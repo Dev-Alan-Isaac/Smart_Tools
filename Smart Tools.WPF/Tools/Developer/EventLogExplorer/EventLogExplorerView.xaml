@@ -1,0 +1,1121 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.EventLogExplorerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:local="clr-namespace:Smart_Tools.WPF.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    IsVisibleChanged="Root_IsVisibleChanged"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown">
+
+    <!--
+        Backend: Controllers/EventExplorerManager.cs (XPath builder, Event ID filter, text
+        filters, CSV / JSON, settings) + .Windows.cs (EventLogSession / EventLogReader);
+        Models/EventExplorerModel.cs. UI only here.
+        Needs administrator rights for some logs (Security): shared ElevationBannerCard.
+    -->
+
+    <UserControl.Resources>
+
+        <local:EventFieldLabelConverter x:Key="FieldLabelConverter" />
+
+        <Style x:Key="PillText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="PillIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="13" />
+            <Setter Property="Height" Value="13" />
+            <Setter Property="Margin" Value="0,0,5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!--  Selectable, read-only text that looks like a label  -->
+        <Style x:Key="SelectableText" TargetType="TextBox">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Height" Value="Auto" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer
+                            x:Name="PART_ContentHost"
+                            Focusable="False"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Disabled" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Sidebar log list row  -->
+        <Style x:Key="LogItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Row"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource AccentFill}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="LogItemTemplate" DataType="{x:Type models:EventExplorerLogInfo}">
+            <Grid ToolTip="{Binding Name}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon
+                    Width="18"
+                    Height="18"
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource SidebarText}"
+                    Kind="ScriptTextOutline" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding DisplayName}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Hint}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <materialDesign:PackIcon
+                    x:Name="Lock"
+                    Grid.Column="2"
+                    Width="14"
+                    Height="14"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource StatusWarningFg}"
+                    Kind="ShieldLockOutline"
+                    ToolTip="{DynamicResource Str_EventExplorer_NeedsAdminTooltip}"
+                    Visibility="Collapsed" />
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding NeedsAdmin}" Value="True">
+                    <Setter TargetName="Lock" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Level chip: coloured by severity  -->
+        <DataTemplate x:Key="LevelCellTemplate" DataType="{x:Type models:EventExplorerEntry}">
+            <Border
+                x:Name="Chip"
+                Padding="7,2"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource StatusInfoBg}"
+                CornerRadius="8">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusInfoFg}"
+                        Kind="InformationOutline" />
+                    <TextBlock
+                        x:Name="ChipText"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource StatusInfoFg}"
+                        Text="{Binding LevelText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:EventExplorerLevel.Critical}">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CloseOctagonOutline" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:EventExplorerLevel.Error}">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:EventExplorerLevel.Warning}">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertOutline" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:EventExplorerLevel.Verbose}">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource RowBg}" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="BugOutline" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <Style x:Key="MutedCell" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="PrimaryCell" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ LOG ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_EventLogExplorer_Log" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_EventExplorer_LogHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ScriptTextOutline}" />
+
+                                    <TextBox
+                                        x:Name="TxtLogSearch"
+                                        Tag="{DynamicResource Str_EventExplorer_LogSearchPlaceholder}"
+                                        TextChanged="TxtLogSearch_TextChanged" />
+
+                                    <ListBox
+                                        x:Name="ListLogs"
+                                        Height="250"
+                                        Margin="0,8,0,0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        ItemContainerStyle="{StaticResource LogItemStyle}"
+                                        ItemTemplate="{StaticResource LogItemTemplate}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                        SelectionChanged="ListLogs_SelectionChanged"
+                                        SelectionMode="Single" />
+
+                                    <ProgressBar
+                                        x:Name="LogsBusy"
+                                        Height="3"
+                                        Margin="0,6,0,0"
+                                        IsIndeterminate="True"
+                                        Visibility="Collapsed" />
+
+                                    <CheckBox
+                                        x:Name="ChkHideEmpty"
+                                        Margin="0,10,0,0"
+                                        Click="ChkHideEmpty_Click"
+                                        Content="{DynamicResource Str_EventExplorer_HideEmpty}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ TIME RANGE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_EventLogExplorer_Range" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_EventExplorer_RangeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ClockOutline}" />
+                                    <ComboBox x:Name="CmbRange" SelectionChanged="Filter_SelectionChanged">
+                                        <ComboBoxItem Content="{DynamicResource Str_EventExplorer_RangeHour}" Tag="LastHour" />
+                                        <ComboBoxItem Content="{DynamicResource Str_EventExplorer_RangeDay}" Tag="Last24Hours" />
+                                        <ComboBoxItem Content="{DynamicResource Str_EventExplorer_RangeWeek}" Tag="Last7Days" />
+                                        <ComboBoxItem Content="{DynamicResource Str_EventExplorer_RangeMonth}" Tag="Last30Days" />
+                                        <ComboBoxItem Content="{DynamicResource Str_EventExplorer_RangeAll}" Tag="All" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ LEVELS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_EventLogExplorer_Levels" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_EventExplorer_LevelsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FilterVariant}" />
+
+                                    <CheckBox
+                                        x:Name="ChkCritical"
+                                        Margin="0,0,0,8"
+                                        Click="Filter_Click"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Foreground="{DynamicResource StatusErrorFg}"
+                                                Kind="CloseOctagonOutline"
+                                                Style="{StaticResource PillIcon}" />
+                                            <TextBlock Style="{StaticResource PillText}" Text="{DynamicResource Str_EventExplorer_LevelCritical}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <CheckBox
+                                        x:Name="ChkError"
+                                        Margin="0,0,0,8"
+                                        Click="Filter_Click"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Foreground="{DynamicResource StatusErrorFg}"
+                                                Kind="AlertCircleOutline"
+                                                Style="{StaticResource PillIcon}" />
+                                            <TextBlock Style="{StaticResource PillText}" Text="{DynamicResource Str_EventExplorer_LevelError}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <CheckBox
+                                        x:Name="ChkWarning"
+                                        Margin="0,0,0,8"
+                                        Click="Filter_Click"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Kind="AlertOutline"
+                                                Style="{StaticResource PillIcon}" />
+                                            <TextBlock Style="{StaticResource PillText}" Text="{DynamicResource Str_EventExplorer_LevelWarning}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <CheckBox
+                                        x:Name="ChkInformation"
+                                        Margin="0,0,0,8"
+                                        Click="Filter_Click"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Foreground="{DynamicResource StatusInfoFg}"
+                                                Kind="InformationOutline"
+                                                Style="{StaticResource PillIcon}" />
+                                            <TextBlock Style="{StaticResource PillText}" Text="{DynamicResource Str_EventExplorer_LevelInformation}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <CheckBox
+                                        x:Name="ChkVerbose"
+                                        Click="Filter_Click"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Kind="BugOutline"
+                                                Style="{StaticResource PillIcon}" />
+                                            <TextBlock Style="{StaticResource PillText}" Text="{DynamicResource Str_EventExplorer_LevelVerbose}" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FILTERS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_EventLogExplorer_Filters" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_EventExplorer_FiltersHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FilterOutline}" />
+
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_EventExplorer_EventIds}" />
+                                    <TextBox
+                                        x:Name="TxtEventIds"
+                                        Tag="{DynamicResource Str_EventExplorer_EventIdsPlaceholder}"
+                                        TextChanged="Filter_TextChanged"
+                                        ToolTip="{DynamicResource Str_EventExplorer_EventIdsTooltip}" />
+                                    <TextBlock
+                                        x:Name="TxtIdError"
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_EventExplorer_Source}" />
+                                    <TextBox
+                                        x:Name="TxtSource"
+                                        Tag="{DynamicResource Str_EventExplorer_SourcePlaceholder}"
+                                        TextChanged="Filter_TextChanged" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_EventExplorer_MaxEvents}" />
+                                    <ComboBox x:Name="CmbMax" SelectionChanged="Filter_SelectionChanged">
+                                        <ComboBoxItem Content="500" Tag="500" />
+                                        <ComboBoxItem Content="1,000" Tag="1000" />
+                                        <ComboBoxItem Content="5,000" Tag="5000" />
+                                        <ComboBoxItem Content="20,000" Tag="20000" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ LIVE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_EventExplorer_LiveHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Pulse}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioLive0"
+                                            Checked="RadioLive_Checked"
+                                            GroupName="EvLive"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="0"
+                                            ToolTip="{DynamicResource Str_EventExplorer_LiveOffTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Kind="Pause" />
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioLive5"
+                                            Grid.Column="2"
+                                            Checked="RadioLive_Checked"
+                                            Content="5 s"
+                                            GroupName="EvLive"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="5" />
+                                        <RadioButton
+                                            x:Name="RadioLive10"
+                                            Grid.Column="4"
+                                            Checked="RadioLive_Checked"
+                                            Content="10 s"
+                                            GroupName="EvLive"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="10" />
+                                        <RadioButton
+                                            x:Name="RadioLive30"
+                                            Grid.Column="6"
+                                            Checked="RadioLive_Checked"
+                                            Content="30 s"
+                                            GroupName="EvLive"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="30" />
+                                    </Grid>
+                                    <TextBlock
+                                        Margin="2,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_EventExplorer_LiveHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!--  ============ TITLE, SEARCH AND ACTIONS ============  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtLogTitle"
+                                    FontSize="18"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_EventExplorer_NoLog}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtLogSubtitle"
+                                    Margin="0,2,0,0"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnRefresh"
+                                    ctl:Tour.Key="Str_Tour_EventLogExplorer_Refresh" ctl:Tour.Order="5"
+                                    Click="BtnRefresh_Click"
+                                    ToolTip="{DynamicResource Str_EventExplorer_RefreshTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Refresh" />
+                                </Button>
+                                <controls:ExportButton
+                                    x:Name="BtnExport"
+                                    Margin="8,0,0,0"
+                                    ToolTip="{DynamicResource Str_EventExplorer_ExportTooltip}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Click="MenuExportCsv_Click" Header="{DynamicResource Str_EventExplorer_ExportCsv}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Click="MenuExportJson_Click" Header="{DynamicResource Str_EventExplorer_ExportJson}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="CodeJson" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Click="MenuExportEvtx_Click" Header="{DynamicResource Str_EventExplorer_ExportEvtx}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileExportOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                                <Button
+                                    Margin="8,0,0,0"
+                                    Click="BtnOpenViewer_Click"
+                                    ToolTip="{DynamicResource Str_EventExplorer_OpenViewerTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="OpenInNew" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  Search  -->
+                        <Border
+                            Grid.Row="1"
+                            Margin="0,14,0,0"
+                            Padding="10,0,4,0"
+                            Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="18"
+                                    Height="18"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Kind="Magnify" />
+                                <TextBox
+                                    x:Name="TxtSearch"
+                                    Grid.Column="1"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="{DynamicResource Str_EventExplorer_SearchPlaceholder}"
+                                    TextChanged="Filter_TextChanged"
+                                    ToolTip="{DynamicResource Str_EventExplorer_SearchTooltip}" />
+                                <Button
+                                    x:Name="BtnClearSearch"
+                                    Grid.Column="2"
+                                    Width="26"
+                                    Height="26"
+                                    Margin="2,3"
+                                    Click="BtnClearSearch_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    Visibility="Collapsed">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Kind="Close" />
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!--  Counts by level + status  -->
+                        <Grid Grid.Row="2" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <WrapPanel VerticalAlignment="Center">
+                                <Border
+                                    x:Name="PillCritical"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_LevelCritical}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Foreground="{Binding Foreground, ElementName=TxtCritical}"
+                                            Kind="CloseOctagonOutline"
+                                            Style="{StaticResource PillIcon}" />
+                                        <TextBlock
+                                            x:Name="TxtCritical"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Style="{StaticResource PillText}"
+                                            Text="0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillError"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_LevelError}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Foreground="{Binding Foreground, ElementName=TxtErrors}"
+                                            Kind="AlertCircleOutline"
+                                            Style="{StaticResource PillIcon}" />
+                                        <TextBlock
+                                            x:Name="TxtErrors"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Style="{StaticResource PillText}"
+                                            Text="0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillWarning"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusWarningBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_LevelWarning}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Foreground="{Binding Foreground, ElementName=TxtWarnings}"
+                                            Kind="AlertOutline"
+                                            Style="{StaticResource PillIcon}" />
+                                        <TextBlock
+                                            x:Name="TxtWarnings"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Style="{StaticResource PillText}"
+                                            Text="0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillInfo"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_LevelInformation}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Foreground="{Binding Foreground, ElementName=TxtInfos}"
+                                            Kind="InformationOutline"
+                                            Style="{StaticResource PillIcon}" />
+                                        <TextBlock
+                                            x:Name="TxtInfos"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Style="{StaticResource PillText}"
+                                            Text="0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_CountTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="FormatListBulleted"
+                                            Style="{StaticResource PillIcon}" />
+                                        <TextBlock
+                                            x:Name="TxtTotal"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Style="{StaticResource PillText}"
+                                            Text="0" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <Border
+                                x:Name="BorderStatus"
+                                Grid.Column="1"
+                                MaxWidth="420"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconStatus"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtStatus}"
+                                        Kind="CheckCircleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtStatus"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  ============ ELEVATION BANNER (Security log and others need admin) ============  -->
+                <controls:ElevationBannerCard
+                    x:Name="ElevationBanner"
+                    Grid.Row="1"
+                    Margin="0,0,0,14"
+                    MessageKey="Str_EventExplorer_AdminMessage"
+                    TitleKey="Str_EventExplorer_AdminTitle" />
+
+                <!--  ============ EVENTS ============  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Reading progress  -->
+                        <Grid
+                            x:Name="LoadBar"
+                            Margin="0,0,0,10"
+                            Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtLoading"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_EventExplorer_Loading}" />
+                                <ProgressBar
+                                    Height="3"
+                                    Margin="0,6,0,0"
+                                    IsIndeterminate="True" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                Click="BtnCancelLoad_Click"
+                                Style="{StaticResource DangerButtonStyle}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="14"
+                                        Height="14"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Stop" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_EventExplorer_Cancel}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <DataGrid
+                                x:Name="GridEvents"
+                                ctl:Tour.Key="Str_Tour_EventLogExplorer_Events" ctl:Tour.Order="6"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                CanUserReorderColumns="False"
+                                FontSize="12"
+                                IsReadOnly="True"
+                                PreviewMouseRightButtonDown="GridEvents_PreviewMouseRightButtonDown"
+                                MinRowHeight="34"
+                                SelectionChanged="GridEvents_SelectionChanged"
+                                SelectionMode="Single"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.ScrollUnit="Pixel"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu Opened="RowMenu_Opened">
+                                        <MenuItem Click="MenuCopyMessage_Click" Header="{DynamicResource Str_EventExplorer_CopyMessage}">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="ContentCopy" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuCopyRow_Click" Header="{DynamicResource Str_EventExplorer_CopyRow}" />
+                                        <Separator />
+                                        <MenuItem Click="MenuOnlyThisId_Click" Header="{DynamicResource Str_EventExplorer_OnlyThisId}">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FilterOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuOnlyThisSource_Click" Header="{DynamicResource Str_EventExplorer_OnlyThisSource}" />
+                                        <Separator />
+                                        <MenuItem Click="MenuSearchOnline_Click" Header="{DynamicResource Str_EventExplorer_SearchOnline}">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="Web" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn
+                                        Width="120"
+                                        CellTemplate="{StaticResource LevelCellTemplate}"
+                                        Header="{DynamicResource Str_EventExplorer_ColLevel}"
+                                        SortMemberPath="Level" />
+                                    <DataGridTextColumn
+                                        Width="150"
+                                        Binding="{Binding TimeText}"
+                                        ElementStyle="{StaticResource MutedCell}"
+                                        Header="{DynamicResource Str_EventExplorer_ColTime}"
+                                        SortMemberPath="TimeCreated" />
+                                    <DataGridTextColumn
+                                        Width="76"
+                                        Binding="{Binding EventId}"
+                                        ElementStyle="{StaticResource PrimaryCell}"
+                                        Header="{DynamicResource Str_EventExplorer_ColId}"
+                                        SortMemberPath="EventId" />
+                                    <DataGridTextColumn
+                                        Width="1.3*"
+                                        MinWidth="70"
+                                        Binding="{Binding Provider}"
+                                        ElementStyle="{StaticResource PrimaryCell}"
+                                        Header="{DynamicResource Str_EventExplorer_ColSource}"
+                                        SortMemberPath="Provider" />
+                                    <DataGridTextColumn
+                                        Width="3*"
+                                        MinWidth="90"
+                                        Binding="{Binding Summary}"
+                                        ElementStyle="{StaticResource MutedCell}"
+                                        Header="{DynamicResource Str_EventExplorer_ColMessage}"
+                                        SortMemberPath="Summary" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!--  Nothing to show: pick a log / no match / can't read  -->
+                            <controls:EmptyStateCard
+                                x:Name="EmptyStatePanel"
+                                Title="{DynamicResource Str_EventExplorer_EmptyPickTitle}"
+                                Description="{DynamicResource Str_EventExplorer_EmptyPickHint}"
+                                DescriptionMaxWidth="380"
+                                Icon="ScriptTextOutline" />
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  ============ DETAILS ============  -->
+                <Border
+                    x:Name="DetailsCard"
+                    Grid.Row="3"
+                    Height="270"
+                    Margin="0,14,0,0"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                x:Name="HeaderDetails"
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_EventExplorer_DetailsHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <RadioButton
+                                    x:Name="RadioGeneral"
+                                    Width="96"
+                                    Checked="RadioTab_Checked"
+                                    Content="{DynamicResource Str_EventExplorer_TabGeneral}"
+                                    GroupName="EvTab"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton
+                                    x:Name="RadioXml"
+                                    Width="96"
+                                    Margin="4,0,0,0"
+                                    Checked="RadioTab_Checked"
+                                    Content="{DynamicResource Str_EventExplorer_TabXml}"
+                                    GroupName="EvTab"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                <Button
+                                    x:Name="BtnCopyDetails"
+                                    Margin="10,0,0,0"
+                                    Click="BtnCopyDetails_Click"
+                                    ToolTip="{DynamicResource Str_EventExplorer_CopyDetailsTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSearchOnline"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="4,0,0,0"
+                                    Click="MenuSearchOnline_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_SearchOnline}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Web" />
+                                </Button>
+                                <Button
+                                    Width="32"
+                                    Height="32"
+                                    Margin="4,0,0,0"
+                                    Click="BtnHideDetails_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_EventExplorer_HideDetailsTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Minus" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  General: message, fields, event data  -->
+                        <ScrollViewer
+                            x:Name="ScrollGeneral"
+                            Grid.Row="1"
+                            VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock
+                                    x:Name="TxtDetailsEmpty"
+                                    Margin="0,20,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_EventExplorer_DetailsEmpty}" />
+                                <StackPanel x:Name="PanelDetails" Visibility="Collapsed">
+                                    <TextBox
+                                        x:Name="TxtDetailMessage"
+                                        FontSize="12.5"
+                                        Style="{StaticResource SelectableText}" />
+
+                                    <TextBlock
+                                        x:Name="LabelData"
+                                        Margin="0,14,0,6"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_EventExplorer_EventData}" />
+                                    <ItemsControl x:Name="ListData">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="150" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock
+                                                        FontSize="11.5"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Text="{Binding Key}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        ToolTip="{Binding Key}" />
+                                                    <TextBox
+                                                        Grid.Column="1"
+                                                        FontSize="12"
+                                                        Style="{StaticResource SelectableText}"
+                                                        Text="{Binding Value, Mode=OneWay}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <TextBlock
+                                        Margin="0,14,0,6"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_EventExplorer_Properties}" />
+                                    <ItemsControl x:Name="ListFields">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="150" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock
+                                                        FontSize="11.5"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Text="{Binding Key, Converter={StaticResource FieldLabelConverter}}" />
+                                                    <TextBox
+                                                        Grid.Column="1"
+                                                        FontSize="12"
+                                                        Style="{StaticResource SelectableText}"
+                                                        Text="{Binding Value, Mode=OneWay}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!--  XML  -->
+                        <TextBox
+                            x:Name="TxtXml"
+                            Grid.Row="1"
+                            Height="Auto"
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Top"
+                            AcceptsReturn="True"
+                            FontFamily="Consolas"
+                            FontSize="12"
+                            HorizontalScrollBarVisibility="Auto"
+                            IsReadOnly="True"
+                            TextWrapping="NoWrap"
+                            VerticalScrollBarVisibility="Auto"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

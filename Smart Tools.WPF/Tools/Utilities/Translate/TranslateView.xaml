@@ -1,0 +1,355 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.TranslateView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        Backend: Controllers/TranslateManager.cs (catalog, model download) and
+        TranslateManager.Engine.cs (tokenizer, ONNX encoder/decoder);
+        Models/TranslateModel.cs. This file and the code-behind are UI only.
+    -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16,16,16,16">
+
+                        <!--  ============ LANGUAGES ============  -->
+                        <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Translate_Languages}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.Translate}" />
+
+                                <TextBlock
+                                    Margin="0,0,0,4"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Translate_From}" />
+                                <!--  Filled in code from TranslateManager.Pairs  -->
+                                <ComboBox x:Name="CmbFrom" SelectionChanged="Language_SelectionChanged" />
+
+                                <Button
+                                    x:Name="BtnSwap"
+                                    Width="40"
+                                    Margin="0,8"
+                                    HorizontalAlignment="Center"
+                                    Click="BtnSwap_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Translate_SwapTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="18"
+                                        Height="18"
+                                        Kind="SwapVertical" />
+                                </Button>
+
+                                <TextBlock
+                                    Margin="0,0,0,4"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Translate_To}" />
+                                <ComboBox x:Name="CmbTo" SelectionChanged="Language_SelectionChanged" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  ============ OFFLINE MODEL ============  -->
+                        <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Translate_ModelHeader}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.DownloadCircleOutline}" />
+
+                                <TextBlock
+                                    x:Name="TxtModelStatus"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap" />
+
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        x:Name="TxtModelPath"
+                                        VerticalAlignment="Center"
+                                        FontFamily="Consolas"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        TextTrimming="CharacterEllipsis"
+                                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                                    <Button
+                                        x:Name="BtnOpenFolder"
+                                        Grid.Column="1"
+                                        Width="40"
+                                        Margin="6,0,0,0"
+                                        Click="BtnOpenFolder_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Translate_OpenFolder}">
+                                        <materialDesign:PackIcon
+                                            Width="18"
+                                            Height="18"
+                                            Kind="FolderOpenOutline" />
+                                    </Button>
+                                </Grid>
+
+                                <ProgressBar
+                                    x:Name="ProgressDownload"
+                                    Height="8"
+                                    Margin="0,8,0,0"
+                                    Maximum="100"
+                                    Visibility="Collapsed" />
+
+                                <Button
+                                    x:Name="BtnDownload"
+                                    Margin="0,10,0,0"
+                                    Click="BtnDownload_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Translate_DownloadTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconDownload"
+                                            Width="18"
+                                            Height="18"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Download" />
+                                        <TextBlock
+                                            x:Name="TxtDownloadLabel"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_Translate_Download}" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnRemove"
+                                    Margin="0,10,0,0"
+                                    Click="BtnRemove_Click"
+                                    Style="{StaticResource DangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Translate_RemoveTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="18"
+                                            Height="18"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Kind="DeleteOutline" />
+                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_Remove}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <Button
+                            x:Name="BtnManage"
+                            Margin="0,0,0,12"
+                            HorizontalAlignment="Stretch"
+                            Click="BtnManage_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Translate_ManageTooltip}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="CogOutline" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_Manage}" />
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock
+                            Margin="4,0,4,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_Translate_Credit}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,12"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnRun"
+                            MinWidth="170"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRun_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_Translate_RunTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    x:Name="IconRun"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Translate" />
+                                <TextBlock
+                                    x:Name="TxtRunLabel"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Translate_Run}" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressTranslate"
+                                Height="8"
+                                Margin="0,0,0,6"
+                                Maximum="100"
+                                Visibility="Collapsed" />
+                            <TextBlock
+                                x:Name="TxtStatus"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Translate_StatusIdle}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </Border>
+
+                <!--  Text panes  -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,10">
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_Translate_InputHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
+                                <Button
+                                    x:Name="BtnClear"
+                                    Width="40"
+                                    HorizontalAlignment="Right"
+                                    Click="BtnClear_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Translate_Clear}">
+                                    <materialDesign:PackIcon
+                                        Width="18"
+                                        Height="18"
+                                        Kind="Close" />
+                                </Button>
+                            </Grid>
+                            <TextBox
+                                x:Name="TxtInput"
+                                Grid.Row="1"
+                                Height="Auto"
+                                Padding="10"
+                                VerticalAlignment="Stretch"
+                                VerticalContentAlignment="Top"
+                                AcceptsReturn="True"
+                                FontSize="14"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto" />
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,10">
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_Translate_OutputHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.TranslateVariant}" />
+                                <Button
+                                    x:Name="BtnCopy"
+                                    Width="40"
+                                    HorizontalAlignment="Right"
+                                    Click="BtnCopy_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Common_Copy}">
+                                    <materialDesign:PackIcon
+                                        Width="18"
+                                        Height="18"
+                                        Kind="ContentCopy" />
+                                </Button>
+                            </Grid>
+                            <TextBox
+                                x:Name="TxtOutput"
+                                Grid.Row="1"
+                                Height="Auto"
+                                Padding="10"
+                                VerticalAlignment="Stretch"
+                                VerticalContentAlignment="Top"
+                                AcceptsReturn="True"
+                                FontSize="14"
+                                IsReadOnly="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,1266 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.ApiTesterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <UserControl.Resources>
+
+        <!--
+            StatusPillStyle, PaneLabel, CodeTextBox, DangerButtonStyle, and
+            SidebarSectionLabel used to be defined here - all five were
+            byte-for-byte duplicates of (or, for DangerButtonStyle, a
+            stripped-down drift from) styles already in Themes/Controls.xaml,
+            so they were removed in favor of the shared versions.
+        -->
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--
+            No page header here any more: MainWindow's header card already
+            shows this tool's icon and name, so a second title card was just
+            repeating it. The WebSocket connection pill (the only live signal
+            the old header carried) now sits in the WebSocket connection bar,
+            where it's relevant.
+        -->
+
+        <!--  ================= CONTENT =================  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Header  -->
+
+                    <StackPanel>
+
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Height="17"
+                                    Margin="10,0,0,0"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+
+                    </StackPanel>
+
+                    <!--  Scrollable settings  -->
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16">
+
+                            <!--  ============ MODE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_ApiTester_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Password_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldLockOutline}" />
+
+                                    <Grid x:Name="ModeTogglePanel">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <RadioButton
+                                            x:Name="RadioModeRest"
+                                            Checked="RadioMode_Checked"
+                                            GroupName="ApiMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Encrypt"
+                                            ToolTip="{DynamicResource Str_Api_ModeRestTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Api" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_ApiTester_Rest}" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <RadioButton
+                                            x:Name="RadioModeWebSocket"
+                                            Grid.Column="2"
+                                            Checked="RadioMode_Checked"
+                                            GroupName="ApiMode"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="WebSocket"
+                                            ToolTip="{DynamicResource Str_Api_ModeWebSocketTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="LanConnect" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_ApiTester_Websocket}" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SAVED ENDPOINTS ============  -->
+
+                            <Border ctl:Tour.Key="Str_Tour_ApiTester_Saved" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Api_SavedEndpointsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.BookmarkMultipleOutline}" />
+
+                                    <Grid>
+                                        <ListBox
+                                            x:Name="SavedEndpointsList"
+                                            Height="120"
+                                            HorizontalContentAlignment="Stretch"
+                                            MouseDoubleClick="SavedEndpointsList_MouseDoubleClick"
+                                            ToolTip="{DynamicResource Str_Api_SavedEndpointsListTooltip}">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                                                    <Setter Property="Padding" Value="8,5" />
+                                                    <Setter Property="Margin" Value="0,1" />
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid ToolTip="{Binding Url}">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="46" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock
+                                                            x:Name="MethodText"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="11"
+                                                            FontWeight="Bold"
+                                                            Foreground="{DynamicResource TextPrimary}"
+                                                            Text="{Binding Method}" />
+                                                        <TextBlock
+                                                            Grid.Column="1"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="11.5"
+                                                            Text="{Binding Url}"
+                                                            TextTrimming="CharacterEllipsis" />
+                                                    </Grid>
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding Method}" Value="GET">
+                                                            <Setter TargetName="MethodText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Method}" Value="POST">
+                                                            <Setter TargetName="MethodText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Method}" Value="PUT">
+                                                            <Setter TargetName="MethodText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Method}" Value="DELETE">
+                                                            <Setter TargetName="MethodText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Method}" Value="PATCH">
+                                                            <Setter TargetName="MethodText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Method}" Value="WS">
+                                                            <Setter TargetName="MethodText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+
+                                        <TextBlock
+                                            x:Name="SavedEndpointsEmptyState"
+                                            Margin="10,0"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            IsHitTestVisible="False"
+                                            Text="{DynamicResource Str_Api_NoSavedEndpoints}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button
+                                            x:Name="BtnSaveEndpoint"
+                                            Grid.Column="0"
+                                            Click="BtnSaveEndpoint_Click"
+                                            ToolTip="{DynamicResource Str_Api_SaveCurrentTooltip}"
+                                            Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="BookmarkPlusOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Api_SaveCurrent}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+
+                                        <Button
+                                            x:Name="BtnRemoveEndpoint"
+                                            Grid.Column="2"
+                                            MinHeight="28"
+                                            Click="BtnRemoveEndpoint_Click"
+                                            Style="{StaticResource DangerButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Api_RemoveEndpointTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="DeleteOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_Remove}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ENVIRONMENT ============  -->
+
+                            <Border ctl:Tour.Key="Str_Tour_ApiTester_Environment" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Api_EnvironmentHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Earth}" />
+
+                                    <TextBlock
+                                        Margin="0,0,0,5"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Api_BaseUrlLabel}" />
+
+                                    <TextBox x:Name="TxtBaseUrl" ToolTip="{DynamicResource Str_Api_BaseUrlTooltip}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ AUTHENTICATION ============  -->
+
+                            <Border ctl:Tour.Key="Str_Tour_ApiTester_Auth" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Api_AuthHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldKeyOutline}" />
+
+                                    <ComboBox
+                                        x:Name="CmbAuthType"
+                                        Margin="0,0,0,8"
+                                        SelectedIndex="0"
+                                        SelectionChanged="CmbAuthType_SelectionChanged"
+                                        ToolTip="{DynamicResource Str_Api_AuthTypeTooltip}">
+                                        <ComboBoxItem Content="{DynamicResource Str_Api_AuthTypeNone}" />
+                                        <ComboBoxItem Content="{DynamicResource Str_Api_AuthTypeBasic}" />
+                                        <ComboBoxItem Content="{DynamicResource Str_Api_AuthTypeBearer}" />
+                                        <ComboBoxItem Content="{DynamicResource Str_Api_AuthTypeApiKey}" />
+                                    </ComboBox>
+
+                                    <StackPanel x:Name="PanelAuthBasic" Visibility="Collapsed">
+                                        <TextBox
+                                            x:Name="TxtAuthUsername"
+                                            Margin="0,0,0,6"
+                                            Tag="{DynamicResource Str_Api_AuthUsernamePlaceholder}"
+                                            ToolTip="{DynamicResource Str_Api_AuthUsernameTooltip}" />
+                                        <PasswordBox
+                                            x:Name="PwdAuthPassword"
+                                            Tag="{DynamicResource Str_Api_AuthPasswordPlaceholder}"
+                                            ToolTip="{DynamicResource Str_Api_AuthPasswordTooltip}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelAuthBearer" Visibility="Collapsed">
+                                        <TextBox
+                                            x:Name="TxtAuthToken"
+                                            Tag="{DynamicResource Str_Api_AuthTokenPlaceholder}"
+                                            ToolTip="{DynamicResource Str_Api_AuthTokenTooltip}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelAuthApiKey" Visibility="Collapsed">
+                                        <TextBox
+                                            x:Name="TxtAuthKeyName"
+                                            Margin="0,0,0,6"
+                                            Tag="{DynamicResource Str_Api_AuthKeyNamePlaceholder}"
+                                            ToolTip="{DynamicResource Str_Api_AuthKeyNameTooltip}" />
+                                        <TextBox
+                                            x:Name="TxtAuthKeyValue"
+                                            Tag="{DynamicResource Str_Api_AuthKeyValuePlaceholder}"
+                                            ToolTip="{DynamicResource Str_Api_AuthKeyValueTooltip}" />
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        x:Name="PanelWebSocketOptions"
+                                        Margin="0,0,0,0"
+                                        Visibility="Collapsed">
+
+                                        <Separator
+                                            x:Name="SepWebSocketOptions"
+                                            Margin="0,15"
+                                            Style="{StaticResource SidebarSeparatorStyle}" />
+
+                                        <ContentControl
+                                            Content="{DynamicResource Str_Api_WebSocketOptionsHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.LanConnect}" />
+
+                                        <CheckBox
+                                            x:Name="ChkAutoReconnect"
+                                            Content="{DynamicResource Str_Api_AutoReconnect}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            ToolTip="{DynamicResource Str_Api_AutoReconnectTooltip}" />
+
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ EXPORT ============  -->
+
+                            <Border Margin="0,0,0,16" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Api_ExportLogHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+
+                                    <controls:ExportButton
+                                        x:Name="BtnExportLog"
+                                        ToolTip="{DynamicResource Str_Api_ExportLogTooltip}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem
+                                                    Click="MenuExport_Click"
+                                                    Header="{DynamicResource Str_Common_ExportAsCsv}"
+                                                    Tag="Csv">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Click="MenuExport_Click"
+                                                    Header="{DynamicResource Str_Common_ExportAsJson}"
+                                                    Tag="Json">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="CodeJson" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Click="MenuExport_Click"
+                                                    Header="{DynamicResource Str_Common_ExportAsXml}"
+                                                    Tag="Xml">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="CodeTags" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                    </controls:ExportButton>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+
+                    </ScrollViewer>
+
+                    <!--
+                        Connection Status moved up into the page header -
+                        this StackPanel is kept (empty) purely so any
+                        existing code referencing OptionsBottomPanel still
+                        has something to point at.
+                    -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+
+                </Grid>
+
+            </Border>
+
+            <!--  ================= REQUEST / RESPONSE (REST) + CONNECTION / LOG (WebSocket) =================  -->
+
+            <Grid Grid.Column="2">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  ================= REST: REQUEST BAR / WEBSOCKET: CONNECTION BAR =================  -->
+
+                <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+
+                            <!--  REST request bar  -->
+
+                            <Grid x:Name="RestRequestBar">
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--
+                                    One rounded "address bar" holding the method and URL
+                                    (InputBarStyle): accent border while either has focus.
+                                    Validation errors colour this border (ShowUrlValidationError).
+                                -->
+                                <Border x:Name="UrlBarBorder" Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!--  Colour-coded like most API tools; the selected method's colour is applied in code (UpdateMethodColor)  -->
+                                        <ComboBox
+                                            x:Name="CmbMethod"
+                                            Grid.Column="0"
+                                            Width="100"
+                                            FontWeight="Bold"
+                                            SelectedIndex="0"
+                                            SelectionChanged="CmbMethod_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_Api_MethodTooltip}">
+                                            <ComboBoxItem Content="{DynamicResource Str_ApiTester_Get}" Foreground="{DynamicResource StatusSuccessFg}" />
+                                            <ComboBoxItem Content="{DynamicResource Str_ApiTester_Post}" Foreground="{DynamicResource StatusInfoFg}" />
+                                            <ComboBoxItem Content="{DynamicResource Str_ApiTester_Put}" Foreground="{DynamicResource StatusWarningFg}" />
+                                            <ComboBoxItem Content="{DynamicResource Str_Common_Delete}" Foreground="{DynamicResource StatusErrorFg}" />
+                                            <ComboBoxItem Content="{DynamicResource Str_ApiTester_Patch}" Foreground="{DynamicResource AccentColor}" />
+                                        </ComboBox>
+
+                                        <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+
+                                        <TextBox
+                                            x:Name="TxtRequestUrl"
+                                            Grid.Column="2"
+                                            VerticalContentAlignment="Center"
+                                            KeyDown="TxtRequestUrl_KeyDown"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="https://api.example.com/endpoint"
+                                            TextChanged="TxtRequestUrl_TextChanged"
+                                            ToolTip="{DynamicResource Str_Api_RequestUrlTooltip}" />
+                                    </Grid>
+                                </Border>
+
+                                <Button
+                                    x:Name="BtnSendRequest"
+                                    ctl:Tour.Key="Str_Tour_ApiTester_Send" ctl:Tour.Order="5"
+                                    Grid.Column="2"
+                                    Width="96"
+                                    MinHeight="38"
+                                    Click="BtnSendRequest_Click"
+                                    Content="{DynamicResource Str_Api_Send}"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Api_SendRequestTooltip}" />
+
+                            </Grid>
+
+                            <!--  WebSocket connection bar  -->
+
+                            <Grid x:Name="WebSocketConnectionBar" Visibility="Collapsed">
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    x:Name="WsUrlBarBorder"
+                                    Grid.Column="0"
+                                    Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="18"
+                                            Height="18"
+                                            Margin="12,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="LanConnect" />
+                                        <TextBox
+                                            x:Name="TxtWebSocketUrl"
+                                            Grid.Column="1"
+                                            VerticalContentAlignment="Center"
+                                            KeyDown="TxtWebSocketUrl_KeyDown"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="wss://example.com/socket"
+                                            TextChanged="TxtWebSocketUrl_TextChanged"
+                                            ToolTip="{DynamicResource Str_Api_WsUrlTooltip}" />
+                                    </Grid>
+                                </Border>
+
+                                <!--  Live connection state (moved from the old page header)  -->
+                                <Border
+                                    x:Name="ConnectionPill"
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Api_ConnectionStateTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse
+                                            x:Name="StatusDot"
+                                            Width="8"
+                                            Height="8"
+                                            Margin="0,0,7,0"
+                                            VerticalAlignment="Center"
+                                            Fill="{DynamicResource TextSecondary}" />
+                                        <TextBlock
+                                            x:Name="TxtConnectionStatus"
+                                            FontSize="11.5"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_Api_Idle}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Button
+                                    x:Name="BtnConnectWebSocket"
+                                    Grid.Column="4"
+                                    Width="110"
+                                    MinHeight="38"
+                                    Click="BtnConnectWebSocket_Click"
+                                    Content="{DynamicResource Str_Network_ConnectButton}"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Api_ConnectWsTooltip}" />
+
+                            </Grid>
+
+                        </Grid>
+
+                        <!--
+                            Inline validation message - hidden until a Send/Connect
+                            attempt fails validation (empty or malformed URL), same
+                            spot for both REST and WebSocket modes since only one
+                            bar is visible at a time.
+                        -->
+                        <TextBlock
+                            x:Name="TxtUrlValidationMessage"
+                            Grid.Row="1"
+                            Margin="0,8,0,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusErrorFg}"
+                            Text="{DynamicResource Str_Api_UrlValidationMessage}"
+                            Visibility="Collapsed" />
+
+                        <!--  Thin indeterminate sweep while a request is in flight (Send turns into Cancel)  -->
+                        <ProgressBar
+                            x:Name="ProgressSending"
+                            Grid.Row="2"
+                            Height="3"
+                            Margin="0,10,0,0"
+                            BorderThickness="0"
+                            IsIndeterminate="False"
+                            Visibility="Collapsed" />
+
+                    </Grid>
+
+                </Border>
+
+                <!--  ================= REST: REQUEST DETAILS + RESPONSE / WEBSOCKET: COMPOSE + LOG =================  -->
+
+                <Grid Grid.Row="2">
+
+                    <!--  REST  -->
+
+                    <Grid x:Name="RestPanel">
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="200" MinHeight="120" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="*" MinHeight="150" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Request details (Headers / Body / Params)  -->
+
+                        <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+
+                            <TabControl
+                                x:Name="TabRequestDetails"
+                                Background="Transparent"
+                                BorderThickness="0">
+
+                                <TabItem Header="{DynamicResource Str_Api_TabHeaders}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <DataGrid
+                                            x:Name="DataGridHeaders"
+                                            AutoGenerateColumns="False"
+                                            CanUserAddRows="False"
+                                            IsReadOnly="False"
+                                            MinRowHeight="32"
+                                            ToolTip="{DynamicResource Str_Api_HeadersGridTooltip}">
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn
+                                                    Width="34"
+                                                    CellStyle="{StaticResource CheckBoxCellStyle}"
+                                                    Header="">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox
+                                                                IsChecked="{Binding Enabled, Mode=TwoWay}"
+                                                                Style="{StaticResource DataGridCheckBoxStyle}"
+                                                                ToolTip="{DynamicResource Str_Api_RowEnableTooltip}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn
+                                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                                    Width="*"
+                                                    Binding="{Binding Key, Mode=TwoWay}"
+                                                    Header="{DynamicResource Str_Api_ColHeaderKey}" />
+                                                <DataGridTextColumn
+                                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                                    Width="2*"
+                                                    Binding="{Binding Value, Mode=TwoWay}"
+                                                    Header="{DynamicResource Str_Metadata_ColHeaderValue}" />
+                                                <DataGridTemplateColumn
+                                                    Width="40"
+                                                    CellStyle="{StaticResource CompactCellStyle}"
+                                                    Header="">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button
+                                                                Width="24"
+                                                                Height="24"
+                                                                Click="BtnRemoveHeaderRow_Click"
+                                                                Style="{StaticResource IconButtonStyle}"
+                                                                ToolTip="{DynamicResource Str_Api_RemoveHeaderRowTooltip}">
+                                                                <TextBlock FontSize="10" Text="✕" />
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                        <Button
+                                            x:Name="BtnAddHeader"
+                                            Grid.Row="1"
+                                            Width="110"
+                                            MinHeight="26"
+                                            Margin="0,6,0,0"
+                                            HorizontalAlignment="Left"
+                                            Click="BtnAddHeader_Click"
+                                            Content="{DynamicResource Str_Api_AddHeader}"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Api_AddHeaderTooltip}" />
+                                    </Grid>
+                                </TabItem>
+
+                                <TabItem Header="{DynamicResource Str_Api_TabParams}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <DataGrid
+                                            x:Name="DataGridParams"
+                                            AutoGenerateColumns="False"
+                                            CanUserAddRows="False"
+                                            IsReadOnly="False"
+                                            MinRowHeight="32"
+                                            ToolTip="{DynamicResource Str_Api_ParamsGridTooltip}">
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn
+                                                    Width="34"
+                                                    CellStyle="{StaticResource CheckBoxCellStyle}"
+                                                    Header="">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox
+                                                                IsChecked="{Binding Enabled, Mode=TwoWay}"
+                                                                Style="{StaticResource DataGridCheckBoxStyle}"
+                                                                ToolTip="{DynamicResource Str_Api_RowEnableTooltip}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn
+                                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                                    Width="*"
+                                                    Binding="{Binding Key, Mode=TwoWay}"
+                                                    Header="{DynamicResource Str_Api_ColHeaderKey}" />
+                                                <DataGridTextColumn
+                                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                                    Width="2*"
+                                                    Binding="{Binding Value, Mode=TwoWay}"
+                                                    Header="{DynamicResource Str_Metadata_ColHeaderValue}" />
+                                                <DataGridTemplateColumn
+                                                    Width="40"
+                                                    CellStyle="{StaticResource CompactCellStyle}"
+                                                    Header="">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button
+                                                                Width="24"
+                                                                Height="24"
+                                                                Click="BtnRemoveParamRow_Click"
+                                                                Style="{StaticResource IconButtonStyle}"
+                                                                ToolTip="{DynamicResource Str_Api_RemoveParamRowTooltip}">
+                                                                <TextBlock FontSize="10" Text="✕" />
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                        <Button
+                                            x:Name="BtnAddParam"
+                                            Grid.Row="1"
+                                            Width="110"
+                                            MinHeight="26"
+                                            Margin="0,6,0,0"
+                                            HorizontalAlignment="Left"
+                                            Click="BtnAddParam_Click"
+                                            Content="{DynamicResource Str_Api_AddParam}"
+                                            Style="{DynamicResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Api_AddParamTooltip}" />
+                                    </Grid>
+                                </TabItem>
+
+                                <TabItem Header="{DynamicResource Str_Api_TabBody}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+
+                                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox
+                                                x:Name="CmbBodyFormat"
+                                                Grid.Column="0"
+                                                Width="140"
+                                                SelectedIndex="0"
+                                                ToolTip="{DynamicResource Str_Api_BodyFormatTooltip}">
+                                                <ComboBoxItem Content="{DynamicResource Str_ApiTester_Json}" />
+                                                <ComboBoxItem Content="{DynamicResource Str_ApiTester_Xml}" />
+                                                <ComboBoxItem Content="{DynamicResource Str_Api_BodyFormatForm}" />
+                                                <ComboBoxItem Content="{DynamicResource Str_Api_BodyFormatRaw}" />
+                                            </ComboBox>
+
+                                            <TextBlock
+                                                x:Name="TxtRequestBodySize"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_ApiTester_0Bytes}"
+                                                ToolTip="{DynamicResource Str_Api_BodySizeTooltip}" />
+                                        </Grid>
+
+                                        <TextBox
+                                            x:Name="TxtRequestBody"
+                                            Grid.Row="1"
+                                            AcceptsTab="True"
+                                            Style="{StaticResource CodeTextBox}"
+                                            TextChanged="TxtRequestBody_TextChanged"
+                                            ToolTip="{DynamicResource Str_Api_RequestBodyTooltip}" />
+                                    </Grid>
+                                </TabItem>
+
+                            </TabControl>
+
+                        </Border>
+
+                        <!--  Response  -->
+
+                        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+
+                            <Grid>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <ContentControl
+                                    Grid.Row="0"
+                                    Margin="0,0,0,10"
+                                    Content="{DynamicResource Str_Api_ResponseLabel}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.CodeJson}" />
+
+                                <!--  Status badges  -->
+
+                                <StackPanel
+                                    Grid.Row="1"
+                                    Margin="0,0,0,10"
+                                    Orientation="Horizontal">
+
+                                    <Border
+                                        x:Name="BorderResponseStatus"
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_Api_StatusCodeTooltip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconResponseStatus"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{Binding Foreground, ElementName=TxtResponseStatus}"
+                                                Kind="CircleOutline" />
+                                            <TextBlock
+                                                x:Name="TxtResponseStatus"
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{DynamicResource Str_Api_NoRequestYet}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_Api_LatencyTooltip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{Binding Foreground, ElementName=TxtResponseLatency}"
+                                                Kind="TimerOutline" />
+                                            <TextBlock
+                                                x:Name="TxtResponseLatency"
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="— ms" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_Api_ResponseSizeTooltip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{Binding Foreground, ElementName=TxtResponseSize}"
+                                                Kind="WeightKilogram" />
+                                            <TextBlock
+                                                x:Name="TxtResponseSize"
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{DynamicResource Str_ApiTester_Bytes}" />
+                                        </StackPanel>
+                                    </Border>
+
+                                </StackPanel>
+
+                                <TabControl
+                                    x:Name="TabResponseDetails"
+                                    ctl:Tour.Key="Str_Tour_ApiTester_Response" ctl:Tour.Order="6"
+                                    Grid.Row="2"
+                                    Background="Transparent"
+                                    BorderThickness="0">
+
+                                    <TabItem Header="{DynamicResource Str_Api_TabBody}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Margin="0,6,0,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox
+                                                    x:Name="ChkPrettyPrint"
+                                                    Grid.Column="0"
+                                                    Margin="0"
+                                                    Checked="ChkPrettyPrint_CheckedChanged"
+                                                    Content="{DynamicResource Str_Api_PrettyPrint}"
+                                                    IsChecked="True"
+                                                    ToolTip="{DynamicResource Str_Api_PrettyPrintTooltip}"
+                                                    Unchecked="ChkPrettyPrint_CheckedChanged" />
+
+                                                <Button
+                                                    x:Name="BtnCopyResponseBody"
+                                                    Grid.Column="1"
+                                                    Width="30"
+                                                    Height="30"
+                                                    HorizontalAlignment="Right"
+                                                    Click="BtnCopyResponseBody_Click"
+                                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Api_CopyResponseBodyTooltip}">
+                                                    <materialDesign:PackIcon
+                                                        Width="15"
+                                                        Height="15"
+                                                        Kind="ContentCopy" />
+                                                </Button>
+                                            </Grid>
+
+                                            <TextBox
+                                                x:Name="TxtResponseBody"
+                                                Grid.Row="1"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource CodeTextBox}"
+                                                Text="{DynamicResource Str_Api_NoResponseHint}"
+                                                ToolTip="{DynamicResource Str_Api_ResponseBodyTooltip}" />
+                                        </Grid>
+                                    </TabItem>
+
+                                    <TabItem Header="{DynamicResource Str_Api_TabHeaders}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <Button
+                                                x:Name="BtnCopyResponseHeaders"
+                                                Grid.Row="0"
+                                                Margin="0,6,0,6"
+                                                HorizontalAlignment="Right"
+                                                Click="BtnCopyResponseHeaders_Click"
+                                                ToolTip="{DynamicResource Str_Api_CopyResponseHeadersTooltip}"
+                                                Style="{StaticResource ListToolButtonStyle}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="ContentCopy" />
+                                            </Button>
+
+                                            <TextBox
+                                                x:Name="TxtResponseHeaders"
+                                                Grid.Row="1"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource CodeTextBox}"
+                                                ToolTip="{DynamicResource Str_Api_ResponseHeadersTooltip}" />
+                                        </Grid>
+                                    </TabItem>
+
+                                </TabControl>
+
+                                <!--  Shown until the first response arrives (ShowResponse hides it)  -->
+                                <Border
+                                    x:Name="ResponseEmptyState"
+                                    Grid.Row="2"
+                                    Background="{DynamicResource CardBg}">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.RocketLaunchOutline}" />
+                                        <TextBlock
+                                            Margin="0,12,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="13"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_ApiTester_SendARequestTo}" />
+                                        <TextBlock
+                                            Margin="0,4,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_ApiTester_TipPressEnterIn}" />
+                                    </StackPanel>
+                                </Border>
+
+                            </Grid>
+
+                        </Border>
+
+                    </Grid>
+
+                    <!--  WebSocket  -->
+
+                    <Grid x:Name="WebSocketPanel" Visibility="Collapsed">
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Live traffic log  -->
+
+                        <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+
+                            <Grid>
+
+                                <ListBox
+                                    x:Name="WebSocketLogList"
+                                    HorizontalContentAlignment="Stretch"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontFamily="Consolas"
+                                    FontSize="12"
+                                    ToolTip="{DynamicResource Str_Api_WsLogTooltip}"
+                                    VirtualizingPanel.IsVirtualizing="True"
+                                    VirtualizingPanel.VirtualizationMode="Recycling">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,5" />
+                                            <Setter Property="Margin" Value="0,1" />
+                                            <Setter Property="Cursor" Value="Arrow" />
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    x:Name="Badge"
+                                                    Width="38"
+                                                    Margin="0,0,8,0"
+                                                    Padding="0,2"
+                                                    VerticalAlignment="Top"
+                                                    Background="{DynamicResource RowBg}"
+                                                    CornerRadius="5">
+                                                    <TextBlock
+                                                        x:Name="BadgeText"
+                                                        HorizontalAlignment="Center"
+                                                        FontFamily="Segoe UI"
+                                                        FontSize="10"
+                                                        FontWeight="Bold"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Text="{Binding DirectionText}" />
+                                                </Border>
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="0,1,10,0"
+                                                    VerticalAlignment="Top"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding TimeText}" />
+                                                <TextBlock
+                                                    x:Name="MessageText"
+                                                    Grid.Column="2"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    Text="{Binding Message}"
+                                                    TextWrapping="Wrap" />
+                                            </Grid>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding Direction}" Value="In">
+                                                    <Setter TargetName="Badge" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                                                    <Setter TargetName="BadgeText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Direction}" Value="Out">
+                                                    <Setter TargetName="Badge" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                                    <Setter TargetName="BadgeText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Direction}" Value="System">
+                                                    <Setter TargetName="MessageText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                    <Setter TargetName="MessageText" Property="FontStyle" Value="Italic" />
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <StackPanel
+                                    x:Name="WebSocketEmptyState"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MessageTextOutline}" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Api_WsEmptyHint}" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Opacity="0.8"
+                                        Text="{DynamicResource Str_ApiTester_ConnectThenPressCtrl}" />
+                                </StackPanel>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!--  Message compose  -->
+
+                        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+
+                            <Grid>
+
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox
+                                    x:Name="TxtWebSocketMessage"
+                                    Grid.Column="0"
+                                    Height="Auto"
+                                    MinHeight="34"
+                                    MaxHeight="80"
+                                    Padding="10,8"
+                                    AcceptsReturn="True"
+                                    FontFamily="Consolas"
+                                    FontSize="12"
+                                    PreviewKeyDown="TxtWebSocketMessage_KeyDown"
+                                    Tag="{DynamicResource Str_Api_WsMessagePlaceholder}"
+                                    TextWrapping="Wrap"
+                                    ToolTip="{DynamicResource Str_Api_WsMessageTooltip}"
+                                    VerticalScrollBarVisibility="Auto" />
+
+                                <Button
+                                    x:Name="BtnSendWebSocketMessage"
+                                    Grid.Column="2"
+                                    Width="96"
+                                    MinHeight="36"
+                                    VerticalAlignment="Bottom"
+                                    Click="BtnSendWebSocketMessage_Click"
+                                    Content="{DynamicResource Str_Api_Send}"
+                                    IsEnabled="False"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Api_SendWsMessageTooltip}" />
+
+                            </Grid>
+
+                        </Border>
+
+                    </Grid>
+
+                </Grid>
+
+            </Grid>
+
+        </Grid>
+
+    </Grid>
+
+</UserControl>

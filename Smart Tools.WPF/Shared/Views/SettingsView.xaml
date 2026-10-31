@@ -1,0 +1,2419 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:modules="clr-namespace:Smart_Tools.WPF.Modules"
+    xmlns:views="clr-namespace:Smart_Tools.WPF.Views"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Data: Modules/AppSettingsStore.cs (shared by every tool).
+        Logic: Controllers/SettingsManager.cs (extension clean-up, category
+        overlaps, name and pattern checks, pattern test). This file and the
+        code-behind are UI only. Every change saves at once - there's no
+        Save button to forget.
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <modules:ShortcutWarningConverter x:Key="ShortcutWarning" />
+
+        <!--  Sidebar section link  -->
+        <Style x:Key="NavButtonStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border
+                            x:Name="Bd"
+                            Margin="0,0,0,4"
+                            Background="Transparent"
+                            CornerRadius="8">
+                            <Grid>
+                                <Border
+                                    x:Name="Indicator"
+                                    Width="3"
+                                    Margin="0,8"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentColor}"
+                                    CornerRadius="2"
+                                    Opacity="0" />
+                                <ContentPresenter
+                                    Margin="{TemplateBinding Padding}"
+                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                                <Setter TargetName="Indicator" Property="Opacity" Value="1" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  A choice tile on a content card (theme, language, pattern type)  -->
+        <Style x:Key="ChoiceTileStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border
+                            x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1.5"
+                            CornerRadius="8"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="0.97"
+                                                Duration="0:0:0.08" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="0.97"
+                                                Duration="0:0:0.08" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1"
+                                                Duration="0:0:0.12" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1"
+                                                Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  One event day / holiday card: name, date, repeats, non-working  -->
+        <DataTemplate x:Key="EventDayTemplate" DataType="{x:Type modules:EventDay}">
+            <Border
+                Margin="0,0,0,10"
+                Padding="12"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MaxWidth="320" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="30"
+                            Height="30"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="8">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="CalendarStar" />
+                        </Border>
+                        <TextBox
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            LostFocus="EventDayField_LostFocus"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{DynamicResource Str_Settings_EventNameTooltip}" />
+                        <Button
+                            Grid.Column="3"
+                            Width="28"
+                            Height="28"
+                            VerticalAlignment="Center"
+                            Click="BtnRemoveEventDay_Click"
+                            Style="{StaticResource IconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Settings_RemoveThisEvent}">
+                            <materialDesign:PackIcon
+                                Width="15"
+                                Height="15"
+                                Foreground="{DynamicResource StatusErrorFg}"
+                                Kind="DeleteOutline" />
+                        </Button>
+                    </Grid>
+
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="40,10,0,0"
+                        Orientation="Horizontal">
+                        <TextBox
+                            Width="120"
+                            VerticalAlignment="Center"
+                            FontFamily="Consolas"
+                            LostFocus="EventDayField_LostFocus"
+                            Text="{Binding Date, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{DynamicResource Str_Settings_EventDateTooltip}" />
+                        <CheckBox
+                            Margin="18,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="EventDayFlag_Click"
+                            Content="{DynamicResource Str_Settings_EveryYear}"
+                            IsChecked="{Binding Repeats, Mode=TwoWay}"
+                            ToolTip="{DynamicResource Str_Settings_EveryYearTooltip}" />
+                        <CheckBox
+                            Margin="18,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="EventDayFlag_Click"
+                            Content="{DynamicResource Str_Settings_NonWorkingDay}"
+                            IsChecked="{Binding NonWorking, Mode=TwoWay}"
+                            ToolTip="{DynamicResource Str_Settings_NonWorkingTooltip}" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="40,6,0,0"
+                        Orientation="Horizontal"
+                        Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}">
+                        <materialDesign:PackIcon
+                            Width="13"
+                            Height="13"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Kind="AlertOutline" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Text="{Binding Warning}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  One saved Mock Data list: name, value chips, add box (same layout as a category card)  -->
+        <DataTemplate x:Key="MockListTemplate" DataType="{x:Type modules:MockDataList}">
+            <Border
+                Margin="0,0,0,10"
+                Padding="12"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MaxWidth="260" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="30"
+                            Height="30"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="8">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="FormatListBulleted" />
+                        </Border>
+                        <TextBox
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            LostFocus="MockListName_LostFocus"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{DynamicResource Str_Settings_MockListNameTooltip}" />
+                        <Border
+                            Grid.Column="2"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            Style="{StaticResource IconStatusPillStyle}">
+                            <TextBlock
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentColor}"
+                                Text="{Binding ValueCount}" />
+                        </Border>
+                        <StackPanel
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Click="BtnMockListUp_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Settings_MoveUpCategoriesHigher}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="ChevronUp" />
+                            </Button>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Margin="2,0"
+                                Click="BtnMockListDown_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Settings_MoveDown}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="ChevronDown" />
+                            </Button>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Click="BtnRemoveMockList_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Settings_RemoveThisMockList}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Foreground="{DynamicResource StatusErrorFg}"
+                                    Kind="DeleteOutline" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  Value chips + add box  -->
+                    <WrapPanel Grid.Row="1" Margin="40,10,0,0">
+                        <ItemsControl Focusable="False" ItemsSource="{Binding ValueList}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        Margin="0,0,6,6"
+                                        Padding="9,3,3,3"
+                                        Background="{DynamicResource CardBg}"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="12">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{Binding}" />
+                                            <Button
+                                                Width="20"
+                                                Height="20"
+                                                Margin="4,0,0,0"
+                                                Click="BtnRemoveMockValue_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                Tag="{Binding}"
+                                                ToolTip="{DynamicResource Str_Settings_RemoveThisValue}">
+                                                <materialDesign:PackIcon
+                                                    Width="11"
+                                                    Height="11"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border
+                            Width="190"
+                            Height="28"
+                            Margin="0,0,0,6"
+                            Padding="8,0"
+                            Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Kind="Plus" />
+                                <TextBox
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    KeyDown="NewMockValue_KeyDown"
+                                    LostFocus="NewMockValue_LostFocus"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="{DynamicResource Str_Settings_AddValuesHint}"
+                                    ToolTip="{DynamicResource Str_Settings_AddValuesTooltip}" />
+                            </Grid>
+                        </Border>
+                    </WrapPanel>
+
+                    <!--  Empty-list / name warning  -->
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="40,4,0,0"
+                        Orientation="Horizontal"
+                        Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}">
+                        <materialDesign:PackIcon
+                            Width="13"
+                            Height="13"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Kind="AlertOutline" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Text="{Binding Warning}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  One category card  -->
+        <DataTemplate x:Key="CategoryTemplate" DataType="{x:Type modules:FileCategory}">
+            <Border
+                Margin="0,0,0,10"
+                Padding="12"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MaxWidth="260" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="30"
+                            Height="30"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="8">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="TagOutline" />
+                        </Border>
+                        <TextBox
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            LostFocus="CategoryName_LostFocus"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="CategoryName_TextChanged"
+                            ToolTip="{DynamicResource Str_Settings_FolderNameOrganizeFiles}" />
+                        <Border
+                            Grid.Column="2"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            Style="{StaticResource IconStatusPillStyle}">
+                            <TextBlock
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentColor}"
+                                Text="{Binding ExtensionCount}" />
+                        </Border>
+                        <StackPanel
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Click="BtnCategoryUp_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Settings_MoveUpCategoriesHigher}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="ChevronUp" />
+                            </Button>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Margin="2,0"
+                                Click="BtnCategoryDown_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Settings_MoveDown}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="ChevronDown" />
+                            </Button>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Click="BtnRemoveCategory_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Settings_RemoveThisCategory}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Foreground="{DynamicResource StatusErrorFg}"
+                                    Kind="DeleteOutline" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  Extension chips + add box  -->
+                    <WrapPanel Grid.Row="1" Margin="40,10,0,0">
+                        <ItemsControl Focusable="False" ItemsSource="{Binding ExtensionList}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        Margin="0,0,6,6"
+                                        Padding="9,3,3,3"
+                                        Background="{DynamicResource CardBg}"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="12">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{Binding}" />
+                                            <Button
+                                                Width="20"
+                                                Height="20"
+                                                Margin="4,0,0,0"
+                                                Click="BtnRemoveExtension_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                Tag="{Binding}"
+                                                ToolTip="{DynamicResource Str_Settings_RemoveThisExtension}">
+                                                <materialDesign:PackIcon
+                                                    Width="11"
+                                                    Height="11"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border
+                            Width="170"
+                            Height="28"
+                            Margin="0,0,0,6"
+                            Padding="8,0"
+                            Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Kind="Plus" />
+                                <TextBox
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas"
+                                    FontSize="12"
+                                    KeyDown="NewExtension_KeyDown"
+                                    LostFocus="NewExtension_LostFocus"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="add: png jpg"
+                                    TextChanged="NewExtension_TextChanged"
+                                    ToolTip="{DynamicResource Str_Settings_TypeOneOrMore}" />
+                            </Grid>
+                        </Border>
+                    </WrapPanel>
+
+                    <!--  Overlap / empty warning  -->
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="40,4,0,0"
+                        Orientation="Horizontal"
+                        Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}">
+                        <materialDesign:PackIcon
+                            Width="13"
+                            Height="13"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Kind="AlertOutline" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Text="{Binding Warning}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  One saved pattern  -->
+        <DataTemplate x:Key="PatternTemplate" DataType="{x:Type modules:SavedSearchPattern}">
+            <Border
+                Margin="0,0,0,10"
+                Padding="12"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            LostFocus="AutoSave_LostFocus"
+                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{DynamicResource Str_Settings_NameShownAsA}" />
+                        <TextBox
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            FontFamily="Consolas"
+                            LostFocus="AutoSave_LostFocus"
+                            Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="PatternText_TextChanged"
+                            ToolTip="{DynamicResource Str_Settings_TheRegularExpressionOr}" />
+                        <ComboBox
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            SelectedValue="{Binding Type, Mode=TwoWay}"
+                            SelectedValuePath="Tag"
+                            SelectionChanged="PatternType_SelectionChanged"
+                            ToolTip="{DynamicResource Str_Settings_RegexMatchesAnywhereIn}">
+                            <ComboBoxItem Tag="Regex">Regex</ComboBoxItem>
+                            <ComboBoxItem Tag="Wildcard">Wildcard</ComboBoxItem>
+                        </ComboBox>
+                        <Border
+                            Grid.Column="5"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource StatusInfoBg}"
+                            Style="{StaticResource IconStatusPillStyle}"
+                            ToolTip="{DynamicResource Str_Settings_MatchesInTheTest}"
+                            Visibility="{Binding HasTestResult, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="12"
+                                    Height="12"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource StatusInfoFg}"
+                                    Kind="TestTube" />
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusInfoFg}"
+                                    Text="{Binding TestResult}" />
+                            </StackPanel>
+                        </Border>
+                        <Button
+                            Grid.Column="6"
+                            Width="28"
+                            Height="28"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRemovePattern_Click"
+                            Style="{StaticResource IconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Settings_RemoveThisPattern}">
+                            <materialDesign:PackIcon
+                                Width="15"
+                                Height="15"
+                                Foreground="{DynamicResource StatusErrorFg}"
+                                Kind="DeleteOutline" />
+                        </Button>
+                    </Grid>
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="180,6,0,0"
+                        Orientation="Horizontal"
+                        Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+                        <materialDesign:PackIcon
+                            Width="13"
+                            Height="13"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusErrorFg}"
+                            Kind="AlertOutline" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusErrorFg}"
+                            Text="{Binding Error}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Settings_SectionsTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel
+                                x:Name="CollapseHeaderStack"
+                                Margin="16,0,0,0"
+                                Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Settings_SectionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="SidebarContent" Margin="12,4,12,16">
+
+                            <RadioButton
+                                x:Name="BtnNavGeneral"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                IsChecked="True"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="General"
+                                ToolTip="{DynamicResource Str_Settings_NavGeneral}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="Cog" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="LblNavGeneral"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavGeneral}" TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavCategories"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="Categories"
+                                ToolTip="{DynamicResource Str_Settings_NavCategories}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="TagMultiple" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="LblNavCategories"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavCategories}" TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavPatterns"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="Patterns"
+                                ToolTip="{DynamicResource Str_Settings_NavPatterns}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="Regex" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="LblNavPatterns"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavPatterns}" TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavMockData"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="MockData"
+                                ToolTip="{DynamicResource Str_Settings_NavMockData}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="DatabaseEdit" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="LblNavMockData"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavMockData}" TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavEventDays"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="EventDays"
+                                ToolTip="{DynamicResource Str_Settings_NavEventDays}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="CalendarStar" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="LblNavEventDays"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavEventDays}" TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavShortcuts"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="Shortcuts"
+                                ToolTip="{DynamicResource Str_Settings_NavShortcuts}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="KeyboardOutline" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="LblNavShortcuts"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavShortcuts}" TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavVault"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="Vault"
+                                ToolTip="{DynamicResource Str_Settings_NavVault}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="ShieldKeyOutline" />
+                                    <TextBlock
+                                        x:Name="LblNavVault"
+                                        Grid.Column="1"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavVault}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavClipboard"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="Clipboard"
+                                ToolTip="{DynamicResource Str_Settings_NavClipboard}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="ClipboardTextClockOutline" />
+                                    <TextBlock
+                                        x:Name="LblNavClipboard"
+                                        Grid.Column="1"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavClipboard}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavTextRecognition"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="TextRecognition"
+                                ToolTip="{DynamicResource Str_Settings_NavTextRecognition}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="TextRecognition" />
+                                    <TextBlock
+                                        x:Name="LblNavTextRecognition"
+                                        Grid.Column="1"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavTextRecognition}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="BtnNavTranslate"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="Translate"
+                                ToolTip="{DynamicResource Str_Settings_NavTranslate}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="Translate" />
+                                    <TextBlock
+                                        x:Name="LblNavTranslate"
+                                        Grid.Column="1"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavTranslate}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= SECTIONS =================  -->
+
+            <ScrollViewer
+                x:Name="ContentScroller"
+                Grid.Column="2"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <Grid>
+
+                    <!--  ============ General ============  -->
+                    <StackPanel x:Name="PanelGeneral">
+                        <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Margin="0,0,0,12"
+                                    Content="{DynamicResource Str_Settings_SettingsFile}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.FileCogOutline}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock
+                                            FontSize="12.5"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_Settings_WhereSettingsLive}" />
+                                        <TextBlock
+                                            x:Name="TxtSettingsPath"
+                                            Margin="0,2,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button
+                                        x:Name="BtnOpenSettingsFolder"
+                                        Grid.Column="1"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Click="BtnOpenSettingsFolder_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Settings_OpenTheFolderWith}">
+                                        <Grid HorizontalAlignment="Center" Margin="8,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FolderOpenOutline" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Text="{DynamicResource Str_FileConverter_OpenFolder}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                                <Border
+                                    x:Name="LoadProblemBanner"
+                                    Margin="0,12,0,0"
+                                    Padding="10,8"
+                                    Background="{DynamicResource StatusWarningBg}"
+                                    CornerRadius="8"
+                                    Visibility="Collapsed">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="14"
+                                            Height="14"
+                                            Margin="0,1,8,0"
+                                            VerticalAlignment="Top"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Kind="AlertOutline" />
+                                        <TextBlock
+                                            x:Name="TxtLoadProblem"
+                                            Grid.Column="1"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Settings_GeneralTitle}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ThemeLightDark}" />
+                                    <Border
+                                        x:Name="SavedPill"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource StatusSuccessBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Kind="CheckCircleOutline" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Text="{DynamicResource Str_Settings_Saved}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                                <TextBlock
+                                    Margin="0,0,0,16"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Settings_GeneralSubtitle}"
+                                    TextWrapping="Wrap" />
+
+                                <TextBlock
+                                    Margin="0,0,0,8"
+                                    Style="{StaticResource FieldLabel}"
+                                    Text="{DynamicResource Str_Settings_Theme}" />
+                                <UniformGrid
+                                    x:Name="ThemeChoices"
+                                    MaxWidth="520"
+                                    HorizontalAlignment="Left"
+                                    Columns="3"
+                                    ToolTip="{DynamicResource Str_Settings_ThemeTooltip}">
+                                    <!--  Swatches are fixed colours on purpose: they picture each theme.  -->
+                                    <RadioButton
+                                        Margin="0,0,8,0"
+                                        Click="RadioTheme_Click"
+                                        GroupName="Theme"
+                                        Style="{StaticResource ChoiceTileStyle}"
+                                        Tag="Light">
+                                        <StackPanel>
+                                            <Border
+                                                Width="120"
+                                                Height="56"
+                                                Background="#F4F6FA"
+                                                BorderBrush="#D9DEE7"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                                <StackPanel Margin="8">
+                                                    <Border
+                                                        Height="8"
+                                                        Background="#FFFFFF"
+                                                        CornerRadius="3" />
+                                                    <Border
+                                                        Width="60"
+                                                        Height="6"
+                                                        Margin="0,6,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="#C9D0DC"
+                                                        CornerRadius="3" />
+                                                    <Border
+                                                        Width="36"
+                                                        Height="6"
+                                                        Margin="0,4,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="#4C8DFF"
+                                                        CornerRadius="3" />
+                                                </StackPanel>
+                                            </Border>
+                                            <StackPanel
+                                                Margin="0,8,0,0"
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="WhiteBalanceSunny" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_PdfToolkit_Light}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton
+                                        Margin="4,0"
+                                        Click="RadioTheme_Click"
+                                        GroupName="Theme"
+                                        Style="{StaticResource ChoiceTileStyle}"
+                                        Tag="Dark">
+                                        <StackPanel>
+                                            <Border
+                                                Width="120"
+                                                Height="56"
+                                                Background="#1B1E24"
+                                                BorderBrush="#2E333C"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                                <StackPanel Margin="8">
+                                                    <Border
+                                                        Height="8"
+                                                        Background="#262A32"
+                                                        CornerRadius="3" />
+                                                    <Border
+                                                        Width="60"
+                                                        Height="6"
+                                                        Margin="0,6,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="#3A404B"
+                                                        CornerRadius="3" />
+                                                    <Border
+                                                        Width="36"
+                                                        Height="6"
+                                                        Margin="0,4,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="#6EA4FF"
+                                                        CornerRadius="3" />
+                                                </StackPanel>
+                                            </Border>
+                                            <StackPanel
+                                                Margin="0,8,0,0"
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="WeatherNight" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Settings_Dark}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton
+                                        Margin="8,0,0,0"
+                                        Click="RadioTheme_Click"
+                                        GroupName="Theme"
+                                        Style="{StaticResource ChoiceTileStyle}"
+                                        Tag="Match System">
+                                        <StackPanel>
+                                            <Grid Width="120" Height="56">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    Background="#F4F6FA"
+                                                    BorderBrush="#D9DEE7"
+                                                    BorderThickness="1,1,0,1"
+                                                    CornerRadius="8,0,0,8" />
+                                                <Border
+                                                    Grid.Column="1"
+                                                    Background="#1B1E24"
+                                                    BorderBrush="#2E333C"
+                                                    BorderThickness="0,1,1,1"
+                                                    CornerRadius="0,8,8,0" />
+                                            </Grid>
+                                            <StackPanel
+                                                Margin="0,8,0,0"
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ThemeLightDark" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Settings_System}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </UniformGrid>
+
+                                <TextBlock
+                                    Margin="0,18,0,8"
+                                    Style="{StaticResource FieldLabel}"
+                                    Text="{DynamicResource Str_Settings_Language}" />
+                                <UniformGrid
+                                    x:Name="LanguageChoices"
+                                    Width="260"
+                                    HorizontalAlignment="Left"
+                                    Columns="2"
+                                    ToolTip="{DynamicResource Str_Settings_LanguageTooltip}">
+                                    <RadioButton
+                                        Margin="0,0,4,0"
+                                        Click="RadioLanguage_Click"
+                                        GroupName="Language"
+                                        Style="{StaticResource ChoiceTileStyle}"
+                                        Tag="en">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Translate" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Settings_English}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </RadioButton>
+                                    <RadioButton
+                                        Margin="4,0,0,0"
+                                        Click="RadioLanguage_Click"
+                                        GroupName="Language"
+                                        Style="{StaticResource ChoiceTileStyle}"
+                                        Tag="es">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Translate" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Settings_EspaOl}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </RadioButton>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Margin="0,0,0,12"
+                                    Content="{DynamicResource Str_CodeToolkit_Behaviour}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.BellOutline}" />
+                                <CheckBox
+                                    x:Name="ChkConfirmDelete"
+                                    Checked="Behaviour_Changed"
+                                    Content="{DynamicResource Str_Settings_ConfirmDelete}"
+                                    ToolTip="{DynamicResource Str_Settings_ConfirmDeleteTooltip}"
+                                    Unchecked="Behaviour_Changed" />
+                                <CheckBox
+                                    x:Name="ChkShowNotifications"
+                                    Checked="Behaviour_Changed"
+                                    Content="{DynamicResource Str_Settings_ShowNotifications}"
+                                    ToolTip="{DynamicResource Str_Settings_ShowNotificationsTooltip}"
+                                    Unchecked="Behaviour_Changed" />
+                                <CheckBox
+                                    x:Name="ChkTrackActiveTool"
+                                    Checked="Behaviour_Changed"
+                                    Content="{DynamicResource Str_Settings_TrackActiveTool}"
+                                    ToolTip="{DynamicResource Str_Settings_TrackActiveToolTooltip}"
+                                    Unchecked="Behaviour_Changed" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Margin="0,0,0,12"
+                                    Content="{DynamicResource Str_Settings_BackgroundHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.TrayFull}" />
+                                <CheckBox
+                                    x:Name="ChkCloseToTray"
+                                    Click="ChkCloseToTray_Click"
+                                    Content="{DynamicResource Str_Shortcuts_CloseToTray}"
+                                    ToolTip="{DynamicResource Str_Shortcuts_CloseToTrayTip}" />
+                                <CheckBox
+                                    x:Name="ChkStartWithWindows"
+                                    Click="ChkStartWithWindows_Click"
+                                    Content="{DynamicResource Str_Shortcuts_StartWithWindows}"
+                                    ToolTip="{DynamicResource Str_Shortcuts_StartWithWindowsTip}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!--  ============ Categories ============  -->
+                    <Border
+                        x:Name="PanelCategories"
+                        Style="{StaticResource CardStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border
+                                Margin="0,0,0,12"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Settings_SearchLabel}" />
+                                    <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtCategorySearch"
+                                            MinHeight="34"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Settings_SearchCategories}"
+                                            TextChanged="ListSearch_TextChanged" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Settings_NavCategories}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.TagMultiple}" />
+                                <Button
+                                    x:Name="BtnResetCategories"
+                                    Grid.Column="1"
+                                    Click="BtnResetCategories_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Settings_PutBackTheSix}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Restore" />
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                Margin="0,4,0,14"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_OrganizeFilesCategoryRule}"
+                                TextWrapping="Wrap" />
+
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MaxWidth="360" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                    <TextBox
+                                        x:Name="TxtNewCategoryName"
+                                        MinHeight="34"
+                                        VerticalContentAlignment="Center"
+                                        KeyDown="TxtNewCategoryName_KeyDown"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="New category name, e.g. RAW photos"
+                                        TextChanged="TxtNewCategoryName_TextChanged" />
+                                </Border>
+                                <Button
+                                    x:Name="BtnAddCategory"
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    Click="BtnAddCategory_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Settings_AddTheCategoryThen}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Plus" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Settings_AddCategory}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                x:Name="TxtNewCategoryHint"
+                                Margin="2,0,0,12"
+                                FontSize="11"
+                                Foreground="{DynamicResource StatusWarningFg}"
+                                Visibility="Collapsed" />
+
+                            <ItemsControl
+                                x:Name="CategoriesList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource CategoryTemplate}" />
+
+                            <TextBlock
+                                x:Name="CategoriesNoMatch"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_NoMatches}"
+                                Visibility="Collapsed" />
+
+                            <StackPanel
+                                x:Name="CategoriesEmpty"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                Visibility="Collapsed">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TagOutline}" />
+                                <TextBlock
+                                    Margin="0,10,0,0"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Settings_NoCategoriesAddOne}"
+                                    TextAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ============ Password vault ============  -->
+                    <Border
+                        x:Name="PanelVault"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Settings_VaultLocking}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.TimerLockOutline}" />
+                                    <TextBlock
+                                        Margin="0,4,0,14"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Settings_VaultIntro}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vault_AutoLockAfter}" />
+                                    <ComboBox
+                                        x:Name="CmbVaultAutoLock"
+                                        MaxWidth="240"
+                                        Margin="0,4,0,12"
+                                        HorizontalAlignment="Left"
+                                        SelectionChanged="CmbVaultAutoLock_SelectionChanged" />
+                                    <CheckBox
+                                        x:Name="ChkVaultLockMinimize"
+                                        Click="ChkVaultLockMinimize_Click"
+                                        Content="{DynamicResource Str_Vault_LockOnMinimize}" />
+                                    <CheckBox
+                                        x:Name="ChkVaultLockSession"
+                                        Margin="0,8,0,0"
+                                        Click="ChkVaultLockSession_Click"
+                                        Content="{DynamicResource Str_Vault_LockOnSession}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Settings_VaultClipboard}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ClipboardOutline}" />
+                                    <TextBlock
+                                        Margin="0,4,0,14"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Settings_VaultClipboardHint}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vault_ClipboardClear}" />
+                                    <ComboBox
+                                        x:Name="CmbVaultClipboard"
+                                        MaxWidth="240"
+                                        Margin="0,4,0,0"
+                                        HorizontalAlignment="Left"
+                                        SelectionChanged="CmbVaultClipboard_SelectionChanged" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ============ Clipboard history ============  -->
+                    <views:ClipboardSettingsPanel x:Name="PanelClipboard" Visibility="Collapsed" />
+
+                    <!--  ============ Text recognition ============  -->
+                    <views:TextRecognitionSettingsPanel x:Name="PanelTextRecognition" Visibility="Collapsed" />
+
+                    <!--  ============ Translation languages ============  -->
+                    <views:TranslateSettingsPanel x:Name="PanelTranslate" Visibility="Collapsed" />
+
+                    <!--  ============ Keyboard shortcuts ============  -->
+                    <Border
+                        x:Name="PanelShortcuts"
+                        Style="{StaticResource CardStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border
+                                Margin="0,0,0,12"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Settings_SearchLabel}" />
+                                    <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtShortcutSearch"
+                                            MinHeight="34"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Shortcuts_SearchHint}"
+                                            TextChanged="TxtShortcutSearch_TextChanged" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Shortcuts_Title}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.KeyboardOutline}" />
+                                <Button
+                                    Grid.Column="1"
+                                    Click="BtnResetShortcuts_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Shortcuts_ResetAllTip}">
+                                    <Grid HorizontalAlignment="Center" Margin="8,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Restore" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Text="{DynamicResource Str_Shortcuts_ResetAll}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                Margin="0,4,0,14"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Shortcuts_Intro}"
+                                TextWrapping="Wrap" />
+
+                            <CheckBox
+                                x:Name="ChkGlobalHotkeys"
+                                Margin="0,0,0,8"
+                                Click="ChkGlobalHotkeys_Click"
+                                Content="{DynamicResource Str_Shortcuts_GlobalSwitch}"
+                                ToolTip="{DynamicResource Str_Shortcuts_GlobalSwitchTip}" />
+
+                            <TextBlock
+                                x:Name="TxtShortcutError"
+                                Margin="0,0,0,8"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource StatusWarningFg}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+
+                            <ItemsControl x:Name="ShortcutsList" Focusable="False">
+                                <ItemsControl.GroupStyle>
+                                    <GroupStyle>
+                                        <GroupStyle.HeaderTemplate>
+                                            <DataTemplate>
+                                                <TextBlock
+                                                    Margin="0,14,0,6"
+                                                    Style="{StaticResource FieldLabel}"
+                                                    Text="{Binding Name}" />
+                                            </DataTemplate>
+                                        </GroupStyle.HeaderTemplate>
+                                    </GroupStyle>
+                                </ItemsControl.GroupStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border
+                                            Margin="0,0,0,6"
+                                            Padding="12,8"
+                                            BorderBrush="{DynamicResource CardBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="34" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding Title}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock
+                                                        Margin="0,2,0,0"
+                                                        FontSize="11.5"
+                                                        Foreground="{DynamicResource StatusWarningFg}"
+                                                        Text="{Binding Warning, Converter={StaticResource ShortcutWarning}}"
+                                                        TextWrapping="Wrap"
+                                                        Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}" />
+                                                </StackPanel>
+                                                <controls:KeyRecorderBox
+                                                    Grid.Column="1"
+                                                    Width="170"
+                                                    Margin="10,0"
+                                                    FontFamily="Consolas"
+                                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Shortcuts_ClickToSet}" />
+                                                <CheckBox
+                                                    Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    Click="ShortcutEnabled_Click"
+                                                    IsChecked="{Binding Enabled, Mode=OneWay}"
+                                                    ToolTip="{DynamicResource Str_Shortcuts_EnabledTip}" />
+                                                <Button
+                                                    Grid.Column="3"
+                                                    Width="28"
+                                                    Margin="6,0,0,0"
+                                                    Padding="0"
+                                                    Click="BtnResetShortcut_Click"
+                                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Shortcuts_ResetOne}"
+                                                    Visibility="{Binding IsModified, Converter={StaticResource BoolToVisibility}}">
+                                                    <materialDesign:PackIcon
+                                                        Width="15"
+                                                        Height="15"
+                                                        Kind="Restore" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock
+                                x:Name="ShortcutsEmpty"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Shortcuts_NoMatches}"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ============ Event days ============  -->
+                    <Border
+                        x:Name="PanelEventDays"
+                        Style="{StaticResource CardStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border
+                                Margin="0,0,0,12"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Settings_SearchLabel}" />
+                                    <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtEventDaySearch"
+                                            MinHeight="34"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Settings_SearchEventDays}"
+                                            TextChanged="ListSearch_TextChanged" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Settings_NavEventDays}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.CalendarStar}" />
+                                <Button
+                                    Grid.Column="1"
+                                    Click="BtnResetEventDays_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Settings_PutBackEventDays}">
+                                    <Grid HorizontalAlignment="Center" Margin="8,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Restore" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Text="{DynamicResource Str_Common_Reset}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                Margin="0,4,0,14"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_EventDaysIntro}"
+                                TextWrapping="Wrap" />
+
+                            <!--  New event day  -->
+                            <Border
+                                Margin="0,0,0,14"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="150" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtNewEventName"
+                                                MinHeight="34"
+                                                VerticalContentAlignment="Center"
+                                                KeyDown="NewEvent_KeyDown"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="{DynamicResource Str_Settings_NewEventNameHint}"
+                                                TextChanged="NewEvent_Changed" />
+                                        </Border>
+                                        <Border
+                                            Grid.Column="2"
+                                            Padding="10,0"
+                                            Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtNewEventDate"
+                                                MinHeight="34"
+                                                VerticalContentAlignment="Center"
+                                                FontFamily="Consolas"
+                                                KeyDown="NewEvent_KeyDown"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="yyyy-MM-dd"
+                                                TextChanged="NewEvent_Changed" />
+                                        </Border>
+                                    </Grid>
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <CheckBox
+                                                x:Name="ChkNewEventRepeats"
+                                                VerticalAlignment="Center"
+                                                Content="{DynamicResource Str_Settings_EveryYear}"
+                                                IsChecked="True"
+                                                ToolTip="{DynamicResource Str_Settings_EveryYearTooltip}" />
+                                            <CheckBox
+                                                x:Name="ChkNewEventNonWorking"
+                                                Margin="18,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Content="{DynamicResource Str_Settings_NonWorkingDay}"
+                                                IsChecked="True"
+                                                ToolTip="{DynamicResource Str_Settings_NonWorkingTooltip}" />
+                                            <TextBlock
+                                                x:Name="TxtNewEventHint"
+                                                Margin="18,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Visibility="Collapsed" />
+                                        </StackPanel>
+                                        <Button
+                                            x:Name="BtnAddEvent"
+                                            Grid.Column="1"
+                                            Click="BtnAddEvent_Click"
+                                            IsEnabled="False"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Settings_AddTheEventTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Plus" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Settings_AddEvent}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <ItemsControl
+                                x:Name="EventDaysList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource EventDayTemplate}" />
+
+                            <TextBlock
+                                x:Name="EventDaysNoMatch"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_NoMatches}"
+                                Visibility="Collapsed" />
+
+                            <StackPanel
+                                x:Name="EventDaysEmpty"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                Visibility="Collapsed">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CalendarStar}" />
+                                <TextBlock
+                                    Margin="0,10,0,0"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Settings_NoEventDaysAddOne}"
+                                    TextAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ============ Mock data lists ============  -->
+                    <Border
+                        x:Name="PanelMockData"
+                        Style="{StaticResource CardStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border
+                                Margin="0,0,0,12"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Settings_SearchLabel}" />
+                                    <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtMockListSearch"
+                                            MinHeight="34"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Settings_SearchMockLists}"
+                                            TextChanged="ListSearch_TextChanged" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Settings_NavMockData}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.DatabaseEdit}" />
+                                <Button
+                                    x:Name="BtnResetMockLists"
+                                    Grid.Column="1"
+                                    Click="BtnResetMockLists_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Settings_PutBackMockLists}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Restore" />
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                Margin="0,4,0,14"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_MockListsIntro}"
+                                TextWrapping="Wrap" />
+
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MaxWidth="360" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                    <TextBox
+                                        x:Name="TxtNewMockListName"
+                                        MinHeight="34"
+                                        VerticalContentAlignment="Center"
+                                        KeyDown="TxtNewMockListName_KeyDown"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="{DynamicResource Str_Settings_NewListNameHint}"
+                                        TextChanged="TxtNewMockListName_TextChanged" />
+                                </Border>
+                                <Button
+                                    x:Name="BtnAddMockList"
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    Click="BtnAddMockList_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Settings_AddTheListThen}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Plus" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Settings_AddList}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                x:Name="TxtNewMockListHint"
+                                Margin="2,0,0,12"
+                                FontSize="11"
+                                Foreground="{DynamicResource StatusWarningFg}"
+                                Visibility="Collapsed" />
+
+                            <ItemsControl
+                                x:Name="MockListsList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource MockListTemplate}" />
+
+                            <TextBlock
+                                x:Name="MockListsNoMatch"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_NoMatches}"
+                                Visibility="Collapsed" />
+
+                            <StackPanel
+                                x:Name="MockListsEmpty"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                Visibility="Collapsed">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                                <TextBlock
+                                    Margin="0,10,0,0"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Settings_NoMockListsAddOne}"
+                                    TextAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ============ Patterns ============  -->
+                    <Border
+                        x:Name="PanelPatterns"
+                        Style="{StaticResource CardStyle}"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border
+                                Margin="0,0,0,12"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Settings_SearchLabel}" />
+                                    <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtPatternSearch"
+                                            MinHeight="34"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Settings_SearchPatterns}"
+                                            TextChanged="ListSearch_TextChanged" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Settings_NavPatterns}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.Regex}" />
+                                <Button
+                                    x:Name="BtnResetPatterns"
+                                    Grid.Column="1"
+                                    Click="BtnResetPatterns_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Settings_PutBackTheBuilt}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Restore" />
+                                </Button>
+                            </Grid>
+                            <TextBlock
+                                Margin="0,4,0,4"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_QuickPicksInFile}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,0,0,14"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_PatternSegmentsHint}"
+                                TextWrapping="Wrap" />
+
+                            <!--  New pattern  -->
+                            <Border
+                                Margin="0,0,0,14"
+                                Padding="12"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Padding="10,0" Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtNewPatternName"
+                                                MinHeight="34"
+                                                VerticalContentAlignment="Center"
+                                                KeyDown="NewPattern_KeyDown"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="Name"
+                                                TextChanged="NewPattern_Changed" />
+                                        </Border>
+                                        <Border
+                                            Grid.Column="2"
+                                            Padding="10,0"
+                                            Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtNewPatternText"
+                                                MinHeight="34"
+                                                VerticalContentAlignment="Center"
+                                                FontFamily="Consolas"
+                                                KeyDown="NewPattern_KeyDown"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="Pattern, e.g. INV-\d{6} or *.log"
+                                                TextChanged="NewPattern_Changed" />
+                                        </Border>
+                                        <UniformGrid
+                                            x:Name="NewPatternTypeChoices"
+                                            Grid.Column="4"
+                                            Width="180"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioNewRegex"
+                                                Margin="0,0,3,0"
+                                                Padding="8,7"
+                                                Click="NewPatternType_Click"
+                                                Content="{DynamicResource Str_Log_RegexCheckbox}"
+                                                GroupName="NewPatternType"
+                                                IsChecked="True"
+                                                Style="{StaticResource ChoiceTileStyle}"
+                                                Tag="Regex" />
+                                            <RadioButton
+                                                x:Name="RadioNewWildcard"
+                                                Margin="3,0,0,0"
+                                                Padding="8,7"
+                                                Click="NewPatternType_Click"
+                                                Content="{DynamicResource Str_SearchFile_Wildcard}"
+                                                GroupName="NewPatternType"
+                                                Style="{StaticResource ChoiceTileStyle}"
+                                                Tag="Wildcard" />
+                                        </UniformGrid>
+                                    </Grid>
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconNewPatternState"
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Kind="InformationOutline" />
+                                            <TextBlock
+                                                x:Name="TxtNewPatternValidation"
+                                                VerticalAlignment="Center"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_Settings_GiveItAName}"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <Button
+                                            x:Name="BtnAddPattern"
+                                            Grid.Column="1"
+                                            Click="BtnAddPattern_Click"
+                                            IsEnabled="False"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Settings_SaveThisPattern}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Plus" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Settings_AddPattern}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  Try them  -->
+                            <TextBlock
+                                Margin="0,0,0,6"
+                                Style="{StaticResource FieldLabel}"
+                                Text="{DynamicResource Str_Settings_TryYourPatterns}" />
+                            <Border
+                                Margin="0,0,0,14"
+                                Padding="10,6"
+                                Style="{StaticResource InputBarStyle}">
+                                <TextBox
+                                    x:Name="TxtPatternTest"
+                                    MinHeight="54"
+                                    MaxHeight="120"
+                                    AcceptsReturn="True"
+                                    FontFamily="Consolas"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="Paste some text (or file names, one per line) to see what each pattern finds"
+                                    TextChanged="TxtPatternTest_TextChanged"
+                                    TextWrapping="Wrap"
+                                    VerticalScrollBarVisibility="Auto" />
+                            </Border>
+
+                            <ItemsControl
+                                x:Name="PatternsList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource PatternTemplate}" />
+
+                            <TextBlock
+                                x:Name="PatternsNoMatch"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Settings_NoMatches}"
+                                Visibility="Collapsed" />
+
+                            <StackPanel
+                                x:Name="PatternsEmpty"
+                                Margin="0,24"
+                                HorizontalAlignment="Center"
+                                Visibility="Collapsed">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.Regex}" />
+                                <TextBlock
+                                    Margin="0,10,0,0"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Settings_NoSavedPatternsAdd}"
+                                    TextAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

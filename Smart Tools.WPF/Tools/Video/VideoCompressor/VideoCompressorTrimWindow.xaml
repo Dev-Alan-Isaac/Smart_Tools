@@ -1,0 +1,42 @@
+<Window
+    x:Class="Smart_Tools.WPF.Views.VideoCompressorTrimWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    Background="{DynamicResource ContentBg}"
+    ResizeMode="CanResize"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner">
+
+    <!--
+        Trim one video: a large dialog (about 85% of the screen's work area, sized in code) so the picture and the timeline have room
+        on a laptop. The editor applies every change at once; Cancel puts back what the item had when the window opened.
+    -->
+
+    <Grid Margin="18,16,18,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <controls:VideoCompressorTrimEditor x:Name="Editor" />
+
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,16,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Margin="0,0,8,0"
+                Click="BtnCancel_Click"
+                Content="{DynamicResource Str_Common_Cancel}"
+                IsCancel="True"
+                Style="{StaticResource ListToolButtonStyle}" />
+            <Button
+                Click="BtnDone_Click"
+                Content="{DynamicResource Str_Vc_TrimDone}"
+                IsDefault="True"
+                Style="{StaticResource PrimaryButtonStyle}" />
+        </StackPanel>
+    </Grid>
+</Window>

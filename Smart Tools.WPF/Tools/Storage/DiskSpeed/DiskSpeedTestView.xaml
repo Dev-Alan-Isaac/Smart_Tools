@@ -1,0 +1,859 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.DiskSpeedTestView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/DiskSpeedTestManager.cs and
+        Models/DiskSpeedTestModel.cs. Code-behind only wires controls.
+        Look & feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs.
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  Thin rounded meter (speed tiles, history rows)  -->
+
+        <!--  Big number on a speed tile  -->
+        <Style x:Key="SpeedValueText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="34" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="RenderTransformOrigin" Value="0,0.5" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  One history row  -->
+        <DataTemplate x:Key="HistoryItemTemplate" DataType="{x:Type models:DiskSpeedTestResult}">
+            <StackPanel Margin="2,2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding TargetDisplay}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding TargetDisplay}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding TimestampDisplay}" />
+                </Grid>
+
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="86" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <materialDesign:PackIcon
+                        Width="12"
+                        Height="12"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="ArrowUpBold"
+                        ToolTip="{DynamicResource Str_DiskSpeed_WriteLabel}" />
+                    <ProgressBar
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource MeterBarStyle}"
+                        Value="{Binding WriteBarPercent, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding WriteDisplay}"
+                        TextAlignment="Right" />
+
+                    <materialDesign:PackIcon
+                        Grid.Row="2"
+                        Width="12"
+                        Height="12"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusInfoFg}"
+                        Kind="ArrowDownBold"
+                        ToolTip="{DynamicResource Str_DiskSpeed_ReadLabel}" />
+                    <ProgressBar
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusInfoFg}"
+                        Style="{StaticResource MeterBarStyle}"
+                        Value="{Binding ReadBarPercent, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="2"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding ReadDisplay}"
+                        TextAlignment="Right" />
+                </Grid>
+
+                <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding SizeDisplay}" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text=" · " />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding TierLabel}" />
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ TARGET ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DiskSpeed_Target" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DiskSpeed_TargetHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Harddisk}" />
+
+                                    <ComboBox
+                                        x:Name="CmbDrive"
+                                        DisplayMemberPath="DisplayName"
+                                        SelectionChanged="CmbDrive_SelectionChanged"
+                                        ToolTip="{DynamicResource Str_DiskSpeed_DriveTooltip}" />
+
+
+                                    <!--  Live check: free space, fallback folder, or why it can't run  -->
+                                    <Border
+                                        x:Name="TargetCheckPanel"
+                                        Margin="0,10,0,0"
+                                        Padding="10,8"
+                                        Background="{DynamicResource SidebarSubPanelBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                x:Name="IconTargetCheck"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,1,8,0"
+                                                VerticalAlignment="Top"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Kind="CheckCircleOutline" />
+                                            <TextBlock
+                                                x:Name="TxtTargetCheck"
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ TARGET FOLDER (a chosen folder wins over the drive picker) ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                FolderChanged="InputCard_FolderChanged"
+                                Header="{DynamicResource Str_DiskSpeed_TargetFolderLabel}"
+                                HeaderIcon="FolderOutline"
+                                Mode="SingleFolder"
+                                ShowSubfolders="False" />
+
+                            <!--  ============ TEST SIZE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DiskSpeed_Size" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DiskSpeed_TestSizeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileCog}" />
+                                    <Grid ToolTip="{DynamicResource Str_DiskSpeed_TestSizeTooltip}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Option: Full Width (100 MB)  -->
+                                        <RadioButton
+                                            x:Name="RadioSize100"
+                                            Grid.Row="0"
+                                            Margin="0,0,0,2"
+                                            Checked="RadioTestSize_Checked"
+                                            Content="100 MB"
+                                            GroupName="TestSize"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="104857600" />
+
+                                        <!--  Middle Options: 1x2 Grid (500 MB & 1 GB)  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,2"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioSize500"
+                                                Margin="0,0,2,0"
+                                                Checked="RadioTestSize_Checked"
+                                                Content="500 MB"
+                                                GroupName="TestSize"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="524288000" />
+                                            <RadioButton
+                                                x:Name="RadioSize1G"
+                                                Margin="2,0,0,0"
+                                                Checked="RadioTestSize_Checked"
+                                                Content="1 GB"
+                                                GroupName="TestSize"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="1073741824" />
+                                        </UniformGrid>
+
+                                        <!--  Last Option: Full Width (2 GB)  -->
+                                        <RadioButton
+                                            x:Name="RadioSize2G"
+                                            Grid.Row="2"
+                                            Margin="0,2,0,0"
+                                            Checked="RadioTestSize_Checked"
+                                            Content="2 GB"
+                                            GroupName="TestSize"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="2147483648" />
+                                    </Grid>
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DiskSpeed_TestSizeExplainer}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ACCURACY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DiskSpeed_Accuracy" ctl:Tour.Order="3" Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DiskSpeedTest_Accuracy}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Target}" />
+                                    <CheckBox
+                                        x:Name="ChkBypassCache"
+                                        Content="{DynamicResource Str_DiskSpeedTest_BypassTheWindowsFile}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DiskSpeedTest_ReadsAndWritesGo}" />
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DiskSpeedTest_OnTheDiskS}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnStartTest"
+                            ctl:Tour.Key="Str_Tour_DiskSpeed_Start"
+                            ctl:Tour.Order="4"
+                            Grid.Column="0"
+                            MinWidth="170"
+                            Margin="0,0,20,0"
+                            VerticalAlignment="Center"
+                            Click="BtnStartTest_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_DiskSpeed_StartButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconStart"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="SpeedometerMedium" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtStartLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_DiskSpeed_StartButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <!--  Write → Read steps  -->
+                            <StackPanel Margin="0,0,0,6" Orientation="Horizontal">
+                                <Border
+                                    x:Name="StepWrite"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconStepWrite"
+                                            Width="12"
+                                            Height="12"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="ArrowUpBold" />
+                                        <TextBlock
+                                            x:Name="TxtStepWrite"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DiskSpeed_WriteLabel}" />
+                                    </StackPanel>
+                                </Border>
+                                <materialDesign:PackIcon
+                                    Width="14"
+                                    Height="14"
+                                    Margin="6,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Kind="ChevronRight" />
+                                <Border
+                                    x:Name="StepRead"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconStepRead"
+                                            Width="12"
+                                            Height="12"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="ArrowDownBold" />
+                                        <TextBlock
+                                            x:Name="TxtStepRead"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DiskSpeed_ReadLabel}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            <ProgressBar
+                                x:Name="ProgressStage"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_DiskSpeed_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtStatus"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DiskSpeed_StatusIdle}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Results + history (history moves under results on narrow windows)  -->
+                <Grid x:Name="ContentGrid" Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="HistoryGapColumn" Width="14" />
+                        <ColumnDefinition x:Name="HistoryColumn" Width="330" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition x:Name="HistoryRow" Height="0" />
+                    </Grid.RowDefinitions>
+
+                    <!--  ============ RESULTS ============  -->
+                    <Border ctl:Tour.Key="Str_Tour_DiskSpeed_Results" ctl:Tour.Order="5" x:Name="ResultsCard" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!--  Header + result pills  -->
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_DiskSpeed_ResultsTitle}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.SpeedometerMedium}" />
+                                <WrapPanel
+                                    Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center">
+                                    <Border
+                                        x:Name="TierPill"
+                                        Margin="0,0,6,0"
+                                        Background="{DynamicResource StatusSuccessBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_DiskSpeedTest_WhatThisReadSpeed}"
+                                        Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Kind="Harddisk" />
+                                            <TextBlock
+                                                x:Name="TxtTier"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource StatusSuccessFg}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border
+                                        x:Name="CachePill"
+                                        Margin="0,0,6,0"
+                                        Background="{DynamicResource StatusWarningBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_DiskSpeedTest_TheWindowsFileCache}"
+                                        Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Kind="AlertOutline" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Text="{DynamicResource Str_DiskSpeedTest_CachedReadMayBe}" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </Grid>
+
+                            <!--  Speed tiles  -->
+                            <Grid Grid.Row="1" Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    x:Name="WriteTile"
+                                    Padding="16,14"
+                                    Background="{DynamicResource RowBg}"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="2"
+                                    CornerRadius="12">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border
+                                                Width="28"
+                                                Height="28"
+                                                Margin="0,0,10,0"
+                                                Background="{DynamicResource AccentColorSubtle}"
+                                                CornerRadius="8">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Kind="ArrowUpBold" />
+                                            </Border>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_DiskSpeed_WriteLabel}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                            <TextBlock
+                                                x:Name="TxtWriteValue"
+                                                Style="{StaticResource SpeedValueText}"
+                                                Text="-" />
+                                            <TextBlock
+                                                Margin="6,0,0,7"
+                                                VerticalAlignment="Bottom"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="MB/s" />
+                                        </StackPanel>
+                                        <ProgressBar
+                                            x:Name="WriteMeter"
+                                            Margin="0,8,0,6"
+                                            Style="{StaticResource MeterBarStyle}" />
+                                        <TextBlock
+                                            x:Name="TxtWriteDetail"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DiskSpeedTest_SequentialWrite}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border
+                                    x:Name="ReadTile"
+                                    Grid.Column="2"
+                                    Padding="16,14"
+                                    Background="{DynamicResource RowBg}"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="2"
+                                    CornerRadius="12">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border
+                                                Width="28"
+                                                Height="28"
+                                                Margin="0,0,10,0"
+                                                Background="{DynamicResource StatusInfoBg}"
+                                                CornerRadius="8">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource StatusInfoFg}"
+                                                    Kind="ArrowDownBold" />
+                                            </Border>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_DiskSpeed_ReadLabel}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                            <TextBlock
+                                                x:Name="TxtReadValue"
+                                                Style="{StaticResource SpeedValueText}"
+                                                Text="-" />
+                                            <TextBlock
+                                                Margin="6,0,0,7"
+                                                VerticalAlignment="Bottom"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="MB/s" />
+                                        </StackPanel>
+                                        <ProgressBar
+                                            x:Name="ReadMeter"
+                                            Margin="0,8,0,6"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Style="{StaticResource MeterBarStyle}" />
+                                        <TextBlock
+                                            x:Name="TxtReadDetail"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DiskSpeedTest_SequentialRead}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!--  Live speed chart: write on the left half, read on the right  -->
+                            <Border
+                                Grid.Row="2"
+                                MinHeight="150"
+                                Padding="10,10,10,6"
+                                Background="{DynamicResource RowBg}"
+                                CornerRadius="12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            FontSize="11.5"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DiskSpeedTest_LiveSpeed}" />
+                                        <TextBlock
+                                            x:Name="TxtChartMax"
+                                            Grid.Column="1"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </Grid>
+
+                                    <Border
+                                        x:Name="ChartHost"
+                                        Grid.Row="1"
+                                        ClipToBounds="True"
+                                        SizeChanged="ChartHost_SizeChanged">
+                                        <Canvas x:Name="SpeedChart" />
+                                    </Border>
+
+                                    <TextBlock
+                                        x:Name="TxtChartEmpty"
+                                        Grid.Row="1"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        IsHitTestVisible="False"
+                                        Text="{DynamicResource Str_DiskSpeedTest_SpeedIsDrawnHere}" />
+
+                                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Text="{DynamicResource Str_DiskSpeedTest_WritePass}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_DiskSpeedTest_ReadPass}" />
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <TextBlock
+                                Grid.Row="3"
+                                Margin="2,12,2,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DiskSpeed_Explainer}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+
+                    <!--  ============ HISTORY ============  -->
+                    <Border
+                        x:Name="HistoryCard"
+                        ctl:Tour.Key="Str_Tour_DiskSpeed_History"
+                        ctl:Tour.Order="6"
+                        Grid.Column="2"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_DiskSpeed_HistoryHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.History}" />
+                                <Button
+                                    x:Name="BtnClearHistory"
+                                    Grid.Column="1"
+                                    Click="BtnClearHistory_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_DiskSpeed_ClearHistoryTooltip}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </Grid>
+
+                            <ListBox
+                                x:Name="HistoryList"
+                                Grid.Row="1"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource FileCardListItemStyle}"
+                                ItemTemplate="{StaticResource HistoryItemTemplate}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                Style="{StaticResource FileCardListBoxStyle}"
+                                ToolTip="{DynamicResource Str_DiskSpeed_HistoryTooltip}"
+                                VirtualizingPanel.IsVirtualizing="True" />
+
+                            <StackPanel
+                                x:Name="HistoryEmptyPanel"
+                                Grid.Row="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.History}" />
+                                <TextBlock
+                                    x:Name="TxtHistoryEmptyState"
+                                    MaxWidth="240"
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_DiskSpeed_HistoryEmptyState}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

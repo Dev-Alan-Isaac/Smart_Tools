@@ -1,0 +1,1044 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.SpaceAnalyzerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/SpaceAnalyzerManager.cs and
+        Models/SpaceAnalyzerModel.cs. Code-behind only wires controls.
+        Look & feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs.
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  List / treemap toggle (active variant swapped in from code)  -->
+        <Style x:Key="ViewToggleButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style
+            x:Key="ViewToggleButtonActiveStyle"
+            BasedOn="{StaticResource ViewToggleButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+        </Style>
+
+
+        <!--  Drive card  -->
+        <DataTemplate x:Key="DriveTemplate" DataType="{x:Type models:DriveSummary}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon
+                    x:Name="DriveIcon"
+                    Width="20"
+                    Height="20"
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource AccentColor}"
+                    Kind="Harddisk" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Label}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding FreeText}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ProgressBar
+                        Height="5"
+                        Margin="0,5,0,0"
+                        Style="{DynamicResource ShareBarStyle}"
+                        Value="{Binding UsedPercent, Mode=OneWay}" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFixed}" Value="False">
+                    <Setter TargetName="DriveIcon" Property="Kind" Value="UsbFlashDriveOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Breadcrumb segment  -->
+        <Style x:Key="CrumbButtonStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="6">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Thin rounded share bar  -->
+        <Style x:Key="ShareBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Maximum" Value="100" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+            <Setter Property="Background" Value="{DynamicResource RowBg}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
+                            <Border x:Name="PART_Track" CornerRadius="4" />
+                            <Border
+                                x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="4" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Name cell: category icon + name + cloud tag  -->
+        <DataTemplate x:Key="NameCellTemplate">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Grid.Column="0"
+                    x:Name="IconChip"
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,10,0"
+                    Background="{DynamicResource RowBg}"
+                    CornerRadius="8">
+                    <materialDesign:PackIcon
+                        x:Name="Icon"
+                        Width="16"
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="FileOutline" />
+                </Border>
+                <TextBlock
+                    Grid.Column="1"
+                    x:Name="NameText"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <Border
+                    Grid.Column="2"
+                    Margin="6,0,0,0"
+                    Padding="6,1"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource StatusInfoBg}"
+                    CornerRadius="8"
+                    ToolTip="{DynamicResource Str_DiskSpaceAnalyzer_OnlineOnlyOnedriveNot}"
+                    Visibility="{Binding IsCloudOnly, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            Width="11"
+                            Height="11"
+                            Margin="0,0,3,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Kind="CloudOutline" />
+                        <TextBlock
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Text="{DynamicResource Str_DiskSpaceAnalyzer_OnlineOnly}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Category}" Value="Folder">
+                    <Setter TargetName="Icon" Property="Kind" Value="Folder" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="IconChip" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                    <Setter TargetName="NameText" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Video">
+                    <Setter TargetName="Icon" Property="Kind" Value="FileVideoOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Image">
+                    <Setter TargetName="Icon" Property="Kind" Value="FileImageOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Audio">
+                    <Setter TargetName="Icon" Property="Kind" Value="FileMusicOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Document">
+                    <Setter TargetName="Icon" Property="Kind" Value="FileDocumentOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Archive">
+                    <Setter TargetName="Icon" Property="Kind" Value="ZipBoxOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Code">
+                    <Setter TargetName="Icon" Property="Kind" Value="FileCodeOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Program">
+                    <Setter TargetName="Icon" Property="Kind" Value="ApplicationOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Others">
+                    <Setter TargetName="Icon" Property="Kind" Value="DotsHorizontalCircleOutline" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="NameText" Property="FontStyle" Value="Italic" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Share of the folder: bar + number  -->
+        <DataTemplate x:Key="PercentCellTemplate">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="46" />
+                </Grid.ColumnDefinitions>
+                <ProgressBar Style="{StaticResource ShareBarStyle}" Value="{Binding Percent, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding PercentText}"
+                    TextTrimming="CharacterEllipsis"
+                    TextAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+
+        <!--  Row actions (not for the "smaller items" row)  -->
+        <DataTemplate x:Key="ActionsCellTemplate">
+            <StackPanel
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Visibility="{Binding CanOpen, Converter={StaticResource BoolToVisibility}}">
+                <Button
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,4,0"
+                    Click="BtnOpenInExplorer_Click"
+                    Style="{StaticResource NeutralIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_DiskSpace_OpenInExplorerTooltip}">
+                    <materialDesign:PackIcon
+                        Width="15"
+                        Height="15"
+                        Kind="OpenInNew" />
+                </Button>
+                <Button
+                    Width="28"
+                    Height="28"
+                    Click="BtnDeleteRow_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTip="{DynamicResource Str_Common_Delete}">
+                    <materialDesign:PackIcon
+                        Width="15"
+                        Height="15"
+                        Kind="DeleteOutline" />
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ WHAT TO SCAN ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DiskSpace_Scope" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DiskSpace_WhatToScanHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FolderSearchOutline}" />
+
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioScopeFolder"
+                                            Grid.Column="0"
+                                            Checked="RadioScope_Checked"
+                                            GroupName="ScanScope"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_DiskSpace_ScopeFolderTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FolderOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DiskSpace_ScopeFolder}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioScopeDisk"
+                                            Grid.Column="2"
+                                            Checked="RadioScope_Checked"
+                                            GroupName="ScanScope"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_DiskSpace_ScopeDiskTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Harddisk" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DiskSpace_ScopeDisk}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
+
+
+                                    <!--  Drive: picker + usage bar  -->
+                                    <StackPanel x:Name="DiskScopePanel" Visibility="Collapsed">
+                                        <ListBox
+                                            x:Name="CmbDrive"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ItemTemplate="{StaticResource DriveTemplate}"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            SelectionChanged="CmbDrive_SelectionChanged"
+                                            ToolTip="{DynamicResource Str_DiskSpace_DriveComboTooltip}">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem">
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Margin" Value="0,0,0,4" />
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ListBoxItem">
+                                                                <Border
+                                                                    x:Name="Bd"
+                                                                    Padding="10,8"
+                                                                    Background="{DynamicResource SidebarInputBg}"
+                                                                    BorderBrush="{DynamicResource SidebarInputBorder}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="8">
+                                                                    <ContentPresenter />
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsSelected" Value="True">
+                                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                        </ListBox>
+                                        <TextBlock
+                                            x:Name="TxtDriveUsage"
+                                            Margin="2,2,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            TextWrapping="Wrap" />
+                                        <Button
+                                            x:Name="BtnRefreshDrives"
+                                            Margin="0,6,0,0"
+                                            HorizontalAlignment="Left"
+                                            Click="BtnRefreshDrives_Click"
+                                            Content="{DynamicResource Str_DiskSpaceAnalyzer_RefreshTheDriveList}"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            ToolTip="{DynamicResource Str_DiskSpaceAnalyzer_LookAgainForDrives}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FOLDER (shown for the Folder scope) ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                FolderChanged="InputCard_FolderChanged"
+                                Header="{DynamicResource Str_DiskSpace_FolderToScanHeader}"
+                                HeaderIcon="FolderSearchOutline"
+                                Mode="SingleFolder"
+                                ShowSubfolders="False" />
+
+                            <!--  ============ SCAN OPTIONS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DiskSpace_Options" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DiskSpace_ScanOptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Filter}" />
+                                    <CheckBox
+                                        x:Name="ChkIncludeSubfolders"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_Common_IncludeSubfolders}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DiskSpace_IncludeSubfoldersTooltip}" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreSystemFiles"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DiskSpace_IgnoreSystemFiles}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DiskSpace_IgnoreSystemFilesTooltip}" />
+                                    <CheckBox
+                                        x:Name="ChkShowHidden"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DiskSpace_ShowHiddenItems}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_DiskSpace_ShowHiddenItemsTooltip}" />
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DiskSpaceAnalyzer_ChangesApplyToThe}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SHOW ITEMS ============  -->
+                            <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DiskSpace_MinSizeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FilterOutline}" />
+
+                                    <Grid Margin="0,0,0,0" ToolTip="{DynamicResource Str_DiskSpace_MinSizeTooltip}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Option: Full Width (All)  -->
+                                        <RadioButton
+                                            x:Name="RadioMinAll"
+                                            Grid.Row="0"
+                                            Margin="0,0,0,2"
+                                            Checked="RadioMinSize_Checked"
+                                            Content="{DynamicResource Str_DiskSpaceAnalyzer_All}"
+                                            GroupName="MinSize"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="0" />
+
+                                        <!--  Middle Options: 1x2 Grid (10 MB & 100 MB)  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,2"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioMin10"
+                                                Margin="0,0,2,0"
+                                                Checked="RadioMinSize_Checked"
+                                                Content="10 MB"
+                                                GroupName="MinSize"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="10485760" />
+                                            <RadioButton
+                                                x:Name="RadioMin100"
+                                                Margin="2,0,0,0"
+                                                Checked="RadioMinSize_Checked"
+                                                Content="100 MB"
+                                                GroupName="MinSize"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="104857600" />
+                                        </UniformGrid>
+
+                                        <!--  Last Option: Full Width (1 GB)  -->
+                                        <RadioButton
+                                            x:Name="RadioMin1G"
+                                            Grid.Row="2"
+                                            Margin="0,2,0,0"
+                                            Checked="RadioMinSize_Checked"
+                                            Content="1 GB"
+                                            GroupName="MinSize"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="1073741824" />
+                                    </Grid>
+
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DiskSpaceAnalyzer_SmallerItemsAreGrouped}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnAnalyze"
+                            ctl:Tour.Key="Str_Tour_DiskSpace_Scan"
+                            ctl:Tour.Order="3"
+                            Grid.Column="0"
+                            MinWidth="170"
+                            VerticalAlignment="Center"
+                            Click="BtnAnalyze_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_DiskSpace_AnalyzeButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconAnalyze"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="ChartDonut" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtAnalyzeLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_DiskSpace_AnalyzeButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <Button
+                            x:Name="BtnRescan"
+                            Grid.Column="1"
+                            Width="36"
+                            Height="36"
+                            Margin="8,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRescan_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_DiskSpace_RescanTooltip}">
+                            <materialDesign:PackIcon
+                                Width="17"
+                                Height="17"
+                                Kind="Refresh" />
+                        </Button>
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressScan"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_DiskSpace_ScanProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Common_ReadyToScan}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="3"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            Text=""
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Results  -->
+                <Border ctl:Tour.Key="Str_Tour_DiskSpace_Results" ctl:Tour.Order="4" Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Header: title, summary pills, actions  -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_DiskSpace_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ChartDonut}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_DiskSpace_TotalSizeTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="Sigma" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryTotalSize"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Text="{DynamicResource Str_DiskSpace_TotalSizeInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_DiskSpace_ItemsScannedTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="FileOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_DiskSpace_ItemsScannedInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="InaccessiblePill"
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource StatusWarningBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_DiskSpaceAnalyzer_TheseFoldersCouldnT}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Kind="ShieldLockOutline" />
+                                        <TextBlock
+                                            x:Name="TxtInaccessible"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusWarningFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="CloudPill"
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_DiskSpaceAnalyzer_OnedriveOnlineOnlyFiles}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="CloudOutline" />
+                                        <TextBlock
+                                            x:Name="TxtCloud"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnOpenExplorer"
+                                    Margin="0,0,8,0"
+                                    Click="BtnOpenExplorer_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_DiskSpace_OpenInExplorerTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnDeleteSelected"
+                                    Click="BtnDeleteSelected_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_DiskSpace_DeleteSelectedTooltip}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  Navigation: up, clickable breadcrumb, folder size, list/treemap  -->
+                        <Border
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Padding="4"
+                            Background="{DynamicResource RowBg}"
+                            CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button
+                                    x:Name="BtnUpFolder"
+                                    Width="30"
+                                    Height="30"
+                                    Margin="0,0,4,0"
+                                    Click="BtnUpFolder_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DiskSpace_UpFolderTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ArrowUp" />
+                                </Button>
+
+                                <ScrollViewer
+                                    x:Name="BreadcrumbScroller"
+                                    Grid.Column="1"
+                                    HorizontalScrollBarVisibility="Hidden"
+                                    VerticalScrollBarVisibility="Disabled">
+                                    <StackPanel
+                                        x:Name="BreadcrumbPanel"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal"
+                                        ToolTip="{DynamicResource Str_DiskSpace_CurrentPathTooltip}" />
+                                </ScrollViewer>
+
+                                <TextBlock
+                                    x:Name="TxtCurrentPath"
+                                    Grid.Column="2"
+                                    Margin="10,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}" />
+
+                                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnViewList"
+                                        Click="BtnViewList_Click"
+                                        Style="{StaticResource ViewToggleButtonActiveStyle}"
+                                        ToolTip="{DynamicResource Str_DiskSpace_ListViewTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="17"
+                                            Height="17"
+                                            Kind="ViewList" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnViewTreemap"
+                                        Margin="2,0,0,0"
+                                        Click="BtnViewTreemap_Click"
+                                        Style="{StaticResource ViewToggleButtonStyle}"
+                                        ToolTip="{DynamicResource Str_DiskSpace_TreemapViewTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="17"
+                                            Height="17"
+                                            Kind="ViewQuilt" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!--  Space by file type (for the folder being viewed)  -->
+                        <StackPanel
+                            x:Name="TypePanel"
+                            Grid.Row="2"
+                            Margin="0,0,0,12"
+                            Visibility="Collapsed">
+                            <Border
+                                Height="12"
+                                Background="{DynamicResource RowBg}"
+                                ClipToBounds="True"
+                                CornerRadius="6">
+                                <Grid x:Name="TypeBarGrid" />
+                            </Border>
+                            <WrapPanel x:Name="TypeLegend" Margin="0,8,0,0" />
+                        </StackPanel>
+
+                        <!--  List  -->
+                        <DataGrid
+                            x:Name="DataGridSpace"
+                            Grid.Row="3"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            EnableRowVirtualization="True"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MouseDoubleClick="DataGridSpace_MouseDoubleClick"
+                            PreviewKeyDown="DataGridSpace_PreviewKeyDown"
+                            MinRowHeight="44"
+                            SelectionChanged="DataGridSpace_SelectionChanged"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_DiskSpace_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="2.5*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderName}"
+                                    SortMemberPath="Name" />
+                                <DataGridTemplateColumn
+                                    Width="1.5*"
+                                    MinWidth="70"
+                                    CellTemplate="{StaticResource PercentCellTemplate}"
+                                    Header="{DynamicResource Str_DiskSpace_ColHeaderPercent}"
+                                    SortMemberPath="SizeBytes" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Width="95"
+                                    Binding="{Binding SizeText}"
+                                    Header="{DynamicResource Str_Common_ColHeaderSize}"
+                                    SortMemberPath="SizeBytes" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColItemCount"
+                                    Width="80"
+                                    Binding="{Binding ItemCountText}"
+                                    Header="{DynamicResource Str_DiskSpace_ColHeaderItems}" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColModified"
+                                    Width="120"
+                                    Binding="{Binding ModifiedText}"
+                                    Header="{DynamicResource Str_Common_ColHeaderModified}" />
+                                <DataGridTemplateColumn
+                                    Width="72"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource ActionsCellTemplate}"
+                                    Header="" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!--  Treemap (tiles added in code)  -->
+                        <Border
+                            x:Name="TreemapHost"
+                            Grid.Row="3"
+                            Background="{DynamicResource RowBg}"
+                            ClipToBounds="True"
+                            CornerRadius="8"
+                            SizeChanged="TreemapHost_SizeChanged"
+                            Visibility="Collapsed">
+                            <Canvas x:Name="TreemapCanvas" ClipToBounds="True" />
+                        </Border>
+
+                        <!--  Empty state  -->
+                        <StackPanel
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="3"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ChartDonut}" />
+                            <TextBlock
+                                x:Name="TxtEmptyHint"
+                                MaxWidth="360"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DiskSpace_EmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,1064 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.LogViewerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    Loaded="Root_Loaded"
+    PreviewDragOver="Root_DragOver"
+    PreviewDrop="Root_Drop">
+
+    <!--
+        Backend: Controllers/LogViewerManager.Tail.cs (follows a file: last
+        lines first, then appends; partial lines, rotation, missing files,
+        encodings) + Controllers/LogViewerManager.cs (formatting, highlight
+        rules, filter, line cap, export, settings); Models/LogViewerModel.cs.
+        UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  The console is dark in both themes (like a terminal), so its colours are fixed here.  -->
+        <SolidColorBrush x:Key="LogConsoleBg" Color="#0F1115" />
+        <SolidColorBrush x:Key="LogConsoleText" Color="#E5E7EB" />
+        <SolidColorBrush x:Key="LogConsoleMuted" Color="#8B93A1" />
+        <SolidColorBrush x:Key="LogConsoleHover" Color="#191C24" />
+        <SolidColorBrush x:Key="LogConsoleSelected" Color="#27344F" />
+        <SolidColorBrush x:Key="LogSystemBg" Color="#1E2533" />
+        <SolidColorBrush x:Key="LogSystemText" Color="#C7D2FE" />
+
+
+        <!--  Coloured dot for a tab's state (tab header and toolbar)  -->
+        <Style x:Key="TabStateDot" TargetType="Ellipse">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Fill" Value="{DynamicResource TextSecondary}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:LogViewerTabState.Following}">
+                    <Setter Property="Fill" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:LogViewerTabState.Missing}">
+                    <Setter Property="Fill" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:LogViewerTabState.Error}">
+                    <Setter Property="Fill" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Tab header: state dot, file name, close  -->
+        <DataTemplate x:Key="TabHeaderTemplate" DataType="{x:Type models:LogViewerTab}">
+            <StackPanel Orientation="Horizontal" ToolTip="{Binding FilePath}">
+                <Ellipse Margin="0,0,8,0" Style="{StaticResource TabStateDot}" />
+                <TextBlock
+                    MaxWidth="180"
+                    VerticalAlignment="Center"
+                    Text="{Binding Title}"
+                    TextTrimming="CharacterEllipsis" />
+                <Button
+                    Width="20"
+                    Height="20"
+                    Margin="8,0,-4,0"
+                    Click="BtnCloseTab_Click"
+                    Style="{StaticResource NeutralIconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_LogViewer_CloseThisTabStops}">
+                    <materialDesign:PackIcon
+                        Width="12"
+                        Height="12"
+                        Kind="Close" />
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  The tab strip only switches tabs; the selected tab's lines are shown below it.  -->
+        <DataTemplate x:Key="NoTabContent">
+            <Grid Height="0" />
+        </DataTemplate>
+
+        <!--
+            The kit's ListBox template doesn't pass CanContentScroll on, which
+            turns virtualization off. A log can hold 20,000 lines, so the
+            console has its own template with virtualization on.
+        -->
+        <Style x:Key="LogConsoleListBox" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource LogConsoleText}" />
+            <Setter Property="SelectionMode" Value="Extended" />
+            <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+            <Setter Property="VirtualizingPanel.ScrollUnit" Value="Item" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer
+                            Padding="6"
+                            CanContentScroll="True"
+                            Focusable="False"
+                            HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                            VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LogLineItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Background="Transparent"
+                            CornerRadius="4">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource LogConsoleHover}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource LogConsoleSelected}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--
+            One line: number + text, on the rule's colour (with dark or light
+            text to suit it). Values sit in Style setters, not attributes, so
+            the IsSystem trigger can override them (an attribute would win).
+        -->
+        <DataTemplate x:Key="LogLineTemplate" DataType="{x:Type models:LogViewerLine}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    MinWidth="44"
+                    Padding="0,2,10,2"
+                    FontFamily="Consolas"
+                    FontSize="12"
+                    Foreground="{StaticResource LogConsoleMuted}"
+                    TextAlignment="Right"
+                    Visibility="{Binding LineNumberVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{Binding LineNumber}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSystem}" Value="True">
+                                    <Setter Property="Text" Value="•" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <Border
+                    Grid.Column="1"
+                    Padding="6,2"
+                    CornerRadius="3">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{Binding HighlightHex, TargetNullValue=Transparent}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSystem}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource LogSystemBg}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock
+                        FontFamily="Consolas"
+                        FontSize="12"
+                        Text="{Binding DisplayText}"
+                        TextWrapping="{Binding LineWrapping, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{Binding HighlightForegroundHex, TargetNullValue={StaticResource LogConsoleText}}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSystem}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource LogSystemText}" />
+                                        <Setter Property="FontStyle" Value="Italic" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <!--  A highlight rule in the sidebar  -->
+        <DataTemplate x:Key="RuleTemplate" DataType="{x:Type models:LogViewerRule}">
+            <Border
+                Margin="0,8,0,0"
+                Padding="8"
+                Background="{DynamicResource SidebarSubPanelBg}"
+                BorderBrush="{DynamicResource SidebarBorder}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            Width="26"
+                            Height="26"
+                            Margin="0,0,6,0"
+                            Click="BtnPickColor_Click"
+                            Cursor="Hand"
+                            Tag="{Binding}"
+                            ToolTip="{DynamicResource Str_LogViewer_PickThisRuleS}">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Ellipse
+                                            Fill="{Binding ColorHex}"
+                                            Stroke="{DynamicResource SidebarBorder}"
+                                            StrokeThickness="1.5" />
+                                        <materialDesign:PackIcon
+                                            Width="12"
+                                            Height="12"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Kind="Palette"
+                                            Opacity="0.85" />
+                                    </Grid>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <Border
+                            Grid.Column="1"
+                            MinHeight="30"
+                            Style="{StaticResource InputBarStyle}">
+                            <TextBox
+                                FontWeight="SemiBold"
+                                Style="{StaticResource BareTextBox}"
+                                Tag="Rule name"
+                                Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                ToolTip="{DynamicResource Str_LogViewer_ANameForThis}" />
+                        </Border>
+                        <CheckBox
+                            Grid.Column="2"
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding Enabled}"
+                            ToolTip="{DynamicResource Str_LogViewer_UseThisRule}" />
+                        <Button
+                            Grid.Column="3"
+                            Margin="2,0,0,0"
+                            Click="BtnMoveRuleUp_Click"
+                            Style="{StaticResource RowMoveButtonStyle}"
+                            Tag="{Binding}"
+                            ToolTip="{DynamicResource Str_LogViewer_MoveUpTheFirst}">
+                            <materialDesign:PackIcon
+                                Width="14"
+                                Height="14"
+                                Kind="ArrowUp" />
+                        </Button>
+                        <Button
+                            Grid.Column="4"
+                            Width="24"
+                            Height="24"
+                            Click="BtnRemoveRule_Click"
+                            Style="{StaticResource IconButtonStyle}"
+                            Tag="{Binding}"
+                            ToolTip="{DynamicResource Str_Log_RemoveRuleTooltip}">
+                            <materialDesign:PackIcon
+                                Width="14"
+                                Height="14"
+                                Kind="TrashCanOutline" />
+                        </Button>
+                    </Grid>
+
+                    <Border
+                        MinHeight="30"
+                        Margin="0,6,0,0"
+                        Style="{StaticResource InputBarStyle}">
+                        <TextBox
+                            FontFamily="Consolas"
+                            Style="{StaticResource BareTextBox}"
+                            Tag="Text to look for"
+                            Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{DynamicResource Str_LogViewer_LinesContainingThisGet}" />
+                    </Border>
+
+                    <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                        <CheckBox
+                            Content="{DynamicResource Str_LogViewer_RegularExpression}"
+                            FontSize="11"
+                            IsChecked="{Binding IsRegex}"
+                            ToolTip="{DynamicResource Str_LogViewer_TreatTheTextAs}" />
+                        <CheckBox
+                            Margin="12,0,0,0"
+                            Content="{DynamicResource Str_Rename_MatchCase}"
+                            FontSize="11"
+                            IsChecked="{Binding CaseSensitive}"
+                            ToolTip="{DynamicResource Str_LogViewer_ErrorAndErrorAre}" />
+                    </StackPanel>
+
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource StatusErrorFg}"
+                        Text="{Binding Problem}"
+                        TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Problem}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ LOG FILES ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_LogViewer_Files" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Junk_LogFilesLabel}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileDocumentMultipleOutline}" />
+                                    <Button
+                                        x:Name="BtnOpenLogFile"
+                                        MinHeight="36"
+                                        HorizontalAlignment="Stretch"
+                                        Click="BtnOpenLogFile_Click"
+                                        Style="{StaticResource AccentPrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_LogViewer_OpenOneOrMore}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FolderOpenOutline" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_LogViewer_OpenLogFile}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_LogViewer_OrDropFilesAnywhere}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ DISPLAY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_LogViewer_Display" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_LogViewer_Display}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.EyeOutline}" />
+                                    <CheckBox
+                                        x:Name="ChkWordWrap"
+                                        Margin="0,0,0,6"
+                                        Click="DisplayOption_Click"
+                                        Content="{DynamicResource Str_Log_WrapLongLines}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_LogViewer_OffLongLinesScroll}" />
+                                    <CheckBox
+                                        x:Name="ChkLineNumbers"
+                                        Margin="0,0,0,6"
+                                        Click="DisplayOption_Click"
+                                        Content="{DynamicResource Str_LogViewer_ShowLineNumbers}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+
+                                    <TextBlock
+                                        Margin="0,14,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_LogViewer_LinesToShowWhen}" />
+
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Option: Full Width (100)  -->
+                                        <RadioButton
+                                            x:Name="RadioInit100"
+                                            Grid.Row="0"
+                                            Margin="0,0,0,2"
+                                            Click="InitialLines_Click"
+                                            Content="100"
+                                            GroupName="LogInitialLines"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="100" />
+
+                                        <!--  Middle Options: 1x2 Grid (500 & 2,000)  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,2"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioInit500"
+                                                Margin="0,0,2,0"
+                                                Click="InitialLines_Click"
+                                                Content="500"
+                                                GroupName="LogInitialLines"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="500" />
+                                            <RadioButton
+                                                x:Name="RadioInit2000"
+                                                Margin="2,0,0,0"
+                                                Click="InitialLines_Click"
+                                                Content="2,000"
+                                                GroupName="LogInitialLines"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="2000" />
+                                        </UniformGrid>
+
+                                        <!--  Last Option: Full Width (5,000)  -->
+                                        <RadioButton
+                                            x:Name="RadioInit5000"
+                                            Grid.Row="2"
+                                            Margin="0,2,0,0"
+                                            Click="InitialLines_Click"
+                                            Content="5,000"
+                                            GroupName="LogInitialLines"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="5000" />
+                                    </Grid>
+
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_LogViewer_TheNewestLinesFrom}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ HIGHLIGHT RULES ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_LogViewer_Rules" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_Log_HighlightRulesHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.FormatColorHighlight}" />
+                                        <Button
+                                            x:Name="BtnAddRule"
+                                            Width="28"
+                                            Height="28"
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Click="BtnAddRule_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_LogViewer_AddARule}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Plus" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock
+                                        Margin="0,0,0,0"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_LogViewer_LinesThatMatchGet}" />
+                                    <ItemsControl
+                                        x:Name="RulesList"
+                                        Focusable="False"
+                                        ItemTemplate="{StaticResource RuleTemplate}" />
+                                    <TextBlock
+                                        x:Name="TxtNoRules"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_LogViewer_NoRulesAddOne}"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Tab strip  -->
+                <Border
+                    x:Name="TabStrip"
+                    Margin="0,0,0,10"
+                    Padding="8,4,8,0"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="Collapsed">
+                    <TabControl
+                        x:Name="TabsControl"
+                        ContentTemplate="{StaticResource NoTabContent}"
+                        ItemTemplate="{StaticResource TabHeaderTemplate}"
+                        SelectionChanged="TabsControl_SelectionChanged" />
+                </Border>
+
+                <!--  No tabs yet  -->
+                <Border
+                    x:Name="EmptyState"
+                    Grid.Row="1"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Rectangle
+                            Margin="12"
+                            RadiusX="12"
+                            RadiusY="12"
+                            Stroke="{DynamicResource CardBorder}"
+                            StrokeDashArray="5 4"
+                            StrokeThickness="1.5" />
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TextBoxSearchOutline}" />
+                            <TextBlock
+                                Margin="0,14,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_LogViewer_WatchALogFile}" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_LogViewer_NewLinesAppearLive}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  The selected tab  -->
+                <Grid
+                    x:Name="TabBody"
+                    Grid.Row="1"
+                    Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Toolbar  -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" MinWidth="120" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Width="34"
+                                Height="34"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AccentGradient}"
+                                CornerRadius="9">
+                                <materialDesign:PackIcon
+                                    Width="18"
+                                    Height="18"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="White"
+                                    Kind="FileDocumentOutline" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtFileName"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtFolder"
+                                    Margin="0,2,0,0"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <Border
+                                x:Name="StatusPill"
+                                Grid.Column="2"
+                                Margin="10,0"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_LogViewer_FollowingNewLinesAppear}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse
+                                        x:Name="StatusDot"
+                                        Margin="0,0,6,0"
+                                        Style="{StaticResource TabStateDot}" />
+                                    <TextBlock
+                                        x:Name="TxtStatus"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Button
+                                x:Name="BtnToggleFollow"
+                                Grid.Column="3"
+                                MinHeight="36"
+                                MinWidth="112"
+                                Margin="0,0,10,0"
+                                Click="BtnToggleFollow_Click"
+                                Style="{StaticResource PrimaryButtonStyle}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        x:Name="IconFollow"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Pause" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="TxtFollow"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_MicRecorder_Pause}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+
+                            <Grid
+                                Grid.Column="4"
+                                Width="190"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                ToolTip="{DynamicResource Str_LogViewer_JsonLinesEachLine}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="4" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <RadioButton
+                                    x:Name="RadioFormatPlain"
+                                    Click="Format_Click"
+                                    GroupName="LogFormat"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="PlainText">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="14"
+                                            Height="14"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Kind="TextLong" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileDiff_ColHeaderText}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </RadioButton>
+                                <RadioButton
+                                    x:Name="RadioFormatJson"
+                                    Grid.Column="2"
+                                    Click="Format_Click"
+                                    GroupName="LogFormat"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="JsonLines">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="14"
+                                            Height="14"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Kind="CodeJson" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_ApiTester_Json}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </RadioButton>
+                            </Grid>
+
+                            <StackPanel
+                                Grid.Column="5"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnCopyLines"
+                                    Click="BtnCopyLines_Click"
+                                    ToolTip="{DynamicResource Str_LogViewer_CopyTheSelectedLines}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnShowInFolder"
+                                    Margin="2,0,0,0"
+                                    Click="BtnShowInFolder_Click"
+                                    ToolTip="{DynamicResource Str_LogViewer_ShowTheFileIn}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderSearchOutline" />
+                                </Button>
+                                <controls:ExportButton
+                                    x:Name="BtnExportLog"
+                                    ctl:Tour.Key="Str_Tour_LogViewer_Export" ctl:Tour.Order="5"
+                                    Margin="2,0,0,0"
+                                    ToolTip="{DynamicResource Str_LogViewer_SaveTheLinesShown}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem
+                                                Click="MenuExport_Click"
+                                                Header="{DynamicResource Str_Common_ExportAsText}"
+                                                Tag="txt">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileDocumentOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="MenuExport_Click"
+                                                Header="Log file (.log)"
+                                                Tag="log">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="TextBoxOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                                <Button
+                                    x:Name="BtnClearLog"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="2,0,0,0"
+                                    Click="BtnClearLog_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_LogViewer_ClearTheViewThe}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="NotificationClearAll" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Filter + console  -->
+                    <Border
+                        Grid.Row="2"
+                        Padding="12"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Border x:Name="FilterBar" Style="{StaticResource InputBarStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Margin="12,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Kind="Magnify" />
+                                    <TextBox
+                                        x:Name="TxtFilter"
+                                        Grid.Column="1"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="Show only lines containing…"
+                                        TextChanged="TxtFilter_TextChanged"
+                                        ToolTip="{DynamicResource Str_LogViewer_OnlyLinesContainingThis}" />
+                                    <Border Grid.Column="2" Style="{StaticResource InputBarDivider}" />
+                                    <CheckBox
+                                        x:Name="ChkFilterRegex"
+                                        Grid.Column="3"
+                                        Margin="10,0"
+                                        VerticalAlignment="Center"
+                                        Click="ChkFilterRegex_Click"
+                                        Content="{DynamicResource Str_Log_RegexCheckbox}"
+                                        FontSize="11.5"
+                                        ToolTip="{DynamicResource Str_LogViewer_TreatTheFilterAs}" />
+                                    <Border
+                                        x:Name="CountPill"
+                                        Grid.Column="4"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{Binding Foreground, ElementName=TxtLineCount}"
+                                                Kind="FormatListNumbered" />
+                                            <TextBlock
+                                                x:Name="TxtLineCount"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_LogViewer_0Lines}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <TextBlock
+                                x:Name="TxtFilterError"
+                                Grid.Row="1"
+                                Margin="4,6,0,0"
+                                FontSize="11"
+                                Foreground="{DynamicResource StatusErrorFg}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+
+                            <Border
+                                Grid.Row="2"
+                                Margin="0,10,0,0"
+                                Background="{StaticResource LogConsoleBg}"
+                                CornerRadius="8">
+                                <Grid>
+                                    <ListBox
+                                        x:Name="LogList"
+                                        ctl:Tour.Key="Str_Tour_LogViewer_Log" ctl:Tour.Order="4"
+                                        ItemContainerStyle="{StaticResource LogLineItem}"
+                                        ItemTemplate="{StaticResource LogLineTemplate}"
+                                        ScrollViewer.ScrollChanged="LogList_ScrollChanged"
+                                        Style="{StaticResource LogConsoleListBox}">
+                                        <ListBox.CommandBindings>
+                                            <CommandBinding Command="ApplicationCommands.Copy" Executed="LogList_Copy" />
+                                        </ListBox.CommandBindings>
+                                        <ListBox.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem
+                                                    Command="ApplicationCommands.Copy"
+                                                    Header="{DynamicResource Str_Common_Copy}"
+                                                    InputGestureText="Ctrl+C" />
+                                                <MenuItem
+                                                    Command="ApplicationCommands.SelectAll"
+                                                    Header="{DynamicResource Str_Common_SelectAll}"
+                                                    InputGestureText="Ctrl+A" />
+                                            </ContextMenu>
+                                        </ListBox.ContextMenu>
+                                    </ListBox>
+
+                                    <TextBlock
+                                        x:Name="TxtConsoleHint"
+                                        Margin="16,14"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        FontSize="12.5"
+                                        Foreground="{StaticResource LogConsoleMuted}"
+                                        IsHitTestVisible="False"
+                                        Text="{DynamicResource Str_LogViewer_WaitingForLines}" />
+
+                                    <!--  Shown once the user scrolls up: new lines keep coming but the view stays put  -->
+                                    <Button
+                                        x:Name="BtnResumeFollowing"
+                                        MinHeight="32"
+                                        Margin="0,0,0,14"
+                                        Padding="14,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Bottom"
+                                        Click="BtnResumeFollowing_Click"
+                                        Style="{StaticResource AccentPrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_LogViewer_JumpToTheNewest}"
+                                        Visibility="Collapsed">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="ArrowDown" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                x:Name="TxtResume"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource Str_LogViewer_BackToTheNewest}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_LogViewer_DropToFollowThese}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_LogViewer_EachFileOpensIn}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

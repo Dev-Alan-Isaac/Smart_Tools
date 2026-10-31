@@ -1,0 +1,44 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Controls.SourceAdapterPicker"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Loaded="Picker_Loaded"
+    Unloaded="Picker_Unloaded">
+
+    <!--
+        "Send from": Automatic, or one connected adapter (Ethernet, USB Ethernet,
+        Wi-Fi...). Choices are built in code (RadioButtons), so this control
+        has no content slot - names inside are fine.
+    -->
+
+    <StackPanel>
+        <Grid>
+            <TextBlock
+                Margin="0,4,0,6"
+                VerticalAlignment="Center"
+                Style="{StaticResource FieldLabel}"
+                Text="{DynamicResource Str_SourceAdapterPicker_SendFrom}" />
+            <Button
+                x:Name="BtnRefresh"
+                Margin="0,4,0,6"
+                HorizontalAlignment="Right"
+                Click="BtnRefresh_Click"
+                ToolTip="{DynamicResource Str_SourceAdapterPicker_LookForAdaptersAgain}"
+                Style="{StaticResource ListToolButtonStyle}">
+                <materialDesign:PackIcon
+                    Width="16"
+                    Height="16"
+                    Kind="Refresh" />
+            </Button>
+        </Grid>
+        <StackPanel x:Name="ChoicesPanel" />
+        <TextBlock
+            x:Name="TxtHint"
+            Margin="2,6,0,0"
+            FontSize="11"
+            Foreground="{DynamicResource SidebarTextMuted}"
+            Text="{DynamicResource Str_SourceAdapterPicker_LookingForAdapters}"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

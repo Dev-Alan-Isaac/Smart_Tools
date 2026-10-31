@@ -1,0 +1,335 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.ScreenshotView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root">
+
+    <!--
+        Backend: Tools/Images/Screenshot/ScreenshotManager.cs (delays, names, arrow maths, settings) +
+        ScreenshotManager.Windows.cs (the front window); the screen itself is captured by
+        ScreenOcrManager.CaptureVirtualScreen and the region overlay is ScreenOcrSelectionWindow. UI only here.
+    -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ CAPTURE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Screenshot_Capture}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Camera}" />
+
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioRegion"
+                                            Margin="0,0,2,0"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Screenshot_ModeRegion}"
+                                            GroupName="ShotMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Region"
+                                            ToolTip="{DynamicResource Str_Screenshot_ModeRegionTip}" />
+                                        <RadioButton
+                                            x:Name="RadioWindow"
+                                            Margin="2,0"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Screenshot_ModeWindow}"
+                                            GroupName="ShotMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Window"
+                                            ToolTip="{DynamicResource Str_Screenshot_ModeWindowTip}" />
+                                        <RadioButton
+                                            x:Name="RadioScreen"
+                                            Margin="2,0,0,0"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Screenshot_ModeScreen}"
+                                            GroupName="ShotMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="FullScreen"
+                                            ToolTip="{DynamicResource Str_Screenshot_ModeScreenTip}" />
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Screenshot_Delay}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="DelayCombo"
+                                            Margin="4,0"
+                                            SelectionChanged="Option_Changed"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_Screenshot_DelayTip}">
+                                            <ComboBoxItem Content="{DynamicResource Str_Screenshot_DelayNone}" Tag="0" />
+                                            <ComboBoxItem Content="{DynamicResource Str_Screenshot_Delay3}" Tag="3" />
+                                            <ComboBoxItem Content="{DynamicResource Str_Screenshot_Delay5}" Tag="5" />
+                                            <ComboBoxItem Content="{DynamicResource Str_Screenshot_Delay10}" Tag="10" />
+                                        </ComboBox>
+                                    </Border>
+
+                                    <CheckBox
+                                        x:Name="ChkHideApp"
+                                        Margin="0,12,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_Screenshot_HideApp}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_Screenshot_HideAppTip}"
+                                        Unchecked="Option_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkCopyAfter"
+                                        Margin="0,8,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_Screenshot_CopyAfter}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_Screenshot_CopyAfterTip}"
+                                        Unchecked="Option_Changed" />
+
+                                    <Button
+                                        x:Name="BtnCapture"
+                                        Margin="0,14,0,0"
+                                        Click="BtnCapture_Click"
+                                        Content="{DynamicResource Str_Screenshot_CaptureButton}"
+                                        Style="{StaticResource AccentPrimaryButtonStyle}" />
+                                    <TextBlock
+                                        x:Name="TxtShortcutHint"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_Screenshot_ShortcutHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ MARK UP ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Screenshot_MarkUp}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Draw}" />
+
+                                    <UniformGrid Columns="3">
+                                        <RadioButton Margin="0,0,2,4" Click="Ink_Click" GroupName="ShotInk" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Pen" ToolTip="{DynamicResource Str_Screenshot_InkPen}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Kind="LeadPencil" />
+                                        </RadioButton>
+                                        <RadioButton Margin="2,0,2,4" Click="Ink_Click" GroupName="ShotInk" Style="{StaticResource ModeToggleButtonStyle}" Tag="Arrow" ToolTip="{DynamicResource Str_Screenshot_InkArrow}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Kind="ArrowTopRight" />
+                                        </RadioButton>
+                                        <RadioButton Margin="2,0,0,4" Click="Ink_Click" GroupName="ShotInk" Style="{StaticResource ModeToggleButtonStyle}" Tag="Rectangle" ToolTip="{DynamicResource Str_Screenshot_InkRectangle}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Kind="RectangleOutline" />
+                                        </RadioButton>
+                                        <RadioButton Margin="0,0,2,0" Click="Ink_Click" GroupName="ShotInk" Style="{StaticResource ModeToggleButtonStyle}" Tag="Highlight" ToolTip="{DynamicResource Str_Screenshot_InkHighlight}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Kind="MarkerCancel" />
+                                        </RadioButton>
+                                        <RadioButton Margin="2,0" Click="Ink_Click" GroupName="ShotInk" Style="{StaticResource ModeToggleButtonStyle}" Tag="Text" ToolTip="{DynamicResource Str_Screenshot_InkText}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Kind="FormatText" />
+                                        </RadioButton>
+                                        <RadioButton Margin="2,0,0,0" Click="Ink_Click" GroupName="ShotInk" Style="{StaticResource ModeToggleButtonStyle}" Tag="Pixelate" ToolTip="{DynamicResource Str_Screenshot_InkPixelate}">
+                                            <materialDesign:PackIcon Width="18" Height="18" Kind="Blur" />
+                                        </RadioButton>
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Screenshot_Color}" />
+                                    <StackPanel x:Name="PanelColors" Orientation="Horizontal" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Screenshot_Thickness}" />
+                                    <Slider
+                                        x:Name="SliderThickness"
+                                        Margin="0,6,0,0"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="16"
+                                        Minimum="2"
+                                        TickFrequency="1"
+                                        Value="4"
+                                        ValueChanged="SliderThickness_ValueChanged" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Actions  -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            x:Name="TxtInfo"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_Screenshot_ReadyInfo}"
+                            TextTrimming="CharacterEllipsis" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button
+                                x:Name="BtnUndo"
+                                Width="40"
+                                Click="BtnUndo_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Screenshot_Undo}">
+                                <materialDesign:PackIcon Width="18" Height="18" Kind="Undo" />
+                            </Button>
+                            <Button
+                                x:Name="BtnClearMarks"
+                                Width="40"
+                                Margin="4,0,0,0"
+                                Click="BtnClearMarks_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Screenshot_ClearMarks}">
+                                <materialDesign:PackIcon Width="18" Height="18" Kind="EraserVariant" />
+                            </Button>
+                            <Button
+                                x:Name="BtnCopy"
+                                MinWidth="100"
+                                Margin="12,0,0,0"
+                                Click="BtnCopy_Click"
+                                Content="{DynamicResource Str_Screenshot_Copy}"
+                                IsEnabled="False"
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                            <Button
+                                x:Name="BtnSave"
+                                MinWidth="100"
+                                Margin="8,0,0,0"
+                                Click="BtnSave_Click"
+                                Content="{DynamicResource Str_Screenshot_Save}"
+                                IsEnabled="False"
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  Empty state  -->
+                    <StackPanel
+                        x:Name="EmptyPanel"
+                        Grid.Row="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.Camera}" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Center"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{DynamicResource Str_Screenshot_EmptyTitle}" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_Screenshot_EmptyHint}" />
+                    </StackPanel>
+
+                    <!--  The picture and its marks, both in the picture's own pixels; the Viewbox only scales them to fit  -->
+                    <Viewbox
+                        x:Name="StageBox"
+                        Grid.Row="1"
+                        StretchDirection="DownOnly"
+                        Visibility="Collapsed">
+                        <Grid x:Name="Stage" ClipToBounds="True">
+                            <Image x:Name="Picture" Stretch="None" />
+                            <Canvas
+                                x:Name="Marks"
+                                Background="Transparent"
+                                Cursor="Cross"
+                                MouseLeftButtonDown="Marks_MouseLeftButtonDown"
+                                MouseLeftButtonUp="Marks_MouseLeftButtonUp"
+                                MouseMove="Marks_MouseMove" />
+                        </Grid>
+                    </Viewbox>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,1942 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.SimilarFileFinderView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/SimilarManager.cs (+ .Media.cs), SimilarHashing.cs,
+        SimilarPreviewService.cs, ShellExplorer.cs; Models/SimilarFilesModel.cs.
+        Code-behind: FindSimilarFilesView.xaml.cs (sidebar, scan, results,
+        review drawer, move/delete) and FindSimilarFilesView.Compare.cs
+        (side-by-side compare). One compare overlay serves images, video
+        and audio - the old view had three near-identical copies.
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  ============ Player chrome (sits on the fixed-dark stage) ============  -->
+
+        <Style
+            x:Key="PlayerPrimaryButtonStyle"
+            BasedOn="{StaticResource PlayerIconButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Background="{DynamicResource AccentFill}"
+                            CornerRadius="24">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.88" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.74" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Hairline scrubber  -->
+        <Style x:Key="PlayerSliderStyle" TargetType="Slider">
+            <Setter Property="Height" Value="16" />
+            <Setter Property="IsMoveToPointEnabled" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center">
+                            <Border
+                                Height="3"
+                                Background="#33FFFFFF"
+                                CornerRadius="1.5" />
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate>
+                                                <Border
+                                                    Height="3"
+                                                    Background="{DynamicResource AccentColor}"
+                                                    CornerRadius="1.5" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate>
+                                                <Border Background="Transparent" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="12" Height="12">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Fill="White" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Small tag inside a cell ("Keep", "Remove")  -->
+        <Style x:Key="TagPillStyle" TargetType="Border">
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!--  Grid: thumbnail  -->
+        <DataTemplate x:Key="ThumbCellTemplate" DataType="{x:Type models:SimilarFileItem}">
+            <Border
+                Width="40"
+                Height="40"
+                Margin="2"
+                Background="{DynamicResource RowBg}"
+                ClipToBounds="True"
+                CornerRadius="6">
+                <Grid>
+                    <materialDesign:PackIcon
+                        x:Name="KindIcon"
+                        Width="16"
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ImageOutline" />
+                    <Image
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="{Binding Thumbnail}"
+                        Stretch="UniformToFill" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Video">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="Filmstrip" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Audio">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="MusicNote" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: name + Keep / Remove tags  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:SimilarFileItem}">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    x:Name="NameText"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding FullPath}" />
+                <Border
+                    x:Name="KeepTag"
+                    Grid.Column="1"
+                    Background="{DynamicResource StatusSuccessBg}"
+                    Style="{StaticResource TagPillStyle}"
+                    ToolTip="{DynamicResource Str_DuplicateFinder_ThisCopyIsKept}"
+                    Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            Width="11"
+                            Height="11"
+                            Margin="0,0,3,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusSuccessFg}"
+                            Kind="Star" />
+                        <TextBlock
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource StatusSuccessFg}"
+                            Text="{DynamicResource Str_FindSimilar_KeepBadge}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+                <Border
+                    x:Name="RemoveTag"
+                    Grid.Column="2"
+                    Background="{DynamicResource StatusErrorBg}"
+                    Style="{StaticResource TagPillStyle}"
+                    ToolTip="{DynamicResource Str_DuplicateFinder_SelectedForMoveDelete}"
+                    Visibility="Collapsed">
+                    <TextBlock
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource StatusErrorFg}"
+                        Text="{DynamicResource Str_VideoEditor_Remove}"
+                        TextTrimming="CharacterEllipsis" />
+                </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsKeep}" Value="True">
+                    <Setter TargetName="KeepTag" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="NameText" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="RemoveTag" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: group header row  -->
+        <DataTemplate x:Key="GroupHeaderTemplate">
+            <Border
+                Margin="0,8,0,2"
+                Padding="10,6"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="26"
+                        Height="26"
+                        Margin="0,0,10,0"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="8">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentColor}"
+                            Kind="ImageSearchOutline" />
+                    </Border>
+                    <StackPanel
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            FontSize="12.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Name.Title}" />
+                        <TextBlock
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding Name.Subtitle}" />
+                    </StackPanel>
+                    <Border
+                        x:Name="SelectionPill"
+                        Grid.Column="2"
+                        Margin="8,0"
+                        Background="{DynamicResource CardBg}"
+                        Style="{StaticResource IconStatusPillStyle}">
+                        <TextBlock
+                            x:Name="SelectionText"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding Name.SelectionText}" />
+                    </Border>
+                    <Button
+                        Grid.Column="3"
+                        Width="100"
+                        Margin="0,0,4,0"
+                        Padding="10,3"
+                        Click="BtnGroupSideBySide_Click"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        Tag="{Binding Name}"
+                        ToolTip="{DynamicResource Str_FindSimilarFiles_SeeOrHearThe}">
+                        <Grid HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Grid.Column="0"
+                                Width="14"
+                                Height="14"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Kind="CompareHorizontal" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="11.5"
+                                Text="{DynamicResource Str_FindSimilarFiles_SideBySide}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Button>
+                    <Button
+                        Grid.Column="4"
+                        Width="70"
+                        Padding="10,3"
+                        Click="BtnGroupReview_Click"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        Tag="{Binding Name}"
+                        ToolTip="{DynamicResource Str_FindSimilarFiles_ReviewEveryFileIn}">
+                        <Grid HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Grid.Column="0"
+                                Width="14"
+                                Height="14"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Kind="ViewCarouselOutline" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="11.5"
+                                Text="{DynamicResource Str_FindSimilarFiles_Review}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Button>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Name.AllSelected}" Value="True">
+                    <Setter TargetName="SelectionPill" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="SelectionText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="SelectionPill" Property="ToolTip" Value="Every copy in this group is selected - acting on it would leave none." />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Review drawer card  -->
+        <DataTemplate x:Key="ReviewCardTemplate" DataType="{x:Type models:SimilarFileItem}">
+            <Border
+                x:Name="CardBd"
+                Margin="0,0,0,10"
+                Padding="10"
+                Background="{DynamicResource RowBg}"
+                BorderBrush="Transparent"
+                BorderThickness="2"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border
+                        Height="180"
+                        Margin="0,0,0,10"
+                        Background="{DynamicResource CardBg}"
+                        ClipToBounds="True"
+                        CornerRadius="8">
+                        <Grid>
+                            <materialDesign:PackIcon
+                                x:Name="BigKindIcon"
+                                Width="40"
+                                Height="40"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Kind="ImageOutline"
+                                Opacity="0.6" />
+                            <Image
+                                RenderOptions.BitmapScalingMode="HighQuality"
+                                Source="{Binding Thumbnail}"
+                                Stretch="Uniform" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Row="1">
+                        <TextBlock
+                            FontSize="12.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding FullPath}" />
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding Folder}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding Folder}" />
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}">
+                            <Run Text="{Binding Details, Mode=OneWay}" />
+                            <Run Text="{DynamicResource Str_DuplicateFinder_Modified}" />
+                            <Run Text="{Binding Modified, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <Grid Grid.Row="2" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <RadioButton
+                            Margin="0,0,4,0"
+                            Click="RadioKeep_Click"
+                            GroupName="ReviewKeep"
+                            IsChecked="{Binding IsKeep, Mode=TwoWay}"
+                            Style="{StaticResource ModeToggleButtonStyle}"
+                            ToolTip="{DynamicResource Str_FindSimilar_KeepThisOneTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Kind="StarOutline" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Text="{DynamicResource Str_FindSimilar_KeepThisOne}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </RadioButton>
+                        <CheckBox
+                            Grid.Column="1"
+                            Margin="8,0,4,0"
+                            VerticalAlignment="Center"
+                            Content="{DynamicResource Str_VideoEditor_Remove}"
+                            IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                            ToolTip="{DynamicResource Str_FindSimilar_RemoveThisOneTooltip}" />
+                        <Button
+                            Grid.Column="2"
+                            Width="30"
+                            Height="30"
+                            Click="BtnCardShowInFolder_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Common_ShowInFolderTooltip}">
+                            <materialDesign:PackIcon
+                                Width="15"
+                                Height="15"
+                                Kind="FolderOpenOutline" />
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsKeep}" Value="True">
+                    <Setter TargetName="CardBd" Property="BorderBrush" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="CardBd" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Video">
+                    <Setter TargetName="BigKindIcon" Property="Kind" Value="Filmstrip" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Audio">
+                    <Setter TargetName="BigKindIcon" Property="Kind" Value="MusicNote" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+
+        <!--  Input card: one queued item  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:FolderListEntry}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="Folder" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding FullPath}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveSingleFolder_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_FindSimilar_RemoveFolderTooltip}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FOLDERS ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ctl:Tour.Key="Str_Tour_FindSimilar_Input"
+                                ctl:Tour.Order="1"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_FindSimilar_FoldersHeader}"
+                                HeaderIcon="FolderSearchOutline"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                Mode="Folders"
+                                PathsAdded="InputCard_PathsAdded"
+                                ShowSubfolders="False" />
+
+
+                            <!--  ============ WHAT TO COMPARE ============  -->
+                            <Border
+                                ctl:Tour.Key="Str_Tour_FindSimilar_Method"
+                                ctl:Tour.Order="2"
+                                Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FindSimilar_DetectionMethodHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ImageSearchOutline}" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioKindImages"
+                                            Checked="RadioKind_Checked"
+                                            GroupName="MediaKind"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_FindSimilarFiles_PhotosAndPicturesThat}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ImageMultipleOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_ImgPdf_ImagesHeader}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioKindVideos"
+                                            Grid.Column="2"
+                                            Checked="RadioKind_Checked"
+                                            GroupName="MediaKind"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_FindSimilarFiles_TheSameClipIn}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Filmstrip" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DuplicateFinder_Videos}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioKindAudio"
+                                            Grid.Column="4"
+                                            Checked="RadioKind_Checked"
+                                            GroupName="MediaKind"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_FindSimilarFiles_TheSameRecordingIn}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="MusicNote" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DuplicateFinder_Audio}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
+
+                                    <!--  Image hash family  -->
+                                    <StackPanel x:Name="ImageMethodPanel" Margin="0,12,0,0">
+                                        <TextBlock
+                                            Margin="0,0,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_FindSimilarFiles_Method}" />
+                                        <UniformGrid Columns="3" ToolTip="{DynamicResource Str_FindSimilar_DetectionMethodTooltip}">
+                                            <RadioButton
+                                                x:Name="RadioPHash"
+                                                Margin="0,0,2,0"
+                                                Checked="Option_Changed"
+                                                Content="{DynamicResource Str_FindSimilarFiles_Phash}"
+                                                GroupName="ImageMethod"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="PHash"
+                                                ToolTip="{DynamicResource Str_FindSimilarFiles_PerceptualHashBestAll}" />
+                                            <RadioButton
+                                                x:Name="RadioDHash"
+                                                Margin="2,0"
+                                                Checked="Option_Changed"
+                                                Content="{DynamicResource Str_FindSimilarFiles_Dhash}"
+                                                GroupName="ImageMethod"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="DHash"
+                                                ToolTip="{DynamicResource Str_FindSimilarFiles_DifferenceHashFastestGood}" />
+                                            <RadioButton
+                                                x:Name="RadioWHash"
+                                                Margin="2,0,0,0"
+                                                Checked="Option_Changed"
+                                                Content="{DynamicResource Str_FindSimilarFiles_Whash}"
+                                                GroupName="ImageMethod"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="WHash"
+                                                ToolTip="{DynamicResource Str_FindSimilarFiles_WaveletHashTolerantOf}" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        x:Name="TxtMethodHint"
+                                        Margin="0,10,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <Border
+                                        x:Name="FfmpegWarning"
+                                        Margin="0,10,0,0"
+                                        Padding="10,8"
+                                        Background="{DynamicResource StatusWarningBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,1,8,0"
+                                                VerticalAlignment="Top"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Kind="AlertOutline" />
+                                            <TextBlock
+                                                x:Name="TxtFfmpegWarning"
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ HOW ALIKE ============  -->
+                            <Border
+                                ctl:Tour.Key="Str_Tour_FindSimilar_Threshold"
+                                ctl:Tour.Order="3"
+                                Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_FindSimilar_ThresholdHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.ScaleBalance}" />
+                                        <Border
+                                            Grid.Column="1"
+                                            Margin="0,0,0,10"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource AccentColorSubtle}"
+                                            Style="{StaticResource IconStatusPillStyle}">
+                                            <TextBlock
+                                                x:Name="TxtThresholdValue"
+                                                FontSize="12"
+                                                FontWeight="Bold"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Text="85%" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SliderThreshold"
+                                        IsSnapToTickEnabled="True"
+                                        LargeChange="5"
+                                        Maximum="100"
+                                        Minimum="50"
+                                        SmallChange="1"
+                                        TickFrequency="1"
+                                        ToolTip="{DynamicResource Str_FindSimilar_ThresholdTooltip}"
+                                        ValueChanged="SliderThreshold_ValueChanged"
+                                        Value="85" />
+                                    <Grid Margin="0,2,0,0">
+                                        <TextBlock
+                                            FontSize="10"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_FindSimilarFiles_Looser}" />
+                                        <TextBlock
+                                            HorizontalAlignment="Right"
+                                            FontSize="10"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_FindSimilarFiles_NearIdentical}" />
+                                    </Grid>
+                                    <TextBlock
+                                        x:Name="TxtThresholdHint"
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OPTIONS + CLEAN-UP ============  -->
+                            <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_OptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Tune}" />
+                                    <CheckBox
+                                        x:Name="ChkIncludeSubfolders"
+                                        Margin="0,0,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_Common_IncludeSubfolders}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_FindSimilar_IncludeSubfoldersTooltip}"
+                                        Unchecked="Option_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreSystemFiles"
+                                        Margin="0,8,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_FindSimilar_IgnoreSystemFiles}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_FindSimilar_IgnoreSystemFilesTooltip}"
+                                        Unchecked="Option_Changed" />
+
+                                    <TextBlock
+                                        Margin="0,14,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_DuplicateFinder_KeepInEachGroup}" />
+                                    <ComboBox
+                                        x:Name="CmbKeepRule"
+                                        SelectedIndex="0"
+                                        SelectionChanged="Option_Changed"
+                                        ToolTip="{DynamicResource Str_FindSimilarFiles_WhichCopyIsKept}">
+                                        <ComboBoxItem Tag="BestQuality">Best quality (highest resolution)</ComboBoxItem>
+                                        <ComboBoxItem Tag="LargestFile">Largest file</ComboBoxItem>
+                                        <ComboBoxItem Tag="Oldest">Oldest copy</ComboBoxItem>
+                                        <ComboBoxItem Tag="Newest">Newest copy</ComboBoxItem>
+                                    </ComboBox>
+                                    <CheckBox
+                                        x:Name="ChkRecycleBin"
+                                        Margin="0,10,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_DuplicateFinder_DeleteToTheRecycle}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_FindSimilarFiles_DeletedFilesCanBe}"
+                                        Unchecked="Option_Changed" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnScanForSimilar"
+                            MinWidth="180"
+                            VerticalAlignment="Center"
+                            ctl:Tour.Key="Str_Tour_FindSimilar_Scan"
+                            ctl:Tour.Order="4"
+                            Click="BtnScanForSimilar_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_FindSimilar_ScanButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    x:Name="IconScan"
+                                    Grid.Column="0"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="ImageSearchOutline" />
+                                <TextBlock
+                                    x:Name="TxtScanLabel"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_FindSimilar_ScanButton}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <Button
+                            x:Name="BtnRescan"
+                            Grid.Column="1"
+                            Width="36"
+                            Height="36"
+                            Margin="8,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRescan_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_FindSimilarFiles_ScanAgainWithThe}">
+                            <materialDesign:PackIcon
+                                Width="17"
+                                Height="17"
+                                Kind="Refresh" />
+                        </Button>
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressScan"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_FindSimilar_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Common_ReadyToScan}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="3"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Results  -->
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_FindSimilar_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ImageSearchOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="ImageMultipleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryGroups"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_FindSimilar_GroupsFoundInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilarFiles_SpaceFreedByKeeping}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="Broom" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryReclaimable"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Text="{DynamicResource Str_Common_ReclaimableInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="SelectionPill"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_DuplicateFinder_FilesCurrentlySelectedFor}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="CheckboxMultipleMarkedOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSelection"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusWarningBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilarFiles_SimilarIsNotIdentical}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Kind="EyeOutline" />
+                                        <TextBlock
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Text="{DynamicResource Str_FindSimilarFiles_ReviewBeforeDeleting}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                x:Name="ActionsPanel"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnAutoSelect"
+                                    Margin="0,0,6,0"
+                                    Click="BtnAutoSelect_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilarFiles_KeepOneFilePer}">
+                                    <Grid Margin="8,0" HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Kind="AutoFix" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Text="{DynamicResource Str_DuplicateFinder_AutoSelect}"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <Button
+                                    x:Name="BtnDeselectAll"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,10,0"
+                                    Click="BtnDeselectAll_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_DeselectAllTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="CheckboxMultipleBlankOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnMoveSelected"
+                                    Margin="0,0,8,0"
+                                    Click="BtnMoveSelected_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_MoveSelectedTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderMoveOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnDeleteSelected"
+                                    Click="BtnDeleteSelected_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_DeleteSelectedTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridDuplicates"
+                            Grid.Row="1"
+                            ctl:Tour.Key="Str_Tour_FindSimilar_Results"
+                            ctl:Tour.Order="5"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserSortColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MinRowHeight="48"
+                            MouseDoubleClick="DataGridDuplicates_MouseDoubleClick"
+                            PreviewKeyDown="DataGridDuplicates_PreviewKeyDown"
+                            PreviewMouseRightButtonDown="DataGridDuplicates_PreviewMouseRightButtonDown"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_FindSimilar_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.GroupStyle>
+                                <GroupStyle HeaderTemplate="{StaticResource GroupHeaderTemplate}" />
+                            </DataGrid.GroupStyle>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="36" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                ToolTip="{DynamicResource Str_FindSimilar_FlagCheckboxTooltip}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="52"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource ThumbCellTemplate}"
+                                    Header="{DynamicResource Str_FindSimilar_ColHeaderPreview}" />
+                                <DataGridTemplateColumn
+                                    Width="2*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}" />
+                                <DataGridTextColumn
+                                    Width="2*"
+                                    Binding="{Binding Folder}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFolder}" />
+                                <DataGridTextColumn
+                                    x:Name="ColDetails"
+                                    Width="120"
+                                    Binding="{Binding Resolution}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Spectrogram_ResolutionHeader}" />
+                                <DataGridTextColumn
+                                    Width="80"
+                                    Binding="{Binding Size}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Common_ColHeaderSize}" />
+                                <DataGridTextColumn
+                                    x:Name="ColModified"
+                                    Width="120"
+                                    Binding="{Binding Modified}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Common_ColHeaderModified}" />
+                                <DataGridTextColumn
+                                    x:Name="ColHash"
+                                    Width="140"
+                                    Binding="{Binding Hash}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_FindSimilar_ColHeaderHash}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <controls:EmptyStateCard
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            Description="{DynamicResource Str_FindSimilar_ResultsHint}"
+                            Icon="ImageSearchOutline"
+                            IsHitTestVisible="False" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!--  ================= REVIEW DRAWER =================  -->
+
+            <Border
+                x:Name="KeepSidebarScrim"
+                Grid.Column="2"
+                Background="Black"
+                CornerRadius="12"
+                MouseDown="KeepSidebarScrim_MouseDown"
+                Opacity="0.35"
+                Visibility="Collapsed" />
+
+            <Border
+                x:Name="KeepSidebarBorder"
+                Grid.Column="2"
+                Width="420"
+                HorizontalAlignment="Right"
+                Background="{DynamicResource CardBg}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Visibility="Collapsed">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="KeepSidebarShift" />
+                </Border.RenderTransform>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Margin="16,14,16,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_FindSimilar_KeepCompareTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ViewCarouselOutline}" />
+                            <Button
+                                Grid.Column="1"
+                                Width="30"
+                                Height="30"
+                                Click="BtnCloseKeepSidebar_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_FindSimilar_CloseDrawerTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="Close" />
+                            </Button>
+                        </Grid>
+
+                        <Border
+                            Margin="0,12,0,0"
+                            Padding="4"
+                            Background="{DynamicResource RowBg}"
+                            CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Name="BtnPrevGroup"
+                                    Width="30"
+                                    Height="30"
+                                    Click="BtnPrevGroup_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DuplicateFinder_PreviousGroup}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ChevronLeft" />
+                                </Button>
+                                <StackPanel
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <TextBlock
+                                        x:Name="TxtGroupPosition"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                    <TextBlock
+                                        x:Name="TxtKeepSidebarGroupLabel"
+                                        HorizontalAlignment="Center"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_FindSimilar_GroupPlaceholder}" />
+                                </StackPanel>
+                                <Button
+                                    x:Name="BtnNextGroup"
+                                    Grid.Column="2"
+                                    Width="30"
+                                    Height="30"
+                                    Click="BtnNextGroup_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DuplicateFinder_NextGroup}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ChevronRight" />
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="KeepSidebarScroller"
+                        Grid.Row="1"
+                        Padding="16,0"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl
+                            x:Name="KeepSidebarItems"
+                            Focusable="False"
+                            ItemTemplate="{StaticResource ReviewCardTemplate}" />
+                    </ScrollViewer>
+
+                    <Grid Grid.Row="2" Margin="16,10,16,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            x:Name="BtnSuggestKeeper"
+                            Click="BtnSuggestKeeper_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_FindSimilarFiles_PickTheKeeperWith}">
+                            <Grid Margin="8,0" HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    Width="15"
+                                    Height="15"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Kind="AutoFix" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Text="{DynamicResource Str_FindSimilarFiles_PickBest}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+                        <Button
+                            x:Name="BtnReviewSideBySide"
+                            Grid.Column="1"
+                            Margin="6,0,0,0"
+                            HorizontalAlignment="Left"
+                            Click="BtnReviewSideBySide_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_FindSimilarFiles_SeeOrHearThe}">
+                            <Grid Margin="8,0" HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    Width="15"
+                                    Height="15"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Kind="CompareHorizontal" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Text="{DynamicResource Str_FindSimilarFiles_SideBySide}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+                        <Button
+                            x:Name="BtnNextReview"
+                            Grid.Column="2"
+                            Click="BtnNextReview_Click"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_FindSimilarFiles_GoToTheNext}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    x:Name="TxtNextReviewLabel"
+                                    Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_DuplicateFinder_NextGroup}"
+                                    TextWrapping="Wrap" />
+                                <materialDesign:PackIcon
+                                    Grid.Column="1"
+                                    Width="15"
+                                    Height="15"
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Kind="ChevronRight" />
+                            </Grid>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!--  ================= SIDE-BY-SIDE COMPARE (images, video, audio) =================  -->
+
+            <Border
+                x:Name="CompareScrim"
+                Grid.ColumnSpan="3"
+                Background="Black"
+                MouseDown="CompareScrim_MouseDown"
+                Opacity="0.6"
+                Visibility="Collapsed" />
+
+            <Border
+                x:Name="ComparePanel"
+                Grid.ColumnSpan="3"
+                MaxWidth="1180"
+                Margin="24"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource CardBg}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Header  -->
+                    <Grid Margin="18,14,18,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <ContentControl
+                                x:Name="CompareHeader"
+                                Content="{DynamicResource Str_FindSimilar_CompareImagesTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.CompareHorizontal}" />
+                            <TextBlock
+                                x:Name="TxtCompareSubtitle"
+                                Margin="38,2,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+
+                        <Border
+                            Grid.Column="1"
+                            Margin="12,0"
+                            Padding="4"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource RowBg}"
+                            CornerRadius="8">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnComparePrevGroup"
+                                    Width="30"
+                                    Height="30"
+                                    Click="BtnComparePrevGroup_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DuplicateFinder_PreviousGroup}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ChevronLeft" />
+                                </Button>
+                                <TextBlock
+                                    x:Name="TxtCompareGroupPosition"
+                                    MinWidth="96"
+                                    Margin="6,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextAlignment="Center" />
+                                <Button
+                                    x:Name="BtnCompareNextGroup"
+                                    Width="30"
+                                    Height="30"
+                                    Click="BtnCompareNextGroup_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DuplicateFinder_NextGroup}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ChevronRight" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <Button
+                            Grid.Column="2"
+                            Width="32"
+                            Height="32"
+                            VerticalAlignment="Center"
+                            Click="BtnCloseCompare_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Common_Close}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="Close" />
+                        </Button>
+                    </Grid>
+
+                    <!--  Two panes on a fixed-dark stage (media reads best on black in both themes)  -->
+                    <Grid Grid.Row="1" Margin="18,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!--  Left: the keeper  -->
+                        <Grid Grid.Column="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border
+                                x:Name="LeftStage"
+                                Background="#0E0F12"
+                                BorderBrush="{DynamicResource StatusSuccessFg}"
+                                BorderThickness="2"
+                                ClipToBounds="True"
+                                CornerRadius="12">
+                                <Grid>
+                                    <MediaElement
+                                        x:Name="MediaLeft"
+                                        LoadedBehavior="Manual"
+                                        Stretch="Uniform"
+                                        UnloadedBehavior="Manual"
+                                        Visibility="Collapsed" />
+                                    <!--  VLC's video window (Engines\VLC). Nothing can be drawn on top of it, so it starts below the badge.  -->
+                                    <ContentControl
+                                        x:Name="VlcLeftSlot"
+                                        Margin="6,50,6,6"
+                                        Focusable="False"
+                                        Visibility="Collapsed" />
+                                    <Image
+                                        x:Name="ImageLeft"
+                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        Stretch="Uniform" />
+                                    <StackPanel
+                                        x:Name="AudioArtLeft"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Visibility="Collapsed">
+                                        <materialDesign:PackIcon
+                                            Width="72"
+                                            Height="72"
+                                            HorizontalAlignment="Center"
+                                            Foreground="#8A8F99"
+                                            Kind="MusicBoxOutline" />
+                                        <materialDesign:PackIcon
+                                            x:Name="IconPlayingLeft"
+                                            Width="28"
+                                            Height="28"
+                                            Margin="0,8,0,0"
+                                            HorizontalAlignment="Center"
+                                            Foreground="#8A8F99"
+                                            Kind="Waveform" />
+                                    </StackPanel>
+                                    <Border
+                                        Margin="10"
+                                        Padding="8,3"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="{DynamicResource StatusSuccessBg}"
+                                        CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="12"
+                                                Height="12"
+                                                Margin="0,0,4,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Kind="Star" />
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Text="{DynamicResource Str_FindSimilar_OriginalKeepBadge}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Slider
+                                x:Name="SliderLeft"
+                                Grid.Row="1"
+                                Margin="4,8,4,0"
+                                PreviewMouseDown="SliderLeft_PreviewMouseDown"
+                                PreviewMouseUp="SliderLeft_PreviewMouseUp"
+                                Style="{StaticResource PlayerSliderStyle}" />
+                            <Grid Grid.Row="2" Margin="2,8,2,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock
+                                        x:Name="TxtLeftName"
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        x:Name="TxtLeftDetails"
+                                        Margin="0,2,0,0"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="TxtLeftTime"
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Top"
+                                    FontFamily="Consolas"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </Grid>
+                        </Grid>
+
+                        <!--  Right: the other copies, one at a time  -->
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border
+                                x:Name="RightStage"
+                                Background="#0E0F12"
+                                BorderBrush="Transparent"
+                                BorderThickness="2"
+                                ClipToBounds="True"
+                                CornerRadius="12">
+                                <Grid>
+                                    <MediaElement
+                                        x:Name="MediaRight"
+                                        LoadedBehavior="Manual"
+                                        Stretch="Uniform"
+                                        UnloadedBehavior="Manual"
+                                        Visibility="Collapsed" />
+                                    <!--  VLC's video window - starts below the paging buttons, which it would otherwise cover.  -->
+                                    <ContentControl
+                                        x:Name="VlcRightSlot"
+                                        Margin="6,50,6,6"
+                                        Focusable="False"
+                                        Visibility="Collapsed" />
+                                    <Image
+                                        x:Name="ImageRight"
+                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        Stretch="Uniform" />
+                                    <StackPanel
+                                        x:Name="AudioArtRight"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Visibility="Collapsed">
+                                        <materialDesign:PackIcon
+                                            Width="72"
+                                            Height="72"
+                                            HorizontalAlignment="Center"
+                                            Foreground="#8A8F99"
+                                            Kind="MusicBoxOutline" />
+                                        <materialDesign:PackIcon
+                                            Width="28"
+                                            Height="28"
+                                            Margin="0,8,0,0"
+                                            HorizontalAlignment="Center"
+                                            Foreground="#8A8F99"
+                                            Kind="Waveform" />
+                                    </StackPanel>
+                                    <Border
+                                        Margin="10"
+                                        Padding="4"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Background="#99000000"
+                                        CornerRadius="12">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button
+                                                x:Name="BtnPrevDuplicate"
+                                                Width="28"
+                                                Height="28"
+                                                Click="BtnPrevDuplicate_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_FindSimilar_PrevDuplicateTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="ChevronLeft" />
+                                            </Button>
+                                            <TextBlock
+                                                x:Name="TxtDuplicateIndex"
+                                                Margin="8,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="#E9EBEF" />
+                                            <Button
+                                                x:Name="BtnNextDuplicate"
+                                                Width="28"
+                                                Height="28"
+                                                Click="BtnNextDuplicate_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_FindSimilar_NextDuplicateTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="ChevronRight" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Slider
+                                x:Name="SliderRight"
+                                Grid.Row="1"
+                                Margin="4,8,4,0"
+                                PreviewMouseDown="SliderRight_PreviewMouseDown"
+                                PreviewMouseUp="SliderRight_PreviewMouseUp"
+                                Style="{StaticResource PlayerSliderStyle}" />
+                            <Grid Grid.Row="2" Margin="2,8,2,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock
+                                        x:Name="TxtRightName"
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        x:Name="TxtRightDetails"
+                                        Margin="0,2,0,0"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="TxtRightTime"
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Top"
+                                    FontFamily="Consolas"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </Grid>
+                            <StackPanel
+                                Grid.Row="3"
+                                Margin="0,10,0,0"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnKeepRight"
+                                    Margin="0,0,8,0"
+                                    Click="BtnKeepRight_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilarFiles_KeepThisCopyInstead}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="14"
+                                            Height="14"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="SwapHorizontal" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_FindSimilarFiles_KeepThisOneInstead}"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <CheckBox
+                                    x:Name="ChkRemoveRight"
+                                    VerticalAlignment="Center"
+                                    Click="ChkRemoveRight_Click"
+                                    Content="{DynamicResource Str_FindSimilarFiles_RemoveThisCopy}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_RemoveThisOneTooltip}" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <!--  Transport + status  -->
+                    <Grid Grid.Row="2" Margin="18,12,18,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            x:Name="TxtCompareStatus"
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                        <Border
+                            x:Name="TransportBar"
+                            Grid.Column="1"
+                            Padding="10,6"
+                            Background="#0E0F12"
+                            CornerRadius="30">
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnRestartBoth"
+                                    Click="BtnRestartBoth_Click"
+                                    Style="{StaticResource PlayerIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_RestartBothTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="17"
+                                        Height="17"
+                                        Kind="Restart" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnPlayPauseBoth"
+                                    Margin="10,0"
+                                    Click="BtnPlayPauseBoth_Click"
+                                    Style="{StaticResource PlayerPrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_PauseBothTooltip}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconPlayPause"
+                                        Width="22"
+                                        Height="22"
+                                        Kind="Pause" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSpeedToggle"
+                                    Width="48"
+                                    Click="BtnSpeedToggle_Click"
+                                    Style="{StaticResource PlayerIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FindSimilar_SpeedToggleTooltip}">
+                                    <TextBlock
+                                        x:Name="TxtSpeed"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Text="1x" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnMuteToggle"
+                                    Margin="10,0,0,0"
+                                    Click="BtnMuteToggle_Click"
+                                    Style="{StaticResource PlayerIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Common_Unmute}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconMute"
+                                        Width="17"
+                                        Height="17"
+                                        Kind="VolumeOff" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

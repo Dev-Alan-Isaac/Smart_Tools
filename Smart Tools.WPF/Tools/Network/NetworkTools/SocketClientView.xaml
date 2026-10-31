@@ -1,0 +1,408 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.SocketClientView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="View_Loaded"
+    Unloaded="View_Unloaded">
+
+    <!--
+        TCP / UDP Client - talk to a device or server, from the adapter you choose.
+        Backend: Controllers/NetworkToolsManager.Socket.cs (SocketSession), NetworkToolsManager.cs
+        (payloads, hex), NetworkToolsManager.Source.cs; Controls/NetworkConsole, Controls/SourceAdapterPicker.
+        This file and the code-behind are UI only.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Small number tile on the tool card  -->
+        <Style x:Key="SidebarHint" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,10,0,0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+                            <!--  ============ TCP / UDP ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_SocketClient_Connection" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Network_SocketClientHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.SwapHorizontal}" />
+                                    <UniformGrid
+                                        x:Name="ProtocolChips"
+                                        Margin="0,0,0,12"
+                                        Columns="2">
+                                        <RadioButton
+                                            Margin="0,0,3,0"
+                                            Click="Protocol_Click"
+                                            Content="{DynamicResource Str_NetworkTools_Tcp}"
+                                            GroupName="SocketProtocol"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Tcp"
+                                            ToolTip="{DynamicResource Str_Network_TcpTooltip}" />
+                                        <RadioButton
+                                            Margin="3,0,0,0"
+                                            Click="Protocol_Click"
+                                            Content="{DynamicResource Str_NetworkTools_Udp}"
+                                            GroupName="SocketProtocol"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Udp"
+                                            ToolTip="{DynamicResource Str_Network_UdpTooltip}" />
+                                    </UniformGrid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="74" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,4,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_NetworkTools_Host}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtSocketHost"
+                                                    KeyDown="HostBox_KeyDown"
+                                                    LostFocus="Setting_LostFocus"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="127.0.0.1"
+                                                    ToolTip="{DynamicResource Str_Network_TargetHostTooltip}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock
+                                                Margin="0,4,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_NetworkTools_Port}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtSocketPort"
+                                                    KeyDown="HostBox_KeyDown"
+                                                    LostFocus="Setting_LostFocus"
+                                                    MaxLength="5"
+                                                    PreviewTextInput="Digits_PreviewTextInput"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="9000"
+                                                    ToolTip="{DynamicResource Str_Network_TargetPortTooltip}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                    <StackPanel
+                                        x:Name="PanelUdpLocalPort"
+                                        Margin="0,12,0,0"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            Margin="0,0,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_Network_LocalPortLabel}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtSocketLocalPort"
+                                                LostFocus="Setting_LostFocus"
+                                                MaxLength="5"
+                                                PreviewTextInput="Digits_PreviewTextInput"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="0 = any free port"
+                                                ToolTip="{DynamicResource Str_Network_LocalPortTooltip}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <CheckBox
+                                            x:Name="ChkAppendNewline"
+                                            Margin="0,14,0,6"
+                                            Checked="Option_Changed"
+                                            Content="{DynamicResource Str_Network_AppendCrlf}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_Network_AppendCrlfTooltip}"
+                                            Unchecked="Option_Changed" />
+                                        <CheckBox
+                                            x:Name="ChkSendHex"
+                                            Margin="0,0,0,6"
+                                            Checked="Option_Changed"
+                                            Content="{DynamicResource Str_Network_SendAsHex}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            ToolTip="{DynamicResource Str_Network_SendAsHexTooltip}"
+                                            Unchecked="Option_Changed" />
+                                        <CheckBox
+                                            x:Name="ChkShowHex"
+                                            Margin="0,0,0,6"
+                                            Checked="Option_Changed"
+                                            Content="{DynamicResource Str_NetworkTools_ShowReceivedDataAs}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            ToolTip="{DynamicResource Str_NetworkTools_ForBinaryProtocolsShows}"
+                                            Unchecked="Option_Changed" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SEND FROM ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_SocketClient_Source" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Ping_Adapter}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Ethernet}" />
+                                    <controls:SourceAdapterPicker x:Name="SourcePicker" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Tool card: connect, send bar, traffic  -->
+                <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                ctl:Tour.Key="Str_Tour_SocketClient_Connect"
+                                ctl:Tour.Order="3"
+                                x:Name="BtnAction"
+                                MinWidth="150"
+                                Margin="0,0,16,0"
+                                VerticalAlignment="Center"
+                                Click="BtnAction_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        x:Name="IconAction"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="LanConnect" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="TxtActionLabel"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Network_ConnectButton}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtToolTitle"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtToolDetail"
+                                    Margin="0,2,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Border
+                                    x:Name="StatePill"
+                                    Margin="12,0,0,0"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Network_ConsoleStateTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconState"
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="LanDisconnect" />
+                                        <TextBlock
+                                            x:Name="TxtState"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_Network_Disconnected}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="SourcePill"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Ping_TheAdapterThisTool}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconSource"
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="AutoFix" />
+                                        <TextBlock
+                                            x:Name="TxtSource"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_NetworkAdapters_Automatic}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox
+                                    x:Name="TxtSocketSend"
+                                    FontFamily="Consolas"
+                                    PreviewKeyDown="TxtSocketSend_PreviewKeyDown"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="Type a message - Enter sends, ↑ ↓ recall earlier ones"
+                                    ToolTip="{DynamicResource Str_Network_DataToSendTooltip}" />
+                            </Border>
+                            <Button
+                                ctl:Tour.Key="Str_Tour_SocketClient_Send"
+                                ctl:Tour.Order="4"
+                                x:Name="BtnSocketSend"
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Click="BtnSocketSend_Click"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_Network_SendButtonTooltip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="15"
+                                        Height="15"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Send" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Network_SendButton}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                        </Grid>
+                        <TextBlock
+                            x:Name="TxtTraffic"
+                            Margin="2,8,0,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="↑ 0 B   ↓ 0 B" />
+                    </StackPanel>
+                </Border>
+
+                <controls:NetworkConsole
+                    ctl:Tour.Key="Str_Tour_SocketClient_Traffic"
+                    ctl:Tour.Order="5"
+                    x:Name="Results"
+                    Grid.Row="1"
+                    EmptyText="What you send and what comes back appear here."
+                    FileNamePrefix="TCP-UDP log" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

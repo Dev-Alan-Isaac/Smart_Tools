@@ -1,0 +1,1237 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.VideoReplayView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    SizeChanged="Root_SizeChanged"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/VideoReplayManager.cs (PlayOrder, file lists,
+        settings), VideoReplayManager.Media.cs (folders, ffprobe durations,
+        preview copies, deleting). Playback is WPF's MediaElement (Windows
+        Media Foundation). This file and the code-behind are UI only.
+        The stage is fixed-dark (#0E0F12) with its own player chrome, like
+        Find Similar Files; everything around it uses theme tokens.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  ============ Player chrome (sits on the fixed-dark stage) ============  -->
+
+        <Style
+            x:Key="PlayerPrimaryButtonStyle"
+            BasedOn="{StaticResource PlayerIconButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Background="{DynamicResource AccentFill}"
+                            CornerRadius="25">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.88" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.74" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Speed pill ("1.5x") on the stage  -->
+        <Style
+            x:Key="PlayerPillButtonStyle"
+            BasedOn="{StaticResource PlayerIconButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Width" Value="Auto" />
+            <Setter Property="MinWidth" Value="48" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="#1AFFFFFF"
+                            CornerRadius="18">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2AFFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Hairline scrubber  -->
+        <Style x:Key="PlayerSliderStyle" TargetType="Slider">
+            <Setter Property="Height" Value="16" />
+            <Setter Property="IsMoveToPointEnabled" Value="True" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center" Background="Transparent">
+                            <Border
+                                Height="3"
+                                Background="#33FFFFFF"
+                                CornerRadius="1.5" />
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate>
+                                                <Border
+                                                    Height="3"
+                                                    Background="{DynamicResource AccentColor}"
+                                                    CornerRadius="1.5" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate>
+                                                <Border Background="Transparent" />
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="12" Height="12">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Fill="White" />
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Playlist: number, or a play icon on the current clip, or an alert when it failed  -->
+        <DataTemplate x:Key="NumberCellTemplate" DataType="{x:Type models:PlaylistItem}">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock
+                    x:Name="Num"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Number}"
+                    TextTrimming="CharacterEllipsis" />
+                <materialDesign:PackIcon
+                    x:Name="Icon"
+                    Width="16"
+                    Height="16"
+                    Foreground="{DynamicResource AccentColor}"
+                    Kind="VolumeHigh"
+                    Visibility="Collapsed" />
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Playing">
+                    <Setter TargetName="Num" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="Icon" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Converting">
+                    <Setter TargetName="Num" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="Icon" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Icon" Property="Kind" Value="Autorenew" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Num" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="Icon" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Icon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ClipCellTemplate" DataType="{x:Type models:PlaylistItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    x:Name="NameText"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    x:Name="SubText"
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="SubText" Property="Text" Value="{Binding Message}" />
+                    <Setter TargetName="SubText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Converting">
+                    <Setter TargetName="SubText" Property="Text" Value="Making a preview copy..." />
+                    <Setter TargetName="SubText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+
+        <!--  Input card: one queued item  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:ReplayQueueGroup}">
+            <Grid ToolTip="{Binding ToolTip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="GroupIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileMultipleOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveQueueGroup_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_AudioReplayControl_RemoveFromThePlaylist}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition x:Name="OptionsGapColumn" Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border
+                x:Name="OptionsSidebar"
+                Grid.Column="0"
+                Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ CLIPS ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ctl:Tour.Key="Str_Tour_VideoReplay_Clips"
+                                ctl:Tour.Order="1"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_VideoReplay_Clips}"
+                                HeaderIcon="FilmstripBoxMultiple"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+
+                            <!--  ============ PLAYBACK ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_VideoReplay_Mode" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_VideoReplay_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PlaylistPlay}" />
+                                    <StackPanel x:Name="ModeTiles" ToolTip="{DynamicResource Str_VideoReplay_ModeTooltip}">
+                                        <!--  Sequential Mode (Full Width)  -->
+                                        <RadioButton
+                                            Margin="0,0,0,3"
+                                            HorizontalAlignment="Stretch"
+                                            Click="Mode_Click"
+                                            GroupName="ReplayMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Sequential">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="PlaylistPlay" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_VideoReplay_ModeSequential}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <!--  Shuffle and Loop Modes (2 Columns)  -->
+                                        <UniformGrid Columns="2">
+                                            <RadioButton
+                                                Margin="0,3,1.5,0"
+                                                Click="Mode_Click"
+                                                GroupName="ReplayMode"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Shuffle">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="ShuffleVariant" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_VideoReplay_ModeShuffle}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton
+                                                Margin="1.5,3,0,0"
+                                                Click="Mode_Click"
+                                                GroupName="ReplayMode"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Loop">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="RepeatOnce" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_VideoReplay_ModeLoop}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </UniformGrid>
+                                    </StackPanel>
+                                    <TextBlock
+                                        x:Name="TxtModeHint"
+                                        Margin="2,10,0,10"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                    <CheckBox
+                                        x:Name="ChkRepeatPlaylist"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_VideoReplay_RepeatThePlaylist}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_VideoReplay_StartAgainFromThe}"
+                                        Unchecked="Option_Changed" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_VideoReplay_FullPlaybackHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SHORTCUTS ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ImageViewerControl_Keyboard}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.KeyboardOutline}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        LineHeight="18"
+                                        TextWrapping="Wrap">
+                                        <Run
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            Text="{DynamicResource Str_ImageViewerControl_Space}" />
+                                        play / pause<LineBreak />
+                                        <Run
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            Text="← →" />
+                                        back / forward 10 s (Shift: 30 s)<LineBreak />
+                                        <Run
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            Text="P  N" />
+                                        previous / next clip<LineBreak />
+                                        <Run
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            Text="M" />
+                                        mute ·<Run
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            Text="T" />
+                                        theater (or double-click the video)</TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= PLAYER + PLAYLIST =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition x:Name="PlaylistColumn" Width="400" />
+                </Grid.ColumnDefinitions>
+
+                <!--  Player card  -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Fixed-dark stage: video + player chrome  -->
+                        <Border
+                            x:Name="Stage"
+                            ctl:Tour.Key="Str_Tour_VideoReplay_Stage"
+                            ctl:Tour.Order="3"
+                            Background="#0E0F12"
+                            ClipToBounds="True"
+                            CornerRadius="12"
+                            MouseLeftButtonDown="Stage_MouseLeftButtonDown">
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Click="MenuShowInFolder_Click">
+                                        <MenuItem.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FolderOpenOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Validate_MenuShowInFolder}" />
+                                            </StackPanel>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuDeleteFile_Click">
+                                        <MenuItem.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="DeleteOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_VideoReplay_DeleteFile}" />
+                                            </StackPanel>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </Border.ContextMenu>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!--  VLC's video window goes here (Engines\VLC). Nothing can be drawn on top of it, so the banner has its own row.  -->
+                                <ContentControl
+                                    x:Name="VlcSlot"
+                                    Grid.Row="1"
+                                    Margin="6,6,6,0"
+                                    Focusable="False"
+                                    Visibility="Collapsed" />
+
+                                <MediaElement
+                                    x:Name="Player"
+                                    Grid.Row="1"
+                                    LoadedBehavior="Manual"
+                                    ScrubbingEnabled="True"
+                                    Stretch="Uniform"
+                                    UnloadedBehavior="Manual" />
+
+                                <!--  Nothing loaded  -->
+                                <StackPanel
+                                    x:Name="NoClipPanel"
+                                    Grid.Row="1"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsHitTestVisible="False">
+                                    <Border
+                                        Width="64"
+                                        Height="64"
+                                        HorizontalAlignment="Center"
+                                        Background="#1AFFFFFF"
+                                        CornerRadius="32">
+                                        <materialDesign:PackIcon
+                                            Width="30"
+                                            Height="30"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="#C9CDD4"
+                                            Kind="MovieOpenOutline" />
+                                    </Border>
+                                    <TextBlock
+                                        x:Name="TxtNoClip"
+                                        MaxWidth="340"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="13"
+                                        Foreground="#C9CDD4"
+                                        Text="{DynamicResource Str_VideoReplay_NoClipHint}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <!--  Making a preview copy  -->
+                                <Border
+                                    x:Name="ConvertingPanel"
+                                    Grid.Row="1"
+                                    Padding="18,14"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Background="#CC16181D"
+                                    CornerRadius="12"
+                                    Visibility="Collapsed">
+                                    <StackPanel Width="260">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="#E9EBEF"
+                                                Kind="Autorenew" />
+                                            <TextBlock
+                                                FontSize="12.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="#E9EBEF"
+                                                Text="{DynamicResource Str_VideoEditor_MakingAPreviewCopy}" />
+                                        </StackPanel>
+                                        <ProgressBar
+                                            x:Name="ProgressConvert"
+                                            Height="4"
+                                            Margin="0,10,0,6"
+                                            IsIndeterminate="True"
+                                            Maximum="100" />
+                                        <TextBlock
+                                            x:Name="TxtConvert"
+                                            FontSize="11"
+                                            Foreground="#A9AFB9"
+                                            Text="{DynamicResource Str_VideoEditor_WindowsCanTPlay}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Problem banner (the old view showed a dialog for every failed clip)  -->
+                                <Border
+                                    x:Name="ErrorBanner"
+                                    Grid.Row="0"
+                                    Margin="12,12,12,0"
+                                    Padding="12,8"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    CornerRadius="8"
+                                    Visibility="Collapsed">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,1,8,0"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtError"
+                                            Grid.Column="1"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            TextWrapping="Wrap" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Width="22"
+                                            Height="22"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Click="BtnDismissError_Click"
+                                            Style="{StaticResource IconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_VideoEditor_Dismiss}">
+                                            <materialDesign:PackIcon
+                                                Width="12"
+                                                Height="12"
+                                                Kind="Close" />
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <!--  Player chrome  -->
+                                <StackPanel Grid.Row="2" Margin="16,6,16,14">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            x:Name="TxtCurrentTime"
+                                            MinWidth="42"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Consolas"
+                                            FontSize="11.5"
+                                            Foreground="#C9CDD4"
+                                            Text="0:00" />
+                                        <Slider
+                                            x:Name="SliderPosition"
+                                            Grid.Column="1"
+                                            Margin="10,0"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            PreviewMouseLeftButtonDown="SliderPosition_PreviewMouseLeftButtonDown"
+                                            PreviewMouseLeftButtonUp="SliderPosition_PreviewMouseLeftButtonUp"
+                                            Style="{StaticResource PlayerSliderStyle}"
+                                            ToolTip="{DynamicResource Str_VideoReplay_SeekTooltip}"
+                                            ValueChanged="SliderPosition_ValueChanged" />
+                                        <TextBlock
+                                            x:Name="TxtTotalTime"
+                                            Grid.Column="2"
+                                            MinWidth="42"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Consolas"
+                                            FontSize="11.5"
+                                            Foreground="#C9CDD4"
+                                            Text="0:00"
+                                            TextAlignment="Right" />
+                                    </Grid>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <Button
+                                                x:Name="BtnMute"
+                                                Click="BtnMute_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Common_MuteTooltip}">
+                                                <materialDesign:PackIcon
+                                                    x:Name="IconMute"
+                                                    Width="18"
+                                                    Height="18"
+                                                    Kind="VolumeHigh" />
+                                            </Button>
+                                            <Slider
+                                                x:Name="SliderVolume"
+                                                Width="84"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                LargeChange="0.1"
+                                                Maximum="1"
+                                                Minimum="0"
+                                                Style="{StaticResource PlayerSliderStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_VolumeTooltip}"
+                                                ValueChanged="SliderVolume_ValueChanged"
+                                                Value="1" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <Button
+                                                x:Name="BtnPrevious"
+                                                Click="BtnPrevious_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_PreviousTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    Kind="SkipPrevious" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnSkipBack"
+                                                Margin="8,0,0,0"
+                                                Click="BtnSkipBack_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Common_SkipBackTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    Kind="Rewind_10" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnPlayPause"
+                                                ctl:Tour.Key="Str_Tour_VideoReplay_Transport"
+                                                ctl:Tour.Order="4"
+                                                Margin="12,0"
+                                                Click="BtnPlayPause_Click"
+                                                Style="{StaticResource PlayerPrimaryButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Common_PlayPauseTooltip}">
+                                                <materialDesign:PackIcon
+                                                    x:Name="IconPlayPause"
+                                                    Width="24"
+                                                    Height="24"
+                                                    Kind="Play" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnSkipForward"
+                                                Margin="0,0,8,0"
+                                                Click="BtnSkipForward_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Common_SkipForwardTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    Kind="FastForward_10" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnNext"
+                                                Click="BtnNext_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_NextTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    Kind="SkipNext" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <StackPanel
+                                            Grid.Column="2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal">
+                                            <Button
+                                                x:Name="BtnSpeed"
+                                                Click="BtnSpeed_Click"
+                                                Content="1x"
+                                                Foreground="#E9EBEF"
+                                                MouseRightButtonUp="BtnSpeed_MouseRightButtonUp"
+                                                Style="{StaticResource PlayerPillButtonStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_SpeedClickForFaster}" />
+                                            <Button
+                                                x:Name="BtnTheater"
+                                                Margin="8,0,0,0"
+                                                Click="BtnTheater_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_TheaterHideBothSide}">
+                                                <materialDesign:PackIcon
+                                                    x:Name="IconTheater"
+                                                    Width="18"
+                                                    Height="18"
+                                                    Kind="ArrowExpand" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!--  Now playing  -->
+                        <Grid Grid.Row="1" Margin="4,12,4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock
+                                    x:Name="TxtNowPlaying"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_Common_NothingLoaded}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtUpNext"
+                                    Margin="0,2,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Border
+                                    x:Name="PillEngine"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="Engine" />
+                                        <TextBlock
+                                            x:Name="TxtEngine"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillPosition"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource AccentColorSubtle}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconModePill"
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="PlaylistPlay" />
+                                        <TextBlock
+                                            x:Name="TxtPosition"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource AccentColor}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  Playlist collapse strip  -->
+                <Button
+                    x:Name="BtnTogglePlaylist"
+                    Grid.Column="1"
+                    Width="26"
+                    Margin="6,0"
+                    Click="BtnTogglePlaylist_Click"
+                    Style="{StaticResource PanelToggleButtonStyle}"
+                    ToolTip="{DynamicResource Str_VideoReplay_TogglePlaylistTooltip}">
+                    <materialDesign:PackIcon
+                        x:Name="IconTogglePlaylist"
+                        Width="20"
+                        Height="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Kind="ChevronRight" />
+                </Button>
+
+                <!--  Playlist  -->
+                <Border
+                    x:Name="PlaylistPanel"
+                    ctl:Tour.Key="Str_Tour_VideoReplay_Playlist"
+                    ctl:Tour.Order="5"
+                    Grid.Column="2"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_VideoReplay_PlaylistTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.PlaylistPlay}" />
+                            <Border
+                                x:Name="SummaryPill"
+                                Grid.Column="1"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_VideoReplay_ClipCountTooltip}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    x:Name="TxtSummaryCount"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusInfoFg}" />
+                            </Border>
+                        </Grid>
+
+                        <StackPanel
+                            x:Name="ListTools"
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Orientation="Horizontal">
+                            <Button
+                                x:Name="BtnMoveUp"
+                                Width="32"
+                                Height="32"
+                                Click="BtnMoveUp_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_VideoEditor_MoveTheHighlightedClips}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowUp" />
+                            </Button>
+                            <Button
+                                x:Name="BtnMoveDown"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Click="BtnMoveDown_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_VideoEditor_MoveTheHighlightedClips2}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowDown" />
+                            </Button>
+                            <Button
+                                x:Name="BtnSortByName"
+                                Width="32"
+                                Height="32"
+                                Margin="10,0,0,0"
+                                Click="BtnSortByName_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_VideoEditor_NameOrderClip2}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="SortAlphabeticalAscending" />
+                            </Button>
+                            <Button
+                                x:Name="BtnSortByDate"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Click="BtnSortByDate_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_PdfToolkit_DateOrderOldestFirst}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="SortCalendarAscending" />
+                            </Button>
+                        </StackPanel>
+
+                        <DataGrid
+                            x:Name="DataGridQueue"
+                            Grid.Row="2"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserSortColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MouseDoubleClick="DataGridQueue_MouseDoubleClick"
+                            PreviewKeyDown="DataGridQueue_PreviewKeyDown"
+                            MinRowHeight="46"
+                            RowStyle="{StaticResource PlaylistRowStyle}"
+                            SelectionChanged="DataGridQueue_SelectionChanged"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_VideoReplay_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Click="MenuPlay_Click">
+                                        <MenuItem.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="PlayCircleOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_AudioReplayControl_Play}" />
+                                            </StackPanel>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuShowInFolder_Click">
+                                        <MenuItem.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FolderOpenOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Validate_MenuShowInFolder}" />
+                                            </StackPanel>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuDeleteFile_Click">
+                                        <MenuItem.Header>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="DeleteOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_VideoReplay_DeleteFile}" />
+                                            </StackPanel>
+                                        </MenuItem.Header>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="34" CellStyle="{StaticResource CheckBoxCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox
+                                                Click="ItemCheckBox_Click"
+                                                IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource DataGridCheckBoxStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_FlagRemoveTooltip}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="34"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource NumberCellTemplate}"
+                                    Header="#" />
+                                <DataGridTemplateColumn
+                                    Width="*"
+                                    MinWidth="70"
+                                    CellTemplate="{StaticResource ClipCellTemplate}"
+                                    Header="{DynamicResource Str_VideoReplay_ColHeaderClip}" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColTime"
+                                    Width="64"
+                                    Binding="{Binding DurationText, Mode=OneWay}"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    Header="{DynamicResource Str_VideoReplay_ColHeaderTime}" />
+                                <DataGridTemplateColumn Width="38" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Width="24"
+                                                Height="24"
+                                                HorizontalAlignment="Center"
+                                                Click="BtnRemoveFromQueue_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_VideoReplay_RemoveFromPlaylistTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="13"
+                                                    Height="13"
+                                                    Foreground="{DynamicResource StatusErrorFg}"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <controls:EmptyStateCard
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="2"
+                            Description="{DynamicResource Str_Common_DragDropHint}"
+                            DescriptionMaxWidth="260"
+                            Icon="PlaylistPlay"
+                            IsHitTestVisible="False" />
+
+                        <!--  ============ PLAYLIST ACTIONS ============  -->
+
+                        <Grid Grid.Row="3" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button
+                                x:Name="BtnSelectAll"
+                                Grid.Column="0"
+                                Width="34"
+                                Height="34"
+                                Margin="0,0,6,0"
+                                Click="BtnSelectAll_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_VideoReplay_SelectAllTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="17"
+                                    Height="17"
+                                    Kind="CheckboxMultipleMarkedOutline" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnDeselectAll"
+                                Grid.Column="1"
+                                Width="34"
+                                Height="34"
+                                Click="BtnDeselectAll_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_VideoReplay_DeselectAllTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="17"
+                                    Height="17"
+                                    Kind="CheckboxMultipleBlankOutline" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnRemoveSelected"
+                                Grid.Column="3"
+                                Margin="0,0,6,0"
+                                Click="BtnRemoveSelected_Click"
+                                ToolTip="{DynamicResource Str_VideoReplay_RemoveCheckedTooltip}"
+                                Style="{StaticResource ListToolButtonStyle}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="PlaylistRemove" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnClearQueue"
+                                Grid.Column="4"
+                                Click="BtnClearQueue_Click"
+                                ToolTip="{DynamicResource Str_VideoReplay_ClearAllTooltip}"
+                                Style="{StaticResource ListToolDangerButtonStyle}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="DeleteSweepOutline" />
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

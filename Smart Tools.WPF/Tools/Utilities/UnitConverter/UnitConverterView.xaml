@@ -1,0 +1,474 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.UnitConverterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Root"
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    mc:Ignorable="d"
+    Loaded="View_Loaded">
+
+    <!--
+        Unit & currency converter - type a number, pick two units, read the answer; every other unit of the
+        category is listed underneath. Currency rates come from the Frankfurter service (ECB data) and are kept
+        for offline use. Backend: Controllers/UnitConverterManager.cs; Models/UnitConverterModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+        <!--  One favorite or recent pair: a chip that selects the category and both units  -->
+        <DataTemplate x:Key="PairChipTemplate">
+            <Button
+                Click="Pair_Click"
+                Content="{Binding Label}"
+                Style="{StaticResource PresetChipStyle}"
+                Tag="{Binding Pair}"
+                ToolTip="{Binding Tip}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="UnitItemTemplate">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    MinWidth="46"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Symbol}" />
+                <TextBlock
+                    Margin="6,0,0,0"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Name}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ CATEGORY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_UnitConverter_Category" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Conv_CategoryHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.SwapHorizontalBold}" />
+                                    <ComboBox x:Name="CmbCategory" SelectionChanged="Category_SelectionChanged" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Conv_CategoryNote}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FAVORITES ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_UnitConverter_Favorites" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Conv_FavoritesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.StarOutline}" />
+                                    <TextBlock
+                                        x:Name="TxtNoFavorites"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_Conv_NoFavorites}" />
+                                    <ItemsControl x:Name="ListFavorites" ItemTemplate="{StaticResource PairChipTemplate}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ RECENT ============  -->
+                            <Border
+                                x:Name="CardRecent"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Conv_RecentHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.History}" />
+                                    <ItemsControl x:Name="ListRecent" ItemTemplate="{StaticResource PairChipTemplate}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                    <Button
+                                        Margin="0,6,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnClearRecent_Click"
+                                        Style="{StaticResource PresetChipStyle}"
+                                        ToolTip="{DynamicResource Str_Conv_ClearRecentTip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Kind="DeleteSweepOutline" />
+                                            <TextBlock Text="{DynamicResource Str_Conv_ClearRecent}" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ EXCHANGE RATES (currency only) ============  -->
+                            <Border
+                                x:Name="CurrencyStatus"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Conv_RatesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Web}" />
+                                    <StackPanel>
+                                        <Border
+                                            x:Name="PillRates"
+                                            HorizontalAlignment="Left"
+                                            Style="{StaticResource IconStatusPillStyle}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    x:Name="IconRates"
+                                                    Width="13"
+                                                    Height="13"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Web" />
+                                                <TextBlock
+                                                    x:Name="TxtRates"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Border>
+                                        <Button
+                                            x:Name="BtnRefreshRates"
+                                            Margin="0,10,0,0"
+                                            Click="BtnRefreshRates_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Conv_RefreshRates}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Refresh" />
+                                                <TextBlock Text="{DynamicResource Str_Conv_UpdateNow}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Conv_RatesTip}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= CONTENT =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Convert  -->
+                <Border ctl:Tour.Key="Str_Tour_UnitConverter_Convert" ctl:Tour.Order="3" Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <StackPanel x:Name="PanelConvert">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--  From  -->
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Conv_From}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MinWidth="90" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox
+                                                x:Name="TxtValue"
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="0"
+                                                Text="1"
+                                                TextChanged="TxtValue_TextChanged" />
+                                            <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+                                            <ComboBox
+                                                x:Name="CmbFrom"
+                                                Grid.Column="2"
+                                                MinWidth="150"
+                                                ItemTemplate="{StaticResource UnitItemTemplate}"
+                                                SelectionChanged="Unit_SelectionChanged"
+                                                Style="{StaticResource BareComboBox}" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <Button
+                                    Grid.Column="1"
+                                    Margin="10,22,10,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnSwap_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Conv_Swap}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="SwapHorizontal" />
+                                </Button>
+
+                                <!--  To  -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Conv_To}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MinWidth="90" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox
+                                                x:Name="TxtResult"
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource BareTextBox}" />
+                                            <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+                                            <ComboBox
+                                                x:Name="CmbTo"
+                                                Grid.Column="2"
+                                                MinWidth="150"
+                                                ItemTemplate="{StaticResource UnitItemTemplate}"
+                                                SelectionChanged="Unit_SelectionChanged"
+                                                Style="{StaticResource BareComboBox}" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <Button
+                                    x:Name="BtnFavorite"
+                                    Grid.Column="3"
+                                    Margin="10,22,0,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnFavorite_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Conv_AddFavorite}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconFavorite"
+                                        Width="16"
+                                        Height="16"
+                                        Kind="StarOutline" />
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnCopy"
+                                    Grid.Column="4"
+                                    Margin="6,22,0,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnCopy_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Conv_CopyResult}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconCopy"
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+                            </Grid>
+
+                            <TextBlock
+                                x:Name="TxtFormula"
+                                Margin="0,10,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}" />
+                            <TextBlock
+                                x:Name="TxtProblem"
+                                Margin="0,4,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource StatusErrorFg}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+
+                        <!--  Currency with no rates yet and no internet  -->
+                        <StackPanel
+                            x:Name="PanelNoRates"
+                            MaxWidth="460"
+                            Margin="0,8"
+                            HorizontalAlignment="Center"
+                            Visibility="Collapsed">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.WebOff}" />
+                            <TextBlock
+                                x:Name="TxtNoRatesTitle"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_Conv_NoRatesTitle}" />
+                            <TextBlock
+                                x:Name="TxtNoRatesHint"
+                                Margin="0,4,0,10"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                            <Button
+                                x:Name="BtnTryAgain"
+                                HorizontalAlignment="Center"
+                                Click="BtnRefreshRates_Click"
+                                Style="{StaticResource PrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Refresh" />
+                                    <TextBlock Text="{DynamicResource Str_Conv_TryAgain}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  Every unit at once  -->
+                <Border ctl:Tour.Key="Str_Tour_UnitConverter_Table" ctl:Tour.Order="4" Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl
+                            Content="{DynamicResource Str_Conv_AllUnits}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                        <DataGrid
+                            x:Name="GridAll"
+                            Grid.Row="1"
+                            Margin="0,8,0,0"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MinRowHeight="34"
+                            MouseDoubleClick="GridAll_MouseDoubleClick"
+                            SelectionMode="Single"
+                            ToolTip="{DynamicResource Str_Conv_AllUnitsTip}"
+                            VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Width="90"
+                                    Binding="{Binding Symbol}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Conv_ColUnit}" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    MinWidth="100"
+                                    Binding="{Binding Name}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Conv_ColName}" />
+                                <DataGridTextColumn
+                                    Width="1.2*"
+                                    MinWidth="100"
+                                    Binding="{Binding Value}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Conv_ColValue}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

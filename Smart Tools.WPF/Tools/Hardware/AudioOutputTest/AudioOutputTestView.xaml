@@ -1,0 +1,687 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.AudioOutputTestView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    IsVisibleChanged="Root_IsVisibleChanged"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/AudioSignalGenerator.cs (the signals, pure maths),
+        Controllers/AudioOutputTestManager.cs (+ .Audio.cs: WASAPI), Models/AudioOutputTestModel.cs. UI only here.
+    -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ DEVICE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_AudioOut_Device" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_AudioOut_DeviceHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Headphones}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox
+                                            x:Name="CmbDevice"
+                                            SelectionChanged="CmbDevice_SelectionChanged"
+                                            ToolTip="{DynamicResource Str_AudioOut_DeviceTip}" />
+                                        <Button
+                                            x:Name="BtnRefreshDevices"
+                                            Grid.Column="1"
+                                            Margin="6,0,0,0"
+                                            Click="BtnRefreshDevices_Click"
+                                            ToolTip="{DynamicResource Str_AudioOut_Refresh}"
+                                            Style="{StaticResource ListToolButtonStyle}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Refresh" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock
+                                        x:Name="TxtDeviceInfo"
+                                        Margin="0,8,0,0"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Opacity="0.8"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ LEVEL ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_AudioOut_Level" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_AudioOut_LevelHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.VolumeMedium}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Style="{DynamicResource FieldLabel}"
+                                            Text="{DynamicResource Str_AudioOut_Level}" />
+                                        <Border
+                                            Grid.Column="1"
+                                            Padding="7,1"
+                                            Background="{DynamicResource AccentFill}"
+                                            CornerRadius="8">
+                                            <TextBlock
+                                                x:Name="TxtLevelValue"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="-30 dB" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SliderLevel"
+                                        Margin="0,4,0,0"
+                                        IsSnapToTickEnabled="True"
+                                        LargeChange="5"
+                                        Maximum="-6"
+                                        Minimum="-60"
+                                        SmallChange="1"
+                                        TickFrequency="1"
+                                        ValueChanged="Option_SliderChanged"
+                                        Value="-30" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Opacity="0.8"
+                                        Text="{DynamicResource Str_AudioOut_LevelSafety}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SIGNAL (changes with the test) ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_AudioOut_Signal" ctl:Tour.Order="3" x:Name="SignalCard" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_AudioOut_SignalHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.SineWave}" />
+
+                                    <!--  Tone  -->
+                                    <StackPanel x:Name="PanelTone">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                Text="{DynamicResource Str_AudioOut_Pitch}" />
+                                            <Border
+                                                Grid.Column="1"
+                                                Padding="7,1"
+                                                Background="{DynamicResource AccentFill}"
+                                                CornerRadius="8">
+                                                <TextBlock
+                                                    x:Name="TxtFreqValue"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="White"
+                                                    Text="1 kHz" />
+                                            </Border>
+                                        </Grid>
+                                        <Slider
+                                            x:Name="SliderFreq"
+                                            Margin="0,4,0,8"
+                                            LargeChange="0.05"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            SmallChange="0.005"
+                                            ValueChanged="Option_SliderChanged"
+                                            Value="0.57" />
+                                        <UniformGrid Columns="4">
+                                            <RadioButton
+                                                x:Name="RadioWaveSine"
+                                                Margin="0,0,3,0"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_WaveSine}"
+                                                GroupName="AudioOutWave"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Sine" />
+                                            <RadioButton
+                                                x:Name="RadioWaveSquare"
+                                                Margin="1,0,2,0"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_WaveSquare}"
+                                                GroupName="AudioOutWave"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Square" />
+                                            <RadioButton
+                                                x:Name="RadioWaveTriangle"
+                                                Margin="2,0,1,0"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_WaveTriangle}"
+                                                GroupName="AudioOutWave"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Triangle" />
+                                            <RadioButton
+                                                x:Name="RadioWaveSaw"
+                                                Margin="3,0,0,0"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_WaveSaw}"
+                                                GroupName="AudioOutWave"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Saw" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <!--  Sweep  -->
+                                    <StackPanel x:Name="PanelSweep" Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                Text="{DynamicResource Str_AudioOut_SweepLength}" />
+                                            <Border
+                                                Grid.Column="1"
+                                                Padding="7,1"
+                                                Background="{DynamicResource AccentFill}"
+                                                CornerRadius="8">
+                                                <TextBlock
+                                                    x:Name="TxtSweepValue"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="White"
+                                                    Text="12 s" />
+                                            </Border>
+                                        </Grid>
+                                        <Slider
+                                            x:Name="SliderSweep"
+                                            Margin="0,4,0,0"
+                                            IsSnapToTickEnabled="True"
+                                            LargeChange="5"
+                                            Maximum="40"
+                                            Minimum="4"
+                                            SmallChange="1"
+                                            TickFrequency="1"
+                                            ValueChanged="Option_SliderChanged"
+                                            Value="12" />
+                                        <TextBlock
+                                            Margin="0,6,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            Opacity="0.8"
+                                            Text="{DynamicResource Str_AudioOut_SweepRange}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <!--  Noise  -->
+                                    <StackPanel x:Name="PanelNoise" Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="4" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <RadioButton
+                                                x:Name="RadioNoisePink"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_NoisePink}"
+                                                GroupName="AudioOutNoise"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Pink" />
+                                            <RadioButton
+                                                x:Name="RadioNoiseWhite"
+                                                Grid.Column="2"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_NoiseWhite}"
+                                                GroupName="AudioOutNoise"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="White" />
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!--  Phase  -->
+                                    <StackPanel x:Name="PanelPhase" Visibility="Collapsed">
+                                        <UniformGrid Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioPhaseIn"
+                                                Margin="0,0,2,4"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_PhaseIn}"
+                                                GroupName="AudioOutPhase"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="InPhase" />
+                                            <RadioButton
+                                                x:Name="RadioPhaseOut"
+                                                Margin="2,0,0,4"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_PhaseOut}"
+                                                GroupName="AudioOutPhase"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="OutOfPhase" />
+                                            <RadioButton
+                                                x:Name="RadioPhaseAlt"
+                                                Margin="0,0,2,0"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_PhaseAlt}"
+                                                GroupName="AudioOutPhase"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Alternate" />
+                                            <RadioButton
+                                                x:Name="RadioPhaseClick"
+                                                Margin="2,0,0,0"
+                                                Checked="Option_Checked"
+                                                Content="{DynamicResource Str_AudioOut_PhaseClick}"
+                                                GroupName="AudioOutPhase"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Click" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <!--  Channels  -->
+                                    <TextBlock
+                                        x:Name="PanelChannelsNote"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Opacity="0.85"
+                                        Text="{DynamicResource Str_AudioOut_ChannelsNote}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar: the primary action is always top-left, same spot as in every tool  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            ctl:Tour.Key="Str_Tour_AudioOut_Play" ctl:Tour.Order="4"
+                            x:Name="BtnPlay"
+                            MinWidth="170"
+                            VerticalAlignment="Center"
+                            Click="BtnPlay_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconPlay"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Play" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtPlay"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_AudioOut_Play}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <Button
+                            x:Name="BtnAllChannels"
+                            Grid.Column="1"
+                            Margin="8,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnAllChannels_Click"
+                            Style="{StaticResource ListToolButtonStyle}"
+                            ToolTip="{DynamicResource Str_AudioOut_AllTip}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="CheckAll" />
+                        </Button>
+
+                        <Border
+                            x:Name="BorderStatus"
+                            Grid.Column="2"
+                            MaxWidth="420"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource RowBg}"
+                            Style="{StaticResource IconStatusPillStyle}"
+                            Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Name="IconStatus"
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding Foreground, ElementName=TxtStatus}"
+                                    Kind="InformationOutline" />
+                                <TextBlock
+                                    x:Name="TxtStatus"
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!--  Test card  -->
+                <Border ctl:Tour.Key="Str_Tour_AudioOut_Test" ctl:Tour.Order="5" Grid.Row="1" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Header  -->
+                    <ContentControl
+                        Margin="0,0,0,12"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Content="{DynamicResource Str_AudioOut_Header}"
+                        Style="{StaticResource CardHeader}"
+                        Tag="{x:Static materialDesign:PackIconKind.Headphones}" />
+
+                    <!--  Which test  -->
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <RadioButton
+                            x:Name="RadioTestChannels"
+                            Checked="Test_Checked"
+                            GroupName="AudioOutTest"
+                            IsChecked="True"
+                            Style="{StaticResource ModeToggleTallStyle}"
+                            Tag="Channels">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Center"
+                                    Kind="SpeakerMultiple" />
+                                <TextBlock
+                                    Margin="0,3,0,0"
+                                    HorizontalAlignment="Center"
+                                    Text="{DynamicResource Str_AudioOut_TestChannels}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioTestPhase"
+                            Grid.Column="2"
+                            Checked="Test_Checked"
+                            GroupName="AudioOutTest"
+                            Style="{StaticResource ModeToggleTallStyle}"
+                            Tag="Phase">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Center"
+                                    Kind="Waveform" />
+                                <TextBlock
+                                    Margin="0,3,0,0"
+                                    HorizontalAlignment="Center"
+                                    Text="{DynamicResource Str_AudioOut_TestPhase}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioTestTone"
+                            Grid.Column="4"
+                            Checked="Test_Checked"
+                            GroupName="AudioOutTest"
+                            Style="{StaticResource ModeToggleTallStyle}"
+                            Tag="Tone">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Center"
+                                    Kind="SineWave" />
+                                <TextBlock
+                                    Margin="0,3,0,0"
+                                    HorizontalAlignment="Center"
+                                    Text="{DynamicResource Str_AudioOut_TestTone}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioTestSweep"
+                            Grid.Column="6"
+                            Checked="Test_Checked"
+                            GroupName="AudioOutTest"
+                            Style="{StaticResource ModeToggleTallStyle}"
+                            Tag="Sweep">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Center"
+                                    Kind="ChartLineVariant" />
+                                <TextBlock
+                                    Margin="0,3,0,0"
+                                    HorizontalAlignment="Center"
+                                    Text="{DynamicResource Str_AudioOut_TestSweep}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioTestNoise"
+                            Grid.Column="8"
+                            Checked="Test_Checked"
+                            GroupName="AudioOutTest"
+                            Style="{StaticResource ModeToggleTallStyle}"
+                            Tag="Noise">
+                            <StackPanel>
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    HorizontalAlignment="Center"
+                                    Kind="Radio" />
+                                <TextBlock
+                                    Margin="0,3,0,0"
+                                    HorizontalAlignment="Center"
+                                    Text="{DynamicResource Str_AudioOut_TestNoise}" />
+                            </StackPanel>
+                        </RadioButton>
+                    </Grid>
+
+                    <!--  Channels + what to listen for  -->
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock
+                                x:Name="TxtChannelsHeader"
+                                Margin="0,0,0,8"
+                                FontSize="11.5"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_AudioOut_ChannelsHeader}" />
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <UniformGrid
+                                x:Name="ChannelPanel"
+                                VerticalAlignment="Center"
+                                Columns="2" />
+                        </ScrollViewer>
+
+                        <Border
+                            x:Name="PhaseBadge"
+                            Grid.Row="2"
+                            Margin="0,6,0,0"
+                            HorizontalAlignment="Left"
+                            Background="{DynamicResource RowBg}"
+                            Style="{StaticResource IconStatusPillStyle}"
+                            Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding Foreground, ElementName=TxtPhaseState}"
+                                    Kind="SineWave" />
+                                <TextBlock
+                                    x:Name="TxtPhaseState"
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            Grid.Row="3"
+                            Margin="0,12,0,0"
+                            Padding="12,10"
+                            Background="{DynamicResource StatusInfoBg}"
+                            CornerRadius="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Margin="0,1,10,0"
+                                    VerticalAlignment="Top"
+                                    Foreground="{DynamicResource StatusInfoFg}"
+                                    Kind="LightbulbOnOutline" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock
+                                        x:Name="TxtGuideTitle"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                    <TextBlock
+                                        x:Name="TxtGuide"
+                                        Margin="0,4,0,0"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

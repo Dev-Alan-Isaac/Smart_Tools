@@ -1,0 +1,961 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.LargeFileFinderView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/LargeFileFinderManager.cs (scan with a few
+        workers, top-N heap, live snapshots, kinds, delete/move off the UI
+        thread, CSV, settings); Models/LargeFileFinderModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+
+        <!--  Thin rounded bar (size column, drive list)  -->
+        <Style x:Key="MeterBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="5" />
+            <Setter Property="Maximum" Value="100" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+            <Setter Property="Background" Value="{DynamicResource RowBg}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="2.5" />
+                            <Border x:Name="PART_Track" CornerRadius="2.5" />
+                            <Border
+                                x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="2.5" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Results: kind icon  -->
+        <DataTemplate x:Key="KindIconTemplate" DataType="{x:Type models:LargeFileItem}">
+            <Border
+                Width="30"
+                Height="30"
+                Background="{DynamicResource AccentColorSubtle}"
+                CornerRadius="8"
+                ToolTip="{Binding Category}">
+                <materialDesign:PackIcon
+                    x:Name="KindIcon"
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource AccentColor}"
+                    Kind="FileOutline" />
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Category}" Value="Video">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="FileVideoOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="DiskImage">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="Disc" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Archive">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="ZipBoxOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Audio">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="FileMusicOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Image">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="FileImageOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Document">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="FileDocumentOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Program">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="ApplicationCogOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Database">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="DatabaseOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Results: name over folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:LargeFileItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Results: size with a bar against the biggest file  -->
+        <DataTemplate x:Key="SizeCellTemplate" DataType="{x:Type models:LargeFileItem}">
+            <StackPanel Margin="0,0,10,0" VerticalAlignment="Center">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding SizeDisplay, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+                <ProgressBar
+                    Margin="0,4,0,0"
+                    Style="{StaticResource MeterBarStyle}"
+                    Value="{Binding BarPercent, Mode=OneWay}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TypeCellTemplate" DataType="{x:Type models:LargeFileItem}">
+            <Border
+                Padding="7,1"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <TextBlock
+                    FontSize="11"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding TypeLabel, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ModifiedCellTemplate" DataType="{x:Type models:LargeFileItem}">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Foreground="{DynamicResource TextPrimary}" Text="{Binding ModifiedDisplay, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding ModifiedAgo, Mode=OneWay}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ActionsCellTemplate" DataType="{x:Type models:LargeFileItem}">
+            <StackPanel
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <Button
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,4,0"
+                    Click="BtnOpenInExplorer_Click"
+                    Style="{StaticResource NeutralIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_LargeFile_OpenExplorerTooltip}">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        Kind="FolderOpenOutline" />
+                </Button>
+                <Button
+                    Width="28"
+                    Height="28"
+                    Click="BtnDeleteRow_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTip="{DynamicResource Str_Common_Delete}">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        Kind="DeleteOutline" />
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Drive card  -->
+        <DataTemplate x:Key="DriveTemplate" DataType="{x:Type models:LargeFileDrive}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon
+                    x:Name="DriveIcon"
+                    Width="20"
+                    Height="20"
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource AccentColor}"
+                    Kind="Harddisk" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding RootPath}" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding DisplayName}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding DisplayName}" />
+                    <ProgressBar
+                        Margin="0,5,0,0"
+                        Style="{StaticResource MeterBarStyle}"
+                        Value="{Binding UsedPercent, Mode=OneWay}" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFixed}" Value="False">
+                    <Setter TargetName="DriveIcon" Property="Kind" Value="UsbFlashDriveOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ WHERE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_LargeFiles_Where" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_LargeFile_WhereHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.MapMarkerOutline}" />
+                                    <UniformGrid Margin="0,0,0,10" Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioScopeFolder"
+                                            Margin="0,0,2,0"
+                                            Click="Scope_Click"
+                                            GroupName="LargeFileScope"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_LargeFile_ScopeFolderTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FolderSearchOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_LargeFile_ScopeFolder}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioScopeDisk"
+                                            Margin="2,0,0,0"
+                                            Click="Scope_Click"
+                                            GroupName="LargeFileScope"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_LargeFile_ScopeDiskTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Harddisk" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_LargeFile_ScopeDisk}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+
+
+                                    <StackPanel x:Name="DiskScopePanel" Visibility="Collapsed">
+                                        <ListBox
+                                            x:Name="DriveList"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ItemTemplate="{StaticResource DriveTemplate}"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            SelectionChanged="DriveList_SelectionChanged"
+                                            ToolTip="{DynamicResource Str_LargeFile_DriveComboTooltip}">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem">
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Margin" Value="0,0,0,4" />
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ListBoxItem">
+                                                                <Border
+                                                                    x:Name="Bd"
+                                                                    Padding="10,8"
+                                                                    Background="{DynamicResource SidebarInputBg}"
+                                                                    BorderBrush="{DynamicResource SidebarInputBorder}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="8">
+                                                                    <ContentPresenter />
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsSelected" Value="True">
+                                                                        <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                        </ListBox>
+                                        <Button
+                                            x:Name="BtnRefreshDrives"
+                                            HorizontalAlignment="Left"
+                                            Click="BtnRefreshDrives_Click"
+                                            Content="{DynamicResource Str_DiskSpaceAnalyzer_RefreshTheDriveList}"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            ToolTip="{DynamicResource Str_DiskSpaceAnalyzer_LookAgainForDrives}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FOLDER (shown for the Folder scope) ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                FolderChanged="InputCard_FolderChanged"
+                                Header="{DynamicResource Str_LargeFile_FolderHeader}"
+                                HeaderIcon="FolderSearchOutline"
+                                Mode="SingleFolder"
+                                ShowSubfolders="False" />
+
+                            <!--  ============ SIZE + HOW MANY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_LargeFiles_Size" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_LargeFile_MinSizeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ArrowExpandAll}" />
+                                    <Border Style="{StaticResource InputBarStyle}" ToolTip="{DynamicResource Str_LargeFile_MinSizeTooltip}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="70" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Margin="4,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_LargeFileFinder_AtLeast}" />
+                                            <TextBox
+                                                x:Name="TxtMinSize"
+                                                Grid.Column="1"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="100"
+                                                Text="100"
+                                                TextChanged="Option_TextChanged" />
+                                            <Border Grid.Column="2" Style="{StaticResource InputBarDivider}" />
+                                            <ComboBox
+                                                x:Name="CmbMinSize"
+                                                Grid.Column="3"
+                                                SelectedIndex="1"
+                                                SelectionChanged="Option_SelectionChanged"
+                                                Style="{StaticResource BareComboBox}">
+                                                <ComboBoxItem Content="KB" />
+                                                <ComboBoxItem Content="MB" />
+                                                <ComboBoxItem Content="GB" />
+                                            </ComboBox>
+                                        </Grid>
+                                    </Border>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Button: Full Width (10 MB)  -->
+                                        <Button
+                                            Grid.Row="0"
+                                            Margin="0,0,0,2"
+                                            Click="SizePreset_Click"
+                                            Content="10 MB"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            Tag="10|1" />
+
+                                        <!--  Row 1: 1x2 Grid (100 MB & 500 MB)  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,2"
+                                            Columns="2">
+                                            <Button
+                                                Margin="0,0,2,0"
+                                                Click="SizePreset_Click"
+                                                Content="100 MB"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="100|1" />
+                                            <Button
+                                                Margin="2,0,0,0"
+                                                Click="SizePreset_Click"
+                                                Content="500 MB"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="500|1" />
+                                        </UniformGrid>
+
+                                        <!--  Row 2: 1x2 Grid (1 GB & 5 GB)  -->
+                                        <UniformGrid
+                                            Grid.Row="2"
+                                            Margin="0,2,0,0"
+                                            Columns="2">
+                                            <Button
+                                                Margin="0,0,2,0"
+                                                Click="SizePreset_Click"
+                                                Content="1 GB"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="1|2" />
+                                            <Button
+                                                Margin="2,0,0,0"
+                                                Click="SizePreset_Click"
+                                                Content="5 GB"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="5|2" />
+                                        </UniformGrid>
+                                    </Grid>
+                                    <TextBlock
+                                        x:Name="TxtSizeError"
+                                        Margin="2,2,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Text="{DynamicResource Str_LargeFileFinder_TypeASizeLike}"
+                                        Visibility="Collapsed" />
+
+                                    <TextBlock
+                                        Margin="2,10,0,6"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_LargeFile_ResultLimitHeader}" />
+                                    <Grid x:Name="LimitChips" ToolTip="{DynamicResource Str_LargeFile_ResultLimitTooltip}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Option: Full Width (25)  -->
+                                        <RadioButton
+                                            x:Name="RadioLimit25"
+                                            Grid.Row="0"
+                                            Margin="0,0,0,2"
+                                            Click="Option_Click"
+                                            Content="25"
+                                            GroupName="LargeLimit"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="25" />
+
+                                        <!--  Middle Options: 1x2 Grid (50 & 100)  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,2"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioLimit50"
+                                                Margin="0,0,2,0"
+                                                Click="Option_Click"
+                                                Content="50"
+                                                GroupName="LargeLimit"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="50" />
+                                            <RadioButton
+                                                x:Name="RadioLimit100"
+                                                Margin="2,0,0,0"
+                                                Click="Option_Click"
+                                                Content="100"
+                                                GroupName="LargeLimit"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="100" />
+                                        </UniformGrid>
+
+                                        <!--  Last Option: Full Width (All)  -->
+                                        <RadioButton
+                                            x:Name="RadioLimitAll"
+                                            Grid.Row="2"
+                                            Margin="0,2,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_DiskSpaceAnalyzer_All}"
+                                            GroupName="LargeLimit"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="0" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OPTIONS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_LargeFiles_Options" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_OptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CogOutline}" />
+                                    <CheckBox
+                                        x:Name="ChkIncludeSubfolders"
+                                        Margin="0,0,0,6"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_Common_IncludeSubfolders}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_LargeFile_IncludeSubfoldersTooltip}" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreSystemFiles"
+                                        Margin="0,0,0,6"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_LargeFile_IgnoreSystemFiles}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_LargeFile_IgnoreSystemFilesTooltip}" />
+                                    <CheckBox
+                                        x:Name="ChkShowHidden"
+                                        Margin="0,0,0,6"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_LargeFile_ShowHiddenFiles}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_LargeFile_ShowHiddenFilesTooltip}" />
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_LargeFileFinder_HiddenFoldersSuchAs}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnFindLargeFiles"
+                            ctl:Tour.Key="Str_Tour_LargeFiles_Find"
+                            ctl:Tour.Order="4"
+                            MinWidth="170"
+                            VerticalAlignment="Center"
+                            Click="BtnFindLargeFiles_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_LargeFile_SearchButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconFind"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="FileFindOutline" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtFindLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_LargeFile_SearchButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+                        <Button
+                            x:Name="BtnRefresh"
+                            Grid.Column="1"
+                            Margin="8,0,20,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRefresh_Click"
+                            IsEnabled="False"
+                            ToolTip="{DynamicResource Str_LargeFile_RefreshTooltip}"
+                            Style="{StaticResource ListToolButtonStyle}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="Refresh" />
+                        </Button>
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressSearch"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_LargeFile_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_LargeFile_ProgressInitial}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="3"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right"
+                            ToolTip="{DynamicResource Str_LargeFileFinder_TotalSizeOfThe}" />
+                    </Grid>
+                </Border>
+
+                <!--  Results  -->
+                <Border ctl:Tour.Key="Str_Tour_LargeFiles_Results" ctl:Tour.Order="5" Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_LargeFile_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.FileFindOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    x:Name="PillCount"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_LargeFile_FilesFoundTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="FileMultipleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_LargeFile_FilesFoundInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillTotal"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_LargeFile_TotalSizeTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="Harddisk" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryTotalSize"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Text="{DynamicResource Str_LargeFile_TotalSizeInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillSkipped"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusWarningBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_LargeFileFinder_FoldersWindowsDidnT}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Kind="FolderLockOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSkipped"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusWarningFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <controls:ExportButton
+                                    x:Name="BtnExportCsv"
+                                    Margin="0,2,8,2"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_LargeFileFinder_SaveTheListAs}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Click="MenuExportCsv_Click" Header="{DynamicResource Str_Common_ExportAsCsv}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                                <Button
+                                    x:Name="BtnMoveSelected"
+                                    Margin="8,0,0,0"
+                                    Click="BtnMoveSelected_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_LargeFile_MoveSelectedTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FileMoveOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnDeleteSelected"
+                                    Margin="8,0,0,0"
+                                    Click="BtnDeleteSelected_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_LargeFile_DeleteSelectedTooltip}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  What the space is: a bar by kind + filter chips (filled from code)  -->
+                        <StackPanel
+                            x:Name="BreakdownPanel"
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Visibility="Collapsed">
+                            <Border
+                                Height="12"
+                                Background="{DynamicResource RowBg}"
+                                ClipToBounds="True"
+                                CornerRadius="6">
+                                <Grid x:Name="SizeBar" />
+                            </Border>
+                            <WrapPanel x:Name="CategoryChips" Margin="0,8,0,0" />
+                        </StackPanel>
+
+                        <DataGrid
+                            x:Name="DataGridLargeFiles"
+                            Grid.Row="2"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserReorderColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MouseDoubleClick="DataGridLargeFiles_MouseDoubleClick"
+                            PreviewKeyDown="DataGridLargeFiles_PreviewKeyDown"
+                            MinRowHeight="48"
+                            SelectionChanged="DataGridLargeFiles_SelectionChanged"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_LargeFile_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            Visibility="Collapsed">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="46"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource KindIconTemplate}"
+                                    Header=""
+                                    SortMemberPath="Category" />
+                                <DataGridTemplateColumn
+                                    Width="3*"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}"
+                                    SortMemberPath="Name" />
+                                <DataGridTemplateColumn
+                                    Width="1.2*"
+                                    MinWidth="70"
+                                    CellTemplate="{StaticResource SizeCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderSize}"
+                                    SortMemberPath="SizeBytes" />
+                                <DataGridTemplateColumn
+                                    x:Name="ColType"
+                                    Width="80"
+                                    CellTemplate="{StaticResource TypeCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderType}"
+                                    SortMemberPath="TypeLabel" />
+                                <DataGridTemplateColumn
+                                    x:Name="ColModified"
+                                    Width="110"
+                                    CellTemplate="{StaticResource ModifiedCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderModified}"
+                                    SortMemberPath="Modified" />
+                                <DataGridTemplateColumn
+                                    Width="76"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource ActionsCellTemplate}"
+                                    Header="" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <ContentControl
+                                x:Name="EmptyBadge"
+                                Style="{StaticResource EmptyStateBadge}"
+                                Tag="{x:Static materialDesign:PackIconKind.FileFindOutline}" />
+                            <TextBlock
+                                x:Name="TxtEmptyTitle"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_LargeFileFinder_FindWhatSFilling}" />
+                            <TextBlock
+                                x:Name="TxtEmptyHint"
+                                MaxWidth="440"
+                                Margin="0,4,0,14"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_LargeFile_EmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

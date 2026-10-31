@@ -1,0 +1,1088 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.DbMigrateView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/DbMigrateManager.cs (connect, plan, run) + .Catalog.cs (reads the source) + .Compat.cs (version
+        differences) + .Script.cs (CREATE statements) + .Data.cs (streaming copy) + .Verify.cs + .Settings.cs;
+        Models/DbMigrateModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Severity icon for notes and console lines  -->
+        <Style x:Key="SeverityIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Kind" Value="InformationOutline" />
+            <Setter Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Severity}" Value="{x:Static models:DbMigrateSeverity.Warning}">
+                    <Setter Property="Kind" Value="AlertOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Severity}" Value="{x:Static models:DbMigrateSeverity.Blocker}">
+                    <Setter Property="Kind" Value="CloseOctagonOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Table state icon  -->
+        <Style x:Key="StateIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Kind" Value="ClockOutline" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:DbMigrateStepState.Running}">
+                    <Setter Property="Kind" Value="Sync" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:DbMigrateStepState.Done}">
+                    <Setter Property="Kind" Value="CheckCircleOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:DbMigrateStepState.Skipped}">
+                    <Setter Property="Kind" Value="SkipNextCircleOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static models:DbMigrateStepState.Failed}">
+                    <Setter Property="Kind" Value="AlertCircleOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  One note (warning / blocker / info)  -->
+        <DataTemplate x:Key="IssueTemplate" DataType="{x:Type models:DbMigrateIssue}">
+            <Grid Margin="0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="26" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon Margin="2,1,0,0" VerticalAlignment="Top" Style="{StaticResource SeverityIcon}" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Object}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Foreground="{DynamicResource TextSecondary}" Text="{Binding Message}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <!--  One console line: time, source chip, text  -->
+        <DataTemplate x:Key="LogLineTemplate" DataType="{x:Type models:DbMigrateLogLine}">
+            <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="62" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    FontFamily="Consolas"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding TimeText}" />
+                <Border
+                    Grid.Column="1"
+                    MinWidth="58"
+                    Margin="0,0,10,0"
+                    Padding="6,0"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="6">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontFamily="Consolas"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource AccentColor}"
+                        Text="{Binding Source}" />
+                </Border>
+                <TextBlock
+                    Grid.Column="2"
+                    FontFamily="Consolas"
+                    FontSize="12"
+                    Text="{Binding Text}"
+                    TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Severity}" Value="{x:Static models:DbMigrateSeverity.Warning}">
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Severity}" Value="{x:Static models:DbMigrateSeverity.Blocker}">
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </DataTemplate>
+
+        <!--
+            The kit's ListBox template doesn't pass CanContentScroll on, which turns virtualization off.
+            The console can hold 5,000 lines, so it has its own template with virtualization on.
+        -->
+        <Style x:Key="ConsoleListBox" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+            <Setter Property="VirtualizingPanel.ScrollUnit" Value="Item" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer
+                            Padding="8"
+                            CanContentScroll="True"
+                            Focusable="False"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  A table can only be (un)ticked when it is supported  -->
+        <Style x:Key="IncludeCheck" TargetType="CheckBox">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="IsEnabled" Value="False" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Unsupported}" Value="{x:Null}">
+                    <Setter Property="IsEnabled" Value="True" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ SOURCE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DbMigrate_Source" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DbMigrate_Source}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.DatabaseExportOutline}" />
+                                    <TextBox
+                                        x:Name="TxtSrcServer"
+                                        Height="32"
+                                        Tag="{DynamicResource Str_DbMigrate_ServerHint}"
+                                        ToolTip="{DynamicResource Str_DbMigrate_ServerTip}" />
+                                    <UniformGrid Margin="0,8,0,0" Columns="2">
+                                        <RadioButton
+                                            x:Name="RadSrcWindows"
+                                            Margin="0,0,2,0"
+                                            Click="AuthMode_Click"
+                                            Content="{DynamicResource Str_DbMigrate_AuthWindows}"
+                                            GroupName="SrcAuth"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadSrcSql"
+                                            Margin="2,0,0,0"
+                                            Click="AuthMode_Click"
+                                            Content="{DynamicResource Str_DbMigrate_AuthSql}"
+                                            GroupName="SrcAuth"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                    </UniformGrid>
+                                    <StackPanel x:Name="PanelSrcSql" Margin="0,8,0,0" Visibility="Collapsed">
+                                        <TextBox x:Name="TxtSrcUser" Height="32" Tag="{DynamicResource Str_DbMigrate_User}" />
+                                        <PasswordBox
+                                            x:Name="PwdSrc"
+                                            Height="32"
+                                            Margin="0,6,0,0"
+                                            materialDesign:HintAssist.Hint="{DynamicResource Str_DbMigrate_Password}" />
+                                    </StackPanel>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox
+                                            x:Name="CmbSrcDatabase"
+                                            Height="32"
+                                            IsEditable="True"
+                                            ToolTip="{DynamicResource Str_DbMigrate_DatabaseTip}" />
+                                        <Button
+                                            x:Name="BtnSrcList"
+                                            Grid.Column="1"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="6,0,0,0"
+                                            Click="BtnList_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            Tag="src"
+                                            ToolTip="{DynamicResource Str_DbMigrate_ListDatabases}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="Refresh" />
+                                        </Button>
+                                    </Grid>
+                                    <CheckBox
+                                        x:Name="ChkSrcTrust"
+                                        Margin="0,8,0,0"
+                                        Content="{DynamicResource Str_DbMigrate_TrustCert}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DbMigrate_TrustCertTip}" />
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnSrcTest"
+                                            Width="32"
+                                            Height="32"
+                                            Click="BtnTest_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            Tag="src"
+                                            ToolTip="{DynamicResource Str_DbMigrate_TestConnection}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="LanConnect" />
+                                        </Button>
+                                        <TextBlock
+                                            x:Name="TxtSrcStatus"
+                                            Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_DbMigrate_SourceReadOnly}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ TARGET ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DbMigrate_Target" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DbMigrate_Target}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.DatabaseImportOutline}" />
+                                    <TextBox
+                                        x:Name="TxtDstServer"
+                                        Height="32"
+                                        Tag="{DynamicResource Str_DbMigrate_ServerHint}"
+                                        ToolTip="{DynamicResource Str_DbMigrate_ServerTip}" />
+                                    <UniformGrid Margin="0,8,0,0" Columns="2">
+                                        <RadioButton
+                                            x:Name="RadDstWindows"
+                                            Margin="0,0,2,0"
+                                            Click="AuthMode_Click"
+                                            Content="{DynamicResource Str_DbMigrate_AuthWindows}"
+                                            GroupName="DstAuth"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadDstSql"
+                                            Margin="2,0,0,0"
+                                            Click="AuthMode_Click"
+                                            Content="{DynamicResource Str_DbMigrate_AuthSql}"
+                                            GroupName="DstAuth"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                    </UniformGrid>
+                                    <StackPanel x:Name="PanelDstSql" Margin="0,8,0,0" Visibility="Collapsed">
+                                        <TextBox x:Name="TxtDstUser" Height="32" Tag="{DynamicResource Str_DbMigrate_User}" />
+                                        <PasswordBox
+                                            x:Name="PwdDst"
+                                            Height="32"
+                                            Margin="0,6,0,0"
+                                            materialDesign:HintAssist.Hint="{DynamicResource Str_DbMigrate_Password}" />
+                                    </StackPanel>
+                                    <UniformGrid Margin="0,8,0,0" Columns="2">
+                                        <RadioButton
+                                            x:Name="RadDstCreate"
+                                            Margin="0,0,2,0"
+                                            Click="TargetMode_Click"
+                                            Content="{DynamicResource Str_DbMigrate_CreateNew}"
+                                            GroupName="DstMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            ToolTip="{DynamicResource Str_DbMigrate_CreateNewTip}" />
+                                        <RadioButton
+                                            x:Name="RadDstExisting"
+                                            Margin="2,0,0,0"
+                                            Click="TargetMode_Click"
+                                            Content="{DynamicResource Str_DbMigrate_UseExisting}"
+                                            GroupName="DstMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            ToolTip="{DynamicResource Str_DbMigrate_UseExistingTip}" />
+                                    </UniformGrid>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox
+                                            x:Name="CmbDstDatabase"
+                                            Height="32"
+                                            IsEditable="True"
+                                            ToolTip="{DynamicResource Str_DbMigrate_DatabaseTip}" />
+                                        <Button
+                                            x:Name="BtnDstList"
+                                            Grid.Column="1"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="6,0,0,0"
+                                            Click="BtnList_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            Tag="dst"
+                                            ToolTip="{DynamicResource Str_DbMigrate_ListDatabases}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="Refresh" />
+                                        </Button>
+                                    </Grid>
+                                    <CheckBox
+                                        x:Name="ChkDstTrust"
+                                        Margin="0,8,0,0"
+                                        Content="{DynamicResource Str_DbMigrate_TrustCert}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DbMigrate_TrustCertTip}" />
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnDstTest"
+                                            Width="32"
+                                            Height="32"
+                                            Click="BtnTest_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            Tag="dst"
+                                            ToolTip="{DynamicResource Str_DbMigrate_TestConnection}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="LanConnect" />
+                                        </Button>
+                                        <TextBlock
+                                            x:Name="TxtDstStatus"
+                                            Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ WHAT TO COPY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DbMigrate_Copy" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DbMigrate_WhatToCopy}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ContentCopy}" />
+                                    <CheckBox
+                                        x:Name="ChkData"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DbMigrate_OptData}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+                                    <CheckBox
+                                        x:Name="ChkIndexes"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DbMigrate_OptIndexes}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DbMigrate_OptIndexesTip}" />
+                                    <CheckBox
+                                        x:Name="ChkCode"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DbMigrate_OptCode}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+                                    <CheckBox
+                                        x:Name="ChkChecksum"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DbMigrate_OptChecksum}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_DbMigrate_OptChecksumTip}" />
+                                    <CheckBox
+                                        x:Name="ChkDropOnFail"
+                                        Content="{DynamicResource Str_DbMigrate_OptDropOnFail}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_DbMigrate_OptDropOnFailTip}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SPEED ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DbMigrate_Speed}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.SpeedometerMedium}" />
+                                    <Grid>
+                                        <TextBlock Foreground="{DynamicResource SidebarText}" Text="{DynamicResource Str_DbMigrate_BatchSize}" />
+                                        <Border HorizontalAlignment="Right" Style="{StaticResource SliderValuePill}">
+                                            <TextBlock x:Name="TxtBatchValue" Foreground="White" Text="5,000" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SldBatch"
+                                        Margin="0,4,0,0"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="50000"
+                                        Minimum="500"
+                                        TickFrequency="500"
+                                        Value="5000"
+                                        ValueChanged="SldBatch_ValueChanged" />
+                                    <Grid Margin="0,10,0,0">
+                                        <TextBlock Foreground="{DynamicResource SidebarText}" Text="{DynamicResource Str_DbMigrate_Parallel}" />
+                                        <Border HorizontalAlignment="Right" Style="{StaticResource SliderValuePill}">
+                                            <TextBlock x:Name="TxtParallelValue" Foreground="White" Text="2" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SldParallel"
+                                        Margin="0,4,0,0"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="8"
+                                        Minimum="1"
+                                        TickFrequency="1"
+                                        Value="2"
+                                        ValueChanged="SldParallel_ValueChanged" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_DbMigrate_SpeedHint}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= CONTENT =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Actions and the version summary  -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                x:Name="BtnAnalyze"
+                                ctl:Tour.Key="Str_Tour_DbMigrate_Analyze" ctl:Tour.Order="4"
+                                MinHeight="36"
+                                MinWidth="130"
+                                Click="BtnAnalyze_Click"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_DbMigrate_AnalyzeTip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="DatabaseSearchOutline" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DbMigrate_Analyze}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                            <Button
+                                x:Name="BtnMigrate"
+                                ctl:Tour.Key="Str_Tour_DbMigrate_Migrate" ctl:Tour.Order="5"
+                                Grid.Column="1"
+                                MinHeight="36"
+                                MinWidth="140"
+                                Margin="10,0,0,0"
+                                Click="BtnMigrate_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource AccentPrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_DbMigrate_MigrateTip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        x:Name="IconMigrate"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="DatabaseArrowRightOutline" />
+                                    <TextBlock Grid.Column="1" x:Name="TxtMigrate" VerticalAlignment="Center" Text="{DynamicResource Str_DbMigrate_Migrate}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                            <StackPanel
+                                Grid.Column="3"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnSaveScript"
+                                    Width="32"
+                                    Height="32"
+                                    Click="BtnSaveScript_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DbMigrate_SaveScript}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FileCodeOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnCopyReport"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="6,0,0,0"
+                                    Click="BtnCopyReport_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DbMigrate_CopyReport}">
+                                    <materialDesign:PackIcon x:Name="IconCopyReport" Width="16" Height="16" Kind="ContentCopy" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSaveReport"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="6,0,0,0"
+                                    Click="BtnSaveReport_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DbMigrate_SaveReport}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  Version pills (after Analyze)  -->
+                        <WrapPanel
+                            x:Name="PillsRow"
+                            Margin="0,12,0,0"
+                            Visibility="Collapsed">
+                            <Border Margin="0,0,8,6" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtPillSource}"
+                                        Kind="DatabaseExportOutline" />
+                                    <TextBlock
+                                        x:Name="TxtPillSource"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="0,0,8,6" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconPillDirection"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtPillDirection}"
+                                        Kind="ArrowRight" />
+                                    <TextBlock
+                                        x:Name="TxtPillDirection"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="0,0,8,6" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtPillTarget}"
+                                        Kind="DatabaseImportOutline" />
+                                    <TextBlock
+                                        x:Name="TxtPillTarget"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="0,0,8,6" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconPillIssues"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtPillIssues}"
+                                        Kind="AlertOutline" />
+                                    <TextBlock
+                                        x:Name="TxtPillIssues"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  Progress strip (during and after a run)  -->
+                <Border
+                    x:Name="ProgressCard"
+                    Grid.Row="1"
+                    Margin="0,12,0,0"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="Collapsed">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="TxtStage"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                x:Name="TxtPercent"
+                                Grid.Column="1"
+                                Foreground="{DynamicResource TextSecondary}" />
+                        </Grid>
+                        <ProgressBar
+                            x:Name="BarOverall"
+                            Margin="0,8,0,0"
+                            Maximum="1"
+                            Style="{StaticResource MeterBarStyle}" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Border Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                        Kind="TableCheck" />
+                                    <TextBlock
+                                        x:Name="TxtPillTables"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="Counter" />
+                                    <TextBlock
+                                        x:Name="TxtPillRows"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="PillFailed"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Kind="AlertCircleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtPillFailed"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusErrorFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtPillTime}"
+                                        Kind="TimerOutline" />
+                                    <TextBlock
+                                        x:Name="TxtPillTime"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  Tabs: Tables | Notes | Console  -->
+                <Border
+                    Grid.Row="2"
+                    Margin="0,12,0,0"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton
+                                    x:Name="TabTables"
+                                    MinWidth="110"
+                                    Margin="0,0,4,0"
+                                    Click="Tab_Click"
+                                    GroupName="DbTabs"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="tables">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="TableLarge" />
+                                        <TextBlock Grid.Column="1" x:Name="TxtTabTables" VerticalAlignment="Center" Text="{DynamicResource Str_DbMigrate_TabTables}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </RadioButton>
+                                <RadioButton
+                                    x:Name="TabNotes"
+                                    MinWidth="110"
+                                    Margin="0,0,4,0"
+                                    Click="Tab_Click"
+                                    GroupName="DbTabs"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="notes">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="AlertOutline" />
+                                        <TextBlock Grid.Column="1" x:Name="TxtTabNotes" VerticalAlignment="Center" Text="{DynamicResource Str_DbMigrate_TabNotes}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </RadioButton>
+                                <RadioButton
+                                    x:Name="TabConsole"
+                                    MinWidth="110"
+                                    Click="Tab_Click"
+                                    GroupName="DbTabs"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="console">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Console" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DbMigrate_TabConsole}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </RadioButton>
+                            </StackPanel>
+                            <StackPanel
+                                x:Name="ConsoleTools"
+                                Grid.Column="2"
+                                Orientation="Horizontal"
+                                Visibility="Collapsed">
+                                <Button
+                                    Width="32"
+                                    Height="32"
+                                    Click="BtnCopyLog_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DbMigrate_CopyLog}">
+                                    <materialDesign:PackIcon x:Name="IconCopyLog" Width="16" Height="16" Kind="ContentCopy" />
+                                </Button>
+                                <Button
+                                    Width="32"
+                                    Height="32"
+                                    Margin="6,0,0,0"
+                                    Click="BtnSaveLog_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DbMigrate_SaveLog}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
+                                </Button>
+                                <Button
+                                    Width="32"
+                                    Height="32"
+                                    Margin="6,0,0,0"
+                                    Click="BtnClearLog_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DbMigrate_ClearLog}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,12,0,0">
+
+                            <!--  Tables  -->
+                            <Grid x:Name="PageTables">
+                                <DataGrid
+                                    x:Name="TablesGrid"
+                                    AutoGenerateColumns="False"
+                                    CanUserAddRows="False"
+                                    CanUserDeleteRows="False"
+                                    HeadersVisibility="Column"
+                                    IsReadOnly="False"
+                                    SelectionMode="Single"
+                                    Visibility="Collapsed">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Width="48" Header="">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding Include, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource IncludeCheck}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Width="*" Header="{DynamicResource Str_DbMigrate_ColTable}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{DynamicResource TextPrimary}"
+                                                        Text="{Binding FullName}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        ToolTip="{Binding FullName}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Width="110" Header="{DynamicResource Str_DbMigrate_ColRows}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Text="{Binding RowCount, StringFormat=N0, TargetNullValue=-}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Width="170" Header="{DynamicResource Str_DbMigrate_ColCopied}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Grid VerticalAlignment="Center">
+                                                        <ProgressBar
+                                                            Height="6"
+                                                            Maximum="1"
+                                                            Style="{StaticResource MeterBarStyle}"
+                                                            Value="{Binding Progress, Mode=OneWay}" />
+                                                        <TextBlock
+                                                            Margin="0,10,0,0"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            Text="{Binding RowsCopied, StringFormat=N0}" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Width="*" Header="{DynamicResource Str_DbMigrate_ColStatus}">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Margin="0,0,8,0" Style="{StaticResource StateIcon}" />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            Text="{Binding Message}"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            ToolTip="{Binding Message}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <!--  Empty state  -->
+                                <StackPanel
+                                    x:Name="EmptyState"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.DatabaseSyncOutline}" />
+                                    <TextBlock
+                                        Margin="0,14,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="{DynamicResource Str_DbMigrate_EmptyTitle}" />
+                                    <TextBlock
+                                        MaxWidth="420"
+                                        Margin="0,4,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_DbMigrate_EmptyHint}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!--  Notes  -->
+                            <Grid x:Name="PageNotes" Visibility="Collapsed">
+                                <ListBox
+                                    x:Name="NotesList"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemTemplate="{StaticResource IssueTemplate}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                                <TextBlock
+                                    x:Name="TxtNoNotes"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_DbMigrate_NoNotes}" />
+                            </Grid>
+
+                            <!--  Console  -->
+                            <Border
+                                x:Name="PageConsole"
+                                Background="{DynamicResource InputBg}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Visibility="Collapsed">
+                                <ListBox
+                                    x:Name="ConsoleList"
+                                    ItemTemplate="{StaticResource LogLineTemplate}"
+                                    SelectionMode="Extended"
+                                    Style="{StaticResource ConsoleListBox}" />
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

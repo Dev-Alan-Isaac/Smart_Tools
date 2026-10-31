@@ -1,0 +1,762 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.NotesView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/NotesManager.cs (live list, safe load/save of
+        notes.json with a backup, ordering, search, export);
+        Models/NotesModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Pin: a round toggle, filled with the accent colour when on  -->
+        <Style x:Key="PinToggleButtonStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border
+                            x:Name="Bd"
+                            Background="{DynamicResource CardBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="17">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColor}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Colour swatch: a dot, ringed in the accent colour when chosen  -->
+        <Style x:Key="SwatchStyle" TargetType="RadioButton">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
+                            </Grid.RenderTransform>
+                            <Ellipse
+                                x:Name="Ring"
+                                Opacity="0"
+                                Stroke="{DynamicResource AccentColor}"
+                                StrokeThickness="2" />
+                            <Ellipse
+                                Margin="4"
+                                Fill="{TemplateBinding Background}"
+                                Stroke="#33000000"
+                                StrokeThickness="1" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Ring" Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Ring" Property="Opacity" Value="0.6" />
+                            </Trigger>
+                            <!--
+                                A transform can't be the target of a Setter (only of an
+                                animation), so the hover grow is a short storyboard.
+                            -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1.12"
+                                                Duration="0:0:0.12" />
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1.12"
+                                                Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Note card in the list: the sticky note, ringed when selected  -->
+        <Style x:Key="NoteCardContainerStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Padding="2"
+                            BorderBrush="Transparent"
+                            BorderThickness="2"
+                            CornerRadius="13"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="Shift" X="0" />
+                            </Border.RenderTransform>
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Shift"
+                                                Storyboard.TargetProperty="X"
+                                                To="3"
+                                                Duration="0:0:0.16" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Shift"
+                                                Storyboard.TargetProperty="X"
+                                                To="0"
+                                                Duration="0:0:0.2" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="NoteCardTemplate" DataType="{x:Type models:NoteItem}">
+            <Border
+                Padding="12,10"
+                Background="{Binding ColorHex}"
+                CornerRadius="8">
+                <StackPanel>
+                    <DockPanel>
+                        <materialDesign:PackIcon
+                            x:Name="IconPinned"
+                            Width="14"
+                            Height="14"
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Right"
+                            Foreground="#8A000000"
+                            Kind="Pin"
+                            ToolTip="{DynamicResource Str_Notes_Pinned}"
+                            Visibility="Collapsed" />
+                        <TextBlock
+                            FontSize="13.5"
+                            FontWeight="SemiBold"
+                            Foreground="#DE000000"
+                            Text="{Binding DisplayTitle}"
+                            TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <TextBlock
+                        x:Name="SnippetText"
+                        MaxHeight="34"
+                        Margin="0,4,0,0"
+                        FontSize="12"
+                        Foreground="#99000000"
+                        Text="{Binding Snippet}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        FontSize="11"
+                        Foreground="#80000000"
+                        Text="{Binding ModifiedLabel}" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Pinned}" Value="True">
+                    <Setter TargetName="IconPinned" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Snippet}" Value="">
+                    <Setter TargetName="SnippetText" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!--  Problem loading notes.json (damaged → backup used / kept aside, or locked)  -->
+            <Border
+                x:Name="LoadMessageBar"
+                Margin="0,0,0,12"
+                Padding="12,8"
+                Background="{DynamicResource StatusWarningBg}"
+                CornerRadius="8"
+                Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusWarningFg}"
+                        Kind="AlertCircleOutline" />
+                    <TextBlock
+                        x:Name="TxtLoadMessage"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource StatusWarningFg}"
+                        TextWrapping="Wrap" />
+                    <Button
+                        x:Name="BtnOpenNotesFolder"
+                        Grid.Column="2"
+                        Margin="10,0,0,0"
+                        Click="BtnOpenNotesFolder_Click"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        ToolTip="{DynamicResource Str_Notes_OpenTheFolderWhere}">
+                        <Grid HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Grid.Column="0"
+                                Width="15"
+                                Height="15"
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Kind="FolderOpenOutline" />
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileConverter_OpenFolder}" TextWrapping="Wrap" />
+                        </Grid>
+                    </Button>
+                    <Button
+                        Grid.Column="3"
+                        Width="28"
+                        Height="28"
+                        Margin="6,0,0,0"
+                        Click="BtnDismissLoadMessage_Click"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        ToolTip="{DynamicResource Str_Notes_HideThisMessage}">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            Kind="Close" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="ListColumn" Width="300" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ================= LEFT: NOTES =================  -->
+                <Border ctl:Tour.Key="Str_Tour_Notes_List" ctl:Tour.Order="1" Grid.Column="0" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_Notes_Title}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.NoteMultipleOutline}" />
+                                <Border
+                                    x:Name="CountPill"
+                                    Margin="8,0,0,0"
+                                    Padding="8,1"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource RowBg}"
+                                    CornerRadius="8">
+                                    <TextBlock
+                                        x:Name="TxtCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="0" />
+                                </Border>
+                            </StackPanel>
+                            <Button
+                                x:Name="BtnNewNote"
+                                ctl:Tour.Key="Str_Tour_Notes_New"
+                                ctl:Tour.Order="2"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Click="BtnNewNote_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_Notes_NewNoteTooltip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{DynamicResource Str_Notes_NewNote}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                        </Grid>
+
+                        <Border
+                            x:Name="SearchBar"
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Padding="8,0,4,0"
+                            Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Kind="Magnify" />
+                                <TextBox
+                                    x:Name="TxtSearch"
+                                    Grid.Column="1"
+                                    PreviewKeyDown="TxtSearch_PreviewKeyDown"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="Search notes (Ctrl+F)"
+                                    TextChanged="TxtSearch_TextChanged" />
+                                <Button
+                                    x:Name="BtnClearSearch"
+                                    Grid.Column="2"
+                                    Width="26"
+                                    Height="26"
+                                    Margin="2,3"
+                                    Click="BtnClearSearch_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_ClearTheSearch}"
+                                    Visibility="Collapsed">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Kind="Close" />
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <ListBox
+                            x:Name="ListNotes"
+                            Grid.Row="2"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemContainerStyle="{StaticResource NoteCardContainerStyle}"
+                            ItemTemplate="{StaticResource NoteCardTemplate}"
+                            PreviewKeyDown="ListNotes_PreviewKeyDown"
+                            PreviewMouseLeftButtonUp="ListNotes_PreviewMouseLeftButtonUp"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            SelectionChanged="ListNotes_SelectionChanged"
+                            SelectionMode="Single"
+                            VirtualizingPanel.ScrollUnit="Pixel" />
+
+                        <!--  No notes at all  -->
+                        <StackPanel
+                            x:Name="EmptyListPanel"
+                            Grid.Row="2"
+                            Margin="8,30,8,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Visibility="Collapsed">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.NoteEditOutline}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_Notes_NoNotesYet}" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Notes_EmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!--  Search found nothing  -->
+                        <StackPanel
+                            x:Name="NoMatchPanel"
+                            Grid.Row="2"
+                            Margin="8,30,8,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Visibility="Collapsed">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MagnifyRemoveOutline}" />
+                            <TextBlock
+                                x:Name="TxtNoMatch"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  ================= RIGHT: EDITOR =================  -->
+                <Border
+                    x:Name="EditorPanel"
+                    ctl:Tour.Key="Str_Tour_Notes_Editor"
+                    ctl:Tour.Order="3"
+                    Grid.Column="2"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <!--  Faint wash of the note's colour behind the editor  -->
+                        <Border
+                            x:Name="EditorTint"
+                            Margin="-4"
+                            CornerRadius="8"
+                            IsHitTestVisible="False"
+                            Opacity="0.16" />
+
+                        <Grid Margin="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    x:Name="ColorDot"
+                                    Width="12"
+                                    Height="28"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    CornerRadius="6" />
+                                <TextBox
+                                    x:Name="TxtTitle"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="21"
+                                    FontWeight="SemiBold"
+                                    PreviewKeyDown="TxtTitle_PreviewKeyDown"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="Title"
+                                    TextChanged="TxtTitle_TextChanged" />
+                                <ToggleButton
+                                    x:Name="BtnPin"
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    Click="BtnPin_Click"
+                                    Style="{StaticResource PinToggleButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Notes_PinTooltip}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconPin"
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PinOutline" />
+                                </ToggleButton>
+                                <controls:ExportButton
+                                    x:Name="BtnExport"
+                                    Grid.Column="3"
+                                    Margin="6,0,0,0"
+                                    ToolTip="{DynamicResource Str_Notes_SaveThisNoteAs}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem
+                                                Click="MenuExport_Click"
+                                                Header="{DynamicResource Str_Common_ExportAsText}"
+                                                Tag="txt">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileDocumentOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="MenuExport_Click"
+                                                Header="{DynamicResource Str_Common_ExportAsMarkdown}"
+                                                Tag="md">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="LanguageMarkdownOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                                <Button
+                                    x:Name="BtnDeleteNote"
+                                    Grid.Column="4"
+                                    Margin="6,0,0,0"
+                                    Click="BtnDeleteNote_Click"
+                                    ToolTip="{DynamicResource Str_Notes_DeleteTooltip}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteOutline" />
+                                </Button>
+                            </Grid>
+
+                            <StackPanel
+                                Grid.Row="1"
+                                Margin="0,10,0,0"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Notes_ColorLabel}" />
+                                <StackPanel x:Name="ColorSwatches" Orientation="Horizontal" />
+                                <TextBlock
+                                    x:Name="TxtModified"
+                                    Margin="14,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+
+                            <Separator
+                                Grid.Row="2"
+                                Margin="0,12,0,8"
+                                Background="{DynamicResource CardBorder}" />
+
+                            <TextBox
+                                x:Name="TxtBody"
+                                Grid.Row="3"
+                                Height="Auto"
+                                MinHeight="160"
+                                Padding="2,6,2,6"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                VerticalContentAlignment="Top"
+                                AcceptsReturn="True"
+                                AcceptsTab="True"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                CaretBrush="{DynamicResource TextPrimary}"
+                                Cursor="IBeam"
+                                FontSize="14.5"
+                                Foreground="{DynamicResource TextPrimary}"
+                                HorizontalScrollBarVisibility="Disabled"
+                                SpellCheck.IsEnabled="True"
+                                Tag="Start typing your note…"
+                                TextChanged="TxtBody_TextChanged"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto" />
+                            <!--
+                                Height/alignment are set on purpose: the app-wide TextBox
+                                style (Controls.xaml) gives every TextBox Height="30" and
+                                centred text, which turned this into a thin strip in the
+                                middle of the note. Here it fills the note, text from the top.
+                            -->
+
+                            <!--  Save state + counts  -->
+                            <StackPanel
+                                Grid.Row="4"
+                                Margin="0,8,0,0"
+                                Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Name="IconSaveState"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    Kind="CheckCircleOutline" />
+                                <TextBlock
+                                    x:Name="TxtSaveState"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Notes_SavedAutomatically}" />
+                                <TextBlock
+                                    x:Name="TxtStats"
+                                    Margin="14,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  Nothing selected  -->
+                <Border
+                    x:Name="NoSelectionPanel"
+                    Grid.Column="2"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.NoteTextOutline}" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Center"
+                            FontSize="14"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_Notes_NoSelectionHint}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,6,0,0"
+                            HorizontalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_Notes_CtrlNNewNote}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!--  Undo after delete  -->
+            <Border
+                x:Name="UndoBar"
+                Grid.Row="1"
+                Margin="0,0,0,18"
+                Padding="14,8,8,8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource CardBg}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Effect="{DynamicResource CardElevation}"
+                Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="DeleteOutline" />
+                    <TextBlock
+                        x:Name="TxtUndo"
+                        MaxWidth="360"
+                        VerticalAlignment="Center"
+                        FontSize="12.5"
+                        Foreground="{DynamicResource TextPrimary}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button
+                        x:Name="BtnUndo"
+                        Margin="12,0,0,0"
+                        Click="BtnUndo_Click"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        ToolTip="{DynamicResource Str_Notes_BringTheNoteBack}">
+                        <Grid HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Grid.Column="0"
+                                Width="15"
+                                Height="15"
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Kind="Undo" />
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Organize_Undo}" TextWrapping="Wrap" />
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

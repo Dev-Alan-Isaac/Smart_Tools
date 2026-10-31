@@ -1,0 +1,837 @@
+﻿<UserControl
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Class="Smart_Tools.WPF.Views.FileShredderView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/ShredderManager.cs (overwrite passes, delete,
+        finding files without following links, removing emptied folders,
+        settings) and ShredderManager.Queue.cs (the sidebar queue);
+        Models/ShredderModel.cs. This file and the code-behind are UI only.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Queue grid: name + folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:ShredItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Queue grid: status chip (reason in the tooltip) + a thin bar while the file is overwritten  -->
+        <DataTemplate x:Key="StatusCellTemplate" DataType="{x:Type models:ShredItem}">
+            <StackPanel VerticalAlignment="Center">
+                <Border
+                    x:Name="Chip"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource RowBg}"
+                    Style="{StaticResource IconStatusPillStyle}"
+                    ToolTip="{Binding Message}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            x:Name="ChipIcon"
+                            Width="12"
+                            Height="12"
+                            Margin="0,0,4,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Kind="ClockOutline" />
+                        <TextBlock
+                            x:Name="ChipText"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_FileGenerator_Waiting}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+                <ProgressBar
+                    x:Name="RowBar"
+                    Height="3"
+                    Margin="0,4,8,0"
+                    Maximum="100"
+                    Visibility="Collapsed"
+                    Value="{Binding Progress, Mode=OneWay}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="Shredder" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Shredding…" />
+                    <Setter TargetName="RowBar" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Shredded">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Shredded" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Failed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="LinkVariantOff" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Skipped" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+
+        <!--  Input card: one queued item  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:ShredQueueGroup}">
+            <Grid ToolTip="{Binding ToolTip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="GroupIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileMultipleOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveQueueGroup_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_SecureFileShredder_TakeTheseOffThe}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FILES ============  -->
+                            <controls:InputFolderCard
+                                ctl:Tour.Key="Str_Tour_Shredder_Files"
+                                ctl:Tour.Order="1"
+                                x:Name="InputCard"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_SecureFileShredder_FilesToShred}"
+                                HeaderIcon="FileMultipleOutline"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+
+                            <!--  ============ METHOD ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Shredder_Method" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Shredder_MethodHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldLockOutline}" />
+                                    <UniformGrid Columns="3" ToolTip="{DynamicResource Str_Shredder_MethodTooltip}">
+                                        <RadioButton
+                                            x:Name="RadioMethodQuick"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            GroupName="Method"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="QuickZero">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FlashOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DeviceScanner_Quick}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    Opacity="0.75"
+                                                    Text="{DynamicResource Str_SecureFileShredder_1Pass}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioMethodDod"
+                                            Margin="2,0"
+                                            Click="Option_Click"
+                                            GroupName="Method"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Dod3Pass">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ShieldHalfFull" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_SecureFileShredder_Standard}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    Opacity="0.75"
+                                                    Text="{DynamicResource Str_SecureFileShredder_3Passes}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioMethodThorough"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            GroupName="Method"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Random7Pass">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ShieldLockOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DeviceScanner_Thorough}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    Opacity="0.75"
+                                                    Text="{DynamicResource Str_SecureFileShredder_7Passes}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtMethodHint"
+                                        Margin="2,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Name="TxtWriteEstimate"
+                                        Margin="2,4,0,0"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OPTIONS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Shredder_Options" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_OptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CogOutline}" />
+                                    <CheckBox
+                                        x:Name="ChkRenameBeforeDelete"
+                                        Margin="0,0,0,6"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_SecureFileShredder_ScrambleTheNameSize}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_SecureFileShredder_BeforeDeletingCutThe}" />
+                                    <CheckBox
+                                        x:Name="ChkRemoveEmptyFolders"
+                                        Margin="0,0,0,6"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_SecureFileShredder_RemoveFoldersThisLeaves}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_SecureFileShredder_OnlyInsideFoldersYou}" />
+                                    <CheckBox
+                                        x:Name="ChkConfirmBeforeShredding"
+                                        Margin="0,0,0,6"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_Shredder_ConfirmBeforeShredding}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_Shredder_ConfirmBeforeShreddingTooltip}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ GOOD TO KNOW ============  -->
+                            <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_SecureFileShredder_GoodToKnow}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_SecureFileShredder_SsdsUsbSticksAnd}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_SecureFileShredder_LinksAndOnedrivePlaceholders}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            ctl:Tour.Key="Str_Tour_Shredder_Run"
+                            ctl:Tour.Order="4"
+                            x:Name="BtnShredSelected"
+                            MinWidth="190"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnShredSelected_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource AccentRedButtonStyle}"
+                            ToolTip="{DynamicResource Str_Shredder_ShredFilesTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconShred"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Shredder" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtShredLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Shredder_ShredFiles}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressShred"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_Shredder_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Shredder_ProgressInitial}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  It can't be undone  -->
+                <Border
+                    Grid.Row="1"
+                    Margin="0,0,0,12"
+                    Padding="12,10"
+                    Background="{DynamicResource StatusErrorBg}"
+                    CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="34"
+                            Height="34"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource StatusErrorFg}"
+                            CornerRadius="17">
+                            <materialDesign:PackIcon
+                                Width="18"
+                                Height="18"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Kind="AlertOctagonOutline" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock
+                                FontSize="12.5"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource StatusErrorFg}"
+                                Text="{DynamicResource Str_Common_Warning}" />
+                            <TextBlock
+                                FontSize="11.5"
+                                Foreground="{DynamicResource StatusErrorFg}"
+                                Text="{DynamicResource Str_Shredder_WarningText}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  Queue  -->
+                <Border ctl:Tour.Key="Str_Tour_Shredder_List" ctl:Tour.Order="5" Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_Shredder_QueueTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.Shredder}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    x:Name="SummaryPill"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Shredder_QueuePillTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="FileMultipleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillShredded"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtShreddedCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillFailed"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FileGenerator_HoverARowS}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtFailedCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                x:Name="ListTools"
+                                Grid.Column="2"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnSelectAll"
+                                    Width="32"
+                                    Height="32"
+                                    Click="BtnSelectAll_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Shredder_SelectAllTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="CheckboxMultipleMarkedOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnDeselectAll"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="4,0,0,0"
+                                    Click="BtnDeselectAll_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Shredder_DeselectAllTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="CheckboxMultipleBlankOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnRemoveSelected"
+                                    Margin="10,0,0,0"
+                                    Click="BtnRemoveSelected_Click"
+                                    ToolTip="{DynamicResource Str_SecureFileShredder_TakeTheTickedRows}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PlaylistRemove" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearAll"
+                                    Margin="10,0,0,0"
+                                    Click="BtnClearQueue_Click"
+                                    ToolTip="{DynamicResource Str_SecureFileShredder_EmptyTheListNothing}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridQueue"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserReorderColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            PreviewKeyDown="DataGridQueue_PreviewKeyDown"
+                            MinRowHeight="46"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_Shredder_QueueGridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="40" CellStyle="{StaticResource CheckBoxCellStyle}">
+                                    <DataGridTemplateColumn.Header>
+                                        <CheckBox
+                                            x:Name="ChkIncludeAll"
+                                            Click="ChkIncludeAll_Click"
+                                            IsChecked="True"
+                                            Style="{StaticResource DataGridCheckBoxStyle}"
+                                            ToolTip="{DynamicResource Str_SecureFileShredder_TickOrUntickEvery}" />
+                                    </DataGridTemplateColumn.Header>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox
+                                                Click="ItemCheckBox_Click"
+                                                IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource DataGridCheckBoxStyle}"
+                                                ToolTip="{DynamicResource Str_Shredder_IncludeItemTooltip}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Width="34" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <materialDesign:PackIcon
+                                                Width="17"
+                                                Height="17"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Kind="FileOutline" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderName}"
+                                    SortMemberPath="Name" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColSize"
+                                    Width="84"
+                                    Binding="{Binding SizeText, Mode=OneWay}"
+                                    Header="{DynamicResource Str_Shredder_ColHeaderSize}"
+                                    SortMemberPath="SizeBytes" />
+                                <DataGridTemplateColumn
+                                    Width="120"
+                                    CellTemplate="{StaticResource StatusCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}"
+                                    SortMemberPath="Status" />
+                                <DataGridTemplateColumn Width="40" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Width="26"
+                                                Height="26"
+                                                Click="BtnRemoveFromQueue_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                Tag="{Binding}"
+                                                ToolTip="{DynamicResource Str_Shredder_RemoveFromQueueTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.Shredder}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_SecureFileShredder_DeleteFilesSoThey}" />
+                            <TextBlock
+                                MaxWidth="420"
+                                Margin="0,4,0,14"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Shredder_DragDropHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_ImageViewerControl_DropToAddTo}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_SecureFileShredder_NothingIsShreddedUntil}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

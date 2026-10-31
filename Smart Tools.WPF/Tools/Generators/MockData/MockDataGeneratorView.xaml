@@ -1,0 +1,1036 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.MockDataGeneratorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/MockDataManager.cs (generating, CSV/JSON/SQL writers,
+        validation, saving, settings) + MockDataManager.Pools.cs (word lists);
+        Models/MockDataModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <FontFamily x:Key="MockMonoFont">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+        <Style x:Key="PresetChipStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,6,4" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Padding="10,4"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource InputBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style
+            x:Key="SidebarChipStyle"
+            BasedOn="{StaticResource PresetChipStyle}"
+            TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+        </Style>
+
+        <!--  One entry of the column-type drop-down (the themed ComboBox's selection box ignores DisplayMemberPath)  -->
+        <DataTemplate x:Key="TypeChoiceTemplate" DataType="{x:Type models:MockDataTypeChoice}">
+            <TextBlock x:Name="Label" VerticalAlignment="Center" Text="{Binding Label}" />
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                    <Setter TargetName="Label" Property="FontSize" Value="10.5" />
+                    <Setter TargetName="Label" Property="FontWeight" Value="SemiBold" />
+                    <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--
+            A category heading in the type drop-down is a plain row (IsHeader) that can't be chosen:
+            disabled, with a bare template so the theme's "disabled" fade doesn't dim it.
+            (WPF's own grouping showed only the headings with this theme's ComboBox popup.)
+        -->
+        <Style
+            x:Key="TypeItemStyle"
+            BasedOn="{StaticResource {x:Type ComboBoxItem}}"
+            TargetType="ComboBoxItem">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                    <Setter Property="Focusable" Value="False" />
+                    <Setter Property="Cursor" Value="Arrow" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ComboBoxItem">
+                                <Border Padding="8,8,8,2">
+                                    <ContentPresenter />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  One column of the data set  -->
+        <DataTemplate x:Key="FieldRowTemplate" DataType="{x:Type models:MockDataField}">
+            <Border
+                Margin="0,0,0,8"
+                Padding="10,8"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="190" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            Width="26"
+                            Height="26"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="8">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="11"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource AccentColor}"
+                                Text="{Binding Number}" />
+                        </Border>
+
+                        <Border
+                            Grid.Column="1"
+                            Margin="0,0,8,0"
+                            Style="{StaticResource InputBarStyle}">
+                            <TextBox
+                                VerticalContentAlignment="Center"
+                                Style="{StaticResource BareTextBox}"
+                                Tag="{DynamicResource Str_Mock_ColumnName}"
+                                Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        </Border>
+
+                        <Border
+                            Grid.Column="2"
+                            Margin="0,0,8,0"
+                            Style="{StaticResource InputBarStyle}">
+                            <ComboBox
+                                VerticalContentAlignment="Center"
+                                IsSynchronizedWithCurrentItem="False"
+                                ItemContainerStyle="{StaticResource TypeItemStyle}"
+                                ItemTemplate="{StaticResource TypeChoiceTemplate}"
+                                ItemsSource="{Binding TypeChoices, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                SelectedValue="{Binding TypeKey, Mode=TwoWay}"
+                                SelectedValuePath="Key"
+                                Style="{StaticResource BareComboBox}">
+                            </ComboBox>
+                        </Border>
+
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Margin="0,0,2,0"
+                                Click="BtnFieldUp_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Mock_MoveUpTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="ChevronUp" />
+                            </Button>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Margin="0,0,2,0"
+                                Click="BtnFieldDown_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Mock_MoveDownTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="ChevronDown" />
+                            </Button>
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Click="BtnFieldRemove_Click"
+                                Style="{StaticResource IconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Mock_RemoveTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Kind="Close" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  Extra inputs for this kind of column  -->
+                    <StackPanel
+                        Grid.Row="1"
+                        Margin="36,8,0,0"
+                        Orientation="Horizontal">
+
+                        <StackPanel
+                            x:Name="RangePanel"
+                            Orientation="Horizontal"
+                            Visibility="Collapsed">
+                            <Border
+                                Width="110"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource InputBarStyle}">
+                                <Grid>
+                                    <TextBox
+                                        VerticalContentAlignment="Center"
+                                        Style="{StaticResource BareTextBox}"
+                                        Text="{Binding Min, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="{DynamicResource Str_Mock_MinTooltip}" />
+                                    <TextBlock
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        IsHitTestVisible="False"
+                                        Opacity="0.7"
+                                        Text="{Binding MinHint}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Min}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <TextBlock
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="–" />
+                            <Border
+                                Width="110"
+                                Margin="0,0,14,0"
+                                Style="{StaticResource InputBarStyle}">
+                                <Grid>
+                                    <TextBox
+                                        VerticalContentAlignment="Center"
+                                        Style="{StaticResource BareTextBox}"
+                                        Text="{Binding Max, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="{DynamicResource Str_Mock_MaxTooltip}" />
+                                    <TextBlock
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        IsHitTestVisible="False"
+                                        Opacity="0.7"
+                                        Text="{Binding MaxHint}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Max}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <Border
+                            x:Name="ListPanel"
+                            Width="330"
+                            Margin="0,0,14,0"
+                            Style="{StaticResource InputBarStyle}"
+                            Visibility="Collapsed">
+                            <TextBox
+                                VerticalContentAlignment="Center"
+                                Style="{StaticResource BareTextBox}"
+                                Tag="{DynamicResource Str_Mock_ListHint}"
+                                Text="{Binding Options, UpdateSourceTrigger=PropertyChanged}"
+                                ToolTip="{DynamicResource Str_Mock_ListTooltip}" />
+                        </Border>
+
+                        <!--  A column filled from a list kept in Settings: just says which one  -->
+                        <Border
+                            x:Name="SavedListPanel"
+                            Width="330"
+                            Margin="0,0,14,0"
+                            Padding="10,0"
+                            Style="{StaticResource InputBarStyle}"
+                            Visibility="Collapsed">
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Kind="FormatListBulleted" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{Binding SavedListNote}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip="{Binding SavedListNote}" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_Mock_BlankLabel}"
+                            ToolTip="{DynamicResource Str_Mock_BlankTooltip}" />
+                        <Border
+                            Width="96"
+                            Style="{StaticResource InputBarStyle}"
+                            ToolTip="{DynamicResource Str_Mock_BlankTooltip}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    HorizontalContentAlignment="Right"
+                                    VerticalContentAlignment="Center"
+                                    LostFocus="BlankBox_LostFocus"
+                                    MaxLength="4"
+                                    Style="{StaticResource BareTextBox}"
+                                    Text="{Binding BlankText, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    IsHitTestVisible="False"
+                                    Text="%" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock
+                        x:Name="ErrorText"
+                        Grid.Row="2"
+                        Margin="36,6,0,0"
+                        FontSize="11.5"
+                        Foreground="{DynamicResource StatusErrorFg}"
+                        Text="{Binding Error}"
+                        TextWrapping="Wrap"
+                        Visibility="Collapsed" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding UsesRange}" Value="True">
+                    <Setter TargetName="RangePanel" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsList}" Value="True">
+                    <Setter TargetName="ListPanel" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSavedList}" Value="True">
+                    <Setter TargetName="SavedListPanel" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasError}" Value="True">
+                    <Setter TargetName="ErrorText" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FORMAT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MockData_Format" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Mock_FormatHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileExportOutline}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioFormatCsv"
+                                            Margin="0,0,2,0"
+                                            Click="Format_Click"
+                                            GroupName="MockFormat"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Csv"
+                                            ToolTip="{DynamicResource Str_Mock_CsvTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileDelimitedOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="CSV" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatJson"
+                                            Margin="2,0,2,0"
+                                            Click="Format_Click"
+                                            GroupName="MockFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Json"
+                                            ToolTip="{DynamicResource Str_Mock_JsonTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="CodeJson" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="JSON" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatSql"
+                                            Margin="2,0,0,0"
+                                            Click="Format_Click"
+                                            GroupName="MockFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Sql"
+                                            ToolTip="{DynamicResource Str_Mock_SqlTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="DatabaseOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="SQL" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+
+                                    <Border
+                                        x:Name="TablePanel"
+                                        Margin="0,10,0,0"
+                                        Style="{StaticResource InputBarStyle}"
+                                        Visibility="Collapsed">
+                                        <TextBox
+                                            x:Name="TxtTable"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Mock_TableName}"
+                                            Text="mock_data"
+                                            TextChanged="Setting_Changed" />
+                                    </Border>
+                                    <CheckBox
+                                        x:Name="ChkHeader"
+                                        Margin="0,10,0,0"
+                                        Click="Setting_Changed"
+                                        Content="{DynamicResource Str_Mock_IncludeHeader}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ROWS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MockData_Rows" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Mock_RowsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtRows"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Text="100"
+                                            TextChanged="Setting_Changed" />
+                                    </Border>
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <Button
+                                            Click="RowsPreset_Click"
+                                            Content="10"
+                                            Style="{StaticResource SidebarChipStyle}"
+                                            Tag="10" />
+                                        <Button
+                                            Click="RowsPreset_Click"
+                                            Content="100"
+                                            Style="{StaticResource SidebarChipStyle}"
+                                            Tag="100" />
+                                        <Button
+                                            Click="RowsPreset_Click"
+                                            Content="1,000"
+                                            Style="{StaticResource SidebarChipStyle}"
+                                            Tag="1000" />
+                                        <Button
+                                            Click="RowsPreset_Click"
+                                            Content="10,000"
+                                            Style="{StaticResource SidebarChipStyle}"
+                                            Tag="10000" />
+                                        <Button
+                                            Click="RowsPreset_Click"
+                                            Content="100,000"
+                                            Style="{StaticResource SidebarChipStyle}"
+                                            Tag="100000" />
+                                    </WrapPanel>
+                                    <TextBlock
+                                        Margin="2,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Mock_RowsHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ LANGUAGE + SEED ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MockData_Names" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Mock_LanguageHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Translate}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioLocaleEnglish"
+                                            Margin="0,0,2,0"
+                                            Click="Locale_Click"
+                                            Content="English"
+                                            GroupName="MockLocale"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="English" />
+                                        <RadioButton
+                                            x:Name="RadioLocaleSpanish"
+                                            Margin="2,0,0,0"
+                                            Click="Locale_Click"
+                                            Content="Español"
+                                            GroupName="MockLocale"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Spanish" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Mock_LanguageHint}"
+                                        TextWrapping="Wrap" />
+
+                                    <ContentControl
+                                        Margin="0,14,0,10"
+                                        Content="{DynamicResource Str_Mock_SeedHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.DiceMultipleOutline}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox
+                                                x:Name="TxtSeed"
+                                                VerticalContentAlignment="Center"
+                                                Style="{StaticResource BareTextBox}"
+                                                Text="12345"
+                                                TextChanged="Setting_Changed" />
+                                            <Button
+                                                Grid.Column="1"
+                                                Width="30"
+                                                Height="30"
+                                                Margin="0,0,3,0"
+                                                Click="BtnNewData_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Mock_NewDataTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="DiceMultipleOutline" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Mock_SeedHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock
+                                Margin="4,2,4,0"
+                                FontSize="11"
+                                Foreground="{DynamicResource SidebarTextMuted}"
+                                Text="{DynamicResource Str_Mock_SafeNote}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <!--  The page scrolls instead of squeezing the cards: columns get a capped height (they scroll inside), the preview keeps a readable height.  -->
+            <ScrollViewer
+                Grid.Column="2"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <Grid Margin="0,0,4,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="14" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Run bar  -->
+                    <Border
+                        Grid.Row="0"
+                        Margin="0,0,0,14"
+                        Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button
+                                    x:Name="BtnSave"
+                                    ctl:Tour.Key="Str_Tour_MockData_Generate" ctl:Tour.Order="5"
+                                    MinWidth="170"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnSave_Click"
+                                    ToolTip="{DynamicResource Str_Mock_SaveTooltip}"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            x:Name="IconSave"
+                                            Width="18"
+                                            Height="18"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ContentSaveOutline" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            x:Name="TxtSaveLabel"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_Mock_SaveButton}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnCopy"
+                                    Grid.Column="1"
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnCopy_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Mock_CopyTooltip}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconCopy"
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+
+                                <Button
+                                    Grid.Column="2"
+                                    Margin="0,0,16,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnNewData_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Mock_NewDataTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Refresh" />
+                                </Button>
+
+                                <WrapPanel Grid.Column="3" VerticalAlignment="Center">
+                                    <Border
+                                        x:Name="PillRows"
+                                        Margin="0,2,8,2"
+                                        Background="{DynamicResource AccentColorSubtle}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="TableRow" />
+                                            <TextBlock
+                                                x:Name="TxtPillRows"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border
+                                        x:Name="PillColumns"
+                                        Margin="0,2,8,2"
+                                        Background="{DynamicResource AccentColorSubtle}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="TableColumn" />
+                                            <TextBlock
+                                                x:Name="TxtPillColumns"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border
+                                        x:Name="PillSize"
+                                        Margin="0,2,8,2"
+                                        Background="{DynamicResource AccentColorSubtle}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_Mock_SizeTooltip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="FileOutline" />
+                                            <TextBlock
+                                                x:Name="TxtPillSize"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                            </Grid>
+
+                            <Grid
+                                x:Name="StatusRow"
+                                Margin="0,10,0,0"
+                                Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                    x:Name="TxtStatus"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <ProgressBar
+                                    x:Name="SaveProgress"
+                                    Grid.Row="1"
+                                    Height="4"
+                                    Margin="0,6,0,0"
+                                    Maximum="100"
+                                    Visibility="Collapsed" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Columns  -->
+                    <Border
+                        x:Name="FieldsCard"
+                        Grid.Row="1"
+                        MinHeight="240"
+                        MaxHeight="420"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_Mock_ColumnsTitle}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.TableColumnPlusAfter}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Mock_ColumnsSubtitle}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <Button
+                                    x:Name="BtnAddField"
+                                    ctl:Tour.Key="Str_Tour_MockData_Columns" ctl:Tour.Order="4"
+                                    Grid.Column="2"
+                                    Click="BtnAddField_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Plus" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Mock_AddColumn}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+
+                            <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                                <WrapPanel x:Name="PresetPanel">
+                                    <TextBlock
+                                        Margin="0,3,10,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Mock_StartFrom}" />
+                                </WrapPanel>
+                                <TextBlock
+                                    x:Name="TxtProblem"
+                                    Margin="0,2,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource StatusErrorFg}"
+                                    TextWrapping="Wrap"
+                                    Visibility="Collapsed" />
+                            </StackPanel>
+
+                            <ScrollViewer
+                                x:Name="FieldsScroll"
+                                Grid.Row="2"
+                                HorizontalScrollBarVisibility="Disabled"
+                                VerticalScrollBarVisibility="Auto">
+                                <ItemsControl
+                                    x:Name="FieldList"
+                                    Focusable="False"
+                                    ItemTemplate="{StaticResource FieldRowTemplate}" />
+                            </ScrollViewer>
+
+                            <StackPanel
+                                x:Name="FieldsEmptyPanel"
+                                Grid.Row="2"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TableColumnPlusAfter}" />
+                                <TextBlock
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="15"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_Mock_EmptyTitle}" />
+                                <TextBlock
+                                    MaxWidth="380"
+                                    Margin="0,4,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Mock_EmptyHint}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Preview  -->
+                    <Border
+                        Grid.Row="3"
+                        Height="380"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_Common_PreviewHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.EyeOutline}" />
+                                <TextBlock
+                                    x:Name="TxtPreviewSubtitle"
+                                    Grid.Column="1"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+
+                            <Border
+                                Grid.Row="1"
+                                Background="{DynamicResource RowBg}"
+                                CornerRadius="8">
+                                <TextBox
+                                    x:Name="TxtPreview"
+                                    ctl:Tour.Key="Str_Tour_MockData_Preview" ctl:Tour.Order="6"
+                                    Padding="12,10"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontFamily="{StaticResource MockMonoFont}"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    IsReadOnly="True"
+                                    Style="{StaticResource CodeTextBoxNoWrap}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

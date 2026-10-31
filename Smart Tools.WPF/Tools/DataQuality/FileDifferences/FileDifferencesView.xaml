@@ -1,0 +1,1021 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.FileDifferencesView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:local="clr-namespace:Smart_Tools.WPF.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    PreviewDragEnter="Root_PreviewDragEnter"
+    PreviewDragLeave="Root_PreviewDragLeave"
+    PreviewDragOver="Root_PreviewDragOver"
+    PreviewDrop="Root_PreviewDrop"
+    PreviewKeyDown="Root_PreviewKeyDown">
+
+    <!--
+        Backend: Controllers/FileDifferencesManager.cs (+ .Matcher.cs, .Files.cs)
+        and Models/FileDifferencesModel.cs. Code-behind only wires controls.
+        Look and feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Small icon button in a card header toolbar  -->
+        <Style
+            x:Key="PaneToolButton"
+            BasedOn="{StaticResource NeutralIconButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="2,0,0,0" />
+        </Style>
+
+        <Style x:Key="PaneToolIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+        </Style>
+
+        <!--  A file slot in the sidebar (Original / Changed): click to pick, drop to replace  -->
+        <Style x:Key="FileSlotStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SidebarInputBg}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,9" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SlotLetterStyle" TargetType="Border">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <!--  Rows: no tint of their own (the cells carry it), accent edge when selected  -->
+        <Style x:Key="DiffRowStyle" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="3,0,0,0">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Background of one line, by its Kind (Style setters so the triggers win)  -->
+        <Style x:Key="LineBackgroundStyle" TargetType="Border">
+            <Setter Property="Background" Value="Transparent" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Added">
+                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Removed">
+                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Filler">
+                    <Setter Property="Background" Value="{DynamicResource RowBg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LineNumberStyle" TargetType="TextBlock">
+            <Setter Property="Padding" Value="0,2,8,2" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Opacity" Value="0.8" />
+            <Setter Property="TextAlignment" Value="Right" />
+        </Style>
+
+        <Style x:Key="LineSignStyle" TargetType="TextBlock">
+            <Setter Property="Padding" Value="0,2" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Text" Value="" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Added">
+                    <Setter Property="Text" Value="+" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Removed">
+                    <Setter Property="Text" Value="−" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LineTextStyle" TargetType="TextBlock">
+            <Setter Property="Padding" Value="0,2,10,2" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!--  "⋯ 120 unchanged lines - click to show"  -->
+        <Style x:Key="GapBarStyle" TargetType="Border">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="Padding" Value="12,4" />
+            <Setter Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Gap">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="LinesPanelStyle" TargetType="Grid">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Gap">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  One side of a side-by-side row (DataContext = FileDiffCell)  -->
+        <DataTemplate x:Key="DiffCellTemplate">
+            <Border Style="{StaticResource LineBackgroundStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource LineNumberStyle}" Text="{Binding NumberText}" />
+                    <TextBlock Grid.Column="1" Style="{StaticResource LineSignStyle}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        local:FileDiffTextView.Source="{Binding}"
+                        Style="{StaticResource LineTextStyle}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  Side by side (DataContext = FileDiffRow)  -->
+        <DataTemplate x:Key="SideBySideTemplate">
+            <Grid TextElement.FontFamily="Consolas" TextElement.FontSize="12">
+                <Grid Style="{StaticResource LinesPanelStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter Content="{Binding Left}" ContentTemplate="{StaticResource DiffCellTemplate}" />
+                    <Border Grid.Column="1" Background="{DynamicResource CardBorder}" />
+                    <ContentPresenter
+                        Grid.Column="2"
+                        Content="{Binding Right}"
+                        ContentTemplate="{StaticResource DiffCellTemplate}" />
+                </Grid>
+                <Border Style="{StaticResource GapBarStyle}">
+                    <TextBlock
+                        FontFamily="Segoe UI"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource AccentColor}"
+                        Text="{Binding GapText}" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <!--  Inline (DataContext = FileDiffInlineRow)  -->
+        <DataTemplate x:Key="InlineTemplate">
+            <Grid TextElement.FontFamily="Consolas" TextElement.FontSize="12">
+                <Grid Style="{StaticResource LinesPanelStyle}">
+                    <Border Style="{StaticResource LineBackgroundStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource LineNumberStyle}" Text="{Binding OldNumberText}" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Style="{StaticResource LineNumberStyle}"
+                                Text="{Binding NewNumberText}" />
+                            <TextBlock Grid.Column="2" Style="{StaticResource LineSignStyle}" />
+                            <TextBlock
+                                Grid.Column="3"
+                                local:FileDiffTextView.Source="{Binding}"
+                                Style="{StaticResource LineTextStyle}" />
+                        </Grid>
+                    </Border>
+                </Grid>
+                <Border Style="{StaticResource GapBarStyle}">
+                    <TextBlock
+                        FontFamily="Segoe UI"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource AccentColor}"
+                        Text="{Binding GapText}" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FILES ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_FileDifferences_Files" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileDiff_FilesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileCompare}" />
+
+                                    <!--  Original (A)  -->
+                                    <Border
+                                        x:Name="SlotA"
+                                        MouseLeftButtonUp="SlotA_MouseLeftButtonUp"
+                                        Style="{StaticResource FileSlotStyle}"
+                                        ToolTip="{DynamicResource Str_FileDiff_SlotATooltip}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="{DynamicResource StatusErrorBg}" Style="{StaticResource SlotLetterStyle}">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="13"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource StatusErrorFg}"
+                                                    Text="A" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="10"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="{DynamicResource Str_FileDiff_Original}" />
+                                                <TextBlock
+                                                    x:Name="TxtNameA"
+                                                    Margin="0,1,0,0"
+                                                    FontSize="12.5"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="{DynamicResource Str_FileDiff_SlotEmpty}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    x:Name="TxtInfoA"
+                                                    Margin="0,2,0,0"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    Visibility="Collapsed" />
+                                            </StackPanel>
+                                            <Button
+                                                x:Name="BtnClearA"
+                                                Grid.Column="2"
+                                                Width="26"
+                                                Height="26"
+                                                Margin="6,0,0,0"
+                                                VerticalAlignment="Top"
+                                                Click="BtnClearA_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_FileDiff_ClearSlotTooltip}"
+                                                Visibility="Collapsed">
+                                                <materialDesign:PackIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+
+                                    <!--  Swap between the two slots  -->
+                                    <Button
+                                        x:Name="BtnSwap"
+                                        Margin="0,4"
+                                        HorizontalAlignment="Center"
+                                        Click="BtnSwap_Click"
+                                        IsEnabled="False"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_FileDiff_SwapTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="SwapVertical" />
+                                    </Button>
+
+                                    <!--  Changed (B)  -->
+                                    <Border
+                                        x:Name="SlotB"
+                                        MouseLeftButtonUp="SlotB_MouseLeftButtonUp"
+                                        Style="{StaticResource FileSlotStyle}"
+                                        ToolTip="{DynamicResource Str_FileDiff_SlotBTooltip}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource SlotLetterStyle}">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="13"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                                    Text="B" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="10"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="{DynamicResource Str_FileDiff_Changed}" />
+                                                <TextBlock
+                                                    x:Name="TxtNameB"
+                                                    Margin="0,1,0,0"
+                                                    FontSize="12.5"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="{DynamicResource Str_FileDiff_SlotEmpty}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    x:Name="TxtInfoB"
+                                                    Margin="0,2,0,0"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    Visibility="Collapsed" />
+                                            </StackPanel>
+                                            <Button
+                                                x:Name="BtnClearB"
+                                                Grid.Column="2"
+                                                Width="26"
+                                                Height="26"
+                                                Margin="6,0,0,0"
+                                                VerticalAlignment="Top"
+                                                Click="BtnClearB_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_FileDiff_ClearSlotTooltip}"
+                                                Visibility="Collapsed">
+                                                <materialDesign:PackIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnChooseFiles"
+                                            Click="BtnChooseFiles_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_FileDiff_ChooseFilesTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FolderOpenOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileDiff_ChooseFiles}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnReload"
+                                            Grid.Column="2"
+                                            Width="34"
+                                            Height="34"
+                                            Click="BtnReload_Click"
+                                            IsEnabled="False"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_FileDiff_ReloadTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Refresh" />
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ COMPARE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_FileDifferences_Compare" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileDiff_CompareHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.TuneVertical}" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreWhitespace"
+                                        Margin="0,0,0,6"
+                                        Click="CompareOption_Click"
+                                        Content="{DynamicResource Str_FileDiff_IgnoreWhitespace}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreWhitespaceTooltip}" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreCase"
+                                        Click="CompareOption_Click"
+                                        Content="{DynamicResource Str_FileDiff_IgnoreCase}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreCaseTooltip}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ VIEW ============  -->
+                            <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileDiff_ViewHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.EyeOutline}" />
+
+                                    <UniformGrid Margin="0,0,0,10" Columns="2">
+                                        <RadioButton
+                                            x:Name="ViewSideBySide"
+                                            Margin="0,0,3,0"
+                                            Click="ViewMode_Click"
+                                            GroupName="FileDiffView"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="SideBySide"
+                                            ToolTip="{DynamicResource Str_FileDiff_SideBySideTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ViewSplitVertical" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileDiff_SideBySide}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="ViewInline"
+                                            Margin="3,0,0,0"
+                                            Click="ViewMode_Click"
+                                            GroupName="FileDiffView"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Inline"
+                                            ToolTip="{DynamicResource Str_FileDiff_InlineTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ViewAgendaOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileDiff_Inline}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </RadioButton>
+                                    </UniformGrid>
+
+                                    <CheckBox
+                                        x:Name="ChkOnlyChanges"
+                                        Click="ChkOnlyChanges_Click"
+                                        Content="{DynamicResource Str_FileDiff_OnlyChanges}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_FileDiff_OnlyChangesTooltip}" />
+
+                                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="12"
+                                            Height="12"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Kind="KeyboardOutline" />
+                                        <TextBlock
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_FileDiff_ShortcutsHint}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar: hero action + live status + result chips  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,12"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnCompare"
+                            ctl:Tour.Key="Str_Tour_FileDifferences_Run"
+                            ctl:Tour.Order="3"
+                            Grid.Column="0"
+                            MinWidth="150"
+                            Margin="0,0,14,0"
+                            VerticalAlignment="Center"
+                            Click="BtnCompare_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_FileDiff_CompareButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconCompare"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="FileCompare" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtCompareLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_FileDiff_CompareButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <Border
+                            x:Name="BorderStatus"
+                            Grid.Column="1"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource RowBg}"
+                            Style="{StaticResource IconStatusPillStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Name="IconStatus"
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding Foreground, ElementName=TxtStatus}"
+                                    Kind="InformationOutline" />
+                                <TextBlock
+                                    x:Name="TxtStatus"
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_FileDiff_StatusPick}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Border
+                                x:Name="ChipAdded"
+                                Margin="6,0,0,0"
+                                Background="{DynamicResource StatusSuccessBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_FileDiff_AddedTooltip}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    x:Name="TxtAddedChip"
+                                    FontSize="11.5"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource StatusSuccessFg}" />
+                            </Border>
+                            <Border
+                                x:Name="ChipRemoved"
+                                Margin="6,0,0,0"
+                                Background="{DynamicResource StatusErrorBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_FileDiff_RemovedTooltip}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    x:Name="TxtRemovedChip"
+                                    FontSize="11.5"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource StatusErrorFg}" />
+                            </Border>
+                            <Border
+                                x:Name="ChipSimilarity"
+                                Margin="6,0,0,0"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_FileDiff_SimilarityTooltip}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,4,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtSimilarityChip}"
+                                        Kind="VectorIntersection" />
+                                    <TextBlock
+                                        x:Name="TxtSimilarityChip"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  Notes the line list can't show (line endings, encodings, final line break)  -->
+                <Border
+                    x:Name="NotesBanner"
+                    Grid.Row="1"
+                    Margin="0,0,0,12"
+                    Padding="12,8"
+                    Background="{DynamicResource StatusInfoBg}"
+                    CornerRadius="8"
+                    Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="15"
+                            Height="15"
+                            Margin="0,1,8,0"
+                            VerticalAlignment="Top"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Kind="InformationOutline" />
+                        <TextBlock
+                            x:Name="TxtNotes"
+                            Grid.Column="1"
+                            FontSize="12"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+
+                <!--  Differences  -->
+                <Border Grid.Row="2" ctl:Tour.Key="Str_Tour_FileDifferences_Differences" ctl:Tour.Order="4" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                Content="{DynamicResource Str_FileDiff_DifferencesHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.CompareHorizontal}" />
+                            <StackPanel
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    x:Name="TxtChangePosition"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                                <Button
+                                    x:Name="BtnPrevChange"
+                                    Margin="0,0,2,0"
+                                    Click="BtnPrevChange_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PaneToolButton}"
+                                    ToolTip="{DynamicResource Str_FileDiff_PrevChangeTooltip}">
+                                    <materialDesign:PackIcon Kind="ChevronUp" Style="{StaticResource PaneToolIcon}" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnNextChange"
+                                    Margin="0,0,8,0"
+                                    Click="BtnNextChange_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PaneToolButton}"
+                                    ToolTip="{DynamicResource Str_FileDiff_NextChangeTooltip}">
+                                    <materialDesign:PackIcon Kind="ChevronDown" Style="{StaticResource PaneToolIcon}" />
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnCopyDiff"
+                                    Click="BtnCopyDiff_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PaneToolButton}"
+                                    ToolTip="{DynamicResource Str_FileDiff_CopyDiffTooltip}">
+                                    <materialDesign:PackIcon Kind="ContentCopy" Style="{StaticResource PaneToolIcon}" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSaveDiff"
+                                    Click="BtnSaveDiff_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PaneToolButton}"
+                                    ToolTip="{DynamicResource Str_FileDiff_SaveDiffTooltip}">
+                                    <materialDesign:PackIcon Kind="ContentSaveOutline" Style="{StaticResource PaneToolIcon}" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  Side-by-side column headings: which file is on which side  -->
+                        <Grid
+                            x:Name="ColumnHeaders"
+                            Grid.Row="1"
+                            Margin="3,0,0,6"
+                            Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="1" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="10,0,8,0" Orientation="Horizontal">
+                                <Border
+                                    Padding="6,1"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Text="A" />
+                                </Border>
+                                <TextBlock
+                                    x:Name="TxtHeaderA"
+                                    Margin="7,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="2"
+                                Margin="10,0,8,0"
+                                Orientation="Horizontal">
+                                <Border
+                                    Padding="6,1"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="Bold"
+                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                        Text="B" />
+                                </Border>
+                                <TextBlock
+                                    x:Name="TxtHeaderB"
+                                    Margin="7,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border
+                            x:Name="DiffListBorder"
+                            Grid.Row="2"
+                            Background="{DynamicResource InputBg}"
+                            BorderBrush="{DynamicResource InputBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Visibility="Collapsed">
+                            <!--
+                                Own template: the kit's ListBox template doesn't pass
+                                CanContentScroll on, which silently turns virtualization off.
+                                No horizontal scrolling: long lines wrap, so both halves of a
+                                side-by-side row stay the same width.
+                            -->
+                            <ListBox
+                                x:Name="DiffList"
+                                Margin="1"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ItemContainerStyle="{StaticResource DiffRowStyle}"
+                                ItemTemplate="{StaticResource SideBySideTemplate}"
+                                PreviewMouseLeftButtonUp="DiffList_PreviewMouseLeftButtonUp"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.Template>
+                                    <ControlTemplate TargetType="ListBox">
+                                        <ScrollViewer
+                                            x:Name="DiffScroll"
+                                            CanContentScroll="True"
+                                            Focusable="False"
+                                            HorizontalScrollBarVisibility="Disabled"
+                                            VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </ListBox.Template>
+                            </ListBox>
+                        </Border>
+
+                        <!--  Nothing compared yet  -->
+                        <controls:EmptyStateCard
+                            x:Name="EmptyPanel"
+                            Title="{DynamicResource Str_FileDiff_EmptyTitle}"
+                            Grid.Row="2"
+                            Description="{DynamicResource Str_FileDiff_EmptyHint}"
+                            Icon="FileCompare" />
+
+                        <!--  A verdict instead of a list: identical, same text, or compared byte for byte  -->
+                        <StackPanel
+                            x:Name="VerdictPanel"
+                            Grid.Row="2"
+                            MaxWidth="440"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                            <ContentControl
+                                x:Name="VerdictBadge"
+                                Style="{StaticResource EmptyStateBadge}"
+                                Tag="{x:Static materialDesign:PackIconKind.CheckCircleOutline}" />
+                            <TextBlock
+                                x:Name="TxtVerdictTitle"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="TxtVerdictDetail"
+                                Margin="0,6,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  ================= DROP OVERLAY (results area only; the sidebar slots light up on their own) =================  -->
+                <Border
+                    x:Name="DropOverlay"
+                    Grid.Row="0"
+                    Grid.RowSpan="3"
+                    Panel.ZIndex="10"
+                    Style="{StaticResource DropZoneStyle}">
+                    <Grid>
+                        <Rectangle
+                            RadiusX="14"
+                            RadiusY="14"
+                            Stroke="{DynamicResource AccentColor}"
+                            StrokeDashArray="5 4"
+                            StrokeThickness="2" />
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_FileDiff_DropTitle}" />
+                            <TextBlock
+                                x:Name="TxtDropHint"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

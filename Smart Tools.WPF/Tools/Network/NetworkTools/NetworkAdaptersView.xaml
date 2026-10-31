@@ -1,0 +1,790 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.NetworkAdaptersView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="View_Loaded"
+    Unloaded="View_Unloaded">
+
+    <!--
+        My IP &amp; Adapters - every network adapter (connected, unplugged or disabled): its
+        addresses, editing its IP settings, enabling and disabling it.
+        Backend: Controllers/NetworkToolsManager.Adapters.cs, NetworkToolsManager.cs (public IP);
+        Controls/NetworkConsole.
+        This file and the code-behind are UI only.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Small number tile on the tool card  -->
+        <Style x:Key="SidebarHint" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,10,0,0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!--  An adapter in the list: rounded, accent bar and tint when chosen  -->
+        <Style x:Key="AdapterItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Padding="8"
+                            Background="Transparent"
+                            CornerRadius="8">
+                            <Grid>
+                                <Border
+                                    x:Name="Bar"
+                                    Width="3"
+                                    Margin="-8,6,0,6"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentColor}"
+                                    CornerRadius="2"
+                                    Visibility="Collapsed" />
+                                <ContentPresenter />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  The adapter's icon, from its kind (DataContext = AdapterInfo)  -->
+        <Style x:Key="AdapterIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Kind" Value="Ethernet" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="USB Ethernet">
+                    <Setter Property="Kind" Value="Usb" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Wi-Fi">
+                    <Setter Property="Kind" Value="Wifi" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="USB Wi-Fi">
+                    <Setter Property="Kind" Value="Wifi" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Bluetooth">
+                    <Setter Property="Kind" Value="Bluetooth" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Cellular">
+                    <Setter Property="Kind" Value="SignalCellular_3" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="VPN">
+                    <Setter Property="Kind" Value="Vpn" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Virtual">
+                    <Setter Property="Kind" Value="ServerNetwork" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  An adapter in the list: icon with a status dot, name, kind + address or state  -->
+        <DataTemplate x:Key="AdapterItemTemplate" DataType="{x:Type models:AdapterInfo}">
+            <Grid x:Name="Item">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid Margin="0,0,10,0">
+                    <Border
+                        Width="32"
+                        Height="32"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="9">
+                        <materialDesign:PackIcon
+                            Width="17"
+                            Height="17"
+                            Foreground="{DynamicResource AccentColor}"
+                            Style="{StaticResource AdapterIcon}" />
+                    </Border>
+                    <Border
+                        x:Name="Dot"
+                        Width="11"
+                        Height="11"
+                        Margin="0,0,-3,-3"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Background="{DynamicResource TextSecondary}"
+                        BorderBrush="{DynamicResource ContentBg}"
+                        BorderThickness="2"
+                        CornerRadius="6"
+                        ToolTip="{Binding StatusText}" />
+                </Grid>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding ListLine}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Description}" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="Connected">
+                    <Setter TargetName="Dot" Property="Background" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="Connecting">
+                    <Setter TargetName="Dot" Property="Background" Value="{DynamicResource StatusInfoFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="Disconnected">
+                    <Setter TargetName="Dot" Property="Background" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="Disabled">
+                    <Setter TargetName="Dot" Property="Background" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="Item" Property="Opacity" Value="0.6" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  A detail line: label / value (selectable to copy)  -->
+        <DataTemplate x:Key="InfoRowTemplate" DataType="{x:Type models:NetworkInfoRow}">
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    FontSize="11.5"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Label}" />
+                <TextBox
+                    Grid.Column="1"
+                    Height="Auto"
+                    Padding="0"
+                    VerticalContentAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    FontFamily="Consolas"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextPrimary}"
+                    IsReadOnly="True"
+                    Text="{Binding Value, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    ToolTip="{DynamicResource Str_NetworkAdapters_SelectToCopy}" />
+            </Grid>
+        </DataTemplate>
+
+        <!--  Label above a field in the edit form  -->
+        <Style
+            x:Key="EditLabel"
+            BasedOn="{StaticResource FieldLabel}"
+            TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,10,0,6" />
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+                            <!--  ============ MY IP ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_NetworkAdapters_MyIp" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Network_IpInfoHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.IpNetworkOutline}" />
+                                    <CheckBox
+                                        x:Name="ChkLookUpPublicIp"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_NetworkAdapters_LookUpMyPublic}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_NetworkAdapters_AsksApiIpifyOrg}"
+                                        Unchecked="Option_Changed" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_NetworkAdapters_ThePublicAddressComes}"
+                                        TextWrapping="Wrap" />
+                                    <CheckBox
+                                        x:Name="ChkShowVirtual"
+                                        Margin="0,12,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_NetworkAdapters_ShowVirtualAdapters}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_NetworkAdapters_AlsoListHyperV}"
+                                        Unchecked="Option_Changed" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_NetworkAdapters_UnpluggedAndDisabledAdapters}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*" />
+                    <RowDefinition Height="1*" MinHeight="130" />
+                </Grid.RowDefinitions>
+
+                <!--  Tool card: refresh, tiles, adapters  -->
+                <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                ctl:Tour.Key="Str_Tour_NetworkAdapters_Refresh"
+                                ctl:Tour.Order="2"
+                                x:Name="BtnAction"
+                                MinWidth="150"
+                                Margin="0,0,16,0"
+                                VerticalAlignment="Center"
+                                Click="BtnAction_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        x:Name="IconAction"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Refresh" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="TxtActionLabel"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Network_Refresh}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtToolTitle"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtToolDetail"
+                                    Margin="0,2,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                        </Grid>
+                        <!--  ~~~ IP info view: every adapter, its details, edit / enable / disable ~~~  -->
+                        <Grid
+                            x:Name="ViewIpInfo"
+                            Grid.Row="1"
+                            Margin="0,14,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <WrapPanel>
+                                <Border Style="{StaticResource StatTileStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_Network_HostnameLabel}" />
+                                        <TextBlock
+                                            x:Name="TxtHostname"
+                                            Style="{StaticResource StatValueStyle}"
+                                            Text="–" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatTileStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_Network_PublicIpLabel}" />
+                                        <TextBlock
+                                            x:Name="TxtPublicIp"
+                                            Style="{StaticResource StatValueStyle}"
+                                            Text="–" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatTileStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_NetworkAdapters_Adapters}" />
+                                        <TextBlock
+                                            x:Name="TxtAdapterCount"
+                                            Style="{StaticResource StatValueStyle}"
+                                            Text="–" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <Grid Grid.Row="1" MinHeight="260">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="260" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!--  Adapter list  -->
+                                <Border
+                                    Padding="6"
+                                    Background="{DynamicResource RowBg}"
+                                    CornerRadius="12">
+                                    <Grid>
+                                        <ListBox
+                                            ctl:Tour.Key="Str_Tour_NetworkAdapters_List"
+                                            ctl:Tour.Order="3"
+                                            x:Name="AdapterList"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ItemContainerStyle="{StaticResource AdapterItemStyle}"
+                                            ItemTemplate="{StaticResource AdapterItemTemplate}"
+                                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                            SelectionChanged="AdapterList_SelectionChanged"
+                                            SelectionMode="Single" />
+                                        <TextBlock
+                                            x:Name="TxtNoAdapters"
+                                            Margin="12"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_NetworkAdapters_ReadingTheAdapters}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                </Border>
+
+                                <!--  The chosen adapter  -->
+                                <ScrollViewer
+                                    x:Name="AdapterDetail"
+                                    Grid.Column="2"
+                                    HorizontalScrollBarVisibility="Disabled"
+                                    VerticalScrollBarVisibility="Auto"
+                                    Visibility="Collapsed">
+                                    <StackPanel x:Name="AdapterDetailPanel">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                x:Name="AdapterChip"
+                                                Width="40"
+                                                Height="40"
+                                                Margin="0,0,12,0"
+                                                VerticalAlignment="Top"
+                                                Background="{DynamicResource AccentGradient}"
+                                                CornerRadius="11"
+                                                RenderTransformOrigin="0.5,0.5">
+                                                <materialDesign:PackIcon
+                                                    Width="21"
+                                                    Height="21"
+                                                    Foreground="White"
+                                                    Style="{StaticResource AdapterIcon}" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="18"
+                                                        FontWeight="Bold"
+                                                        Foreground="{DynamicResource TextPrimary}"
+                                                        Text="{Binding Name}" />
+                                                    <Border
+                                                        x:Name="AdapterStatePill"
+                                                        Margin="10,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Background="{DynamicResource RowBg}"
+                                                        Style="{StaticResource IconStatusPillStyle}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon
+                                                                x:Name="IconAdapterState"
+                                                                Width="12"
+                                                                Height="12"
+                                                                Margin="0,0,5,0"
+                                                                VerticalAlignment="Center"
+                                                                Kind="LanConnect" />
+                                                            <TextBlock
+                                                                x:Name="TxtAdapterState"
+                                                                FontSize="11"
+                                                                FontWeight="SemiBold"
+                                                                Text="{Binding StatusText}" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    FontSize="11.5"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding Description}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    ToolTip="{Binding Description}" />
+                                            </StackPanel>
+                                            <WrapPanel
+                                                Grid.Column="2"
+                                                Margin="12,0,0,0"
+                                                VerticalAlignment="Center">
+                                                <Button
+                                                    x:Name="BtnEditIp"
+                                                    Width="Auto"
+                                                    MinHeight="34"
+                                                    Margin="0,0,6,0"
+                                                    Click="BtnEditIp_Click"
+                                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_NetworkAdapters_ChangeTheIpAddress}">
+                                                    <Grid HorizontalAlignment="Center" Margin="10,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon
+                                                            Grid.Column="0"
+                                                            Width="15"
+                                                            Height="15"
+                                                            Margin="0,0,6,0"
+                                                            VerticalAlignment="Center"
+                                                            Kind="PencilOutline" />
+                                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_NetworkAdapters_EditIp}" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button
+                                                    x:Name="BtnToggleAdapter"
+                                                    Width="Auto"
+                                                    MinHeight="34"
+                                                    Click="BtnToggleAdapter_Click"
+                                                    Style="{StaticResource NeutralIconButtonStyle}">
+                                                    <Grid HorizontalAlignment="Center" Margin="10,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon
+                                                            Grid.Column="0"
+                                                            x:Name="IconToggleAdapter"
+                                                            Width="15"
+                                                            Height="15"
+                                                            Margin="0,0,6,0"
+                                                            VerticalAlignment="Center"
+                                                            Kind="PowerPlugOff" />
+                                                        <TextBlock
+                                                            Grid.Column="1"
+                                                            x:Name="TxtToggleAdapter"
+                                                            VerticalAlignment="Center"
+                                                            Text="{DynamicResource Str_NetworkAdapters_Disable}" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Button>
+                                            </WrapPanel>
+                                        </Grid>
+
+                                        <ProgressBar
+                                            x:Name="AdapterBusyBar"
+                                            Height="3"
+                                            Margin="0,12,0,0"
+                                            IsIndeterminate="True"
+                                            Visibility="Collapsed" />
+
+                                        <!--  Edit form (opens with Edit IP)  -->
+                                        <Border
+                                            x:Name="EditPanel"
+                                            Margin="0,14,0,0"
+                                            Padding="14,4,14,14"
+                                            BorderBrush="{DynamicResource AccentColor}"
+                                            BorderThickness="1"
+                                            CornerRadius="12"
+                                            Visibility="Collapsed">
+                                            <StackPanel>
+                                                <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_DeviceScan_ColHeaderIp}" />
+                                                <UniformGrid Columns="2">
+                                                    <RadioButton
+                                                        x:Name="RadioIpAuto"
+                                                        Margin="0,0,3,0"
+                                                        Click="EditMode_Click"
+                                                        Content="{DynamicResource Str_NetworkAdapters_AutomaticDhcp}"
+                                                        GroupName="IpMode"
+                                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                                        ToolTip="{DynamicResource Str_NetworkAdapters_TheRouterHandsOut}" />
+                                                    <RadioButton
+                                                        x:Name="RadioIpManual"
+                                                        Margin="3,0,0,0"
+                                                        Click="EditMode_Click"
+                                                        Content="{DynamicResource Str_NetworkAdapters_Manual}"
+                                                        GroupName="IpMode"
+                                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                                        ToolTip="{DynamicResource Str_NetworkAdapters_AFixedAddressYou}" />
+                                                </UniformGrid>
+                                                <Grid x:Name="ManualIpFields" Visibility="Collapsed">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_NetworkAdapters_Address}" />
+                                                        <Border Style="{StaticResource InputBarStyle}">
+                                                            <TextBox
+                                                                x:Name="TxtEditIp"
+                                                                Style="{StaticResource BareTextBox}"
+                                                                Tag="192.168.1.50"
+                                                                TextChanged="EditField_TextChanged" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_NetworkAdapters_SubnetMask}" />
+                                                        <Border Style="{StaticResource InputBarStyle}">
+                                                            <TextBox
+                                                                x:Name="TxtEditMask"
+                                                                Style="{StaticResource BareTextBox}"
+                                                                Tag="255.255.255.0"
+                                                                TextChanged="EditField_TextChanged"
+                                                                ToolTip="{DynamicResource Str_NetworkAdapters_2552552550}" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="4">
+                                                        <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_NetworkAdapters_Gateway}" />
+                                                        <Border Style="{StaticResource InputBarStyle}">
+                                                            <TextBox
+                                                                x:Name="TxtEditGateway"
+                                                                Style="{StaticResource BareTextBox}"
+                                                                Tag="192.168.1.1 (optional)"
+                                                                TextChanged="EditField_TextChanged"
+                                                                ToolTip="{DynamicResource Str_NetworkAdapters_YourRouterSAddress}" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_NetworkAdapters_DnsServers}" />
+                                                <UniformGrid Columns="2">
+                                                    <RadioButton
+                                                        x:Name="RadioDnsAuto"
+                                                        Margin="0,0,3,0"
+                                                        Click="EditMode_Click"
+                                                        Content="{DynamicResource Str_NetworkAdapters_Automatic}"
+                                                        GroupName="DnsMode"
+                                                        Style="{StaticResource ModeToggleButtonStyle}" />
+                                                    <RadioButton
+                                                        x:Name="RadioDnsManual"
+                                                        Margin="3,0,0,0"
+                                                        Click="EditMode_Click"
+                                                        Content="{DynamicResource Str_NetworkAdapters_Manual}"
+                                                        GroupName="DnsMode"
+                                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                                        ToolTip="{DynamicResource Str_NetworkAdapters_ForExample11}" />
+                                                </UniformGrid>
+                                                <Grid x:Name="ManualDnsFields" Visibility="Collapsed">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_NetworkAdapters_Preferred}" />
+                                                        <Border Style="{StaticResource InputBarStyle}">
+                                                            <TextBox
+                                                                x:Name="TxtEditDns1"
+                                                                Style="{StaticResource BareTextBox}"
+                                                                Tag="1.1.1.1"
+                                                                TextChanged="EditField_TextChanged" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Style="{StaticResource EditLabel}" Text="{DynamicResource Str_NetworkAdapters_Alternate}" />
+                                                        <Border Style="{StaticResource InputBarStyle}">
+                                                            <TextBox
+                                                                x:Name="TxtEditDns2"
+                                                                Style="{StaticResource BareTextBox}"
+                                                                Tag="8.8.8.8 (optional)"
+                                                                TextChanged="EditField_TextChanged" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <TextBlock
+                                                    x:Name="TxtEditError"
+                                                    Margin="2,10,0,0"
+                                                    FontSize="11.5"
+                                                    Foreground="{DynamicResource StatusErrorFg}"
+                                                    TextWrapping="Wrap"
+                                                    Visibility="Collapsed" />
+                                                <Grid Margin="0,14,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                                        <materialDesign:PackIcon
+                                                            Width="14"
+                                                            Height="14"
+                                                            Margin="0,0,6,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            Kind="ShieldAccountOutline" />
+                                                        <TextBlock
+                                                            x:Name="TxtAdminHint"
+                                                            VerticalAlignment="Center"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            Text="{DynamicResource Str_NetworkAdapters_WindowsWillAskFor}"
+                                                            TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                    <Button
+                                                        x:Name="BtnCancelEdit"
+                                                        Grid.Column="1"
+                                                        Width="50"
+                                                        MinHeight="34"
+                                                        Margin="12,0,6,0"
+                                                        Padding="14,0"
+                                                        Click="BtnCancelEdit_Click"
+                                                        Content="{DynamicResource Str_Common_Cancel}"
+                                                        Style="{StaticResource NeutralIconButtonStyle}" />
+                                                    <Button
+                                                        x:Name="BtnApplyIp"
+                                                        Grid.Column="2"
+                                                        MinHeight="36"
+                                                        MinWidth="110"
+                                                        Click="BtnApplyIp_Click"
+                                                        Style="{StaticResource PrimaryButtonStyle}">
+                                                        <Grid HorizontalAlignment="Center">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <materialDesign:PackIcon
+                                                                Grid.Column="0"
+                                                                Width="15"
+                                                                Height="15"
+                                                                Margin="0,0,6,0"
+                                                                VerticalAlignment="Center"
+                                                                Kind="ContentSaveOutline" />
+                                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_ImgEdit_ApplyCrop}" TextWrapping="Wrap" />
+                                                        </Grid>
+                                                    </Button>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!--  Details  -->
+                                        <ItemsControl
+                                            x:Name="AdapterInfoRows"
+                                            Margin="0,16,0,0"
+                                            Focusable="False"
+                                            ItemTemplate="{StaticResource InfoRowTemplate}" />
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <controls:NetworkConsole
+                    ctl:Tour.Key="Str_Tour_NetworkAdapters_Log"
+                    ctl:Tour.Order="4"
+                    x:Name="Results"
+                    Title="{DynamicResource Str_NetworkAdapters_Activity}"
+                    Grid.Row="1"
+                    EmptyText="Changes you make to adapters, and what Windows answered, are listed here."
+                    FileNamePrefix="Adapters log" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

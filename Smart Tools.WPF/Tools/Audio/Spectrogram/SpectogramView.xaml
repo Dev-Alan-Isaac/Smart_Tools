@@ -1,0 +1,1494 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.SpectogramView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:local="clr-namespace:Smart_Tools.WPF.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/SpectrogramManager.cs (options, the ffmpeg
+        command, probing, single and batch runs, saving, the temp folder,
+        settings) and SpectrogramManager.Render.cs (loading pictures, palette
+        swatches); Models/SpectrogramModel.cs. This file and the code-behind
+        are UI only. Folders picked here are kept for this session only.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Palette list: a gradient of the real ffmpeg colours + the name  -->
+        <DataTemplate x:Key="PaletteItemTemplate" DataType="{x:Type local:PaletteChoice}">
+            <StackPanel Orientation="Horizontal">
+                <Border
+                    Width="64"
+                    Height="14"
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    Background="{Binding Swatch}"
+                    CornerRadius="4" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Batch grid: thumbnail (loaded only for rows on screen)  -->
+        <DataTemplate x:Key="ThumbCellTemplate" DataType="{x:Type models:SpectrogramItem}">
+            <Border
+                Width="84"
+                Height="38"
+                HorizontalAlignment="Center"
+                Background="#FF0E0E14"
+                ClipToBounds="True"
+                CornerRadius="6">
+                <Grid>
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="#66FFFFFF"
+                        Kind="Waveform" />
+                    <Image
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="{Binding Thumbnail}"
+                        Stretch="UniformToFill" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  Batch grid: name + folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:SpectrogramItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding FileName}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="10.5"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Batch grid: status chip, the reason in the tooltip  -->
+        <DataTemplate x:Key="StatusCellTemplate" DataType="{x:Type models:SpectrogramItem}">
+            <Border
+                x:Name="Chip"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource RowBg}"
+                Style="{StaticResource IconStatusPillStyle}"
+                ToolTip="{Binding Message}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ClockOutline" />
+                    <TextBlock
+                        x:Name="ChipText"
+                        FontSize="10.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_FileGenerator_Waiting}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="ProgressClock" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Making…" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Done" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Failed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CloseCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Stopped" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ MODE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Spectrogram_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Spectogram_WhatToMake}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Waveform}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioModeSingle"
+                                            Margin="0,0,3,0"
+                                            Checked="RadioMode_Checked"
+                                            GroupName="SpectrogramMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Single"
+                                            ToolTip="{DynamicResource Str_Spectrogram_ModeSingleTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileMusicOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Spectrogram_ModeSingle}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioModeBatch"
+                                            Margin="3,0,0,0"
+                                            Checked="RadioMode_Checked"
+                                            GroupName="SpectrogramMode"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Batch"
+                                            ToolTip="{DynamicResource Str_Spectrogram_ModeBatchTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FolderMultipleOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Spectrogram_ModeBatch}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SIZE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Spectrogram_Size" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Spectrogram_ResolutionHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ArrowExpandAll}" />
+                                    <StackPanel Margin="0,0,0,8">
+                                        <!--  Standout / Featured Option (HD)  -->
+                                        <RadioButton
+                                            x:Name="RadioSizeHd"
+                                            Margin="0,0,0,4"
+                                            HorizontalAlignment="Stretch"
+                                            Click="SizePreset_Click"
+                                            Content="HD (1920 × 1080)"
+                                            GroupName="Size"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="1920x1080"
+                                            ToolTip="{DynamicResource Str_Spectogram_19201080FullHd}" />
+
+                                        <!--  The Rest in a 3-Column UniformGrid  -->
+                                        <UniformGrid Columns="3">
+                                            <RadioButton
+                                                x:Name="RadioSizeSmall"
+                                                Margin="0,0,2,0"
+                                                Click="SizePreset_Click"
+                                                Content="{DynamicResource Str_BarcodeGenerator_Small}"
+                                                GroupName="Size"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="800x400"
+                                                ToolTip="800 × 400" />
+                                            <RadioButton
+                                                x:Name="RadioSizeMedium"
+                                                Margin="2,0"
+                                                Click="SizePreset_Click"
+                                                Content="{DynamicResource Str_BarcodeGenerator_Medium}"
+                                                GroupName="Size"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="1024x512"
+                                                ToolTip="1024 × 512" />
+                                            <RadioButton
+                                                x:Name="RadioSize4K"
+                                                Margin="2,0,0,0"
+                                                Click="SizePreset_Click"
+                                                Content="4K"
+                                                GroupName="Size"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="3840x2160"
+                                                ToolTip="3840 × 2160" />
+                                        </UniformGrid>
+                                    </StackPanel>
+                                    <Border Style="{StaticResource InputBarStyle}" ToolTip="{DynamicResource Str_Spectogram_SizeOfTheSpectrum}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--  Icon on the Left  -->
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="14"
+                                                Height="14"
+                                                Margin="10,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="ImageSizeSelectLarge" />
+
+                                            <!--  Width × Height Inputs on the Right  -->
+                                            <Grid Grid.Column="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="WidthTextBox"
+                                                    Grid.Column="0"
+                                                    MaxLength="5"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="Width"
+                                                    Text="1024"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_Spectrogram_WidthTooltip}" />
+
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="4,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="×" />
+
+                                                <TextBox
+                                                    x:Name="HeightTextBox"
+                                                    Grid.Column="2"
+                                                    MaxLength="5"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="Height"
+                                                    Text="512"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_Spectrogram_HeightTooltip}" />
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock
+                                        x:Name="TxtSizeNote"
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ LOOK ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Spectrogram_Look" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Spectrogram_AppearanceHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Spectrogram_ColorScheme}" />
+                                    <ComboBox
+                                        x:Name="ColorSchemeCombo"
+                                        ItemTemplate="{StaticResource PaletteItemTemplate}"
+                                        SelectionChanged="ColorSchemeCombo_SelectionChanged"
+                                        ToolTip="{DynamicResource Str_Spectrogram_ColorSchemeTooltip}" />
+                                    <TextBlock
+                                        x:Name="TxtPaletteHint"
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Spectrogram_FreqScale}" />
+                                    <UniformGrid Columns="2" ToolTip="{DynamicResource Str_Spectogram_EvenSpacingEveryKhz}">
+                                        <RadioButton
+                                            x:Name="RadioScaleLinear"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Spectrogram_Linear}"
+                                            GroupName="Scale"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Linear" />
+                                        <RadioButton
+                                            x:Name="RadioScaleLog"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Spectrogram_Logarithmic}"
+                                            GroupName="Scale"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Logarithmic"
+                                            ToolTip="{DynamicResource Str_Spectogram_BassAndMidsGet}" />
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Spectogram_StereoChannels}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioChannelsCombined"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Spectogram_Together}"
+                                            GroupName="Channels"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Combined"
+                                            ToolTip="{DynamicResource Str_Spectogram_OnePictureForAll}" />
+                                        <RadioButton
+                                            x:Name="RadioChannelsSeparate"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Spectogram_OnePerChannel}"
+                                            GroupName="Channels"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Separate"
+                                            ToolTip="{DynamicResource Str_Spectogram_ABandPerChannel}" />
+                                    </UniformGrid>
+
+                                    <CheckBox
+                                        x:Name="ShowLegendCheckBox"
+                                        Margin="0,12,0,0"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_Spectrogram_ShowLegend}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_Spectogram_TimeAndFrequencyScales}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FREQUENCY RANGE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Spectrogram_FreqRangeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.SineWave}" />
+                                    <StackPanel Margin="0,0,0,8">
+                                        <!--  Top row: Full-width Full option  -->
+                                        <RadioButton
+                                            x:Name="RadioRangeFull"
+                                            Margin="0,0,0,4"
+                                            HorizontalAlignment="Stretch"
+                                            Click="RangePreset_Click"
+                                            Content="{DynamicResource Str_Spectogram_Full}"
+                                            GroupName="Range"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Full" />
+
+                                        <!--  Bottom row: 3 equal columns for the remaining options  -->
+                                        <UniformGrid Columns="3">
+                                            <RadioButton
+                                                x:Name="RadioRangeSpeech"
+                                                Margin="0,0,2,0"
+                                                Click="RangePreset_Click"
+                                                Content="{DynamicResource Str_Spectogram_Speech}"
+                                                GroupName="Range"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Speech" />
+                                            <RadioButton
+                                                x:Name="RadioRangeBass"
+                                                Margin="2,0"
+                                                Click="RangePreset_Click"
+                                                Content="{DynamicResource Str_Spectogram_Bass}"
+                                                GroupName="Range"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Bass" />
+                                            <RadioButton
+                                                x:Name="RadioRangeHighs"
+                                                Margin="2,0,0,0"
+                                                Click="RangePreset_Click"
+                                                Content="{DynamicResource Str_Spectogram_Highs}"
+                                                GroupName="Range"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Highs" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--  Icon on the Left  -->
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="14"
+                                                Height="14"
+                                                Margin="10,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="SineWave" />
+
+                                            <!--  Frequency Range Inputs on the Right  -->
+                                            <Grid Grid.Column="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox
+                                                    x:Name="MinFrequencyTextBox"
+                                                    Grid.Column="0"
+                                                    MaxLength="8"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="0 Hz"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_Spectrogram_MinHzTooltip}" />
+
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="4,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="to" />
+
+                                                <TextBox
+                                                    x:Name="MaxFrequencyTextBox"
+                                                    Grid.Column="2"
+                                                    MaxLength="8"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="Top"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_Spectrogram_MaxHzTooltip}" />
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock
+                                        x:Name="TxtRangeNote"
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ IMAGE FORMAT ============  -->
+                            <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Spectrogram_ImageFormat}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioFormatPng"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_BarcodeGenerator_Png}"
+                                            GroupName="Format"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Png"
+                                            ToolTip="{DynamicResource Str_Spectogram_SharpAndLosslessBest}" />
+                                        <RadioButton
+                                            x:Name="RadioFormatJpg"
+                                            Margin="2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_BackgroundRemover_Jpg}"
+                                            GroupName="Format"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Jpg"
+                                            ToolTip="{DynamicResource Str_Spectogram_SmallerButCanSoften}" />
+                                        <RadioButton
+                                            x:Name="RadioFormatBmp"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileConverter_Bmp}"
+                                            GroupName="Format"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Bmp"
+                                            ToolTip="{DynamicResource Str_Spectogram_UncompressedVeryLargeFiles}" />
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--
+                                ============ SAVE TO ============
+                                The shared Output card (folder for this session only). File name (single
+                                mode), "Save automatically" and the hint go in its Options, built in
+                                code-behind (BuildOutputOptions) - no x:Name may go inside the card's Options (MC3093).
+                            -->
+                            <controls:OutputFolderCard
+                                ctl:Tour.Key="Str_Tour_Spectrogram_Output"
+                                ctl:Tour.Order="4"
+                                x:Name="OutputCard"
+                                Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
+                                HeaderIcon="ContentSaveOutline"
+                                ToolName="Spectrogram" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Problems with what's typed in the sidebar  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2">
+                        <Border
+                            x:Name="OptionsErrorBanner"
+                            Margin="12,0,12,12"
+                            Padding="10,8"
+                            Background="{DynamicResource StatusErrorBg}"
+                            CornerRadius="10"
+                            Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Margin="0,1,8,0"
+                                    Foreground="{DynamicResource StatusErrorFg}"
+                                    Kind="AlertCircleOutline" />
+                                <TextBlock
+                                    x:Name="TxtOptionsError"
+                                    Grid.Column="1"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource StatusErrorFg}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="GenerateButton"
+                            ctl:Tour.Key="Str_Tour_Spectrogram_Generate"
+                            ctl:Tour.Order="5"
+                            MinWidth="180"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="GenerateButton_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_Spectrogram_GenerateTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconGenerate"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Waveform" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtGenerateLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Spectrogram_Generate}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="BatchProgressBar"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_Spectrogram_GenProgressTooltip}" />
+                            <TextBlock
+                                x:Name="StatusText"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Spectogram_ChooseOrDropAn}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  ============ SINGLE MODE ============  -->
+                <Border
+                    x:Name="SingleModeArea"
+                    ctl:Tour.Key="Str_Tour_Spectrogram_Result"
+                    ctl:Tour.Order="6"
+                    Grid.Row="1"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!--  File bar  -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!--  Icon on the Left  -->
+                                    <materialDesign:PackIcon
+                                        x:Name="IconSourceKind"
+                                        Grid.Column="0"
+                                        Width="14"
+                                        Height="14"
+                                        Margin="10,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource AccentColor}"
+                                        Kind="FileMusicOutline" />
+
+                                    <!--  File Path Textbox  -->
+                                    <TextBox
+                                        x:Name="PathTextBox"
+                                        Grid.Column="1"
+                                        IsReadOnly="True"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="Choose or drop an audio or video file"
+                                        ToolTip="{DynamicResource Str_Spectrogram_InputFileTooltip}" />
+
+                                    <!--  Browse Button  -->
+                                    <Button
+                                        x:Name="BrowseButton"
+                                        Grid.Column="2"
+                                        Click="BrowseButton_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Spectrogram_BrowseTooltip}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FolderOpenOutline" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_Browse}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="SaveButton"
+                                    Width="36"
+                                    Height="36"
+                                    Click="SaveButton_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_SaveAsTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="17"
+                                        Height="17"
+                                        Kind="ContentSaveEditOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="CopyButton"
+                                    Width="36"
+                                    Height="36"
+                                    Margin="6,0,0,0"
+                                    Click="CopyButton_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_CopyClipboardTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="17"
+                                        Height="17"
+                                        Kind="ContentCopy" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnShowInFolder"
+                                    Width="36"
+                                    Height="36"
+                                    Margin="6,0,0,0"
+                                    Click="BtnShowInFolder_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectogram_ShowTheSavedPicture}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderSearchOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnZoomActual"
+                                    Width="36"
+                                    Height="36"
+                                    Margin="6,0,0,0"
+                                    Click="BtnZoomActual_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectogram_ShowActualPixelsScroll}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconZoom"
+                                        Width="17"
+                                        Height="17"
+                                        Kind="MagnifyPlusOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  File details  -->
+                        <WrapPanel
+                            x:Name="InfoPanel"
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Visibility="Collapsed">
+                            <Border
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_Password_LengthHeader}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="TimerOutline" />
+                                    <TextBlock
+                                        x:Name="TxtInfoDuration"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_Spectogram_SampleRateThePicture}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="SineWave" />
+                                    <TextBlock
+                                        x:Name="TxtInfoRate"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_MicRecorder_Channels}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="SpeakerMultiple" />
+                                    <TextBlock
+                                        x:Name="TxtInfoChannels"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_Spectogram_PictureSizeInPixels}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="ImageSizeSelectLarge" />
+                                    <TextBlock
+                                        x:Name="TxtInfoSize"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="PillSaved"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusSuccessBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                        Kind="CheckCircleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtSaved"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusSuccessFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="PillRangeNote"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusWarningBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusWarningFg}"
+                                        Kind="InformationOutline" />
+                                    <TextBlock
+                                        x:Name="TxtRangeNoteResult"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusWarningFg}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+
+                        <!--  Picture stage (fixed dark, like the picture itself)  -->
+                        <Border
+                            x:Name="SinglePreviewArea"
+                            Grid.Row="2"
+                            Background="#FF0E0E14"
+                            ClipToBounds="True"
+                            CornerRadius="12">
+                            <Grid>
+                                <ScrollViewer
+                                    x:Name="PreviewScroller"
+                                    HorizontalScrollBarVisibility="Disabled"
+                                    VerticalScrollBarVisibility="Disabled">
+                                    <Image
+                                        x:Name="PreviewImage"
+                                        Margin="12"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        Stretch="Uniform" />
+                                </ScrollViewer>
+
+                                <!--  Working  -->
+                                <Border
+                                    x:Name="PreviewBusy"
+                                    Margin="0,0,0,18"
+                                    Padding="16,10"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Bottom"
+                                    Background="#CC1A1A24"
+                                    CornerRadius="18"
+                                    Visibility="Collapsed">
+                                    <StackPanel>
+                                        <TextBlock
+                                            x:Name="TxtPreviewBusy"
+                                            HorizontalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="White"
+                                            Text="{DynamicResource Str_Spectogram_MakingThePicture}" />
+                                        <ProgressBar
+                                            x:Name="PreviewBusyBar"
+                                            Width="140"
+                                            Height="4"
+                                            Margin="0,8,0,0"
+                                            IsIndeterminate="True" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Empty state  -->
+                                <StackPanel
+                                    x:Name="PreviewPlaceholder"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.Waveform}" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Foreground="#EEFFFFFF"
+                                        Text="{DynamicResource Str_Spectogram_SeeWhatASound}" />
+                                    <TextBlock
+                                        MaxWidth="380"
+                                        Margin="0,4,0,14"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="#99FFFFFF"
+                                        Text="{DynamicResource Str_Spectogram_DropAnAudioOr}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                    <Button
+                                        x:Name="BtnEmptyBrowse"
+                                        HorizontalAlignment="Center"
+                                        Click="BrowseButton_Click"
+                                        Style="{StaticResource AccentPrimaryButtonStyle}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FileMusicOutline" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Spectogram_ChooseAFile}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!--  ============ BATCH MODE ============  -->
+                <Border
+                    x:Name="BatchModeArea"
+                    Grid.Row="1"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="Collapsed">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition x:Name="BatchPreviewGap" Width="14" />
+                            <ColumnDefinition x:Name="BatchPreviewColumn" Width="340" />
+                        </Grid.ColumnDefinitions>
+
+                        <!--  Toolbar  -->
+                        <Grid Grid.ColumnSpan="3" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_Spectrogram_BatchEntriesCardTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.PlaylistMusicOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center">
+                                <Border
+                                    x:Name="BatchEntriesCountPill"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_BatchEntriesPillTooltip}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="FileMusicOutline" />
+                                        <TextBlock
+                                            x:Name="TxtBatchEntriesCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="SummaryPill"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_BatchResultsPillTooltip}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillFailed"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FileConverter_HoverAFailedRow}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtFailedCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                x:Name="ListTools"
+                                Grid.Column="2"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnAddBatchFiles"
+                                    Click="BtnAddBatchFiles_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_AddFilesTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="FilePlusOutline" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Spectrogram_AddFiles}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <Button
+                                    x:Name="BtnLoadFromFolder"
+                                    Margin="6,0,0,0"
+                                    Click="BtnLoadFromFolder_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_AddFolderRecursiveTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="FolderPlusOutline" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Validate_AddFolder}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <CheckBox
+                                    x:Name="ChkIncludeSubfolders"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_Spectogram_Subfolders}"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    IsChecked="True"
+                                    ToolTip="{DynamicResource Str_Spectogram_AlsoAddFilesIn}" />
+                                <controls:ExportButton
+                                    x:Name="BatchExportButton"
+                                    Margin="10,0,0,0"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_Spectrogram_ExportAllToFolderTooltip}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Click="BatchExportButton_Click" Header="{DynamicResource Str_Spectrogram_ExportAllToFolder}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="ContentSaveAllOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                                <Button
+                                    x:Name="BtnRemoveBatchEntry"
+                                    Margin="10,0,0,0"
+                                    Click="BtnRemoveBatchEntry_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_RemoveSelectedTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PlaylistRemove" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearBatchEntries"
+                                    Margin="6,0,0,0"
+                                    Click="BtnClearBatchEntries_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Spectrogram_ClearAllTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  The list  -->
+                        <DataGrid
+                            x:Name="DataGridBatch"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserReorderColumns="False"
+                            CanUserSortColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            LoadingRow="DataGridBatch_LoadingRow"
+                            MouseDoubleClick="DataGridBatch_MouseDoubleClick"
+                            PreviewKeyDown="DataGridBatch_PreviewKeyDown"
+                            MinRowHeight="50"
+                            SelectionChanged="DataGridBatch_SelectionChanged"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_Spectrogram_BatchGridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="96"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource ThumbCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderPreview}" />
+                                <DataGridTemplateColumn
+                                    Width="*"
+                                    MinWidth="70"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColDuration"
+                                    Width="76"
+                                    Binding="{Binding DurationText, Mode=OneWay}"
+                                    Header="{DynamicResource Str_Spectrogram_ColHeaderDuration}" />
+                                <DataGridTemplateColumn
+                                    Width="104"
+                                    CellTemplate="{StaticResource StatusCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}" />
+                                <DataGridTemplateColumn Width="40" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Width="26"
+                                                Height="26"
+                                                Click="BtnRemoveSingleBatchEntry_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                Tag="{Binding}"
+                                                ToolTip="{DynamicResource Str_Common_Remove}">
+                                                <materialDesign:PackIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel
+                            x:Name="BatchEmptyStatePanel"
+                            Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FolderMusicOutline}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_Spectogram_MakeSpectrogramsForMany}" />
+                            <TextBlock
+                                x:Name="TxtBatchEmptyHint"
+                                MaxWidth="380"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Spectrogram_BatchEmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!--  Picture of the highlighted row  -->
+                        <Border
+                            x:Name="BatchPreviewPanel"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Background="#FF0E0E14"
+                            ClipToBounds="True"
+                            CornerRadius="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Image
+                                    x:Name="BatchPreviewImage"
+                                    Margin="10"
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                    Stretch="Uniform" />
+                                <TextBlock
+                                    x:Name="TxtBatchPreviewEmpty"
+                                    MaxWidth="240"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="#99FFFFFF"
+                                    Text="{DynamicResource Str_Spectogram_HighlightAFinishedRow}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                                <StackPanel Grid.Row="1" Margin="12,0,12,12">
+                                    <TextBlock
+                                        x:Name="TxtBatchPreviewName"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="#EEFFFFFF"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        x:Name="TxtBatchPreviewMessage"
+                                        Margin="0,2,0,0"
+                                        FontSize="11"
+                                        Foreground="#99FFFFFF"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!--  Footer  -->
+                        <Grid
+                            Grid.Row="2"
+                            Grid.ColumnSpan="3"
+                            Margin="0,10,0,0">
+                            <TextBlock
+                                x:Name="TxtBatchExportHint"
+                                VerticalAlignment="Center"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Spectrogram_BatchExportHint}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        x:Name="TxtDropTitle"
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_Spectogram_DropToMakeA}" />
+                    <TextBlock
+                        x:Name="TxtDropHint"
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_Spectogram_AudioOrVideoFiles}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

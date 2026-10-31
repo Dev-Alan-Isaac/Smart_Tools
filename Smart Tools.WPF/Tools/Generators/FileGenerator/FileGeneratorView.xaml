@@ -1,0 +1,1476 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.FileGeneratorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/FileGeneratorManager.cs (names, sizes, free-space
+        check, writing under a temporary name, archive, report, settings) and
+        FileGeneratorManager.Formats.cs (one writer per format, exact sizes,
+        valid files); Models/FileGeneratorModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Small one-click preset (sizes, counts)  -->
+
+        <Style x:Key="SidebarFieldLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,10,0,4" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+        </Style>
+
+
+        <!--  Results: icon by file type + name  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:FileGenItem}">
+            <Grid VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,10,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="8">
+                    <materialDesign:PackIcon
+                        x:Name="TypeIcon"
+                        Width="15"
+                        Height="15"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileOutline" />
+                </Border>
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Format}" Value="Txt">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileDocumentOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Csv">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileDelimitedOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Json">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="CodeJson" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Xml">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="Xml" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Pdf">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FilePdfBox" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Docx">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileWordBox" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Bin">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileCogOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Dat">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="DatabaseOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Jpg">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileImageOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Png">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="ImageOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Mp4">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileVideoOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Format}" Value="Custom">
+                    <Setter TargetName="TypeIcon" Property="Kind" Value="FileQuestionOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Results: size, with "exact" / how far off underneath  -->
+        <DataTemplate x:Key="SizeCellTemplate" DataType="{x:Type models:FileGenItem}">
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Foreground="{DynamicResource TextPrimary}" Text="{Binding SizeDisplay}" TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding SizeNote}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Results: status chip (reason in the tooltip)  -->
+        <DataTemplate x:Key="StatusCellTemplate" DataType="{x:Type models:FileGenItem}">
+            <Border
+                x:Name="Chip"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource RowBg}"
+                Style="{StaticResource IconStatusPillStyle}"
+                ToolTip="{Binding Message}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ClockOutline" />
+                    <TextBlock
+                        x:Name="ChipText"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_FileGenerator_Waiting}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Creating">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="FilePlusOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Creating…" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Created">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Created" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Failed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CancelOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Text" Value="Not made" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="300" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FILE TYPE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_FileGenerator_Type" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileGen_FileTypeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileMultipleOutline}" />
+                                    <UniformGrid
+                                        x:Name="FormatChips"
+                                        Columns="4"
+                                        ToolTip="{DynamicResource Str_FileGen_FileTypeTooltip}">
+                                        <RadioButton
+                                            x:Name="RadioFormatTxt"
+                                            Margin="0,0,2,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Txt">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileDocumentOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_FileGenerator_Txt}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatCsv"
+                                            Margin="2,0,2,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Csv">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileDelimitedOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_ApiTester_Csv}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatJson"
+                                            Margin="2,0,2,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Json">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="CodeJson" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_ApiTester_Json}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatXml"
+                                            Margin="2,0,0,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Xml">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Xml" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_ApiTester_Xml}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatPdf"
+                                            Margin="0,0,2,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Pdf">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FilePdfBox" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_BarcodeGenerator_Pdf}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatDocx"
+                                            Margin="2,0,2,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Docx">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileWordBox" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_FileGenerator_Word}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatJpg"
+                                            Margin="2,0,2,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Jpg">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileImageOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_BackgroundRemover_Jpg}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatPng"
+                                            Margin="2,0,0,4"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Png">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ImageOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_BarcodeGenerator_Png}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatMp4"
+                                            Margin="0,0,2,0"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Mp4">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileVideoOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="MP4" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatBin"
+                                            Margin="2,0,2,0"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Bin">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileCogOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_FileGenerator_Bin}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatDat"
+                                            Margin="2,0,2,0"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Dat">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="DatabaseOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_FileGenerator_Dat}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatCustom"
+                                            Margin="2,0,0,0"
+                                            Click="Format_Click"
+                                            GroupName="FileGenFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Custom">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileQuestionOutline" />
+                                                <TextBlock
+                                                    Margin="0,2,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_FileGenerator_Other}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                    <TextBlock x:Name="TxtFormatHint" Style="{StaticResource SidebarHint}" />
+
+                                    <StackPanel x:Name="PanelCustomExtension" Visibility="Collapsed">
+                                        <TextBlock Style="{StaticResource SidebarFieldLabel}" Text="{DynamicResource Str_FileGen_ExtensionLabel}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Margin="4,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="Consolas"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Text="." />
+                                                <TextBox
+                                                    x:Name="TxtCustomExtension"
+                                                    Grid.Column="1"
+                                                    FontFamily="Consolas"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="log"
+                                                    Text="dat"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_ExtensionTooltip}" />
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SIZE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_FileGenerator_Size" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_SizeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ResizeBottomRight}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioSizeExact"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_SizeExact}"
+                                            GroupName="SizeMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            ToolTip="{DynamicResource Str_FileGen_SizeExactTooltip}" />
+                                        <RadioButton
+                                            x:Name="RadioSizeRandom"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_SizeRandomRange}"
+                                            GroupName="SizeMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            ToolTip="{DynamicResource Str_FileGen_SizeRandomRangeTooltip}" />
+                                    </UniformGrid>
+
+                                    <StackPanel x:Name="PanelExactSize" Margin="0,10,0,0">
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="72" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <!--  Ruler Icon with 10px left margin  -->
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="10,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Kind="Ruler" />
+
+                                                <TextBox
+                                                    x:Name="TxtExactSize"
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="1"
+                                                    Text="1"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_ExactSizeTooltip}" />
+
+                                                <Border Grid.Column="2" Style="{StaticResource InputBarDivider}" />
+
+                                                <ComboBox
+                                                    x:Name="CmbExactSizeUnit"
+                                                    Grid.Column="3"
+                                                    SelectedIndex="2"
+                                                    SelectionChanged="Option_SelectionChanged"
+                                                    Style="{StaticResource BareComboBox}"
+                                                    ToolTip="{DynamicResource Str_FileGen_SizeUnitTooltip}">
+                                                    <ComboBoxItem Content="B" />
+                                                    <ComboBoxItem Content="KB" />
+                                                    <ComboBoxItem Content="MB" />
+                                                    <ComboBoxItem Content="GB" />
+                                                </ComboBox>
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Margin="0,8,0,0">
+                                            <!--  Top row: Full-width 10 MB standout option  -->
+                                            <Button
+                                                Margin="0,0,0,4"
+                                                HorizontalAlignment="Stretch"
+                                                Click="SizePreset_Click"
+                                                Content="10 MB"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="10|2" />
+
+                                            <!--  Bottom row: Uniform grid for the remaining sizes  -->
+                                            <UniformGrid Columns="3">
+                                                <Button
+                                                    Margin="0,0,2,0"
+                                                    Click="SizePreset_Click"
+                                                    Content="100 KB"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="100|1" />
+                                                <Button
+                                                    Margin="2,0"
+                                                    Click="SizePreset_Click"
+                                                    Content="1 MB"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="1|2" />
+                                                <Button
+                                                    Margin="2,0,0,0"
+                                                    Click="SizePreset_Click"
+                                                    Content="100 MB"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="100|2" />
+                                            </UniformGrid>
+
+                                            <!--  Final row or next item if needed for 1 GB  -->
+                                            <Button
+                                                Margin="0,4,0,0"
+                                                HorizontalAlignment="Stretch"
+                                                Click="SizePreset_Click"
+                                                Content="1 GB"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="1|3" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        x:Name="PanelRandomSize"
+                                        Margin="0,10,0,0"
+                                        Visibility="Collapsed">
+                                        <Border Margin="0,0,0,6" Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="72" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Margin="4,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{DynamicResource Str_FileGenerator_From}" />
+                                                <TextBox
+                                                    x:Name="TxtMinSize"
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="Min"
+                                                    Text="1"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_MinSizeTooltip}" />
+                                                <Border Grid.Column="2" Style="{StaticResource InputBarDivider}" />
+                                                <ComboBox
+                                                    x:Name="CmbMinSizeUnit"
+                                                    Grid.Column="3"
+                                                    SelectedIndex="2"
+                                                    SelectionChanged="Option_SelectionChanged"
+                                                    Style="{StaticResource BareComboBox}"
+                                                    ToolTip="{DynamicResource Str_FileGen_MinSizeUnitTooltip}">
+                                                    <ComboBoxItem Content="B" />
+                                                    <ComboBoxItem Content="KB" />
+                                                    <ComboBoxItem Content="MB" />
+                                                    <ComboBoxItem Content="GB" />
+                                                </ComboBox>
+                                            </Grid>
+                                        </Border>
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="72" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Margin="4,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="To" />
+                                                <TextBox
+                                                    x:Name="TxtMaxSize"
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="Max"
+                                                    Text="10"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_MaxSizeTooltip}" />
+                                                <Border Grid.Column="2" Style="{StaticResource InputBarDivider}" />
+                                                <ComboBox
+                                                    x:Name="CmbMaxSizeUnit"
+                                                    Grid.Column="3"
+                                                    SelectedIndex="2"
+                                                    SelectionChanged="Option_SelectionChanged"
+                                                    Style="{StaticResource BareComboBox}"
+                                                    ToolTip="{DynamicResource Str_FileGen_MaxSizeUnitTooltip}">
+                                                    <ComboBoxItem Content="B" />
+                                                    <ComboBoxItem Content="KB" />
+                                                    <ComboBoxItem Content="MB" />
+                                                    <ComboBoxItem Content="GB" />
+                                                </ComboBox>
+                                            </Grid>
+                                        </Border>
+                                        <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_FileGenerator_EachFileGetsIts}" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        x:Name="TxtSizeError"
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ CONTENT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_FileGenerator_Content" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel x:Name="PanelContentFill">
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileGen_ContentFillHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormatColorFill}" />
+                                    <UniformGrid
+                                        x:Name="FillChips"
+                                        Columns="2"
+                                        ToolTip="{DynamicResource Str_FileGen_ContentFillTooltip}">
+                                        <RadioButton
+                                            x:Name="RadioFillZeroes"
+                                            Margin="0,0,2,4"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_ZeroFilled}"
+                                            GroupName="FileGenFill"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Zeroes" />
+                                        <RadioButton
+                                            x:Name="RadioFillRandom"
+                                            Margin="2,0,0,4"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_RandomBytes}"
+                                            GroupName="FileGenFill"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="RandomBytes" />
+                                        <RadioButton
+                                            x:Name="RadioFillPattern"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_RepeatedPattern}"
+                                            GroupName="FileGenFill"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="RepeatedPattern" />
+                                        <RadioButton
+                                            x:Name="RadioFillLorem"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_PlaceholderText}"
+                                            GroupName="FileGenFill"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="PlaceholderText" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtFillNote"
+                                        Style="{StaticResource SidebarHint}"
+                                        Visibility="Collapsed" />
+
+                                    <StackPanel x:Name="PanelPatternText" Visibility="Collapsed">
+                                        <TextBlock Style="{StaticResource SidebarFieldLabel}" Text="{DynamicResource Str_FileGen_PatternToRepeatLabel}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtPatternText"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="SmartTools"
+                                                Text="SmartTools"
+                                                TextChanged="Option_TextChanged"
+                                                ToolTip="{DynamicResource Str_FileGen_PatternToRepeatTooltip}" />
+                                        </Border>
+                                    </StackPanel>
+
+                                    <CheckBox
+                                        x:Name="ChkInjectMetadata"
+                                        Margin="0,12,0,0"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_FileGen_InjectMetadata}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_FileGen_InjectMetadataTooltip}" />
+                                    <StackPanel
+                                        x:Name="PanelMetadataTag"
+                                        Margin="0,8,0,0"
+                                        Visibility="Collapsed">
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="2,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Kind="TagOutline" />
+                                                <TextBox
+                                                    x:Name="TxtMetadataTag"
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="Custom tag text"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_MetadataTagTooltip}" />
+                                            </Grid>
+                                        </Border>
+                                        <TextBlock x:Name="TxtMetadataHint" Style="{StaticResource SidebarHint}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ NAMES ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_FileGenerator_Naming" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileGen_NamingHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormatLetterCase}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioNamingSequential"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_NamingSequential}"
+                                            GroupName="NamingMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            ToolTip="{DynamicResource Str_FileGen_NamingSequentialTooltip}" />
+                                        <RadioButton
+                                            x:Name="RadioNamingPrefixSuffix"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGen_NamingPrefixSuffix}"
+                                            GroupName="NamingMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            ToolTip="{DynamicResource Str_FileGen_NamingPrefixSuffixTooltip}" />
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_FileGen_BaseNameLabel}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtBaseName"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="file"
+                                            Text="file"
+                                            TextChanged="Option_TextChanged"
+                                            ToolTip="{DynamicResource Str_FileGen_BaseNameTooltip}" />
+                                    </Border>
+
+                                    <Grid x:Name="PanelPrefixSuffix" Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource SidebarFieldLabel}" Text="{DynamicResource Str_FileGen_Prefix}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtPrefix"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="test_"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_PrefixTooltip}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Style="{StaticResource SidebarFieldLabel}" Text="{DynamicResource Str_FileGen_Suffix}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtSuffix"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="_v2"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_SuffixTooltip}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="65" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,12,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_FileGen_StartIndexLabel}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtStartIndex"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="1"
+                                                    Text="1"
+                                                    TextChanged="Option_TextChanged"
+                                                    ToolTip="{DynamicResource Str_FileGen_StartIndexTooltip}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <CheckBox
+                                            x:Name="ChkPadNumbers"
+                                            Grid.Column="2"
+                                            Margin="0,0,0,8"
+                                            VerticalAlignment="Bottom"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGenerator_PadNumbers0102}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_FileGenerator_File01File12SoThe}" />
+                                    </Grid>
+
+                                    <Border
+                                        Margin="0,10,0,0"
+                                        Padding="10,7"
+                                        Background="{DynamicResource SidebarSubPanelBg}"
+                                        CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Kind="EyeOutline" />
+                                            <TextBlock
+                                                x:Name="TxtNamePreview"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                TextTrimming="CharacterEllipsis"
+                                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ HOW MANY + ARCHIVE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FileGen_BatchHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ContentCopy}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Margin="10,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="Pound" />
+                                            <TextBox
+                                                x:Name="TxtCount"
+                                                Grid.Column="1"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="1"
+                                                Text="1"
+                                                TextChanged="Option_TextChanged"
+                                                ToolTip="{DynamicResource Str_FileGen_NumberOfFilesTooltip}" />
+                                        </Grid>
+                                    </Border>
+                                    <StackPanel Margin="0,8,0,0">
+                                        <!--  Top row: Full-width 10 standout option  -->
+                                        <Button
+                                            Margin="0,0,0,4"
+                                            HorizontalAlignment="Stretch"
+                                            Click="CountPreset_Click"
+                                            Content="10"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            Tag="10" />
+
+                                        <!--  Bottom row: 3 equal columns for the remaining count presets  -->
+                                        <UniformGrid Columns="3">
+                                            <Button
+                                                Margin="0,0,2,0"
+                                                Click="CountPreset_Click"
+                                                Content="1"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="1" />
+                                            <Button
+                                                Margin="2,0"
+                                                Click="CountPreset_Click"
+                                                Content="100"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="100" />
+                                            <Button
+                                                Margin="2,0,0,0"
+                                                Click="CountPreset_Click"
+                                                Content="1,000"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="1000" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_FileGen_ArchiveHeader}" />
+                                    <UniformGrid Columns="3" ToolTip="{DynamicResource Str_FileGen_ArchiveTooltip}">
+                                        <RadioButton
+                                            x:Name="RadioArchiveNone"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Api_AuthTypeNone}"
+                                            GroupName="FileGenArchive"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="None" />
+                                        <RadioButton
+                                            x:Name="RadioArchiveZip"
+                                            Margin="2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGenerator_Zip}"
+                                            GroupName="FileGenArchive"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Zip" />
+                                        <RadioButton
+                                            x:Name="RadioArchiveTar"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_FileGenerator_Tar}"
+                                            GroupName="FileGenArchive"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Tar" />
+                                    </UniformGrid>
+                                    <CheckBox
+                                        x:Name="ChkKeepFiles"
+                                        Margin="0,10,0,0"
+                                        Click="Option_Click"
+                                        Content="{DynamicResource Str_FileGenerator_KeepTheSeparateFiles}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        IsEnabled="False"
+                                        ToolTip="{DynamicResource Str_FileGenerator_OffOnlyTheArchive}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SAVE TO ============  -->
+                            <controls:OutputFolderCard
+                                x:Name="OutputCard"
+                                ctl:Tour.Key="Str_Tour_FileGenerator_Output" ctl:Tour.Order="5"
+                                Margin="0,0,0,4"
+                                Header="{DynamicResource Str_FileGen_OutputFolderHeader}"
+                                HeaderIcon="FolderDownloadOutline"
+                                ToolName="File Generator" />
+
+                            <!--  Live check: names, total size vs free space, or why it can't run  -->
+                            <Border
+                                x:Name="PlanCheckCard"
+                                Margin="0,0,0,4"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="{Binding Visibility, ElementName=PlanCheckPanel}">
+                                <StackPanel>
+                                    <Border
+                                        x:Name="PlanCheckPanel"
+                                        Margin="0"
+                                        Padding="10,8"
+                                        Background="{DynamicResource SidebarSubPanelBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                x:Name="IconPlanCheck"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,1,8,0"
+                                                VerticalAlignment="Top"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Kind="CheckCircleOutline" />
+                                            <TextBlock
+                                                x:Name="TxtPlanCheck"
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnGenerate"
+                            ctl:Tour.Key="Str_Tour_FileGenerator_Generate" ctl:Tour.Order="6"
+                            MinWidth="180"
+                            Margin="0,0,20,0"
+                            VerticalAlignment="Center"
+                            Click="BtnGenerate_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_FileGen_GenerateButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconGenerate"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="FilePlusOutline" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtGenerateLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_FileGen_GenerateButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock
+                                x:Name="TxtPlanSummary"
+                                Margin="0,0,0,6"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextTrimming="CharacterEllipsis" />
+                            <ProgressBar
+                                x:Name="ProgressGenerate"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_FileGen_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_FileGen_ProgressInitial}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Results  -->
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_FileGen_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.FilePlusOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    x:Name="SummaryPill"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FileGen_ResultsPillTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Text="{DynamicResource Str_FileGen_ResultsPillInitial}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillTotal"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FileGenerator_TotalSizeOfThe}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="Harddisk" />
+                                        <TextBlock
+                                            x:Name="TxtTotalSize"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillFailed"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FileGenerator_HoverARowS}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtFailedCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillArchive"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource AccentColorSubtle}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconArchive"
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="ZipBoxOutline" />
+                                        <TextBlock
+                                            x:Name="TxtArchive"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource AccentColor}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <controls:ExportButton
+                                    x:Name="BtnExportReport"
+                                    Click="BtnExportReport_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_FileGen_ExportReportTooltip}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu x:Name="ExportMenu">
+                                            <MenuItem
+                                                x:Name="MenuExportJson"
+                                                Click="MenuExport_Click"
+                                                Header="{DynamicResource Str_Common_ExportAsJson}"
+                                                Tag="Json">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="CodeJson" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                x:Name="MenuExportCsv"
+                                                Click="MenuExport_Click"
+                                                Header="{DynamicResource Str_Common_ExportAsCsv}"
+                                                Tag="Csv">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                x:Name="MenuExportXml"
+                                                Click="MenuExport_Click"
+                                                Header="{DynamicResource Str_Common_ExportAsXml}"
+                                                Tag="Xml">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="CodeTags" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                                <Button
+                                    x:Name="BtnOpenFolder"
+                                    Margin="6,0,0,0"
+                                    Click="BtnOpenFolder_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_FileGenerator_OpenTheFolder}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearResults"
+                                    Margin="6,0,0,0"
+                                    Click="BtnClearResults_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_FileGenerator_ClearTheListThe}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridResults"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserReorderColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MouseDoubleClick="DataGridResults_MouseDoubleClick"
+                            MinRowHeight="44"
+                            ToolTip="{DynamicResource Str_FileGen_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            Visibility="Collapsed">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="3*"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderName}"
+                                    SortMemberPath="Name" />
+                                <DataGridTemplateColumn
+                                    x:Name="ColSize"
+                                    Width="1.4*"
+                                    CellTemplate="{StaticResource SizeCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderSize}"
+                                    SortMemberPath="SizeBytes" />
+                                <DataGridTextColumn
+                                    x:Name="ColTarget"
+                                    Width="*"
+                                    Binding="{Binding TargetDisplay, Mode=OneWay}"
+                                    Header="{DynamicResource Str_FileGenerator_AskedFor}"
+                                    SortMemberPath="TargetBytes">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTemplateColumn
+                                    Width="130"
+                                    CellTemplate="{StaticResource StatusCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}"
+                                    SortMemberPath="Status" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <ContentControl
+                                x:Name="EmptyBadge"
+                                Style="{StaticResource EmptyStateBadge}"
+                                Tag="{x:Static materialDesign:PackIconKind.FilePlusOutline}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_FileGenerator_MakeTestFilesOf}" />
+                            <TextBlock
+                                MaxWidth="440"
+                                Margin="0,4,0,14"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_FileGen_EmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

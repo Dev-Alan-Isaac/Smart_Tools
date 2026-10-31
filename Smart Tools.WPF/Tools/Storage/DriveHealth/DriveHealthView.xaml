@@ -1,0 +1,1013 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.DriveHealthView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/DriveHealthManager.cs (+ .Native.cs, .Wmi.cs)
+        and Models/DriveHealthModel.cs. Code-behind only wires controls.
+        Look & feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs.
+        The old DriveHealthConverters.cs is gone: status colours are
+        DataTriggers on theme tokens, visibility uses Has* model flags.
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  Small stat tile on a drive card  -->
+        <Style x:Key="StatTileStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource RowBg}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="MinWidth" Value="112" />
+        </Style>
+        <Style x:Key="StatLabelText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="StatValueText" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+        <Style x:Key="StatIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="13" />
+            <Setter Property="Height" Value="13" />
+            <Setter Property="Margin" Value="0,0,5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <!--  Life bar  -->
+        <Style x:Key="LifeBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Maximum" Value="100" />
+            <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+            <Setter Property="Background" Value="{DynamicResource RowBg}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
+                            <Border x:Name="PART_Track" CornerRadius="4" />
+                            <Border
+                                x:Name="PART_Indicator"
+                                HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="4" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  "All attributes" toggle  -->
+        <Style x:Key="LinkToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border
+                            x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="8">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  One finding ("8 reallocated sectors" + what it means)  -->
+        <DataTemplate x:Key="FindingTemplate" DataType="{x:Type models:HealthFinding}">
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon
+                    x:Name="Icon"
+                    Width="16"
+                    Height="16"
+                    Margin="0,1,8,0"
+                    VerticalAlignment="Top"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Kind="InformationOutline" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Title}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Margin="0,2,0,0"
+                        FontSize="11.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Detail}"
+                        TextWrapping="Wrap"
+                        Visibility="{Binding HasDetail, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Severity}" Value="Healthy">
+                    <Setter TargetName="Icon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Severity}" Value="Warning">
+                    <Setter TargetName="Icon" Property="Kind" Value="AlertOutline" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Severity}" Value="Unhealthy">
+                    <Setter TargetName="Icon" Property="Kind" Value="CloseCircleOutline" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  One SMART attribute row  -->
+        <DataTemplate x:Key="AttributeRowTemplate" DataType="{x:Type models:SmartAttribute}">
+            <Border
+                x:Name="RowBd"
+                Padding="6,4"
+                CornerRadius="6">
+                <Grid TextElement.FontSize="11.5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="34" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="96" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="IdText"
+                        FontFamily="Consolas"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding IdHex}" />
+                    <TextBlock
+                        x:Name="NameText"
+                        Grid.Column="1"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Current}"
+                        TextAlignment="Right" />
+                    <TextBlock
+                        Grid.Column="3"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Worst}"
+                        TextAlignment="Right" />
+                    <TextBlock
+                        Grid.Column="4"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding ThresholdText}"
+                        TextAlignment="Right" />
+                    <TextBlock
+                        x:Name="RawText"
+                        Grid.Column="5"
+                        FontFamily="Consolas"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Raw}"
+                        TextAlignment="Right" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding NeedsAttention}" Value="True">
+                    <Setter TargetName="RowBd" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="RawText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="NameText" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsFailing}" Value="True">
+                    <Setter TargetName="RowBd" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="RawText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  ================= Drive card =================  -->
+        <DataTemplate x:Key="DriveCardTemplate" DataType="{x:Type models:DriveHealthInfo}">
+            <Border
+                Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                Margin="0,0,14,14"
+                VerticalAlignment="Top"
+                Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Header: kind icon, name, subtitle, health chip  -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            x:Name="KindChip"
+                            Width="42"
+                            Height="42"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Top"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="12">
+                            <materialDesign:PackIcon
+                                x:Name="KindIcon"
+                                Width="22"
+                                Height="22"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="Harddisk" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{Binding FriendlyName}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding FriendlyName}" />
+                            <TextBlock
+                                Margin="0,3,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{Binding Subtitle}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Border
+                            x:Name="HealthChip"
+                            Grid.Column="2"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Top"
+                            Background="{DynamicResource RowBg}"
+                            Style="{StaticResource IconStatusPillStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Name="HealthIcon"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Kind="HelpCircleOutline" />
+                                <TextBlock
+                                    x:Name="HealthText"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{Binding HealthText}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!--  SSD life  -->
+                    <Grid
+                        Grid.Row="1"
+                        Margin="0,16,0,0"
+                        Visibility="{Binding HasLife, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="BatteryHeartVariant" Style="{StaticResource StatIcon}" />
+                            <TextBlock
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DriveHealth_LifeRemaining}"
+                                ToolTip="{DynamicResource Str_DriveHealth_HowMuchOfIts}" />
+                        </StackPanel>
+                        <ProgressBar
+                            x:Name="LifeBar"
+                            Grid.Column="1"
+                            Margin="12,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource LifeBarStyle}"
+                            Value="{Binding LifePercent, Mode=OneWay}" />
+                        <TextBlock
+                            Grid.Column="2"
+                            FontSize="13"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding LifeText}" />
+                    </Grid>
+
+                    <!--  Stat tiles (each only when the drive reports it)  -->
+                    <WrapPanel Grid.Row="2" Margin="0,14,0,0">
+                        <Border
+                            x:Name="TempTile"
+                            Style="{StaticResource StatTileStyle}"
+                            Visibility="{Binding HasTemperature, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="TempIcon"
+                                        Kind="Thermometer"
+                                        Style="{StaticResource StatIcon}" />
+                                    <TextBlock Style="{StaticResource StatLabelText}" Text="{DynamicResource Str_DriveHealth_Temperature}" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="TempValue"
+                                    Style="{StaticResource StatValueText}"
+                                    Text="{Binding TemperatureText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{Binding PowerOnDetail}"
+                            Visibility="{Binding HasPowerOn, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ClockOutline" Style="{StaticResource StatIcon}" />
+                                    <TextBlock Style="{StaticResource StatLabelText}" Text="{DynamicResource Str_DriveHealth_PoweredOn}" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource StatValueText}" Text="{Binding PowerOnText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTileStyle}" Visibility="{Binding HasPowerCycles, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PowerCycle" Style="{StaticResource StatIcon}" />
+                                    <TextBlock Style="{StaticResource StatLabelText}" Text="{DynamicResource Str_DriveHealth_PowerCycles}" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource StatValueText}" Text="{Binding PowerCyclesText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_TotalDataTheComputer}"
+                            Visibility="{Binding HasWritten, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="DatabaseArrowUpOutline" Style="{StaticResource StatIcon}" />
+                                    <TextBlock Style="{StaticResource StatLabelText}" Text="{DynamicResource Str_DriveHealth_DataWritten}" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource StatValueText}" Text="{Binding WrittenText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            x:Name="ReallocTile"
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_BadAreasTheDrive}"
+                            Visibility="{Binding HasReallocated, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="ReallocIcon"
+                                        Kind="HarddiskRemove"
+                                        Style="{StaticResource StatIcon}" />
+                                    <TextBlock
+                                        x:Name="ReallocLabel"
+                                        Style="{StaticResource StatLabelText}"
+                                        Text="{DynamicResource Str_DriveHealth_ReallocatedSuffix}" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="ReallocValue"
+                                    Style="{StaticResource StatValueText}"
+                                    Text="{Binding ReallocatedText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            x:Name="PendingTile"
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_UnstableSectorsWaitingTo}"
+                            Visibility="{Binding HasPending, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="PendingIcon"
+                                        Kind="AlertOutline"
+                                        Style="{StaticResource StatIcon}" />
+                                    <TextBlock
+                                        x:Name="PendingLabel"
+                                        Style="{StaticResource StatLabelText}"
+                                        Text="{DynamicResource Str_DriveHealth_PendingSuffix}" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="PendingValue"
+                                    Style="{StaticResource StatValueText}"
+                                    Text="{Binding PendingText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            x:Name="UncTile"
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_SectorsTheDriveCouldn}"
+                            Visibility="{Binding HasUncorrectable, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="UncIcon"
+                                        Kind="CloseCircleOutline"
+                                        Style="{StaticResource StatIcon}" />
+                                    <TextBlock
+                                        x:Name="UncLabel"
+                                        Style="{StaticResource StatLabelText}"
+                                        Text="{DynamicResource Str_DriveHealth_Uncorrectable}" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="UncValue"
+                                    Style="{StaticResource StatValueText}"
+                                    Text="{Binding UncorrectableText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            x:Name="MediaTile"
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_DataTheDriveCouldn}"
+                            Visibility="{Binding HasMediaErrors, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="MediaIcon"
+                                        Kind="FlashAlertOutline"
+                                        Style="{StaticResource StatIcon}" />
+                                    <TextBlock
+                                        x:Name="MediaLabel"
+                                        Style="{StaticResource StatLabelText}"
+                                        Text="{DynamicResource Str_DriveHealth_MediaErrors}" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="MediaValue"
+                                    Style="{StaticResource StatValueText}"
+                                    Text="{Binding MediaErrorsText}" />
+                            </StackPanel>
+                        </Border>
+                        <Border
+                            Style="{StaticResource StatTileStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_TimesPowerWasCut}"
+                            Visibility="{Binding HasUnsafeShutdowns, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="PowerPlugOutline" Style="{StaticResource StatIcon}" />
+                                    <TextBlock Style="{StaticResource StatLabelText}" Text="{DynamicResource Str_DriveHealth_UnsafeShutdowns}" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource StatValueText}" Text="{Binding UnsafeShutdownsText}" />
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+
+                    <!--  Why: plain-language findings  -->
+                    <ItemsControl
+                        Grid.Row="3"
+                        Margin="0,6,0,0"
+                        Focusable="False"
+                        ItemTemplate="{StaticResource FindingTemplate}"
+                        ItemsSource="{Binding Findings}" />
+
+                    <!--  No SMART: say why  -->
+                    <Border
+                        Grid.Row="4"
+                        Margin="0,4,0,8"
+                        Padding="10,8"
+                        Background="{DynamicResource StatusInfoBg}"
+                        CornerRadius="8">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SmartAvailable}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Width="15"
+                                Height="15"
+                                Margin="0,1,8,0"
+                                VerticalAlignment="Top"
+                                Foreground="{DynamicResource StatusInfoFg}"
+                                Kind="InformationOutline" />
+                            <TextBlock
+                                Grid.Column="1"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource StatusInfoFg}"
+                                Text="{Binding UnavailableText}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+
+                    <!--  Footer: identity + attribute table toggle  -->
+                    <Grid Grid.Row="5" Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding DetailsLine}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding DetailsLine}" />
+                        <ToggleButton
+                            x:Name="BtnAttributes"
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            Style="{StaticResource LinkToggleStyle}"
+                            ToolTip="{DynamicResource Str_DriveHealth_ShowEverySmartAttribute}"
+                            Visibility="{Binding HasAttributes, Converter={StaticResource BoolToVisibility}}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Kind="TableLarge" />
+                                <TextBlock Grid.Column="1" Text="{DynamicResource Str_DriveHealth_AllAttributes}" TextWrapping="Wrap" />
+                            </Grid>
+                        </ToggleButton>
+                    </Grid>
+
+                    <!--  Attribute table (toggled)  -->
+                    <StackPanel
+                        x:Name="AttributesPanel"
+                        Grid.Row="6"
+                        Margin="0,10,0,0"
+                        Visibility="{Binding IsChecked, ElementName=BtnAttributes, Converter={StaticResource BoolToVisibility}}">
+                        <Grid
+                            Margin="6,0,6,4"
+                            TextElement.FontSize="11"
+                            TextElement.FontWeight="SemiBold"
+                            TextElement.Foreground="{DynamicResource TextSecondary}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="52" />
+                                <ColumnDefinition Width="52" />
+                                <ColumnDefinition Width="52" />
+                                <ColumnDefinition Width="96" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="ID" />
+                            <TextBlock Grid.Column="1" Text="{DynamicResource Str_DriveHealth_Attribute}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                Text="{DynamicResource Str_Metadata_ColHeaderValue}"
+                                TextAlignment="Right" />
+                            <TextBlock
+                                Grid.Column="3"
+                                Text="{DynamicResource Str_DriveHealth_Worst}"
+                                TextAlignment="Right" />
+                            <TextBlock
+                                Grid.Column="4"
+                                Text="{DynamicResource Str_DriveHealth_Threshold}"
+                                TextAlignment="Right" />
+                            <TextBlock
+                                Grid.Column="5"
+                                Text="{DynamicResource Str_DriveHealth_Raw}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ItemsControl
+                            Focusable="False"
+                            ItemTemplate="{StaticResource AttributeRowTemplate}"
+                            ItemsSource="{Binding Attributes}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <DataTemplate.Triggers>
+                <!--  Kind icon  -->
+                <DataTrigger Binding="{Binding Kind}" Value="Ssd">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="ExpansionCardVariant" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="StorageClassMemory">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="Memory" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsNvme}" Value="True">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="Chip" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsUsb}" Value="True">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="UsbFlashDrive" />
+                </DataTrigger>
+
+                <!--  Health chip + icon chip tint  -->
+                <DataTrigger Binding="{Binding HealthStatus}" Value="Healthy">
+                    <Setter TargetName="HealthChip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="HealthIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="HealthIcon" Property="Kind" Value="ShieldCheckOutline" />
+                    <Setter TargetName="HealthText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HealthStatus}" Value="Warning">
+                    <Setter TargetName="HealthChip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="HealthIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="HealthIcon" Property="Kind" Value="ShieldAlertOutline" />
+                    <Setter TargetName="HealthText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="KindChip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="KindIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HealthStatus}" Value="Unhealthy">
+                    <Setter TargetName="HealthChip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="HealthIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="HealthIcon" Property="Kind" Value="AlertOctagonOutline" />
+                    <Setter TargetName="HealthText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="KindChip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="KindIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+
+                <!--  Life bar colour  -->
+                <DataTrigger Binding="{Binding LifeLevel}" Value="Low">
+                    <Setter TargetName="LifeBar" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding LifeLevel}" Value="Critical">
+                    <Setter TargetName="LifeBar" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+
+                <!--  Temperature tile  -->
+                <DataTrigger Binding="{Binding TemperatureLevel}" Value="Warm">
+                    <Setter TargetName="TempIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding TemperatureLevel}" Value="Hot">
+                    <Setter TargetName="TempTile" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="TempIcon" Property="Kind" Value="ThermometerHigh" />
+                    <Setter TargetName="TempIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="TempValue" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+
+                <!--  Sector / error tiles turn amber when non-zero  -->
+                <DataTrigger Binding="{Binding ReallocatedAlert}" Value="True">
+                    <Setter TargetName="ReallocTile" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ReallocIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ReallocLabel" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ReallocValue" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding PendingAlert}" Value="True">
+                    <Setter TargetName="PendingTile" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="PendingIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="PendingLabel" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="PendingValue" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding UncorrectableAlert}" Value="True">
+                    <Setter TargetName="UncTile" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="UncIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="UncLabel" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="UncValue" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding MediaErrorsAlert}" Value="True">
+                    <Setter TargetName="MediaTile" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="MediaIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="MediaLabel" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="MediaValue" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!--  ================= RUN BAR =================  -->
+            <Border
+                Grid.Row="0"
+                Margin="0,0,0,14"
+                Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button
+                        x:Name="BtnRefresh"
+                        ctl:Tour.Key="Str_Tour_DriveHealth_Refresh"
+                        ctl:Tour.Order="1"
+                        MinWidth="150"
+                        Margin="0,0,20,0"
+                        VerticalAlignment="Center"
+                        Click="BtnRefresh_Click"
+                        Style="{StaticResource AccentPrimaryButtonStyle}"
+                        ToolTip="{DynamicResource Str_DriveHealth_RefreshTooltip}">
+                        <Grid HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Grid.Column="0"
+                                x:Name="IconRefresh"
+                                Width="18"
+                                Height="18"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Kind="Refresh" />
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_Refresh}" TextWrapping="Wrap" />
+                        </Grid>
+                    </Button>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <WrapPanel x:Name="SummaryPanel" Visibility="Collapsed">
+                            <Border
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="Harddisk" />
+                                    <TextBlock
+                                        x:Name="TxtDriveCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="HealthyPill"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusSuccessBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                        Kind="ShieldCheckOutline" />
+                                    <TextBlock
+                                        x:Name="TxtHealthyCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusSuccessFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="WarningPill"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusWarningBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusWarningFg}"
+                                        Kind="ShieldAlertOutline" />
+                                    <TextBlock
+                                        x:Name="TxtWarningCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusWarningFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="UnhealthyPill"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusErrorBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Kind="AlertOctagonOutline" />
+                                    <TextBlock
+                                        x:Name="TxtUnhealthyCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusErrorFg}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                        <ProgressBar
+                            x:Name="LoadingIndicator"
+                            Height="6"
+                            Margin="0,0,0,6"
+                            IsIndeterminate="True"
+                            Visibility="Collapsed" />
+                        <TextBlock
+                            x:Name="TxtStatus"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_DriveHealth_SmartExplainer}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+
+                    <!--  Elevation state  -->
+                    <Border
+                        x:Name="AdminPill"
+                        Grid.Column="2"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource RowBg}"
+                        Style="{StaticResource IconStatusPillStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon
+                                x:Name="IconAdmin"
+                                Width="13"
+                                Height="13"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Kind="ShieldLockOutline" />
+                            <TextBlock
+                                x:Name="TxtAdmin"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DriveHealth_StandardUser}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!--  ================= ELEVATION BANNER =================  -->
+            <!--  Only when a SATA drive's details actually need admin (NVMe usually doesn't).  -->
+            <Border
+                x:Name="ElevationBanner"
+                Grid.Row="1"
+                Margin="0,0,0,14"
+                Padding="14,12"
+                Background="{DynamicResource StatusWarningBg}"
+                CornerRadius="12"
+                Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Width="34"
+                        Height="34"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource CardBg}"
+                        CornerRadius="10">
+                        <materialDesign:PackIcon
+                            Width="18"
+                            Height="18"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Kind="ShieldLockOutline" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            x:Name="TxtBannerTitle"
+                            FontSize="12.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Text="{DynamicResource Str_DriveHealth_SomeSmartDetailsNeed}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Text="{DynamicResource Str_DriveHealth_ElevationWarning}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button
+                        x:Name="BtnRestartAsAdmin"
+                        Grid.Column="2"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Center"
+                        Click="BtnRestartAsAdmin_Click"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        ToolTip="{DynamicResource Str_DriveHealth_RestartAsAdminTooltip}">
+                        <Grid HorizontalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon
+                                Grid.Column="0"
+                                Width="15"
+                                Height="15"
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Kind="ShieldAccount" />
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DriveHealth_RestartAsAdmin}" TextWrapping="Wrap" />
+                        </Grid>
+                    </Button>
+
+                    <Button
+                        x:Name="BtnDismissBanner"
+                        Grid.Column="3"
+                        Width="28"
+                        Height="28"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Click="BtnDismissBanner_Click"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        ToolTip="{DynamicResource Str_HardwareSensors_HideBanner}">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            Kind="Close" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!--  ================= DRIVES =================  -->
+            <Grid Grid.Row="2">
+                <ScrollViewer
+                    x:Name="DriveScroller"
+                    ctl:Tour.Key="Str_Tour_DriveHealth_Drives"
+                    ctl:Tour.Order="2"
+                    HorizontalScrollBarVisibility="Disabled"
+                    SizeChanged="DriveScroller_SizeChanged"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl
+                        x:Name="DriveList"
+                        Margin="0,0,-14,0"
+                        Focusable="False"
+                        ItemTemplate="{StaticResource DriveCardTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!--  Loading / empty  -->
+                <StackPanel
+                    x:Name="EmptyStatePanel"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.HeartPulse}" />
+                    <TextBlock
+                        x:Name="TxtEmptyState"
+                        MaxWidth="380"
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_DriveHealth_ReadingDriveInformation}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,2046 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.DateTimeToolkitView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/DateTimeToolkitManager.cs (timestamps, zones, calendar
+        maths, settings); Models/DateTimeToolkitModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <FontFamily x:Key="DtMonoFont">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+        <!--  The themed ComboBox's selection box ignores DisplayMemberPath, so entries use a template.  -->
+        <DataTemplate x:Key="ZoneOptionTemplate" DataType="{x:Type models:DateToolZoneOption}">
+            <TextBlock
+                VerticalAlignment="Center"
+                Text="{Binding Label}"
+                TextTrimming="CharacterEllipsis" />
+        </DataTemplate>
+
+        <Style x:Key="MiniLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Margin" Value="2,0,0,4" />
+        </Style>
+
+        <!--  One result line: label, value, copy  -->
+        <DataTemplate x:Key="ResultRowTemplate" DataType="{x:Type models:DateToolRow}">
+            <Border
+                Margin="0,0,0,6"
+                Padding="12,7,8,7"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="11.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Label}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource DtMonoFont}"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Value}"
+                        TextWrapping="Wrap" />
+                    <Button
+                        Grid.Column="2"
+                        Width="28"
+                        Height="28"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Click="BtnCopyValue_Click"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        Tag="{Binding Value}"
+                        ToolTip="{DynamicResource Str_DateTimeTool_CopyTooltip}">
+                        <materialDesign:PackIcon
+                            Width="14"
+                            Height="14"
+                            Kind="ContentCopy" />
+                    </Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  A total (days, weeks ...) as a tile  -->
+        <DataTemplate x:Key="TotalTileTemplate" DataType="{x:Type models:DateToolRow}">
+            <Border
+                MinWidth="110"
+                Margin="0,0,8,8"
+                Padding="12,8"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="17"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource AccentColor}"
+                        Text="{Binding Value}" />
+                    <TextBlock
+                        Margin="0,2,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Label}" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!--  An event day: name, then its date or status  -->
+        <DataTemplate x:Key="EventLineTemplate" DataType="{x:Type models:DateToolRow}">
+            <Border
+                Margin="0,0,0,6"
+                Padding="12,8"
+                Background="{DynamicResource CardBg}"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="CalendarStar" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock
+                            FontSize="12.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Value}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            Margin="0,1,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding Label}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  One time zone card  -->
+        <DataTemplate x:Key="ZoneCardTemplate" DataType="{x:Type models:DateToolZoneItem}">
+            <Border
+                MinWidth="220"
+                Margin="0,0,12,12"
+                Padding="16,14"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="12.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding Name}" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="6,-4,-6,0"
+                            Click="BtnZoneRemove_Click"
+                            Style="{StaticResource ListToolDangerButtonStyle}"
+                            ToolTip="{DynamicResource Str_DateTimeTool_RemoveZoneTooltip}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="DeleteOutline" />
+                        </Button>
+                    </Grid>
+                    <!--  The clock grows with the card (Viewbox): a bigger window or fewer zones means bigger digits.  -->
+                    <Viewbox
+                        Grid.Row="1"
+                        MaxHeight="120"
+                        Margin="0,6,0,4"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Stretch="Uniform"
+                        StretchDirection="Both">
+                        <TextBlock
+                            FontFamily="{StaticResource DtMonoFont}"
+                            FontSize="30"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            Text="{Binding Time}" />
+                    </Viewbox>
+                    <StackPanel Grid.Row="2">
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding Date}" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Border
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource AccentColorSubtle}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Text="{Binding Offset}" />
+                            </Border>
+                            <Border
+                                x:Name="PillDst"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusWarningBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusWarningFg}"
+                                    Text="{DynamicResource Str_DateTimeTool_Dst}" />
+                            </Border>
+                            <Border
+                                x:Name="PillLocal"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusInfoFg}"
+                                    Text="{DynamicResource Str_DateTimeTool_ThisPc}" />
+                            </Border>
+                            <Border
+                                x:Name="PillYesterday"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource RowBg}"
+                                BorderBrush="{DynamicResource InputBorder}"
+                                BorderThickness="1"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_DateTimeTool_Yesterday}" />
+                            </Border>
+                            <Border
+                                x:Name="PillTomorrow"
+                                Margin="0,0,6,4"
+                                Background="{DynamicResource RowBg}"
+                                BorderBrush="{DynamicResource InputBorder}"
+                                BorderThickness="1"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_DateTimeTool_Tomorrow}" />
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsDaylightTime}" Value="True">
+                    <Setter TargetName="PillDst" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsLocal}" Value="True">
+                    <Setter TargetName="PillLocal" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding DayDelta}" Value="-1">
+                    <Setter TargetName="PillYesterday" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding DayDelta}" Value="1">
+                    <Setter TargetName="PillTomorrow" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+
+        <!--  "Good to know" cards: what each mode is, how it works.  -->
+        <Border
+            x:Key="FactsUnix"
+            Margin="0,14,0,0"
+            Padding="16,14,0,0"
+            x:Shared="False"
+            Background="{DynamicResource RowBg}"
+            CornerRadius="12">
+            <StackPanel>
+                <StackPanel Margin="0,0,0,12" Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="LightbulbOnOutline" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
+                </StackPanel>
+                <UniformGrid Columns="2">
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Unix1_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Unix1_B}"
+                        Icon="Counter" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Unix2_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Unix2_B}"
+                        Icon="Calculator" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Unix3_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Unix3_B}"
+                        Icon="Ruler" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Unix4_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Unix4_B}"
+                        Icon="EarthBox" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Unix5_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Unix5_B}"
+                        Icon="CalendarAlert" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Unix6_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Unix6_B}"
+                        Icon="History" />
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+        <Border
+            x:Key="FactsZones"
+            Margin="0,14,0,0"
+            Padding="16,14,0,0"
+            x:Shared="False"
+            Background="{DynamicResource RowBg}"
+            CornerRadius="12">
+            <StackPanel>
+                <StackPanel Margin="0,0,0,12" Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="LightbulbOnOutline" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
+                </StackPanel>
+                <UniformGrid Columns="3">
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Zones1_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Zones1_B}"
+                        Icon="WeatherSunny" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Zones2_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Zones2_B}"
+                        Icon="Identifier" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Zones3_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Zones3_B}"
+                        Icon="MapClock" />
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+        <Border
+            x:Key="FactsDiff"
+            Margin="0,14,0,0"
+            Padding="16,14,0,0"
+            x:Shared="False"
+            Background="{DynamicResource RowBg}"
+            CornerRadius="12">
+            <StackPanel>
+                <StackPanel Margin="0,0,0,12" Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="LightbulbOnOutline" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
+                </StackPanel>
+                <UniformGrid Columns="2">
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Diff1_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Diff1_B}"
+                        Icon="CalendarRange" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Diff2_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Diff2_B}"
+                        Icon="BriefcaseClock" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Diff3_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Diff3_B}"
+                        Icon="CalendarPlus" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Diff4_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Diff4_B}"
+                        Icon="NumericPositive_1" />
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+        <Border
+            x:Key="FactsIso"
+            Margin="0,14,0,0"
+            Padding="16,14,0,0"
+            x:Shared="False"
+            Background="{DynamicResource RowBg}"
+            CornerRadius="12">
+            <StackPanel>
+                <StackPanel Margin="0,0,0,12" Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="LightbulbOnOutline" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
+                </StackPanel>
+                <UniformGrid Columns="2">
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Iso1_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Iso1_B}"
+                        Icon="ScaleBalance" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Iso2_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Iso2_B}"
+                        Icon="AlphaZ" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Iso3_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Iso3_B}"
+                        Icon="CalendarWeek" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Iso4_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Iso4_B}"
+                        Icon="TimerSand" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Iso5_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Iso5_B}"
+                        Icon="FormatLetterCase" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Iso6_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Iso6_B}"
+                        Icon="ClockAlert" />
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+        <Border
+            x:Key="FactsCal"
+            Margin="0,14,0,0"
+            Padding="16,14,0,0"
+            x:Shared="False"
+            Background="{DynamicResource RowBg}"
+            CornerRadius="12">
+            <StackPanel>
+                <StackPanel Margin="0,0,0,12" Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="LightbulbOnOutline" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
+                </StackPanel>
+                <UniformGrid Columns="2">
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Cal1_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Cal1_B}"
+                        Icon="NumericOne" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Cal2_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Cal2_B}"
+                        Icon="CalendarSync" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Cal3_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Cal3_B}"
+                        Icon="FlagVariant" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Cal4_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Cal4_B}"
+                        Icon="Numeric" />
+                    <controls:InfoFact
+                        Title="{DynamicResource Str_DateTimeTool_Fact_Cal5_T}"
+                        Body="{DynamicResource Str_DateTimeTool_Fact_Cal5_B}"
+                        Icon="CalendarStar" />
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ MODE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DateTime_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DateTimeTool_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
+                                    <RadioButton
+                                        x:Name="RadioModeUnix"
+                                        Click="Mode_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_ModeUnix}"
+                                        GroupName="DtMode"
+                                        IsChecked="True"
+                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                        Tag="Unix" />
+                                    <RadioButton
+                                        x:Name="RadioModeZones"
+                                        Margin="0,4,0,0"
+                                        Click="Mode_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_ModeZones}"
+                                        GroupName="DtMode"
+                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                        Tag="Zones" />
+                                    <RadioButton
+                                        x:Name="RadioModeDiff"
+                                        Margin="0,4,0,0"
+                                        Click="Mode_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_ModeDiff}"
+                                        GroupName="DtMode"
+                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                        Tag="Difference" />
+                                    <RadioButton
+                                        x:Name="RadioModeIso"
+                                        Margin="0,4,0,0"
+                                        Click="Mode_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_ModeIso}"
+                                        GroupName="DtMode"
+                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                        Tag="Iso" />
+                                    <RadioButton
+                                        x:Name="RadioModeCalendar"
+                                        Margin="0,4,0,0"
+                                        Click="Mode_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_ModeCalendar}"
+                                        GroupName="DtMode"
+                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                        Tag="Calendar" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ UNIX OPTIONS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DateTime_Options" ctl:Tour.Order="2" x:Name="UnixOptionsPanel" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DateTimeTool_InputHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.NumericPositive_1}" />
+                                    <TextBlock
+                                        Margin="2,0,0,4"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Text="{DynamicResource Str_DateTimeTool_UnitLabel}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="CmbUnit"
+                                            VerticalContentAlignment="Center"
+                                            SelectedIndex="0"
+                                            SelectionChanged="CmbUnit_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}">
+                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Auto}" Tag="Auto" />
+                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Seconds}" Tag="Seconds" />
+                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Milliseconds}" Tag="Milliseconds" />
+                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Microseconds}" Tag="Microseconds" />
+                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Nanoseconds}" Tag="Nanoseconds" />
+                                        </ComboBox>
+                                    </Border>
+                                    <TextBlock
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_UnitHint}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Margin="2,14,0,4"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Text="{DynamicResource Str_DateTimeTool_AssumeHeader}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioAssumeLocal"
+                                            Margin="0,0,2,0"
+                                            Click="Assume_Click"
+                                            Content="{DynamicResource Str_DateTimeTool_AssumeLocal}"
+                                            GroupName="DtAssume"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadioAssumeUtc"
+                                            Margin="2,0,0,0"
+                                            Click="Assume_Click"
+                                            Content="UTC"
+                                            GroupName="DtAssume"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_AssumeHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ZONES OPTIONS ============  -->
+                            <Border
+                                x:Name="ZonesOptionsPanel"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DateTimeTool_ZonesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.EarthArrowRight}" />
+                                    <TextBlock
+                                        Margin="2,0,0,4"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Text="{DynamicResource Str_DateTimeTool_AddZoneLabel}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="CmbAddZone"
+                                            VerticalContentAlignment="Center"
+                                            ItemTemplate="{StaticResource ZoneOptionTemplate}"
+                                            SelectedValuePath="Id"
+                                            Style="{StaticResource BareComboBox}" />
+                                    </Border>
+                                    <Button
+                                        x:Name="BtnAddZone"
+                                        Margin="0,8,0,0"
+                                        Click="BtnAddZone_Click"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Plus" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_AddZone}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                    <TextBlock
+                                        x:Name="TxtZoneLimit"
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_ZoneLimit}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <Separator Margin="0,12" Style="{StaticResource SidebarSeparatorStyle}" />
+
+                                    <CheckBox
+                                        x:Name="Chk24Hour"
+                                        Click="Chk24Hour_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_Use24Hour}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+                                    <Button
+                                        Margin="0,10,0,0"
+                                        Click="BtnResetZones_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_DateTimeTool_ResetZones}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Restore" />
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ DIFFERENCE NOTE ============  -->
+                            <Border
+                                x:Name="DiffOptionsPanel"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DateTimeTool_CalendarHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CalendarRange}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_CalendarNote}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_BusinessNote}"
+                                        TextWrapping="Wrap" />
+                                    <Separator Margin="0,12" Style="{StaticResource SidebarSeparatorStyle}" />
+                                    <CheckBox
+                                        x:Name="ChkSkipEventDays"
+                                        Click="ChkSkipEventDays_Click"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DateTimeTool_SkipEventDaysTip}">
+                                        <TextBlock Text="{DynamicResource Str_DateTimeTool_SkipEventDays}" TextWrapping="Wrap" />
+                                    </CheckBox>
+                                    <TextBlock
+                                        x:Name="TxtEventDaysCount"
+                                        Margin="2,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ISO OPTIONS ============  -->
+                            <Border
+                                x:Name="IsoOptionsPanel"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DateTimeTool_IsoHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CalendarCheck}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_IsoNote}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_IsoNote2}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ CALENDAR OPTIONS ============  -->
+                            <Border
+                                x:Name="CalendarOptionsPanel"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DateTimeTool_CalOptHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CalendarWeek}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_CalOptNote}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Name="TxtCalEventsCount"
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_DateTimeTool_CalOptSettings}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Border ctl:Tour.Key="Str_Tour_DateTime_Results" ctl:Tour.Order="3" Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentControl
+                            x:Name="HeaderTitle"
+                            VerticalAlignment="Center"
+                            Content="{DynamicResource Str_DateTimeTool_ModeUnix}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
+                        <Border
+                            x:Name="CopiedPill"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource StatusSuccessBg}"
+                            Style="{StaticResource IconStatusPillStyle}"
+                            Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    Kind="Check" />
+                                <TextBlock
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    Text="{DynamicResource Str_DateTimeTool_Copied}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!--  ============ UNIX <-> DATE ============  -->
+                    <Grid x:Name="UnixPanel" Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <DockPanel>
+                                    <controls:DateTimePickerButton DockPanel.Dock="Right" Target="{Binding ElementName=TxtUnixInput}" />
+                                    <TextBox
+                                        x:Name="TxtUnixInput"
+                                        VerticalContentAlignment="Center"
+                                        FontFamily="{StaticResource DtMonoFont}"
+                                        FontSize="14"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="{DynamicResource Str_DateTimeTool_UnixHint}"
+                                        TextChanged="TxtUnixInput_TextChanged" />
+                                </DockPanel>
+                                <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+                                <Button
+                                    Grid.Column="2"
+                                    Margin="6,4"
+                                    Click="BtnUnixNow_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DateTimeTool_NowTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ClockOutline" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_Now}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <WrapPanel Grid.Row="1" Margin="0,10,0,0">
+                            <Border
+                                x:Name="PillNow"
+                                Margin="0,0,8,4"
+                                Background="{DynamicResource AccentColorSubtle}"
+                                Cursor="Hand"
+                                MouseLeftButtonUp="PillNow_Click"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_DateTimeTool_NowPillTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource AccentColor}"
+                                        Kind="ClockFast" />
+                                    <TextBlock
+                                        x:Name="TxtPillNow"
+                                        FontFamily="{StaticResource DtMonoFont}"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource AccentColor}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="PillDetected"
+                                Margin="0,0,8,4"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="Numeric" />
+                                    <TextBlock
+                                        x:Name="TxtPillDetected"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="PillRelative"
+                                Margin="0,0,8,4"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Kind="History" />
+                                    <TextBlock
+                                        x:Name="TxtPillRelative"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+
+                        <TextBlock
+                            x:Name="TxtUnixError"
+                            Grid.Row="2"
+                            Margin="2,0,0,8"
+                            FontSize="12"
+                            Foreground="{DynamicResource StatusErrorFg}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+
+                        <ScrollViewer
+                            x:Name="UnixScroll"
+                            Grid.Row="3"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <StackPanel
+                                    x:Name="UnixEmptyPanel"
+                                    MaxWidth="420"
+                                    Margin="0,24,0,8"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="{DynamicResource Str_DateTimeTool_EmptyTitle}" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_DateTimeTool_EmptyHint}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                                <ItemsControl
+                                    x:Name="ListUnixRows"
+                                    Focusable="False"
+                                    ItemTemplate="{StaticResource ResultRowTemplate}" />
+                                <ContentControl Content="{StaticResource FactsUnix}" IsTabStop="False" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!--  ============ TIME ZONES ============  -->
+                    <Grid
+                        x:Name="ZonesPanel"
+                        Grid.Row="1"
+                        Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="260" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <DockPanel>
+                                    <controls:DateTimePickerButton DockPanel.Dock="Right" Target="{Binding ElementName=TxtZoneTime}" />
+                                    <TextBox
+                                        x:Name="TxtZoneTime"
+                                        VerticalContentAlignment="Center"
+                                        FontFamily="{StaticResource DtMonoFont}"
+                                        FontSize="14"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="{DynamicResource Str_DateTimeTool_ZoneTimeHint}"
+                                        TextChanged="TxtZoneTime_TextChanged" />
+                                </DockPanel>
+                                <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+                                <ComboBox
+                                    x:Name="CmbZoneFrom"
+                                    Grid.Column="2"
+                                    VerticalContentAlignment="Center"
+                                    ItemTemplate="{StaticResource ZoneOptionTemplate}"
+                                    SelectedValuePath="Id"
+                                    SelectionChanged="CmbZoneFrom_SelectionChanged"
+                                    Style="{StaticResource BareComboBox}"
+                                    ToolTip="{DynamicResource Str_DateTimeTool_FromZoneTooltip}" />
+                                <Border Grid.Column="3" Style="{StaticResource InputBarDivider}" />
+                                <Button
+                                    Grid.Column="4"
+                                    Margin="6,4"
+                                    Click="BtnZoneNow_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DateTimeTool_ZoneNowTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ClockOutline" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_Now}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock
+                            x:Name="TxtZoneNote"
+                            Grid.Row="1"
+                            Margin="2,8,0,0"
+                            FontSize="12"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+
+                        <ScrollViewer
+                            x:Name="ZonesScroll"
+                            Grid.Row="2"
+                            Margin="0,12,0,0"
+                            HorizontalScrollBarVisibility="Disabled"
+                            SizeChanged="ZonesScroll_SizeChanged"
+                            VerticalScrollBarVisibility="Auto">
+                            <ItemsControl
+                                x:Name="ListZones"
+                                Margin="0,0,-12,0"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource ZoneCardTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Loaded="ZonesGrid_Loaded" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <ContentControl
+                            Grid.Row="3"
+                            Content="{StaticResource FactsZones}"
+                            IsTabStop="False" />
+
+                        <StackPanel
+                            x:Name="ZonesEmptyPanel"
+                            Grid.Row="2"
+                            MaxWidth="380"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.EarthArrowRight}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_DateTimeTool_NoZonesTitle}" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DateTimeTool_NoZonesHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  ============ DIFFERENCE + ADD ============  -->
+                    <ScrollViewer
+                        x:Name="DiffPanel"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto"
+                        Visibility="Collapsed">
+                        <StackPanel>
+
+                            <!--  Difference  -->
+                            <Border
+                                Margin="0,0,0,14"
+                                Padding="14,12"
+                                Background="{DynamicResource RowBg}"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,10"
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="{DynamicResource Str_DateTimeTool_DiffTitle}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Start}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <DockPanel>
+                                                    <controls:DateTimePickerButton DockPanel.Dock="Right" Target="{Binding ElementName=TxtDiffStart}" />
+                                                    <TextBox
+                                                        x:Name="TxtDiffStart"
+                                                        VerticalContentAlignment="Center"
+                                                        FontFamily="{StaticResource DtMonoFont}"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Tag="{DynamicResource Str_DateTimeTool_DateHint}"
+                                                        TextChanged="Diff_Changed" />
+                                                </DockPanel>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_End}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <DockPanel>
+                                                    <controls:DateTimePickerButton DockPanel.Dock="Right" Target="{Binding ElementName=TxtDiffEnd}" />
+                                                    <TextBox
+                                                        x:Name="TxtDiffEnd"
+                                                        VerticalContentAlignment="Center"
+                                                        FontFamily="{StaticResource DtMonoFont}"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Tag="{DynamicResource Str_DateTimeTool_DateHint}"
+                                                        TextChanged="Diff_Changed" />
+                                                </DockPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock
+                                        x:Name="TxtDiffError"
+                                        Margin="2,8,0,0"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                    <StackPanel
+                                        x:Name="DiffResultPanel"
+                                        Margin="0,14,0,0"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            x:Name="TxtDiffMain"
+                                            FontSize="20"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            x:Name="TxtDiffSub"
+                                            Margin="0,2,0,10"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            TextWrapping="Wrap" />
+                                        <ItemsControl
+                                            x:Name="ListDiffTotals"
+                                            Margin="0,0,-8,0"
+                                            Focusable="False"
+                                            ItemTemplate="{StaticResource TotalTileTemplate}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <UniformGrid SizeChanged="TilesGrid_SizeChanged" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  Add / subtract  -->
+                            <Border
+                                Padding="14,12"
+                                Background="{DynamicResource RowBg}"
+                                CornerRadius="12">
+                                <StackPanel>
+                                    <TextBlock
+                                        Margin="0,0,0,10"
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="{DynamicResource Str_DateTimeTool_AddTitle}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Start}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <DockPanel>
+                                                    <controls:DateTimePickerButton DockPanel.Dock="Right" Target="{Binding ElementName=TxtAddStart}" />
+                                                    <TextBox
+                                                        x:Name="TxtAddStart"
+                                                        VerticalContentAlignment="Center"
+                                                        FontFamily="{StaticResource DtMonoFont}"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Tag="{DynamicResource Str_DateTimeTool_DateHint}"
+                                                        TextChanged="Add_Changed" />
+                                                </DockPanel>
+                                            </Border>
+                                        </StackPanel>
+                                        <UniformGrid
+                                            Grid.Column="2"
+                                            Width="230"
+                                            VerticalAlignment="Bottom"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioPlus"
+                                                Margin="0,0,2,0"
+                                                Click="Add_Changed"
+                                                GroupName="DtSign"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}">
+                                                <Grid HorizontalAlignment="Center">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <materialDesign:PackIcon
+                                                        Grid.Column="0"
+                                                        Width="14"
+                                                        Height="14"
+                                                        Margin="0,0,6,0"
+                                                        VerticalAlignment="Center"
+                                                        Kind="Plus" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_Add}" TextWrapping="Wrap" />
+                                                </Grid>
+                                            </RadioButton>
+                                            <RadioButton
+                                                x:Name="RadioMinus"
+                                                Margin="2,0,0,0"
+                                                Click="Add_Changed"
+                                                GroupName="DtSign"
+                                                Style="{StaticResource ModeToggleButtonStyle}">
+                                                <Grid HorizontalAlignment="Center">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <materialDesign:PackIcon
+                                                        Grid.Column="0"
+                                                        Width="14"
+                                                        Height="14"
+                                                        Margin="0,0,6,0"
+                                                        VerticalAlignment="Center"
+                                                        Kind="Minus" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_Subtract}" TextWrapping="Wrap" />
+                                                </Grid>
+                                            </RadioButton>
+                                        </UniformGrid>
+                                    </Grid>
+
+                                    <WrapPanel Margin="0,12,0,0">
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Years}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddYears"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Months}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddMonths"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Weeks}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddWeeks"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Days}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddDays"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel
+                                            Width="96"
+                                            Margin="0,0,10,8"
+                                            ToolTip="{DynamicResource Str_DateTimeTool_BusinessTip}">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Business}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddBusiness"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Hours}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddHours"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Minutes}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddMinutes"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Width="96" Margin="0,0,10,8">
+                                            <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_Amt_Seconds}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtAddSeconds"
+                                                    VerticalContentAlignment="Center"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Text="0"
+                                                    TextChanged="Add_Changed" />
+                                            </Border>
+                                        </StackPanel>
+                                    </WrapPanel>
+
+                                    <TextBlock
+                                        x:Name="TxtAddError"
+                                        Margin="2,4,0,0"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <Grid
+                                        x:Name="AddResultPanel"
+                                        Margin="0,10,0,0"
+                                        Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock
+                                                x:Name="TxtAddMain"
+                                                FontSize="20"
+                                                FontWeight="Bold"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                x:Name="TxtAddSub"
+                                                Margin="0,2,0,0"
+                                                FontFamily="{StaticResource DtMonoFont}"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextSecondary}" />
+                                        </StackPanel>
+                                        <Button
+                                            x:Name="BtnCopyAdd"
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Click="BtnCopyValue_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_DateTimeTool_CopyTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="ContentCopy" />
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <ContentControl Content="{StaticResource FactsDiff}" IsTabStop="False" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  ============ ISO 8601 / RFC 3339 ============  -->
+                    <Grid
+                        x:Name="IsoPanel"
+                        Grid.Row="1"
+                        Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <DockPanel>
+                                    <controls:DateTimePickerButton DockPanel.Dock="Right" IsoSeparator="True" Target="{Binding ElementName=TxtIsoInput}" />
+                                    <TextBox
+                                        x:Name="TxtIsoInput"
+                                        VerticalContentAlignment="Center"
+                                        FontFamily="{StaticResource DtMonoFont}"
+                                        FontSize="14"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="{DynamicResource Str_DateTimeTool_IsoHint}"
+                                        TextChanged="TxtIsoInput_TextChanged" />
+                                </DockPanel>
+                                <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+                                <Button
+                                    Grid.Column="2"
+                                    Margin="6,4"
+                                    Click="BtnIsoNow_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DateTimeTool_IsoNowTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ClockOutline" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_Now}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock
+                            x:Name="TxtIsoError"
+                            Grid.Row="1"
+                            Margin="2,8,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource StatusErrorFg}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+
+                        <Grid Grid.Row="2">
+                            <ScrollViewer
+                                x:Name="IsoScroll"
+                                Margin="0,12,0,0"
+                                HorizontalScrollBarVisibility="Disabled"
+                                VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <!--  Two verdicts side by side, each as wide as half the page  -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border
+                                            x:Name="IsoVerdictCard"
+                                            Padding="14,12"
+                                            Background="{DynamicResource RowBg}"
+                                            CornerRadius="12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    x:Name="IsoVerdictBadge"
+                                                    Width="36"
+                                                    Height="36"
+                                                    Margin="0,0,12,0"
+                                                    VerticalAlignment="Top"
+                                                    CornerRadius="10">
+                                                    <materialDesign:PackIcon
+                                                        x:Name="IsoVerdictIcon"
+                                                        Width="20"
+                                                        Height="20"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        x:Name="TxtIsoVerdictTitle"
+                                                        FontSize="14"
+                                                        FontWeight="Bold"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        x:Name="TxtIsoVerdictText"
+                                                        Margin="0,3,0,0"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                        <Border
+                                            x:Name="RfcVerdictCard"
+                                            Grid.Column="2"
+                                            Padding="14,12"
+                                            Background="{DynamicResource RowBg}"
+                                            CornerRadius="12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    x:Name="RfcVerdictBadge"
+                                                    Width="36"
+                                                    Height="36"
+                                                    Margin="0,0,12,0"
+                                                    VerticalAlignment="Top"
+                                                    CornerRadius="10">
+                                                    <materialDesign:PackIcon
+                                                        x:Name="RfcVerdictIcon"
+                                                        Width="20"
+                                                        Height="20"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        x:Name="TxtRfcVerdictTitle"
+                                                        FontSize="14"
+                                                        FontWeight="Bold"
+                                                        TextWrapping="Wrap" />
+                                                    <TextBlock
+                                                        x:Name="TxtRfcVerdictText"
+                                                        Margin="0,3,0,0"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+
+                                    <TextBlock
+                                        x:Name="TxtIsoNote"
+                                        Margin="2,10,0,0"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource StatusWarningFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <ItemsControl
+                                        x:Name="ListIsoRows"
+                                        Margin="0,12,0,0"
+                                        Focusable="False"
+                                        ItemTemplate="{StaticResource ResultRowTemplate}" />
+                                    <ContentControl Content="{StaticResource FactsIso}" IsTabStop="False" />
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <ScrollViewer
+                                x:Name="IsoEmptyScroll"
+                                Margin="0,12,0,0"
+                                HorizontalScrollBarVisibility="Disabled"
+                                VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <StackPanel
+                                        x:Name="IsoEmptyPanel"
+                                        MaxWidth="520"
+                                        Margin="0,16,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CalendarCheck}" />
+                                        <TextBlock
+                                            Margin="0,12,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_DateTimeTool_IsoEmptyTitle}" />
+                                        <TextBlock
+                                            Margin="0,4,0,12"
+                                            HorizontalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DateTimeTool_IsoEmptyHint}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                        <WrapPanel x:Name="IsoExamples" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                    <ContentControl Content="{StaticResource FactsIso}" IsTabStop="False" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+
+                    <!--  ============ WEEK / DAY OF YEAR ============  -->
+                    <Grid
+                        x:Name="CalPanel"
+                        Grid.Row="1"
+                        Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <DockPanel>
+                                    <controls:DateTimePickerButton DockPanel.Dock="Right" IncludeTime="False" Target="{Binding ElementName=TxtCalDate}" />
+                                    <TextBox
+                                        x:Name="TxtCalDate"
+                                        VerticalContentAlignment="Center"
+                                        FontFamily="{StaticResource DtMonoFont}"
+                                        FontSize="14"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="{DynamicResource Str_DateTimeTool_CalHint}"
+                                        TextChanged="Cal_Changed" />
+                                </DockPanel>
+                                <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
+                                <Button
+                                    Grid.Column="2"
+                                    Margin="6,4"
+                                    Click="BtnCalToday_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_DateTimeTool_CalTodayTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="CalendarToday" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_CalToday}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock
+                            x:Name="TxtCalError"
+                            Grid.Row="1"
+                            Margin="2,8,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource StatusErrorFg}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+
+                        <ScrollViewer
+                            x:Name="CalScroll"
+                            Grid.Row="2"
+                            Margin="0,12,0,0"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+
+                                <!--  Headline  -->
+                                <Border
+                                    Padding="16,14"
+                                    Background="{DynamicResource RowBg}"
+                                    CornerRadius="12">
+                                    <StackPanel>
+                                        <TextBlock
+                                            x:Name="TxtCalHeadline"
+                                            FontSize="26"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            x:Name="TxtCalLong"
+                                            Margin="0,2,0,0"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            x:Name="TxtCalRange"
+                                            Margin="0,2,0,0"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            TextWrapping="Wrap" />
+                                        <WrapPanel x:Name="CalEventPills" Margin="0,8,0,0" />
+                                    </StackPanel>
+                                </Border>
+
+                                <ItemsControl
+                                    x:Name="ListCalTiles"
+                                    Margin="0,12,-8,0"
+                                    Focusable="False"
+                                    ItemTemplate="{StaticResource TotalTileTemplate}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid SizeChanged="TilesGrid_SizeChanged" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+
+                                <ItemsControl
+                                    x:Name="ListCalRows"
+                                    Focusable="False"
+                                    ItemTemplate="{StaticResource ResultRowTemplate}" />
+
+                                <!--  Event days from Settings  -->
+                                <Border
+                                    Margin="0,8,0,0"
+                                    Padding="14,12"
+                                    Background="{DynamicResource RowBg}"
+                                    CornerRadius="12">
+                                    <StackPanel>
+                                        <TextBlock
+                                            Margin="0,0,0,8"
+                                            FontSize="13"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_DateTimeTool_CalUpcoming}" />
+                                        <ItemsControl
+                                            x:Name="ListUpcoming"
+                                            Focusable="False"
+                                            ItemTemplate="{StaticResource EventLineTemplate}" />
+                                        <TextBlock
+                                            x:Name="TxtNoEvents"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_DateTimeTool_CalNoEvents}"
+                                            TextWrapping="Wrap"
+                                            Visibility="Collapsed" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Back the other way: week -> dates, day number -> date  -->
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border
+                                        Padding="14,12"
+                                        Background="{DynamicResource RowBg}"
+                                        CornerRadius="12">
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,0,0,10"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{DynamicResource Str_DateTimeTool_CalWeekToDates}" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <StackPanel Width="100" Margin="0,0,10,0">
+                                                    <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_CalYear}" />
+                                                    <Border Style="{StaticResource InputBarStyle}">
+                                                        <TextBox
+                                                            x:Name="TxtWeekYear"
+                                                            VerticalContentAlignment="Center"
+                                                            Style="{StaticResource BareTextBox}"
+                                                            TextChanged="Cal_Reverse_Changed" />
+                                                    </Border>
+                                                </StackPanel>
+                                                <StackPanel Width="100">
+                                                    <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_CalWeek}" />
+                                                    <Border Style="{StaticResource InputBarStyle}">
+                                                        <TextBox
+                                                            x:Name="TxtWeekNo"
+                                                            VerticalContentAlignment="Center"
+                                                            Style="{StaticResource BareTextBox}"
+                                                            TextChanged="Cal_Reverse_Changed" />
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <Grid Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    x:Name="TxtWeekResult"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    TextWrapping="Wrap" />
+                                                <Button
+                                                    x:Name="BtnCopyWeek"
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Click="BtnCopyValue_Click"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_DateTimeTool_CopyTooltip}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="ContentCopy" />
+                                                </Button>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border
+                                        Grid.Column="2"
+                                        Padding="14,12"
+                                        Background="{DynamicResource RowBg}"
+                                        CornerRadius="12">
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,0,0,10"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{DynamicResource Str_DateTimeTool_CalDayToDate}" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <StackPanel Width="100" Margin="0,0,10,0">
+                                                    <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_CalYear}" />
+                                                    <Border Style="{StaticResource InputBarStyle}">
+                                                        <TextBox
+                                                            x:Name="TxtDoyYear"
+                                                            VerticalContentAlignment="Center"
+                                                            Style="{StaticResource BareTextBox}"
+                                                            TextChanged="Cal_Reverse_Changed" />
+                                                    </Border>
+                                                </StackPanel>
+                                                <StackPanel Width="100">
+                                                    <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_CalDay}" />
+                                                    <Border Style="{StaticResource InputBarStyle}">
+                                                        <TextBox
+                                                            x:Name="TxtDoyNo"
+                                                            VerticalContentAlignment="Center"
+                                                            Style="{StaticResource BareTextBox}"
+                                                            TextChanged="Cal_Reverse_Changed" />
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <Grid Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    x:Name="TxtDoyResult"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    TextWrapping="Wrap" />
+                                                <Button
+                                                    x:Name="BtnCopyDoy"
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Click="BtnCopyValue_Click"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_DateTimeTool_CopyTooltip}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="ContentCopy" />
+                                                </Button>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                                <ContentControl Content="{StaticResource FactsCal}" IsTabStop="False" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

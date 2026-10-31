@@ -1,0 +1,135 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Controls.DateTimePickerButton"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    IsTabStop="False">
+
+    <!--  An icon button that opens a calendar (and a time row) and writes the pick into its Target text box.  -->
+    <Grid>
+        <Button
+            x:Name="BtnOpen"
+            Width="30"
+            Height="30"
+            Margin="2,0"
+            VerticalAlignment="Center"
+            Click="BtnOpen_Click"
+            Style="{StaticResource NeutralIconButtonStyle}"
+            ToolTip="{DynamicResource Str_DateTimeTool_PickTooltip}">
+            <materialDesign:PackIcon
+                Width="16"
+                Height="16"
+                Kind="CalendarClock" />
+        </Button>
+
+        <Popup
+            x:Name="PickPopup"
+            AllowsTransparency="True"
+            Closed="PickPopup_Closed"
+            Placement="Bottom"
+            PlacementTarget="{Binding ElementName=BtnOpen}"
+            PopupAnimation="Fade"
+            StaysOpen="False">
+            <Border
+                Margin="8"
+                Padding="10"
+                Background="{DynamicResource CardBg}"
+                BorderBrush="{DynamicResource InputBorder}"
+                BorderThickness="1"
+                CornerRadius="12">
+                <Border.Effect>
+                    <DropShadowEffect
+                        BlurRadius="14"
+                        Opacity="0.25"
+                        ShadowDepth="2" />
+                </Border.Effect>
+                <StackPanel>
+                    <Calendar
+                        x:Name="PickCalendar"
+                        GotMouseCapture="PickCalendar_GotMouseCapture"
+                        SelectedDatesChanged="PickCalendar_SelectedDatesChanged" />
+
+                    <Grid x:Name="TimeRow" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="16"
+                            Height="16"
+                            Margin="4,0,8,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Kind="ClockOutline" />
+                        <Border Grid.Column="1" Style="{StaticResource InputBarStyle}">
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <TextBox
+                                    x:Name="TxtHour"
+                                    Width="34"
+                                    Padding="0"
+                                    GotKeyboardFocus="TimePart_GotFocus"
+                                    PreviewKeyDown="TimePart_PreviewKeyDown"
+                                    PreviewMouseWheel="TimePart_MouseWheel"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    LostFocus="TimePart_LostFocus"
+                                    MaxLength="2"
+                                    PreviewTextInput="TimePart_PreviewTextInput"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="HH" />
+                                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Text=":" />
+                                <TextBox
+                                    x:Name="TxtMinute"
+                                    Width="34"
+                                    Padding="0"
+                                    GotKeyboardFocus="TimePart_GotFocus"
+                                    PreviewKeyDown="TimePart_PreviewKeyDown"
+                                    PreviewMouseWheel="TimePart_MouseWheel"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    LostFocus="TimePart_LostFocus"
+                                    MaxLength="2"
+                                    PreviewTextInput="TimePart_PreviewTextInput"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="mm" />
+                                <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Text=":" />
+                                <TextBox
+                                    x:Name="TxtSecond"
+                                    Width="34"
+                                    Padding="0"
+                                    GotKeyboardFocus="TimePart_GotFocus"
+                                    PreviewKeyDown="TimePart_PreviewKeyDown"
+                                    PreviewMouseWheel="TimePart_MouseWheel"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    LostFocus="TimePart_LostFocus"
+                                    MaxLength="2"
+                                    PreviewTextInput="TimePart_PreviewTextInput"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="ss" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            Click="BtnPickNow_Click"
+                            Content="{DynamicResource Str_DateTimeTool_Now}"
+                            Style="{StaticResource NeutralIconButtonStyle}" />
+                        <Button
+                            x:Name="BtnApply"
+                            Grid.Column="2"
+                            Click="BtnApply_Click"
+                            Content="{DynamicResource Str_DateTimeTool_PickApply}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

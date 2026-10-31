@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-strings.ps1\"",
+            "timeout": 30,
+            "statusMessage": "Checking language strings..."
+          }
+        ]
+      }
+    ]
+  }
+}

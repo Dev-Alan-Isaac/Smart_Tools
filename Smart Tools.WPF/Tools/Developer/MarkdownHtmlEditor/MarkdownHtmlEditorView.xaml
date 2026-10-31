@@ -1,0 +1,869 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.MarkdownHtmlEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    IsVisibleChanged="Root_IsVisibleChanged"
+    Loaded="Root_Loaded"
+    PreviewDragLeave="Root_PreviewDragLeave"
+    PreviewDragOver="Root_PreviewDragOver"
+    PreviewDrop="Root_PreviewDrop"
+    PreviewKeyDown="Root_PreviewKeyDown">
+
+    <!--
+        Backend: Controllers/MarkdownHtmlEditorManager.cs (documents, toolbar edits,
+        stats, preview/export pages, settings) + .Markdown.cs (Markdown → HTML);
+        Models/MarkdownHtmlEditorModel.cs. UI only here.
+        The preview is a WebView2 created in code inside PreviewHost (scripts off,
+        served from a virtual host so relative images resolve to the document's folder).
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Toolbar icon button: square, quiet until hovered  -->
+        <Style
+            x:Key="EditorToolButton"
+            BasedOn="{StaticResource NeutralIconButtonStyle}"
+            TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+        </Style>
+
+        <Style x:Key="EditorToolIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+        </Style>
+
+        <Style x:Key="ToolbarDivider" TargetType="Border">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Margin" Value="6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource CardBorder}" />
+        </Style>
+
+        <!--  Small caps label above each pane  -->
+        <Style x:Key="PaneLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0,0,6" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <Style x:Key="StatusText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <!--  Draggable gap between editor and preview: a thin line, accent on hover  -->
+        <Style x:Key="PaneSplitter" TargetType="GridSplitter">
+            <Setter Property="Width" Value="12" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="ResizeBehavior" Value="PreviousAndNext" />
+            <Setter Property="Cursor" Value="SizeWE" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GridSplitter">
+                        <Grid Background="Transparent">
+                            <Border
+                                x:Name="Line"
+                                Width="2"
+                                Margin="0,22,0,0"
+                                HorizontalAlignment="Center"
+                                Background="{DynamicResource CardBorder}"
+                                CornerRadius="1" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Line" Property="Background" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ DOCUMENT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MarkdownHtmlEditor_Document" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MdHtml_DocumentHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileDocumentOutline}" />
+
+                                    <UniformGrid Columns="2">
+                                        <Button
+                                            x:Name="BtnNew"
+                                            Margin="0,0,3,6"
+                                            Click="BtnNew_Click"
+                                            ToolTip="{DynamicResource Str_MdHtml_NewTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="{x:Static materialDesign:PackIconKind.FilePlusOutline}" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MdHtml_New}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnOpen"
+                                            Margin="3,0,0,6"
+                                            Click="BtnOpen_Click"
+                                            ToolTip="{DynamicResource Str_MdHtml_OpenTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="{x:Static materialDesign:PackIconKind.FolderOpenOutline}" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MdHtml_Open}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnSave"
+                                            Margin="0,0,3,0"
+                                            Click="BtnSave_Click"
+                                            Style="{StaticResource ListToolPrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_MdHtml_SaveTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="{x:Static materialDesign:PackIconKind.ContentSaveOutline}" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MdHtml_Save}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnSaveAs"
+                                            Margin="3,0,0,0"
+                                            Click="BtnSaveAs_Click"
+                                            Style="{StaticResource ListToolPrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_MdHtml_SaveAsTooltip}">
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_MdHtml_SaveAs}" />
+                                        </Button>
+                                    </UniformGrid>
+
+                                    <!--  Drop target for .md / .html files (click opens the file picker)  -->
+                                    <Border
+                                        x:Name="DropArea"
+                                        Margin="0,10,0,0"
+                                        Padding="10,14"
+                                        Background="{DynamicResource SidebarInputBg}"
+                                        BorderBrush="{DynamicResource SidebarInputBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Cursor="Hand"
+                                        MouseLeftButtonUp="DropArea_MouseLeftButtonUp"
+                                        ToolTip="{DynamicResource Str_MdHtml_OpenTooltip}">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <materialDesign:PackIcon
+                                                Width="20"
+                                                Height="20"
+                                                HorizontalAlignment="Center"
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Kind="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                                            <TextBlock
+                                                Margin="0,6,0,0"
+                                                HorizontalAlignment="Center"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Text="{DynamicResource Str_MdHtml_DropHint}"
+                                                TextAlignment="Center"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FORMAT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MarkdownHtmlEditor_Format" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MdHtml_FormatHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CodeTags}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioFormatMarkdown"
+                                            Checked="RadioFormat_Checked"
+                                            GroupName="MdHtmlFormat"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_MdHtml_MarkdownTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="{x:Static materialDesign:PackIconKind.LanguageMarkdownOutline}" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="Markdown" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioFormatHtml"
+                                            Grid.Column="2"
+                                            Checked="RadioFormat_Checked"
+                                            GroupName="MdHtmlFormat"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_MdHtml_HtmlTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="{x:Static materialDesign:PackIconKind.LanguageHtml5}" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="HTML" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ PREVIEW ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MarkdownHtmlEditor_Preview" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MdHtml_PreviewHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ThemeLightDark}" />
+
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_MdHtml_PreviewTheme}" />
+                                    <Grid ToolTip="{DynamicResource Str_MdHtml_PreviewThemeTooltip}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioThemeApp"
+                                            Checked="RadioTheme_Checked"
+                                            Content="{DynamicResource Str_MdHtml_ThemeApp}"
+                                            GroupName="MdHtmlTheme"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadioThemeLight"
+                                            Grid.Column="2"
+                                            Checked="RadioTheme_Checked"
+                                            Content="{DynamicResource Str_SvgTool_BgLight}"
+                                            GroupName="MdHtmlTheme"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadioThemeDark"
+                                            Grid.Column="4"
+                                            Checked="RadioTheme_Checked"
+                                            Content="{DynamicResource Str_SvgTool_BgDark}"
+                                            GroupName="MdHtmlTheme"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                    </Grid>
+
+                                    <CheckBox
+                                        x:Name="ChkSyncScroll"
+                                        Margin="0,12,0,0"
+                                        Checked="ChkSyncScroll_Changed"
+                                        Content="{DynamicResource Str_MdHtml_SyncScroll}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_MdHtml_SyncScrollTooltip}"
+                                        Unchecked="ChkSyncScroll_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkWordWrap"
+                                        Margin="0,8,0,0"
+                                        Checked="ChkWordWrap_Changed"
+                                        Content="{DynamicResource Str_MdHtml_WordWrap}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        Unchecked="ChkWordWrap_Changed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ EXPORT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MarkdownHtmlEditor_Export" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <controls:ExportButton x:Name="BtnExport">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem
+                                                x:Name="MenuExportHtml"
+                                                Click="BtnExportHtml_Click"
+                                                Header="HTML"
+                                                ToolTip="{DynamicResource Str_MdHtml_ExportHtmlTooltip}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="LanguageHtml5" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                x:Name="MenuExportPdf"
+                                                Click="BtnExportPdf_Click"
+                                                Header="PDF"
+                                                IsEnabled="False"
+                                                ToolTip="{DynamicResource Str_MdHtml_ExportPdfTooltip}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FilePdfBox" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                            </Border>
+
+                            <!--  ============ ENGINE (WebView2 runtime status) ============  -->
+                            <Border
+                                x:Name="EngineCard"
+                                Margin="0,4,0,0"
+                                Padding="10,8"
+                                Background="{DynamicResource StatusInfoBg}"
+                                CornerRadius="8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        x:Name="IconEngine"
+                                        Width="14"
+                                        Height="14"
+                                        Margin="0,1,8,0"
+                                        VerticalAlignment="Top"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="{x:Static materialDesign:PackIconKind.MicrosoftEdge}" />
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock
+                                            x:Name="TxtEngineTitle"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_MdHtml_EngineStarting}" />
+                                        <TextBlock
+                                            x:Name="TxtEngineHint"
+                                            Margin="0,2,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_MdHtml_EngineHint}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Document title + state  -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentControl
+                            x:Name="DocHeader"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.LanguageMarkdownOutline}" />
+                        <Ellipse
+                            x:Name="DirtyDot"
+                            Grid.Column="1"
+                            Width="7"
+                            Height="7"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource AccentColor}"
+                            ToolTip="{DynamicResource Str_MdHtml_UnsavedTooltip}"
+                            Visibility="Collapsed" />
+                        <Border
+                            x:Name="BorderStatus"
+                            Grid.Column="3"
+                            MaxWidth="420"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource RowBg}"
+                            Style="{StaticResource IconStatusPillStyle}"
+                            Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Name="IconStatus"
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding Foreground, ElementName=TxtStatus}"
+                                    Kind="{x:Static materialDesign:PackIconKind.CheckCircleOutline}" />
+                                <TextBlock
+                                    x:Name="TxtStatus"
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!--  Formatting toolbar + layout switch  -->
+                    <Border
+                        Grid.Row="1"
+                        Margin="0,0,0,12"
+                        Padding="6,5"
+                        Background="{DynamicResource RowBg}"
+                        CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnUndo"
+                                        Click="BtnUndo_Click"
+                                        IsEnabled="False"
+                                        Style="{StaticResource EditorToolButton}"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipUndo}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.Undo}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnRedo"
+                                        Click="BtnRedo_Click"
+                                        IsEnabled="False"
+                                        Style="{StaticResource EditorToolButton}"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipRedo}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.Redo}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Border Style="{StaticResource ToolbarDivider}" />
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Heading1"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipH1}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatHeader_1}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Heading2"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipH2}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatHeader_2}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Bold"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipBold}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatBold}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Italic"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipItalic}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatItalic}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Strikethrough"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipStrike}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatStrikethrough}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Border Style="{StaticResource ToolbarDivider}" />
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="BulletList"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipBullets}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatListBulleted}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="NumberedList"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipNumbered}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatListNumbered}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Quote"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipQuote}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.FormatQuoteClose}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Code"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipCode}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.CodeTags}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Border Style="{StaticResource ToolbarDivider}" />
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Link"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipLink}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.LinkVariant}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Image"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipImage}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.ImageOutline}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnCommand_Click"
+                                        Style="{StaticResource EditorToolButton}"
+                                        Tag="Table"
+                                        ToolTip="{DynamicResource Str_MdHtml_TipTable}">
+                                        <materialDesign:PackIcon Kind="{x:Static materialDesign:PackIconKind.Table}" Style="{StaticResource EditorToolIcon}" />
+                                    </Button>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!--  Layout: editor only / split / preview only  -->
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                Orientation="Horizontal">
+                                <RadioButton
+                                    x:Name="RadioLayoutEditor"
+                                    Width="38"
+                                    Checked="RadioLayout_Checked"
+                                    GroupName="MdHtmlLayout"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MdHtml_LayoutEditor}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="{x:Static materialDesign:PackIconKind.PencilOutline}" />
+                                </RadioButton>
+                                <RadioButton
+                                    x:Name="RadioLayoutSplit"
+                                    Width="38"
+                                    Margin="4,0"
+                                    Checked="RadioLayout_Checked"
+                                    GroupName="MdHtmlLayout"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MdHtml_LayoutSplit}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="{x:Static materialDesign:PackIconKind.ViewSplitVertical}" />
+                                </RadioButton>
+                                <RadioButton
+                                    x:Name="RadioLayoutPreview"
+                                    Width="38"
+                                    Checked="RadioLayout_Checked"
+                                    GroupName="MdHtmlLayout"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MdHtml_LayoutPreview}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="{x:Static materialDesign:PackIconKind.EyeOutline}" />
+                                </RadioButton>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Editor | splitter | preview  -->
+                    <Grid x:Name="PanesGrid" ctl:Tour.Key="Str_Tour_MarkdownHtmlEditor_Panes" ctl:Tour.Order="5" Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition
+                                x:Name="EditorColumn"
+                                Width="*"
+                                MinWidth="160" />
+                            <ColumnDefinition x:Name="SplitterColumn" Width="12" />
+                            <ColumnDefinition
+                                x:Name="PreviewColumn"
+                                Width="*"
+                                MinWidth="160" />
+                        </Grid.ColumnDefinitions>
+
+                        <!--  Source  -->
+                        <Grid x:Name="EditorPane">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Style="{StaticResource PaneLabel}" Text="{DynamicResource Str_MdHtml_SourceLabel}" />
+                            <TextBox
+                                x:Name="TxtSource"
+                                Grid.Row="1"
+                                Padding="14,12"
+                                AcceptsTab="True"
+                                FontSize="13"
+                                SelectionChanged="TxtSource_SelectionChanged"
+                                SpellCheck.IsEnabled="False"
+                                Style="{StaticResource CodeTextBox}"
+                                TextChanged="TxtSource_TextChanged"
+                                UndoLimit="500" />
+                        </Grid>
+
+                        <GridSplitter
+                            x:Name="PaneSplitter"
+                            Grid.Column="1"
+                            Style="{StaticResource PaneSplitter}" />
+
+                        <!--  Rendered preview  -->
+                        <Grid x:Name="PreviewPane" Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Style="{StaticResource PaneLabel}" Text="{DynamicResource Str_MdHtml_PreviewLabel}" />
+                            <Border
+                                Grid.Row="1"
+                                Background="{DynamicResource InputBg}"
+                                BorderBrush="{DynamicResource InputBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                                <Grid>
+                                    <!--  The WebView2 is added here from code  -->
+                                    <Grid x:Name="PreviewHost" Margin="1" />
+
+                                    <!--  Loading, or the runtime is missing  -->
+                                    <StackPanel
+                                        x:Name="PreviewFallback"
+                                        MaxWidth="360"
+                                        Margin="20"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                        <ContentControl
+                                            x:Name="PreviewFallbackBadge"
+                                            Style="{StaticResource EmptyStateBadge}"
+                                            Tag="{x:Static materialDesign:PackIconKind.MicrosoftEdge}" />
+                                        <TextBlock
+                                            x:Name="TxtPreviewFallbackTitle"
+                                            Margin="0,12,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_MdHtml_EngineStarting}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            x:Name="TxtPreviewFallbackHint"
+                                            Margin="0,6,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap"
+                                            Visibility="Collapsed" />
+                                        <Button
+                                            x:Name="BtnGetWebView2"
+                                            Margin="0,14,0,0"
+                                            HorizontalAlignment="Center"
+                                            Click="BtnGetWebView2_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Visibility="Collapsed">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="{x:Static materialDesign:PackIconKind.OpenInNew}" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MdHtml_GetWebView2}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+
+                    <!--  Status bar  -->
+                    <Grid Grid.Row="3" Margin="2,10,2,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtCaret" Style="{StaticResource StatusText}" />
+                        <TextBlock
+                            x:Name="TxtStats"
+                            Grid.Column="1"
+                            Margin="16,0,0,0"
+                            Style="{StaticResource StatusText}" />
+                        <TextBlock
+                            Grid.Column="3"
+                            Style="{StaticResource StatusText}"
+                            Text="UTF-8" />
+                        <TextBlock
+                            x:Name="TxtFormatLabel"
+                            Grid.Column="4"
+                            Margin="16,0,0,0"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource AccentColor}"
+                            Style="{StaticResource StatusText}"
+                            Text="Markdown" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  ================= DROP OVERLAY (dragging a file over the view) =================  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_MdHtml_DropToOpen}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,905 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.MidiInstrumentsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    FocusVisualStyle="{x:Null}"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    PreviewKeyUp="Root_PreviewKeyUp"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Engines/Midi/WinMmMidi.cs (Windows MIDI through winmm.dll -
+        no NuGet), Controllers/MidiInstrumentsManager.cs (notes, sustain,
+        MIDI keyboard, recording, playback) + MidiInstrumentsManager.Music.cs
+        (note names, key layout, .mid writer, settings); Models/
+        MidiInstrumentsModel.cs (the 128 GM instruments, drum kits, keys).
+        UI only here. The piano keys are built in code (their number
+        follows the octave) and drawn as Borders on a Canvas.
+    -->
+
+    <UserControl.Resources>
+
+
+
+
+        <!--
+            A piano is black and white in either theme, so the keys use their
+            own fixed colours; the pressed colour is the theme accent.
+        -->
+        <SolidColorBrush x:Key="PianoWhiteKey" Color="#FBFAF6" />
+        <SolidColorBrush x:Key="PianoWhiteKeyEdge" Color="#C9C6BD" />
+        <SolidColorBrush x:Key="PianoWhiteKeyText" Color="#6B6A66" />
+        <SolidColorBrush x:Key="PianoBlackKey" Color="#1F232B" />
+        <SolidColorBrush x:Key="PianoBlackKeyEdge" Color="#0E1015" />
+        <SolidColorBrush x:Key="PianoBlackKeyText" Color="#C8CBD2" />
+
+        <!--  Instrument row: number chip, name, family (shown while searching)  -->
+        <Style x:Key="InstrumentRowStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Padding="6,5"
+                            Background="Transparent"
+                            CornerRadius="8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="InstrumentTemplate" DataType="{x:Type models:MidiInstrument}">
+            <Grid ToolTip="{Binding Family.Name}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    MinWidth="30"
+                    Margin="0,0,8,0"
+                    Padding="4,1"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource SidebarInputBg}"
+                    CornerRadius="6">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontFamily="Consolas"
+                        FontSize="10.5"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding NumberText}" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        x:Name="FamilyLine"
+                        FontSize="10"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Family.Name}"
+                        Visibility="{Binding Tag, RelativeSource={RelativeSource AncestorType=ListBox}}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="290" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <ScrollViewer x:Name="OptionsScrollViewer" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16">
+
+                        <!--  ============ INSTRUMENT ============  -->
+                        <Border ctl:Tour.Key="Str_Tour_Midi_Instrument" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_InstrumentTuner_Instrument}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.Piano}" />
+
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="10,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="Magnify" />
+                                        <TextBox
+                                            x:Name="TxtSearch"
+                                            Grid.Column="1"
+                                            VerticalContentAlignment="Center"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="Search 136 sounds (sax, strings, 808…)"
+                                            TextChanged="TxtSearch_TextChanged"
+                                            ToolTip="{DynamicResource Str_MidiInstruments_SearchEveryInstrumentAnd}" />
+                                        <Button
+                                            x:Name="BtnClearSearch"
+                                            Grid.Column="2"
+                                            Width="26"
+                                            Height="26"
+                                            Margin="0,0,4,0"
+                                            Click="BtnClearSearch_Click"
+                                            Style="{StaticResource IconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_MidiInstruments_ClearTheSearch}"
+                                            Visibility="Collapsed">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Kind="Close" />
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <Border
+                                    x:Name="FamilyBar"
+                                    Margin="0,8,0,0"
+                                    Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            x:Name="IconFamily"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="10,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="Piano" />
+                                        <ComboBox
+                                            x:Name="CmbFamily"
+                                            Grid.Column="1"
+                                            Margin="4,0,4,0"
+                                            DisplayMemberPath="Name"
+                                            SelectionChanged="CmbFamily_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_MidiInstruments_GeneralMidiGroupsIts}" />
+                                    </Grid>
+                                </Border>
+
+                                <ListBox
+                                    x:Name="ListInstruments"
+                                    Height="232"
+                                    Margin="0,8,0,0"
+                                    Padding="2"
+                                    Background="{DynamicResource SidebarInputBg}"
+                                    BorderBrush="{DynamicResource SidebarInputBorder}"
+                                    BorderThickness="1"
+                                    ItemContainerStyle="{StaticResource InstrumentRowStyle}"
+                                    ItemTemplate="{StaticResource InstrumentTemplate}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    SelectionChanged="ListInstruments_SelectionChanged"
+                                    Tag="{x:Static Visibility.Collapsed}">
+                                    <ListBox.Template>
+                                        <ControlTemplate TargetType="ListBox">
+                                            <Border
+                                                Padding="{TemplateBinding Padding}"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="10">
+                                                <ScrollViewer Focusable="False">
+                                                    <ItemsPresenter />
+                                                </ScrollViewer>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </ListBox.Template>
+                                </ListBox>
+
+                                <TextBlock
+                                    x:Name="TxtInstrumentHint"
+                                    Style="{StaticResource SidebarHint}"
+                                    Text="{DynamicResource Str_MidiInstruments_ClickASoundAnd}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  ============ SOUND ============  -->
+                        <Border ctl:Tour.Key="Str_Tour_Midi_Sound" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_MidiInstruments_Sound}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.TuneVertical}" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_MidiInstruments_HowHardVelocity}" />
+                                    <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                        <TextBlock
+                                            x:Name="TxtVelocityValue"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"
+                                            Text="100" />
+                                    </Border>
+                                </Grid>
+                                <Slider
+                                    x:Name="SldVelocity"
+                                    Margin="0,6,0,0"
+                                    IsMoveToPointEnabled="True"
+                                    Maximum="127"
+                                    Minimum="1"
+                                    SmallChange="1"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_HowHardEachNote}"
+                                    ValueChanged="SldVelocity_ValueChanged"
+                                    Value="100" />
+                                <CheckBox
+                                    x:Name="ChkTouch"
+                                    Margin="0,6,0,0"
+                                    Checked="ChkTouch_Changed"
+                                    Content="{DynamicResource Str_MidiInstruments_ClickLowerOnA}"
+                                    Foreground="{DynamicResource SidebarText}"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_LikeARealKey}"
+                                    Unchecked="ChkTouch_Changed" />
+
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_TTS_Volume}" />
+                                    <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                        <TextBlock
+                                            x:Name="TxtVolumeValue"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"
+                                            Text="87%" />
+                                    </Border>
+                                </Grid>
+                                <Slider
+                                    x:Name="SldVolume"
+                                    Margin="0,6,0,0"
+                                    IsMoveToPointEnabled="True"
+                                    Maximum="127"
+                                    Minimum="0"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_TheInstrumentSVolume}"
+                                    ValueChanged="SldVolume_ValueChanged"
+                                    Value="110" />
+
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_MidiInstruments_RoomReverb}" />
+                                    <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                        <TextBlock
+                                            x:Name="TxtReverbValue"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"
+                                            Text="31%" />
+                                    </Border>
+                                </Grid>
+                                <Slider
+                                    x:Name="SldReverb"
+                                    Margin="0,6,0,0"
+                                    IsMoveToPointEnabled="True"
+                                    Maximum="127"
+                                    Minimum="0"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_FromADryStudio}"
+                                    ValueChanged="SldReverb_ValueChanged"
+                                    Value="40" />
+
+                                <CheckBox
+                                    x:Name="ChkSustain"
+                                    Margin="0,14,0,0"
+                                    Checked="ChkSustain_Changed"
+                                    Content="{DynamicResource Str_MidiInstruments_SustainNotesRingAfter}"
+                                    Foreground="{DynamicResource SidebarText}"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_LikeHoldingThePiano}"
+                                    Unchecked="ChkSustain_Changed" />
+                                <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MidiInstruments_OrHoldSpaceWhile}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  ============ KEYBOARD ============  -->
+                        <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_ImageViewerControl_Keyboard}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.KeyboardOutline}" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button
+                                        x:Name="BtnOctaveDown"
+                                        Width="34"
+                                        Height="34"
+                                        Click="BtnOctaveDown_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_MidiInstruments_OneOctaveLower}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Minus" />
+                                    </Button>
+                                    <Border
+                                        x:Name="OctavePill"
+                                        Grid.Column="1"
+                                        Margin="8,0"
+                                        Padding="8,6"
+                                        Background="{DynamicResource SidebarInputBg}"
+                                        CornerRadius="10"
+                                        RenderTransformOrigin="0.5,0.5">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock
+                                                x:Name="TxtOctave"
+                                                HorizontalAlignment="Center"
+                                                FontSize="14"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                Text="{DynamicResource Str_MidiInstruments_Octave4}" />
+                                            <TextBlock
+                                                x:Name="TxtOctaveRange"
+                                                HorizontalAlignment="Center"
+                                                FontSize="10.5"
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Text="C4 – C7" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Button
+                                        x:Name="BtnOctaveUp"
+                                        Grid.Column="2"
+                                        Width="34"
+                                        Height="34"
+                                        Click="BtnOctaveUp_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_MidiInstruments_OneOctaveHigher}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="Plus" />
+                                    </Button>
+                                </Grid>
+
+                                <CheckBox
+                                    x:Name="ChkShowNoteNames"
+                                    Margin="0,12,0,0"
+                                    Checked="KeyLabels_Changed"
+                                    Content="{DynamicResource Str_MidiInstruments_ShowNoteNames}"
+                                    Foreground="{DynamicResource SidebarText}"
+                                    IsChecked="True"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_C4D4OnThe}"
+                                    Unchecked="KeyLabels_Changed" />
+                                <CheckBox
+                                    x:Name="ChkShowComputerKeys"
+                                    Margin="0,6,0,0"
+                                    Checked="KeyLabels_Changed"
+                                    Content="{DynamicResource Str_MidiInstruments_ShowComputerKeys}"
+                                    Foreground="{DynamicResource SidebarText}"
+                                    IsChecked="True"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_WhichLetterOnYour}"
+                                    Unchecked="KeyLabels_Changed" />
+                                <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MidiInstruments_BottomLetterRowZ}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  ============ DEVICES ============  -->
+                        <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <Grid>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MidiInstruments_Devices}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.MidiPort}" />
+                                    <Button
+                                        x:Name="BtnRefreshDevices"
+                                        Margin="0,-6,0,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Click="BtnRefreshDevices_Click"
+                                        ToolTip="{DynamicResource Str_MidiInstruments_LookAgainAfterPlugging}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconRefresh"
+                                            Width="15"
+                                            Height="15"
+                                            Kind="Refresh"
+                                            RenderTransformOrigin="0.5,0.5" />
+                                    </Button>
+                                </Grid>
+
+                                <TextBlock
+                                    Margin="0,4,0,6"
+                                    Style="{StaticResource FieldLabel}"
+                                    Text="{DynamicResource Str_MidiInstruments_SoundComesFrom}" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="10,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="Speaker" />
+                                        <ComboBox
+                                            x:Name="CmbOutput"
+                                            Grid.Column="1"
+                                            Margin="4,0,4,0"
+                                            DisplayMemberPath="Name"
+                                            SelectionChanged="CmbOutput_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_MidiInstruments_TheSynthThatMakes}" />
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock
+                                    Margin="0,12,0,6"
+                                    Style="{StaticResource FieldLabel}"
+                                    Text="{DynamicResource Str_MidiInstruments_MidiKeyboard}" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="10,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="Midi" />
+                                        <ComboBox
+                                            x:Name="CmbInput"
+                                            Grid.Column="1"
+                                            Margin="4,0,4,0"
+                                            DisplayMemberPath="Name"
+                                            SelectionChanged="CmbInput_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_MidiInstruments_AKeyboardPluggedIn}" />
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock
+                                    x:Name="TxtDeviceHint"
+                                    Style="{StaticResource SidebarHint}"
+                                    Text="" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  ============ NOW PLAYING + RECORDER ============  -->
+                <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                x:Name="InstrumentBadge"
+                                Width="56"
+                                Height="56"
+                                Margin="0,0,14,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AccentColorSubtle}"
+                                CornerRadius="16"
+                                RenderTransformOrigin="0.5,0.5">
+                                <materialDesign:PackIcon
+                                    x:Name="IconInstrument"
+                                    Width="30"
+                                    Height="30"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Kind="Piano" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtInstrumentName"
+                                    FontSize="22"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_MidiInstruments_AcousticGrandPiano}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <WrapPanel Margin="0,6,0,0">
+                                    <Border
+                                        Margin="0,0,6,4"
+                                        Background="{DynamicResource RowBg}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconFamilyPill"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Kind="Piano" />
+                                            <TextBlock
+                                                x:Name="TxtFamily"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_MidiInstruments_Piano}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border
+                                        Margin="0,0,6,4"
+                                        Background="{DynamicResource RowBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_MidiInstruments_TheMidiChannelThe}">
+                                        <TextBlock
+                                            x:Name="TxtChannel"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_MidiInstruments_Program1Channel1}" />
+                                    </Border>
+                                    <Border
+                                        x:Name="SustainPill"
+                                        Margin="0,0,6,4"
+                                        Background="{DynamicResource StatusInfoBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusInfoFg}"
+                                                Kind="MusicNoteWhole" />
+                                            <TextBlock
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource StatusInfoFg}"
+                                                Text="{DynamicResource Str_Synth_Sustain}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border
+                                        x:Name="DevicePill"
+                                        Margin="0,0,6,4"
+                                        Background="{DynamicResource StatusSuccessBg}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconDevice"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{Binding Foreground, ElementName=TxtDevice}"
+                                                Kind="Midi" />
+                                            <TextBlock
+                                                x:Name="TxtDevice"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource StatusSuccessFg}"
+                                                Text="{DynamicResource Str_MidiInstruments_KeyboardConnected}" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <!--  Last note played: big and friendly  -->
+                            <StackPanel
+                                Grid.Column="2"
+                                MinWidth="110"
+                                Margin="14,0,0,0"
+                                VerticalAlignment="Center"
+                                ToolTip="{DynamicResource Str_MidiInstruments_TheLastNotePlayed}">
+                                <TextBlock
+                                    x:Name="TxtLastNote"
+                                    HorizontalAlignment="Right"
+                                    FontSize="30"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    RenderTransformOrigin="0.5,0.5"
+                                    Text="–" />
+                                <TextBlock
+                                    x:Name="TxtLastNoteDetail"
+                                    HorizontalAlignment="Right"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_MidiInstruments_PlayAKey}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  Recorder  -->
+                        <Border
+                            Margin="0,14,0,0"
+                            Padding="12,10"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button
+                                    ctl:Tour.Key="Str_Tour_Midi_Record" ctl:Tour.Order="3"
+                                    x:Name="BtnRecord"
+                                    MinWidth="118"
+                                    Click="BtnRecord_Click"
+                                    Style="{StaticResource AccentRedButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_RecordWhatYouPlay}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            x:Name="IconRecord"
+                                            Width="17"
+                                            Height="17"
+                                            Margin="0,0,7,0"
+                                            VerticalAlignment="Center"
+                                            Kind="RecordCircleOutline"
+                                            RenderTransformOrigin="0.5,0.5" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            x:Name="TxtRecordLabel"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_MicRecorder_Record}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnPlay"
+                                    Grid.Column="1"
+                                    MinWidth="96"
+                                    Margin="8,0,0,0"
+                                    Click="BtnPlay_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_PlayTheRecordingBack}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            x:Name="IconPlay"
+                                            Width="17"
+                                            Height="17"
+                                            Margin="0,0,7,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Play" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            x:Name="TxtPlayLabel"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_AudioReplayControl_Play}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnSaveMidi"
+                                    Grid.Column="2"
+                                    Margin="8,0,0,0"
+                                    Click="BtnSaveMidi_Click"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_SaveTheRecordingAs}"
+                                    Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="17"
+                                            Height="17"
+                                            Margin="0,0,7,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ContentSaveOutline" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MidiInstruments_SaveMid}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+
+                                <StackPanel
+                                    Grid.Column="3"
+                                    Margin="14,0,8,0"
+                                    VerticalAlignment="Center">
+                                    <TextBlock
+                                        x:Name="TxtRecorderTime"
+                                        FontFamily="Consolas"
+                                        FontSize="18"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="0:00" />
+                                    <TextBlock
+                                        x:Name="TxtRecorderStatus"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_MidiInstruments_PressRecordPlayThen}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
+                                <Button
+                                    x:Name="BtnPanic"
+                                    Grid.Column="4"
+                                    Click="BtnPanic_Click"
+                                    Style="{StaticResource DangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_MidiInstruments_SilenceEveryNoteAt}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="VolumeOff" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MidiInstruments_AllSoundOff}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!--  ============ PIANO ============  -->
+                <Border ctl:Tour.Key="Str_Tour_Midi_Piano" ctl:Tour.Order="4" Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                Content="{DynamicResource Str_MidiInstruments_Keys}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.Piano}" />
+                            <TextBlock
+                                x:Name="TxtKeyboardRange"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="C4 – C7" />
+                        </Grid>
+
+                        <Border
+                            x:Name="PianoFrame"
+                            Grid.Row="1"
+                            MinHeight="150"
+                            Padding="8,8,8,10"
+                            Background="{DynamicResource PianoBlackKeyEdge}"
+                            CornerRadius="14">
+                            <Canvas
+                                x:Name="PianoCanvas"
+                                Background="Transparent"
+                                ClipToBounds="True"
+                                Cursor="Hand"
+                                LostMouseCapture="PianoCanvas_LostMouseCapture"
+                                MouseLeftButtonDown="PianoCanvas_MouseLeftButtonDown"
+                                MouseLeftButtonUp="PianoCanvas_MouseLeftButtonUp"
+                                MouseMove="PianoCanvas_MouseMove"
+                                SizeChanged="PianoCanvas_SizeChanged" />
+                        </Border>
+
+                        <!--  No synth: say so on the keys rather than playing silence  -->
+                        <Border
+                            x:Name="NoSynthPanel"
+                            Grid.Row="1"
+                            Background="{DynamicResource CardBg}"
+                            CornerRadius="14"
+                            Opacity="0.96"
+                            Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MusicNoteOff}" />
+                                <TextBlock
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="15"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_MidiInstruments_NoMidiSynthFound}" />
+                                <TextBlock
+                                    x:Name="TxtNoSynth"
+                                    MaxWidth="420"
+                                    Margin="0,4,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_MidiInstruments_WindowsNormallyIncludesMicrosoft}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Margin="0,10,0,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_MidiInstruments_ClickOrDragAcross}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+
+</UserControl>

@@ -1,0 +1,1009 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.SystemMonitorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Like Task Manager's Performance tab: a list of sections on the left
+        (PC, CPU, Memory, each disk, each network adapter, each GPU) and the
+        chosen one on the right - big graph, live figures, fixed facts.
+        Backend: Controllers/SystemMonitorManager.cs (reads Windows only),
+        SystemMonitorManager.Dxgi.cs (graphics cards), SystemMonitorManager.Format.cs
+        (sections, units, report, settings); Models/SystemMonitorModel.cs;
+        Controls/SystemMonitorSparkline.cs. This file and the code-behind are UI only.
+    -->
+
+    <UserControl.Resources>
+
+
+        <!--  The section's icon, from its kind (works wherever the DataContext is a SystemMonitorSection)  -->
+        <Style x:Key="SectionIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Kind" Value="Monitor" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Pc">
+                    <Setter Property="Kind" Value="DesktopTowerMonitor" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Cpu">
+                    <Setter Property="Kind" Value="Cpu_64Bit" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Memory">
+                    <Setter Property="Kind" Value="Memory" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Disk">
+                    <Setter Property="Kind" Value="Harddisk" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Network">
+                    <Setter Property="Kind" Value="Lan" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsWireless}" Value="True">
+                    <Setter Property="Kind" Value="Wifi" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="Gpu">
+                    <Setter Property="Kind" Value="ExpansionCardVariant" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  A section in the list: rounded, accent bar and tint when chosen  -->
+        <Style x:Key="SectionItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Padding="8"
+                            Background="Transparent"
+                            CornerRadius="8">
+                            <Grid>
+                                <Border
+                                    x:Name="Bar"
+                                    Width="3"
+                                    Margin="-8,6,0,6"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentColor}"
+                                    CornerRadius="2"
+                                    Visibility="Collapsed" />
+                                <ContentPresenter />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  A section in the list: mini graph (or icon for PC), title, one-line summary  -->
+        <DataTemplate x:Key="SectionItemTemplate" DataType="{x:Type models:SystemMonitorSection}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="62"
+                    Height="40"
+                    Margin="0,0,10,0"
+                    Padding="2"
+                    Background="{DynamicResource RowBg}"
+                    CornerRadius="6">
+                    <Grid>
+                        <controls:SystemMonitorSparkline
+                            x:Name="Mini"
+                            Capacity="30"
+                            Maximum="{Binding GraphMaximum}"
+                            Stroke="{DynamicResource AccentColor}"
+                            Values="{Binding History}"
+                            Values2="{Binding History2}" />
+                        <materialDesign:PackIcon
+                            x:Name="MiniIcon"
+                            Width="20"
+                            Height="20"
+                            HorizontalAlignment="Center"
+                            Foreground="{DynamicResource AccentColor}"
+                            Style="{StaticResource SectionIcon}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="13"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Title}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Title}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Summary}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Device}" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Graph}" Value="None">
+                    <Setter TargetName="Mini" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="MiniIcon" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Warm">
+                    <Setter TargetName="Mini" Property="Stroke" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Hot">
+                    <Setter TargetName="Mini" Property="Stroke" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--
+            A tile on the PC section (click = open that section). The icon/title
+            row still has to be a Grid (Auto icon column, * text column) rather
+            than a StackPanel: a horizontal StackPanel hands its children
+            unbounded width, so TextWrapping/TextTrimming on the title would
+            silently stop working and long adapter names would get clipped hard
+            by the tile's edge again (that was the original bug here).
+        -->
+        <DataTemplate x:Key="OverviewTileTemplate" DataType="{x:Type models:SystemMonitorSection}">
+            <Button
+                Height="Auto"
+                MinHeight="0"
+                Margin="0,0,14,14"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Top"
+                Click="Tile_Click"
+                Cursor="Hand"
+                FocusVisualStyle="{x:Null}"
+                OverridesDefaultStyle="True"
+                ToolTip="{Binding Device}">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Padding="16,14"
+                            Background="{DynamicResource RowBg}"
+                            CornerRadius="12"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform />
+                            </Border.RenderTransform>
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="32"
+                            Height="32"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Top"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="9">
+                            <materialDesign:PackIcon
+                                Width="17"
+                                Height="17"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Style="{StaticResource SectionIcon}" />
+                        </Border>
+                        <TextBlock
+                            Grid.Column="1"
+                            MinHeight="32"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Title}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="Wrap"
+                            ToolTip="{Binding Title}" />
+                    </Grid>
+                    <TextBlock
+                        MaxHeight="32"
+                        Margin="0,8,0,0"
+                        FontSize="11.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Device}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap"
+                        ToolTip="{Binding Device}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        FontSize="12.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Summary}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Summary}" />
+                    <controls:SystemMonitorSparkline
+                        x:Name="TileGraph"
+                        Height="54"
+                        Margin="0,12,0,0"
+                        Capacity="60"
+                        Maximum="{Binding GraphMaximum}"
+                        Stroke="{DynamicResource AccentColor}"
+                        Values="{Binding History}"
+                        Values2="{Binding History2}" />
+                </StackPanel>
+            </Button>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Warm">
+                    <Setter TargetName="TileGraph" Property="Stroke" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Hot">
+                    <Setter TargetName="TileGraph" Property="Stroke" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  A headline figure, shown as a small card right under the title  -->
+        <DataTemplate x:Key="LiveStatTemplate" DataType="{x:Type models:SystemMonitorStatRow}">
+            <Border
+                MinWidth="110"
+                Margin="0,0,8,8"
+                Padding="12,9"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Label}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,2,0,0"
+                        FontSize="19"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Value}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Value}" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!--  A fixed fact on the right: label / value (selectable to copy)  -->
+        <DataTemplate x:Key="InfoRowTemplate" DataType="{x:Type models:SystemMonitorStatRow}">
+            <StackPanel
+                MinWidth="160"
+                MaxWidth="320"
+                Margin="0,0,16,8">
+                <TextBlock
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Label}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Label}" />
+                <TextBox
+                    Margin="0,1,0,0"
+                    Padding="0"
+                    VerticalContentAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextPrimary}"
+                    IsReadOnly="True"
+                    Text="{Binding Value, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    ToolTip="{DynamicResource Str_NetworkAdapters_SelectToCopy}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  One logical processor (CPU section)  -->
+        <DataTemplate x:Key="CoreBarTemplate" DataType="{x:Type models:SystemMonitorBar}">
+            <StackPanel Width="30" Margin="0,0,6,8">
+                <Border
+                    Height="44"
+                    Background="{DynamicResource RowBg}"
+                    CornerRadius="5"
+                    ToolTip="{Binding ToolTipText}">
+                    <ProgressBar
+                        x:Name="Bar"
+                        Height="44"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Maximum="100"
+                        Orientation="Vertical"
+                        Value="{Binding Percent, Mode=OneWay}" />
+                </Border>
+                <TextBlock
+                    Margin="0,3,0,0"
+                    HorizontalAlignment="Center"
+                    FontSize="9.5"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Label}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Warm">
+                    <Setter TargetName="Bar" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Hot">
+                    <Setter TargetName="Bar" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  One graphics engine (GPU section)  -->
+        <DataTemplate x:Key="EngineBarTemplate" DataType="{x:Type models:SystemMonitorBar}">
+            <StackPanel Margin="0,0,14,10">
+                <Grid>
+                    <TextBlock
+                        FontSize="11.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Label}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Percent, StringFormat={}{0:0}%}" />
+                </Grid>
+                <ProgressBar
+                    x:Name="Bar"
+                    Height="5"
+                    Margin="0,4,0,0"
+                    Maximum="100"
+                    ToolTip="{Binding ToolTipText}"
+                    Value="{Binding Percent, Mode=OneWay}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Warm">
+                    <Setter TargetName="Bar" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Hot">
+                    <Setter TargetName="Bar" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Small caption above / below a graph  -->
+        <Style x:Key="GraphCaption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <!--  One self-contained block of the detail page (the graph, the cores, the facts...)  -->
+        <Style x:Key="DetailCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource RowBg}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="14,12" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ REFRESH ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_SystemMonitor_Refresh" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_Network_Refresh}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.TimerSyncOutline}" />
+                                        <Border
+                                            x:Name="LiveDot"
+                                            Width="9"
+                                            Height="9"
+                                            Margin="0,4,2,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Background="{DynamicResource StatusSuccessFg}"
+                                            CornerRadius="5"
+                                            RenderTransformOrigin="0.5,0.5"
+                                            ToolTip="{DynamicResource Str_HardwareSensors_Live}" />
+                                    </Grid>
+                                    <UniformGrid Columns="4">
+                                        <RadioButton
+                                            x:Name="RadioRefresh500"
+                                            Margin="0,0,2,0"
+                                            Click="Refresh_Click"
+                                            Content="½ s"
+                                            GroupName="MonitorRefresh"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="500"
+                                            ToolTip="{DynamicResource Str_HardwareSensors_TwiceASecond}" />
+                                        <RadioButton
+                                            x:Name="RadioRefresh1000"
+                                            Margin="2,0"
+                                            Click="Refresh_Click"
+                                            Content="1 s"
+                                            GroupName="MonitorRefresh"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="1000" />
+                                        <RadioButton
+                                            x:Name="RadioRefresh2000"
+                                            Margin="2,0"
+                                            Click="Refresh_Click"
+                                            Content="2 s"
+                                            GroupName="MonitorRefresh"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="2000" />
+                                        <RadioButton
+                                            x:Name="RadioRefresh5000"
+                                            Margin="2,0,0,0"
+                                            Click="Refresh_Click"
+                                            Content="5 s"
+                                            GroupName="MonitorRefresh"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="5000"
+                                            ToolTip="{DynamicResource Str_HardwareSensors_LightestOnThePc}" />
+                                    </UniformGrid>
+                                    <Button
+                                        x:Name="BtnPause"
+                                        MinHeight="36"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Stretch"
+                                        Click="BtnPause_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                x:Name="IconPause"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Pause" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                x:Name="TxtPause"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource Str_MicRecorder_Pause}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_SystemMonitor_ReadingStopsWhileYou}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ REPORT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_SystemMonitor_Report" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_HardwareSensors_Report}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileDocumentOutline}" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <controls:ExportButton
+                                            x:Name="BtnSaveReport"
+                                            IsEnabled="False"
+                                            ToolTip="{DynamicResource Str_SystemMonitor_SaveEverySectionAs}">
+                                            <Button.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Click="BtnSaveReport_Click" Header="{DynamicResource Str_Common_ExportAsText}">
+                                                        <MenuItem.Icon>
+                                                            <materialDesign:PackIcon Kind="FileDocumentOutline" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                        </controls:ExportButton>
+                                        <Button
+                                            x:Name="BtnCopyReport"
+                                            Grid.Column="1"
+                                            Margin="6,0,0,0"
+                                            Click="BtnCopyReport_Click"
+                                            IsEnabled="False"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_HardwareSensors_CopyTheReportTo}">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconCopy"
+                                                Width="16"
+                                                Height="16"
+                                                Kind="ContentCopy" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_SystemMonitor_EverySectionWithThe}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Admin rights banner (same card as Hardware Sensors)  -->
+                <controls:ElevationBannerCard
+                    x:Name="ElevationBanner"
+                    Margin="0,0,0,12"
+                    MessageKey="Str_SystemMonitor_AdminWarning"
+                    TitleKey="Str_SystemMonitor_AdminTitle" />
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="250" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  ============ SECTION LIST ============  -->
+                    <Border ctl:Tour.Key="Str_Tour_SystemMonitor_Sections" ctl:Tour.Order="1" Padding="8" Style="{StaticResource CardStyle}">
+                        <ListBox
+                            x:Name="SectionList"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemContainerStyle="{StaticResource SectionItemStyle}"
+                            ItemTemplate="{StaticResource SectionItemTemplate}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            SelectionChanged="SectionList_SelectionChanged"
+                            SelectionMode="Single" />
+                    </Border>
+
+                    <!--  ============ DETAIL ============  -->
+                    <Border ctl:Tour.Key="Str_Tour_SystemMonitor_Detail" ctl:Tour.Order="2" Grid.Column="2" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <ScrollViewer
+                                x:Name="DetailScroll"
+                                HorizontalScrollBarVisibility="Disabled"
+                                VerticalScrollBarVisibility="Auto"
+                                Visibility="Collapsed">
+                                <StackPanel x:Name="DetailPanel">
+
+                                    <!--  Header: icon, section name, what it is  -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border
+                                            x:Name="HeaderChip"
+                                            Width="34"
+                                            Height="34"
+                                            Margin="0,0,10,0"
+                                            Background="{DynamicResource AccentGradient}"
+                                            CornerRadius="10"
+                                            RenderTransformOrigin="0.5,0.5">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                Foreground="White"
+                                                Style="{StaticResource SectionIcon}" />
+                                        </Border>
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="21"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{Binding Title}" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Margin="16,0,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{Binding Device}"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip="{Binding Device}" />
+                                    </Grid>
+
+                                    <!--  Headline figures - the numbers that matter, right under the title  -->
+                                    <ItemsControl
+                                        x:Name="LiveStats"
+                                        Margin="0,0,0,2"
+                                        Focusable="False"
+                                        ItemTemplate="{StaticResource LiveStatTemplate}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+
+                                    <!--  PC: every other section at a glance  -->
+                                    <Border
+                                        x:Name="OverviewBlock"
+                                        Style="{StaticResource DetailCardStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,0,0,8"
+                                                Style="{StaticResource SectionHeading}"
+                                                Text="{DynamicResource Str_SystemMonitor_AtAGlance}" />
+                                            <ItemsControl
+                                                x:Name="OverviewTiles"
+                                                Margin="0,0,-14,0"
+                                                Focusable="False"
+                                                ItemTemplate="{StaticResource OverviewTileTemplate}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <UniformGrid SizeChanged="OverviewPanel_SizeChanged" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  The big graph (every section but PC)  -->
+                                    <Border x:Name="GraphBlock" Style="{StaticResource DetailCardStyle}">
+                                        <StackPanel>
+                                            <Grid>
+                                                <TextBlock x:Name="TxtGraphCaption" Style="{StaticResource GraphCaption}" />
+                                                <TextBlock
+                                                    x:Name="TxtGraphMax"
+                                                    HorizontalAlignment="Right"
+                                                    Style="{StaticResource GraphCaption}" />
+                                            </Grid>
+                                            <Border
+                                                Height="160"
+                                                Margin="0,4,0,0"
+                                                Padding="1"
+                                                Background="{DynamicResource ContentBg}"
+                                                CornerRadius="8">
+                                                <controls:SystemMonitorSparkline
+                                                    x:Name="GraphMain"
+                                                    ShowGrid="True"
+                                                    Stroke="{DynamicResource AccentColor}" />
+                                            </Border>
+                                            <Grid Margin="0,4,0,0">
+                                                <TextBlock Style="{StaticResource GraphCaption}" Text="{DynamicResource Str_SystemMonitor_60Seconds}" />
+                                                <StackPanel
+                                                    x:Name="RateLegend"
+                                                    HorizontalAlignment="Center"
+                                                    Orientation="Horizontal"
+                                                    Visibility="Collapsed">
+                                                    <Border
+                                                        Width="16"
+                                                        Height="2"
+                                                        Margin="0,0,5,0"
+                                                        VerticalAlignment="Center"
+                                                        Background="{DynamicResource AccentColor}" />
+                                                    <TextBlock
+                                                        x:Name="TxtLegend1"
+                                                        Margin="0,0,14,0"
+                                                        Style="{StaticResource GraphCaption}"
+                                                        Text="{DynamicResource Str_SystemMonitor_Receive}" />
+                                                    <Line
+                                                        Margin="0,0,5,0"
+                                                        VerticalAlignment="Center"
+                                                        Stroke="{DynamicResource AccentColor}"
+                                                        StrokeDashArray="1.5 1"
+                                                        StrokeThickness="2"
+                                                        X1="0"
+                                                        X2="16"
+                                                        Y1="1"
+                                                        Y2="1" />
+                                                    <TextBlock
+                                                        x:Name="TxtLegend2"
+                                                        Style="{StaticResource GraphCaption}"
+                                                        Text="{DynamicResource Str_Network_SendButton}" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    HorizontalAlignment="Right"
+                                                    Style="{StaticResource GraphCaption}"
+                                                    Text="0" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  Disks: transfer rate (read solid, write dashed)  -->
+                                    <Border
+                                        x:Name="TransferBlock"
+                                        Style="{StaticResource DetailCardStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel>
+                                            <Grid>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,14,0"
+                                                        Style="{StaticResource GraphCaption}"
+                                                        Text="{DynamicResource Str_SystemMonitor_DiskTransferRate}" />
+                                                    <Border
+                                                        Width="16"
+                                                        Height="2"
+                                                        Margin="0,0,5,0"
+                                                        VerticalAlignment="Center"
+                                                        Background="{DynamicResource AccentColor}" />
+                                                    <TextBlock
+                                                        Margin="0,0,14,0"
+                                                        Style="{StaticResource GraphCaption}"
+                                                        Text="{DynamicResource Str_SystemMonitor_Read}" />
+                                                    <Line
+                                                        Margin="0,0,5,0"
+                                                        VerticalAlignment="Center"
+                                                        Stroke="{DynamicResource AccentColor}"
+                                                        StrokeDashArray="1.5 1"
+                                                        StrokeThickness="2"
+                                                        X1="0"
+                                                        X2="16"
+                                                        Y1="1"
+                                                        Y2="1" />
+                                                    <TextBlock Style="{StaticResource GraphCaption}" Text="{DynamicResource Str_SystemMonitor_Write}" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    x:Name="TxtTransferMax"
+                                                    HorizontalAlignment="Right"
+                                                    Style="{StaticResource GraphCaption}" />
+                                            </Grid>
+                                            <Border
+                                                Height="80"
+                                                Margin="0,4,0,0"
+                                                Padding="1"
+                                                Background="{DynamicResource ContentBg}"
+                                                CornerRadius="8">
+                                                <controls:SystemMonitorSparkline
+                                                    x:Name="GraphTransfer"
+                                                    Maximum="0"
+                                                    ShowGrid="True"
+                                                    Stroke="{DynamicResource AccentColor}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  CPU, GPU, disks: temperature, when a sensor was found  -->
+                                    <Border
+                                        x:Name="TempBlock"
+                                        Style="{StaticResource DetailCardStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel>
+                                            <Grid>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock
+                                                        Margin="0,0,8,0"
+                                                        Style="{StaticResource GraphCaption}"
+                                                        Text="{DynamicResource Str_DriveHealth_Temperature}" />
+                                                    <TextBlock
+                                                        x:Name="TxtTempNow"
+                                                        FontWeight="SemiBold"
+                                                        Style="{StaticResource GraphCaption}" />
+                                                </StackPanel>
+                                                <TextBlock
+                                                    x:Name="TxtTempMax"
+                                                    HorizontalAlignment="Right"
+                                                    Style="{StaticResource GraphCaption}" />
+                                            </Grid>
+                                            <Border
+                                                Height="80"
+                                                Margin="0,4,0,0"
+                                                Padding="1"
+                                                Background="{DynamicResource ContentBg}"
+                                                CornerRadius="8">
+                                                <controls:SystemMonitorSparkline
+                                                    x:Name="GraphTemp"
+                                                    Maximum="0"
+                                                    ShowGrid="True"
+                                                    Stroke="{DynamicResource AccentColor}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  CPU: each logical processor  -->
+                                    <Border
+                                        x:Name="CoresBlock"
+                                        Style="{StaticResource DetailCardStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <TextBlock Style="{StaticResource SectionHeading}" Text="{DynamicResource Str_SystemMonitor_LogicalProcessors}" />
+                                                <TextBlock
+                                                    x:Name="TxtCoreSummary"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Style="{StaticResource GraphCaption}" />
+                                            </Grid>
+                                            <ItemsControl
+                                                x:Name="CoreBars"
+                                                Focusable="False"
+                                                ItemTemplate="{StaticResource CoreBarTemplate}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  GPU: engines  -->
+                                    <Border
+                                        x:Name="EnginesBlock"
+                                        Style="{StaticResource DetailCardStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,0,0,8"
+                                                Style="{StaticResource SectionHeading}"
+                                                Text="{DynamicResource Str_SystemMonitor_Engines}" />
+                                            <ItemsControl
+                                                x:Name="EngineBars"
+                                                Focusable="False"
+                                                ItemTemplate="{StaticResource EngineBarTemplate}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <UniformGrid Columns="4" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!--  Fixed facts: base speed, capacity, driver...  -->
+                                    <Border
+                                        x:Name="InfoBlock"
+                                        Padding="14,12"
+                                        Background="{DynamicResource RowBg}"
+                                        CornerRadius="8">
+                                        <StackPanel>
+                                            <TextBlock
+                                                Margin="0,0,0,8"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{DynamicResource Str_Validate_ColHeaderDetails}" />
+                                            <ItemsControl
+                                                x:Name="InfoRows"
+                                                Focusable="False"
+                                                ItemTemplate="{StaticResource InfoRowTemplate}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                            <TextBlock
+                                                x:Name="TxtInfoLoading"
+                                                Margin="0,0,0,8"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_SystemMonitor_ReadingThisPcS}"
+                                                Visibility="Collapsed" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!--  Before the first reading  -->
+                            <StackPanel
+                                x:Name="StartingPanel"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MonitorDashboard}" />
+                                <TextBlock
+                                    x:Name="TxtStarting"
+                                    Margin="0,12,0,8"
+                                    HorizontalAlignment="Center"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_SystemMonitor_ReadingThisPc}" />
+                                <ProgressBar
+                                    x:Name="StartingProgress"
+                                    Width="180"
+                                    Height="4"
+                                    IsIndeterminate="True" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

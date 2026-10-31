@@ -1,0 +1,97 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Controls.ElevationBannerCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        The "needs administrator rights" banner, same look as Hardware Sensors
+        and Drive Health. Collapsed when the app is already elevated. The page
+        sets Title/Message (resource keys) and the card does the rest:
+        confirm, relaunch with UAC, and a dismiss button.
+    -->
+
+    <Border
+        x:Name="Card"
+        Padding="14,12"
+        Background="{DynamicResource StatusWarningBg}"
+        CornerRadius="12">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border
+                Width="34"
+                Height="34"
+                Margin="0,0,12,0"
+                VerticalAlignment="Center"
+                Background="{DynamicResource CardBg}"
+                CornerRadius="10">
+                <materialDesign:PackIcon
+                    Width="18"
+                    Height="18"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource StatusWarningFg}"
+                    Kind="ShieldLockOutline" />
+            </Border>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock
+                    x:Name="TxtTitle"
+                    FontSize="12.5"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource StatusWarningFg}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    x:Name="TxtMessage"
+                    Margin="0,2,0,0"
+                    FontSize="11.5"
+                    Foreground="{DynamicResource StatusWarningFg}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Button
+                Grid.Column="2"
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                Click="BtnRestart_Click"
+                Style="{StaticResource PrimaryButtonStyle}"
+                ToolTip="{DynamicResource Str_DriveHealth_RestartAsAdminTooltip}">
+                <Grid HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon
+                        Grid.Column="0"
+                        Width="15"
+                        Height="15"
+                        Margin="0,0,6,0"
+                        VerticalAlignment="Center"
+                        Kind="ShieldAccount" />
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DriveHealth_RestartAsAdmin}" TextWrapping="Wrap" />
+                </Grid>
+            </Button>
+
+            <Button
+                Grid.Column="3"
+                Width="28"
+                Height="28"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Click="BtnDismiss_Click"
+                Style="{StaticResource NeutralIconButtonStyle}"
+                ToolTip="{DynamicResource Str_HardwareSensors_HideBanner}">
+                <materialDesign:PackIcon
+                    Width="14"
+                    Height="14"
+                    Kind="Close" />
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

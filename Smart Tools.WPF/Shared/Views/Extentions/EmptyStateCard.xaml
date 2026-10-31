@@ -1,0 +1,81 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Controls.EmptyStateCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Name="Root"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        The standard empty state: a dashed drop zone with a round icon badge,
+        a title, a hint and an optional call to action (put buttons inside the
+        element's content). Same look as AudioReplay / Background Remover.
+        Usage:
+            <controls:EmptyStateCard x:Name="EmptyStatePanel"
+                Icon="MusicBoxMultipleOutline"
+                Title="{DynamicResource Str_..._Title}"
+                Description="{DynamicResource Str_..._Hint}" />
+    -->
+
+    <Grid>
+        <Rectangle
+            Margin="2"
+            RadiusX="14"
+            RadiusY="14"
+            Stroke="{DynamicResource InputBorder}"
+            StrokeDashArray="5 4"
+            StrokeThickness="1.5" />
+        <StackPanel
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+            <ContentControl
+                HorizontalAlignment="Center"
+                Style="{StaticResource EmptyStateBadge}"
+                Tag="{Binding Icon, ElementName=Root}" />
+            <TextBlock
+                x:Name="TxtTitle"
+                Margin="0,12,0,0"
+                HorizontalAlignment="Center"
+                FontSize="14"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource TextPrimary}"
+                Text="{Binding Title, ElementName=Root}"
+                TextAlignment="Center"
+                TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <TextBlock
+                x:Name="TxtDescription"
+                MaxWidth="{Binding DescriptionMaxWidth, ElementName=Root}"
+                Margin="0,4,0,0"
+                HorizontalAlignment="Center"
+                FontSize="11.5"
+                Foreground="{DynamicResource TextSecondary}"
+                Text="{Binding Description, ElementName=Root}"
+                TextAlignment="Center"
+                TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <ContentPresenter
+                Margin="0,14,0,0"
+                HorizontalAlignment="Center"
+                Content="{Binding Action, ElementName=Root}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

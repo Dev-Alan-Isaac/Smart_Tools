@@ -1,0 +1,1297 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.GifMakerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/GifMakerManager.cs (sizes, filter graphs, checks,
+        the image list, settings), GifMakerManager.Run.cs (ffprobe, frame grabs,
+        making the GIF, the size estimate) and GifMakerManager.Render.cs (frame
+        grabs as images, GifAnimator for the animated preview);
+        Models/GifMakerModel.cs. This file and the code-behind are UI only.
+        Choices are read by Tag. The clip stage is a fixed-dark media stage
+        (the documented exception to theme tokens).
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Frames list: name + folder  -->
+        <DataTemplate x:Key="FrameNameCellTemplate" DataType="{x:Type models:GifImageItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Frames list: number, or an alert when the image can't be read  -->
+        <DataTemplate x:Key="FrameNumberCellTemplate" DataType="{x:Type models:GifImageItem}">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock
+                    x:Name="NumberText"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Number}"
+                    TextTrimming="CharacterEllipsis" />
+                <materialDesign:PackIcon
+                    x:Name="ProblemIcon"
+                    Width="16"
+                    Height="16"
+                    Foreground="{DynamicResource StatusErrorFg}"
+                    Kind="AlertCircleOutline"
+                    ToolTip="{Binding Problem}"
+                    Visibility="Collapsed" />
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding HasProblem}" Value="True">
+                    <Setter TargetName="NumberText" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="ProblemIcon" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Frames list: remove button  -->
+        <DataTemplate x:Key="FrameRemoveCellTemplate" DataType="{x:Type models:GifImageItem}">
+            <Button
+                Width="26"
+                Height="26"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Click="BtnRemoveFrame_Click"
+                Style="{StaticResource IconButtonStyle}"
+                Tag="{Binding}"
+                ToolTip="{DynamicResource Str_Validate_RemoveFromListTooltip}">
+                <materialDesign:PackIcon
+                    Width="13"
+                    Height="13"
+                    Kind="Close" />
+            </Button>
+        </DataTemplate>
+
+        <!--  Small label + value row used in the trim bar  -->
+        <Style x:Key="TrimLabel" TargetType="TextBlock">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <Style x:Key="TrimTime" TargetType="TextBlock">
+            <Setter Property="Width" Value="64" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="TextAlignment" Value="Right" />
+        </Style>
+
+
+        <!--  Input card: one queued item  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:GifImageGroup}">
+            <Grid ToolTip="{Binding ToolTip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="GroupIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="ImageMultipleOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveQueueGroup_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_Validate_RemoveFromListTooltip}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ SOURCE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_GifMaker_Source" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_GifMaker_SourceHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileGifBox}" />
+                                    <UniformGrid x:Name="ModeChips" Columns="2">
+                                        <RadioButton
+                                            Margin="0,0,3,0"
+                                            Click="Mode_Click"
+                                            GroupName="GifSource"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Video">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FileVideoOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_GifMaker_ModeVideo}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </RadioButton>
+                                        <RadioButton
+                                            Margin="3,0,0,0"
+                                            Click="Mode_Click"
+                                            GroupName="GifSource"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Images">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ImageMultipleOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_GifMaker_ModeImages}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ VIDEO (Video mode) ============  -->
+                            <Border x:Name="VideoCard" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_GifMaker_VideoHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileVideoOutline}" />
+
+                                    <Border
+                                        x:Name="VideoDropArea"
+                                        MinHeight="64"
+                                        Margin="0,0,0,10"
+                                        AllowDrop="True"
+                                        Background="{DynamicResource SidebarInputBg}"
+                                        BorderBrush="{DynamicResource SidebarInputBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        DragLeave="VideoDropArea_DragLeave"
+                                        DragOver="VideoDropArea_DragOver"
+                                        Drop="VideoDropArea_Drop">
+                                        <Grid>
+                                            <Grid
+                                                x:Name="VideoRow"
+                                                Margin="10,8"
+                                                Visibility="Collapsed">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    Width="30"
+                                                    Height="30"
+                                                    Margin="0,0,8,0"
+                                                    Background="{DynamicResource AccentColorSubtle}"
+                                                    CornerRadius="8">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{DynamicResource AccentColor}"
+                                                        Kind="Filmstrip" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        x:Name="TxtVideoName"
+                                                        FontSize="12"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource SidebarText}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock
+                                                        x:Name="TxtVideoDetails"
+                                                        Margin="0,1,0,0"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                                <Button
+                                                    x:Name="BtnClearVideo"
+                                                    Grid.Column="2"
+                                                    Width="24"
+                                                    Height="24"
+                                                    Margin="6,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Click="BtnClearVideo_Click"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_GifMaker_ClearVideoTooltip}">
+                                                    <materialDesign:PackIcon
+                                                        Width="13"
+                                                        Height="13"
+                                                        Kind="Close" />
+                                                </Button>
+                                            </Grid>
+
+                                            <StackPanel
+                                                x:Name="VideoEmptyHint"
+                                                Margin="10,12"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                                <materialDesign:PackIcon
+                                                    Width="22"
+                                                    Height="22"
+                                                    HorizontalAlignment="Center"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Kind="TrayArrowDown" />
+                                                <TextBlock
+                                                    x:Name="TxtVideoHint"
+                                                    Margin="0,4,0,0"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="{DynamicResource Str_GifMaker_DropVideoHint}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <Button
+                                        x:Name="BtnChooseVideo"
+                                        Click="BtnChooseVideo_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_GifMaker_ChooseVideoTooltip}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FileVideoOutline" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_GifMaker_ChooseVideo}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FILES (Images mode) ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Common_Files}"
+                                HeaderIcon="FileMultipleOutline"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+
+                            <!--  ============ SETTINGS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_GifMaker_Settings" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_GifMaker_SettingsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CogOutline}" />
+
+                                    <StackPanel x:Name="PanelVideoSettings">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_GifMaker_FrameRate}" />
+                                        <UniformGrid x:Name="FpsChips" Columns="4">
+                                            <RadioButton
+                                                Margin="0,0,2,0"
+                                                Click="Setting_Click"
+                                                Content="10"
+                                                GroupName="GifFps"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="10" />
+                                            <RadioButton
+                                                Margin="2,0"
+                                                Click="Setting_Click"
+                                                Content="15"
+                                                GroupName="GifFps"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="15" />
+                                            <RadioButton
+                                                Margin="2,0"
+                                                Click="Setting_Click"
+                                                Content="20"
+                                                GroupName="GifFps"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="20" />
+                                            <RadioButton
+                                                Margin="2,0,0,0"
+                                                Click="Setting_Click"
+                                                Content="25"
+                                                GroupName="GifFps"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="25" />
+                                        </UniformGrid>
+
+                                        <TextBlock
+                                            Margin="0,12,0,0"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_GifMaker_Speed}" />
+                                        <UniformGrid x:Name="SpeedChips" Columns="4">
+                                            <RadioButton
+                                                Margin="0,0,2,0"
+                                                Click="Setting_Click"
+                                                Content="0.5×"
+                                                GroupName="GifSpeed"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="0.5" />
+                                            <RadioButton
+                                                Margin="2,0"
+                                                Click="Setting_Click"
+                                                Content="1×"
+                                                GroupName="GifSpeed"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="1" />
+                                            <RadioButton
+                                                Margin="2,0"
+                                                Click="Setting_Click"
+                                                Content="1.5×"
+                                                GroupName="GifSpeed"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="1.5" />
+                                            <RadioButton
+                                                Margin="2,0,0,0"
+                                                Click="Setting_Click"
+                                                Content="2×"
+                                                GroupName="GifSpeed"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="2" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelImageSettings" Visibility="Collapsed">
+                                        <TextBlock
+                                            Margin="0,4,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_GifMaker_ImageDuration}" />
+                                        <ComboBox x:Name="CmbImageDuration" SelectionChanged="Setting_SelectionChanged">
+                                            <ComboBoxItem Content="0.1 s" Tag="0.1" />
+                                            <ComboBoxItem Content="0.2 s" Tag="0.2" />
+                                            <ComboBoxItem
+                                                Content="0.5 s"
+                                                IsSelected="True"
+                                                Tag="0.5" />
+                                            <ComboBoxItem Content="1 s" Tag="1" />
+                                            <ComboBoxItem Content="2 s" Tag="2" />
+                                        </ComboBox>
+
+                                        <TextBlock
+                                            Margin="0,12,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_GifMaker_Fill}" />
+                                        <UniformGrid x:Name="FillChips" Columns="3">
+                                            <RadioButton
+                                                Margin="0,0,2,0"
+                                                Click="Setting_Click"
+                                                Content="{DynamicResource Str_GifMaker_FillTransparent}"
+                                                GroupName="GifFill"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Transparent" />
+                                            <RadioButton
+                                                Margin="2,0"
+                                                Click="Setting_Click"
+                                                Content="{DynamicResource Str_GifMaker_FillWhite}"
+                                                GroupName="GifFill"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="White" />
+                                            <RadioButton
+                                                Margin="2,0,0,0"
+                                                Click="Setting_Click"
+                                                Content="{DynamicResource Str_GifMaker_FillBlack}"
+                                                GroupName="GifFill"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Black" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_GifMaker_MaxWidth}" />
+                                    <ComboBox x:Name="CmbWidth" SelectionChanged="Setting_SelectionChanged">
+                                        <ComboBoxItem Content="{DynamicResource Str_GifMaker_WidthOriginal}" Tag="0" />
+                                        <ComboBoxItem Content="240 px" Tag="240" />
+                                        <ComboBoxItem Content="320 px" Tag="320" />
+                                        <ComboBoxItem
+                                            Content="480 px"
+                                            IsSelected="True"
+                                            Tag="480" />
+                                        <ComboBoxItem Content="640 px" Tag="640" />
+                                        <ComboBoxItem Content="800 px" Tag="800" />
+                                    </ComboBox>
+
+                                    <Border
+                                        x:Name="FfmpegWarning"
+                                        Margin="0,10,0,0"
+                                        Padding="10,8"
+                                        Background="{DynamicResource StatusWarningBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,1,8,0"
+                                                VerticalAlignment="Top"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Kind="AlertOutline" />
+                                            <TextBlock
+                                                x:Name="TxtFfmpegWarning"
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ QUALITY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_GifMaker_Quality" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_GifMaker_QualityHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
+                                    <UniformGrid x:Name="QualityChips" Columns="3">
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_GifMaker_QualitySmall}"
+                                            GroupName="GifQuality"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Small" />
+                                        <RadioButton
+                                            Margin="2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_GifMaker_QualityBalanced}"
+                                            GroupName="GifQuality"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Balanced" />
+                                        <RadioButton
+                                            Margin="2,0,0,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_GifMaker_QualityBest}"
+                                            GroupName="GifQuality"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Best" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtQualityNote"
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_GifMaker_Plays}" />
+                                    <ComboBox x:Name="CmbPlays" SelectionChanged="Setting_SelectionChanged">
+                                        <ComboBoxItem
+                                            Content="{DynamicResource Str_GifMaker_PlaysForever}"
+                                            IsSelected="True"
+                                            Tag="0" />
+                                        <ComboBoxItem Content="{DynamicResource Str_GifMaker_PlaysOnce}" Tag="1" />
+                                        <ComboBoxItem Content="{DynamicResource Str_GifMaker_Plays2}" Tag="2" />
+                                        <ComboBoxItem Content="{DynamicResource Str_GifMaker_Plays3}" Tag="3" />
+                                        <ComboBoxItem Content="{DynamicResource Str_GifMaker_Plays5}" Tag="5" />
+                                        <ComboBoxItem Content="{DynamicResource Str_GifMaker_Plays10}" Tag="10" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OUTPUT (file mode) ============  -->
+                            <controls:OutputFolderCard
+                                x:Name="OutputCard"
+                                ctl:Tour.Key="Str_Tour_GifMaker_Output"
+                                ctl:Tour.Order="4"
+                                Margin="0,8,0,0"
+                                AllowAskEachTime="True"
+                                AllowSameAsSource="False"
+                                AskEachTimeChanged="OutputCard_AskEachTimeChanged"
+                                DefaultFileName="animation"
+                                FileExtension=".gif"
+                                FolderChanged="OutputCard_FolderChanged"
+                                Header="{DynamicResource Str_MicRecorder_OutputHeader}"
+                                ShowFileName="True"
+                                ToolName="GIF Maker" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnCreate"
+                            ctl:Tour.Key="Str_Tour_GifMaker_Create"
+                            ctl:Tour.Order="5"
+                            MinWidth="170"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnCreate_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_GifMaker_CreateTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconCreate"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="FileGifBox" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtCreateLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_GifMaker_CreateGif}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressRun"
+                                Height="8"
+                                Maximum="100" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_GifMaker_NoSourceHint}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  ============ CLIP / FRAMES ============  -->
+                    <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <ContentControl
+                                x:Name="SourceHeader"
+                                Margin="0,0,0,10"
+                                Content="{DynamicResource Str_GifMaker_ClipHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.MovieOpenOutline}" />
+
+                            <!--  Video mode: frame preview + trim bar  -->
+                            <Grid x:Name="PanelClip" Grid.Row="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Border
+                                    x:Name="ClipStage"
+                                    MinHeight="160"
+                                    Background="#FF111114"
+                                    CornerRadius="12"
+                                    Visibility="Collapsed">
+                                    <Grid>
+                                        <Image
+                                            x:Name="ImgFrame"
+                                            Margin="6"
+                                            RenderOptions.BitmapScalingMode="HighQuality"
+                                            Stretch="Uniform" />
+                                        <Border
+                                            Margin="10"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Background="#B3000000"
+                                            CornerRadius="8">
+                                            <TextBlock
+                                                x:Name="TxtFrameLabel"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="#FFFFFFFF" />
+                                        </Border>
+                                        <Button
+                                            x:Name="BtnLoop"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="10"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Background="#B3000000"
+                                            Click="BtnLoop_Click"
+                                            Foreground="#FFFFFFFF"
+                                            Style="{StaticResource NeutralIconButtonStyle}">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconLoop"
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Repeat" />
+                                        </Button>
+                                        <ProgressBar
+                                            x:Name="FrameLoading"
+                                            Height="3"
+                                            VerticalAlignment="Bottom"
+                                            IsIndeterminate="True"
+                                            Visibility="Collapsed" />
+                                    </Grid>
+                                </Border>
+
+                                <controls:EmptyStateCard
+                                    x:Name="ClipEmptyState"
+                                    Title="{DynamicResource Str_GifMaker_NoVideoTitle}"
+                                    Description="{DynamicResource Str_GifMaker_NoVideoHint}"
+                                    Icon="FileVideoOutline" />
+                                <StackPanel
+                                    x:Name="TrimPanel"
+                                    Grid.Row="1"
+                                    Margin="0,12,0,0"
+                                    IsEnabled="False">
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            x:Name="TxtTrimLength"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource AccentColor}" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <TextBlock
+                                                x:Name="TxtZoom"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="11.5"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="1×" />
+                                            <Button
+                                                Width="32"
+                                                Height="28"
+                                                Click="BtnZoomOut_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_GifMaker_ZoomOut}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="MagnifyMinusOutline" />
+                                            </Button>
+                                            <Button
+                                                Width="32"
+                                                Height="28"
+                                                Click="BtnZoomIn_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_GifMaker_ZoomIn}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="MagnifyPlusOutline" />
+                                            </Button>
+                                            <Button
+                                                Width="32"
+                                                Height="28"
+                                                Click="BtnZoomSelection_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_GifMaker_ZoomSelection}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="ArrowExpandHorizontal" />
+                                            </Button>
+                                            <Button
+                                                Width="32"
+                                                Height="28"
+                                                Click="BtnZoomReset_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_GifMaker_ZoomReset}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="FitToPageOutline" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                    <controls:TrimTimelineControl
+                                        x:Name="TrimTimeline"
+                                        BackBrush="{DynamicResource ContentBg}"
+                                        GridBrush="{DynamicResource CardBorder}"
+                                        HandleBrush="{DynamicResource AccentFill}"
+                                        HandleGlyphBrush="White"
+                                        SelectionBrush="{DynamicResource AccentFill}"
+                                        TextBrush="{DynamicResource TextSecondary}"
+                                        ToolTip="{DynamicResource Str_GifMaker_TimelineTooltip}"
+                                        TrackBrush="{DynamicResource RowBg}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource TrimLabel}" Text="{DynamicResource Str_GifMaker_Start}" />
+                                            <TextBlock
+                                                x:Name="TxtStartTime"
+                                                Style="{StaticResource TrimTime}"
+                                                Text="0:00.0"
+                                                TextAlignment="Left" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                            <TextBlock
+                                                Style="{StaticResource TrimLabel}"
+                                                Text="{DynamicResource Str_GifMaker_End}"
+                                                TextAlignment="Right" />
+                                            <TextBlock
+                                                x:Name="TxtEndTime"
+                                                Style="{StaticResource TrimTime}"
+                                                Text="0:00.0" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+
+                            <!--  Images mode: the frames in order  -->
+                            <Grid
+                                x:Name="PanelFrames"
+                                Grid.Row="1"
+                                Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel
+                                    x:Name="FrameTools"
+                                    Margin="0,0,0,10"
+                                    Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnMoveUp"
+                                        Width="32"
+                                        Height="32"
+                                        Click="BtnMoveUp_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_GifMaker_MoveUpTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ArrowUp" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnMoveDown"
+                                        Width="32"
+                                        Height="32"
+                                        Margin="4,0,0,0"
+                                        Click="BtnMoveDown_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_GifMaker_MoveDownTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ArrowDown" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnSortByName"
+                                        Width="32"
+                                        Height="32"
+                                        Margin="10,0,0,0"
+                                        Click="BtnSortByName_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_GifMaker_SortNameTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="SortAlphabeticalAscending" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnSortByDate"
+                                        Width="32"
+                                        Height="32"
+                                        Margin="4,0,0,0"
+                                        Click="BtnSortByDate_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_GifMaker_SortDateTooltip}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="SortCalendarAscending" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnRemoveSelected"
+                                        Margin="10,0,0,0"
+                                        Click="BtnRemoveSelected_Click"
+                                        ToolTip="{DynamicResource Str_GifMaker_RemoveTooltip}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="PlaylistRemove" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnClearAll"
+                                        Margin="10,0,0,0"
+                                        Click="BtnClearFiles_Click"
+                                        ToolTip="{DynamicResource Str_GifMaker_ClearTooltip}"
+                                        Style="{StaticResource ListToolDangerButtonStyle}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="DeleteSweepOutline" />
+                                    </Button>
+                                </StackPanel>
+
+                                <DataGrid
+                                    x:Name="DataGridFrames"
+                                    Grid.Row="1"
+                                    AutoGenerateColumns="False"
+                                    CanUserAddRows="False"
+                                    CanUserReorderColumns="False"
+                                    CanUserSortColumns="False"
+                                    FontSize="12"
+                                    IsReadOnly="True"
+                                    MouseDoubleClick="DataGridFrames_MouseDoubleClick"
+                                    PreviewKeyDown="DataGridFrames_PreviewKeyDown"
+                                    MinRowHeight="44"
+                                    SelectionChanged="DataGridFrames_SelectionChanged"
+                                    SelectionMode="Extended"
+                                    ToolTip="{DynamicResource Str_GifMaker_FramesGridTooltip}"
+                                    VirtualizingPanel.IsVirtualizing="True"
+                                    VirtualizingPanel.ScrollUnit="Pixel"
+                                    VirtualizingPanel.VirtualizationMode="Recycling">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn
+                                            Width="40"
+                                            CellStyle="{StaticResource CompactCellStyle}"
+                                            CellTemplate="{StaticResource FrameNumberCellTemplate}"
+                                            Header="#" />
+                                        <DataGridTemplateColumn
+                                            Width="*"
+                                            MinWidth="70"
+                                            CellTemplate="{StaticResource FrameNameCellTemplate}"
+                                            Header="{DynamicResource Str_Common_ColHeaderFileName}" />
+                                        <DataGridTextColumn
+                                            ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                            Width="80"
+                                            Binding="{Binding DimensionsText}"
+                                            Header="{DynamicResource Str_GifMaker_ColDimensions}" />
+                                        <DataGridTemplateColumn
+                                            Width="40"
+                                            CellStyle="{StaticResource CompactCellStyle}"
+                                            CellTemplate="{StaticResource FrameRemoveCellTemplate}" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <controls:EmptyStateCard
+                                    x:Name="FramesEmptyState"
+                                    Title="{DynamicResource Str_GifMaker_NoImagesTitle}"
+                                    Grid.Row="1"
+                                    Description="{DynamicResource Str_GifMaker_NoImagesHint}"
+                                    Icon="ImageMultipleOutline" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!--  ============ GIF ============  -->
+                    <Border ctl:Tour.Key="Str_Tour_GifMaker_Result" ctl:Tour.Order="6" Grid.Column="2" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_GifMaker_ResultHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.FileGifBox}" />
+                                <WrapPanel
+                                    Grid.Column="1"
+                                    Margin="10,0,0,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                                    <Border
+                                        x:Name="PillPlan"
+                                        Margin="0,2,6,2"
+                                        Background="{DynamicResource StatusInfoBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusInfoFg}"
+                                                Kind="Filmstrip" />
+                                            <TextBlock
+                                                x:Name="TxtPlan"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource StatusInfoFg}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border
+                                        x:Name="PillEstimate"
+                                        Margin="0,2,0,2"
+                                        Background="{DynamicResource AccentColorSubtle}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        ToolTip="{DynamicResource Str_GifMaker_EstimateTooltip}"
+                                        Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconEstimate"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="Harddisk" />
+                                            <TextBlock
+                                                x:Name="TxtEstimate"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}" />
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </Grid>
+
+                            <Border
+                                x:Name="ResultStage"
+                                Grid.Row="1"
+                                MinHeight="160"
+                                Background="{DynamicResource RowBg}"
+                                CornerRadius="12"
+                                Visibility="Collapsed">
+                                <Image
+                                    x:Name="ImgResult"
+                                    Margin="8"
+                                    RenderOptions.BitmapScalingMode="NearestNeighbor"
+                                    Stretch="Uniform"
+                                    StretchDirection="DownOnly" />
+                            </Border>
+
+                            <controls:EmptyStateCard
+                                x:Name="ResultEmptyState"
+                                Title="{DynamicResource Str_GifMaker_NoResultTitle}"
+                                Grid.Row="1"
+                                Description="{DynamicResource Str_GifMaker_NoResultHint}"
+                                Icon="FileGifBox"
+                                IsHitTestVisible="False" />
+
+                            <Grid
+                                x:Name="ResultBar"
+                                Grid.Row="2"
+                                Margin="0,12,0,0"
+                                Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Name="BtnPlayPause"
+                                    Width="34"
+                                    Height="34"
+                                    Click="BtnPlayPause_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_GifMaker_PlayPauseTooltip}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconPlayPause"
+                                        Width="17"
+                                        Height="17"
+                                        Kind="Pause" />
+                                </Button>
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Margin="10,0"
+                                    VerticalAlignment="Center">
+                                    <TextBlock
+                                        x:Name="TxtResultName"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        x:Name="TxtResultInfo"
+                                        Margin="0,1,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <Button
+                                    x:Name="BtnOpenResult"
+                                    Grid.Column="2"
+                                    Margin="0,0,8,0"
+                                    Click="BtnOpenResult_Click"
+                                    ToolTip="{DynamicResource Str_GifMaker_OpenResultTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="OpenInNew" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnShowResult"
+                                    Grid.Column="3"
+                                    Click="BtnShowResult_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}">
+                                    <Grid HorizontalAlignment="Center" Margin="8,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Kind="FolderOpenOutline" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Text="{DynamicResource Str_GifMaker_ShowInFolder}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_GifMaker_DropOverlay}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_GifMaker_DropOverlayHint}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

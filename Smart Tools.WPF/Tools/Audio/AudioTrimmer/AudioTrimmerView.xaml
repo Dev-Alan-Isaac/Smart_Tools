@@ -1,0 +1,1183 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.AudioTrimmerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    DragEnter="Root_DragEnter"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/AudioTrimmerManager.cs (editing the clip list, undo, the ffmpeg
+        filter graph, settings) + AudioTrimmerManager.Engine.cs (ffprobe, waveform, export) +
+        AudioTrimPlayer.cs (preview); Models/AudioTrimmerModel.cs; Controls/AudioWaveformControl.cs.
+        UI only here.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  One clip of the result  -->
+        <DataTemplate x:Key="ClipRowTemplate" DataType="{x:Type models:AudioTrimClip}">
+            <Border
+                x:Name="RowBorder"
+                Margin="0,0,0,6"
+                Padding="10,8"
+                Background="{DynamicResource RowBg}"
+                BorderBrush="Transparent"
+                BorderThickness="1.5"
+                CornerRadius="12"
+                Cursor="Hand"
+                MouseLeftButtonUp="ClipRow_Click">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Width="28"
+                        Height="28"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="8">
+                        <Grid>
+                            <TextBlock
+                                x:Name="NumberText"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="11.5"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource AccentColor}"
+                                Text="{Binding Number}" />
+                            <materialDesign:PackIcon
+                                x:Name="PlayingIcon"
+                                Width="15"
+                                Height="15"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="VolumeHigh"
+                                Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="12.5"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding Source.Path}" />
+                        <TextBlock
+                            Margin="0,2,0,0"
+                            FontFamily="Cascadia Mono, Consolas"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding RangeText}" />
+                    </StackPanel>
+
+                    <Border
+                        Grid.Column="2"
+                        Margin="10,0,8,0"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        Style="{StaticResource IconStatusPillStyle}">
+                        <TextBlock
+                            FontFamily="Cascadia Mono, Consolas"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource AccentColor}"
+                            Text="{Binding DurationText}" />
+                    </Border>
+
+                    <StackPanel
+                        Grid.Column="3"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Button
+                            Width="26"
+                            Height="26"
+                            Margin="0,0,2,0"
+                            Click="BtnClipUp_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_AudioTrimmer_MoveUpTooltip}">
+                            <materialDesign:PackIcon
+                                Width="14"
+                                Height="14"
+                                Kind="ChevronUp" />
+                        </Button>
+                        <Button
+                            Width="26"
+                            Height="26"
+                            Margin="0,0,2,0"
+                            Click="BtnClipDown_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_AudioTrimmer_MoveDownTooltip}">
+                            <materialDesign:PackIcon
+                                Width="14"
+                                Height="14"
+                                Kind="ChevronDown" />
+                        </Button>
+                        <Button
+                            Width="26"
+                            Height="26"
+                            Click="BtnClipRemove_Click"
+                            Style="{StaticResource IconButtonStyle}"
+                            ToolTip="{DynamicResource Str_AudioTrimmer_RemoveClipTooltip}">
+                            <materialDesign:PackIcon
+                                Width="14"
+                                Height="14"
+                                Kind="Close" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                    <Setter TargetName="PlayingIcon" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="NumberText" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  A compact labelled chip row entry for the sidebar  -->
+        <Style x:Key="MiniHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="2,6,0,0" />
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="ClipsColumn" Width="340" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FADES + LEVEL ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_AudioTrimmer_Edit" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_AudioTrimmer_EditHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Waveform}" />
+
+                                    <Grid>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_AudioTrimmer_FadeIn}" />
+                                        <Border
+                                            HorizontalAlignment="Right"
+                                            Background="{DynamicResource AccentFill}"
+                                            CornerRadius="8">
+                                            <TextBlock
+                                                x:Name="TxtFadeInValue"
+                                                Margin="8,1"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="0" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SliderFadeIn"
+                                        Margin="0,2,0,0"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="10"
+                                        TickFrequency="0.5"
+                                        ValueChanged="Slider_ValueChanged" />
+
+                                    <Grid Margin="0,10,0,0">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_AudioTrimmer_FadeOut}" />
+                                        <Border
+                                            HorizontalAlignment="Right"
+                                            Background="{DynamicResource AccentFill}"
+                                            CornerRadius="8">
+                                            <TextBlock
+                                                x:Name="TxtFadeOutValue"
+                                                Margin="8,1"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="0" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SliderFadeOut"
+                                        Margin="0,2,0,0"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="10"
+                                        TickFrequency="0.5"
+                                        ValueChanged="Slider_ValueChanged" />
+                                    <TextBlock Style="{StaticResource MiniHint}" Text="{DynamicResource Str_AudioTrimmer_FadeHint}" />
+
+                                    <TextBlock
+                                        Margin="0,14,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_AudioTrimmer_Normalize}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioNormOff"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_NormOff}"
+                                            GroupName="AtNorm"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Off" />
+                                        <RadioButton
+                                            x:Name="RadioNormPeak"
+                                            Margin="2,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_NormPeak}"
+                                            GroupName="AtNorm"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Peak" />
+                                        <RadioButton
+                                            x:Name="RadioNormLoud"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_NormLoud}"
+                                            GroupName="AtNorm"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Loudness" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtNormHint"
+                                        Style="{StaticResource MiniHint}"
+                                        Text="{DynamicResource Str_AudioTrimmer_NormHintOff}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ EXPORT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_AudioTrimmer_Format" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_ExportHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileExportOutline}" />
+
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_AudioTrimmer_FormatLabel}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="CmbFormat"
+                                            VerticalContentAlignment="Center"
+                                            SelectedIndex="0"
+                                            SelectionChanged="CmbFormat_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}">
+                                            <ComboBoxItem Content="MP3" Tag="Mp3" />
+                                            <ComboBoxItem Content="WAV" Tag="Wav" />
+                                            <ComboBoxItem Content="FLAC" Tag="Flac" />
+                                            <ComboBoxItem Content="M4A (AAC)" Tag="M4a" />
+                                            <ComboBoxItem Content="OGG Vorbis" Tag="Ogg" />
+                                            <ComboBoxItem Content="Opus" Tag="Opus" />
+                                        </ComboBox>
+                                    </Border>
+                                    <TextBlock
+                                        x:Name="TxtFormatHint"
+                                        Style="{StaticResource MiniHint}"
+                                        Text="" />
+
+                                    <StackPanel x:Name="BitratePanel">
+                                        <TextBlock
+                                            Margin="0,12,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_AudioTrimmer_QualityLabel}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <ComboBox
+                                                x:Name="CmbBitrate"
+                                                VerticalContentAlignment="Center"
+                                                SelectionChanged="CmbBitrate_SelectionChanged"
+                                                Style="{StaticResource BareComboBox}" />
+                                        </Border>
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_AudioTrimmer_SampleRateLabel}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioRateAuto"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_Auto}"
+                                            GroupName="AtRate"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="0" />
+                                        <RadioButton
+                                            x:Name="RadioRate441"
+                                            Margin="2,0,2,0"
+                                            Click="Option_Click"
+                                            Content="44.1 kHz"
+                                            GroupName="AtRate"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="44100" />
+                                        <RadioButton
+                                            x:Name="RadioRate48"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="48 kHz"
+                                            GroupName="AtRate"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="48000" />
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_AudioTrimmer_ChannelsLabel}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioChAuto"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_Auto}"
+                                            GroupName="AtChannels"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Auto" />
+                                        <RadioButton
+                                            x:Name="RadioChStereo"
+                                            Margin="2,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_Stereo}"
+                                            GroupName="AtChannels"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Stereo" />
+                                        <RadioButton
+                                            x:Name="RadioChMono"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_Mono}"
+                                            GroupName="AtChannels"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Mono" />
+                                    </UniformGrid>
+                                    <TextBlock Style="{StaticResource MiniHint}" Text="{DynamicResource Str_AudioTrimmer_JoinHint}" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock
+                                Margin="4,2,4,0"
+                                Style="{StaticResource MiniHint}"
+                                Text="{DynamicResource Str_AudioTrimmer_PreviewNote}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <ScrollViewer
+                x:Name="MainScroll"
+                Grid.Column="2"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <Grid
+                    Height="{Binding ViewportHeight, ElementName=MainScroll}"
+                    MinHeight="420"
+                    Margin="0,0,4,0">
+
+                    <!--  ============ WAVEFORM CARD ============  -->
+                    <Border Grid.Row="0" ctl:Tour.Key="Str_Tour_AudioTrimmer_Waveform" ctl:Tour.Order="2" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_AudioTrimmer_WaveformTitle}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.Waveform}" />
+                                <TextBlock
+                                    x:Name="TxtWaveTitle"
+                                    Grid.Column="1"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Border
+                                        Margin="0,0,6,0"
+                                        Background="{DynamicResource AccentColorSubtle}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="VectorLink" />
+                                            <TextBlock
+                                                x:Name="TxtPillClips"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="TimerOutline" />
+
+                                            <TextBlock
+                                                x:Name="TxtPillTotal"
+                                                Margin="0,1,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Cascadia Mono, Consolas"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <Border
+                                Grid.Row="1"
+                                MinHeight="150"
+                                Background="{DynamicResource RowBg}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                ClipToBounds="True"
+                                CornerRadius="12">
+                                <Grid>
+                                    <controls:AudioWaveformControl
+                                        x:Name="Wave"
+                                        BackBrush="{DynamicResource RowBg}"
+                                        GridBrush="{DynamicResource CardBorder}"
+                                        PlayheadBrush="{DynamicResource StatusErrorFg}"
+                                        SelectionBrush="{DynamicResource AccentColorSubtle}"
+                                        SelectionEdgeBrush="{DynamicResource AccentColor}"
+                                        TextBrush="{DynamicResource TextSecondary}"
+                                        WaveBrush="{DynamicResource AccentColor}" />
+
+                                    <StackPanel
+                                        x:Name="WaveEmptyPanel"
+                                        MaxWidth="420"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.Waveform}" />
+                                        <TextBlock
+                                            x:Name="TxtWaveEmptyTitle"
+                                            Margin="0,12,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="15"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_AudioTrimmer_EmptyTitle}" />
+                                        <TextBlock
+                                            x:Name="TxtWaveEmptyHint"
+                                            Margin="0,4,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_AudioTrimmer_EmptyHint}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                        <Button
+                                            x:Name="BtnEmptyAdd"
+                                            Margin="0,12,0,0"
+                                            HorizontalAlignment="Center"
+                                            Click="BtnAddFiles_Click"
+                                            Style="{StaticResource AccentPrimaryButtonStyle}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Plus" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_AudioTrimmer_AddFiles}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <StackPanel
+                                        x:Name="WaveLoadingPanel"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            x:Name="TxtWaveLoading"
+                                            HorizontalAlignment="Center"
+                                            FontSize="12.5"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                        <ProgressBar
+                                            x:Name="WaveLoadingBar"
+                                            Width="220"
+                                            Height="4"
+                                            Margin="0,8,0,0"
+                                            Maximum="100" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <ScrollBar
+                                x:Name="WaveScroll"
+                                Grid.Row="2"
+                                Margin="0,4,0,0"
+                                Orientation="Horizontal"
+                                Scroll="WaveScroll_Scroll" />
+
+                            <!--  time readout (like the Audio Replay seek row)  -->
+                            <TextBlock
+                                x:Name="TxtTime"
+                                Grid.Row="3"
+                                Margin="2,4,0,0"
+                                HorizontalAlignment="Right"
+                                FontFamily="Cascadia Mono, Consolas"
+                                FontSize="11.5"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}"
+                                ToolTip="{DynamicResource Str_AudioTrimmer_TimeTooltip}" />
+
+                            <!--  controls: trim values chip | transport dock | zoom chip (same layout as Audio Replay)  -->
+                            <Grid Grid.Row="4" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border
+                                    Grid.Column="0"
+                                    Padding="12,4"
+                                    HorizontalAlignment="Left"
+                                    Style="{StaticResource ControlChipStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_TrimValuesTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <StackPanel Margin="0,0,14,0">
+                                            <TextBlock
+                                                FontSize="9.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_AudioTrimmer_TrimStart}" />
+                                            <TextBlock
+                                                x:Name="TxtSelStart"
+                                                FontFamily="Cascadia Mono, Consolas"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="–" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,14,0">
+                                            <TextBlock
+                                                FontSize="9.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_AudioTrimmer_TrimEnd}" />
+                                            <TextBlock
+                                                x:Name="TxtSelEnd"
+                                                FontFamily="Cascadia Mono, Consolas"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="–" />
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock
+                                                FontSize="9.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_AudioTrimmer_TrimLength}" />
+                                            <TextBlock
+                                                x:Name="TxtSelLen"
+                                                FontFamily="Cascadia Mono, Consolas"
+                                                FontSize="12"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Text="–" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Transport dock  -->
+                                <Border
+                                    Grid.Column="1"
+                                    Padding="6,4"
+                                    Background="{DynamicResource RowBg}"
+                                    BorderBrush="{DynamicResource CardBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="34">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button
+                                            x:Name="BtnStop"
+                                            Click="BtnStop_Click"
+                                            Style="{StaticResource TransportButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_StopTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="Stop" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnPlay"
+                                            Margin="8,0"
+                                            Click="BtnPlay_Click"
+                                            Style="{StaticResource PlayPauseButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_PlayTooltip}">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconPlay"
+                                                Width="26"
+                                                Height="26"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="White"
+                                                Kind="Play" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnPlayAll"
+                                            Click="BtnPlayAll_Click"
+                                            Style="{StaticResource TransportButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_PlayAllTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="22"
+                                                Height="22"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="PlaylistPlay" />
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+
+                                <!--  Zoom chip  -->
+                                <Border
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource ControlChipStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button
+                                            x:Name="BtnZoomOut"
+                                            Width="32"
+                                            Height="32"
+                                            Click="BtnZoomOut_Click"
+                                            Style="{StaticResource TransportButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_ZoomOutTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="MagnifyMinusOutline" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnZoomIn"
+                                            Width="32"
+                                            Height="32"
+                                            Click="BtnZoomIn_Click"
+                                            Style="{StaticResource TransportButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_ZoomInTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="MagnifyPlusOutline" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnZoomFit"
+                                            Width="32"
+                                            Height="32"
+                                            Click="BtnZoomFit_Click"
+                                            Style="{StaticResource TransportButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_ZoomFitTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="FitToPageOutline" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnZoomSel"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="0,0,8,0"
+                                            Click="BtnZoomSel_Click"
+                                            Style="{StaticResource TransportButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_ZoomSelTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="SelectSearch" />
+                                        </Button>
+                                        <CheckBox
+                                            x:Name="ChkBoost"
+                                            VerticalAlignment="Center"
+                                            Click="ChkBoost_Click"
+                                            Content="{DynamicResource Str_AudioTrimmer_BoostView}"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_AudioTrimmer_BoostViewTooltip}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!--  edit buttons  -->
+                            <WrapPanel Grid.Row="5" Margin="0,10,0,0">
+                                <Button
+                                    x:Name="BtnKeep"
+                                    Margin="0,0,8,6"
+                                    Click="BtnKeep_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_KeepTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="Crop" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_AudioTrimmer_Keep}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <Button
+                                    x:Name="BtnCut"
+                                    Margin="0,0,8,6"
+                                    Click="BtnCut_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_CutTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ContentCut" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_AudioTrimmer_CutOut}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <Button
+                                    x:Name="BtnSplit"
+                                    Margin="0,0,8,6"
+                                    Click="BtnSplit_Click"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_SplitTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ArrowSplitVertical" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_AudioTrimmer_Split}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+                                <Button
+                                    x:Name="BtnReset"
+                                    Margin="0,0,14,6"
+                                    Click="BtnReset_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_ResetTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Restore" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnUndo"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,4,6"
+                                    Click="BtnUndo_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_UndoTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="UndoVariant" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnRedo"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,0,6"
+                                    Click="BtnRedo_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_AudioTrimmer_RedoTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="RedoVariant" />
+                                </Button>
+                            </WrapPanel>
+                        </Grid>
+                    </Border>
+
+                </Grid>
+            </ScrollViewer>
+
+            <!--  ================= CLIPS + EXPORT (right, collapsible like the Audio Replay playlist) =================  -->
+
+            <Button
+                x:Name="BtnToggleClips"
+                Grid.Column="3"
+                Width="26"
+                Margin="6,0"
+                Click="BtnToggleClips_Click"
+                Style="{StaticResource PanelToggleButtonStyle}"
+                ToolTip="{DynamicResource Str_AudioTrimmer_ClipsPanelToggleTooltip}">
+                <materialDesign:PackIcon
+                    x:Name="IconToggleClips"
+                    Width="18"
+                    Height="18"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Kind="ChevronRight" />
+            </Button>
+
+            <Border
+                x:Name="ClipsPanel"
+                ctl:Tour.Key="Str_Tour_AudioTrimmer_Clips"
+                ctl:Tour.Order="1"
+                Grid.Column="4"
+                Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" MinHeight="160" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    VerticalAlignment="Center"
+                                    Content="{DynamicResource Str_AudioTrimmer_ClipsTitle}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="12,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_AudioTrimmer_ClipsSubtitle}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnAddFiles"
+                                        Margin="0,0,8,0"
+                                        Click="BtnAddFiles_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Plus" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_AudioTrimmer_AddFiles}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnClearClips"
+                                        Click="BtnClearClips_Click"
+                                        Style="{StaticResource ListToolDangerButtonStyle}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="DeleteSweepOutline" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <ScrollViewer
+                                Grid.Row="1"
+                                HorizontalScrollBarVisibility="Disabled"
+                                VerticalScrollBarVisibility="Auto">
+                                <ItemsControl
+                                    x:Name="ListClips"
+                                    Focusable="False"
+                                    ItemTemplate="{StaticResource ClipRowTemplate}" />
+                            </ScrollViewer>
+
+                            <TextBlock
+                                x:Name="TxtClipsEmpty"
+                                Grid.Row="1"
+                                Margin="0,6,0,6"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_AudioTrimmer_NoClips}" />
+                        </Grid>
+                    </Border>
+                    <Separator
+                        Grid.Row="1"
+                        Margin="0,12"
+                        Background="{DynamicResource CardBorder}" />
+                    <Border Grid.Row="2">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <StackPanel>
+                                    <Button
+                                        x:Name="BtnExport"
+                                        ctl:Tour.Key="Str_Tour_AudioTrimmer_Export"
+                                        ctl:Tour.Order="5"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Center"
+                                        Click="BtnExport_Click"
+                                        Style="{StaticResource AccentPrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioTrimmer_ExportTooltip}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                x:Name="IconExport"
+                                                Width="18"
+                                                Height="18"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FileExportOutline" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                x:Name="TxtExportLabel"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource Str_AudioTrimmer_ExportAudio}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                    <TextBlock
+                                        x:Name="TxtExportSummary"
+                                        Margin="0,12,0,0"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel
+                                    x:Name="StatusRow"
+                                    Margin="0,10,0,0"
+                                    Visibility="Collapsed">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock
+                                            x:Name="TxtStatus"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            TextWrapping="Wrap" />
+                                        <Button
+                                            x:Name="BtnShowFolder"
+                                            Grid.Row="1"
+                                            Margin="0,8,0,0"
+                                            HorizontalAlignment="Left"
+                                            Click="BtnShowFolder_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Visibility="Collapsed">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FolderOpenOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_ShowInFolderTooltip}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </Grid>
+                                    <ProgressBar
+                                        x:Name="ExportProgress"
+                                        Height="4"
+                                        Margin="0,8,0,0"
+                                        Maximum="100"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_AudioTrimmer_DropTitle}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_AudioTrimmer_DropHint}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

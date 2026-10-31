@@ -1,0 +1,667 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.PaletteExtractorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/PaletteExtractorManager.cs (+ .Render.cs) and
+        Models/PaletteExtractModel.cs. Code-behind only wires controls.
+        Swatches are data colours (they ARE the picture's colours), so their fills are set
+        from code; everything around them uses theme tokens.
+    -->
+
+    <UserControl.Resources>
+
+        <Style x:Key="ValuePill" TargetType="Border">
+            <Setter Property="Padding" Value="7,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AccentFill}" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="ValuePillText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!--  Clickable colour tile: the fill is the colour, the ring shows hover / selection  -->
+        <Style x:Key="PaletteTileStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border
+                                x:Name="Ring"
+                                Margin="-3"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="2"
+                                CornerRadius="12" />
+                            <Border
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ IMAGE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_PaletteExtractor_Image" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Palette_ImageHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+
+                                    <TextBlock
+                                        x:Name="TxtImageInfo"
+                                        Margin="0,0,0,10"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Palette_NoImageInfo}"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnLoadImage"
+                                            HorizontalAlignment="Stretch"
+                                            Click="BtnLoadImage_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FolderOpenOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Palette_OpenImage}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnPasteImage"
+                                            Grid.Column="2"
+                                            Width="32"
+                                            Height="32"
+                                            Click="BtnPasteImage_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Palette_PasteTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Kind="ContentPaste" />
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ EXTRACTION ============  -->
+                            <Border Margin="0,0,0,4" ctl:Tour.Key="Str_Tour_PaletteExtractor_Extract" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Palette_ExtractHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PaletteSwatchOutline}" />
+
+                                    <DockPanel Margin="0,0,0,4">
+                                        <Border DockPanel.Dock="Right" Style="{StaticResource ValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtCountValue"
+                                                Style="{StaticResource ValuePillText}"
+                                                Text="6" />
+                                        </Border>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Palette_Colors}" />
+                                    </DockPanel>
+                                    <Slider
+                                        x:Name="CountSlider"
+                                        Margin="0,0,0,10"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="16"
+                                        Minimum="3"
+                                        TickFrequency="1"
+                                        ToolTip="{DynamicResource Str_Palette_ColorsTooltip}"
+                                        ValueChanged="CountSlider_ValueChanged"
+                                        Value="6" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Palette_Method}" />
+                                    <UniformGrid Margin="0,0,0,4" Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioKMeans"
+                                            Margin="0,0,2,0"
+                                            Click="Method_Click"
+                                            Content="{DynamicResource Str_Palette_KMeans}"
+                                            GroupName="PaletteMethod"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="KMeans" />
+                                        <RadioButton
+                                            x:Name="RadioMedianCut"
+                                            Margin="2,0,0,0"
+                                            Click="Method_Click"
+                                            Content="{DynamicResource Str_Palette_MedianCut}"
+                                            GroupName="PaletteMethod"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="MedianCut" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtMethodHint"
+                                        Margin="0,2,0,12"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Palette_Ignore}" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreTransparent"
+                                        Margin="0"
+                                        Checked="Filter_Changed"
+                                        Content="{DynamicResource Str_Palette_IgnoreTransparent}"
+                                        IsChecked="True"
+                                        Unchecked="Filter_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreWhite"
+                                        Margin="0,8,0,0"
+                                        Checked="Filter_Changed"
+                                        Content="{DynamicResource Str_Palette_IgnoreWhite}"
+                                        Unchecked="Filter_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkIgnoreBlack"
+                                        Margin="0,8,0,0"
+                                        Checked="Filter_Changed"
+                                        Content="{DynamicResource Str_Palette_IgnoreBlack}"
+                                        Unchecked="Filter_Changed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FAVORITES (shared with the other colour tools) ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Color_FavoritesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Star}" />
+
+                                    <WrapPanel
+                                        x:Name="FavoritesPanel"
+                                        Margin="3,3,0,0"
+                                        ToolTip="{DynamicResource Str_Palette_FavoritesTooltip}" />
+
+                                    <TextBlock
+                                        x:Name="TxtFavoritesEmptyHint"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Palette_FavoritesEmptyHint}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <ScrollViewer
+                x:Name="MainScroll"
+                Grid.Column="2"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <!--  At least as tall as the window, so the picture card takes the spare height; taller content scrolls  -->
+                <Grid MinHeight="{Binding ViewportHeight, ElementName=MainScroll}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  ========== Picture + palette ==========  -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid MinHeight="330">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="5*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!--  Picture: drop target  -->
+                            <Grid
+                                x:Name="DropArea"
+                                AllowDrop="True"
+                                Background="Transparent"
+                                DragEnter="DropArea_DragEnter"
+                                DragLeave="DropArea_DragLeave"
+                                DragOver="DropArea_DragOver"
+                                Drop="DropArea_Drop">
+                                <Image
+                                    x:Name="PreviewImage"
+                                    Margin="6"
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                    Stretch="Uniform" />
+
+                                <Grid x:Name="EmptyState" IsHitTestVisible="False">
+                                    <Rectangle
+                                        Margin="1"
+                                        RadiusX="10"
+                                        RadiusY="10"
+                                        Stroke="{DynamicResource CardBorder}"
+                                        StrokeDashArray="5 4"
+                                        StrokeThickness="1.5" />
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+                                        <TextBlock
+                                            Margin="0,12,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="13"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_Palette_EmptyTitle}" />
+                                        <TextBlock
+                                            MaxWidth="220"
+                                            Margin="0,4,0,0"
+                                            HorizontalAlignment="Center"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text="{DynamicResource Str_Palette_EmptyHint}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border
+                                    x:Name="DropHighlight"
+                                    IsHitTestVisible="False"
+                                    Style="{StaticResource DropZoneStyle}">
+                                    <Rectangle
+                                        RadiusX="10"
+                                        RadiusY="10"
+                                        Stroke="{DynamicResource AccentColor}"
+                                        StrokeDashArray="6 4"
+                                        StrokeThickness="2" />
+                                </Border>
+                            </Grid>
+
+                            <!--  Palette  -->
+                            <Grid Grid.Column="2">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Palette_PaletteHeader}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
+                                    <Border
+                                        x:Name="StatusPill"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Background="{DynamicResource RowBg}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconStatus"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{Binding Foreground, ElementName=StatusText}"
+                                                Kind="InformationOutline" />
+                                            <TextBlock
+                                                x:Name="StatusText"
+                                                MaxWidth="300"
+                                                FontSize="11.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_Palette_Ready}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <ProgressBar
+                                    x:Name="WorkingBar"
+                                    Grid.Row="1"
+                                    Height="3"
+                                    Margin="0,0,0,8"
+                                    IsIndeterminate="True"
+                                    Visibility="Collapsed" />
+
+                                <!--  Share bar: one segment per colour, as wide as its share  -->
+                                <Border
+                                    Grid.Row="2"
+                                    Height="22"
+                                    Margin="0,0,0,12"
+                                    BorderBrush="{DynamicResource CardBorder}"
+                                    BorderThickness="1"
+                                    ClipToBounds="True"
+                                    CornerRadius="8">
+                                    <Grid x:Name="ShareBar" />
+                                </Border>
+
+                                <!--  Tiles share the spare height and width; the negative margin cancels the last tile's gap  -->
+                                <UniformGrid
+                                    x:Name="SwatchPanel"
+                                    ctl:Tour.Key="Str_Tour_PaletteExtractor_Palette"
+                                    ctl:Tour.Order="3"
+                                    Grid.Row="3"
+                                    Margin="0,0,-8,-8" />
+
+                                <!--  Selected colour  -->
+                                <Grid
+                                    x:Name="SelectedPanel"
+                                    Grid.Row="4"
+                                    Margin="0,6,0,0"
+                                    Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border
+                                        x:Name="SelectedSwatch"
+                                        Width="48"
+                                        Height="48"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="12" />
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock
+                                            x:Name="TxtSelectedHex"
+                                            FontFamily="Consolas"
+                                            FontSize="15"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock
+                                            x:Name="TxtSelectedDetail"
+                                            FontFamily="Consolas"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            x:Name="TxtSelectedText"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!--  Copy / export  -->
+                                <WrapPanel
+                                    x:Name="ExportPanel"
+                                    Grid.Row="5"
+                                    Margin="0,12,0,0"
+                                    Visibility="Collapsed">
+                                    <Button
+                                        x:Name="BtnCopyHex"
+                                        Margin="0,0,6,6"
+                                        Click="BtnCopyHex_Click"
+                                        ToolTip="{DynamicResource Str_Palette_CopyHexTooltip}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ContentCopy" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnCopyCss"
+                                        Margin="0,0,6,6"
+                                        Click="BtnCopyCss_Click"
+                                        ToolTip="{DynamicResource Str_Palette_CopyCssTooltip}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="CodeTags" />
+                                    </Button>
+                                    <controls:ExportButton
+                                        x:Name="BtnExport"
+                                        ctl:Tour.Key="Str_Tour_PaletteExtractor_Export"
+                                        ctl:Tour.Order="4"
+                                        Margin="0,0,0,6">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem
+                                                    Click="BtnSaveJson_Click"
+                                                    Header="{DynamicResource Str_Palette_SaveJson}"
+                                                    ToolTip="{DynamicResource Str_Palette_SaveJsonTooltip}">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="CodeJson" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Click="BtnSavePng_Click"
+                                                    Header="{DynamicResource Str_Palette_SavePng}"
+                                                    ToolTip="{DynamicResource Str_Palette_SavePngTooltip}">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="ImageOutline" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                    </controls:ExportButton>
+                                </WrapPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!--  ========== Related palettes ==========  -->
+                    <Border
+                        Grid.Row="1"
+                        Margin="0,14,0,0"
+                        Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Margin="0,0,0,4"
+                                Content="{DynamicResource Str_Palette_VariantsHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.VectorTriangle}" />
+                            <TextBlock
+                                x:Name="TxtVariantsHint"
+                                Margin="0,0,0,10"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Palette_VariantsNeedColor}"
+                                TextWrapping="Wrap" />
+                            <StackPanel x:Name="VariantsPanel" Visibility="Collapsed" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ========== Contrast ==========  -->
+                    <Border
+                        Grid.Row="2"
+                        Margin="0,14,0,0"
+                        Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Margin="0,0,0,10"
+                                Content="{DynamicResource Str_Palette_ContrastHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ContrastCircle}" />
+
+                            <TextBlock
+                                x:Name="TxtContrastHint"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Palette_ContrastNeedColors}"
+                                TextWrapping="Wrap" />
+
+                            <Grid x:Name="ContrastPanel" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Palette_TextColor}" />
+                                    <WrapPanel x:Name="ForegroundPanel" Margin="0,0,0,10" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Palette_BackgroundColor}" />
+                                    <WrapPanel x:Name="BackgroundPanel" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <Border
+                                        x:Name="SampleBorder"
+                                        Padding="14,12"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8">
+                                        <StackPanel>
+                                            <TextBlock
+                                                x:Name="TxtSampleLarge"
+                                                FontSize="22"
+                                                FontWeight="Bold"
+                                                Text="{DynamicResource Str_Palette_SampleLarge}" />
+                                            <TextBlock
+                                                x:Name="TxtSampleSmall"
+                                                Margin="0,2,0,0"
+                                                FontSize="13"
+                                                Text="{DynamicResource Str_Palette_SampleSmall}"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                        <TextBlock
+                                            x:Name="TxtRatio"
+                                            VerticalAlignment="Center"
+                                            FontSize="24"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}" />
+                                        <TextBlock
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Text=": 1" />
+                                    </StackPanel>
+
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <Border x:Name="PillAaNormal" Margin="0,0,6,6" Style="{StaticResource IconStatusPillStyle}">
+                                            <TextBlock x:Name="TxtAaNormal" FontSize="11.5" FontWeight="SemiBold" />
+                                        </Border>
+                                        <Border x:Name="PillAaaNormal" Margin="0,0,6,6" Style="{StaticResource IconStatusPillStyle}">
+                                            <TextBlock x:Name="TxtAaaNormal" FontSize="11.5" FontWeight="SemiBold" />
+                                        </Border>
+                                        <Border x:Name="PillAaLarge" Margin="0,0,6,6" Style="{StaticResource IconStatusPillStyle}">
+                                            <TextBlock x:Name="TxtAaLarge" FontSize="11.5" FontWeight="SemiBold" />
+                                        </Border>
+                                        <Border x:Name="PillAaaLarge" Margin="0,0,6,6" Style="{StaticResource IconStatusPillStyle}">
+                                            <TextBlock x:Name="TxtAaaLarge" FontSize="11.5" FontWeight="SemiBold" />
+                                        </Border>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

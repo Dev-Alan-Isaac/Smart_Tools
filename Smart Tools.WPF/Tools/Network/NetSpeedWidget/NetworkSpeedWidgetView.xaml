@@ -1,0 +1,108 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.NetworkSpeedWidgetView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Loaded="View_Loaded">
+
+    <!--
+        Backend: Controllers/NetworkSpeedWidgetManager.cs (counters, rates, units,
+        settings), Controllers/OuiLookupManager.cs (MAC -> manufacturer),
+        Controllers/NetworkSpeedWidgetWindow.cs (the floating widget);
+        Models/NetSpeedWidgetModel.cs. This file and the code-behind are UI only.
+    -->
+
+    <Grid Margin="16,8,16,16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="320" />
+        </Grid.ColumnDefinitions>
+
+        <!--  Live preview  -->
+        <Border ctl:Tour.Key="Str_Tour_NetWidget_Live" ctl:Tour.Order="1" Grid.Column="0" Padding="20" Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <ContentControl Content="{DynamicResource Str_NetWidget_Live}" Style="{StaticResource CardHeader}" />
+
+                <UniformGrid Margin="0,14,0,0" Columns="2">
+                    <Border Margin="0,0,8,0" Padding="16,14" Background="{DynamicResource RowBg}" CornerRadius="12">
+                        <StackPanel>
+                            <TextBlock Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Download}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtDownValue" FontSize="34" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="0" />
+                                <TextBlock x:Name="TxtDownUnit" Margin="6,0,0,7" VerticalAlignment="Bottom" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="8,0,0,0" Padding="16,14" Background="{DynamicResource RowBg}" CornerRadius="12">
+                        <StackPanel>
+                            <TextBlock Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Upload}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtUpValue" FontSize="34" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="0" />
+                                <TextBlock x:Name="TxtUpUnit" Margin="6,0,0,7" VerticalAlignment="Bottom" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <controls:SystemMonitorSparkline
+                    x:Name="Graph"
+                    Height="110"
+                    Margin="0,14,0,0"
+                    ShowGrid="True"
+                    Stroke="{DynamicResource AccentFill}" />
+
+                <TextBlock x:Name="TxtSession" Margin="0,10,0,0" Foreground="{DynamicResource TextSecondary}" />
+
+                <!--  Which card is being measured  -->
+                <Border Margin="0,16,0,0" Padding="16,12" Background="{DynamicResource RowBg}" CornerRadius="12">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtAdapterName" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="TxtAdapterDesc" Margin="0,2,0,0" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="TxtAdapterMaker" Margin="0,6,0,0" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="TxtAdapterMac" Margin="0,2,0,0" Foreground="{DynamicResource TextSecondary}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!--  Options  -->
+        <Border Grid.Column="2" Padding="16" Style="{StaticResource SidebarPanelStyle}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Button
+                        ctl:Tour.Key="Str_Tour_NetWidget_Show"
+                        ctl:Tour.Order="3"
+                        x:Name="BtnToggleWidget"
+                        MinHeight="40"
+                        Click="BtnToggleWidget_Click"
+                        Content="{DynamicResource Str_NetWidget_Show}"
+                        Style="{StaticResource PrimaryButtonStyle}" />
+
+                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Adapter}" />
+                    <ComboBox ctl:Tour.Key="Str_Tour_NetWidget_Adapter" ctl:Tour.Order="2" x:Name="CmbAdapter" SelectionChanged="CmbAdapter_SelectionChanged" />
+
+                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Units}" />
+                    <UniformGrid Columns="2">
+                        <RadioButton x:Name="RadioBytes" Margin="0,0,3,0" Checked="Option_Changed" Content="{DynamicResource Str_NetWidget_Bytes}" GroupName="NetWidgetUnits" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
+                        <RadioButton x:Name="RadioBits" Margin="3,0,0,0" Checked="Option_Changed" Content="{DynamicResource Str_NetWidget_Bits}" GroupName="NetWidgetUnits" Style="{StaticResource ModeToggleButtonStyle}" />
+                    </UniformGrid>
+
+                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Refresh}" />
+                    <ComboBox x:Name="CmbRefresh" SelectionChanged="Option_Changed" />
+
+                    <TextBlock Margin="0,14,0,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Opacity}" />
+                    <Slider x:Name="SliderOpacity" Margin="0,4,0,0" Maximum="1" Minimum="0.3" SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05" ValueChanged="SliderOpacity_ValueChanged" Value="0.9" />
+
+                    <CheckBox x:Name="ChkMini" Margin="0,14,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_Mini}" />
+                    <CheckBox x:Name="ChkMaker" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ShowMaker}" IsChecked="True" />
+                    <CheckBox x:Name="ChkClickThrough" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ClickThrough}" />
+
+                    <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Hint}" TextWrapping="Wrap" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

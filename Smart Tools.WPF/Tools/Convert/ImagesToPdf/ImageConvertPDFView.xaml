@@ -1,0 +1,1092 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.ImageConvertView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/ImageToPdfManager.cs (page layout, quality
+        presets, the list and page order, file names and splitting,
+        settings, and the run), ImageToPdfManager.Files.cs (finding images)
+        and ImageToPdfManager.Pdf.cs (ImageMagick + PdfSharp);
+        Models/ImageToPdfModel.cs. This file and the code-behind are UI
+        only. The list order is the page order; the tick box decides what
+        goes in the PDF.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Grid: thumbnail (loaded only for rows on screen)  -->
+        <DataTemplate x:Key="ThumbCellTemplate" DataType="{x:Type models:ImagePdfItem}">
+            <Border
+                x:Name="Thumb"
+                Width="34"
+                Height="34"
+                HorizontalAlignment="Center"
+                Background="{DynamicResource RowBg}"
+                ClipToBounds="True"
+                CornerRadius="6">
+                <Grid>
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ImageOutline" />
+                    <Image
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="{Binding Thumbnail}"
+                        Stretch="UniformToFill" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsIncluded}" Value="False">
+                    <Setter TargetName="Thumb" Property="Opacity" Value="0.4" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: page number  -->
+        <DataTemplate x:Key="NumberCellTemplate" DataType="{x:Type models:ImagePdfItem}">
+            <Border
+                x:Name="Badge"
+                MinWidth="24"
+                Padding="5,1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource AccentColorSubtle}"
+                CornerRadius="8">
+                <TextBlock
+                    x:Name="Num"
+                    HorizontalAlignment="Center"
+                    FontSize="11"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource AccentColor}"
+                    Text="{Binding Number}"
+                    TextTrimming="CharacterEllipsis" />
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsIncluded}" Value="False">
+                    <Setter TargetName="Badge" Property="Background" Value="{DynamicResource RowBg}" />
+                    <Setter TargetName="Num" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: name + folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:ImagePdfItem}">
+            <StackPanel
+                x:Name="NamePanel"
+                VerticalAlignment="Center"
+                ToolTip="{Binding FullPath}">
+                <TextBlock
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsIncluded}" Value="False">
+                    <Setter TargetName="NamePanel" Property="Opacity" Value="0.5" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: status chip. The page number or the reason it failed is in the tooltip.  -->
+        <DataTemplate x:Key="StatusCellTemplate" DataType="{x:Type models:ImagePdfItem}">
+            <Border
+                x:Name="Chip"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource RowBg}"
+                Style="{StaticResource IconStatusPillStyle}"
+                ToolTip="{Binding Message}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ClockOutline" />
+                    <TextBlock
+                        x:Name="ChipText"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding StatusText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="ProgressClock" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Added">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CloseCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+
+        <!--  Input card: one queued item  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:ImagePdfGroup}">
+            <Grid ToolTip="{Binding ToolTip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="GroupIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileMultipleOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveGroup_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_BackgroundRemover_TakeTheseImagesOff}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--
+                                ============ FILES ============
+                                Same card as Validate Data and Convert Files: drop area
+                                listing what was added (one row per folder, one for loose
+                                files), Add files / Add folder / Clear, Include subfolders.
+                            -->
+                            <controls:InputFolderCard
+                                ctl:Tour.Key="Str_Tour_ImagesToPdf_Input"
+                                ctl:Tour.Order="1"
+                                x:Name="InputCard"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Common_Files}"
+                                HeaderIcon="FileMultipleOutline"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+
+                            <!--  ============ PAGES ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_ImagesToPdf_Pages" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ImageConvertPDF_Pages}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileDocumentOutline}" />
+
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_ImgPdf_PageSizeLabel}" />
+                                    <ComboBox
+                                        x:Name="CmbPageSize"
+                                        SelectedIndex="0"
+                                        SelectionChanged="Option_Changed"
+                                        ToolTip="{DynamicResource Str_ImageConvertPDF_PaperSizeOfEvery}">
+                                        <ComboBoxItem Content="A4 (210 × 297 mm)" Tag="A4" />
+                                        <ComboBoxItem Content="{DynamicResource Str_ImageConvertPDF_Letter8511}" Tag="Letter" />
+                                        <ComboBoxItem Content="{DynamicResource Str_ImageConvertPDF_Legal8514}" Tag="Legal" />
+                                        <ComboBoxItem Content="A3 (297 × 420 mm)" Tag="A3" />
+                                        <ComboBoxItem Content="A5 (148 × 210 mm)" Tag="A5" />
+                                        <ComboBoxItem Content="{DynamicResource Str_ImageConvertPDF_SameAsImage}" Tag="MatchImage" />
+                                    </ComboBox>
+
+                                    <StackPanel x:Name="PaperOptionsPanel">
+                                        <TextBlock
+                                            Margin="0,12,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_ImgPdf_OrientationLabel}" />
+                                        <UniformGrid Columns="3">
+                                            <RadioButton
+                                                x:Name="RadioPortrait"
+                                                Margin="0,0,2,0"
+                                                Click="Option_Click"
+                                                GroupName="Orientation"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Portrait"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_EveryPageUpright}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="CropPortrait" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_ImageConvertPDF_Portrait}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton
+                                                x:Name="RadioLandscape"
+                                                Margin="2,0"
+                                                Click="Option_Click"
+                                                GroupName="Orientation"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Landscape"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_EveryPageSideways}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="CropLandscape" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_ImageConvertPDF_Landscape}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton
+                                                x:Name="RadioAutoOrientation"
+                                                Margin="2,0,0,0"
+                                                Click="Option_Click"
+                                                GroupName="Orientation"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Auto"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_EachPageTurnsTo}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="PhoneRotateLandscape" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_ImageConvertPDF_Auto}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_ImgPdf_MarginsLabel}" />
+                                    <StackPanel x:Name="MarginOptions" ToolTip="{DynamicResource Str_ImageConvertPDF_MarginsForEachPicture}">
+
+                                        <!--  Top row: Full-width Normal option  -->
+                                        <RadioButton
+                                            x:Name="RadioMarginNormal"
+                                            Margin="0,0,0,4"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_ImageConvertPDF_Normal}"
+                                            GroupName="Margins"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Normal"
+                                            ToolTip="{DynamicResource Str_ImageConvertPDF_1Inch25Mm}" />
+
+                                        <!--  Bottom row: 3 equal columns for the remaining options  -->
+                                        <UniformGrid Columns="3">
+                                            <RadioButton
+                                                x:Name="RadioMarginNone"
+                                                Margin="0,0,2,0"
+                                                Click="Option_Click"
+                                                Content="{DynamicResource Str_Api_AuthTypeNone}"
+                                                GroupName="Margins"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="None"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_PicturesGoRightTo}" />
+                                            <RadioButton
+                                                x:Name="RadioMarginNarrow"
+                                                Margin="2,0"
+                                                Click="Option_Click"
+                                                Content="{DynamicResource Str_ImageConvertPDF_Narrow}"
+                                                GroupName="Margins"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Narrow"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_Inch13MmAround}" />
+                                            <RadioButton
+                                                x:Name="RadioMarginWide"
+                                                Margin="2,0,0,0"
+                                                Click="Option_Click"
+                                                Content="{DynamicResource Str_ImageConvertPDF_Wide}"
+                                                GroupName="Margins"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Wide"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_1Inches38Mm}" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <CheckBox
+                                        x:Name="ChkFitImageToPage"
+                                        Margin="0,12,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_ImgPdf_FitImageToPage}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_ImageConvertPDF_EnlargeSmallPicturesTo}"
+                                        Unchecked="Option_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkPageNumbering"
+                                        Margin="0,8,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_ImgPdf_AddPageNumbers}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_ImageConvertPDF_QuotPage1Quot}"
+                                        Unchecked="Option_Changed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ QUALITY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_ImagesToPdf_Quality" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Convert_QualityLabel}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ImageFilterHdr}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioQualityHigh"
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            GroupName="Quality"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="High"
+                                            ToolTip="{DynamicResource Str_ImageConvertPDF_FullSizeJpegPhotos}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Diamond" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_ImageConvertPDF_High}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioQualityBalanced"
+                                            Margin="2,0"
+                                            Click="Option_Click"
+                                            GroupName="Quality"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Balanced"
+                                            ToolTip="{DynamicResource Str_ImageConvertPDF_SharpWhenPrintedMuch}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ScaleBalance" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_DeviceScanner_Balanced}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioQualitySmall"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            GroupName="Quality"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Small"
+                                            ToolTip="{DynamicResource Str_ImageConvertPDF_SmallestFileGoodFor}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="EmailFastOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_BarcodeGenerator_Small}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtQualityHint"
+                                        Margin="2,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_ImageConvertPDF_SplitIntoFilesOf}" />
+                                    <StackPanel ToolTip="{DynamicResource Str_ImageConvertPDF_StartANewPdf}">
+                                        <!--  Top row: Full-width "No limit" standout option  -->
+                                        <RadioButton
+                                            x:Name="RadioSplitOff"
+                                            Margin="0,0,0,4"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_ImageConvertPDF_NoLimit}"
+                                            GroupName="Split"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="0" />
+
+                                        <!--  Bottom row: 3 equal columns for 10 MB, 20 MB, and 30 MB  -->
+                                        <UniformGrid Columns="3">
+                                            <RadioButton
+                                                x:Name="RadioSplit10"
+                                                Margin="0,0,2,0"
+                                                Click="Option_Click"
+                                                Content="10 MB"
+                                                GroupName="Split"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="10" />
+                                            <RadioButton
+                                                x:Name="RadioSplit20"
+                                                Margin="2,0"
+                                                Click="Option_Click"
+                                                Content="20 MB"
+                                                GroupName="Split"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="20" />
+                                            <RadioButton
+                                                x:Name="RadioSplit30"
+                                                Margin="2,0,0,0"
+                                                Click="Option_Click"
+                                                Content="30 MB"
+                                                GroupName="Split"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="30" />
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ TITLE PAGE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ImageConvertPDF_TitlePage}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormatTitle}" />
+                                    <CheckBox
+                                        x:Name="ChkAddTitlePage"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_ImgPdf_AddTitlePage}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_ImageConvertPDF_AFirstPageWith}"
+                                        Unchecked="Option_Changed" />
+                                    <StackPanel x:Name="TitlePageOptionsPanel" Visibility="Collapsed">
+                                        <TextBlock
+                                            Margin="0,10,0,4"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_ImgPdf_TitleLabel}" />
+                                        <TextBox
+                                            x:Name="TxtTitlePageTitle"
+                                            MaxLength="300"
+                                            Tag="e.g. Holiday 2025"
+                                            ToolTip="{DynamicResource Str_ImageConvertPDF_LongTitlesWrapOnto}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--
+                                ============ SAVE TO ============
+                                The shared Output card in file mode: folder (kept for this
+                                session only), File name with the .pdf pill, "Ask where to save
+                                each time", and a "Saves as …" line with the exact file.
+                            -->
+                            <controls:OutputFolderCard
+                                ctl:Tour.Key="Str_Tour_ImagesToPdf_Output"
+                                ctl:Tour.Order="4"
+                                x:Name="OutputCard"
+                                Margin="0,0,0,4"
+                                AllowAskEachTime="True"
+                                AskEachTimeChanged="OutputCard_AskEachTimeChanged"
+                                FileExtension=".pdf"
+                                FileNameEdited="OutputCard_FileNameEdited"
+                                Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
+                                HeaderIcon="ContentSaveOutline"
+                                ShowFileName="True"
+                                ToolName="Images to PDF" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnCreatePdf"
+                            ctl:Tour.Key="Str_Tour_ImagesToPdf_Create"
+                            ctl:Tour.Order="5"
+                            MinWidth="170"
+                            VerticalAlignment="Center"
+                            Click="BtnCreatePdf_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_ImageConvertPDF_MakeAPdfFrom}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconCreate"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="FilePdfBox" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtCreateLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_ImgPdf_CreateButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <Button
+                            x:Name="BtnOpenPdf"
+                            Grid.Column="1"
+                            Width="36"
+                            Height="36"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="BtnOpenPdf_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource ListToolButtonStyle}"
+                            ToolTip="{DynamicResource Str_ImageConvertPDF_OpenThePdf}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="OpenInNew" />
+                        </Button>
+
+                        <Button
+                            x:Name="BtnShowInFolder"
+                            Grid.Column="2"
+                            Width="36"
+                            Height="36"
+                            Margin="6,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnShowInFolder_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource ListToolButtonStyle}"
+                            ToolTip="{DynamicResource Str_ImageConvertPDF_ShowThePdfIn}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="FolderSearchOutline" />
+                        </Button>
+
+                        <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressConversion"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_ImageConvertPDF_PagesAddedSoFar}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_ImageConvertPDF_AddImagesToMake}"
+                                TextTrimming="CharacterEllipsis"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="4"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Pages  -->
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_ImageConvertPDF_Pages}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.BookOpenPageVariantOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_ImagesInTheList}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="ImageMultipleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillAdded"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryAdded"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillFailed"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_FileConverter_HoverAFailedRow}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryFailed"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel
+                                x:Name="ListTools"
+                                Grid.Column="2"
+                                Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnMoveUp"
+                                    Width="32"
+                                    Height="32"
+                                    Click="BtnMoveUp_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_MoveTheHighlightedPages}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ArrowUp" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnMoveDown"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="4,0,0,0"
+                                    Click="BtnMoveDown_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_MoveTheHighlightedPages2}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ArrowDown" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSortByName"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="10,0,0,0"
+                                    Click="BtnSortByName_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_PutThePagesIn}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="SortAlphabeticalAscending" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSortByDate"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="4,0,0,0"
+                                    Click="BtnSortByDate_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_PutThePagesIn2}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="SortCalendarAscending" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnRemoveSelected"
+                                    Margin="10,0,0,0"
+                                    Click="BtnRemoveSelected_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_TakeTheHighlightedRows}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PlaylistRemove" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearAll"
+                                    Margin="10,0,0,0"
+                                    Click="BtnClearAll_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ImageConvertPDF_EmptyTheListThe}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridImages"
+                            ctl:Tour.Key="Str_Tour_ImagesToPdf_Order"
+                            ctl:Tour.Order="6"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserReorderColumns="False"
+                            CanUserSortColumns="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            LoadingRow="DataGridImages_LoadingRow"
+                            MouseDoubleClick="DataGridImages_MouseDoubleClick"
+                            PreviewKeyDown="DataGridImages_PreviewKeyDown"
+                            MinRowHeight="46"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_ImageConvertPDF_TheListOrderIs}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="34" CellStyle="{StaticResource CheckBoxCellStyle}">
+                                    <DataGridTemplateColumn.Header>
+                                        <CheckBox
+                                            x:Name="ChkIncludeAll"
+                                            Click="ChkIncludeAll_Click"
+                                            IsChecked="True"
+                                            Style="{StaticResource DataGridCheckBoxStyle}"
+                                            ToolTip="{DynamicResource Str_ImageConvertPDF_TickOrUntickEvery}" />
+                                    </DataGridTemplateColumn.Header>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox
+                                                Click="ItemCheckBox_Click"
+                                                IsChecked="{Binding IsIncluded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Style="{StaticResource DataGridCheckBoxStyle}"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_TickedImagesGoIn}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn
+                                    Width="44"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource NumberCellTemplate}"
+                                    Header="#" />
+                                <DataGridTemplateColumn
+                                    Width="46"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource ThumbCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderPreview}" />
+                                <DataGridTemplateColumn
+                                    Width="*"
+                                    MinWidth="70"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColFormat"
+                                    Width="64"
+                                    Binding="{Binding Format, Mode=OneWay}"
+                                    Header="{DynamicResource Str_ImgPdf_ColHeaderFormat}" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Width="76"
+                                    Binding="{Binding Size, Mode=OneWay}"
+                                    Header="{DynamicResource Str_Common_ColHeaderSize}" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    x:Name="ColDimensions"
+                                    Width="104"
+                                    Binding="{Binding Dimensions, Mode=OneWay}"
+                                    Header="{DynamicResource Str_ImgPdf_ColHeaderDimensions}" />
+                                <DataGridTemplateColumn
+                                    Width="104"
+                                    CellTemplate="{StaticResource StatusCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}" />
+                                <DataGridTemplateColumn Width="40" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Width="26"
+                                                Height="26"
+                                                Click="BtnRemoveImage_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                Tag="{Binding}"
+                                                ToolTip="{DynamicResource Str_ImageConvertPDF_TakeThisImageOff}">
+                                                <materialDesign:PackIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Kind="Close" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <controls:EmptyStateCard
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            Description="{DynamicResource Str_ImageConvertPDF_AddImagesOrA}"
+                            Icon="FilePdfBox"
+                            IsHitTestVisible="False" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_ImageConvertPDF_DropToAddPages}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_ImageConvertPDF_ImagesAndWholeFolders}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

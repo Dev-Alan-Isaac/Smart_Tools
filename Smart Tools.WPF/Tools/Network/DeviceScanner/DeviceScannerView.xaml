@@ -1,0 +1,771 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.DeviceScannerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/DeviceScannerManager.cs and
+        Models/DeviceScannerModel.cs. Code-behind only wires controls.
+        Look & feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Small chip (speed presets)  -->
+
+
+        <!--  Small tag next to a device name (This PC, Router, private MAC)  -->
+        <Style x:Key="DeviceTag" TargetType="Border">
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+        </Style>
+        <Style x:Key="DeviceTagText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  Device cell: icon by kind + name + tags  -->
+        <DataTemplate x:Key="DeviceCellTemplate">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Grid.Column="0"
+                    x:Name="IconChip"
+                    Width="28"
+                    Height="28"
+                    Margin="0,0,10,0"
+                    Background="{DynamicResource RowBg}"
+                    CornerRadius="8">
+                    <materialDesign:PackIcon
+                        x:Name="DeviceIcon"
+                        Width="16"
+                        Height="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="Devices" />
+                </Border>
+                <TextBlock
+                    Grid.Column="1"
+                    x:Name="NameText"
+                    VerticalAlignment="Center"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding HostNameDisplay}"
+                    TextTrimming="CharacterEllipsis" />
+                <Border Grid.Column="2" Style="{StaticResource DeviceTag}" Visibility="{Binding IsThisDevice, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource DeviceTagText}" Text="{DynamicResource Str_DeviceScanner_ThisPc}" TextTrimming="CharacterEllipsis" />
+                </Border>
+                <Border Grid.Column="3" Style="{StaticResource DeviceTag}" Visibility="{Binding IsGateway, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource DeviceTagText}" Text="{DynamicResource Str_DeviceScanner_Router}" TextTrimming="CharacterEllipsis" />
+                </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsGateway}" Value="True">
+                    <Setter TargetName="DeviceIcon" Property="Kind" Value="RouterWireless" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsThisDevice}" Value="True">
+                    <Setter TargetName="DeviceIcon" Property="Kind" Value="DesktopTowerMonitor" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsRandomizedMac}" Value="True">
+                    <Setter TargetName="DeviceIcon" Property="Kind" Value="CellphoneLink" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasHostName}" Value="False">
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="NameText" Property="FontWeight" Value="Normal" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  MAC cell: monospace + private-address tag  -->
+        <DataTemplate x:Key="MacCellTemplate">
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontFamily="Consolas"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding MacAddressDisplay}"
+                    TextTrimming="CharacterEllipsis" />
+                <Border
+                    Style="{StaticResource DeviceTag}"
+                    ToolTip="{DynamicResource Str_DeviceScanner_APrivateRandomizedAddress}"
+                    Visibility="{Binding IsRandomizedMac, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            Width="11"
+                            Height="11"
+                            Margin="0,0,3,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Kind="Incognito" />
+                        <TextBlock Style="{StaticResource DeviceTagText}" Text="{DynamicResource Str_DeviceScanner_Private}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Response cell: latency pill coloured by speed; "no reply" for ARP-only devices  -->
+        <DataTemplate x:Key="ResponseCellTemplate">
+            <Border
+                x:Name="Pill"
+                Padding="8,2"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource StatusSuccessBg}"
+                CornerRadius="8">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="PillIcon"
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusSuccessFg}"
+                        Kind="Speedometer" />
+                    <TextBlock
+                        x:Name="PillText"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource StatusSuccessFg}"
+                        Text="{Binding ResponseDisplay}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Latency}" Value="Normal">
+                    <Setter TargetName="Pill" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="PillIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="PillIcon" Property="Kind" Value="SpeedometerMedium" />
+                    <Setter TargetName="PillText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Latency}" Value="Slow">
+                    <Setter TargetName="Pill" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="PillIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="PillIcon" Property="Kind" Value="SpeedometerSlow" />
+                    <Setter TargetName="PillText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Latency}" Value="Unknown">
+                    <Setter TargetName="Pill" Property="Background" Value="{DynamicResource RowBg}" />
+                    <Setter TargetName="PillIcon" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="PillIcon" Property="Kind" Value="ShieldOffOutline" />
+                    <Setter TargetName="PillText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="Pill" Property="ToolTip" Value="Doesn't answer ping (firewall), but it's on the network - found in the ARP table" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ NETWORK ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DeviceScanner_Network" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_DeviceScan_SubnetHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.LanConnect}" />
+                                        <Button
+                                            x:Name="BtnRefreshNetworks"
+                                            Grid.Column="1"
+                                            Margin="0,0,0,10"
+                                            Click="BtnRefreshNetworks_Click"
+                                            ToolTip="{DynamicResource Str_DeviceScanner_LookForNetworksAgain}"
+                                            Style="{StaticResource ListToolButtonStyle}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Refresh" />
+                                        </Button>
+                                    </Grid>
+
+                                    <!--  Adapter cards are built in code (same look as Ping's adapter picker)  -->
+                                    <StackPanel
+                                        x:Name="NetworkChoicesPanel"
+                                        Margin="0,0,0,6"
+                                        ToolTip="{DynamicResource Str_DeviceScanner_TheNetworkToScan}" />
+
+                                    <TextBlock
+                                        x:Name="TxtNetworkInfo"
+                                        Margin="0,0,0,10"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <CheckBox
+                                        x:Name="ChkSubnetOverride"
+                                        Margin="0,0,0,8"
+                                        Checked="ChkSubnetOverride_CheckedChanged"
+                                        Content="{DynamicResource Str_DeviceScanner_ScanACustomRange}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_DeviceScan_OverrideSubnetTooltip}"
+                                        Unchecked="ChkSubnetOverride_CheckedChanged" />
+
+                                    <Border
+                                        x:Name="SubnetBar"
+                                        IsEnabled="False"
+                                        Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtSubnetOverride"
+                                            FontFamily="Consolas"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="192.168.1.0/24"
+                                            Text="192.168.1.0/24"
+                                            TextChanged="TxtSubnetOverride_TextChanged"
+                                            ToolTip="192.168.1.0/24 · 192.168.1.10-192.168.1.50 · 10.0.0.1-80 · 192.168.1" />
+                                    </Border>
+                                    <TextBlock
+                                        x:Name="TxtRangeInfo"
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SPEED ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DeviceScanner_Speed" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_DeviceScan_SettingsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Speedometer}" />
+
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Button: Full Width (Quick)  -->
+                                        <Button
+                                            Grid.Row="0"
+                                            Margin="0,0,0,2"
+                                            Click="BtnSpeedPreset_Click"
+                                            Content="{DynamicResource Str_DeviceScanner_Quick}"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            Tag="200,128"
+                                            ToolTip="{DynamicResource Str_DeviceScanner_200MsTimeout128}" />
+
+                                        <!--  Remaining Buttons: 1x2 Grid (Balanced & Thorough)  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,2,0,0"
+                                            Columns="2">
+                                            <Button
+                                                Margin="0,0,2,0"
+                                                Click="BtnSpeedPreset_Click"
+                                                Content="{DynamicResource Str_DeviceScanner_Balanced}"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="500,64"
+                                                ToolTip="{DynamicResource Str_DeviceScanner_500MsTimeout64}" />
+                                            <Button
+                                                Margin="2,0,0,0"
+                                                Click="BtnSpeedPreset_Click"
+                                                Content="{DynamicResource Str_DeviceScanner_Thorough}"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="1500,32"
+                                                ToolTip="{DynamicResource Str_DeviceScanner_15STimeout}" />
+                                        </UniformGrid>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,12,0,6">
+                                            <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_DeviceScan_TimeoutLabel}" />
+                                            <Border x:Name="TimeoutBar" Style="{StaticResource InputBarStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="TxtTimeout"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Text="500"
+                                                        TextChanged="ScanField_TextChanged"
+                                                        ToolTip="{DynamicResource Str_DeviceScan_TimeoutTooltip}" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Style="{StaticResource UnitSuffix}"
+                                                        Text="ms" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Margin="0,12,0,6">
+                                            <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_DeviceScan_ConcurrencyLabel}" />
+                                            <Border x:Name="ConcurrencyBar" Style="{StaticResource InputBarStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="TxtConcurrency"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Text="64"
+                                                        TextChanged="ScanField_TextChanged"
+                                                        ToolTip="{DynamicResource Str_DeviceScan_ConcurrencyTooltip}" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Style="{StaticResource UnitSuffix}"
+                                                        Text="{DynamicResource Str_DeviceScanner_AtOnce}" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock
+                                        x:Name="TxtSpeedError"
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ DETAILS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DeviceScanner_Options" ctl:Tour.Order="3" Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_OptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Tag}" />
+                                    <CheckBox
+                                        x:Name="ChkResolveNames"
+                                        Margin="0,0,0,6"
+                                        Content="{DynamicResource Str_DeviceScanner_LookUpDeviceNames}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DeviceScanner_ReverseDnsForEach}" />
+                                    <CheckBox
+                                        x:Name="ChkIncludeArp"
+                                        Content="{DynamicResource Str_DeviceScanner_IncludeDevicesThatIgnore}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_DeviceScanner_PhonesAndFirewalledPcs}" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            ctl:Tour.Key="Str_Tour_DeviceScanner_Scan"
+                            ctl:Tour.Order="4"
+                            x:Name="ScanButton"
+                            Grid.Column="0"
+                            MinWidth="180"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="ScanButton_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_DeviceScan_ScanButtonTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconScan"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Radar" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtScanLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_DeviceScan_ScanButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ScanProgressBar"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_DeviceScan_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtScanProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DeviceScan_ProgressInitial}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtScanProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            Text="0%"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Results  -->
+                <Border ctl:Tour.Key="Str_Tour_DeviceScanner_Results" ctl:Tour.Order="5" Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_DeviceScan_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.Devices}" />
+                            <Border
+                                x:Name="SummaryPill"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_DeviceScan_DevicesPillTooltip}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="AccessPointNetwork" />
+                                    <TextBlock
+                                        x:Name="TxtSummaryCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Text="{DynamicResource Str_DeviceScan_DevicesPillInitial}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="NoPingPill"
+                                Grid.Column="2"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_DeviceScanner_FoundInTheArp}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Kind="ShieldOffOutline" />
+                                    <TextBlock
+                                        x:Name="TxtNoPingCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  Filter  -->
+                            <Border
+                                Grid.Column="4"
+                                Width="220"
+                                Padding="8,0,4,0"
+                                Style="{StaticResource InputBarStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Width="15"
+                                        Height="15"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Kind="Magnify" />
+                                    <TextBox
+                                        x:Name="TxtFilter"
+                                        Grid.Column="1"
+                                        Style="{StaticResource BareTextBox}"
+                                        Tag="Filter by name, IP or MAC"
+                                        TextChanged="TxtFilter_TextChanged" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="GridDevices"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            EnableRowVirtualization="True"
+                            IsReadOnly="True"
+                            MinRowHeight="42"
+                            SelectionMode="Extended"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Click="MenuCopyIp_Click" Header="{DynamicResource Str_DeviceScanner_CopyIpAddress}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="Ip" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuCopyMac_Click" Header="{DynamicResource Str_DeviceScanner_CopyMacAddress}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="ContentCopy" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuCopyName_Click" Header="{DynamicResource Str_DeviceScanner_CopyName}" />
+                                    <MenuItem Click="MenuCopyRow_Click" Header="{DynamicResource Str_DeviceScanner_CopyRowS}" />
+                                    <Separator />
+                                    <MenuItem Click="MenuOpenBrowser_Click" Header="{DynamicResource Str_DeviceScanner_OpenInBrowserHttp}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="OpenInNew" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="2*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource DeviceCellTemplate}"
+                                    Header="{DynamicResource Str_DeviceScan_ColHeaderHostname}"
+                                    SortMemberPath="HostNameDisplay" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Width="130"
+                                    Binding="{Binding IPAddress}"
+                                    FontFamily="Consolas"
+                                    Header="{DynamicResource Str_DeviceScan_ColHeaderIp}"
+                                    SortMemberPath="IpSortKey" />
+                                <DataGridTemplateColumn
+                                    Width="210"
+                                    CellTemplate="{StaticResource MacCellTemplate}"
+                                    Header="{DynamicResource Str_DeviceScan_ColHeaderMac}"
+                                    SortMemberPath="MacAddressDisplay" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Width="1.2*"
+                                    MinWidth="70"
+                                    Binding="{Binding VendorDisplay}"
+                                    Header="{DynamicResource Str_DeviceScan_ColHeaderVendor}"
+                                    SortMemberPath="VendorDisplay" />
+                                <DataGridTemplateColumn
+                                    Width="*"
+                                    MinWidth="70"
+                                    CellTemplate="{StaticResource ResponseCellTemplate}"
+                                    Header="{DynamicResource Str_DeviceScan_ColHeaderResponseTime}"
+                                    SortMemberPath="ResponseTimeMs" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False">
+                            <ContentControl
+                                x:Name="EmptyBadge"
+                                Style="{StaticResource EmptyStateBadge}"
+                                Tag="{x:Static materialDesign:PackIconKind.Radar}" />
+                            <TextBlock
+                                x:Name="TxtEmptyHint"
+                                MaxWidth="360"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_DeviceScan_EmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="2" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Kind="InformationOutline" />
+                                <TextBlock
+                                    x:Name="TxtFooterHint"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_DeviceScanner_RightClickADevice}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <controls:ExportButton
+                                x:Name="BtnExport"
+                                Grid.Column="1"
+                                IsEnabled="False"
+                                ToolTip="{DynamicResource Str_DeviceScan_ExportCsvTooltip}">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Click="MenuExportCsv_Click" Header="{DynamicResource Str_Common_ExportAsCsv}">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </controls:ExportButton>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

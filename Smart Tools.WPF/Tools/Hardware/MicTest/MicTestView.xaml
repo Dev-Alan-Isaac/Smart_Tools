@@ -1,0 +1,298 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.MicTestView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Tools/Hardware/MicTest/MicTestManager.cs (NAudio capture, level numbers, hearing the
+        input) + MicTestManager.Logic.cs (decibels, verdict, settings); MicTestModel.cs. UI only here.
+        Nothing is recorded or saved. The test stops when you leave the page.
+    -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ MICROPHONE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_MicTest_Device}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.MicrophoneOutline}" />
+                                        <Button
+                                            x:Name="BtnRefreshDevices"
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Click="BtnRefreshDevices_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_InstrumentTuner_LookAgainAfterPlugging}">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconRefresh"
+                                                Width="15"
+                                                Height="15"
+                                                Kind="Refresh"
+                                                RenderTransformOrigin="0.5,0.5" />
+                                        </Button>
+                                    </Grid>
+
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="DeviceCombo"
+                                            Margin="4,0"
+                                            DisplayMemberPath="Name"
+                                            SelectionChanged="DeviceCombo_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_MicTest_DeviceTip}" />
+                                    </Border>
+                                    <TextBlock
+                                        x:Name="TxtDeviceHint"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ HEAR ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MicTest_Listen}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Headphones}" />
+                                    <CheckBox
+                                        x:Name="ChkHear"
+                                        Checked="ChkHear_Changed"
+                                        Content="{DynamicResource Str_MicTest_Hear}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_MicTest_HearTip}"
+                                        Unchecked="ChkHear_Changed" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MicTest_HearHint}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Start / stop and the big reading  -->
+                    <Grid Margin="0,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                x:Name="LiveDot"
+                                Width="12"
+                                Height="12"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                Fill="{DynamicResource StatusErrorFg}"
+                                Opacity="0.25" />
+                            <TextBlock
+                                x:Name="TxtDb"
+                                VerticalAlignment="Center"
+                                FontFamily="Consolas"
+                                FontSize="40"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="-∞ dB" />
+                        </StackPanel>
+                        <Button
+                            x:Name="BtnStart"
+                            Grid.Column="1"
+                            MinWidth="140"
+                            Click="BtnStart_Click"
+                            Content="{DynamicResource Str_MicTest_Start}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                    </Grid>
+
+                    <!--  Level meter with a peak marker; green, then amber, red near clipping  -->
+                    <Border
+                        x:Name="MeterTrack"
+                        Grid.Row="1"
+                        Height="16"
+                        Background="{DynamicResource RowBg}"
+                        CornerRadius="8"
+                        SizeChanged="MeterTrack_SizeChanged"
+                        ToolTip="{DynamicResource Str_MicTest_MeterTip}">
+                        <Grid>
+                            <Border
+                                x:Name="LevelFill"
+                                Background="{DynamicResource StatusSuccessFg}"
+                                CornerRadius="8"
+                                RenderTransformOrigin="0,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="LevelScale" ScaleX="0" />
+                                </Border.RenderTransform>
+                            </Border>
+                            <Border
+                                x:Name="PeakMarker"
+                                Width="3"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource TextPrimary}"
+                                CornerRadius="1.5"
+                                Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
+
+                    <!--  Verdict  -->
+                    <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                        <TextBlock
+                            x:Name="TxtVerdict"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_MicTest_Ready}"
+                            TextWrapping="Wrap" />
+                        <StackPanel
+                            x:Name="PanelPrivacy"
+                            Margin="0,8,0,0"
+                            Orientation="Horizontal"
+                            Visibility="Collapsed">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_MicTest_PrivacyHint}" />
+                            <Button
+                                Margin="12,0,0,0"
+                                Click="BtnOpenPrivacy_Click"
+                                Content="{DynamicResource Str_MicTest_OpenPrivacy}"
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!--  Numbers  -->
+                    <UniformGrid
+                        Grid.Row="3"
+                        Margin="0,20,0,0"
+                        Columns="4">
+                        <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Peak}" />
+                                <TextBlock x:Name="TxtPeak" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Quietest}" />
+                                <TextBlock x:Name="TxtQuietest" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Clipped}" />
+                                <TextBlock x:Name="TxtClipped" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Time}" />
+                                <TextBlock x:Name="TxtTime" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0:00" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <Button
+                        x:Name="BtnResetPeak"
+                        Grid.Row="4"
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Click="BtnResetPeak_Click"
+                        Content="{DynamicResource Str_MicTest_ResetPeak}"
+                        IsEnabled="False"
+                        Style="{StaticResource NeutralIconButtonStyle}" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

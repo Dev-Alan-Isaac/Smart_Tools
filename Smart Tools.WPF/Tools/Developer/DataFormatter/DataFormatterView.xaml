@@ -1,0 +1,445 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.DataFormatterView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    mc:Ignorable="d"
+    Loaded="View_Loaded">
+
+    <!--
+        JSON / YAML / XML Formatter - format, minify, validate, and convert between the three. Everything stays on this PC.
+        Backend: Controllers/DataFormatterManager.cs; Models/DataFormatterModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+        <FontFamily x:Key="FormatterMono">Cascadia Mono, Consolas, Courier New</FontFamily>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ INPUT FORMAT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DataFormatter_InputFormat" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Formatter_InputHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Import}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="FromAuto"
+                                            Margin="0,0,2,4"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Formatter_Auto}"
+                                            GroupName="FormatterFrom"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Auto"
+                                            ToolTip="{DynamicResource Str_Formatter_AutoTip}" />
+                                        <RadioButton
+                                            Margin="2,0,0,4"
+                                            Click="Option_Click"
+                                            Content="JSON"
+                                            GroupName="FormatterFrom"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Json" />
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="YAML"
+                                            GroupName="FormatterFrom"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Yaml" />
+                                        <RadioButton
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="XML"
+                                            GroupName="FormatterFrom"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Xml" />
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OUTPUT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DataFormatter_OutputFormat" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Formatter_OutputHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Export}" />
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Formatter_OutputFormat}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="JSON"
+                                            GroupName="FormatterTo"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Json" />
+                                        <RadioButton
+                                            Margin="2,0,2,0"
+                                            Click="Option_Click"
+                                            Content="YAML"
+                                            GroupName="FormatterTo"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Yaml" />
+                                        <RadioButton
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="XML"
+                                            GroupName="FormatterTo"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Xml" />
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Formatter_Layout}" />
+                                    <UniformGrid x:Name="ActionRow" Columns="2">
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Formatter_Pretty}"
+                                            GroupName="FormatterAction"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Pretty" />
+                                        <RadioButton
+                                            x:Name="ActionMinify"
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Formatter_Minify}"
+                                            GroupName="FormatterAction"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Minify" />
+                                    </UniformGrid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Formatter_Indent}" />
+                                    <UniformGrid x:Name="IndentRow" Columns="3">
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Formatter_TwoSpaces}"
+                                            GroupName="FormatterIndent"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="TwoSpaces" />
+                                        <RadioButton
+                                            Margin="2,0,2,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Formatter_FourSpaces}"
+                                            GroupName="FormatterIndent"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="FourSpaces" />
+                                        <RadioButton
+                                            Margin="2,0,0,0"
+                                            Click="Option_Click"
+                                            Content="{DynamicResource Str_Formatter_Tab}"
+                                            GroupName="FormatterIndent"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Tab" />
+                                    </UniformGrid>
+                                    <TextBlock x:Name="TxtOptionNote" Style="{StaticResource SidebarHint}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ WHAT CONVERTING KEEPS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DataFormatter_Convert" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Formatter_ConvertHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_Formatter_ConvertNote}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= PANES =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!--  Input  -->
+                <Border Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                Content="{DynamicResource Str_Formatter_Input}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.TextBoxEditOutline}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    Margin="0,0,2,0"
+                                    Click="BtnOpen_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Formatter_Open}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button
+                                    Margin="0,0,2,0"
+                                    Click="BtnPaste_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Formatter_Paste}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentPaste" />
+                                </Button>
+                                <Button
+                                    Click="BtnClear_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Formatter_Clear}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                        <TextBox
+                            x:Name="TxtInput" Height="Auto"
+                            ctl:Tour.Key="Str_Tour_DataFormatter_Input" ctl:Tour.Order="4"
+                            Grid.Row="1"
+                            Margin="0,10,0,0"
+                            VerticalContentAlignment="Top"
+                            AcceptsReturn="True"
+                            AcceptsTab="True"
+                            FontFamily="{StaticResource FormatterMono}"
+                            FontSize="12"
+                            HorizontalScrollBarVisibility="Auto"
+                            TextChanged="TxtInput_TextChanged"
+                            VerticalScrollBarVisibility="Auto"
+                            Tag="{DynamicResource Str_Formatter_InputHint}" />
+                    </Grid>
+                </Border>
+
+                <!--  Output  -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                Content="{DynamicResource Str_Formatter_Output}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.TextBoxCheckOutline}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnUseAsInput"
+                                    Margin="0,0,2,0"
+                                    Click="BtnUseAsInput_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Formatter_UseAsInput}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ArrowLeftBold" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSaveOutput"
+                                    Margin="0,0,2,0"
+                                    Click="BtnSave_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Formatter_Save}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentSaveOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnCopyOutput"
+                                    Click="BtnCopy_Click"
+                                    IsEnabled="False"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Formatter_Copy}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconCopy"
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                        <TextBox
+                            x:Name="TxtOutput" Height="Auto"
+                            ctl:Tour.Key="Str_Tour_DataFormatter_Output" ctl:Tour.Order="5"
+                            Grid.Row="1"
+                            Margin="0,10,0,0"
+                            VerticalContentAlignment="Top"
+                            AcceptsReturn="True"
+                            FontFamily="{StaticResource FormatterMono}"
+                            FontSize="12"
+                            HorizontalScrollBarVisibility="Auto"
+                            IsReadOnly="True"
+                            VerticalScrollBarVisibility="Auto" />
+                    </Grid>
+                </Border>
+
+                <!--  Result line: valid or where it went wrong  -->
+                <Border
+                    Grid.Row="1"
+                    Grid.ColumnSpan="3"
+                    Margin="0,12,0,0"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="PillResult" Style="{StaticResource IconStatusPillStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Name="IconResult"
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Kind="TextBoxCheckOutline" />
+                                <TextBlock
+                                    x:Name="TxtResult"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock
+                            x:Name="TxtResultDetail"
+                            Grid.Column="1"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            x:Name="TxtSize"
+                            Grid.Column="2"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

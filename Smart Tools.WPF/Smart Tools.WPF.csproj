@@ -1,0 +1,146 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+		<RootNamespace>Smart_Tools.WPF</RootNamespace>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AssemblyName>SmartTools</AssemblyName>
+		<Product>Smart Tools</Product>
+		<AssemblyTitle>Smart Tools</AssemblyTitle>
+		<ApplicationIcon>Images\Icon.ico</ApplicationIcon>
+	</PropertyGroup>
+
+	<!-- ================= Native engines (no NuGet) ================= -->
+
+	<ItemGroup>
+		<Content Include="Engines\FFMPEG\ffmpeg.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Include="Engines\FFMPEG\ffplay.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Include="Engines\FFMPEG\ffprobe.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- VLC: libvlc.dll, libvlccore.dll, COPYING.txt and the whole plugins
+	     folder, copied to bin\...\Engines\VLC with the subfolders kept.
+	     The None Remove stops the same files being listed twice. -->
+	<ItemGroup>
+		<None Remove="Engines\VLC\**" />
+		<Content Include="Engines\VLC\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- Tesseract OCR (optional engine for Screen OCR): tesseract.exe, its DLLs and
+	     tessdata (configs + English). More languages are downloaded into AppPaths.TesseractData. -->
+	<ItemGroup>
+		<None Remove="Engines\TESSERACT\**" />
+		<Content Include="Engines\TESSERACT\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- Whisper speech engine (Speech to Text): whisper-cli.exe and the DLLs it loads, including the
+	     ggml-cpu-*.dll variants it picks from at run time. Models are downloaded into AppPaths.WhisperModels. -->
+	<ItemGroup>
+		<None Remove="Engines\WHISPER\**" />
+		<Content Include="Engines\WHISPER\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- IEEE OUI snapshot (MAC prefix -> manufacturer), read by OuiLookupManager. -->
+	<ItemGroup>
+		<Content Include="Data\oui.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Include="log4net.config">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- ================= Images ================= -->
+
+	<ItemGroup>
+		<None Remove="Images\Icon.ico" />
+		<Resource Include="Images\Icon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Images\Memento.jpeg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="Images\Memento-bg.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- ================= Packages ================= -->
+
+	<ItemGroup>
+		<PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+		<PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
+		<PackageReference Include="log4net" Version="3.5.0" />
+		<PackageReference Include="Magick.NET-Q16-AnyCPU" Version="15.0.0" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.4.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.1" />
+		<PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
+		<PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+		<PackageReference Include="NAudio" Version="3.3.0" />
+		<!--  Stay on 6.2.4 (MIT). 6.5.0 is AGPL with a license check: saving any PDF throws "The loaded license is not valid".  -->
+		<PackageReference Include="PDFsharp" Version="6.5.0" />
+		<PackageReference Include="System.IO.Hashing" Version="10.0.14" />
+		<PackageReference Include="System.Management" Version="10.0.14" />
+		<PackageReference Include="System.Speech" Version="10.0.14" />
+		<PackageReference Include="YamlDotNet" Version="18.1.0" />
+		<PackageReference Include="ZXing.Net" Version="0.16.11" />
+	</ItemGroup>
+
+	<!-- ================= Resources and settings ================= -->
+
+	<ItemGroup>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+</Project>

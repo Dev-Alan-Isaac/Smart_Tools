@@ -1,0 +1,609 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.TextToSpeechView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/TextToSpeechManager.cs (Windows voices through
+        System.Speech: speak, pause, stop, word progress, background WAV
+        save) + TextToSpeechManager.Text.cs (SSML, names, estimates,
+        settings); Models/TextToSpeechModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="290" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ VOICE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_TextToSpeech_Voice" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_TTS_VoiceHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.AccountVoice}" />
+                                        <Button
+                                            x:Name="BtnRefreshVoices"
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Click="BtnRefreshVoices_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_TextToSpeech_LookAgainAfterAdding}">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconRefresh"
+                                                Width="15"
+                                                Height="15"
+                                                Kind="Refresh"
+                                                RenderTransformOrigin="0.5,0.5" />
+                                        </Button>
+                                    </Grid>
+
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="10,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Kind="AccountVoice" />
+                                            <ComboBox
+                                                x:Name="VoiceCombo"
+                                                Grid.Column="1"
+                                                Margin="4,0,4,0"
+                                                DisplayMemberPath="DisplayLabel"
+                                                SelectionChanged="VoiceCombo_SelectionChanged"
+                                                Style="{StaticResource BareComboBox}"
+                                                ToolTip="{DynamicResource Str_TextToSpeech_TheVoiceThatReads}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <Button
+                                        x:Name="BtnSample"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnSample_Click"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_TextToSpeech_HearThisVoiceSay}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="PlayCircleOutline" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_TextToSpeech_HearASample}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+
+                                    <TextBlock
+                                        x:Name="TxtVoiceHint"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ HOW IT SOUNDS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_TextToSpeech_Sound" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_TextToSpeech_HowItSounds}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.TuneVertical}" />
+                                        <Button
+                                            x:Name="BtnResetSound"
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Click="BtnResetSound_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_TextToSpeech_BackToNormalSpeed}">
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Kind="Refresh"
+                                                RenderTransformOrigin="0.5,0.5" />
+                                        </Button>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource SliderLabel}" Text="{DynamicResource Str_TextToSpeech_Speed}" />
+                                        <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtRateValue"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="{DynamicResource Str_ImageConvertPDF_Normal}" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="RateSlider"
+                                        Margin="0,6,0,0"
+                                        IsMoveToPointEnabled="True"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="10"
+                                        Minimum="-10"
+                                        TickFrequency="1"
+                                        ToolTip="{DynamicResource Str_TextToSpeech_SlowerToTheLeft}"
+                                        ValueChanged="Sound_ValueChanged"
+                                        Value="0" />
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource SliderLabel}" Text="{DynamicResource Str_TTS_Volume}" />
+                                        <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtVolumeValue"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="100%" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="VolumeSlider"
+                                        Margin="0,6,0,0"
+                                        IsMoveToPointEnabled="True"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="100"
+                                        Minimum="0"
+                                        TickFrequency="5"
+                                        ToolTip="{DynamicResource Str_TextToSpeech_HowLoudTheVoice}"
+                                        ValueChanged="Sound_ValueChanged"
+                                        Value="100" />
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource SliderLabel}" Text="{DynamicResource Str_TTS_Pitch}" />
+                                        <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtPitchValue"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="{DynamicResource Str_TextToSpeech_Natural}" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="PitchSlider"
+                                        Margin="0,6,0,0"
+                                        IsMoveToPointEnabled="True"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="10"
+                                        Minimum="-10"
+                                        TickFrequency="1"
+                                        ToolTip="{DynamicResource Str_TextToSpeech_DeeperToTheLeft}"
+                                        ValueChanged="Sound_ValueChanged"
+                                        Value="0" />
+
+                                    <CheckBox
+                                        x:Name="ChkHighlight"
+                                        Margin="0,14,0,0"
+                                        Checked="Option_Changed"
+                                        Content="{DynamicResource Str_TextToSpeech_HighlightEachWordAs}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_TextToSpeech_FollowAlongInThe}"
+                                        Unchecked="Option_Changed" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_TextToSpeech_ChangesApplyTheNext}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SAVE TO ============  -->
+                            <!--
+                                The shared Output card (folder for this session only). File name and
+                                "Save without asking" go in its Options, built in code-behind
+                                (BuildOutputOptions) - no x:Name may go inside the card's Options (MC3093).
+                            -->
+                            <controls:OutputFolderCard
+                                ctl:Tour.Key="Str_Tour_TextToSpeech_Output"
+                                ctl:Tour.Order="5"
+                                x:Name="OutputCard"
+                                Margin="0,0,0,4"
+                                Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
+                                HeaderIcon="ContentSaveOutline"
+                                ToolName="Text to Speech" />
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  ============ PLAYER ============  -->
+                <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button
+                                x:Name="BtnSpeak"
+                                ctl:Tour.Key="Str_Tour_TextToSpeech_Speak"
+                                ctl:Tour.Order="3"
+                                MinWidth="140"
+                                Click="BtnSpeak_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_TextToSpeech_ReadTheTextAloud}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Play" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="TxtSpeakLabel"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_TTS_Play}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+
+                            <Button
+                                x:Name="BtnPause"
+                                Grid.Column="1"
+                                Width="38"
+                                Height="38"
+                                Margin="8,0,0,0"
+                                Click="BtnPause_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_TextToSpeech_PauseResume}">
+                                <materialDesign:PackIcon
+                                    x:Name="IconPause"
+                                    Width="18"
+                                    Height="18"
+                                    Kind="Pause" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnStop"
+                                Grid.Column="2"
+                                Width="38"
+                                Height="38"
+                                Margin="4,0,0,0"
+                                Click="BtnStop_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_MicRecorder_Stop}">
+                                <materialDesign:PackIcon
+                                    Width="18"
+                                    Height="18"
+                                    Kind="Stop" />
+                            </Button>
+
+                            <StackPanel
+                                Grid.Column="3"
+                                Margin="16,0,12,0"
+                                VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="StatusText"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_TextToSpeech_TypeOrPasteText}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <ProgressBar
+                                    x:Name="ProgressSave"
+                                    Height="6"
+                                    Margin="0,6,0,0"
+                                    Maximum="1"
+                                    Visibility="Collapsed" />
+                            </StackPanel>
+
+                            <Button
+                                x:Name="BtnSaveToFile"
+                                ctl:Tour.Key="Str_Tour_TextToSpeech_Save"
+                                ctl:Tour.Order="4"
+                                Grid.Column="4"
+                                Click="BtnSaveToFile_Click"
+                                Style="{StaticResource ListToolPrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_TextToSpeech_SaveTheSpeechAs}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        x:Name="IconSave"
+                                        Width="17"
+                                        Height="17"
+                                        Margin="0,0,7,0"
+                                        VerticalAlignment="Center"
+                                        Kind="ContentSaveOutline" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="TxtSaveLabel"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_TextToSpeech_SaveAsWav}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                        </Grid>
+
+                        <WrapPanel Margin="0,12,0,0">
+                            <Border
+                                Margin="0,0,6,0"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Kind="AccountVoice" />
+                                    <TextBlock
+                                        x:Name="TxtVoicePill"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_TextToSpeech_NoVoice}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,6,0"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Kind="TimerOutline" />
+                                    <TextBlock
+                                        x:Name="TxtLengthPill"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_TextToSpeech_0Words}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="StatePill"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconStatePill"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="VolumeHigh" />
+                                    <TextBlock
+                                        x:Name="TxtStatePill"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Text="{DynamicResource Str_TextToSpeech_Speaking}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  ============ TEXT ============  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                Content="{DynamicResource Str_FileDiff_ColHeaderText}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
+                            <Button
+                                x:Name="BtnPaste"
+                                Grid.Column="1"
+                                Width="34"
+                                Height="34"
+                                Click="BtnPaste_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_TextToSpeech_ReplaceTheTextWith}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ContentPaste" />
+                            </Button>
+                            <Button
+                                x:Name="BtnLoadFromFile"
+                                Grid.Column="2"
+                                Width="34"
+                                Height="34"
+                                Margin="4,0,0,0"
+                                Click="BtnLoadFromFile_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_TextToSpeech_OpenATextFile}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="FileDocumentOutline" />
+                            </Button>
+                            <Button
+                                x:Name="BtnClearText"
+                                Grid.Column="3"
+                                Width="34"
+                                Height="34"
+                                Margin="4,0,0,0"
+                                Click="BtnClearText_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_TextToSpeech_ClearTheText}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="Eraser" />
+                            </Button>
+                        </Grid>
+
+                        <!--
+                            Multi-line box: the app-wide TextBox style is one line
+                            high, so Height/alignment are set explicitly. The
+                            inactive selection highlight shows the word being read
+                            even while the focus is on a button.
+                        -->
+                        <TextBox
+                            x:Name="TxtSpeech"
+                            Grid.Row="1"
+                            Height="Auto"
+                            MinHeight="160"
+                            Padding="10,8"
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Top"
+                            AcceptsReturn="True"
+                            AcceptsTab="False"
+                            FontSize="14"
+                            IsInactiveSelectionHighlightEnabled="True"
+                            SelectionBrush="{DynamicResource AccentColor}"
+                            Tag="Type or paste what you'd like to hear…"
+                            TextChanged="TxtSpeech_TextChanged"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto" />
+
+                        <TextBlock
+                            x:Name="TxtCharCount"
+                            Grid.Row="2"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Right"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_TextToSpeech_0Characters}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

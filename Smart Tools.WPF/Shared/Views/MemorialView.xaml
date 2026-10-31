@@ -1,0 +1,160 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.MemorialView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <Grid
+        x:Name="RootGrid"
+        Background="{DynamicResource ContentBg}"
+        Opacity="0">
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ContentControl
+                Margin="24,56,24,24"
+                MaxWidth="560"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="0"
+                x:Name="CardHost"
+                Style="{StaticResource ElevatedCardHost}">
+
+                <!--
+                    Memento-bg.png (set from code) covers the whole rounded card;
+                    the card clips it to its corners. Falls back to plain CardBg.
+                    The text sits on a translucent CardBg panel for readability.
+                -->
+                <StackPanel>
+
+                    <StackPanel HorizontalAlignment="Stretch">
+
+                        <!--
+                            Portrait: ring + optional photo. The photo starts Collapsed
+                            and is only shown, in place of the flower icon, if
+                            PhotoPath resolves to a real image file.
+                        -->
+                        <Grid
+                            Width="220"
+                            Height="220"
+                            Margin="0,28,0,18"
+                            HorizontalAlignment="Center">
+                            <Ellipse Fill="{DynamicResource CardBg}" />
+                            <Ellipse
+                                Stroke="{DynamicResource AccentColor}"
+                                StrokeThickness="2"
+                                Opacity="0.55" />
+                            <Ellipse
+                                Margin="10"
+                                Fill="{DynamicResource AccentColorSubtle}" />
+                            <Ellipse
+                                x:Name="EllipsePhoto"
+                                Margin="10"
+                                Visibility="Collapsed" />
+                            <materialDesign:PackIcon
+                                x:Name="IconFallback"
+                                Width="72"
+                                Height="72"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="FlowerTulip" />
+                        </Grid>
+
+                    <Grid Margin="14,0,14,14">
+                    <Border Background="{DynamicResource CardBg}" CornerRadius="8" Opacity="0.85" />
+                    <StackPanel Margin="22,20,22,24">
+
+                    <!--  PLACEHOLDER - replace with the real name  -->
+                    <TextBlock
+                        x:Name="TxtMemorialName"
+                        HorizontalAlignment="Center"
+                        FontSize="26"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_Memorial_Name}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    <!--  PLACEHOLDER - replace with the real dates  -->
+                    <Border
+                        Margin="0,10,0,0"
+                        Padding="14,4"
+                        HorizontalAlignment="Center"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="12">
+                        <TextBlock
+                            x:Name="TxtMemorialDates"
+                            FontSize="12.5"
+                            FontWeight="Medium"
+                            Foreground="{DynamicResource AccentColor}"
+                            Text="{DynamicResource Str_Memorial_Dates}" />
+                    </Border>
+
+                    <!--  Ornamental divider  -->
+                    <Grid Margin="0,22,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Height="1"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource CardBorder}" />
+                        <materialDesign:PackIcon
+                            Grid.Column="1"
+                            Width="16"
+                            Height="16"
+                            Margin="12,0"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Kind="HeartOutline" />
+                        <Border
+                            Grid.Column="2"
+                            Height="1"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource CardBorder}" />
+                    </Grid>
+
+                    <!--  PLACEHOLDER - replace with the real message  -->
+                    <TextBlock
+                        x:Name="TxtMemorialMessage"
+                        FontSize="14"
+                        FontStyle="Italic"
+                        Foreground="{DynamicResource TextPrimary}"
+                        LineHeight="22"
+                        Text="{DynamicResource Str_Memorial_Message}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+
+                    </StackPanel>
+                    </Grid>
+
+                    </StackPanel>
+
+                </StackPanel>
+
+            </ContentControl>
+        </ScrollViewer>
+
+        <!--  Back button - the parent window handles BackRequested  -->
+        <Button
+            x:Name="BtnBack"
+            Width="32"
+            Height="32"
+            Margin="16"
+            Padding="0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Click="BtnBack_Click"
+            Style="{StaticResource NeutralIconButtonStyle}"
+            ToolTip="{DynamicResource Str_Common_Back}">
+            <materialDesign:PackIcon
+                Width="18"
+                Height="18"
+                Foreground="{DynamicResource TextPrimary}"
+                Kind="ArrowLeft" />
+        </Button>
+
+    </Grid>
+
+</UserControl>

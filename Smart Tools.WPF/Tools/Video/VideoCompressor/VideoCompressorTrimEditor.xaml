@@ -1,0 +1,116 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Controls.VideoCompressorTrimEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Smart_Tools.WPF.Controls"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        The body of the Video Compressor's trim window: the frame at the handle that moved, the timeline, and the start and end
+        times. Fills the window, so the picture grows with it. Logic: VideoCompressorManager (ParseTime, ClampKeep, TrimRange).
+        UI only; every change is written to the item at once.
+    -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  The picture stage stays dark in both themes (a documented exception to "theme tokens only").  -->
+        <Border
+            MinHeight="200"
+            Margin="0,0,0,14"
+            Background="Black"
+            ClipToBounds="True"
+            CornerRadius="10">
+            <Grid>
+                <Image x:Name="ImgFrame" Stretch="Uniform" />
+                <TextBlock
+                    x:Name="TxtFrameLabel"
+                    Margin="12,10,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    FontFamily="Cascadia Mono, Consolas"
+                    FontSize="12"
+                    Foreground="White" />
+            </Grid>
+        </Border>
+
+        <local:TrimTimelineControl
+            x:Name="Timeline"
+            Grid.Row="1"
+            BackBrush="{DynamicResource ContentBg}"
+            GridBrush="{DynamicResource CardBorder}"
+            HandleBrush="{DynamicResource AccentFill}"
+            HandleGlyphBrush="White"
+            SelectionBrush="{DynamicResource AccentFill}"
+            TextBrush="{DynamicResource TextSecondary}"
+            ToolTip="{DynamicResource Str_Vc_TimelineTip}"
+            TrackBrush="{DynamicResource RowBg}" />
+
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Margin="0,0,12,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_TrimStart}" />
+                <Border Style="{StaticResource InputBarStyle}">
+                    <TextBox
+                        x:Name="TxtStart"
+                        Width="110"
+                        FontFamily="Cascadia Mono, Consolas"
+                        KeyDown="TimeBox_KeyDown"
+                        LostFocus="TimeBox_LostFocus"
+                        Style="{StaticResource BareTextBox}"
+                        VerticalContentAlignment="Center" />
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_TrimEnd}" />
+                <Border Style="{StaticResource InputBarStyle}">
+                    <TextBox
+                        x:Name="TxtEnd"
+                        Width="110"
+                        FontFamily="Cascadia Mono, Consolas"
+                        KeyDown="TimeBox_KeyDown"
+                        LostFocus="TimeBox_LostFocus"
+                        Style="{StaticResource BareTextBox}"
+                        VerticalContentAlignment="Center" />
+                </Border>
+            </StackPanel>
+
+            <TextBlock
+                x:Name="TxtLength"
+                Grid.Column="2"
+                Margin="0,0,12,8"
+                VerticalAlignment="Bottom"
+                FontSize="12"
+                Foreground="{DynamicResource TextSecondary}"
+                TextTrimming="CharacterEllipsis" />
+
+            <StackPanel
+                Grid.Column="3"
+                VerticalAlignment="Bottom"
+                Orientation="Horizontal">
+                <Button
+                    x:Name="BtnReset"
+                    Margin="0,0,8,0"
+                    Click="BtnReset_Click"
+                    Content="{DynamicResource Str_Vc_TrimReset}"
+                    Style="{StaticResource ListToolButtonStyle}" />
+                <Button
+                    x:Name="BtnSaveFrame"
+                    Click="BtnSaveFrame_Click"
+                    Content="{DynamicResource Str_Vc_SaveFrame}"
+                    Style="{StaticResource ListToolButtonStyle}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

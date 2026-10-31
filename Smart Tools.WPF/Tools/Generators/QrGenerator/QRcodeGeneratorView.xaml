@@ -1,0 +1,1700 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.QrCodeGeneratorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/QrCodeManager.cs (+ shared ZxingImageHelpers.cs)
+        and Models/QrCodeModel.cs. Code-behind only wires controls.
+        Look & feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs -
+        same layout as BarCodeGeneratorView so the two tools feel like one.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Small chip (quick-start content, size presets, swap/reset colours)  -->
+
+        <!--  Unit suffix inside a field ("px", "modules")  -->
+
+        <!--  Chip icon  -->
+        <Style x:Key="ChipIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="13" />
+            <Setter Property="Height" Value="13" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!--  Round colour swatch that opens the colour picker  -->
+
+        <!--  Batch status chip, coloured from theme tokens by Status (enum)  -->
+        <DataTemplate x:Key="BatchStatusChipTemplate">
+            <Border
+                x:Name="Chip"
+                Padding="7,3,9,3"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource StatusSuccessBg}"
+                CornerRadius="8"
+                ToolTip="{Binding Message}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="13"
+                        Height="13"
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusSuccessFg}"
+                        Kind="CheckCircleOutline" />
+                    <TextBlock
+                        x:Name="ChipText"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource StatusSuccessFg}"
+                        Text="{Binding Message}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16">
+                            <!--  ============ MODE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_QrGenerator_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Password_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldLockOutline}" />
+
+                                    <Grid x:Name="ModeTogglePanel">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <RadioButton
+                                            x:Name="RadioModeSingle"
+                                            Checked="RadioMode_Checked"
+                                            GroupName="QrMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_QR_ModeSingleTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Qrcode" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_QR_ModeSingle}" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <RadioButton
+                                            x:Name="RadioModeBatch"
+                                            Grid.Column="2"
+                                            Checked="RadioMode_Checked"
+                                            GroupName="QrMode"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_QR_ModeBatchTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="LayersTripleOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Common_ModeBatch}" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ CONTENT (single mode) ============  -->
+                            <Border x:Name="SingleInputSection" ctl:Tour.Key="Str_Tour_QrGenerator_Input" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_QR_InputHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormTextbox}" />
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioInputText"
+                                            Grid.Column="0"
+                                            Checked="InputMode_Checked"
+                                            GroupName="QrInputMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_QR_InputTextTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FormatText" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_QR_InputText}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioInputFile"
+                                            Grid.Column="2"
+                                            Checked="InputMode_Checked"
+                                            GroupName="QrInputMode"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_QR_InputFileTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="17"
+                                                    Height="17"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FileDocumentOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_QR_InputFile}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
+
+                                    <!--  Text mode: quick-start chips + the content box  -->
+                                    <StackPanel x:Name="TextInputPanel">
+                                        <StackPanel Margin="0,4,0,6" Orientation="Horizontal">
+                                            <TextBlock
+                                                FontSize="11"
+                                                Style="{DynamicResource FieldLabel}"
+                                                Text="{DynamicResource Str_QRcodeGenerator_QuickStart}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,0,6">
+                                            <!--  Top row: Full-width Link standout option  -->
+                                            <Button
+                                                Margin="0,0,0,4"
+                                                HorizontalAlignment="Stretch"
+                                                Click="BtnTemplate_Click"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="Url"
+                                                ToolTip="{DynamicResource Str_QRcodeGenerator_AWebLinkOpens}">
+                                                <Grid HorizontalAlignment="Center">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <materialDesign:PackIcon Grid.Column="0" Kind="Web" Style="{StaticResource ChipIcon}" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_QRcodeGenerator_Link}" TextWrapping="Wrap" />
+                                                </Grid>
+                                            </Button>
+
+                                            <!--  Bottom section: 2x2 Grid for the remaining 4 options  -->
+                                            <UniformGrid Columns="2">
+                                                <Button
+                                                    Margin="0,0,2,2"
+                                                    Click="BtnTemplate_Click"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="Wifi"
+                                                    ToolTip="{DynamicResource Str_QRcodeGenerator_JoinsAWiFi}">
+                                                    <Grid HorizontalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon Grid.Column="0" Kind="Wifi" Style="{StaticResource ChipIcon}" />
+                                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Wi-Fi" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button
+                                                    Margin="2,0,0,2"
+                                                    Click="BtnTemplate_Click"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="Email"
+                                                    ToolTip="{DynamicResource Str_QRcodeGenerator_StartsAnEmailWith}">
+                                                    <Grid HorizontalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon Grid.Column="0" Kind="EmailOutline" Style="{StaticResource ChipIcon}" />
+                                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_QRcodeGenerator_Email}" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button
+                                                    Margin="0,2,2,0"
+                                                    Click="BtnTemplate_Click"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="Phone"
+                                                    ToolTip="{DynamicResource Str_QRcodeGenerator_OffersToCallThe}">
+                                                    <Grid HorizontalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon Grid.Column="0" Kind="PhoneOutline" Style="{StaticResource ChipIcon}" />
+                                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_QRcodeGenerator_Phone}" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Button>
+                                                <Button
+                                                    Margin="2,2,0,0"
+                                                    Click="BtnTemplate_Click"
+                                                    Style="{StaticResource PresetChipStyle}"
+                                                    Tag="Sms"
+                                                    ToolTip="{DynamicResource Str_QRcodeGenerator_StartsATextMessage}">
+                                                    <Grid HorizontalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <materialDesign:PackIcon Grid.Column="0" Kind="MessageTextOutline" Style="{StaticResource ChipIcon}" />
+                                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_QRcodeGenerator_Sms}" TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Button>
+                                            </UniformGrid>
+                                        </StackPanel>
+
+                                        <TextBox
+                                            x:Name="TxtInput"
+                                            Height="84"
+                                            Padding="8,6"
+                                            AcceptsReturn="True"
+                                            FontFamily="Consolas"
+                                            Tag="Type a link or any text"
+                                            Text="https://example.com"
+                                            TextChanged="TxtInput_TextChanged"
+                                            TextWrapping="Wrap"
+                                            ToolTip="{DynamicResource Str_QR_ValueTooltip}"
+                                            VerticalScrollBarVisibility="Auto" />
+
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                x:Name="TxtContentKind"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Text="{DynamicResource Str_QRcodeGenerator_Link}" />
+                                            <TextBlock
+                                                x:Name="TxtCharCount"
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Text="{DynamicResource Str_QRcodeGenerator_19Characters}" />
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!--  File mode: the file's TEXT is encoded (e.g. a .vcf contact)  -->
+                                    <StackPanel x:Name="FileInputPanel" Visibility="Collapsed">
+                                        <Border Padding="8,0,4,0" Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Kind="FileDocumentOutline" />
+                                                <TextBox
+                                                    x:Name="TxtFilePath"
+                                                    Grid.Column="1"
+                                                    IsReadOnly="True"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="No file chosen"
+                                                    ToolTip="{DynamicResource Str_QR_FilePathTooltip}" />
+                                                <Button
+                                                    x:Name="BtnBrowseFile"
+                                                    Grid.Column="2"
+                                                    Width="28"
+                                                    Height="28"
+                                                    Margin="2,4"
+                                                    Click="BtnBrowseFile_Click"
+                                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_QR_BrowseFileTooltip}">
+                                                    <materialDesign:PackIcon
+                                                        Width="15"
+                                                        Height="15"
+                                                        Kind="FolderOpenOutline" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                        <TextBlock
+                                            Margin="0,6,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_QRcodeGenerator_TheFileSText}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        x:Name="TxtValidationMessage"
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ BATCH ENTRIES (batch mode) ============  -->
+                            <Border
+                                x:Name="BatchInputSection"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_BatchEntriesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PlaylistPlus}" />
+
+                                    <!--  Type + Enter (or +) adds one entry  -->
+                                    <Border Padding="0,0,4,0" Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox
+                                                x:Name="TxtNewBatchEntry"
+                                                FontFamily="Consolas"
+                                                KeyDown="TxtNewBatchEntry_KeyDown"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="Type a value, press Enter"
+                                                ToolTip="{DynamicResource Str_QR_TypeValueTooltip}" />
+                                            <Button
+                                                x:Name="BtnAddBatchEntry"
+                                                Grid.Column="1"
+                                                Width="28"
+                                                Height="28"
+                                                Margin="2,4"
+                                                Click="BtnAddBatchEntry_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_QR_AddValueTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="Plus" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnPasteBatchEntries"
+                                            Grid.Column="0"
+                                            MinHeight="30"
+                                            Click="BtnPasteBatchEntries_Click"
+                                            ToolTip="{DynamicResource Str_QRcodeGenerator_AddEveryLineCurrently}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ContentPaste" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_BarcodeGenerator_PasteList}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnLoadNamesFromFolder"
+                                            Grid.Column="2"
+                                            MinHeight="30"
+                                            Click="BtnLoadNamesFromFolder_Click"
+                                            ToolTip="{DynamicResource Str_QR_LoadNamesFromFolderTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FolderOpenOutline" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_QR_LoadNamesFromFolder}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SIZE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_SizeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ArrowExpandAll}" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock
+                                                Margin="0,4,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_Common_WidthPx}" />
+                                            <Border x:Name="WidthBar" Style="{StaticResource InputBarStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="TxtWidth"
+                                                        LostFocus="SizeField_LostFocus"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Text="512"
+                                                        TextChanged="SizeField_TextChanged"
+                                                        ToolTip="{DynamicResource Str_QR_WidthTooltip}" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Style="{StaticResource UnitSuffix}"
+                                                        Text="px" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock
+                                                Margin="0,4,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_Common_HeightPx}" />
+                                            <Border x:Name="HeightBar" Style="{StaticResource InputBarStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox
+                                                        x:Name="TxtHeight"
+                                                        LostFocus="SizeField_LostFocus"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        Text="512"
+                                                        TextChanged="SizeField_TextChanged"
+                                                        ToolTip="{DynamicResource Str_QR_HeightTooltip}" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Style="{StaticResource UnitSuffix}"
+                                                        Text="px" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_QR_QuietZone}" />
+                                    <Border x:Name="MarginBar" Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox
+                                                x:Name="TxtMargin"
+                                                LostFocus="SizeField_LostFocus"
+                                                Style="{StaticResource BareTextBox}"
+                                                Text="4"
+                                                TextChanged="SizeField_TextChanged"
+                                                ToolTip="{DynamicResource Str_QR_QuietZoneTooltip}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                Style="{StaticResource UnitSuffix}"
+                                                Text="{DynamicResource Str_QRcodeGenerator_Modules}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock
+                                        x:Name="TxtSizeError"
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <StackPanel Margin="0,8,0,0">
+                                        <!--  Top row: Full-width Medium standout option  -->
+                                        <Button
+                                            Margin="0,0,0,4"
+                                            HorizontalAlignment="Stretch"
+                                            Click="BtnSizePreset_Click"
+                                            Content="{DynamicResource Str_BarcodeGenerator_Medium}"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            Tag="512x512"
+                                            ToolTip="512 × 512 px" />
+
+                                        <!--  Bottom row: 3 equal columns for the remaining size presets  -->
+                                        <UniformGrid Columns="3">
+                                            <Button
+                                                Margin="0,0,2,0"
+                                                Click="BtnSizePreset_Click"
+                                                Content="{DynamicResource Str_BarcodeGenerator_Small}"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="256x256"
+                                                ToolTip="{DynamicResource Str_QRcodeGenerator_256256PxWeb}" />
+                                            <Button
+                                                Margin="2,0"
+                                                Click="BtnSizePreset_Click"
+                                                Content="{DynamicResource Str_BarcodeGenerator_Large}"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="1024x1024"
+                                                ToolTip="{DynamicResource Str_QRcodeGenerator_10241024PxSlides}" />
+                                            <Button
+                                                Margin="2,0,0,0"
+                                                Click="BtnSizePreset_Click"
+                                                Content="{DynamicResource Str_BarcodeGenerator_Print}"
+                                                Style="{StaticResource PresetChipStyle}"
+                                                Tag="2048x2048"
+                                                ToolTip="{DynamicResource Str_QRcodeGenerator_20482048PxPosters}" />
+                                        </UniformGrid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ COLOURS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_QrGenerator_Colors" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_QR_ColorsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
+
+                                    <TextBlock
+                                        Margin="0,4,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_QR_Foreground}" />
+                                    <Border x:Name="ForegroundBar" Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button
+                                                x:Name="SwatchForeground"
+                                                Background="Black"
+                                                Click="SwatchForeground_Click"
+                                                Style="{StaticResource SwatchPickerStyle}"
+                                                ToolTip="{DynamicResource Str_Common_PickColorTooltip}" />
+                                            <TextBox
+                                                x:Name="TxtForegroundHex"
+                                                Grid.Column="1"
+                                                FontFamily="Consolas"
+                                                LostFocus="ColorField_LostFocus"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="#RRGGBB"
+                                                Text="#000000"
+                                                TextChanged="ColorField_TextChanged"
+                                                ToolTip="{DynamicResource Str_QR_ForegroundTooltip}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_QR_Background}" />
+                                    <Border x:Name="BackgroundBar" Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button
+                                                x:Name="SwatchBackground"
+                                                Background="White"
+                                                Click="SwatchBackground_Click"
+                                                Style="{StaticResource SwatchPickerStyle}"
+                                                ToolTip="{DynamicResource Str_Common_PickColorTooltip}" />
+                                            <TextBox
+                                                x:Name="TxtBackgroundHex"
+                                                Grid.Column="1"
+                                                FontFamily="Consolas"
+                                                LostFocus="ColorField_LostFocus"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="#RRGGBB"
+                                                Text="#FFFFFF"
+                                                TextChanged="ColorField_TextChanged"
+                                                ToolTip="{DynamicResource Str_QR_BackgroundTooltip}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock
+                                        x:Name="TxtColorError"
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Text="{DynamicResource Str_QRcodeGenerator_UseAHexColour}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <UniformGrid Margin="0,8,0,0" Columns="2">
+                                        <Button
+                                            x:Name="BtnSwapColors"
+                                            Margin="0,0,2,0"
+                                            Click="BtnSwapColors_Click"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            ToolTip="{DynamicResource Str_QRcodeGenerator_SwapTheSquareAnd}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon Grid.Column="0" Kind="SwapVertical" Style="{StaticResource ChipIcon}" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_BarcodeGenerator_Swap}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnResetColors"
+                                            Margin="2,0,0,0"
+                                            Click="BtnResetColors_Click"
+                                            Style="{StaticResource PresetChipStyle}"
+                                            ToolTip="{DynamicResource Str_QRcodeGenerator_BackToBlackOn}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon Grid.Column="0" Kind="Restore" Style="{StaticResource ChipIcon}" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_Reset}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                    </UniformGrid>
+
+                                    <!--  Scannability warning (inverted or low-contrast colours)  -->
+                                    <Border
+                                        x:Name="ColorWarningPanel"
+                                        Margin="0,8,0,0"
+                                        Padding="8,6"
+                                        Background="{DynamicResource StatusWarningBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,1,6,0"
+                                                VerticalAlignment="Top"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                Kind="AlertOutline" />
+                                            <TextBlock
+                                                x:Name="TxtColorWarning"
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource StatusWarningFg}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ERROR CORRECTION ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_QrGenerator_ErrorCorrection" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_QR_ErrorCorrectionHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
+
+                                    <!--  2 x 2 pills: level + how much damage it survives  -->
+                                    <Grid x:Name="ErrorCorrectionPanel" ToolTip="{DynamicResource Str_QR_ErrorCorrectionTooltip}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="4" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <RadioButton
+                                            x:Name="RadioEcLow"
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            MinHeight="46"
+                                            Checked="RadioErrorCorrection_Checked"
+                                            GroupName="QrEc"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Low">
+                                            <StackPanel>
+                                                <TextBlock HorizontalAlignment="Center" Text="{DynamicResource Str_InstrumentTuner_Low}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    FontWeight="Normal"
+                                                    Opacity="0.8"
+                                                    Text="{DynamicResource Str_QRcodeGenerator_7Smallest}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioEcMedium"
+                                            Grid.Row="0"
+                                            Grid.Column="2"
+                                            MinHeight="46"
+                                            Checked="RadioErrorCorrection_Checked"
+                                            GroupName="QrEc"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Medium">
+                                            <StackPanel>
+                                                <TextBlock HorizontalAlignment="Center" Text="{DynamicResource Str_BarcodeGenerator_Medium}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    FontWeight="Normal"
+                                                    Opacity="0.8"
+                                                    Text="{DynamicResource Str_QRcodeGenerator_15Balanced}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioEcQuartile"
+                                            Grid.Row="2"
+                                            Grid.Column="0"
+                                            MinHeight="46"
+                                            Checked="RadioErrorCorrection_Checked"
+                                            GroupName="QrEc"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Quartile">
+                                            <StackPanel>
+                                                <TextBlock HorizontalAlignment="Center" Text="{DynamicResource Str_QRcodeGenerator_Quartile}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    FontWeight="Normal"
+                                                    Opacity="0.8"
+                                                    Text="{DynamicResource Str_QRcodeGenerator_25Sturdy}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioEcHigh"
+                                            Grid.Row="2"
+                                            Grid.Column="2"
+                                            MinHeight="46"
+                                            Checked="RadioErrorCorrection_Checked"
+                                            GroupName="QrEc"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="High">
+                                            <StackPanel>
+                                                <TextBlock HorizontalAlignment="Center" Text="{DynamicResource Str_ImageConvertPDF_High}" />
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    FontSize="10"
+                                                    FontWeight="Normal"
+                                                    Opacity="0.8"
+                                                    Text="{DynamicResource Str_QRcodeGenerator_30LogosPrint}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
+
+                                    <!--  Shown while a logo is set: level is locked to High  -->
+                                    <Border
+                                        x:Name="TxtErrorCorrectionNote"
+                                        Margin="0,8,0,0"
+                                        Padding="8,6"
+                                        Background="{DynamicResource StatusInfoBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,1,6,0"
+                                                VerticalAlignment="Top"
+                                                Foreground="{DynamicResource StatusInfoFg}"
+                                                Kind="InformationOutline" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource StatusInfoFg}"
+                                                Text="{DynamicResource Str_QR_LogoForcesHighHint}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ LOGO ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_QrGenerator_Logo" ctl:Tour.Order="5" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_QR_LogoHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!--  Thumbnail tile (click to choose)  -->
+                                        <Button
+                                            x:Name="LogoTileButton"
+                                            Grid.Column="0"
+                                            Width="46"
+                                            Height="46"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnBrowseLogo_Click"
+                                            Cursor="Hand"
+                                            FocusVisualStyle="{StaticResource FocusRingVisual}"
+                                            ToolTip="{DynamicResource Str_QR_ChooseLogoTooltip}">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border
+                                                        x:Name="Tile"
+                                                        Background="{DynamicResource InputBg}"
+                                                        BorderBrush="{DynamicResource InputBorder}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="8">
+                                                        <ContentPresenter />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                            <Grid>
+                                                <materialDesign:PackIcon
+                                                    x:Name="LogoEmptyIcon"
+                                                    Width="20"
+                                                    Height="20"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Kind="ImagePlusOutline" />
+                                                <Image
+                                                    x:Name="LogoThumbnail"
+                                                    Margin="5"
+                                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                                    Stretch="Uniform" />
+                                            </Grid>
+                                        </Button>
+
+                                        <!--  Browse Button and Subtitle Text  -->
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                            <Button
+                                                x:Name="BtnBrowseLogo"
+                                                MinHeight="28"
+                                                HorizontalAlignment="Stretch"
+                                                Click="BtnBrowseLogo_Click"
+                                                ToolTip="{DynamicResource Str_QR_ChooseLogoTooltip}">
+                                                <Grid HorizontalAlignment="Center">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <materialDesign:PackIcon
+                                                        Grid.Column="0"
+                                                        Width="14"
+                                                        Height="14"
+                                                        Margin="0,0,6,0"
+                                                        VerticalAlignment="Center"
+                                                        Kind="ImagePlus" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_QR_ChooseLogo}" TextWrapping="Wrap" />
+                                                </Grid>
+                                            </Button>
+                                            <TextBlock
+                                                x:Name="TxtLogoName"
+                                                MaxHeight="30"
+                                                Margin="0,4,0,0"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarTextMuted}"
+                                                Text="{DynamicResource Str_QRcodeGenerator_PngWithTransparencyWorks}"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+
+                                        <!--  Remove Button  -->
+                                        <Button
+                                            x:Name="BtnRemoveLogo"
+                                            Grid.Column="4"
+                                            Width="28"
+                                            Height="28"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnRemoveLogo_Click"
+                                            IsEnabled="False"
+                                            Style="{StaticResource DangerButtonStyle}"
+                                            ToolTip="{DynamicResource Str_QR_RemoveLogoTooltip}">
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Kind="DeleteOutline" />
+                                        </Button>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_QR_LogoSize}" />
+                                        <Border
+                                            Grid.Column="1"
+                                            Padding="7,1"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource AccentFill}"
+                                            CornerRadius="8">
+                                            <TextBlock
+                                                x:Name="TxtLogoScaleValue"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="22%" />
+                                        </Border>
+                                    </Grid>
+                                    <Slider
+                                        x:Name="SliderLogoScale"
+                                        Margin="0,4,0,0"
+                                        IsEnabled="False"
+                                        IsSnapToTickEnabled="True"
+                                        LargeChange="0.05"
+                                        Maximum="0.35"
+                                        Minimum="0.05"
+                                        SmallChange="0.01"
+                                        TickFrequency="0.01"
+                                        ToolTip="{DynamicResource Str_QR_LogoSizeTooltip}"
+                                        ValueChanged="SliderLogoScale_ValueChanged"
+                                        Value="0.22" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ CAPTION ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_OptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormatTextVariant}" />
+                                    <CheckBox
+                                        x:Name="ShowTextCheckBox"
+                                        Margin="0"
+                                        Checked="OptionToggle_Changed"
+                                        Content="{DynamicResource Str_QR_ShowText}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_QR_ShowTextTooltip}"
+                                        Unchecked="OptionToggle_Changed" />
+                                </StackPanel>
+                            </Border>
+
+
+                        </StackPanel>
+
+                    </ScrollViewer>
+
+                </Grid>
+
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+
+                <!--  ============ SINGLE MODE ============  -->
+
+                <Border x:Name="SingleModeArea" Style="{StaticResource CardStyle}">
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!--  Header + live status  -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                Content="{DynamicResource Str_Common_PreviewHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.QrcodeScan}" />
+
+                            <Border
+                                x:Name="BorderStatus"
+                                Grid.Column="1"
+                                MaxWidth="440"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconStatus"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtProgress}"
+                                        Kind="InformationOutline" />
+                                    <TextBlock
+                                        x:Name="TxtProgress"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_FileDiff_ReadyNoDot}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!--  Stage: the code sits on a raised "card" that floats over a soft surface  -->
+                        <Border
+                            x:Name="SinglePreviewArea"
+                            ctl:Tour.Key="Str_Tour_QrGenerator_Preview" ctl:Tour.Order="6"
+                            Grid.Row="1"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Grid>
+                                <!--  Large codes shrink to fit (DownOnly); small ones show at true size  -->
+                                <ContentControl
+                                    x:Name="PreviewLabel"
+                                    Margin="24"
+                                    Padding="12"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Style="{StaticResource ElevatedCardHost}">
+                                    <Image
+                                        x:Name="PreviewImage"
+                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                        SnapsToDevicePixels="True"
+                                        Stretch="Uniform"
+                                        StretchDirection="DownOnly" />
+                                </ContentControl>
+
+                                <StackPanel
+                                    x:Name="PreviewPlaceholder"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Visibility="Collapsed">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.QrcodeRemove}" />
+                                    <TextBlock
+                                        MaxWidth="340"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_QR_PreviewPlaceholder}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!--  Info + export actions  -->
+                        <Grid Grid.Row="2" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                x:Name="TxtPreviewInfo"
+                                VerticalAlignment="Center"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                TextTrimming="CharacterEllipsis" />
+
+                            <Button
+                                x:Name="BtnCopyToClipboard"
+                                Grid.Column="1"
+                                Margin="0,0,8,0"
+                                Click="BtnCopyToClipboard_Click"
+                                IsEnabled="False"
+                                ToolTip="{DynamicResource Str_QR_CopyClipboardTooltip}"
+                                Style="{StaticResource ListToolButtonStyle}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ContentCopy" />
+                            </Button>
+
+                            <controls:ExportButton
+                                x:Name="BtnSaveAs"
+                                Grid.Column="2"
+                                IsEnabled="False"
+                                ToolTip="{DynamicResource Str_QR_SaveAsTooltip}">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem
+                                            Click="MenuSave_Click"
+                                            Header="{DynamicResource Str_BarcodeGenerator_Png}"
+                                            Tag="Png"
+                                            ToolTip="PNG - lossless, crisp edges (recommended)">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FileImageOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="MenuSave_Click"
+                                            Header="{DynamicResource Str_BackgroundRemover_Jpg}"
+                                            Tag="Jpg"
+                                            ToolTip="JPG - smaller, but can soften edges">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FileImageOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="MenuSave_Click"
+                                            Header="{DynamicResource Str_BarcodeGenerator_Svg}"
+                                            Tag="Svg"
+                                            ToolTip="SVG - true vector squares, sharp at any print size">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="VectorSquare" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="MenuSave_Click"
+                                            Header="{DynamicResource Str_BarcodeGenerator_Pdf}"
+                                            Tag="Pdf"
+                                            ToolTip="PDF - lossless, print-ready">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FilePdfBox" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </controls:ExportButton>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!--  ============ BATCH MODE ============  -->
+
+                <Grid x:Name="BatchModeArea" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  Run bar  -->
+                    <Border
+                        Grid.Row="0"
+                        Grid.ColumnSpan="3"
+                        Margin="0,0,0,14"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button
+                                x:Name="BtnGenerateAll"
+                                Grid.Column="0"
+                                MinWidth="180"
+                                Margin="0,0,16,0"
+                                VerticalAlignment="Center"
+                                Click="BtnGenerateAll_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_QR_GenerateAllTooltip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        x:Name="IconGenerateAll"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="PlayCircleOutline" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        x:Name="TxtGenerateAllLabel"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_QR_GenerateAll}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <ProgressBar
+                                    x:Name="ProgressBarBatch"
+                                    Height="8"
+                                    Maximum="100"
+                                    ToolTip="{DynamicResource Str_QR_BatchProgressTooltip}" />
+                                <TextBlock
+                                    x:Name="TxtBatchProgress"
+                                    Margin="0,6,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_QR_BatchProgressInitial}" />
+                            </StackPanel>
+
+                            <TextBlock
+                                x:Name="TxtProgressPercent"
+                                Grid.Column="2"
+                                MinWidth="54"
+                                Margin="16,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource AccentColor}"
+                                Text="0%"
+                                TextAlignment="Right" />
+                        </Grid>
+                    </Border>
+
+                    <!--  Entries  -->
+                    <Border
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Common_BatchEntriesCardTitle}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                                <Border
+                                    x:Name="BatchCountPill"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <TextBlock
+                                        x:Name="TxtBatchCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Text="0" />
+                                </Border>
+                            </Grid>
+
+                            <ListBox
+                                x:Name="ListBoxBatchEntries"
+                                Grid.Row="1"
+                                HorizontalContentAlignment="Stretch"
+                                FontFamily="Consolas"
+                                SelectionMode="Extended"
+                                ToolTip="{DynamicResource Str_QR_BatchEntriesListTooltip}"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemContainerStyle>
+                                    <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="8,5" />
+                                        <Setter Property="Margin" Value="0,1" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="14"
+                                                Height="14"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentColor}"
+                                                Kind="Qrcode" />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                Text="{Binding}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <StackPanel
+                                x:Name="BatchEntriesEmptyPanel"
+                                Grid.Row="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.PlaylistPlus}" />
+                                <TextBlock
+                                    x:Name="TxtBatchEmptyHint"
+                                    MaxWidth="240"
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_QR_BatchEmptyHint}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <Grid Grid.Row="2" Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Name="BtnRemoveBatchEntry"
+                                    Grid.Column="0"
+                                    Click="BtnRemoveBatchEntry_Click"
+                                    ToolTip="{DynamicResource Str_Common_RemoveSelectedEntriesTooltip}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PlaylistRemove" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearBatchEntries"
+                                    Grid.Column="2"
+                                    Click="BtnClearBatchEntries_Click"
+                                    ToolTip="{DynamicResource Str_Common_ClearAllEntriesTooltip}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!--  Results  -->
+                    <Border
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Common_BatchResultsTitle}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.ViewGridOutline}" />
+                                <Border
+                                    x:Name="SummaryPill"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Common_BatchResultsPillTooltip}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{Binding Foreground, ElementName=TxtSummaryCount}"
+                                            Kind="CheckAll" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryCount"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Text="{DynamicResource Str_QR_BatchResultsPillInitial}" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <DataGrid
+                                x:Name="DataGridBatch"
+                                Grid.Row="1"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                EnableRowVirtualization="True"
+                                IsReadOnly="True"
+                                MinRowHeight="58"
+                                ToolTip="{DynamicResource Str_QR_BatchGridTooltip}"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="64" Header="">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <!--  Codes keep their own colours, so the tile stays white in both themes  -->
+                                                <Border
+                                                    Padding="2"
+                                                    HorizontalAlignment="Left"
+                                                    Background="White"
+                                                    CornerRadius="4">
+                                                    <Image
+                                                        Width="46"
+                                                        Height="46"
+                                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                                        Source="{Binding Thumbnail}"
+                                                        Stretch="Uniform" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Width="2*"
+                                        Binding="{Binding Input}"
+                                        FontFamily="Consolas"
+                                        Header="{DynamicResource Str_QR_ColHeaderInput}" />
+                                    <DataGridTextColumn
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Width="90"
+                                        Binding="{Binding SizeInfo}"
+                                        Header="{DynamicResource Str_QRcodeGenerator_Symbol}" />
+                                    <DataGridTemplateColumn
+                                        Width="2*"
+                                        CellTemplate="{StaticResource BatchStatusChipTemplate}"
+                                        Header="{DynamicResource Str_Common_ColHeaderStatus}"
+                                        SortMemberPath="Status" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <StackPanel
+                                x:Name="BatchEmptyStatePanel"
+                                Grid.Row="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.QrcodePlus}" />
+                                <TextBlock
+                                    MaxWidth="320"
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_QR_BatchResultsEmptyHint}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <Grid Grid.Row="2" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    x:Name="TxtBatchExportInfo"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_QRcodeGenerator_EachGeneratedCodeIs}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <controls:ExportButton
+                                    x:Name="BtnExportAll"
+                                    Grid.Column="1"
+                                    IsEnabled="False"
+                                    ToolTip="{DynamicResource Str_QR_ExportAllToFolderTooltip}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem
+                                                Click="MenuBatchExport_Click"
+                                                Header="{DynamicResource Str_BarcodeGenerator_Png}"
+                                                Tag="Png"
+                                                ToolTip="PNG - lossless, crisp edges (recommended)">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileImageOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="MenuBatchExport_Click"
+                                                Header="{DynamicResource Str_BackgroundRemover_Jpg}"
+                                                Tag="Jpg"
+                                                ToolTip="JPG - smaller, but can soften edges">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileImageOutline" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="MenuBatchExport_Click"
+                                                Header="{DynamicResource Str_BarcodeGenerator_Svg}"
+                                                Tag="Svg"
+                                                ToolTip="SVG - true vector squares, sharp at any print size">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="VectorSquare" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem
+                                                Click="MenuBatchExport_Click"
+                                                Header="{DynamicResource Str_BarcodeGenerator_Pdf}"
+                                                Tag="Pdf"
+                                                ToolTip="PDF - lossless, print-ready">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FilePdfBox" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
+            </Grid>
+
+        </Grid>
+
+    </Grid>
+
+</UserControl>

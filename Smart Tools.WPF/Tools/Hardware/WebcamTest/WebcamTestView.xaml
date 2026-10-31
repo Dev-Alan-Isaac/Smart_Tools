@@ -1,0 +1,298 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.WebcamTestView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Tools/Hardware/WebcamTest/WebcamTestManager.cs (the bundled FFmpeg with DirectShow: camera
+        list, sizes, and the preview as a raw-frame pipe) + WebcamTestManager.Logic.cs (list parsing,
+        brightness, settings); WebcamTestModel.cs. UI only here. Nothing is recorded; the camera is only on
+        between Start and Stop, and always off when you leave the page.
+    -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ CAMERA ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_WebcamTest_Device}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.Webcam}" />
+                                        <Button
+                                            x:Name="BtnRefreshDevices"
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Click="BtnRefreshDevices_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_InstrumentTuner_LookAgainAfterPlugging}">
+                                            <materialDesign:PackIcon
+                                                x:Name="IconRefresh"
+                                                Width="15"
+                                                Height="15"
+                                                Kind="Refresh"
+                                                RenderTransformOrigin="0.5,0.5" />
+                                        </Button>
+                                    </Grid>
+
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="DeviceCombo"
+                                            Margin="4,0"
+                                            DisplayMemberPath="Name"
+                                            SelectionChanged="DeviceCombo_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_WebcamTest_DeviceTip}" />
+                                    </Border>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_WebcamTest_Size}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <ComboBox
+                                            x:Name="ModeCombo"
+                                            Margin="4,0"
+                                            SelectionChanged="ModeCombo_SelectionChanged"
+                                            Style="{StaticResource BareComboBox}"
+                                            ToolTip="{DynamicResource Str_WebcamTest_SizeTip}" />
+                                    </Border>
+
+                                    <CheckBox
+                                        x:Name="ChkMirror"
+                                        Margin="0,12,0,0"
+                                        Checked="ChkMirror_Changed"
+                                        Content="{DynamicResource Str_WebcamTest_Mirror}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_WebcamTest_MirrorTip}"
+                                        Unchecked="ChkMirror_Changed" />
+
+                                    <TextBlock
+                                        x:Name="TxtDeviceHint"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text=""
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Start / stop and the snapshot  -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse
+                                x:Name="LiveDot"
+                                Width="12"
+                                Height="12"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                Fill="{DynamicResource StatusErrorFg}"
+                                Opacity="0.25" />
+                            <TextBlock
+                                x:Name="TxtVerdict"
+                                VerticalAlignment="Center"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_WebcamTest_Ready}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button
+                                x:Name="BtnSnapshot"
+                                MinWidth="120"
+                                Click="BtnSnapshot_Click"
+                                Content="{DynamicResource Str_WebcamTest_Snapshot}"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_WebcamTest_SnapshotTip}" />
+                            <Button
+                                x:Name="BtnStart"
+                                MinWidth="130"
+                                Margin="8,0,0,0"
+                                Click="BtnStart_Click"
+                                Content="{DynamicResource Str_WebcamTest_Start}"
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  The picture. A fixed dark stage, like the video players.  -->
+                    <Border
+                        Grid.Row="1"
+                        Background="Black"
+                        ClipToBounds="True"
+                        CornerRadius="8">
+                        <Grid>
+                            <Image
+                                x:Name="Preview"
+                                RenderTransformOrigin="0.5,0.5"
+                                Stretch="Uniform">
+                                <Image.RenderTransform>
+                                    <ScaleTransform x:Name="MirrorTransform" ScaleX="-1" />
+                                </Image.RenderTransform>
+                            </Image>
+                            <StackPanel
+                                x:Name="EmptyPanel"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <materialDesign:PackIcon
+                                    Width="48"
+                                    Height="48"
+                                    HorizontalAlignment="Center"
+                                    Foreground="White"
+                                    Kind="WebcamOff"
+                                    Opacity="0.6" />
+                                <TextBlock
+                                    Margin="0,10,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="13"
+                                    Foreground="White"
+                                    Opacity="0.75"
+                                    Text="{DynamicResource Str_WebcamTest_EmptyHint}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!--  Privacy hint, shown when the camera is on but sends no picture  -->
+                    <StackPanel
+                        x:Name="PanelPrivacy"
+                        Grid.Row="2"
+                        Margin="0,12,0,0"
+                        Orientation="Horizontal"
+                        Visibility="Collapsed">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{DynamicResource Str_WebcamTest_PrivacyHint}" />
+                        <Button
+                            Margin="12,0,0,0"
+                            Click="BtnOpenPrivacy_Click"
+                            Content="{DynamicResource Str_WebcamTest_OpenPrivacy}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                    </StackPanel>
+
+                    <!--  Numbers  -->
+                    <UniformGrid
+                        Grid.Row="3"
+                        Margin="0,12,0,0"
+                        Columns="3">
+                        <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_WebcamTest_Resolution}" />
+                                <TextBlock x:Name="TxtResolution" FontFamily="Consolas" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8" ToolTip="{DynamicResource Str_WebcamTest_FpsTip}">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_WebcamTest_Fps}" />
+                                <TextBlock x:Name="TxtFps" FontFamily="Consolas" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_WebcamTest_Brightness}" />
+                                <TextBlock x:Name="TxtBrightness" FontFamily="Consolas" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

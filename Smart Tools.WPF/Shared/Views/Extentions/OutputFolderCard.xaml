@@ -1,0 +1,295 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Controls.OutputFolderCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        No x:Name in this file on purpose: a UserControl that names its own
+        parts can't hold content the page names (error MC3093 for
+        ChkKeepStructure in File Converter's Options). Parts carry x:Uid and
+        the code-behind finds them once, after InitializeComponent.
+
+        The standard Output card: same look and feel as the Files card (a
+        rounded drop panel that shows what was chosen, a primary button and
+        icon buttons under it). Logic: Controllers/OutputFolderManager.cs.
+        The folder is kept for this session only - never saved.
+
+        File mode (one result file, e.g. Images to PDF): set ShowFileName,
+        FileExtension (".pdf"), DefaultFileName and AllowAskEachTime; then
+        call GetSavePath(...) when saving.
+
+        Use it in a sidebar like this:
+            <controls:OutputFolderCard
+                x:Name="OutputCard"
+                ToolName="File Converter"
+                AllowSameAsSource="True"
+                ExampleFileName="photo-converted.png"
+                FolderChanged="OutputCard_FolderChanged">
+                <controls:OutputFolderCard.Options>
+                    <CheckBox x:Name="ChkKeepStructure" Content="{DynamicResource Str_OutputFolderCard_KeepFolderStructure}" />
+                </controls:OutputFolderCard.Options>
+            </controls:OutputFolderCard>
+        (xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls")
+    -->
+
+    <Border Style="{StaticResource SidebarGroupCardStyle}">
+        <StackPanel>
+            <ContentControl
+                x:Uid="HeaderControl"
+                Content="{DynamicResource Str_VideoEditor_Output}"
+                Style="{StaticResource SidebarGroupHeader}"
+                Tag="{x:Static materialDesign:PackIconKind.FolderArrowRightOutline}" />
+
+            <!--  The chosen folder, inside a drop panel like the Files card's  -->
+            <Border
+                x:Uid="FolderPanel"
+                MinHeight="64"
+                Margin="0,0,0,10"
+                Padding="8,7"
+                AllowDrop="True"
+                Background="{DynamicResource SidebarInputBg}"
+                BorderBrush="{DynamicResource SidebarInputBorder}"
+                BorderThickness="1"
+                CornerRadius="10"
+                Cursor="Hand"
+                DragLeave="FolderPanel_DragLeave"
+                DragOver="FolderPanel_DragOver"
+                Drop="FolderPanel_Drop"
+                MouseLeftButtonUp="FolderPanel_MouseLeftButtonUp">
+                <Grid>
+                    <!--  A folder (or "next to each file")  -->
+                    <Grid x:Uid="FolderRow">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            x:Uid="FolderChip"
+                            Width="32"
+                            Height="32"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Top"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="9"
+                            RenderTransformOrigin="0.5,0.5">
+                            <materialDesign:PackIcon
+                                x:Uid="FolderIcon"
+                                Width="17"
+                                Height="17"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentColor}"
+                                Kind="Folder" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock
+                                    x:Uid="TxtFolderName"
+                                    MaxWidth="150"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource SidebarText}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <Border
+                                    x:Uid="DefaultTag"
+                                    Margin="6,0,0,0"
+                                    Padding="5,0"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    CornerRadius="5"
+                                    ToolTip="{DynamicResource Str_OutputFolderCard_UsedUntilYouChoose}"
+                                    Visibility="Collapsed">
+                                    <TextBlock
+                                        FontSize="9.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Text="{DynamicResource Str_OutputFolderCard_Default}" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock
+                                x:Uid="TxtFolderPath"
+                                Margin="0,1,0,0"
+                                FontSize="10.5"
+                                Foreground="{DynamicResource SidebarTextMuted}"
+                                TextTrimming="CharacterEllipsis" />
+                            <StackPanel
+                                x:Uid="StatusLine"
+                                Margin="0,4,0,0"
+                                Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    x:Uid="StatusIcon"
+                                    Width="12"
+                                    Height="12"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    Kind="CheckCircleOutline" />
+                                <TextBlock
+                                    x:Uid="TxtStatus"
+                                    VerticalAlignment="Center"
+                                    FontSize="10.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  Nothing chosen and no default  -->
+                    <StackPanel
+                        x:Uid="EmptyHint"
+                        Margin="10,6"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsHitTestVisible="False"
+                        Visibility="Collapsed">
+                        <materialDesign:PackIcon
+                            Width="22"
+                            Height="22"
+                            HorizontalAlignment="Center"
+                            Foreground="{DynamicResource SidebarTextMuted}"
+                            Kind="FolderPlusOutline" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource SidebarTextMuted}"
+                            Text="{DynamicResource Str_OutputFolderCard_DropAFolderHere}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    x:Uid="BtnChooseFolder"
+                    Click="BtnChooseFolder_Click"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    ToolTip="{DynamicResource Str_OutputFolderCard_ChooseTheFolderThe}">
+                    <Grid HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Grid.Column="0"
+                            Width="16"
+                            Height="16"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Kind="FolderOutline" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_OutputFolderCard_ChooseFolder}" TextWrapping="Wrap" />
+                    </Grid>
+                </Button>
+                <Button
+                    x:Uid="BtnOpenFolder"
+                    Grid.Column="1"
+                    Width="34"
+                    Height="34"
+                    Margin="6,0,0,0"
+                    Click="BtnOpenFolder_Click"
+                    Style="{StaticResource NeutralIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_OutputFolderCard_OpenThisFolderIn}">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Kind="FolderOpenOutline" />
+                </Button>
+                <Button
+                    x:Uid="BtnResetFolder"
+                    Grid.Column="2"
+                    Width="34"
+                    Height="34"
+                    Margin="6,0,0,0"
+                    Click="BtnResetFolder_Click"
+                    Style="{StaticResource NeutralIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_OutputFolderCard_BackToTheDefault}">
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Kind="Restore" />
+                </Button>
+            </Grid>
+
+            <!--  File mode (ShowFileName): the name of the one file the tool saves  -->
+            <StackPanel x:Uid="FileNamePanel" Visibility="Collapsed">
+                <TextBlock
+                    Margin="0,12,0,6"
+                    Style="{StaticResource FieldLabel}"
+                    Text="{DynamicResource Str_Common_ColHeaderFileName}" />
+                <Border MinHeight="34" Style="{StaticResource InputBarStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="15"
+                            Height="15"
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentColor}"
+                            Kind="FileDocumentEditOutline" />
+                        <TextBox
+                            x:Uid="TxtFileName"
+                            Grid.Column="1"
+                            Style="{StaticResource BareTextBox}"
+                            TextChanged="TxtFileName_TextChanged"
+                            ToolTip="{DynamicResource Str_OutputFolderCard_JustANameThe}" />
+                        <Border
+                            x:Uid="ExtensionPill"
+                            Grid.Column="2"
+                            Margin="0,0,6,0"
+                            Padding="6,1"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            CornerRadius="6"
+                            Visibility="Collapsed">
+                            <TextBlock
+                                x:Uid="TxtExtension"
+                                FontSize="10.5"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource AccentColor}" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <CheckBox
+                    x:Uid="ChkAskEachTime"
+                    Margin="0,10,0,0"
+                    Click="ChkAskEachTime_Click"
+                    Content="{DynamicResource Str_OutputFolderCard_AskWhereToSave}"
+                    Foreground="{DynamicResource SidebarText}"
+                    ToolTip="{DynamicResource Str_OutputFolderCard_OffSavesStraightInto}"
+                    Visibility="Collapsed" />
+            </StackPanel>
+
+            <CheckBox
+                x:Uid="ChkSameAsSource"
+                Margin="0,10,0,0"
+                Click="ChkSameAsSource_Click"
+                Content="{DynamicResource Str_OutputFolderCard_SaveNextToEach}"
+                Foreground="{DynamicResource SidebarText}"
+                ToolTip="{DynamicResource Str_OutputFolderCard_EachResultGoesIn}"
+                Visibility="Collapsed" />
+
+            <!--  The tool's own extra options (Options property)  -->
+            <ContentPresenter x:Uid="OptionsPresenter" />
+
+            <TextBlock
+                x:Uid="TxtExample"
+                Margin="2,8,0,0"
+                FontFamily="Consolas"
+                FontSize="10.5"
+                Foreground="{DynamicResource SidebarTextMuted}"
+                TextTrimming="CharacterEllipsis"
+                Visibility="Collapsed" />
+        </StackPanel>
+    </Border>
+</UserControl>

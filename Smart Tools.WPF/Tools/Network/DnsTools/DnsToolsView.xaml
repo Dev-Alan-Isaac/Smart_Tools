@@ -1,0 +1,418 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.DnsToolsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Root"
+    d:DesignHeight="720"
+    d:DesignWidth="1100"
+    mc:Ignorable="d"
+    Loaded="View_Loaded">
+
+    <!--
+        DNS lookup, WHOIS and traceroute in one place: pick a tool, type a host, run.
+        Backend: Controllers/DnsToolsManager.cs (+ .Whois.cs, .Trace.cs) and DnsProtocol.cs; Models/DnsToolsModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+        <FontFamily x:Key="DnsMono">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+        <!--  Hops that nobody answered fade back  -->
+        <Style
+            x:Key="HopRowStyle"
+            BasedOn="{StaticResource {x:Type DataGridRow}}"
+            TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Silent}" Value="True">
+                    <Setter Property="Opacity" Value="0.55" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ TOOL ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Dns_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Dns_ToolHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Dns}" />
+                                    <UniformGrid Columns="1">
+                                        <RadioButton
+                                            x:Name="RadDns"
+                                            Margin="0,0,0,4"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Dns_ModeDns}"
+                                            GroupName="DnsMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Dns"
+                                            ToolTip="{DynamicResource Str_Dns_Hint_Dns}" />
+                                        <RadioButton
+                                            x:Name="RadWhois"
+                                            Margin="0,0,0,4"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Dns_ModeWhois}"
+                                            GroupName="DnsMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Whois"
+                                            ToolTip="{DynamicResource Str_Dns_Hint_Whois}" />
+                                        <RadioButton
+                                            x:Name="RadTrace"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Dns_ModeTrace}"
+                                            GroupName="DnsMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Trace"
+                                            ToolTip="{DynamicResource Str_Dns_Hint_Trace}" />
+                                    </UniformGrid>
+                                    <TextBlock x:Name="TxtModeHint" Style="{StaticResource SidebarHint}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ DNS SETTINGS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_Dns_Settings" ctl:Tour.Order="2" x:Name="OptionsDns" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Dns_DnsOptions}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Dns_RecordType}" />
+                                    <ComboBox
+                                        x:Name="CmbType"
+                                        SelectionChanged="Setting_Changed"
+                                        ToolTip="{DynamicResource Str_Dns_RecordTypeTip}" />
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Dns_Server}" />
+                                    <ComboBox x:Name="CmbServer" SelectionChanged="Setting_Changed" />
+                                    <Border
+                                        x:Name="CustomServerBar"
+                                        Margin="0,8,0,0"
+                                        Style="{StaticResource InputBarStyle}"
+                                        Visibility="Collapsed">
+                                        <TextBox
+                                            x:Name="TxtCustomServer"
+                                            LostFocus="Setting_LostFocus"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="{DynamicResource Str_Dns_CustomHint}" />
+                                    </Border>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Dns_ServerNote}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ TRACE SETTINGS ============  -->
+                            <Border
+                                x:Name="OptionsTrace"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Dns_TraceOptions}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.MapMarkerPath}" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Dns_MaxHops}" />
+                                    <ComboBox x:Name="CmbHops" SelectionChanged="Setting_Changed" />
+                                    <CheckBox
+                                        x:Name="ChkResolve"
+                                        Margin="0,12,0,0"
+                                        Click="Setting_Changed"
+                                        Content="{DynamicResource Str_Dns_ResolveNames}"
+                                        ToolTip="{DynamicResource Str_Dns_ResolveNamesTip}" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Dns_TraceNote}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= CONTENT =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  What to look up  -->
+                <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border ctl:Tour.Key="Str_Tour_Dns_Host" ctl:Tour.Order="3" Style="{StaticResource InputBarStyle}">
+                                <TextBox
+                                    x:Name="TxtHost"
+                                    KeyDown="TxtHost_KeyDown"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="{DynamicResource Str_Dns_HostHint}" />
+                            </Border>
+                            <Button
+                                ctl:Tour.Key="Str_Tour_Dns_Run"
+                                ctl:Tour.Order="4"
+                                x:Name="BtnRun"
+                                Grid.Column="1"
+                                MinWidth="130"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Stretch"
+                                Click="BtnRun_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconRun"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Magnify" />
+                                    <TextBlock x:Name="TxtRun" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <ProgressBar
+                            x:Name="ProgressRun"
+                            Height="4"
+                            Margin="0,12,0,0"
+                            IsIndeterminate="True"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+
+                <!--  The answer  -->
+                <Border ctl:Tour.Key="Str_Tour_Dns_Results" ctl:Tour.Order="5" Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid x:Name="ResultsHeader" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                x:Name="TxtResultsHeader"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                            <WrapPanel
+                                x:Name="PillRow"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center" />
+                            <Button
+                                x:Name="BtnCopy"
+                                Grid.Column="2"
+                                Click="BtnCopy_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_Dns_Copy}">
+                                <materialDesign:PackIcon
+                                    x:Name="IconCopy"
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ContentCopy" />
+                            </Button>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+
+                            <!--  DNS records  -->
+                            <DataGrid
+                                x:Name="GridRecords"
+                                Margin="0,10,0,0"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                FontSize="12"
+                                IsReadOnly="True"
+                                MinRowHeight="34"
+                                SelectionMode="Extended"
+                                VerticalScrollBarVisibility="Auto"
+                                Visibility="Collapsed">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding TypeText}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColType}" />
+                                    <DataGridTextColumn
+                                        Width="*"
+                                        MinWidth="90"
+                                        Binding="{Binding Name}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColName}" />
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding TtlText}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColTtl}" />
+                                    <DataGridTextColumn
+                                        Width="2*"
+                                        MinWidth="120"
+                                        Binding="{Binding Value}"
+                                        ElementStyle="{StaticResource WrappingCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColValue}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!--  WHOIS: the useful fields, then the full text  -->
+                            <Grid x:Name="PanelWhois" Margin="0,10,0,0" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <WrapPanel x:Name="WhoisFields" Margin="0,0,0,6" />
+                                <TextBox
+                                    x:Name="TxtWhoisRaw"
+                                    Grid.Row="1"
+                                    Height="Auto"
+                                    VerticalContentAlignment="Top"
+                                    AcceptsReturn="True"
+                                    FontFamily="{StaticResource DnsMono}"
+                                    FontSize="12"
+                                    HorizontalScrollBarVisibility="Auto"
+                                    IsReadOnly="True"
+                                    VerticalScrollBarVisibility="Auto" />
+                            </Grid>
+
+                            <!--  Traceroute hops, filling in live  -->
+                            <DataGrid
+                                x:Name="GridHops"
+                                Margin="0,10,0,0"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                FontSize="12"
+                                IsReadOnly="True"
+                                MinRowHeight="34"
+                                RowStyle="{StaticResource HopRowStyle}"
+                                SelectionMode="Extended"
+                                VerticalScrollBarVisibility="Auto"
+                                Visibility="Collapsed">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn
+                                        Width="60"
+                                        Binding="{Binding Number}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColHop}" />
+                                    <DataGridTextColumn
+                                        Width="*"
+                                        MinWidth="140"
+                                        Binding="{Binding Display}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColRouter}" />
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding Time1}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColTry1}" />
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding Time2}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColTry2}" />
+                                    <DataGridTextColumn
+                                        Width="80"
+                                        Binding="{Binding Time3}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColTry3}" />
+                                    <DataGridTextColumn
+                                        Width="90"
+                                        Binding="{Binding Average}"
+                                        ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                        Header="{DynamicResource Str_Dns_ColAverage}" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!--  Nothing to show yet, or the lookup failed  -->
+                            <controls:EmptyStateCard x:Name="MessagePanel" Icon="Magnify" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

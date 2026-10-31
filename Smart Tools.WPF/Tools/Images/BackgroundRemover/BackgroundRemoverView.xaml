@@ -1,0 +1,1718 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.BackgroundRemoverView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/BackgroundRemoverManager.cs (Magick.NET engine,
+        folder scan, live preview, batch run, report) + Models/
+        BackgroundRemoverModel.cs (data). Code-behind only wires controls.
+        Look & feel: shared view kit in Themes/Controls.xaml + UiMotion.cs.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Queue list: plain rows (the Files grid has its own columns)  -->
+        <Style
+            x:Key="QueueRowStyle"
+            BasedOn="{StaticResource {x:Type DataGridRow}}"
+            TargetType="DataGridRow" />
+
+        <!--  Queue list: image tile  -->
+        <DataTemplate x:Key="ThumbCellTemplate" DataType="{x:Type models:BackgroundRemoverItem}">
+            <Border
+                Width="42"
+                Height="42"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <Grid>
+                    <Image
+                        Margin="2"
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="{Binding Thumbnail}"
+                        Stretch="Uniform" />
+                    <materialDesign:PackIcon
+                        x:Name="NoThumb"
+                        Width="18"
+                        Height="18"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="ImageOutline"
+                        Visibility="Collapsed" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Thumbnail}" Value="{x:Null}">
+                    <Setter TargetName="NoThumb" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Queue list: name, size and status  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:BackgroundRemoverItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding DisplayName}"
+                    TextTrimming="CharacterEllipsis" />
+                <Grid Margin="0,3,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding SizeDisplay}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ContentPresenter Grid.Column="1" Content="{Binding}" ContentTemplate="{DynamicResource StatusChipTemplate}" />
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!--
+            Status chip used by both grids. Colours come from theme tokens
+            via Status (enum) - the old model handed out light-theme hex
+            strings that glared in Dark. "Processing" spins its icon.
+        -->
+        <DataTemplate x:Key="StatusChipTemplate">
+            <Border
+                x:Name="Chip"
+                Padding="7,3,9,3"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8"
+                ToolTip="{Binding StatusText}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="13"
+                        Height="13"
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ClockOutline"
+                        RenderTransformOrigin="0.5,0.5">
+                        <materialDesign:PackIcon.RenderTransform>
+                            <RotateTransform x:Name="ChipSpin" Angle="0" />
+                        </materialDesign:PackIcon.RenderTransform>
+                    </materialDesign:PackIcon>
+                    <TextBlock
+                        x:Name="ChipText"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding StatusText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Processing">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="Autorenew" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard x:Name="SpinStoryboard">
+                            <Storyboard RepeatBehavior="Forever">
+                                <DoubleAnimation
+                                    Storyboard.TargetName="ChipSpin"
+                                    Storyboard.TargetProperty="Angle"
+                                    From="0"
+                                    To="360"
+                                    Duration="0:0:1" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <RemoveStoryboard BeginStoryboardName="SpinStoryboard" />
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Removed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="SkipNextCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--
+            Checkerboard behind the "after" preview so transparency is
+            visible. Fixed light greys on purpose - it stands for "no pixels
+            here", the same convention every image editor uses.
+        -->
+        <DrawingBrush
+            x:Key="CheckerBrush"
+            TileMode="Tile"
+            Viewport="0,0,16,16"
+            ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#F4F5F7">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,16,16" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="#E1E4EA">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="0,0,8,8" />
+                                <RectangleGeometry Rect="8,8,8,8" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <!--  Round colour preset (Tag = "target|#RRGGBB" or "replacement|#RRGGBB")  -->
+        <Style x:Key="BgPresetSwatchStyle" TargetType="Button">
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="SwatchScale" ScaleX="1" ScaleY="1" />
+                            </Grid.RenderTransform>
+                            <Ellipse
+                                x:Name="Ring"
+                                Stroke="{DynamicResource SidebarBorder}"
+                                StrokeThickness="2" />
+                            <Ellipse
+                                Margin="3"
+                                Fill="{TemplateBinding Background}"
+                                Stroke="#33000000"
+                                StrokeThickness="1" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource AccentColor}" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EasePop}"
+                                                Storyboard.TargetName="SwatchScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1.15"
+                                                Duration="0:0:0.2" />
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EasePop}"
+                                                Storyboard.TargetName="SwatchScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1.15"
+                                                Duration="0:0:0.2" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="SwatchScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="SwatchScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Small value pill next to a slider label ("10%", "90")  -->
+
+
+        <Style x:Key="PreviewCaption" TargetType="Border">
+            <Setter Property="Margin" Value="8" />
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Background" Value="{DynamicResource CardBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+
+        <!--  Input card: one queued item  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:BackgroundRemoverGroup}">
+            <Grid ToolTip="{Binding ToolTip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="GroupIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileMultipleOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveGroup_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_BackgroundRemover_TakeTheseImagesOff}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16">
+
+                            <!--
+                                ============ FILES ============
+                                Same card as Validate Data, Convert Files and Images to PDF: drop area
+                                listing what was added (one row per folder, one for loose
+                                files), Add files / Add folder / Clear, Include subfolders.
+                            -->
+                            <controls:InputFolderCard
+                                ctl:Tour.Key="Str_Tour_BgRemove_Input" ctl:Tour.Order="1"
+                                x:Name="InputCard"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Common_Files}"
+                                HeaderIcon="FileMultipleOutline"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+
+                            <!--  ============ COLOUR TO REMOVE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_BgRemove_Color" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_BgRemove_ColorToRemoveHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.EyedropperVariant}" />
+
+                                    <!--  Swatch + hex in one rounded field  -->
+                                    <Border x:Name="TargetColorBar" Style="{StaticResource InputBarStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                x:Name="SwatchTargetColor"
+                                                Width="22"
+                                                Height="22"
+                                                Margin="7,0,0,0"
+                                                Background="White"
+                                                BorderBrush="{DynamicResource InputBorder}"
+                                                BorderThickness="1"
+                                                CornerRadius="11" />
+                                            <TextBox
+                                                x:Name="TxtTargetColor"
+                                                Grid.Column="1"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="#RRGGBB"
+                                                Text="#FFFFFF"
+                                                TextChanged="TxtTargetColor_TextChanged"
+                                                ToolTip="{DynamicResource Str_BgRemove_TargetColorTooltip}" />
+                                            <Button
+                                                x:Name="BtnPickColor"
+                                                Grid.Column="2"
+                                                Width="26"
+                                                Height="26"
+                                                Margin="0,0,4,0"
+                                                Click="BtnPickColor_Click"
+                                                Style="{StaticResource IconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_BgRemove_PickColorTooltip}">
+                                                <materialDesign:PackIcon
+                                                    x:Name="IconPickColor"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="EyedropperVariant" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock
+                                        x:Name="TxtPickHint"
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource AccentColor}"
+                                        Text="{DynamicResource Str_BgRemove_PickColorHint}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <TextBlock
+                                        x:Name="TxtTargetColorError"
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Text="{DynamicResource Str_BgRemove_InvalidHexError}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <!--  Common backdrops, one click each  -->
+                                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                        <Button
+                                            Background="#FFFFFF"
+                                            Click="BtnColorPreset_Click"
+                                            Style="{StaticResource BgPresetSwatchStyle}"
+                                            Tag="target|#FFFFFF"
+                                            ToolTip="{DynamicResource Str_BackgroundRemover_WhiteBackdrop}" />
+                                        <Button
+                                            Background="#000000"
+                                            Click="BtnColorPreset_Click"
+                                            Style="{StaticResource BgPresetSwatchStyle}"
+                                            Tag="target|#000000"
+                                            ToolTip="{DynamicResource Str_BackgroundRemover_BlackBackdrop}" />
+                                        <Button
+                                            Background="#00B140"
+                                            Click="BtnColorPreset_Click"
+                                            Style="{StaticResource BgPresetSwatchStyle}"
+                                            Tag="target|#00B140"
+                                            ToolTip="{DynamicResource Str_BackgroundRemover_GreenScreen}" />
+                                        <Button
+                                            Background="#0047BB"
+                                            Click="BtnColorPreset_Click"
+                                            Style="{StaticResource BgPresetSwatchStyle}"
+                                            Tag="target|#0047BB"
+                                            ToolTip="{DynamicResource Str_BackgroundRemover_BlueScreen}" />
+                                        <Button
+                                            Background="#F2F2F2"
+                                            Click="BtnColorPreset_Click"
+                                            Style="{StaticResource BgPresetSwatchStyle}"
+                                            Tag="target|#F2F2F2"
+                                            ToolTip="{DynamicResource Str_BackgroundRemover_LightGreyStudioBackdrop}" />
+                                    </StackPanel>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            Margin="0,12,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_BgRemove_ToleranceLabel}" />
+                                        <Border
+                                            x:Name="TolerancePill"
+                                            Grid.Column="1"
+                                            Style="{StaticResource SliderValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtToleranceValue"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="White"
+                                                Text="10%" />
+                                        </Border>
+                                    </Grid>
+
+                                    <Slider
+                                        x:Name="SldTolerance"
+                                        Margin="0,6,0,0"
+                                        IsMoveToPointEnabled="True"
+                                        Maximum="100"
+                                        Minimum="0"
+                                        ToolTip="{DynamicResource Str_BgRemove_ToleranceTooltip}"
+                                        ValueChanged="SldTolerance_ValueChanged"
+                                        Value="10" />
+
+                                    <CheckBox
+                                        x:Name="ChkCleanEdges"
+                                        Margin="0,10,0,0"
+                                        Checked="ChkCleanEdges_Changed"
+                                        Content="{DynamicResource Str_BgRemove_CleanEdges}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_BgRemove_CleanEdgesTooltip}"
+                                        Unchecked="ChkCleanEdges_Changed" />
+
+                                    <StackPanel x:Name="EdgeOptionsPanel">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Margin="0,10,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_BgRemove_EdgeSoftness}" />
+                                            <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                                <TextBlock
+                                                    x:Name="TxtEdgeSoftnessValue"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="White"
+                                                    Text="35%" />
+                                            </Border>
+                                        </Grid>
+                                        <Slider
+                                            x:Name="SldEdgeSoftness"
+                                            Margin="0,6,0,0"
+                                            IsMoveToPointEnabled="True"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            ToolTip="{DynamicResource Str_BgRemove_EdgeSoftnessTooltip}"
+                                            ValueChanged="SldEdgeSoftness_ValueChanged"
+                                            Value="35" />
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Margin="0,10,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_BgRemove_EdgeChoke}" />
+                                            <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                                <TextBlock
+                                                    x:Name="TxtEdgeChokeValue"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="White"
+                                                    Text="0 px" />
+                                            </Border>
+                                        </Grid>
+                                        <Slider
+                                            x:Name="SldEdgeChoke"
+                                            Margin="0,6,0,0"
+                                            IsMoveToPointEnabled="True"
+                                            IsSnapToTickEnabled="True"
+                                            Maximum="3"
+                                            Minimum="0"
+                                            TickFrequency="1"
+                                            ToolTip="{DynamicResource Str_BgRemove_EdgeChokeTooltip}"
+                                            ValueChanged="SldEdgeChoke_ValueChanged"
+                                            Value="0" />
+                                    </StackPanel>
+
+                                    <CheckBox
+                                        x:Name="ChkTrimEdges"
+                                        Margin="0,10,0,0"
+                                        Checked="PreviewOption_Changed"
+                                        Content="{DynamicResource Str_BgRemove_TrimEdges}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_BgRemove_TrimEdgesTooltip}"
+                                        Unchecked="PreviewOption_Changed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ NEW BACKGROUND ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_BgRemove_Background" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_BgRemove_BackgroundHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.LayersOutline}" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <RadioButton
+                                            x:Name="RadioBgTransparent"
+                                            Grid.Column="0"
+                                            MinHeight="62"
+                                            Checked="RadioBackgroundMode_Checked"
+                                            GroupName="BgRemoverMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_BgRemove_BackgroundModeTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Checkerboard" />
+                                                <TextBlock
+                                                    Margin="2,3,2,0"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_BgRemove_Transparent}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <RadioButton
+                                            x:Name="RadioBgSolid"
+                                            Grid.Column="2"
+                                            MinHeight="62"
+                                            Checked="RadioBackgroundMode_Checked"
+                                            GroupName="BgRemoverMode"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_BgRemove_BackgroundModeTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FormatColorFill" />
+                                                <TextBlock
+                                                    Margin="2,3,2,0"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_BgRemove_SolidColor}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <RadioButton
+                                            x:Name="RadioBgImage"
+                                            Grid.Column="4"
+                                            MinHeight="62"
+                                            Checked="RadioBackgroundMode_Checked"
+                                            GroupName="BgRemoverMode"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_BgRemove_BackgroundModeTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ImageOutline" />
+                                                <TextBlock
+                                                    Margin="2,3,2,0"
+                                                    FontSize="11"
+                                                    Text="{DynamicResource Str_BgRemove_ImageReplacement}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
+
+                                    <!--  Solid colour  -->
+                                    <StackPanel
+                                        x:Name="PanelSolidColorOptions"
+                                        Margin="0,12,0,0"
+                                        Visibility="Collapsed">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_BgRemove_ReplacementColorHeader}" />
+
+                                        <Border x:Name="ReplacementColorBar" Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border
+                                                    x:Name="SwatchReplacementColor"
+                                                    Width="22"
+                                                    Height="22"
+                                                    Margin="7,0,0,0"
+                                                    Background="White"
+                                                    BorderBrush="{DynamicResource InputBorder}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="11" />
+                                                <TextBox
+                                                    x:Name="TxtReplacementColor"
+                                                    Grid.Column="1"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="#RRGGBB"
+                                                    Text="#FFFFFF"
+                                                    TextChanged="TxtReplacementColor_TextChanged"
+                                                    ToolTip="{DynamicResource Str_BgRemove_ReplacementColorTooltip}" />
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock
+                                            x:Name="TxtReplacementColorError"
+                                            Margin="0,4,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Text="{DynamicResource Str_BgRemove_InvalidHexError}"
+                                            TextWrapping="Wrap"
+                                            Visibility="Collapsed" />
+
+                                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                            <Button
+                                                Background="#FFFFFF"
+                                                Click="BtnColorPreset_Click"
+                                                Style="{StaticResource BgPresetSwatchStyle}"
+                                                Tag="replacement|#FFFFFF"
+                                                ToolTip="{DynamicResource Str_BackgroundRemover_White}" />
+                                            <Button
+                                                Background="#000000"
+                                                Click="BtnColorPreset_Click"
+                                                Style="{StaticResource BgPresetSwatchStyle}"
+                                                Tag="replacement|#000000"
+                                                ToolTip="{DynamicResource Str_BackgroundRemover_Black}" />
+                                            <Button
+                                                Background="#E5E7EB"
+                                                Click="BtnColorPreset_Click"
+                                                Style="{StaticResource BgPresetSwatchStyle}"
+                                                Tag="replacement|#E5E7EB"
+                                                ToolTip="{DynamicResource Str_BackgroundRemover_SoftGrey}" />
+                                            <Button
+                                                Background="#3D6FE0"
+                                                Click="BtnColorPreset_Click"
+                                                Style="{StaticResource BgPresetSwatchStyle}"
+                                                Tag="replacement|#3D6FE0"
+                                                ToolTip="{DynamicResource Str_BackgroundRemover_BrandBlue}" />
+                                            <Button
+                                                Background="#FDE68A"
+                                                Click="BtnColorPreset_Click"
+                                                Style="{StaticResource BgPresetSwatchStyle}"
+                                                Tag="replacement|#FDE68A"
+                                                ToolTip="{DynamicResource Str_BackgroundRemover_WarmYellow}" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!--  Replacement image  -->
+                                    <StackPanel
+                                        x:Name="PanelImageReplaceOptions"
+                                        Margin="0,12,0,0"
+                                        Visibility="Collapsed">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_BgRemove_ReplacementImageHeader}" />
+
+                                        <Button
+                                            HorizontalAlignment="Stretch"
+                                            Click="BtnBrowseReplacementImage_Click"
+                                            ToolTip="{DynamicResource Str_BgRemove_BrowseImageTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ImageSearchOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_Browse}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+
+                                        <TextBlock
+                                            x:Name="TxtReplacementImagePath"
+                                            Margin="0,6,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_BgRemove_NoImageSelected}"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip="{DynamicResource Str_BgRemove_NoImageSelected}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OUTPUT FORMAT ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_BgRemove_OutputFormatHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FileImageOutline}" />
+
+                                    <Grid ToolTip="{DynamicResource Str_BgRemove_OutputFormatTooltip}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton
+                                            x:Name="RadioFormatPng"
+                                            Grid.Column="0"
+                                            Checked="RadioOutputFormat_Checked"
+                                            Content="{DynamicResource Str_BgRemove_OutputFormatPng}"
+                                            GroupName="BgRemoverFormat"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadioFormatJpg"
+                                            Grid.Column="2"
+                                            Checked="RadioOutputFormat_Checked"
+                                            Content="{DynamicResource Str_BackgroundRemover_Jpg}"
+                                            GroupName="BgRemoverFormat"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                        <RadioButton
+                                            x:Name="RadioFormatWebp"
+                                            Grid.Column="4"
+                                            Checked="RadioOutputFormat_Checked"
+                                            Content="{DynamicResource Str_BackgroundRemover_Webp}"
+                                            GroupName="BgRemoverFormat"
+                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                    </Grid>
+
+                                    <TextBlock
+                                        x:Name="TxtFormatHint"
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_BackgroundRemover_PngKeepsTransparency}"
+                                        TextWrapping="Wrap" />
+
+                                    <StackPanel
+                                        x:Name="PanelQuality"
+                                        Margin="0,10,0,0"
+                                        Visibility="Collapsed">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Style="{StaticResource SliderLabel}" Text="{DynamicResource Str_BgRemove_QualityLabel}" />
+                                            <Border Grid.Column="1" Style="{StaticResource SliderValuePill}">
+                                                <TextBlock
+                                                    x:Name="TxtQualityValue"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="White"
+                                                    Text="90" />
+                                            </Border>
+                                        </Grid>
+
+                                        <Slider
+                                            x:Name="SldQuality"
+                                            Margin="0,6,0,0"
+                                            IsMoveToPointEnabled="True"
+                                            Maximum="100"
+                                            Minimum="1"
+                                            ToolTip="{DynamicResource Str_BgRemove_QualityTooltip}"
+                                            ValueChanged="SldQuality_ValueChanged"
+                                            Value="90" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FILE NAMES ============  -->
+                            <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_BgRemove_SuffixHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FormTextbox}" />
+
+                                    <TextBox
+                                        x:Name="TxtNamingSuffix"
+                                        Tag="_nobg"
+                                        Text="_nobg"
+                                        TextChanged="TxtNamingSuffix_TextChanged"
+                                        ToolTip="{DynamicResource Str_BgRemove_SuffixTooltip}" />
+
+                                    <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="12"
+                                            Height="12"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Kind="ArrowRightBottom" />
+                                        <TextBlock
+                                            x:Name="TxtNamingExample"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_BackgroundRemover_PhotoNobgPng}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+
+                                    <CheckBox
+                                        x:Name="ChkOverwriteExisting"
+                                        Margin="0,12,0,0"
+                                        Content="{DynamicResource Str_Convert_OverwriteExisting}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_BackgroundRemover_IfAProcessedFile}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SAVE TO ============  -->
+                            <!--  The shared Output card (folder for this session only).  -->
+                            <controls:OutputFolderCard
+                                ctl:Tour.Key="Str_Tour_BgRemove_Output" ctl:Tour.Order="4"
+                                x:Name="OutputCard"
+                                Margin="0,8,0,0"
+                                AllowSameAsSource="True"
+                                FolderChanged="OutputCard_FolderChanged"
+                                Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
+                                HeaderIcon="ContentSaveOutline"
+                                SameAsSourceText="Save next to the originals"
+                                ToolName="Background Remover" />
+
+                        </StackPanel>
+
+                    </ScrollViewer>
+
+                    <!--  Kept (empty) for existing code that references it  -->
+                    <StackPanel x:Name="OptionsBottomPanel" Grid.Row="2" />
+
+                </Grid>
+
+            </Border>
+
+            <!--  ================= WORKSPACE + COLLAPSIBLE QUEUE =================  -->
+
+            <Grid Grid.Column="2">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition x:Name="QueueColumn" Width="450" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ================= WORKSPACE CARD =================  -->
+
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!--  ============ RUN BAR (moved here from the old page header) ============  -->
+                        <Border
+                            Grid.Row="0"
+                            Padding="12,10"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button
+                                    ctl:Tour.Key="Str_Tour_BgRemove_Run" ctl:Tour.Order="5"
+                                    x:Name="BtnRun"
+                                    Grid.Column="0"
+                                    MinWidth="190"
+                                    Margin="0,0,16,0"
+                                    VerticalAlignment="Center"
+                                    Click="BtnRun_Click"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}"
+                                    ToolTip="{DynamicResource Str_BgRemove_RunButtonTooltip}">
+                                    <Grid HorizontalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Grid.Column="0"
+                                            x:Name="IconRun"
+                                            Width="18"
+                                            Height="18"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Kind="AutoFix" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            x:Name="TxtRunLabel"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_BgRemove_RunButton}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Button>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <ProgressBar
+                                        x:Name="ProgressRun"
+                                        Height="8"
+                                        Maximum="100"
+                                        ToolTip="{DynamicResource Str_BgRemove_ProgressTooltip}" />
+                                    <TextBlock
+                                        x:Name="TxtProgress"
+                                        Margin="0,6,0,0"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_BgRemove_ProgressInitial}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
+                                <TextBlock
+                                    x:Name="TxtProgressPercent"
+                                    Grid.Column="2"
+                                    MinWidth="54"
+                                    Margin="16,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="20"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource AccentColor}"
+                                    Text="0%"
+                                    TextAlignment="Right" />
+                            </Grid>
+                        </Border>
+
+                        <!--  ============ LIVE COUNTS (shown once a run starts) ============  -->
+                        <WrapPanel
+                            x:Name="StatsPanel"
+                            Grid.Row="1"
+                            Margin="0,10,0,0"
+                            Visibility="Collapsed">
+                            <Border
+                                Margin="0,0,8,0"
+                                Background="{DynamicResource StatusSuccessBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_BackgroundRemover_BackgroundsRemoved}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtStatRemoved}"
+                                        Kind="CheckCircleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtStatRemoved"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                        Text="{DynamicResource Str_BackgroundRemover_0Removed}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,8,0"
+                                Background="{DynamicResource StatusWarningBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_BackgroundRemover_SkippedOutputAlreadyExisted}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtStatSkipped}"
+                                        Kind="SkipNextCircleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtStatSkipped"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusWarningFg}"
+                                        Text="{DynamicResource Str_BackgroundRemover_0Skipped}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                Margin="0,0,8,0"
+                                Background="{DynamicResource StatusErrorBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_BackgroundRemover_FailedHoverARow}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtStatFailed}"
+                                        Kind="AlertCircleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtStatFailed"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        Text="{DynamicResource Str_BackgroundRemover_0Failed}" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="EtaPill"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_BackgroundRemover_TimeRemainingEstimatedTotal}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtEta}"
+                                        Kind="TimerOutline" />
+                                    <TextBlock
+                                        x:Name="TxtEta"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="—" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+
+                        <!--  ============ HEADER + TOOLBAR ============  -->
+                        <Grid Grid.Row="2" Margin="0,14,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                Content="{DynamicResource Str_BgRemove_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ImageFilterCenterFocus}" />
+
+                            <Button
+                                x:Name="BtnPreview"
+                                Grid.Column="1"
+                                Click="BtnPreview_Click"
+                                ToolTip="{DynamicResource Str_BgRemove_PreviewTooltip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="15"
+                                        Height="15"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Reload" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_BgRemove_PreviewButton}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+
+                            <controls:ExportButton
+                                x:Name="BtnExportReport"
+                                Grid.Column="3"
+                                ToolTip="{DynamicResource Str_BgRemove_ExportReportTooltip}">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem
+                                            Click="MenuExport_Click"
+                                            Header="{DynamicResource Str_Common_ExportAsCsv}"
+                                            Tag="csv">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem
+                                            Click="MenuExport_Click"
+                                            Header="{DynamicResource Str_Common_ExportAsJson}"
+                                            Tag="json">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="CodeJson" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </controls:ExportButton>
+                        </Grid>
+
+                        <!--  ============ PREVIEW + RESULTS ============  -->
+                        <Grid Grid.Row="3">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!--
+                                Live before/after of the selected file (click any row).
+                                Re-renders as colour/tolerance/background settings change.
+                            -->
+                            <Grid
+                                x:Name="PreviewPanel"
+                                Grid.Row="0"
+                                MinHeight="200">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Border
+                                    Grid.Column="0"
+                                    Background="{DynamicResource RowBg}"
+                                    BorderBrush="{DynamicResource CardBorder}"
+                                    BorderThickness="1"
+                                    ClipToBounds="True"
+                                    CornerRadius="12">
+                                    <Grid>
+                                        <Image
+                                            x:Name="ImgBefore"
+                                            Margin="10"
+                                            MouseLeftButtonUp="ImgBefore_MouseLeftButtonUp"
+                                            RenderOptions.BitmapScalingMode="HighQuality"
+                                            Stretch="Uniform" />
+                                        <Border Style="{StaticResource PreviewCaption}">
+                                            <TextBlock
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_BackgroundRemover_Before}" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <Border
+                                    Grid.Column="2"
+                                    Background="{StaticResource CheckerBrush}"
+                                    BorderBrush="{DynamicResource CardBorder}"
+                                    BorderThickness="1"
+                                    ClipToBounds="True"
+                                    CornerRadius="12">
+                                    <Grid>
+                                        <Image
+                                            x:Name="ImgAfter"
+                                            Margin="10"
+                                            RenderOptions.BitmapScalingMode="HighQuality"
+                                            Stretch="Uniform" />
+                                        <Border Style="{StaticResource PreviewCaption}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="12"
+                                                    Height="12"
+                                                    Margin="0,0,4,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Kind="AutoFix" />
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Text="{DynamicResource Str_BackgroundRemover_After}" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!--  Rendering indicator  -->
+                                        <ProgressBar
+                                            x:Name="PreviewBusy"
+                                            Height="3"
+                                            Margin="12,0,12,8"
+                                            VerticalAlignment="Bottom"
+                                            BorderThickness="0"
+                                            IsIndeterminate="False"
+                                            Visibility="Collapsed" />
+
+                                        <!--  Preview error (unreadable file, missing replacement image ...)  -->
+                                        <Border
+                                            x:Name="PreviewErrorPanel"
+                                            Margin="16"
+                                            Padding="12,8"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource StatusErrorBg}"
+                                            CornerRadius="8"
+                                            Visibility="Collapsed">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource StatusErrorFg}"
+                                                    Kind="AlertCircleOutline" />
+                                                <TextBlock
+                                                    x:Name="TxtPreviewError"
+                                                    MaxWidth="260"
+                                                    FontSize="11.5"
+                                                    Foreground="{DynamicResource StatusErrorFg}"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock
+                                    x:Name="TxtPreviewInfo"
+                                    Grid.Row="1"
+                                    Grid.ColumnSpan="3"
+                                    Margin="2,6,0,0"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_BackgroundRemover_ClickAFileTo}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+
+                            <!--  ============ EMPTY STATE (dashed drop zone + call to action) ============  -->
+                            <controls:EmptyStateCard
+                                x:Name="EmptyStatePanel"
+                                Title="{DynamicResource Str_BackgroundRemover_RemoveSolidBackgroundsIn}"
+                                Grid.Row="0"
+                                Background="{DynamicResource CardBg}"
+                                Description="{DynamicResource Str_BgRemove_MainDropHint}"
+                                Icon="ImageRemoveOutline" />
+                        </Grid>
+
+                    </Grid>
+
+                </Border>
+
+                <!--  ================= QUEUE TOGGLE STRIP =================  -->
+                <Button
+                    x:Name="BtnToggleQueue"
+                    Grid.Column="1"
+                    Width="26"
+                    Margin="6,0"
+                    Click="BtnToggleQueue_Click"
+                    Style="{StaticResource PanelToggleButtonStyle}"
+                    ToolTip="{DynamicResource Str_BgRemove_ToggleQueueTooltip}">
+                    <materialDesign:PackIcon
+                        x:Name="IconTogglePlaylist"
+                        Width="18"
+                        Height="18"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Kind="ChevronRight" />
+                </Button>
+
+                <!--  ================= IMAGE LIST =================  -->
+                <Border
+                    x:Name="QueuePanel"
+                    Grid.Column="2"
+                    Style="{StaticResource CardStyle}">
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_BgRemove_QueueTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.FormatListChecks}" />
+
+                            <Border
+                                x:Name="SummaryPill"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_BgRemove_QueuePillTooltip}"
+                                Visibility="Collapsed">
+                                <TextBlock
+                                    x:Name="TxtSummaryCount"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusInfoFg}" />
+                            </Border>
+                        </Grid>
+
+                        <StackPanel
+                            x:Name="ListTools"
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Orientation="Horizontal">
+                            <Button
+                                x:Name="BtnMoveUp"
+                                Width="32"
+                                Height="32"
+                                Click="BtnMoveUp_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_ImageViewerControl_MoveEarlier}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowUp" />
+                            </Button>
+                            <Button
+                                x:Name="BtnMoveDown"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Click="BtnMoveDown_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_ImageViewerControl_MoveLater}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowDown" />
+                            </Button>
+                            <Button
+                                x:Name="BtnSortByName"
+                                Width="32"
+                                Height="32"
+                                Margin="10,0,0,0"
+                                Click="BtnSortByName_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_ImageViewerControl_SortByName}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="SortAlphabeticalAscending" />
+                            </Button>
+                            <Button
+                                x:Name="BtnSortByDate"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Click="BtnSortByDate_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_PdfToolkit_DateOrderOldestFirst}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="SortCalendarAscending" />
+                            </Button>
+                        </StackPanel>
+
+                        <Grid Grid.Row="2">
+                            <DataGrid
+                                x:Name="DataGridQueue"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                CanUserSortColumns="False"
+                                FontSize="12"
+                                HeadersVisibility="None"
+                                IsReadOnly="True"
+                                LoadingRow="DataGridQueue_LoadingRow"
+                                MinRowHeight="56"
+                                RowStyle="{StaticResource QueueRowStyle}"
+                                SelectionChanged="DataGridQueue_SelectionChanged"
+                                SelectionMode="Single"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.ScrollUnit="Pixel"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Click="MenuShowInFolder_Click">
+                                            <MenuItem.Header>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon
+                                                        Width="15"
+                                                        Height="15"
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        Kind="FolderOpenOutline" />
+                                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Validate_MenuShowInFolder}" />
+                                                </StackPanel>
+                                            </MenuItem.Header>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuDeleteFile_Click">
+                                            <MenuItem.Header>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon
+                                                        Width="15"
+                                                        Height="15"
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        Kind="DeleteOutline" />
+                                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_VideoReplay_DeleteFile}" />
+                                                </StackPanel>
+                                            </MenuItem.Header>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="34" CellStyle="{StaticResource CheckBoxCellStyle}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    Checked="ItemCheckBox_Changed"
+                                                    IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    Style="{StaticResource DataGridCheckBoxStyle}"
+                                                    ToolTip="{DynamicResource Str_ImgEdit_IncludeImageTooltip}"
+                                                    Unchecked="ItemCheckBox_Changed" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn
+                                        Width="52"
+                                        CellStyle="{StaticResource CompactCellStyle}"
+                                        CellTemplate="{StaticResource ThumbCellTemplate}" />
+                                    <DataGridTemplateColumn Width="*" CellTemplate="{StaticResource NameCellTemplate}" />
+                                    <DataGridTemplateColumn Width="38" CellStyle="{StaticResource CompactCellStyle}">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                                    <Button
+                                                        Width="24"
+                                                        Height="24"
+                                                        Click="BtnRemoveFromQueue_Click"
+                                                        Style="{StaticResource IconButtonStyle}"
+                                                        ToolTip="{DynamicResource Str_BgRemove_RemoveRowTooltip}">
+                                                        <materialDesign:PackIcon
+                                                            Width="13"
+                                                            Height="13"
+                                                            Foreground="{DynamicResource StatusErrorFg}"
+                                                            Kind="Close" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <controls:EmptyStateCard
+                                x:Name="QueueEmptyStatePanel"
+                                Description="{DynamicResource Str_Common_DragDropHint}"
+                                DescriptionMaxWidth="260"
+                                Icon="ImageMultipleOutline"
+                                IsHitTestVisible="False" />
+                        </Grid>
+
+                        <!--  ============ PLAYLIST ACTIONS ============  -->
+                        <Grid Grid.Row="3" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button
+                                x:Name="BtnRemoveFiles"
+                                Grid.Column="0"
+                                Margin="0,0,6,0"
+                                Click="BtnSelectAll_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_Common_SelectAll}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="PlaylistRemove" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnDeselectAll"
+                                Grid.Column="1"
+                                Width="34"
+                                Height="34"
+                                Click="BtnDeselectAll_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Common_DeselectAll}">
+                                <materialDesign:PackIcon
+                                    Width="17"
+                                    Height="17"
+                                    Kind="CheckboxMultipleBlankOutline" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnRemoveSelected"
+                                Grid.Column="3"
+                                Margin="0,0,6,0"
+                                Click="BtnRemoveFiles_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_BgRemove_RemoveSelectedTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="PlaylistRemove" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnClearAll"
+                                Grid.Column="4"
+                                Click="BtnClearAll_Click"
+                                Style="{StaticResource ListToolDangerButtonStyle}"
+                                ToolTip="{DynamicResource Str_BgRemove_ClearTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="DeleteSweepOutline" />
+                            </Button>
+                        </Grid>
+
+                    </Grid>
+
+                </Border>
+
+            </Grid>
+
+        </Grid>
+
+        <!--  ================= DROP OVERLAY =================  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_BackgroundRemover_DropImagesToAdd}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_BackgroundRemover_PngJpgBmpTiff}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</UserControl>

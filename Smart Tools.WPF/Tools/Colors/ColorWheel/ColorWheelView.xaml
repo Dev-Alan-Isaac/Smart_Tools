@@ -1,0 +1,832 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Views.ColorWheelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/ColorWheelManager.cs (+ .Render.cs) and
+        Models/ColorModel.cs. Code-behind only wires controls.
+        Look & feel: shared view kit (Themes/Controls.xaml) + UiMotion.cs.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Value pill next to a slider label  -->
+        <Style x:Key="ValuePill" TargetType="Border">
+            <Setter Property="Padding" Value="7,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AccentFill}" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="ValuePillText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!--  Round swatch that opens the color dialog  -->
+
+        <!--  Clickable colour tile (legend, harmony, gradient stops): colour fill + label  -->
+        <Style x:Key="ColorTileStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="Scale" ScaleX="1" ScaleY="1" />
+                            </Grid.RenderTransform>
+                            <Border
+                                x:Name="Ring"
+                                Margin="-3"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="2"
+                                CornerRadius="11" />
+                            <Border
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="9">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Ring" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1.05"
+                                                Duration="0:0:0.12" />
+                                            <DoubleAnimation
+                                                EasingFunction="{StaticResource EaseOut}"
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1.05"
+                                                Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="Scale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1"
+                                                Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ WHEEL ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_ColorWheel_Wheel" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ColorWheel_WheelHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ChartDonut}" />
+
+                                    <DockPanel Margin="0,0,0,4">
+                                        <Border DockPanel.Dock="Right" Style="{StaticResource ValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtSaturationValue"
+                                                Style="{StaticResource ValuePillText}"
+                                                Text="100%" />
+                                        </Border>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_ColorWheel_Saturation}" />
+                                    </DockPanel>
+                                    <Slider
+                                        x:Name="SaturationSlider"
+                                        Margin="0,0,0,10"
+                                        LargeChange="0.1"
+                                        Maximum="1"
+                                        Minimum="0.1"
+                                        SmallChange="0.01"
+                                        ToolTip="{DynamicResource Str_ColorWheel_SaturationTooltip}"
+                                        ValueChanged="WheelSlider_ValueChanged"
+                                        Value="1" />
+
+                                    <DockPanel Margin="0,0,0,4">
+                                        <Border DockPanel.Dock="Right" Style="{StaticResource ValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtBrightnessValue"
+                                                Style="{StaticResource ValuePillText}"
+                                                Text="100%" />
+                                        </Border>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_ColorWheel_Brightness}" />
+                                    </DockPanel>
+                                    <Slider
+                                        x:Name="BrightnessSlider"
+                                        Margin="0,0,0,10"
+                                        LargeChange="0.1"
+                                        Maximum="1"
+                                        Minimum="0.2"
+                                        SmallChange="0.01"
+                                        ToolTip="{DynamicResource Str_ColorWheel_BrightnessTooltip}"
+                                        ValueChanged="WheelSlider_ValueChanged"
+                                        Value="1" />
+
+                                    <Button
+                                        x:Name="BtnResetWheel"
+                                        Width="NaN"
+                                        Padding="12,0"
+                                        HorizontalAlignment="Stretch"
+                                        Click="BtnResetWheel_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_ColorWheel_BackToFullSaturation}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon
+                                                Grid.Column="0"
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Restore" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_ColorWheel_ResetWheel}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ HARMONY ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_ColorWheel_Harmony" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ColorWheel_Harmony}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.VectorTriangle}" />
+
+                                    <Grid Margin="0,4,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  First Option: Full Width (Complementary)  -->
+                                        <RadioButton
+                                            x:Name="RadioHarmonyComplementary"
+                                            Grid.Row="0"
+                                            Margin="0,0,0,4"
+                                            Checked="Harmony_Checked"
+                                            Content="{DynamicResource Str_ColorWheel_Complementary}"
+                                            GroupName="Harmony"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Complementary" />
+
+                                        <!--  Row 1: Analogous & Triadic  -->
+                                        <UniformGrid
+                                            Grid.Row="1"
+                                            Margin="0,0,0,4"
+                                            Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioHarmonyAnalogous"
+                                                Margin="0,0,2,0"
+                                                Checked="Harmony_Checked"
+                                                Content="{DynamicResource Str_ColorWheel_Analogous}"
+                                                GroupName="Harmony"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Analogous" />
+                                            <RadioButton
+                                                x:Name="RadioHarmonyTriadic"
+                                                Margin="2,0,0,0"
+                                                Checked="Harmony_Checked"
+                                                Content="{DynamicResource Str_ColorWheel_Triadic}"
+                                                GroupName="Harmony"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Triadic" />
+                                        </UniformGrid>
+
+                                        <!--  Row 2: Split-Complementary & Tetradic  -->
+                                        <UniformGrid Grid.Row="2" Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioHarmonySplit"
+                                                Margin="0,0,2,0"
+                                                Checked="Harmony_Checked"
+                                                Content="{DynamicResource Str_Pdf_OpSplit}"
+                                                GroupName="Harmony"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="SplitComplementary"
+                                                ToolTip="{DynamicResource Str_ColorWheel_SplitComplementary}" />
+                                            <RadioButton
+                                                x:Name="RadioHarmonyTetradic"
+                                                Margin="2,0,0,0"
+                                                Checked="Harmony_Checked"
+                                                Content="{DynamicResource Str_ColorWheel_Tetradic}"
+                                                GroupName="Harmony"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Tetradic" />
+                                        </UniformGrid>
+                                    </Grid>
+
+                                    <TextBlock
+                                        x:Name="TxtHarmonyHint"
+                                        Margin="0,8,0,0"
+                                        FontSize="10.5"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ FAVORITES ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Color_FavoritesHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Star}" />
+
+                                    <WrapPanel
+                                        x:Name="FavoritesPanel"
+                                        Margin="3,3,0,0"
+                                        ToolTip="{DynamicResource Str_ColorWheel_FavoritesTooltip}" />
+
+                                    <TextBlock
+                                        x:Name="TxtFavoritesEmptyHint"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_ColorPicker_PressTheStarNext}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ GRADIENT ============  -->
+                            <Border
+                                Margin="0,0,0,4"
+                                ctl:Tour.Key="Str_Tour_ColorWheel_Gradient"
+                                ctl:Tour.Order="4"
+                                Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ColorWheel_GradientHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.GradientHorizontal}" />
+
+                                    <!--  Start and End stacked so the hex text gets the full sidebar width; swap button on the right  -->
+                                    <Grid Margin="0,4,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock
+                                            Grid.Row="0"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_ColorWheel_StartColor}" />
+                                        <Border
+                                            x:Name="StartBar"
+                                            Grid.Row="1"
+                                            Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button
+                                                    x:Name="StartSwatch"
+                                                    Background="Red"
+                                                    Click="StartSwatch_Click"
+                                                    Style="{StaticResource SwatchPickerStyle}"
+                                                    ToolTip="{DynamicResource Str_Common_PickColorTooltip}" />
+                                                <TextBox
+                                                    x:Name="TxtStartHex"
+                                                    Grid.Column="1"
+                                                    FontFamily="Consolas"
+                                                    LostFocus="StartHex_LostFocus"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="#RRGGBB"
+                                                    Text="#FF0000"
+                                                    TextChanged="GradientHex_TextChanged"
+                                                    ToolTip="{DynamicResource Str_ColorWheel_StartColorTooltip}" />
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock
+                                            Grid.Row="2"
+                                            Margin="0,8,0,0"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_ColorWheel_EndColor}" />
+                                        <Border
+                                            x:Name="EndBar"
+                                            Grid.Row="3"
+                                            Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Button
+                                                    x:Name="EndSwatch"
+                                                    Background="Blue"
+                                                    Click="EndSwatch_Click"
+                                                    Style="{StaticResource SwatchPickerStyle}"
+                                                    ToolTip="{DynamicResource Str_Common_PickColorTooltip}" />
+                                                <TextBox
+                                                    x:Name="TxtEndHex"
+                                                    Grid.Column="1"
+                                                    FontFamily="Consolas"
+                                                    LostFocus="EndHex_LostFocus"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    Tag="#RRGGBB"
+                                                    Text="#0000FF"
+                                                    TextChanged="GradientHex_TextChanged"
+                                                    ToolTip="{DynamicResource Str_ColorWheel_EndColorTooltip}" />
+                                            </Grid>
+                                        </Border>
+
+                                        <Button
+                                            x:Name="BtnSwapGradient"
+                                            Grid.RowSpan="4"
+                                            Grid.Column="1"
+                                            Width="32"
+                                            Height="32"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Click="BtnSwapGradient_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_ColorWheel_SwapStartAndEnd}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Kind="SwapVertical" />
+                                        </Button>
+                                    </Grid>
+
+                                    <DockPanel Margin="0,0,0,4">
+                                        <Border DockPanel.Dock="Right" Style="{StaticResource ValuePill}">
+                                            <TextBlock
+                                                x:Name="TxtStepsValue"
+                                                Style="{StaticResource ValuePillText}"
+                                                Text="8" />
+                                        </Border>
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_ColorWheel_Steps}" />
+                                    </DockPanel>
+                                    <Slider
+                                        x:Name="StepsSlider"
+                                        Margin="0,0,0,10"
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="16"
+                                        Minimum="2"
+                                        TickFrequency="1"
+                                        ToolTip="{DynamicResource Str_ColorWheel_StepsTooltip}"
+                                        ValueChanged="StepsSlider_ValueChanged"
+                                        Value="8" />
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!--  ========== Wheel + selection + harmony + legend ==========  -->
+                <Border
+                    Grid.Row="0"
+                    ctl:Tour.Key="Str_Tour_ColorWheel_Stage"
+                    ctl:Tour.Order="1"
+                    Style="{StaticResource CardStyle}">
+                    <Grid x:Name="WheelCard" SizeChanged="WheelCard_SizeChanged">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!--
+                            Wheel: click a colour to select it, right-click for the gradient end.
+                            WheelHost is sized from code (WheelCard_SizeChanged) to the free space; 340 is only the first-draw size.
+                        -->
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <Grid
+                                x:Name="WheelHost"
+                                Width="340"
+                                Height="340"
+                                Background="Transparent"
+                                Cursor="Hand"
+                                MouseLeave="WheelHost_MouseLeave"
+                                MouseLeftButtonDown="WheelHost_MouseLeftButtonDown"
+                                MouseMove="WheelHost_MouseMove"
+                                MouseRightButtonUp="WheelHost_MouseRightButtonUp">
+                                <!--  Soft shadow disc behind the wheel  -->
+                                <Ellipse
+                                    Margin="4"
+                                    Effect="{DynamicResource CardElevation}"
+                                    Fill="{DynamicResource CardBg}" />
+                                <Image
+                                    x:Name="WheelImage"
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                    Stretch="Uniform" />
+                            </Grid>
+                            <Border
+                                x:Name="WheelHoverPill"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border
+                                        x:Name="WheelHoverSwatch"
+                                        Width="12"
+                                        Height="12"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        CornerRadius="6"
+                                        Visibility="Collapsed" />
+                                    <TextBlock
+                                        x:Name="TxtWheelHover"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_ColorWheel_ClickAColourTo}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <ScrollViewer
+                            Grid.Column="2"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <!--  The margin leaves room for the tiles' selection ring (3 px outside the tile) and hover zoom, which the scroll area would otherwise clip  -->
+                            <StackPanel Margin="10,8,8,4" VerticalAlignment="Center">
+
+                                <!--  Selected colour  -->
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="14" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border
+                                        x:Name="SelectedSwatch"
+                                        Width="64"
+                                        Height="64"
+                                        Background="Red"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="16" />
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock
+                                            x:Name="TxtSelectedName"
+                                            FontSize="18"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_ColorWheel_Red}" />
+                                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+                                            <TextBlock
+                                                x:Name="TxtSelectedHex"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas"
+                                                FontSize="12.5"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="#FF0000" />
+                                            <Border
+                                                x:Name="SelectedTierPill"
+                                                Margin="8,0,0,0"
+                                                Padding="7,1"
+                                                VerticalAlignment="Center"
+                                                Background="{DynamicResource AccentColorSubtle}"
+                                                CornerRadius="8">
+                                                <TextBlock
+                                                    x:Name="TxtSelectedTier"
+                                                    FontSize="10.5"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    Text="{DynamicResource Str_ColorWheel_Primary}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                            <Button
+                                                x:Name="BtnUseAsStart"
+                                                MinHeight="28"
+                                                Margin="0,0,6,0"
+                                                Click="BtnUseAsStart_Click"
+                                                Content="{DynamicResource Str_ColorWheel_SetAsStart}" />
+                                            <Button
+                                                x:Name="BtnUseAsEnd"
+                                                MinHeight="28"
+                                                Click="BtnUseAsEnd_Click"
+                                                Content="{DynamicResource Str_ColorWheel_SetAsEnd}" />
+                                            <Button
+                                                x:Name="BtnFavoriteSelected"
+                                                Width="28"
+                                                Height="28"
+                                                Margin="6,0,0,0"
+                                                Click="BtnFavoriteSelected_Click"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Color_AddToFavoritesTooltip}">
+                                                <materialDesign:PackIcon
+                                                    x:Name="IconFavoriteSelected"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="StarOutline" />
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!--  Harmony palette  -->
+                                <DockPanel Margin="0,0,0,8">
+                                    <Button
+                                        x:Name="BtnCopyHarmony"
+                                        Width="30"
+                                        Height="30"
+                                        Click="BtnCopyHarmony_Click"
+                                        DockPanel.Dock="Right"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_ColorWheel_CopyTheseColoursOne}">
+                                        <materialDesign:PackIcon
+                                            Width="15"
+                                            Height="15"
+                                            Kind="ContentCopy" />
+                                    </Button>
+                                    <ContentControl
+                                        x:Name="HarmonyHeader"
+                                        Content="{DynamicResource Str_ColorWheel_Complementary}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.VectorTriangle}" />
+                                </DockPanel>
+                                <UniformGrid
+                                    x:Name="HarmonyPanel"
+                                    Margin="0,0,0,16"
+                                    Rows="1" />
+
+                                <!--  Legend  -->
+                                <ContentControl
+                                    Margin="0,0,0,8"
+                                    Content="{DynamicResource Str_ColorWheel_WheelLegendHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.PaletteSwatchOutline}" />
+                                <UniformGrid x:Name="WheelLegendPanel" Columns="4" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!--  ========== Gradient ==========  -->
+                <Border
+                    Grid.Row="2"
+                    ctl:Tour.Key="Str_Tour_ColorWheel_Strip"
+                    ctl:Tour.Order="5"
+                    Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentControl
+                                Content="{DynamicResource Str_ColorWheel_GradientPreviewHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.GradientHorizontal}" />
+                            <Border
+                                x:Name="StatusPill"
+                                Grid.Column="1"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconStatus"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=StatusText}"
+                                        Kind="InformationOutline" />
+                                    <TextBlock
+                                        x:Name="StatusText"
+                                        MaxWidth="320"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_ColorWheel_ReadyStatus}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+                            <!--  Blend mode + save, in the card header like Screen Color's format toggles and actions  -->
+                            <Grid
+                                Grid.Column="2"
+                                Width="140"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="4" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <RadioButton
+                                    x:Name="RadioModeHsl"
+                                    Checked="GradientOption_Changed"
+                                    Content="{DynamicResource Str_ColorWheel_ModeHsl}"
+                                    GroupName="GradientMode"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ColorWheel_ModeHslTooltip}" />
+                                <RadioButton
+                                    x:Name="RadioModeRgb"
+                                    Grid.Column="2"
+                                    Checked="GradientOption_Changed"
+                                    Content="{DynamicResource Str_ColorWheel_ModeRgb}"
+                                    GroupName="GradientMode"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    ToolTip="{DynamicResource Str_ColorWheel_ModeRgbTooltip}" />
+                            </Grid>
+                            <Button
+                                x:Name="BtnSaveGradient"
+                                Grid.Column="3"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                Click="BtnSaveGradient_Click"
+                                Style="{StaticResource ListToolPrimaryButtonStyle}"
+                                ToolTip="{DynamicResource Str_ColorWheel_SaveGradientTooltip}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="ContentSaveOutline" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_ColorWheel_SaveGradient}" TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                            <Button
+                                x:Name="BtnCopyCss"
+                                Grid.Column="4"
+                                Margin="0,0,6,0"
+                                Click="BtnCopyCss_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_ColorWheel_CopyAsACss}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="CodeTags" />
+                            </Button>
+                            <Button
+                                x:Name="BtnCopyHexList"
+                                Grid.Column="5"
+                                Click="BtnCopyHexList_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_ColorWheel_HexListCopyTooltip}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ContentCopy" />
+                            </Button>
+                        </Grid>
+
+                        <!--  Rounded strip (ImageBrush keeps the corner radius)  -->
+                        <Border
+                            x:Name="GradientStrip"
+                            Height="72"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12" />
+
+                        <!--  One clickable stop per colour: click copies its hex  -->
+                        <UniformGrid
+                            x:Name="GradientStopsPanel"
+                            Margin="0,10,0,0"
+                            Rows="1" />
+
+                        <!--  Kept for existing references; the stops above replace the plain list  -->
+                        <Image x:Name="GradientImage" Visibility="Collapsed" />
+                        <TextBlock x:Name="TxtGradientHexList" Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

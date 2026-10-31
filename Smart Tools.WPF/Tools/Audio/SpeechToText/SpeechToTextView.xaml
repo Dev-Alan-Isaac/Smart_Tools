@@ -1,0 +1,830 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.SpeechToTextView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/SpeechToTextManager.cs (models, languages, whisper's arguments and output, subtitle formats,
+        settings), SpeechToTextManager.Run.cs (FFmpeg + whisper.cpp) and WhisperModelManager.cs (model downloads);
+        Models/SpeechToTextModel.cs. This file and the code-behind are UI only.
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  Grid: icon  -->
+        <DataTemplate x:Key="KindCellTemplate" DataType="{x:Type models:SttFileItem}">
+            <Border
+                Width="30"
+                Height="30"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource AccentColorSubtle}"
+                CornerRadius="8">
+                <materialDesign:PackIcon
+                    x:Name="KindIcon"
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource AccentColor}"
+                    Kind="Waveform" />
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="TextBoxOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: name + folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:SttFileItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Grid: status chip (+ live progress while working)  -->
+        <DataTemplate x:Key="StatusCellTemplate" DataType="{x:Type models:SttFileItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding Message}">
+                <Border
+                    x:Name="Chip"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource StatusInfoBg}"
+                    Style="{StaticResource IconStatusPillStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            x:Name="ChipIcon"
+                            Width="12"
+                            Height="12"
+                            Margin="0,0,4,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Kind="CheckCircleOutline" />
+                        <TextBlock
+                            x:Name="ChipText"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Text="{Binding StatusText}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+                <ProgressBar
+                    Width="86"
+                    Height="3"
+                    Margin="2,4,0,0"
+                    HorizontalAlignment="Left"
+                    Maximum="100"
+                    Visibility="{Binding IsWorking, Converter={StaticResource BoolToVisibility}}"
+                    Value="{Binding Progress, Mode=OneWay}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Reading">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource RowBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="ClockOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Unreadable">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="FileAlertOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="Autorenew" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CloseCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Input card: one queued file  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:SttFileItem}">
+            <Grid ToolTip="{Binding FullPath}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="Waveform" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding DurationText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveQueueItem_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_Validate_RemoveFromListTooltip}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+
+        <!--  Sidebar: one speech model  -->
+        <DataTemplate x:Key="ModelRowTemplate" DataType="{x:Type models:SttModelItem}">
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Detail}"
+                        TextWrapping="Wrap" />
+                    <ProgressBar
+                        x:Name="BarProgress"
+                        Height="4"
+                        Margin="0,4,8,0"
+                        Maximum="100"
+                        Value="{Binding Progress}"
+                        Visibility="Collapsed" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                    <Button
+                        x:Name="BtnInstall"
+                        MinWidth="68"
+                        Click="BtnInstallModel_Click"
+                        Content="{DynamicResource Str_Stt_Install}"
+                        Style="{StaticResource PrimaryButtonStyle}" />
+                    <Button
+                        x:Name="BtnRemove"
+                        MinWidth="68"
+                        Click="BtnRemoveModel_Click"
+                        Content="{DynamicResource Str_Stt_Remove}"
+                        Style="{StaticResource DangerButtonStyle}"
+                        Visibility="Collapsed" />
+                    <Button
+                        x:Name="BtnCancel"
+                        MinWidth="68"
+                        Click="BtnCancelModel_Click"
+                        Content="{DynamicResource Str_Stt_Cancel}"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsInstalled}" Value="True">
+                    <Setter TargetName="BtnInstall" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="BtnRemove" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                    <Setter TargetName="BtnInstall" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="BtnRemove" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="BtnCancel" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="BarProgress" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="OptionsPanel" Margin="16,4,16,16">
+
+                            <!--  ============ FILES ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ctl:Tour.Key="Str_Tour_SpeechToText_Input"
+                                ctl:Tour.Order="1"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Common_Files}"
+                                HeaderIcon="Waveform"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+                            <!--  ============ MODEL ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_SpeechToText_Model" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Stt_ModelHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Brain}" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Stt_UseModel}" />
+                                    <ComboBox
+                                        x:Name="CmbModel"
+                                        DisplayMemberPath="Name"
+                                        SelectionChanged="Setting_SelectionChanged" />
+                                    <TextBlock
+                                        x:Name="TxtModelHint"
+                                        Margin="0,6,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Stt_AllModels}" />
+                                    <ItemsControl
+                                        x:Name="ListModels"
+                                        Focusable="False"
+                                        ItemTemplate="{StaticResource ModelRowTemplate}" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Stt_ModelDownloadNote}" />
+
+                                    <Border
+                                        x:Name="EngineWarning"
+                                        Margin="0,10,0,0"
+                                        Padding="10,8"
+                                        Background="{DynamicResource StatusWarningBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            x:Name="TxtEngineWarning"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            TextWrapping="Wrap" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ OPTIONS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_SpeechToText_Options" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Stt_OptionsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Translate}" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Stt_Language}" />
+                                    <ComboBox
+                                        x:Name="CmbLanguage"
+                                        DisplayMemberPath="Name"
+                                        SelectionChanged="Setting_SelectionChanged" />
+                                    <CheckBox
+                                        x:Name="ChkTranslate"
+                                        Margin="0,10,0,0"
+                                        Click="Option_Changed"
+                                        Content="{DynamicResource Str_Stt_Translate}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_Stt_TranslateTip}" />
+                                    <TextBlock
+                                        x:Name="TxtLanguageNote"
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,4"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Stt_Formats}" />
+                                    <CheckBox
+                                        x:Name="ChkTxt"
+                                        Click="Format_Click"
+                                        Content="{DynamicResource Str_Stt_FormatTxt}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True" />
+                                    <CheckBox
+                                        x:Name="ChkSrt"
+                                        Margin="0,6,0,0"
+                                        Click="Format_Click"
+                                        Content="{DynamicResource Str_Stt_FormatSrt}"
+                                        Foreground="{DynamicResource SidebarText}" />
+                                    <CheckBox
+                                        x:Name="ChkVtt"
+                                        Margin="0,6,0,0"
+                                        Click="Format_Click"
+                                        Content="{DynamicResource Str_Stt_FormatVtt}"
+                                        Foreground="{DynamicResource SidebarText}" />
+                                    <CheckBox
+                                        x:Name="ChkTimestamps"
+                                        Margin="0,10,0,0"
+                                        Click="Option_Changed"
+                                        Content="{DynamicResource Str_Stt_Timestamps}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_Stt_TimestampsTip}" />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Stt_SpeedNote}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--
+                                ============ OUTPUT ============
+                                The shared Output card. Its extra option (Open the folder when done) is made in the
+                                code-behind: no x:Name inside another UserControl's content (MC3093).
+                            -->
+                            <controls:OutputFolderCard
+                                x:Name="OutputCard"
+                                ctl:Tour.Key="Str_Tour_SpeechToText_Output"
+                                ctl:Tour.Order="4"
+                                Margin="0,8,0,0"
+                                AllowSameAsSource="True"
+                                ExampleFileName="recording.srt"
+                                FolderChanged="OutputCard_FolderChanged"
+                                Header="{DynamicResource Str_MicRecorder_OutputHeader}"
+                                SameAsSourceText="{DynamicResource Str_Stt_SameAsSource}"
+                                ToolName="Speech to Text" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnRun"
+                            ctl:Tour.Key="Str_Tour_SpeechToText_Run"
+                            ctl:Tour.Order="5"
+                            MinWidth="180"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRun_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_Stt_TranscribeTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    x:Name="IconRun"
+                                    Grid.Column="0"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="TextBoxOutline" />
+                                <TextBlock
+                                    x:Name="TxtRunLabel"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Stt_Transcribe}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressRun"
+                                Height="8"
+                                Maximum="100" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Stt_ReadyHint}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Files and transcript  -->
+                <Border
+                    Grid.Row="1"
+                    ctl:Tour.Key="Str_Tour_SpeechToText_Results"
+                    ctl:Tour.Order="6"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="2*" MinHeight="120" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="3*" MinHeight="140" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_Stt_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.TextBoxMultipleOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="Waveform" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryFiles"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillDone"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryDone"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillFailed"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryFailed"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnOpenOutput"
+                                    Margin="0,0,8,0"
+                                    Click="BtnOpenOutput_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Stt_OpenOutputTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnRemoveFiles"
+                                    Margin="0,0,8,0"
+                                    Click="BtnRemoveFiles_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Stt_RemoveTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PlaylistRemove" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearFiles"
+                                    Click="BtnClearFiles_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Stt_ClearTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridFiles"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MinRowHeight="48"
+                            MouseDoubleClick="DataGridFiles_MouseDoubleClick"
+                            PreviewKeyDown="DataGridFiles_PreviewKeyDown"
+                            SelectionChanged="DataGridFiles_SelectionChanged"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_Stt_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="46"
+                                    CanUserSort="False"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource KindCellTemplate}" />
+                                <DataGridTemplateColumn
+                                    Width="2*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}"
+                                    SortMemberPath="Name" />
+                                <DataGridTextColumn
+                                    x:Name="ColLength"
+                                    Width="70"
+                                    Binding="{Binding DurationText}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Stt_ColLength}"
+                                    SortMemberPath="Duration" />
+                                <DataGridTextColumn
+                                    x:Name="ColLanguage"
+                                    Width="80"
+                                    Binding="{Binding Language}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Stt_ColLanguage}" />
+                                <DataGridTemplateColumn
+                                    Width="130"
+                                    CellTemplate="{StaticResource StatusCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}"
+                                    SortMemberPath="Status" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <controls:EmptyStateCard
+                            x:Name="EmptyStatePanel"
+                            Title="{DynamicResource Str_Stt_EmptyTitle}"
+                            Grid.Row="1"
+                            Grid.RowSpan="3"
+                            Description="{DynamicResource Str_Stt_EmptyHint}"
+                            Icon="Waveform" />
+
+                        <!--  Transcript header  -->
+                        <Grid x:Name="TranscriptHeader" Grid.Row="2" Margin="0,12,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock
+                                    FontSize="13"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_Stt_Transcript}" />
+                                <TextBlock
+                                    x:Name="TxtTranscriptInfo"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnCopy"
+                                    Margin="0,0,8,0"
+                                    Click="BtnCopy_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Stt_Copy}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnSaveAs"
+                                    Click="BtnSaveAs_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Stt_SaveAs}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentSaveOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBox
+                            x:Name="TxtTranscript"
+                            Grid.Row="3"
+                            AcceptsReturn="True"
+                            FontSize="13"
+                            TextWrapping="Wrap"
+                            VerticalContentAlignment="Top"
+                            VerticalScrollBarVisibility="Auto"
+                            Tag="{DynamicResource Str_Stt_TranscriptEmpty}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_Stt_DropOverlay}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_Stt_DropOverlayHint}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,899 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.VideoCompressorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded"
+    SizeChanged="Root_SizeChanged">
+
+    <!--
+        Backend: Controllers/VideoCompressorManager.cs (FFmpeg arguments, target-size maths, estimates, settings) and
+        VideoCompressorManager.Run.cs (ffprobe, the batch run); Models/VideoCompressorModel.cs. This file and the
+        code-behind are UI only. Choices are read by Tag (enum name or number).
+    -->
+
+    <UserControl.Resources>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!--  Grid: icon  -->
+        <DataTemplate x:Key="KindCellTemplate" DataType="{x:Type models:VcFileItem}">
+            <Border
+                Width="30"
+                Height="30"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource AccentColorSubtle}"
+                CornerRadius="8">
+                <materialDesign:PackIcon
+                    x:Name="KindIcon"
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource AccentColor}"
+                    Kind="Filmstrip" />
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="KindIcon" Property="Kind" Value="VideoCheckOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: name + folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:VcFileItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Grid: the part to keep, with a button to change it  -->
+        <DataTemplate x:Key="TrimCellTemplate" DataType="{x:Type models:VcFileItem}">
+            <Button
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Click="BtnTrim_Click"
+                IsEnabled="{Binding CanRun}"
+                Style="{StaticResource ListToolButtonStyle}"
+                Tag="{Binding}"
+                ToolTip="{DynamicResource Str_Vc_TrimTooltip}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        Margin="0,0,6,0"
+                        VerticalAlignment="Center"
+                        Kind="ContentCut" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="11.5"
+                        Text="{Binding TrimText}" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+
+        <!--  Grid: estimated size before, real size after (green)  -->
+        <DataTemplate x:Key="ResultCellTemplate" DataType="{x:Type models:VcFileItem}">
+            <TextBlock
+                x:Name="ResultText"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Foreground="{DynamicResource TextSecondary}"
+                Text="{Binding ResultText}"
+                TextTrimming="CharacterEllipsis"
+                ToolTip="{Binding ResultText}" />
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="ResultText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Grid: status chip (+ live progress while working)  -->
+        <DataTemplate x:Key="StatusCellTemplate" DataType="{x:Type models:VcFileItem}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding Message}">
+                <Border
+                    x:Name="Chip"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource StatusInfoBg}"
+                    Style="{StaticResource IconStatusPillStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon
+                            x:Name="ChipIcon"
+                            Width="12"
+                            Height="12"
+                            Margin="0,0,4,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Kind="CheckCircleOutline" />
+                        <TextBlock
+                            x:Name="ChipText"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource StatusInfoFg}"
+                            Text="{Binding StatusText}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Border>
+                <ProgressBar
+                    Width="86"
+                    Height="3"
+                    Margin="2,4,0,0"
+                    HorizontalAlignment="Left"
+                    Maximum="100"
+                    Visibility="{Binding IsWorking, Converter={StaticResource BoolToVisibility}}"
+                    Value="{Binding Progress, Mode=OneWay}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Reading">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource RowBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="ClockOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Unreadable">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="FileAlertOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="Autorenew" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CloseCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Input card: one queued video  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:VcFileItem}">
+            <Grid ToolTip="{Binding FullPath}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileVideoOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding DurationText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveQueueItem_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_Validate_RemoveFromListTooltip}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="OptionsPanel" Margin="16,4,16,16">
+
+                            <!--  ============ FILES ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ctl:Tour.Key="Str_Tour_VideoCompressor_Input"
+                                ctl:Tour.Order="1"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Common_Files}"
+                                HeaderIcon="FileVideoOutline"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+                            <!--  ============ WHAT TO DO ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_VideoCompressor_Mode" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Vc_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.VideoMinusOutline}" />
+
+                                    <UniformGrid x:Name="ModeChips" Columns="3">
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_Vc_ModeQuality}"
+                                            GroupName="VcMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Quality"
+                                            ToolTip="{DynamicResource Str_Vc_ModeQualityTip}" />
+                                        <RadioButton
+                                            Margin="2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_Vc_ModeSize}"
+                                            GroupName="VcMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="TargetSize"
+                                            ToolTip="{DynamicResource Str_Vc_ModeSizeTip}" />
+                                        <RadioButton
+                                            Margin="2,0,0,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_Vc_ModeTrim}"
+                                            GroupName="VcMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="TrimOnly"
+                                            ToolTip="{DynamicResource Str_Vc_ModeTrimTip}" />
+                                    </UniformGrid>
+
+                                    <!--  Quality  -->
+                                    <StackPanel x:Name="PanelQuality" Margin="0,12,0,0">
+                                        <TextBlock Margin="0,0,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_Quality}" />
+                                        <UniformGrid x:Name="QualityChips" Columns="3">
+                                            <RadioButton
+                                                Margin="0,0,2,0"
+                                                Click="Setting_Click"
+                                                Content="{DynamicResource Str_Vc_QualitySmall}"
+                                                GroupName="VcQuality"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Small" />
+                                            <RadioButton
+                                                Margin="2,0"
+                                                Click="Setting_Click"
+                                                Content="{DynamicResource Str_Vc_QualityBalanced}"
+                                                GroupName="VcQuality"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="Balanced" />
+                                            <RadioButton
+                                                Margin="2,0,0,0"
+                                                Click="Setting_Click"
+                                                Content="{DynamicResource Str_Vc_QualityHigh}"
+                                                GroupName="VcQuality"
+                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                Tag="High" />
+                                        </UniformGrid>
+                                    </StackPanel>
+
+                                    <!--  Target size  -->
+                                    <StackPanel x:Name="PanelSize" Margin="0,12,0,0" Visibility="Collapsed">
+                                        <TextBlock Margin="0,0,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_TargetSize}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox
+                                                    x:Name="TxtTargetMb"
+                                                    VerticalContentAlignment="Center"
+                                                    LostFocus="TxtTargetMb_LostFocus"
+                                                    PreviewTextInput="TxtTargetMb_PreviewTextInput"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    TextChanged="TxtTargetMb_TextChanged" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="0,0,12,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="MB" />
+                                            </Grid>
+                                        </Border>
+                                        <UniformGrid x:Name="SizePresets" Margin="0,6,0,0" Columns="4">
+                                            <Button
+                                                Margin="0,0,2,0"
+                                                Click="SizePreset_Click"
+                                                Content="10"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                Tag="10" />
+                                            <Button
+                                                Margin="2,0"
+                                                Click="SizePreset_Click"
+                                                Content="25"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                Tag="25" />
+                                            <Button
+                                                Margin="2,0"
+                                                Click="SizePreset_Click"
+                                                Content="50"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                Tag="50" />
+                                            <Button
+                                                Margin="2,0,0,0"
+                                                Click="SizePreset_Click"
+                                                Content="100"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                Tag="100" />
+                                        </UniformGrid>
+                                        <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Vc_TargetSizeHint}" />
+                                    </StackPanel>
+
+                                    <!--  Trim only  -->
+                                    <TextBlock
+                                        x:Name="TxtTrimNote"
+                                        Margin="0,10,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_Vc_TrimOnlyHint}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+
+                                    <Border
+                                        x:Name="FfmpegWarning"
+                                        Margin="0,10,0,0"
+                                        Padding="10,8"
+                                        Background="{DynamicResource StatusWarningBg}"
+                                        CornerRadius="8"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            x:Name="TxtFfmpegWarning"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            TextWrapping="Wrap" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ PICTURE AND SOUND ============  -->
+                            <Border
+                                x:Name="PanelPicture"
+                                ctl:Tour.Key="Str_Tour_VideoCompressor_Picture"
+                                ctl:Tour.Order="3"
+                                Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Vc_PictureHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ImageSizeSelectLarge}" />
+
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_MaxHeight}" />
+                                    <ComboBox x:Name="CmbHeight" SelectionChanged="Setting_SelectionChanged">
+                                        <ComboBoxItem
+                                            Content="{DynamicResource Str_Vc_Original}"
+                                            IsSelected="True"
+                                            Tag="0" />
+                                        <ComboBoxItem Content="1080p" Tag="1080" />
+                                        <ComboBoxItem Content="720p" Tag="720" />
+                                        <ComboBoxItem Content="480p" Tag="480" />
+                                    </ComboBox>
+
+                                    <TextBlock Margin="0,10,0,0" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_MaxFps}" />
+                                    <ComboBox x:Name="CmbFps" SelectionChanged="Setting_SelectionChanged">
+                                        <ComboBoxItem
+                                            Content="{DynamicResource Str_Vc_Original}"
+                                            IsSelected="True"
+                                            Tag="0" />
+                                        <ComboBoxItem Content="60" Tag="60" />
+                                        <ComboBoxItem Content="30" Tag="30" />
+                                        <ComboBoxItem Content="24" Tag="24" />
+                                        <ComboBoxItem Content="15" Tag="15" />
+                                    </ComboBox>
+
+                                    <TextBlock Margin="0,10,0,0" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_Speed}" />
+                                    <ComboBox x:Name="CmbSpeed" SelectionChanged="Setting_SelectionChanged">
+                                        <ComboBoxItem Content="0.5×" Tag="0.5" />
+                                        <ComboBoxItem Content="0.75×" Tag="0.75" />
+                                        <ComboBoxItem
+                                            Content="1×"
+                                            IsSelected="True"
+                                            Tag="1" />
+                                        <ComboBoxItem Content="1.25×" Tag="1.25" />
+                                        <ComboBoxItem Content="1.5×" Tag="1.5" />
+                                        <ComboBoxItem Content="2×" Tag="2" />
+                                        <ComboBoxItem Content="3×" Tag="3" />
+                                        <ComboBoxItem Content="4×" Tag="4" />
+                                    </ComboBox>
+
+                                    <TextBlock Margin="0,12,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Vc_Sound}" />
+                                    <UniformGrid x:Name="AudioChips" Columns="3">
+                                        <RadioButton
+                                            Margin="0,0,2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_Vc_AudioKeep}"
+                                            GroupName="VcAudio"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Keep" />
+                                        <RadioButton
+                                            Margin="2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_Vc_AudioSmaller}"
+                                            GroupName="VcAudio"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Smaller"
+                                            ToolTip="{DynamicResource Str_Vc_AudioSmallerTip}" />
+                                        <RadioButton
+                                            Margin="2,0,0,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_Vc_AudioRemove}"
+                                            GroupName="VcAudio"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Remove" />
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+
+                            <!--
+                                ============ OUTPUT ============
+                                The shared Output card. Its extra option (Open the folder when done) is made in the
+                                code-behind: no x:Name inside another UserControl's content (MC3093).
+                            -->
+                            <controls:OutputFolderCard
+                                x:Name="OutputCard"
+                                ctl:Tour.Key="Str_Tour_VideoCompressor_Output"
+                                ctl:Tour.Order="4"
+                                Margin="0,8,0,0"
+                                AllowSameAsSource="True"
+                                ExampleFileName="video - compressed.mp4"
+                                FolderChanged="OutputCard_FolderChanged"
+                                Header="{DynamicResource Str_MicRecorder_OutputHeader}"
+                                SameAsSourceText="{DynamicResource Str_Vc_SameAsSource}"
+                                ToolName="Video Compressor" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnRun"
+                            ctl:Tour.Key="Str_Tour_VideoCompressor_Run"
+                            ctl:Tour.Order="5"
+                            MinWidth="180"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRun_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_Vc_RunTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    x:Name="IconRun"
+                                    Grid.Column="0"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="VideoMinusOutline" />
+                                <TextBlock
+                                    x:Name="TxtRunLabel"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Vc_Run}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressRun"
+                                Height="8"
+                                Maximum="100" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Vc_ReadyHint}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Videos  -->
+                <Border
+                    Grid.Row="1"
+                    ctl:Tour.Key="Str_Tour_VideoCompressor_Results"
+                    ctl:Tour.Order="6"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_Vc_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.VideoCheckOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="Filmstrip" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryFiles"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillEstimate"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource AccentColorSubtle}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    ToolTip="{DynamicResource Str_Vc_EstimateTooltip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="Harddisk" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryEstimate"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource AccentColor}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillDone"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryDone"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillFailed"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryFailed"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Button
+                                    x:Name="BtnOpenOutput"
+                                    Margin="0,0,8,0"
+                                    Click="BtnOpenOutput_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Vc_OpenOutputTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnRemoveFiles"
+                                    Margin="0,0,8,0"
+                                    Click="BtnRemoveFiles_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Vc_RemoveTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="PlaylistRemove" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearFiles"
+                                    Click="BtnClearFiles_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Vc_ClearTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridFiles"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MinRowHeight="48"
+                            MouseDoubleClick="DataGridFiles_MouseDoubleClick"
+                            PreviewKeyDown="DataGridFiles_PreviewKeyDown"
+                            SelectionMode="Extended"
+                            ToolTip="{DynamicResource Str_Vc_GridTooltip}"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="46"
+                                    CanUserSort="False"
+                                    CellStyle="{StaticResource CompactCellStyle}"
+                                    CellTemplate="{StaticResource KindCellTemplate}" />
+                                <DataGridTemplateColumn
+                                    Width="2*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}"
+                                    SortMemberPath="Name" />
+                                <DataGridTextColumn
+                                    x:Name="ColLength"
+                                    Width="70"
+                                    Binding="{Binding DurationText}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Vc_ColLength}"
+                                    SortMemberPath="Duration" />
+                                <DataGridTextColumn
+                                    x:Name="ColResolution"
+                                    Width="90"
+                                    Binding="{Binding ResolutionText}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Vc_ColResolution}" />
+                                <DataGridTemplateColumn
+                                    Width="1.3*"
+                                    MinWidth="110"
+                                    CanUserSort="False"
+                                    CellTemplate="{StaticResource TrimCellTemplate}"
+                                    Header="{DynamicResource Str_Vc_ColKeep}" />
+                                <DataGridTemplateColumn
+                                    x:Name="ColResult"
+                                    Width="1.2*"
+                                    MinWidth="90"
+                                    CanUserSort="False"
+                                    CellTemplate="{StaticResource ResultCellTemplate}"
+                                    Header="{DynamicResource Str_Vc_ColResult}" />
+                                <DataGridTemplateColumn
+                                    Width="120"
+                                    CellTemplate="{StaticResource StatusCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}"
+                                    SortMemberPath="Status" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <controls:EmptyStateCard
+                            x:Name="EmptyStatePanel"
+                            Title="{DynamicResource Str_Vc_EmptyTitle}"
+                            Grid.Row="1"
+                            Description="{DynamicResource Str_Vc_EmptyHint}"
+                            Icon="VideoMinusOutline" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!--  Drop overlay: anywhere on the page  -->
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_Vc_DropOverlay}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_Vc_DropOverlayHint}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

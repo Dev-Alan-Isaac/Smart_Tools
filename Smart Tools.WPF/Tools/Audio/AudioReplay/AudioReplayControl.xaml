@@ -1,0 +1,1238 @@
+﻿<UserControl
+    x:Class="Smart_Tools.WPF.Controls.AudioReplayControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    SizeChanged="Root_SizeChanged"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Controllers/AudioReplayManager.cs (playlist, play order,
+        NAudio playback, spectrum) + Models/AudioReplayModel.cs (data). The
+        code-behind only wires these controls to the manager.
+        
+        Look & feel follows the shared "view kit" in Themes/Controls.xaml
+        (SidebarGroupHeader, CardHeader, EmptyStateBadge, ControlChipStyle,
+        DropZoneStyle ...) and Controls/UiMotion.cs for motion.
+    -->
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card already shows this tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+
+                <Grid>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+
+                        <StackPanel Margin="16">
+
+                            <!--
+                                ============ FILES ============
+                                Same card as Validate Data and Convert Files: drop area
+                                listing what was added (one row per folder, one for loose
+                                files), Add files / Add folder / Clear, Include subfolders.
+                            -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Common_Files}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.FolderMusicOutline}" />
+
+                                    <Border
+                                        x:Name="DropArea"
+                                        MinHeight="64"
+                                        Margin="0,0,0,10"
+                                        AllowDrop="True"
+                                        Background="{DynamicResource SidebarInputBg}"
+                                        BorderBrush="{DynamicResource SidebarInputBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        DragLeave="DropArea_DragLeave"
+                                        DragOver="DropArea_DragOver"
+                                        Drop="DropArea_Drop">
+                                        <Grid>
+                                            <ListBox
+                                                x:Name="QueueList"
+                                                MaxHeight="170"
+                                                Padding="4"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                                <ListBox.ItemContainerStyle>
+                                                    <Style TargetType="ListBoxItem">
+                                                        <Setter Property="Padding" Value="0" />
+                                                        <Setter Property="Margin" Value="0,0,0,2" />
+                                                        <Setter Property="Focusable" Value="False" />
+                                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ListBoxItem">
+                                                                    <Border
+                                                                        x:Name="RowBorder"
+                                                                        Background="Transparent"
+                                                                        CornerRadius="8">
+                                                                        <ContentPresenter Margin="6,5" />
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ListBox.ItemContainerStyle>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid ToolTip="{Binding FolderPath}">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border
+                                                                Width="26"
+                                                                Height="26"
+                                                                Margin="0,0,8,0"
+                                                                Background="{DynamicResource AccentColorSubtle}"
+                                                                CornerRadius="7">
+                                                                <materialDesign:PackIcon
+                                                                    x:Name="GroupIcon"
+                                                                    Width="14"
+                                                                    Height="14"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource AccentColor}"
+                                                                    Kind="FileMusicOutline" />
+                                                            </Border>
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                <TextBlock
+                                                                    FontSize="12"
+                                                                    FontWeight="SemiBold"
+                                                                    Foreground="{DynamicResource SidebarText}"
+                                                                    Text="{Binding FolderName}"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock
+                                                                    Margin="0,1,0,0"
+                                                                    FontSize="11"
+                                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                                    Text="{Binding Subtitle}"
+                                                                    TextTrimming="CharacterEllipsis" />
+                                                            </StackPanel>
+                                                            <Button
+                                                                Grid.Column="2"
+                                                                Width="24"
+                                                                Height="24"
+                                                                Margin="6,0,0,0"
+                                                                VerticalAlignment="Center"
+                                                                Click="BtnRemoveGroup_Click"
+                                                                Style="{StaticResource IconButtonStyle}"
+                                                                Tag="{Binding}"
+                                                                ToolTip="{DynamicResource Str_AudioReplayControl_TakeTheseTracksOff}">
+                                                                <materialDesign:PackIcon
+                                                                    Width="13"
+                                                                    Height="13"
+                                                                    Kind="Close" />
+                                                            </Button>
+                                                        </Grid>
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                                                                <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+
+                                            <StackPanel
+                                                x:Name="QueueEmptyHint"
+                                                Margin="10,12"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                                <materialDesign:PackIcon
+                                                    Width="22"
+                                                    Height="22"
+                                                    HorizontalAlignment="Center"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Kind="TrayArrowDown" />
+                                                <TextBlock
+                                                    Margin="0,4,0,0"
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                                    Text="{DynamicResource Str_Common_DragDropFilesFolder}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnAddFiles"
+                                            Click="BtnAddFiles_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioReplayControl_AddAudioFilesTo}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FilePlusOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Validate_AddFiles}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnAddFolder"
+                                            Grid.Column="1"
+                                            Width="34"
+                                            Height="34"
+                                            Margin="6,0,0,0"
+                                            Click="BtnAddFolder_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioReplayControl_AddEveryAudioFile}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="FolderPlusOutline" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnClearQueue"
+                                            Grid.Column="2"
+                                            Width="34"
+                                            Height="34"
+                                            Margin="6,0,0,0"
+                                            Click="BtnClearFiles_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_AudioReplayControl_EmptyThePlaylistThe}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="PlaylistRemove" />
+                                        </Button>
+                                    </Grid>
+
+                                    <CheckBox
+                                        x:Name="ChkIncludeSubfolders"
+                                        Margin="0,10,0,0"
+                                        Checked="ChkIncludeSubfolders_Changed"
+                                        Content="{DynamicResource Str_Common_IncludeSubfolders}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_AlsoAddTheAudio}"
+                                        Unchecked="ChkIncludeSubfolders_Changed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ REPLAY MODE ============  -->
+
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+
+                                    <ContentControl
+                                        Content="{DynamicResource Str_VideoReplay_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.RepeatVariant}" />
+
+                                    <!--  Three icon pills: Sequential full width on top, Shuffle & Loop side-by-side below  -->
+                                    <StackPanel>
+                                        <!--  Sequential Mode (Full Width)  -->
+                                        <RadioButton
+                                            x:Name="RadioModeSequential"
+                                            Margin="0,0,0,4"
+                                            HorizontalAlignment="Stretch"
+                                            Checked="RadioReplayMode_Checked"
+                                            GroupName="AudioReplayMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            ToolTip="{DynamicResource Str_AudioReplayControl_PlayEveryFileOnce}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FormatListNumbered" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_AudioReplayControl_InOrder}" />
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <!--  Shuffle and Loop Modes (2 Columns)  -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="4" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <RadioButton
+                                                x:Name="RadioModeShuffle"
+                                                Grid.Column="0"
+                                                Checked="RadioReplayMode_Checked"
+                                                GroupName="AudioReplayMode"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                ToolTip="{DynamicResource Str_AudioReplayControl_PlayEveryFileOnce2}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="ShuffleVariant" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_AudioReplayControl_Shuffle}" />
+                                                </StackPanel>
+                                            </RadioButton>
+
+                                            <RadioButton
+                                                x:Name="RadioModeLoop"
+                                                Grid.Column="2"
+                                                Checked="RadioReplayMode_Checked"
+                                                GroupName="AudioReplayMode"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                ToolTip="{DynamicResource Str_AudioReplayControl_RepeatTheCurrentFile}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="18"
+                                                        Height="18"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="RepeatOnce" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_AudioReplayControl_Loop}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        x:Name="TxtModeHint"
+                                        Margin="0,8,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource SidebarTextMuted}"
+                                        Text="{DynamicResource Str_AudioReplayControl_SequentialPlaysEveryQueued}"
+                                        TextWrapping="Wrap" />
+
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel Margin="4,2,4,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,1,6,0"
+                                    VerticalAlignment="Top"
+                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                    Kind="InformationOutline" />
+                                <TextBlock
+                                    Width="220"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource SidebarTextMuted}"
+                                    Text="{DynamicResource Str_AudioReplayControl_EachFileAlwaysPlays}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                        </StackPanel>
+
+                    </ScrollViewer>
+
+                </Grid>
+
+            </Border>
+
+            <!--  ================= PLAYER + COLLAPSIBLE PLAYLIST =================  -->
+
+            <Grid Grid.Column="2">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition x:Name="PlaylistColumn" Width="380" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ================= PLAYER CARD =================  -->
+
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!--
+                            VISUALIZER - live spectrum (bass left -> treble right).
+                            Bars + peak caps are built in code (BuildLevelBars) and
+                            driven by AudioReplayManager.GetSpectrumLevels. Below
+                            the floor line a faded mirror (VisualBrush of the bar
+                            panel) gives the stage some depth.
+                        -->
+                        <Border
+                            x:Name="VisualizerBorder"
+                            Grid.Row="0"
+                            MinHeight="260"
+                            ClipToBounds="True"
+                            CornerRadius="12">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Offset="0" Color="#0B0F18" />
+                                    <GradientStop Offset="1" Color="#141B2A" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+
+                            <Grid Margin="12,14,12,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="38" />
+                                </Grid.RowDefinitions>
+
+                                <!--  Soft glow rising from the floor  -->
+                                <Border
+                                    Grid.Row="0"
+                                    Height="80"
+                                    VerticalAlignment="Bottom"
+                                    IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                                            <GradientStop Offset="0" Color="#383D6FE0" />
+                                            <GradientStop Offset="1" Color="#003D6FE0" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <UniformGrid
+                                    x:Name="LevelBarsPanel"
+                                    Grid.Row="0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Rows="1" />
+
+                                <!--  Floor line  -->
+                                <Border Grid.Row="1" Height="1">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Offset="0" Color="#003D6FE0" />
+                                            <GradientStop Offset="0.5" Color="#803D6FE0" />
+                                            <GradientStop Offset="1" Color="#003D6FE0" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <!--  Mirror reflection of the bottom of the bars  -->
+                                <Rectangle
+                                    Grid.Row="2"
+                                    IsHitTestVisible="False"
+                                    Opacity="0.22">
+                                    <Rectangle.Fill>
+                                        <VisualBrush
+                                            AlignmentY="Bottom"
+                                            Stretch="None"
+                                            Visual="{Binding ElementName=LevelBarsPanel}">
+                                            <VisualBrush.RelativeTransform>
+                                                <ScaleTransform CenterY="0.5" ScaleY="-1" />
+                                            </VisualBrush.RelativeTransform>
+                                        </VisualBrush>
+                                    </Rectangle.Fill>
+                                    <Rectangle.OpacityMask>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Offset="0" Color="Black" />
+                                            <GradientStop Offset="1" Color="Transparent" />
+                                        </LinearGradientBrush>
+                                    </Rectangle.OpacityMask>
+                                </Rectangle>
+
+                                <StackPanel
+                                    x:Name="NoClipPanel"
+                                    Grid.Row="0"
+                                    Grid.RowSpan="3"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <Border
+                                        Width="64"
+                                        Height="64"
+                                        HorizontalAlignment="Center"
+                                        Background="#1AFFFFFF"
+                                        CornerRadius="32">
+                                        <materialDesign:PackIcon
+                                            Width="30"
+                                            Height="30"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="#AEB8CA"
+                                            Kind="MusicNoteOutline" />
+                                    </Border>
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="#D5DBE6"
+                                        Text="{DynamicResource Str_AudioReplayControl_NothingPlayingYet}" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="#8A96AB"
+                                        Text="{DynamicResource Str_AudioReplayControl_AddFilesOnThe}" />
+                                </StackPanel>
+
+                            </Grid>
+
+                        </Border>
+
+                        <!--  ============ NOW PLAYING ============  -->
+
+                        <Grid Grid.Row="1" Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!--  "Album art" tile - pulses with the bass while playing (MeterTimer_Tick)  -->
+                            <Border
+                                x:Name="AlbumTile"
+                                Width="52"
+                                Height="52"
+                                Margin="0,0,12,0"
+                                Background="{DynamicResource AccentGradient}"
+                                CornerRadius="12"
+                                RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="AlbumTileScale" ScaleX="1" ScaleY="1" />
+                                </Border.RenderTransform>
+                                <Border.Effect>
+                                    <DropShadowEffect
+                                        x:Name="AlbumTileGlow"
+                                        BlurRadius="18"
+                                        Direction="270"
+                                        Opacity="0.25"
+                                        ShadowDepth="3"
+                                        Color="{DynamicResource ButtonHoverGlowColor}" />
+                                </Border.Effect>
+                                <materialDesign:PackIcon
+                                    x:Name="IconAlbumTile"
+                                    Width="26"
+                                    Height="26"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="White"
+                                    Kind="MusicNote" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtNowPlaying"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_AudioReplayControl_NothingLoaded}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtNowPlayingDetail"
+                                    Margin="0,2,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_AudioReplayControl_PickATrackTo}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!--  ============ SEEK ============  -->
+
+                        <Grid Grid.Row="2" Margin="0,10,0,0">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="44" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock
+                                x:Name="TxtCurrentTime"
+                                VerticalAlignment="Center"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="0:00" />
+
+                            <Slider
+                                x:Name="SliderPosition"
+                                Grid.Column="1"
+                                Margin="6,0"
+                                VerticalAlignment="Center"
+                                IsMoveToPointEnabled="True"
+                                IsSnapToTickEnabled="False"
+                                Maximum="1"
+                                Minimum="0"
+                                PreviewMouseLeftButtonDown="SliderPosition_PreviewMouseLeftButtonDown"
+                                PreviewMouseLeftButtonUp="SliderPosition_PreviewMouseLeftButtonUp"
+                                ToolTip="{DynamicResource Str_VideoEditor_SeekTooltip}" />
+
+                            <TextBlock
+                                x:Name="TxtTotalTime"
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                FontSize="11"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="0:00" />
+
+                        </Grid>
+
+                        <!--  ============ CONTROLS: volume chip | transport dock | speed chip ============  -->
+
+                        <Grid Grid.Row="3" Margin="0,12,0,0">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource ControlChipStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnMute"
+                                        Width="32"
+                                        Height="32"
+                                        Margin="0"
+                                        Click="BtnMute_Click"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Common_MuteTooltip}">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconMute"
+                                            Width="18"
+                                            Height="18"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="VolumeHigh" />
+                                    </Button>
+                                    <Slider
+                                        x:Name="SliderVolume"
+                                        Width="80"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Center"
+                                        IsMoveToPointEnabled="True"
+                                        Maximum="1"
+                                        Minimum="0"
+                                        ToolTip="{DynamicResource Str_TTS_Volume}"
+                                        ValueChanged="SliderVolume_ValueChanged"
+                                        Value="1" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  Transport dock  -->
+                            <Border
+                                Grid.Column="1"
+                                Padding="6,4"
+                                Background="{DynamicResource RowBg}"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="34">
+                                <StackPanel Orientation="Horizontal">
+
+                                    <Button
+                                        x:Name="BtnPrevious"
+                                        Click="BtnPrevious_Click"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_PreviousRestartsTheTrack}">
+                                        <materialDesign:PackIcon
+                                            Width="22"
+                                            Height="22"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="SkipPrevious" />
+                                    </Button>
+
+                                    <Button
+                                        x:Name="BtnSkipBack"
+                                        Click="BtnSkipBack_Click"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_Back10Seconds}">
+                                        <materialDesign:PackIcon
+                                            Width="20"
+                                            Height="20"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="Rewind_10" />
+                                    </Button>
+
+                                    <Button
+                                        x:Name="BtnPlayPause"
+                                        Margin="8,0"
+                                        Click="BtnPlayPause_Click"
+                                        Style="{StaticResource PlayPauseButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_Play}">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconPlayPause"
+                                            Width="26"
+                                            Height="26"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="White"
+                                            Kind="Play" />
+                                    </Button>
+
+                                    <Button
+                                        x:Name="BtnSkipForward"
+                                        Click="BtnSkipForward_Click"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_Forward10Seconds}">
+                                        <materialDesign:PackIcon
+                                            Width="20"
+                                            Height="20"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="FastForward_10" />
+                                    </Button>
+
+                                    <Button
+                                        x:Name="BtnNext"
+                                        Click="BtnNext_Click"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_Next}">
+                                        <materialDesign:PackIcon
+                                            Width="22"
+                                            Height="22"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="SkipNext" />
+                                    </Button>
+
+                                    <Button
+                                        x:Name="BtnStop"
+                                        Click="BtnStop_Click"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_StopAndRewindTo}">
+                                        <materialDesign:PackIcon
+                                            Width="18"
+                                            Height="18"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="Stop" />
+                                    </Button>
+
+                                </StackPanel>
+                            </Border>
+
+                            <!--  Speed (shifts pitch with speed - the tooltip says so up front)  -->
+                            <Border
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource ControlChipStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnSpeed"
+                                        Width="32"
+                                        Height="32"
+                                        Margin="0"
+                                        Style="{StaticResource TransportButtonStyle}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_ChangesPlaybackSpeedPitch}">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconSpeed"
+                                            Width="18"
+                                            Height="18"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Kind="SpeedometerMedium" />
+                                    </Button>
+                                    <ComboBox
+                                        x:Name="CmbSpeed"
+                                        Width="66"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Center"
+                                        SelectedIndex="1"
+                                        SelectionChanged="CmbSpeed_SelectionChanged"
+                                        Style="{StaticResource BareComboBox}"
+                                        ToolTip="{DynamicResource Str_AudioReplayControl_ChangesPlaybackSpeedPitch}">
+                                        <ComboBoxItem Content="0.5x" />
+                                        <ComboBoxItem Content="1x" />
+                                        <ComboBoxItem Content="1.5x" />
+                                        <ComboBoxItem Content="2x" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Border>
+
+                        </Grid>
+
+                    </Grid>
+
+                </Border>
+
+                <!--  ================= PLAYLIST TOGGLE STRIP =================  -->
+
+                <Button
+                    x:Name="BtnTogglePlaylist"
+                    Grid.Column="1"
+                    Width="26"
+                    Margin="6,0"
+                    Click="BtnTogglePlaylist_Click"
+                    Style="{StaticResource PanelToggleButtonStyle}"
+                    ToolTip="{DynamicResource Str_AudioReplayControl_ShowHideThePlaylist}">
+                    <materialDesign:PackIcon
+                        x:Name="IconTogglePlaylist"
+                        Width="18"
+                        Height="18"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Kind="ChevronRight" />
+                </Button>
+
+                <!--  ================= PLAYLIST =================  -->
+
+                <Border
+                    x:Name="PlaylistPanel"
+                    Grid.Column="2"
+                    Style="{StaticResource CardStyle}">
+
+                    <Grid>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                Content="{DynamicResource Str_VideoReplay_PlaylistTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.PlaylistMusic}" />
+
+                            <Border
+                                x:Name="SummaryPill"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_HowManyFilesAre}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="MusicBoxMultipleOutline" />
+                                    <TextBlock
+                                        x:Name="TxtSummaryCount"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Text="{DynamicResource Str_BgRemove_QueuePillInitial}" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <StackPanel
+                            x:Name="ListTools"
+                            Grid.Row="1"
+                            Margin="0,0,0,10"
+                            Orientation="Horizontal">
+                            <Button
+                                x:Name="BtnMoveUp"
+                                Width="32"
+                                Height="32"
+                                Click="BtnMoveUp_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_MoveUp}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowUp" />
+                            </Button>
+                            <Button
+                                x:Name="BtnMoveDown"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Click="BtnMoveDown_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_MoveDown}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowDown" />
+                            </Button>
+                            <Button
+                                x:Name="BtnSortByName"
+                                Width="32"
+                                Height="32"
+                                Margin="10,0,0,0"
+                                Click="BtnSortByName_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_SortByName}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="SortAlphabeticalAscending" />
+                            </Button>
+                            <Button
+                                x:Name="BtnSortByDate"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Click="BtnSortByDate_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_SortByDate}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="SortCalendarAscending" />
+                            </Button>
+                        </StackPanel>
+
+                        <Grid Grid.Row="2">
+
+                            <DataGrid
+                                x:Name="DataGridQueue"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                EnableColumnVirtualization="True"
+                                EnableRowVirtualization="True"
+                                FontSize="12"
+                                IsReadOnly="True"
+                                MouseDoubleClick="DataGridQueue_MouseDoubleClick"
+                                PreviewKeyDown="DataGridQueue_PreviewKeyDown"
+                                MinRowHeight="42"
+                                RowStyle="{StaticResource PlaylistRowStyle}"
+                                ScrollViewer.CanContentScroll="True"
+                                SelectionChanged="DataGridQueue_SelectionChanged"
+                                SelectionMode="Extended"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_DoubleClickATrack}"
+                                VerticalScrollBarVisibility="Auto"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.ScrollUnit="Pixel"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+
+                                <DataGrid.Columns>
+
+                                    <DataGridTemplateColumn
+                                        Width="34"
+                                        CellStyle="{StaticResource CheckBoxCellStyle}"
+                                        Header="">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox
+                                                    Checked="ItemCheckBox_Changed"
+                                                    IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    Style="{StaticResource DataGridCheckBoxStyle}"
+                                                    ToolTip="{DynamicResource Str_AudioReplayControl_FlagForRemoval}"
+                                                    Unchecked="ItemCheckBox_Changed" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!--  Track - shows an accent "now playing" icon on the current row  -->
+                                    <DataGridTemplateColumn
+                                        Width="2*"
+                                        MinWidth="70"
+                                        Header="{DynamicResource Str_AudioReplayControl_Track}"
+                                        SortMemberPath="Name">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <materialDesign:PackIcon
+                                                        x:Name="NowPlayingIcon"
+                                                        Width="16"
+                                                        Height="16"
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="{DynamicResource AccentColor}"
+                                                        Kind="Equalizer"
+                                                        Visibility="Collapsed" />
+                                                    <TextBlock
+                                                        x:Name="TrackName"
+                                                        Grid.Column="1"
+                                                        VerticalAlignment="Center"
+                                                        Text="{Binding Name}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        ToolTip="{Binding FilePath}" />
+                                                </Grid>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding IsNowPlaying}" Value="True">
+                                                        <Setter TargetName="NowPlayingIcon" Property="Visibility" Value="Visible" />
+                                                        <Setter TargetName="TrackName" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTextColumn
+                                        x:Name="ColTime"
+                                        Width="64"
+                                        Binding="{Binding Duration}"
+                                        CellStyle="{StaticResource CompactCellStyle}"
+                                        Header="{DynamicResource Str_VideoReplay_ColHeaderTime}">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTemplateColumn
+                                        Width="42"
+                                        CellStyle="{StaticResource CompactCellStyle}"
+                                        Header="">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button
+                                                    Width="24"
+                                                    Height="24"
+                                                    HorizontalAlignment="Center"
+                                                    Click="BtnRemoveFromQueue_Click"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_AudioReplayControl_RemoveFromThePlaylist}">
+                                                    <materialDesign:PackIcon
+                                                        Width="14"
+                                                        Height="14"
+                                                        Kind="Close" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                </DataGrid.Columns>
+
+                            </DataGrid>
+
+                            <!--  ============ EMPTY STATE (dashed drop zone + call to action) ============  -->
+
+                            <controls:EmptyStateCard
+                                x:Name="EmptyStatePanel"
+                                Title="{DynamicResource Str_AudioReplayControl_YourPlaylistIsEmpty}"
+                                Margin="4"
+                                Description="{DynamicResource Str_AudioReplayControl_DragAudioFilesOr}"
+                                Icon="MusicBoxMultipleOutline" />
+
+                        </Grid>
+
+                        <!--  ============ PLAYLIST ACTIONS ============  -->
+
+                        <Grid Grid.Row="3" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button
+                                x:Name="BtnSelectAll"
+                                Grid.Column="0"
+                                Width="34"
+                                Height="34"
+                                Margin="0,0,6,0"
+                                Click="BtnSelectAll_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_SelectEveryTrack}">
+                                <materialDesign:PackIcon
+                                    Width="17"
+                                    Height="17"
+                                    Kind="CheckboxMultipleMarkedOutline" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnDeselectAll"
+                                Grid.Column="1"
+                                Width="34"
+                                Height="34"
+                                Click="BtnDeselectAll_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_DeselectEveryTrack}">
+                                <materialDesign:PackIcon
+                                    Width="17"
+                                    Height="17"
+                                    Kind="CheckboxMultipleBlankOutline" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnRemoveSelected"
+                                Grid.Column="3"
+                                Margin="0,0,6,0"
+                                Click="BtnRemoveSelected_Click"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_RemoveTheCheckedTracks}"
+                                Style="{StaticResource ListToolButtonStyle}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="PlaylistRemove" />
+                            </Button>
+
+                            <Button
+                                x:Name="BtnClearAll"
+                                Grid.Column="4"
+                                Click="BtnClearAll_Click"
+                                ToolTip="{DynamicResource Str_AudioReplayControl_RemoveEveryTrackFrom}"
+                                Style="{StaticResource ListToolDangerButtonStyle}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="DeleteSweepOutline" />
+                            </Button>
+                        </Grid>
+
+                    </Grid>
+
+                </Border>
+
+            </Grid>
+
+        </Grid>
+
+        <!--  ================= DROP OVERLAY (shown while dragging files over the view) =================  -->
+
+        <Border
+            x:Name="DropOverlay"
+            Margin="16,8,16,16"
+            Panel.ZIndex="10"
+            Style="{StaticResource DropZoneStyle}">
+            <Grid>
+                <Rectangle
+                    RadiusX="14"
+                    RadiusY="14"
+                    Stroke="{DynamicResource AccentColor}"
+                    StrokeDashArray="6 4"
+                    StrokeThickness="2" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_AudioReplayControl_DropToAddTo}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_AudioReplayControl_AudioFilesAndWhole}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</UserControl>

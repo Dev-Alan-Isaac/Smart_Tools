@@ -1,0 +1,882 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.HashVerifierView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    AllowDrop="True"
+    DragLeave="Root_DragLeave"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
+    Loaded="Root_Loaded">
+
+    <!--
+        Backend: Controllers/HashVerifierManager.cs (hashing, checksum lists,
+        file listing, settings), .Run.cs (plan, compare, the run), .Export.cs
+        (checksum files, CSV); Models/HashVerifierModel.cs.
+        This file and the code-behind are UI only.
+    -->
+
+    <UserControl.Resources>
+
+        <!--  Hash text: fixed-width so columns of digits line up  -->
+        <!--  Input card: one queued file / folder  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:HashQueueGroup}">
+            <Grid ToolTip="{Binding ToolTip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="GroupIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveQueueGroup_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="GroupIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <Style x:Key="HashCellText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,5" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        </Style>
+
+        <!--  Grid: name + folder  -->
+        <DataTemplate x:Key="NameCellTemplate" DataType="{x:Type models:HashFileResult}">
+            <StackPanel VerticalAlignment="Center" ToolTip="{Binding FullPath}">
+                <TextBlock
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding FileName}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Margin="0,1,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding Folder}"
+                    TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Grid: details, full text in the tooltip  -->
+        <DataTemplate x:Key="DetailsCellTemplate" DataType="{x:Type models:HashFileResult}">
+            <TextBlock
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource TextSecondary}"
+                Text="{Binding Details}"
+                TextTrimming="CharacterEllipsis"
+                ToolTip="{Binding Details}" />
+        </DataTemplate>
+
+        <!--  Grid: verdict chip  -->
+        <DataTemplate x:Key="VerdictCellTemplate" DataType="{x:Type models:HashFileResult}">
+            <Border
+                x:Name="Chip"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{DynamicResource RowBg}"
+                Style="{StaticResource IconStatusPillStyle}"
+                ToolTip="{Binding Details}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon
+                        x:Name="ChipIcon"
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Kind="ClockOutline" />
+                    <TextBlock
+                        x:Name="ChipText"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding VerdictText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Verdict}" Value="Hashing">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="Autorenew" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Computed">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="Pound" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Match">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CheckCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Mismatch">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Missing">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="FileHidden" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Extra">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="FilePlusOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Unreadable">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="AlertOutline" />
+                    <Setter TargetName="ChipIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Verdict}" Value="Cancelled">
+                    <Setter TargetName="ChipIcon" Property="Kind" Value="CloseCircleOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+
+        <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
+
+        <Grid Margin="16,8,16,16">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FILES ============  -->
+                            <controls:InputFolderCard
+                                ctl:Tour.Key="Str_Tour_HashVerifier_Input"
+                                ctl:Tour.Order="1"
+                                x:Name="InputCard"
+                                ClearRequested="InputCard_ClearRequested"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+                            <!--  ============ ALGORITHMS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_HashVerifier_Algorithms" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel ToolTip="{DynamicResource Str_Hash_AlgorithmsTooltip}">
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Hash_AlgorithmsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Pound}" />
+                                    <UniformGrid Columns="2">
+                                        <CheckBox
+                                            x:Name="ChkMd5"
+                                            Margin="0,0,0,6"
+                                            Click="Algorithm_Click"
+                                            Content="MD5"
+                                            Foreground="{DynamicResource SidebarText}" />
+                                        <CheckBox
+                                            x:Name="ChkSha1"
+                                            Margin="0,0,0,6"
+                                            Click="Algorithm_Click"
+                                            Content="SHA-1"
+                                            Foreground="{DynamicResource SidebarText}" />
+                                        <CheckBox
+                                            x:Name="ChkSha256"
+                                            Margin="0,0,0,6"
+                                            Click="Algorithm_Click"
+                                            Content="SHA-256"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsChecked="True" />
+                                        <CheckBox
+                                            x:Name="ChkSha384"
+                                            Margin="0,0,0,6"
+                                            Click="Algorithm_Click"
+                                            Content="SHA-384"
+                                            Foreground="{DynamicResource SidebarText}" />
+                                        <CheckBox
+                                            x:Name="ChkSha512"
+                                            Margin="0,0,0,6"
+                                            Click="Algorithm_Click"
+                                            Content="SHA-512"
+                                            Foreground="{DynamicResource SidebarText}" />
+                                        <CheckBox
+                                            x:Name="ChkCrc32"
+                                            Margin="0,0,0,6"
+                                            Click="Algorithm_Click"
+                                            Content="CRC32"
+                                            Foreground="{DynamicResource SidebarText}" />
+                                    </UniformGrid>
+                                    <CheckBox
+                                        x:Name="ChkUpperCase"
+                                        Margin="0,4,0,0"
+                                        Click="UpperCase_Click"
+                                        Content="{DynamicResource Str_Hash_UpperCase}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        ToolTip="{DynamicResource Str_Hash_UpperCaseTooltip}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ COMPARE WITH ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_HashVerifier_Compare" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Hash_CompareHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
+
+                                    <UniformGrid Columns="3" ToolTip="{DynamicResource Str_Hash_ModeTooltip}">
+                                        <RadioButton
+                                            x:Name="RadioModeCompute"
+                                            Margin="0,0,2,0"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Hash_ModeCompute}"
+                                            GroupName="HashMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Compute" />
+                                        <RadioButton
+                                            x:Name="RadioModeExpected"
+                                            Margin="2,0,2,0"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Hash_ModeExpected}"
+                                            GroupName="HashMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Expected" />
+                                        <RadioButton
+                                            x:Name="RadioModeList"
+                                            Margin="2,0,0,0"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_Hash_ModeList}"
+                                            GroupName="HashMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="ChecksumList" />
+                                    </UniformGrid>
+
+                                    <!--  Expected hash  -->
+                                    <StackPanel
+                                        x:Name="PanelExpected"
+                                        Margin="0,12,0,0"
+                                        Visibility="Collapsed">
+                                        <Border Height="84" Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtExpected"
+                                                Height="Auto"
+                                                Padding="10,8"
+                                                VerticalAlignment="Stretch"
+                                                VerticalContentAlignment="Top"
+                                                FontFamily="Consolas"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="{DynamicResource Str_Hash_ExpectedHint}"
+                                                TextChanged="TxtExpected_TextChanged"
+                                                TextWrapping="Wrap"
+                                                ToolTip="{DynamicResource Str_Hash_ExpectedTooltip}" />
+                                        </Border>
+                                        <TextBlock
+                                            x:Name="TxtExpectedState"
+                                            Margin="2,6,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <!--  Checksum list  -->
+                                    <StackPanel
+                                        x:Name="PanelList"
+                                        Margin="0,12,0,0"
+                                        Visibility="Collapsed">
+                                        <Button
+                                            x:Name="BtnLoadList"
+                                            Click="BtnLoadList_Click"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Hash_LoadListTooltip}">
+                                            <Grid HorizontalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <materialDesign:PackIcon
+                                                    Grid.Column="0"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FileCheckOutline" />
+                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Hash_LoadList}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </Button>
+                                        <TextBlock
+                                            x:Name="TxtListInfo"
+                                            Margin="2,8,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_Hash_ListNone}"
+                                            TextWrapping="Wrap" />
+                                        <TextBlock
+                                            Margin="2,10,0,4"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource SidebarTextMuted}"
+                                            Text="{DynamicResource Str_Hash_BaseFolder}"
+                                            TextWrapping="Wrap" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBlock
+                                                    x:Name="TxtBaseFolder"
+                                                    Margin="10,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11.5"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </Border>
+                                            <Button
+                                                Grid.Column="1"
+                                                Width="34"
+                                                Height="34"
+                                                Margin="6,0,0,0"
+                                                Click="BtnBaseFolder_Click"
+                                                Style="{StaticResource NeutralIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Hash_ChangeFolderTooltip}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="FolderOpenOutline" />
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN AREA =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run bar  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="BtnRun"
+                            ctl:Tour.Key="Str_Tour_HashVerifier_Run"
+                            ctl:Tour.Order="4"
+                            MinWidth="180"
+                            Margin="0,0,16,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRun_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}"
+                            ToolTip="{DynamicResource Str_Hash_RunTooltip}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon
+                                    Grid.Column="0"
+                                    x:Name="IconRun"
+                                    Width="18"
+                                    Height="18"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Pound" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    x:Name="TxtRunLabel"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Hash_RunButton}" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <ProgressBar
+                                x:Name="ProgressHash"
+                                Height="8"
+                                Maximum="100"
+                                ToolTip="{DynamicResource Str_Hash_ProgressTooltip}" />
+                            <TextBlock
+                                x:Name="TxtProgress"
+                                Margin="0,6,0,0"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_Hash_Idle}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="TxtProgressPercent"
+                            Grid.Column="2"
+                            MinWidth="54"
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource AccentColor}"
+                            TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Results  -->
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_Hash_ResultsTitle}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ClipboardCheckOutline}" />
+
+                            <WrapPanel
+                                x:Name="SummaryPanel"
+                                Grid.Column="1"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                                <Border
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusInfoBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusInfoFg}"
+                                            Kind="FileMultipleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryFiles"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusInfoFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillMatch"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryMatch"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillProblems"
+                                    Margin="0,2,6,2"
+                                    Background="{DynamicResource StatusErrorBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusErrorFg}"
+                                            Kind="AlertCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtSummaryProblems"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusErrorFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+
+                            <!--  Actions: right of the summary pills, like the Duplicate and Validate views  -->
+                            <StackPanel
+                                x:Name="ActionsPanel"
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                Orientation="Horizontal">
+
+                                <Border
+                                    Width="190"
+                                    Margin="0,0,6,0"
+                                    Style="{StaticResource InputBarStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon
+                                            Width="14"
+                                            Height="14"
+                                            Margin="10,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="FilterOutline" />
+                                        <TextBox
+                                            x:Name="TxtResultFilter"
+                                            Grid.Column="1"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="Filter results"
+                                            TextChanged="TxtResultFilter_TextChanged"
+                                            ToolTip="{DynamicResource Str_SearchFile_ShowOnlyRowsWhose}" />
+                                    </Grid>
+                                </Border>
+
+                                <controls:ExportButton
+                                    x:Name="BtnExport"
+                                    Margin="0,0,6,0"
+                                    Click="BtnExport_Click"
+                                    Label="{DynamicResource Str_Hash_ExportTitle}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu x:Name="ExportMenu" />
+                                    </Button.ContextMenu>
+                                </controls:ExportButton>
+
+                                <Button
+                                    x:Name="BtnCheckProblems"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,6,0"
+                                    Click="BtnCheckProblems_Click"
+                                    Style="{StaticResource ListToolWarningButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Hash_OnlyProblemsTooltip}">
+                                    <materialDesign:PackIcon
+                                        x:Name="ProblemsIcon"
+                                        Width="16"
+                                        Height="16"
+                                        Kind="WarningOutline" />
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnCopyHash"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,6,0"
+                                    Click="MenuCopyHash_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Hash_MenuCopyHash}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="ContentCopy" />
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnCopyPath"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,6,0"
+                                    Click="MenuCopyPath_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Hash_MenuCopyPath}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FileOutline" />
+                                </Button>
+
+                                <Button
+                                    x:Name="BtnShowInFolder"
+                                    Width="32"
+                                    Height="32"
+                                    Click="MenuShowInFolder_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Hash_MenuShowInFolder}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <DataGrid
+                            x:Name="DataGridResults"
+                            ctl:Tour.Key="Str_Tour_HashVerifier_Results"
+                            ctl:Tour.Order="5"
+                            Grid.Row="1"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MouseDoubleClick="DataGridResults_MouseDoubleClick"
+                            PreviewMouseRightButtonDown="DataGridResults_PreviewMouseRightButtonDown"
+                            MinRowHeight="46"
+                            SelectionChanged="DataGridResults_SelectionChanged"
+                            SelectionMode="Extended"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.ScrollUnit="Pixel"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Click="MenuCopyHash_Click" Header="{DynamicResource Str_Hash_MenuCopyHash}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="ContentCopy" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuCopyAll_Click" Header="{DynamicResource Str_Hash_MenuCopyAll}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="ClipboardTextMultipleOutline" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuCopyPath_Click" Header="{DynamicResource Str_Hash_MenuCopyPath}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="FileOutline" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Click="MenuShowInFolder_Click" Header="{DynamicResource Str_Hash_MenuShowInFolder}">
+                                        <MenuItem.Icon>
+                                            <materialDesign:PackIcon Kind="FolderOpenOutline" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="1.5*"
+                                    MinWidth="90"
+                                    CellTemplate="{StaticResource NameCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderFileName}"
+                                    IsReadOnly="True"
+                                    SortMemberPath="FileName" />
+                                <DataGridTextColumn
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Width="80"
+                                    Binding="{Binding Size, Mode=OneWay}"
+                                    Header="{DynamicResource Str_Common_ColHeaderSize}"
+                                    IsReadOnly="True"
+                                    SortMemberPath="SizeBytes" />
+                                <DataGridTemplateColumn
+                                    Width="120"
+                                    CellTemplate="{StaticResource VerdictCellTemplate}"
+                                    Header="{DynamicResource Str_Common_ColHeaderStatus}"
+                                    IsReadOnly="True"
+                                    SortMemberPath="Verdict" />
+                                <DataGridTextColumn
+                                    x:Name="ColMd5"
+                                    Width="1*"
+                                    MinWidth="60"
+                                    Binding="{Binding Md5, Mode=OneWay}"
+                                    ElementStyle="{StaticResource HashCellText}"
+                                    Header="MD5"
+                                    IsReadOnly="True"
+                                    Visibility="Collapsed" />
+                                <DataGridTextColumn
+                                    x:Name="ColSha1"
+                                    Width="1.25*"
+                                    MinWidth="60"
+                                    Binding="{Binding Sha1, Mode=OneWay}"
+                                    ElementStyle="{StaticResource HashCellText}"
+                                    Header="SHA-1"
+                                    IsReadOnly="True"
+                                    Visibility="Collapsed" />
+                                <DataGridTextColumn
+                                    x:Name="ColSha256"
+                                    Width="2*"
+                                    MinWidth="60"
+                                    Binding="{Binding Sha256, Mode=OneWay}"
+                                    ElementStyle="{StaticResource HashCellText}"
+                                    Header="SHA-256"
+                                    IsReadOnly="True" />
+                                <DataGridTextColumn
+                                    x:Name="ColSha384"
+                                    Width="3*"
+                                    MinWidth="60"
+                                    Binding="{Binding Sha384, Mode=OneWay}"
+                                    ElementStyle="{StaticResource HashCellText}"
+                                    Header="SHA-384"
+                                    IsReadOnly="True"
+                                    Visibility="Collapsed" />
+                                <DataGridTextColumn
+                                    x:Name="ColSha512"
+                                    Width="4*"
+                                    MinWidth="60"
+                                    Binding="{Binding Sha512, Mode=OneWay}"
+                                    ElementStyle="{StaticResource HashCellText}"
+                                    Header="SHA-512"
+                                    IsReadOnly="True"
+                                    Visibility="Collapsed" />
+                                <DataGridTextColumn
+                                    x:Name="ColCrc32"
+                                    Width="0.5*"
+                                    MinWidth="60"
+                                    Binding="{Binding Crc32, Mode=OneWay}"
+                                    ElementStyle="{StaticResource HashCellText}"
+                                    Header="CRC32"
+                                    IsReadOnly="True"
+                                    Visibility="Collapsed" />
+                                <DataGridTemplateColumn
+                                    Width="1.5*"
+                                    MinWidth="80"
+                                    CellTemplate="{StaticResource DetailsCellTemplate}"
+                                    Header="{DynamicResource Str_Hash_ColDetails}"
+                                    IsReadOnly="True"
+                                    SortMemberPath="Details" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <controls:EmptyStateCard
+                            x:Name="EmptyStatePanel"
+                            Grid.Row="1"
+                            Description="{DynamicResource Str_Hash_EmptyDescription}"
+                            Icon="Pound"
+                            IsHitTestVisible="False" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
