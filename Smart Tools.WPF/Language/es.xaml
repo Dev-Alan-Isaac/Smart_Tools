@@ -6468,6 +6468,71 @@
     <system:String x:Key="Str_Startup_NeedsAdmin">Esa entrada es para todos los usuarios. Windows solo permite que un administrador la cambie.</system:String>
     <system:String x:Key="Str_Startup_Failed">No se pudo cambiar esa entrada. Puede estar en uso o protegida.</system:String>
 
+    <!--  Services  -->
+    <system:String x:Key="Str_Services_AdminTitle">Se necesitan derechos de administrador</system:String>
+    <system:String x:Key="Str_Services_AdminWarning">Iniciar, detener o cambiar un servicio requiere derechos de administrador. Reinicia Smart Tools como administrador para hacer cambios.</system:String>
+    <system:String x:Key="Str_Services_SearchPlaceholder">Buscar por nombre o descripción</system:String>
+    <system:String x:Key="Str_Services_Refresh">Volver a buscar</system:String>
+    <system:String x:Key="Str_Services_FilterAll">Todos</system:String>
+    <system:String x:Key="Str_Services_FilterRunning">En ejecución</system:String>
+    <system:String x:Key="Str_Services_FilterStopped">Detenidos</system:String>
+    <system:String x:Key="Str_Services_FilterAllTip">Mostrar todos los servicios</system:String>
+    <system:String x:Key="Str_Services_FilterRunningTip">Mostrar solo los servicios en ejecución</system:String>
+    <system:String x:Key="Str_Services_FilterStoppedTip">Mostrar solo los servicios detenidos</system:String>
+    <system:String x:Key="Str_Services_ColName">Nombre</system:String>
+    <system:String x:Key="Str_Services_ColStatus">Estado</system:String>
+    <system:String x:Key="Str_Services_ColStartup">Tipo de inicio</system:String>
+    <system:String x:Key="Str_Services_ColAccount">Iniciar sesión como</system:String>
+    <system:String x:Key="Str_Services_StateRunning">En ejecución</system:String>
+    <system:String x:Key="Str_Services_StateStopped">Detenido</system:String>
+    <system:String x:Key="Str_Services_StatePaused">En pausa</system:String>
+    <system:String x:Key="Str_Services_StateStarting">Iniciando</system:String>
+    <system:String x:Key="Str_Services_StateStopping">Deteniendo</system:String>
+    <system:String x:Key="Str_Services_StatePausing">Pausando</system:String>
+    <system:String x:Key="Str_Services_StateResuming">Reanudando</system:String>
+    <system:String x:Key="Str_Services_StateUnknown">Desconocido</system:String>
+    <system:String x:Key="Str_Services_ModeAutomatic">Automático</system:String>
+    <system:String x:Key="Str_Services_ModeDelayed">Automático (retrasado)</system:String>
+    <system:String x:Key="Str_Services_ModeManual">Manual</system:String>
+    <system:String x:Key="Str_Services_ModeDisabled">Deshabilitado</system:String>
+    <system:String x:Key="Str_Services_Start">Iniciar</system:String>
+    <system:String x:Key="Str_Services_Stop">Detener</system:String>
+    <system:String x:Key="Str_Services_Restart">Reiniciar</system:String>
+    <system:String x:Key="Str_Services_More">Más acciones</system:String>
+    <system:String x:Key="Str_Services_Pause">Pausar</system:String>
+    <system:String x:Key="Str_Services_Resume">Reanudar</system:String>
+    <system:String x:Key="Str_Services_StartupType">Tipo de inicio</system:String>
+    <system:String x:Key="Str_Services_CopyName">Copiar nombre del servicio</system:String>
+    <system:String x:Key="Str_Services_Count">{0} servicios, {1} en ejecución</system:String>
+    <system:String x:Key="Str_Services_NoMatches">Nada coincide</system:String>
+    <system:String x:Key="Str_Services_NoMatchesHint">Prueba con otra búsqueda o filtro.</system:String>
+    <system:String x:Key="Str_Services_EmptyTitle">No se encontraron servicios</system:String>
+    <system:String x:Key="Str_Services_EmptyHint">Windows no listó ningún servicio. Prueba a buscar de nuevo.</system:String>
+    <system:String x:Key="Str_Services_ReadFailed">No se pudo leer la lista de servicios.</system:String>
+    <system:String x:Key="Str_Services_Starting">Iniciando {0}...</system:String>
+    <system:String x:Key="Str_Services_Started">{0} se inició.</system:String>
+    <system:String x:Key="Str_Services_Stopping">Deteniendo {0}...</system:String>
+    <system:String x:Key="Str_Services_StoppedDone">{0} se detuvo.</system:String>
+    <system:String x:Key="Str_Services_Restarting">Reiniciando {0}...</system:String>
+    <system:String x:Key="Str_Services_Restarted">{0} se reinició.</system:String>
+    <system:String x:Key="Str_Services_Pausing">Pausando {0}...</system:String>
+    <system:String x:Key="Str_Services_PausedDone">{0} está en pausa.</system:String>
+    <system:String x:Key="Str_Services_Resuming">Reanudando {0}...</system:String>
+    <system:String x:Key="Str_Services_ResumedDone">{0} se reanudó.</system:String>
+    <system:String x:Key="Str_Services_Changing">Cambiando {0}...</system:String>
+    <system:String x:Key="Str_Services_StartupChanged">El tipo de inicio de {0} ahora es {1}.</system:String>
+    <system:String x:Key="Str_Services_CoreConfirm">{0} es un servicio básico de Windows. Detenerlo o deshabilitarlo puede afectar la red, la seguridad u otras partes de Windows. ¿Continuar?</system:String>
+    <system:String x:Key="Str_Services_DependentsConfirm">{0} tiene servicios en ejecución que dependen de él: {1}. También se detendrán. ¿Continuar?</system:String>
+    <system:String x:Key="Str_Services_RestartDependentsConfirm">{0} tiene servicios en ejecución que dependen de él: {1}. Se detendrán y se iniciarán de nuevo con él. ¿Continuar?</system:String>
+    <system:String x:Key="Str_Services_ListTwo">{0} y {1}</system:String>
+    <system:String x:Key="Str_Services_ListMany">{0} y {1}</system:String>
+    <system:String x:Key="Str_Services_ListMore">{0} más</system:String>
+    <system:String x:Key="Str_Services_NeedsAdmin">Windows bloqueó este cambio. Puede que necesites derechos de administrador, o que el servicio esté protegido.</system:String>
+    <system:String x:Key="Str_Services_HasDependents">Otros servicios en ejecución dependen de este. Deténlos primero.</system:String>
+    <system:String x:Key="Str_Services_IsDisabled">Este servicio está deshabilitado. Cambia su tipo de inicio para iniciarlo.</system:String>
+    <system:String x:Key="Str_Services_TimedOut">El servicio no respondió a tiempo. Revisa su estado e inténtalo de nuevo.</system:String>
+    <system:String x:Key="Str_Services_Failed">No se pudo cambiar ese servicio. Puede estar en uso o protegido.</system:String>
+
     <!--  Clipboard History  -->
     <system:String x:Key="Str_Clipboard_Pin">Fijar o desfijar</system:String>
     <system:String x:Key="Str_Clipboard_Copy">Copiar de nuevo</system:String>
@@ -7785,6 +7850,13 @@
     <system:String x:Key="Str_Tour_StartupApps_Refresh_Text">Vuelve a leer las entradas de inicio.</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Entries_Title">Entradas de inicio</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Entries_Text">Programas que se inician con Windows. Activa o desactiva cada uno para acelerar el inicio de sesión.</system:String>
+    <!-- Tour: Servicios -->
+    <system:String x:Key="Str_Tour_Services_Search_Title">Buscar y filtrar</system:String>
+    <system:String x:Key="Str_Tour_Services_Search_Text">Encuentra un servicio por nombre o descripción y muestra solo los que están en ejecución o detenidos.</system:String>
+    <system:String x:Key="Str_Tour_Services_Refresh_Title">Volver a buscar</system:String>
+    <system:String x:Key="Str_Tour_Services_Refresh_Text">Vuelve a leer los servicios para ver los cambios hechos fuera de esta herramienta.</system:String>
+    <system:String x:Key="Str_Tour_Services_List_Title">Servicios</system:String>
+    <system:String x:Key="Str_Tour_Services_List_Text">Inicia, detiene o reinicia un servicio. El menú de tres puntos lo pausa y cambia su tipo de inicio.</system:String>
     <!-- Tour: Cifrado de archivos -->
     <system:String x:Key="Str_Tour_FileEncrypt_Mode_Title">Modo</system:String>
     <system:String x:Key="Str_Tour_FileEncrypt_Mode_Text">Elige si cifrar archivos o descifrar archivos que cifraste antes.</system:String>

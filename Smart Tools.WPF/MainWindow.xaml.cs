@@ -258,6 +258,7 @@ namespace Smart_Tools.WPF
             // Planned tools with a real husk view (layout + disabled controls, no logic yet; see FUTURE_IDEAS.md)
             Add<ProcessKillerView>("process-killer", v => v.CancelActiveRun());   // stops reading processes
             Add<StartupAppsView>("startup-apps", v => v.CancelActiveRun());
+            Add<ServicesView>("services", v => v.CancelActiveRun());
             Add<PixelArtView>("pixel-art", v => v.CancelActiveRun());   // stops the preview, saves the setup
             Add<SpritePackerView>("sprite-packer", v => v.CancelActiveRun());   // stops a running save (finished files stay), saves the setup
             Add<MarkdownHtmlEditorView>("md-html-editor", v => v.CancelActiveRun());   // saves options, closes the preview
