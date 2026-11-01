@@ -750,6 +750,20 @@ namespace Smart_Tools.WPF.Views
             if (MessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
+            // Work out where to carry on before StopPlayback loses the position: the clip before the deleted one
+            // (or the one after it when the deleted clip was first).
+            PlaylistItem? resume = null;
+            if (wasCurrent)
+            {
+                if (_order.Count != _queue.Count) _order.Rebuild(_queue, Mode, _current);
+                var order = _order.Order;
+                int idx = -1;
+                for (int k = 0; k < order.Count; k++)
+                    if (ReferenceEquals(order[k], item)) { idx = k; break; }
+                if (idx > 0) resume = order[idx - 1];
+                else if (idx == 0 && order.Count > 1) resume = order[1];
+            }
+
             // MediaElement locks the file it plays - release it first.
             if (ReferenceEquals(item, _current)) StopPlayback();
             try
@@ -762,7 +776,12 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
             RemoveItems(new[] { item });
-            if (wasCurrent && _queue.Count > 0) PlayNext(userAsked: false);   // keep watching after binning the clip on screen
+            if (wasCurrent && resume != null && _queue.Contains(resume))
+            {
+                _order.JumpTo(resume);   // keep watching from the clip before the one just binned
+                _ = LoadAndPlayAsync(resume);
+            }
+            else if (wasCurrent && _queue.Count > 0) PlayNext(userAsked: false);
         }
 
         // =================================================================
