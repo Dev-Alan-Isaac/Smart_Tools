@@ -207,13 +207,42 @@ namespace Smart_Tools.WPF.Controllers
             await ProbeGate.WaitAsync(token).ConfigureAwait(false);
             try
             {
-                var run = await RunAsync(exe, new[] { "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", path }, null, TimeSpan.FromSeconds(20), token).ConfigureAwait(false);
-                return run.ExitCode == 0 ? ParseSeconds(run.Output) is double s ? TimeSpan.FromSeconds(s) : null : null;
+                // Big files (or slow / network drives) need longer than a small clip.
+                long bytes = 0;
+                try { bytes = new FileInfo(path).Length; } catch (IOException) { } catch (UnauthorizedAccessException) { }
+                var timeout = TimeSpan.FromSeconds(20 + bytes / (100L * 1024 * 1024));
+
+                var run = await RunAsync(exe, new[] { "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", path }, null, timeout, token).ConfigureAwait(false);
+                if (run.ExitCode == 0 && ParseSeconds(run.Output) is double s) return TimeSpan.FromSeconds(s);
+
+                // No container length (N/A): try the video stream's own length.
+                run = await RunAsync(exe, new[] { "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=duration", "-of", "default=nw=1:nk=1", path }, null, timeout, token).ConfigureAwait(false);
+                return run.ExitCode == 0 && ParseSeconds(run.Output) is double s2 ? TimeSpan.FromSeconds(s2) : null;
             }
             finally
             {
                 ProbeGate.Release();
             }
+        }
+
+        /// <summary>True when the first video stream is H.264 and the first audio stream (if any) is AAC.</summary>
+        private static async Task<bool> IsH264AacAsync(string path, CancellationToken token)
+        {
+            string? exe = FfprobeExe;
+            if (exe == null) return false;
+            var run = await RunAsync(exe, new[] { "-v", "error", "-show_entries", "stream=codec_type,codec_name", "-of", "csv=p=0", path }, null, TimeSpan.FromSeconds(30), token).ConfigureAwait(false);
+            if (run.ExitCode != 0) return false;
+            bool video = false;
+            foreach (string line in run.Output.Split('\n'))
+            {
+                var parts = line.Trim().Split(',');
+                if (parts.Length < 2) continue;
+                // csv order follows ffprobe's field order: codec_name,codec_type
+                string name = parts[0], type = parts[1];
+                if (type == "video" && !video) { if (name != "h264") return false; video = true; }
+                else if (type == "audio" && name != "aac") return false;
+            }
+            return video;
         }
 
         public static double? ParseSeconds(string text) =>
@@ -339,6 +368,20 @@ namespace Smart_Tools.WPF.Controllers
             string lastError = "";
             try
             {
+                // Already H.264 + AAC: rewrap instead of re-encoding (seconds instead of minutes, even for huge files).
+                if (await IsH264AacAsync(source, token).ConfigureAwait(false))
+                {
+                    var copy = await RunAsync(exe, new[] { "-hide_banner", "-nostdin", "-y", "-fflags", "+genpts", "-i", source, "-map", "0:v:0?", "-map", "0:a:0?", "-c", "copy", "-movflags", "+faststart", "-f", "mp4", part },
+                        null, TimeSpan.FromMinutes(Math.Max(10, duration / 60)), token).ConfigureAwait(false);
+                    if (copy.ExitCode == 0 && File.Exists(part) && new FileInfo(part).Length > 0)
+                    {
+                        File.Move(part, target, overwrite: true);
+                        onPercent?.Invoke(100);
+                        return target;
+                    }
+                    TryDelete(part);   // rewrap refused (odd timestamps etc.) - fall through to a real conversion
+                }
+
                 foreach (string encoder in await EncoderOrderAsync(exe, token).ConfigureAwait(false))
                 {
                     token.ThrowIfCancellationRequested();

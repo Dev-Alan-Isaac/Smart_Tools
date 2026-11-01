@@ -1111,7 +1111,7 @@ namespace Smart_Tools.WPF.Views
         private void BeginSeek(TimeSpan target)
         {
             _seekTarget = target;
-            _seekDeadline = DateTime.UtcNow.AddSeconds(8);
+            _seekDeadline = DateTime.UtcNow.AddSeconds(45);   // big files without an index can take a while; released as soon as the engine arrives
             _backend.Position = target;
         }
 
