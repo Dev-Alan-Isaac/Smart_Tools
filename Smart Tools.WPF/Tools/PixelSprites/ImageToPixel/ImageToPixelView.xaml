@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
     Focusable="True"
     AllowDrop="True"
@@ -12,7 +13,7 @@
     Loaded="Root_Loaded"
     Unloaded="Root_Unloaded">
 
-    <!--  Backend: Controllers/ImageToPixelManager.cs (shrinking, palette, dithering, PNG). UI only here.  -->
+    <!--  Backend: Controllers/ImageToPixelManager.cs (finding pictures, shrinking, palette, dithering, PNG, converting a list). UI only here.  -->
 
     <UserControl.Resources>
         <Style x:Key="IpLabel" TargetType="TextBlock">
@@ -27,6 +28,57 @@
             <Setter Property="Margin" Value="2,6,0,0" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+
+        <!--  A file or folder on the Input card  -->
+        <DataTemplate x:Key="SourceTemplate" DataType="{x:Type models:PixelSource}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="26" Height="26" Margin="0,0,8,0" Background="{DynamicResource AccentColorSubtle}" CornerRadius="7">
+                    <materialDesign:PackIcon x:Name="SourceIcon" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="FileImageOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                    <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="Take this off the list">
+                    <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="SourceIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  One picture in the list  -->
+        <DataTemplate x:Key="PictureTemplate" DataType="{x:Type models:PixelItem}">
+            <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Width="38" Height="38" Margin="0,0,10,0" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
+                    <Image Margin="2" RenderOptions.BitmapScalingMode="HighQuality" Source="{Binding Thumbnail}" Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                    <TextBlock x:Name="Sub" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Sub" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="Sub" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
@@ -39,19 +91,16 @@
 
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
-                <StackPanel>
-                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
-                        <StackPanel>
-                            <ContentControl Content="PICTURE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
-                            <Button Margin="0,8,0,0" MinHeight="36" HorizontalContentAlignment="Left" Click="BtnOpen_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
-                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="Choose a picture" TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </Button>
-                            <TextBlock x:Name="TxtSourceInfo" Style="{StaticResource IpHint}" Text="Or drop a picture anywhere on this page." />
-                        </StackPanel>
-                    </Border>
+                <StackPanel x:Name="SidebarStack">
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="Pictures"
+                        HeaderIcon="FileMultipleOutline"
+                        IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                        ItemTemplate="{StaticResource SourceTemplate}"
+                        Mode="Files"
+                        PathsAdded="InputCard_PathsAdded" />
 
                     <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
@@ -88,16 +137,26 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="SAVE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ContentSaveOutline}" />
                             <TextBlock Style="{StaticResource IpLabel}" Text="Make each pixel this many pixels wide" />
                             <Border Style="{StaticResource InputBarStyle}">
                                 <ComboBox x:Name="CmbScale" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}" />
                             </Border>
+                            <TextBlock Style="{StaticResource IpLabel}" Text="Add to each file name" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtSuffix" MaxLength="40" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                            </Border>
                             <TextBlock x:Name="TxtSaveInfo" Style="{StaticResource IpHint}" />
                         </StackPanel>
                     </Border>
+
+                    <controls:OutputFolderCard
+                        x:Name="OutputCard"
+                        Header="Save pictures to"
+                        HeaderIcon="FolderOutline"
+                        ToolName="Image to Pixel Art" />
                 </StackPanel>
             </controls:ToolSidebar>
 
@@ -109,21 +168,34 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="240" />
+                    <ColumnDefinition Width="0.8*" MinWidth="210" />
                     <ColumnDefinition Width="14" />
-                    <ColumnDefinition Width="*" MinWidth="240" />
+                    <ColumnDefinition Width="1*" MinWidth="220" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="1*" MinWidth="220" />
                 </Grid.ColumnDefinitions>
 
-                <!--  ========== Summary and saving ==========  -->
-                <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
+                <!--  ========== Summary, saving ==========  -->
+                <Border Grid.ColumnSpan="5" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
-                            <Button x:Name="BtnSave" MinHeight="38" DockPanel.Dock="Right" Click="BtnSave_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentSaveOutline" />
-                                    <TextBlock VerticalAlignment="Center" Text="Save PNG" />
-                                </StackPanel>
-                            </Button>
+                            <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Button x:Name="BtnOpenFolder" Margin="0,0,8,0" Click="BtnOpenFolder_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Open the folder with the saved pictures" Visibility="Collapsed">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button x:Name="BtnSave" MinHeight="38" Margin="0,0,8,0" Click="BtnSave_Click" IsEnabled="False" ToolTip="Save the picture you are looking at, wherever you like">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentSaveOutline" />
+                                        <TextBlock VerticalAlignment="Center" Text="Save this one" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnConvertAll" MinHeight="38" Click="BtnConvertAll_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Make pixel art from every picture in the list and save them in the folder chosen on the left">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon x:Name="IconConvert" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ImageFilterFrames" />
+                                        <TextBlock x:Name="TxtConvert" VerticalAlignment="Center" Text="Convert all" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="PIXEL ART" />
                                 <WrapPanel Margin="0,4,0,0">
@@ -136,18 +208,39 @@
                                     <Border x:Name="DonePill" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
                                         <TextBlock x:Name="TxtDonePill" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                     </Border>
-                                    <TextBlock x:Name="TxtHeroHint" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" Text="Choose a picture to start." />
+                                    <TextBlock x:Name="TxtHeroHint" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" Text="Add pictures or folders on the left to start." />
                                 </WrapPanel>
                             </StackPanel>
                         </DockPanel>
-                        <Border x:Name="StatusBanner" Margin="0,10,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
+                        <ProgressBar x:Name="RunProgress" Height="5" Margin="0,12,0,0" Visibility="Collapsed" />
+                        <Border x:Name="StatusBanner" Margin="0,12,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
                             <TextBlock x:Name="TxtStatus" MaxWidth="900" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </Border>
                     </StackPanel>
                 </Border>
 
-                <!--  ========== The original ==========  -->
+                <!--  ========== The list of pictures ==========  -->
                 <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock x:Name="TxtCount" VerticalAlignment="Center" DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                            <ContentControl Content="Pictures" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
+                        </DockPanel>
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <ListBox x:Name="PictureList" Padding="6" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource PictureTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="PictureList_SelectionChanged" VirtualizingPanel.IsVirtualizing="True" />
+                                <TextBlock x:Name="ListEmpty" Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Pictures you add show here. Click one to see it." TextAlignment="Center" TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!--  ========== The original ==========  -->
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -157,14 +250,14 @@
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
                                 <Image x:Name="OriginalImage" Margin="14" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Uniform" />
-                                <TextBlock x:Name="OriginalEmpty" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Your picture shows here." />
+                                <TextBlock x:Name="OriginalEmpty" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="The picture you click shows here." />
                             </Grid>
                         </Border>
                     </Grid>
                 </Border>
 
                 <!--  ========== The pixel art ==========  -->
-                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Border Grid.Row="2" Grid.Column="4" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -188,10 +281,10 @@
                                         <Image x:Name="ResultImage" RenderOptions.BitmapScalingMode="NearestNeighbor" Stretch="Fill" />
                                     </Grid>
                                 </Viewbox>
-                                <StackPanel x:Name="PreviewEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <StackPanel x:Name="PreviewEmpty" MaxWidth="280" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
-                                    <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Turn a picture into pixel art" />
-                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Choose a picture or drop one here. Fewer pixels and fewer colors give a more retro look." TextAlignment="Center" TextWrapping="Wrap" />
+                                    <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Turn pictures into pixel art" />
+                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Add pictures or whole folders, click one to preview it, then Convert all. Fewer pixels and colors give a more retro look." TextAlignment="Center" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </Border>

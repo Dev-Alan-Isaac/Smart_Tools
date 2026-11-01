@@ -5,7 +5,8 @@ using System.Text;
 
 namespace Smart_Tools.WPF.Controllers
 {
-    public enum FrameMode { OneFrame, EverySeconds, EvenlySpaced }
+    /// <summary>OneFrame = the time in the box; EverySeconds / EvenlySpaced = a pattern; Picked = the moments you chose one by one.</summary>
+    public enum FrameMode { OneFrame, EverySeconds, EvenlySpaced, Picked }
     public enum FrameFormat { Png, Jpg }
 
     public sealed class FrameExtractorSettings
@@ -15,6 +16,7 @@ namespace Smart_Tools.WPF.Controllers
         public double AtSeconds { get; set; } = 0;
         public double EverySeconds { get; set; } = 5;
         public int Count { get; set; } = 10;
+        public bool IncludeSubfolders { get; set; } = true;
     }
 
     public sealed record FrameRunResult(List<string> Files, string? Problem, bool Cancelled);
@@ -66,8 +68,22 @@ namespace Smart_Tools.WPF.Controllers
             return double.TryParse(t, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out seconds) && seconds >= 0;
         }
 
-        /// <summary>The moments (in seconds) to take frames at, for a video of this length. Empty when nothing fits.</summary>
-        public static List<double> Moments(FrameExtractorSettings s, double duration)
+        /// <summary>"1:23.450" (or "23.450", or "1:02:03.450" past an hour).</summary>
+        public static string FormatTime(double seconds)
+        {
+            var t = TimeSpan.FromSeconds(Math.Max(0, seconds));
+            int hours = (int)t.TotalHours;
+            string ms = t.Milliseconds.ToString("000", CultureInfo.InvariantCulture);
+            return hours > 0
+                ? $"{hours}:{t.Minutes:00}:{t.Seconds:00}.{ms}"
+                : $"{t.Minutes}:{t.Seconds:00}.{ms}";
+        }
+
+        /// <summary>
+        /// The moments (in seconds) to take frames at, for a video of this length. Empty when nothing fits.
+        /// For <see cref="FrameMode.Picked"/> they are the ones in <paramref name="picked"/> (sorted, no repeats, none past the end).
+        /// </summary>
+        public static List<double> Moments(FrameExtractorSettings s, double duration, IReadOnlyList<double>? picked = null)
         {
             s = Clamp(s);
             var list = new List<double>();
@@ -76,6 +92,10 @@ namespace Smart_Tools.WPF.Controllers
 
             switch (s.Mode)
             {
+                case FrameMode.Picked:
+                    foreach (double t in (picked ?? Array.Empty<double>()).Where(t => t >= 0).Select(t => Math.Round(Math.Min(t, last), 3)).Distinct().OrderBy(t => t))
+                        if (list.Count < MaxFrames) list.Add(t);
+                    break;
                 case FrameMode.OneFrame:
                     list.Add(Math.Min(s.AtSeconds, last));
                     break;
@@ -112,6 +132,159 @@ namespace Smart_Tools.WPF.Controllers
             args.Add("-update"); args.Add("1");
             args.Add(output);
             return args;
+        }
+
+        // =================================================================
+        //  Finding videos
+        // =================================================================
+
+        public static readonly string[] VideoExtensions = { ".mp4", ".mkv", ".mov", ".avi", ".wmv", ".webm", ".m4v", ".flv", ".mpg", ".mpeg", ".ts", ".m2ts", ".mts", ".3gp" };
+
+        public const string VideoFilter = "*.mp4;*.mkv;*.mov;*.avi;*.wmv;*.webm;*.m4v;*.flv;*.mpg;*.mpeg;*.ts;*.m2ts;*.mts;*.3gp";
+        public const int MaxVideos = 500;
+
+        public static bool IsVideo(string path) => VideoExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
+
+        /// <summary>Every video under the paths (folders, or loose files), once each, A-Z. Links aren't followed.</summary>
+        public static (List<string> Files, int Inaccessible) FindVideos(IEnumerable<string> paths, bool includeSubfolders)
+        {
+            var files = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int inaccessible = 0;
+            var options = new EnumerationOptions { RecurseSubdirectories = includeSubfolders, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
+            foreach (string path in paths)
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                    {
+                        var here = Directory.EnumerateFiles(path, "*", options).Where(IsVideo).ToList();
+                        here.Sort(StringComparer.OrdinalIgnoreCase);
+                        foreach (string f in here) if (seen.Add(f)) files.Add(f);
+                    }
+                    else if (File.Exists(path) && IsVideo(path) && seen.Add(path)) files.Add(path);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+                {
+                    inaccessible++;
+                }
+            }
+            return (files, inaccessible);
+        }
+
+        // =================================================================
+        //  A still at any time (for choosing the moment)
+        // =================================================================
+
+        /// <summary>
+        /// One frame at <paramref name="seconds"/> as PNG bytes, at most <paramref name="width"/> pixels wide (never enlarged).
+        /// Null with the reason in <paramref name="problem"/>; also null when cancelled.
+        /// </summary>
+        public static byte[]? PreviewFrame(string video, double seconds, int width, out string? problem, CancellationToken token)
+        {
+            problem = null;
+            string? exe = ConverterManager.FfmpegExe;
+            if (exe == null) { problem = "ffmpeg.exe wasn't found."; return null; }
+            try
+            {
+                var info = new ProcessStartInfo(exe)
+                {
+                    UseShellExecute = false, CreateNoWindow = true,
+                    RedirectStandardOutput = true, RedirectStandardError = true,
+                };
+                foreach (string a in new[]
+                {
+                    "-nostdin", "-v", "error",
+                    "-ss", Math.Max(0, seconds).ToString("0.###", CultureInfo.InvariantCulture),
+                    "-i", video,
+                    "-frames:v", "1", "-an", "-sn", "-dn",
+                    "-vf", $"scale='min({Math.Clamp(width, 16, 4096)},iw)':-2",
+                    "-f", "image2pipe", "-c:v", "png", "pipe:1",
+                }) info.ArgumentList.Add(a);
+
+                using var p = Process.Start(info);
+                if (p == null) { problem = "Couldn't start ffmpeg."; return null; }
+                using var registration = token.Register(() => { try { if (!p.HasExited) p.Kill(); } catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { } });
+                var errorText = p.StandardError.ReadToEndAsync();
+                using var ms = new MemoryStream();
+                p.StandardOutput.BaseStream.CopyTo(ms);
+                p.WaitForExit();
+                if (token.IsCancellationRequested) return null;
+                if (ms.Length == 0)
+                {
+                    string text = errorText.Result.Trim();
+                    problem = text.Length > 0 ? text.Split('\n')[0].Trim() : "There is no picture at that time.";
+                    return null;
+                }
+                return ms.ToArray();
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
+            {
+                problem = ex.Message;
+                return null;
+            }
+        }
+
+        // =================================================================
+        //  Several videos at once
+        // =================================================================
+
+        public sealed record FrameBatchProgress(int VideoIndex, int VideoCount, string Video, int Done, int Total);
+
+        public sealed record FrameBatchResult(List<string> Files, List<(string Video, string Problem)> Problems, bool Cancelled);
+
+        private sealed class InlineProgress<T> : IProgress<T>
+        {
+            private readonly Action<T> _action;
+            public InlineProgress(Action<T> action) => _action = action;
+            public void Report(T value) => _action(value);
+        }
+
+        /// <summary>
+        /// Takes the frames of every video. With more than one video each gets its own sub-folder (named after it, numbered when
+        /// two share a name). "Picked" moments belong to one video, so give it a list with one video. A video that can't be
+        /// read is reported and the rest carry on. Never over an existing file.
+        /// </summary>
+        public static FrameBatchResult ExtractBatch(IReadOnlyList<string> videos, string folder, FrameExtractorSettings settings,
+            IReadOnlyList<double>? picked, IProgress<FrameBatchProgress>? progress, CancellationToken token)
+        {
+            var files = new List<string>();
+            var problems = new List<(string Video, string Problem)>();
+            bool sub = videos.Count > 1;
+            var usedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < videos.Count; i++)
+            {
+                if (token.IsCancellationRequested) return new FrameBatchResult(files, problems, true);
+                string video = videos[i];
+
+                double? duration = ProbeDuration(video, out string? probeProblem);
+                if (duration == null) { problems.Add((video, probeProblem ?? "Couldn't be read")); continue; }
+                var moments = Moments(settings, duration.Value, picked);
+                if (moments.Count == 0) { problems.Add((video, "No frames to take")); continue; }
+
+                string target = folder;
+                if (sub)
+                {
+                    string baseName = Path.Combine(folder, SafeName(Path.GetFileNameWithoutExtension(video)));
+                    target = baseName;
+                    for (int n = 2; !usedFolders.Add(target); n++) target = $"{baseName} ({n})";
+                }
+
+                int index = i;
+                var result = Extract(video, target, moments, settings.Format,
+                    new InlineProgress<int>(done => progress?.Report(new FrameBatchProgress(index, videos.Count, video, done, moments.Count))), token);
+                files.AddRange(result.Files);
+                if (result.Problem != null) problems.Add((video, result.Problem));
+                if (result.Cancelled) return new FrameBatchResult(files, problems, true);
+            }
+            return new FrameBatchResult(files, problems, false);
+        }
+
+        private static string SafeName(string name)
+        {
+            string clean = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).Trim().TrimEnd('.');
+            return clean.Length > 0 ? clean : "video";
         }
 
         // =================================================================

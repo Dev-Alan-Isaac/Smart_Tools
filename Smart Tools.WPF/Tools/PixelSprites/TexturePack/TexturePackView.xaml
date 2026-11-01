@@ -142,6 +142,11 @@
                                     <ComboBox x:Name="CmbVersion" VerticalContentAlignment="Center" SelectionChanged="Setting_SelectionChanged" Style="{StaticResource BareComboBox}" />
                                 </Border>
                                 <TextBlock x:Name="TxtVersionHint" Style="{StaticResource TpSideHint}" />
+                                <WrapPanel Margin="0,8,0,0">
+                                    <Button x:Name="BtnAddVersion" MinHeight="30" Margin="0,0,4,4" Click="BtnAddVersion_Click" Content="Add version" ToolTip="Type in a Minecraft version and its pack format number" />
+                                    <Button x:Name="BtnCheckVersions" MinHeight="30" Margin="0,0,4,4" Click="BtnCheckVersions_Click" Content="Check for new" ToolTip="Look in your Minecraft launcher's version list for releases that aren't in this list" />
+                                    <Button x:Name="BtnWikiUpdate" MinHeight="30" Margin="0,0,4,4" Click="BtnWikiUpdate_Click" Content="Update from wiki" ToolTip="Read the Minecraft Wiki's pack format table and add the numbers that are missing" />
+                                </WrapPanel>
 
                                 <TextBlock Style="{StaticResource TpSideLabel}" Text="Pack icon (optional)" />
                                 <Grid>

@@ -101,7 +101,7 @@
                                         <TextBlock x:Name="TxtFind" Text="Find empty folders" />
                                     </StackPanel>
                                 </Button>
-                                <Button x:Name="BtnDelete" MinHeight="38" Click="BtnDelete_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <Button x:Name="BtnDelete" MinHeight="38" Click="BtnDelete_Click" IsEnabled="False" Style="{StaticResource AccentRedButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="DeleteOutline" />
                                         <TextBlock x:Name="TxtDelete" VerticalAlignment="Center" Text="Move to Recycle Bin" />

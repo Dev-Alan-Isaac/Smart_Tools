@@ -58,7 +58,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="SIZES IN THE .ICO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ResizeBottomRight}" />
                             <WrapPanel Margin="0,8,0,0">
@@ -71,6 +71,13 @@
                                 <CheckBox x:Name="Size256" Margin="0,0,14,6" Click="Option_Click" Content="256" Tag="256" />
                             </WrapPanel>
                             <TextBlock Style="{StaticResource ImHint}" Text="Windows picks the best size for each place it shows the icon. 16, 32, 48 and 256 cover most needs." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="ZOOM" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MagnifyPlusOutline}" />
+                            <TextBlock Style="{StaticResource ImHint}" Text="Turn the mouse wheel over the icons to zoom in and out. Double-click an icon, or press Reset, to go back to real size." />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -124,54 +131,66 @@
                     </StackPanel>
                 </Border>
 
-                <!--  ========== Every size ==========  -->
-                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,10" Content="Every size" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageSizeSelectActual}" />
-                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                            <Grid>
-                                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl x:Name="PreviewList" Margin="20">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Margin="0,0,28,22">
-                                                    <Border Width="{Binding Box}" Height="{Binding Box}" HorizontalAlignment="Left" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1">
-                                                        <Border.Background>
-                                                            <DrawingBrush TileMode="Tile" Viewport="0,0,12,12" ViewportUnits="Absolute">
-                                                                <DrawingBrush.Drawing>
-                                                                    <DrawingGroup>
-                                                                        <GeometryDrawing Brush="{DynamicResource InputBg}"><GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,12,12" /></GeometryDrawing.Geometry></GeometryDrawing>
-                                                                        <GeometryDrawing Brush="{DynamicResource InputBorder}"><GeometryDrawing.Geometry><GeometryGroup><RectangleGeometry Rect="0,0,6,6" /><RectangleGeometry Rect="6,6,6,6" /></GeometryGroup></GeometryDrawing.Geometry></GeometryDrawing>
-                                                                    </DrawingGroup>
-                                                                </DrawingBrush.Drawing>
-                                                            </DrawingBrush>
-                                                        </Border.Background>
-                                                        <Image Width="{Binding Size}" Height="{Binding Size}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor" Source="{Binding Picture}" />
-                                                    </Border>
-                                                    <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" />
+                <!--  ========== One card per size (wheel = zoom) ==========  -->
+                <Grid Grid.Row="2">
+                    <ScrollViewer x:Name="PreviewScroll" HorizontalScrollBarVisibility="Auto" PreviewMouseWheel="Preview_MouseWheel" SizeChanged="PreviewScroll_SizeChanged" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="PreviewList" Margin="0,0,4,4">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,14,14" MouseLeftButtonDown="Card_MouseLeftButtonDown" Style="{StaticResource CardStyle}">
+                                        <StackPanel>
+                                            <DockPanel Margin="0,0,0,10">
+                                                <Button Width="30" Height="30" Margin="14,0,0,0" Click="BtnSavePng_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding Size}" ToolTip="Save this size as a PNG">
+                                                    <materialDesign:PackIcon Width="15" Height="15" Kind="ContentSaveOutline" />
+                                                </Button>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Label}" />
+                                                    <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Note}" />
                                                 </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                                <StackPanel x:Name="PreviewEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
-                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageSizeSelectActual}" />
-                                    <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Choose a picture" />
-                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="You will see it at every icon size here, exactly as it will be saved." TextAlignment="Center" TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </Border>
+                                            </DockPanel>
+                                            <Border Width="{Binding Box}" Height="{Binding Box}" HorizontalAlignment="Left" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
+                                                <Border.Background>
+                                                    <DrawingBrush TileMode="Tile" Viewport="0,0,12,12" ViewportUnits="Absolute">
+                                                        <DrawingBrush.Drawing>
+                                                            <DrawingGroup>
+                                                                <GeometryDrawing Brush="{DynamicResource InputBg}"><GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,12,12" /></GeometryDrawing.Geometry></GeometryDrawing>
+                                                                <GeometryDrawing Brush="{DynamicResource InputBorder}"><GeometryDrawing.Geometry><GeometryGroup><RectangleGeometry Rect="0,0,6,6" /><RectangleGeometry Rect="6,6,6,6" /></GeometryGroup></GeometryDrawing.Geometry></GeometryDrawing>
+                                                            </DrawingGroup>
+                                                        </DrawingBrush.Drawing>
+                                                    </DrawingBrush>
+                                                </Border.Background>
+                                                <Image Width="{Binding Display}" Height="{Binding Display}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor" Source="{Binding Picture}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!--  Zoom badge  -->
+                    <Border x:Name="ZoomBadge" Margin="0,0,24,10" Padding="4" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="10" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="TxtZoom" Margin="8,0,8,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="×1" />
+                            <Button Width="28" Height="28" Click="BtnZoomReset_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Back to real size">
+                                <materialDesign:PackIcon Width="14" Height="14" Kind="MagnifyRemoveOutline" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="PreviewEmpty" Style="{StaticResource CardStyle}">
+                        <StackPanel MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageSizeSelectActual}" />
+                            <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Choose a picture" />
+                            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="You will see it at every icon size here, each in its own card, exactly as it will be saved." TextAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>

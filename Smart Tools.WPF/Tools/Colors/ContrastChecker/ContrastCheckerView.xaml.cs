@@ -54,6 +54,23 @@ namespace Smart_Tools.WPF.Views
             _saveTimer.Start();
         }
 
+        private void SwatchFg_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => PickInto(TxtFg);
+        private void SwatchBg_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) => PickInto(TxtBg);
+
+        /// <summary>Opens the Windows color window, starting at the color in the box, and writes the choice back as #RRGGBB.</summary>
+        private static void PickInto(System.Windows.Controls.TextBox box)
+        {
+            var start = ColorManager.TryParseColor(box.Text, out var c) ? c : new RgbColor(0, 0, 0);
+            using var dialog = new System.Windows.Forms.ColorDialog
+            {
+                FullOpen = true,
+                AnyColor = true,
+                Color = System.Drawing.Color.FromArgb(start.R, start.G, start.B),
+            };
+            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+            box.Text = new RgbColor(dialog.Color.R, dialog.Color.G, dialog.Color.B).Hex;
+        }
+
         private void Pair_Click(object sender, RoutedEventArgs e)
         {
             if ((sender as FrameworkElement)?.Tag is not string tag || tag.Split('|') is not { Length: 2 } parts) return;

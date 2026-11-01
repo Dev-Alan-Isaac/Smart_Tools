@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace Smart_Tools.WPF.Controllers
 {
     public sealed class ImageToPixelSettings
@@ -9,6 +11,9 @@ namespace Smart_Tools.WPF.Controllers
         public string Palette { get; set; } = "Auto";
         public bool Dither { get; set; }
         public int ExportScale { get; set; } = 8;
+        public bool IncludeSubfolders { get; set; } = true;
+        /// <summary>Added to each saved file's name when converting a list ("photo.jpg" becomes "photo-pixel.png").</summary>
+        public string Suffix { get; set; } = "-pixel";
     }
 
     public sealed record PixelizeResult(uint[] Pixels, int Width, int Height, int ColorsUsed);
@@ -30,6 +35,8 @@ namespace Smart_Tools.WPF.Controllers
             s.Colors = s.Colors == 0 ? 0 : Math.Clamp(s.Colors, 2, 64);
             s.Palette = PixelArtManager.Palettes.Any(p => p.Name == s.Palette) ? s.Palette : "Auto";
             s.ExportScale = Scales.Contains(s.ExportScale) ? s.ExportScale : 8;
+            s.Suffix = string.Concat((s.Suffix ?? "-pixel").Where(c => !Path.GetInvalidFileNameChars().Contains(c)));
+            if (s.Suffix.Length > 40) s.Suffix = s.Suffix[..40];
             return s;
         }
 
@@ -158,6 +165,124 @@ namespace Smart_Tools.WPF.Controllers
                 int max = Math.Max(rr, Math.Max(gr, br));
                 return (max == rr ? 0 : max == gr ? 1 : 2, max);
             }
+        }
+
+        // =================================================================
+        //  Finding pictures and converting a whole list
+        // =================================================================
+
+        public static readonly string[] PictureExtensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".ico", ".webp" };
+
+        public const string PictureFilter = "*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.webp";
+        public const int MaxPictures = 5000;
+
+        public static bool IsPicture(string path) =>
+            PictureExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
+
+        /// <summary>Every picture under the paths (folders, or loose files), once each, A-Z. Links aren't followed.</summary>
+        public static (List<string> Files, int Inaccessible) FindPictures(IEnumerable<string> paths, bool includeSubfolders)
+        {
+            var files = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int inaccessible = 0;
+            var options = new EnumerationOptions { RecurseSubdirectories = includeSubfolders, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
+            foreach (string path in paths)
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                    {
+                        var here = Directory.EnumerateFiles(path, "*", options).Where(IsPicture).ToList();
+                        here.Sort(StringComparer.OrdinalIgnoreCase);
+                        foreach (string f in here) if (seen.Add(f)) files.Add(f);
+                    }
+                    else if (File.Exists(path) && IsPicture(path) && seen.Add(path)) files.Add(path);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+                {
+                    inaccessible++;
+                }
+            }
+            return (files, inaccessible);
+        }
+
+        /// <summary>"photo.jpg" -> "photo-pixel.png" (the suffix is cleaned so it can't contain a path).</summary>
+        public static string OutputName(string source, string suffix)
+        {
+            string clean = string.Concat((suffix ?? "").Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Trim();
+            return Path.GetFileNameWithoutExtension(source) + clean + ".png";
+        }
+
+        /// <summary>The path itself when free, otherwise "name (2).png", "name (3).png"... Never an existing file.</summary>
+        public static string UniquePath(string path)
+        {
+            if (!File.Exists(path)) return path;
+            string folder = Path.GetDirectoryName(path)!, name = Path.GetFileNameWithoutExtension(path), ext = Path.GetExtension(path);
+            for (int n = 2; ; n++)
+            {
+                string candidate = Path.Combine(folder, $"{name} ({n}){ext}");
+                if (!File.Exists(candidate)) return candidate;
+            }
+        }
+
+        /// <summary>What happened to one picture: the file written, or why not.</summary>
+        public sealed record PixelItemResult(string Source, string? Output, string? Error);
+
+        public sealed record PixelBatchResult(List<PixelItemResult> Items, int Done, int Failed, bool Cancelled);
+
+        /// <summary>
+        /// Converts every picture with the same settings into PNGs in <paramref name="folder"/>, never over an existing file.
+        /// <paramref name="load"/> turns a file into pixels (the view passes the WPF decoder; tests pass a fake).
+        /// <paramref name="progress"/> gets each result as it is made, so rows can show Done or Failed at once.
+        /// A picture that can't be read or saved is reported and skipped; the rest continue.
+        /// </summary>
+        public static PixelBatchResult ConvertAll(IReadOnlyList<string> sources, ImageToPixelSettings settings, string folder, string suffix,
+            Func<string, (byte[]? Bgra, int Width, int Height, string Problem)> load, IProgress<(int Index, PixelItemResult Result)>? progress, CancellationToken token)
+        {
+            var results = new List<PixelItemResult>();
+            int done = 0, failed = 0;
+            try
+            {
+                Directory.CreateDirectory(folder);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                var all = sources.Select(s => new PixelItemResult(s, null, "Couldn't use the output folder: " + ex.Message)).ToList();
+                return new PixelBatchResult(all, 0, all.Count, false);
+            }
+
+            for (int i = 0; i < sources.Count; i++)
+            {
+                if (token.IsCancellationRequested) return new PixelBatchResult(results, done, failed, true);
+                string source = sources[i];
+                PixelItemResult result;
+                try
+                {
+                    var (bgra, w, h, problem) = load(source);
+                    if (bgra == null) result = new PixelItemResult(source, null, problem == "ImageTooBig" ? "Too big to open" : "Couldn't be opened");
+                    else
+                    {
+                        var pixels = Pixelize(bgra, w, h, settings);
+                        var png = ToPng(pixels, settings.ExportScale, out string? tooBig);
+                        if (png == null) result = new PixelItemResult(source, null, tooBig ?? "Couldn't make the PNG");
+                        else
+                        {
+                            string target = UniquePath(Path.Combine(folder, OutputName(source, suffix)));
+                            string? error = SafeFile.WriteAllBytes(target, png);
+                            result = error == null ? new PixelItemResult(source, target, null) : new PixelItemResult(source, null, error);
+                        }
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or InvalidOperationException)
+                {
+                    result = new PixelItemResult(source, null, ex.Message);
+                }
+
+                results.Add(result);
+                if (result.Error == null) done++; else failed++;
+                progress?.Report((i, result));
+            }
+            return new PixelBatchResult(results, done, failed, false);
         }
 
         // =================================================================

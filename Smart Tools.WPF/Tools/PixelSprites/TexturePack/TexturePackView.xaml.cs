@@ -37,6 +37,7 @@ namespace Smart_Tools.WPF.Views
 
         private bool _loadedOnce;
         private bool _applyingSettings;
+        private List<PackVersion> _versions = new();
         private bool _busy;
         private int _syncRun;
         private string? _iconPath;
@@ -53,7 +54,8 @@ namespace Smart_Tools.WPF.Views
             _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
             _textures.CollectionChanged += (_, _) => UpdateListState();
 
-            CmbVersion.ItemsSource = TexturePackManager.Versions;
+            _versions = TexturePackVersions.Load();
+            CmbVersion.ItemsSource = _versions;
             CmbVersion.SelectedIndex = 0;
 
             _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
@@ -90,7 +92,7 @@ namespace Smart_Tools.WPF.Views
             {
                 TxtPackName.Text = s.PackName;
                 TxtDescription.Text = s.Description;
-                var version = TexturePackManager.Versions.FirstOrDefault(v => v.Label == s.VersionLabel) ?? TexturePackManager.Versions[0];
+                var version = _versions.FirstOrDefault(v => v.Label == s.VersionLabel) ?? _versions[0];
                 CmbVersion.SelectedItem = version;
                 InputCard.IncludeSubfolders = s.IncludeSubfolders;
                 (s.AsZip ? RadioZip : RadioFolder).IsChecked = true;
@@ -147,6 +149,120 @@ namespace Smart_Tools.WPF.Views
             TxtVersionHint.Text = v.UsesMinMax
                 ? $"Writes min_format and max_format {v.Format}."
                 : $"Writes pack_format {v.Format}.";
+        }
+
+        // =================================================================
+        //  Keeping the Minecraft version list up to date
+        // =================================================================
+
+        private string? _suggestedVersion;
+
+        /// <summary>Reloads the list (built-in + the user's file) and keeps the choice when it still exists.</summary>
+        private void RefreshVersions(string? selectLabel)
+        {
+            _applyingSettings = true;
+            try
+            {
+                _versions = TexturePackVersions.Load();
+                CmbVersion.ItemsSource = _versions;
+                CmbVersion.SelectedItem = _versions.FirstOrDefault(v => v.Label == selectLabel) ?? _versions[0];
+            }
+            finally
+            {
+                _applyingSettings = false;
+            }
+            UpdateVersionHint();
+            QueueSave();
+        }
+
+        private void BtnAddVersion_Click(object sender, RoutedEventArgs e)
+        {
+            var version = AskVersion(_suggestedVersion ?? "");
+            if (version == null) return;
+            TexturePackVersions.AddOrUpdate(version);
+            _suggestedVersion = null;
+            RefreshVersions(version.Label);
+            ShowStatus($"Added {version.Label} (format {version.Format}) to your list.", StatusKind.Success);
+        }
+
+        /// <summary>Compares the list with the releases your Minecraft launcher knows (works offline).</summary>
+        private async void BtnCheckVersions_Click(object sender, RoutedEventArgs e)
+        {
+            BtnCheckVersions.IsEnabled = false;
+            var (ids, error) = await TexturePackVersions.GetReleaseIdsAsync();
+            BtnCheckVersions.IsEnabled = true;
+            if (error != null) { ShowStatus(error, StatusKind.Error); return; }
+
+            var missing = TexturePackVersions.MissingReleases(ids, _versions);
+            string newest = ids.OrderByDescending(TexturePackVersions.KeyOf, TexturePackVersions.VersionKeyComparer.Instance).First();
+            if (missing.Count == 0)
+            {
+                ShowStatus($"Your list covers every Minecraft release (the newest is {newest}).", StatusKind.Success);
+                return;
+            }
+            _suggestedVersion = missing[0];
+            ShowStatus($"Minecraft {string.Join(", ", missing.Take(5))} {(missing.Count == 1 ? "isn't" : "aren't")} in your list yet. Press \"Update from wiki\" to fetch the numbers, or \"Add version\" to type one in.", StatusKind.Warning);
+        }
+
+        /// <summary>Best effort: reads the Minecraft Wiki's table and adds or corrects rows in your own file.</summary>
+        private async void BtnWikiUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            BtnWikiUpdate.IsEnabled = false;
+            string? keep = (CmbVersion.SelectedItem as PackVersion)?.Label;
+            var (added, changed, error) = await TexturePackVersions.UpdateFromWikiAsync();
+            BtnWikiUpdate.IsEnabled = true;
+            if (error != null) { ShowStatus(error, StatusKind.Error); return; }
+
+            RefreshVersions(keep);
+            _suggestedVersion = null;
+            ShowStatus(added + changed == 0
+                ? "Your list already matches the Minecraft Wiki."
+                : $"Updated from the Minecraft Wiki: {added} added, {changed} corrected.", StatusKind.Success);
+        }
+
+        /// <summary>A small window asking for a version name and its format number.</summary>
+        private PackVersion? AskVersion(string label)
+        {
+            var labelBox = new System.Windows.Controls.TextBox { Text = label, MinWidth = 300, Margin = new Thickness(0, 4, 0, 10) };
+            var formatBox = new System.Windows.Controls.TextBox { MinWidth = 300, Margin = new Thickness(0, 4, 0, 10) };
+            var newStyle = new System.Windows.Controls.CheckBox { Content = "Newer style (Minecraft 1.21.9 and later: min_format / max_format)", IsChecked = true, Margin = new Thickness(0, 0, 0, 12) };
+            var error = new TextBlock { Foreground = System.Windows.Media.Brushes.IndianRed, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) };
+            var ok = new System.Windows.Controls.Button { Content = "Add", MinWidth = 90, MinHeight = 34, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
+            var cancel = new System.Windows.Controls.Button { Content = "Cancel", MinWidth = 90, MinHeight = 34, IsCancel = true };
+            var link = new TextBlock { Margin = new Thickness(0, 0, 0, 12), TextWrapping = TextWrapping.Wrap, Text = "The format number is on the Minecraft Wiki's \"Pack format\" page (minecraft.wiki/w/Pack_format). A number like 97.1 is entered as 97." };
+
+            var window = new Window
+            {
+                Title = "Add a Minecraft version",
+                SizeToContent = SizeToContent.WidthAndHeight,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = Window.GetWindow(this),
+                ShowInTaskbar = false,
+            };
+            window.SetResourceReference(Window.BackgroundProperty, "ContentBg");
+            PackVersion? result = null;
+            ok.Click += (_, _) =>
+            {
+                string name = labelBox.Text.Trim();
+                if (name.Length == 0 || name.Length > 60) { error.Text = "Type the version, for example 26.4."; return; }
+                if (!int.TryParse(formatBox.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out int format) || format is < 1 or > 100000)
+                { error.Text = "The format number must be a whole number, for example 97."; return; }
+                result = new PackVersion(name, format, newStyle.IsChecked == true);
+                window.DialogResult = true;
+            };
+            var panel = new StackPanel { Margin = new Thickness(20) };
+            panel.Children.Add(new TextBlock { Text = "Minecraft version", FontWeight = FontWeights.SemiBold });
+            panel.Children.Add(labelBox);
+            panel.Children.Add(new TextBlock { Text = "Pack format number", FontWeight = FontWeights.SemiBold });
+            panel.Children.Add(formatBox);
+            panel.Children.Add(link);
+            panel.Children.Add(newStyle);
+            panel.Children.Add(error);
+            panel.Children.Add(new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Children = { ok, cancel } });
+            window.Content = panel;
+            labelBox.Loaded += (_, _) => (string.IsNullOrEmpty(labelBox.Text) ? labelBox : formatBox).Focus();
+            return window.ShowDialog() == true ? result : null;
         }
 
         // =================================================================

@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
     Focusable="True"
     AllowDrop="True"
@@ -12,7 +13,7 @@
     Loaded="Root_Loaded"
     Unloaded="Root_Unloaded">
 
-    <!--  Backend: Controllers/FrameExtractorManager.cs (moments, ffmpeg/ffprobe, saving). UI only here.  -->
+    <!--  Backend: Controllers/FrameExtractorManager.cs (finding videos, moments, a still at any time, ffmpeg/ffprobe, saving). UI only here.  -->
 
     <UserControl.Resources>
         <Style x:Key="FeLabel" TargetType="TextBlock">
@@ -27,6 +28,64 @@
             <Setter Property="Margin" Value="2,6,0,0" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+
+        <!--  A file or folder on the Input card  -->
+        <DataTemplate x:Key="SourceTemplate" DataType="{x:Type models:VideoSource}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="26" Height="26" Margin="0,0,8,0" Background="{DynamicResource AccentColorSubtle}" CornerRadius="7">
+                    <materialDesign:PackIcon x:Name="SourceIcon" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="FilmstripBox" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                    <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="Take this off the list">
+                    <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="SourceIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  One video in the list  -->
+        <DataTemplate x:Key="VideoTemplate" DataType="{x:Type models:VideoItem}">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <materialDesign:PackIcon Width="20" Height="20" Margin="2,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Kind="FilmstripBox" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                    <TextBlock x:Name="Sub" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Problem}" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding HasProblem}" Value="True">
+                    <Setter TargetName="Sub" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  A moment chosen for "Pick moments"  -->
+        <DataTemplate x:Key="MomentTemplate" DataType="{x:Type models:MomentChip}">
+            <Border Margin="0,0,6,6" Padding="10,3,4,3" Background="{DynamicResource AccentColorSubtle}" CornerRadius="14">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" FontFamily="Cascadia Mono, Consolas" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" Text="{Binding Label}" Cursor="Hand" MouseLeftButtonUp="Chip_Go" ToolTip="Go to this moment" />
+                    <Button Width="22" Height="22" Margin="4,0,0,0" Click="BtnRemoveMoment_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="Remove this moment">
+                        <materialDesign:PackIcon Width="12" Height="12" Kind="Close" />
+                    </Button>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
@@ -40,30 +99,30 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel x:Name="SidebarStack">
-                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
-                        <StackPanel>
-                            <ContentControl Content="VIDEO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
-                            <Button Margin="0,8,0,0" MinHeight="36" HorizontalContentAlignment="Left" Click="BtnOpen_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
-                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="Choose a video" TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </Button>
-                            <TextBlock x:Name="TxtVideoInfo" Style="{StaticResource FeHint}" Text="Or drop a video anywhere on this page." />
-                        </StackPanel>
-                    </Border>
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="Videos"
+                        HeaderIcon="FilmstripBox"
+                        IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                        ItemTemplate="{StaticResource SourceTemplate}"
+                        Mode="Files"
+                        PathsAdded="InputCard_PathsAdded" />
 
                     <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="WHICH FRAMES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
-                            <RadioButton x:Name="RadioOne" Margin="0,8,0,0" Click="Mode_Click" Content="One frame at a time" GroupName="FeMode" IsChecked="True" />
-                            <RadioButton x:Name="RadioEvery" Margin="0,6,0,0" Click="Mode_Click" Content="One every few seconds" GroupName="FeMode" />
-                            <RadioButton x:Name="RadioEven" Margin="0,6,0,0" Click="Mode_Click" Content="A set number, evenly spread" GroupName="FeMode" />
+                            <StackPanel Margin="0,6,0,0">
+                                <RadioButton x:Name="RadioOne" Margin="0,0,0,4" Click="Mode_Click" Content="One frame at a time" GroupName="FeMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="The time in the box below (or the one you set on the slider)" />
+                                <RadioButton x:Name="RadioPicked" Margin="0,0,0,4" Click="Mode_Click" Content="Pick moments" GroupName="FeMode" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Choose exact moments on the slider and add them one by one" />
+                                <RadioButton x:Name="RadioEvery" Margin="0,0,0,4" Click="Mode_Click" Content="One every few seconds" GroupName="FeMode" Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton x:Name="RadioEven" Click="Mode_Click" Content="A set number, evenly spread" GroupName="FeMode" Style="{StaticResource ModeToggleButtonStyle}" />
+                            </StackPanel>
 
                             <StackPanel x:Name="PanelAt">
                                 <TextBlock Style="{StaticResource FeLabel}" Text="At (1:30, 90, 1m30s)" />
                                 <Border Style="{StaticResource InputBarStyle}">
-                                    <TextBox x:Name="TxtAt" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                    <TextBox x:Name="TxtAt" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="At_TextChanged" />
                                 </Border>
                             </StackPanel>
                             <StackPanel x:Name="PanelEvery" Visibility="Collapsed">
@@ -78,6 +137,7 @@
                                     <TextBox x:Name="TxtCount" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
                                 </Border>
                             </StackPanel>
+                            <TextBlock x:Name="PanelPicked" Style="{StaticResource FeHint}" Visibility="Collapsed" Text="Move the slider (or type a time), press Add this moment, and repeat. Only the video selected in the list is used." />
 
                             <TextBlock Style="{StaticResource FeLabel}" Text="Picture type" />
                             <UniformGrid Columns="2">
@@ -103,9 +163,16 @@
                     <RowDefinition Height="14" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.75*" MinWidth="190" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="1.6*" MinWidth="320" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="1.1*" MinWidth="220" />
+                </Grid.ColumnDefinitions>
 
-                <!--  ========== The video and the run ==========  -->
-                <Border Style="{StaticResource CardStyle}">
+                <!--  ========== The run ==========  -->
+                <Border Grid.ColumnSpan="5" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Orientation="Horizontal">
@@ -123,9 +190,9 @@
                                 </Button>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="VIDEO" />
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="VIDEO FRAMES" />
                                 <TextBlock x:Name="HeroName" Margin="0,2,0,0" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="No video yet" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Name="TxtActionInfo" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Choose or drop a video to start." TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtActionInfo" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Add videos or folders on the left to start." TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>
                         <ProgressBar x:Name="RunProgress" Height="5" Margin="0,12,0,0" Visibility="Collapsed" />
@@ -135,18 +202,95 @@
                     </StackPanel>
                 </Border>
 
-                <!--  ========== The frames ==========  -->
+                <!--  ========== The list of videos ==========  -->
                 <Border Grid.Row="2" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,10" Content="Frames" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock x:Name="TxtVideoCount" VerticalAlignment="Center" DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                            <ContentControl Content="Videos" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
+                        </DockPanel>
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <ListBox x:Name="VideoList" Padding="6" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource VideoTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="VideoList_SelectionChanged" VirtualizingPanel.IsVirtualizing="True" />
+                                <TextBlock x:Name="VideosEmpty" Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Videos you add show here. Click one to see it and pick a moment." TextAlignment="Center" TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!--  ========== Choose a moment ==========  -->
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock x:Name="TxtPreviewTime" VerticalAlignment="Center" DockPanel.Dock="Right" FontFamily="Cascadia Mono, Consolas" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="0:00.000" />
+                            <ContentControl Content="Choose a moment" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ClockOutline}" />
+                        </DockPanel>
+
+                        <Border Grid.Row="1" MinHeight="120" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <Image x:Name="PreviewImage" Margin="6" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Uniform" />
+                                <TextBlock x:Name="TxtPreviewNote" Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Click a video in the list to see it here." TextAlignment="Center" TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+
+                        <Slider x:Name="SliderTime" Grid.Row="2" Margin="0,12,0,0" IsEnabled="False" IsMoveToPointEnabled="True" LargeChange="1" Maximum="1" Minimum="0" SmallChange="0.1" ValueChanged="Slider_ValueChanged" />
+
+                        <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                            <WrapPanel HorizontalAlignment="Center">
+                                <Button x:Name="BtnBack1" MinWidth="52" MinHeight="34" Margin="0,0,4,4" Click="Step_Click" Content="-1 s" IsEnabled="False" Tag="-1" ToolTip="One second back" />
+                                <Button x:Name="BtnBackFine" MinWidth="52" MinHeight="34" Margin="0,0,8,4" Click="Step_Click" Content="-0.1" IsEnabled="False" Tag="-0.1" ToolTip="A tenth of a second back" />
+                                <Border Width="130" Height="34" Margin="0,0,8,4" Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtTime" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Cascadia Mono, Consolas" IsEnabled="False" KeyDown="TxtTime_KeyDown" LostFocus="TxtTime_LostFocus" Style="{StaticResource BareTextBox}" ToolTip="Type a time such as 1:23.5 and press Enter" />
+                                </Border>
+                                <Button x:Name="BtnFwdFine" MinWidth="52" MinHeight="34" Margin="0,0,4,4" Click="Step_Click" Content="+0.1" IsEnabled="False" Tag="0.1" ToolTip="A tenth of a second forward" />
+                                <Button x:Name="BtnFwd1" MinWidth="52" MinHeight="34" Margin="0,0,0,4" Click="Step_Click" Content="+1 s" IsEnabled="False" Tag="1" ToolTip="One second forward" />
+                            </WrapPanel>
+                            <Button x:Name="BtnAddMoment" MinHeight="36" Margin="0,4,0,0" Click="BtnAddMoment_Click" IsEnabled="False" Style="{StaticResource ListToolPrimaryButtonStyle}" ToolTip="Add this moment to the list of frames to take">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,5,0" VerticalAlignment="Center" Kind="PlusCircleOutline" />
+                                    <TextBlock VerticalAlignment="Center" Text="Add this moment" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel x:Name="PickedArea" Grid.Row="4" Margin="0,12,0,0" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtPickedTitle" Margin="0,0,0,6" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="MOMENTS YOU PICKED" />
+                            <ItemsControl x:Name="PickedList" ItemTemplate="{StaticResource MomentTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                            <TextBlock x:Name="TxtPickedEmpty" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="None yet. Move the slider to a moment you like and press Add this moment." TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  ========== The frames ==========  -->
+                <Border Grid.Row="2" Grid.Column="4" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,10" Content="Frames saved" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
                                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl x:Name="ResultList" Margin="14">
+                                    <ItemsControl x:Name="ResultList" Margin="12">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel />
@@ -154,8 +298,8 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <StackPanel Width="190" Margin="0,0,14,14" ToolTip="{Binding Path}">
-                                                    <Border Height="110" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
+                                                <StackPanel Width="150" Margin="0,0,10,12" ToolTip="{Binding Path}">
+                                                    <Border Height="88" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
                                                         <Image Margin="2" Source="{Binding Picture}" Stretch="Uniform" />
                                                     </Border>
                                                     <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
@@ -164,10 +308,10 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </ScrollViewer>
-                                <StackPanel x:Name="ListEmpty" MaxWidth="340" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <StackPanel x:Name="ListEmpty" MaxWidth="260" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
-                                    <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Choose a video" />
-                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Pick which frames to take, then press Take frames. The pictures show up here." TextAlignment="Center" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Nothing saved yet" />
+                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="The frames you take show up here." TextAlignment="Center" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </Border>

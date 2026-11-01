@@ -1,8 +1,12 @@
 using Smart_Tools.WPF.Controllers;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using MouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
+using MouseWheelEventArgs = System.Windows.Input.MouseWheelEventArgs;
 using System.Windows.Threading;
 using CheckBox = System.Windows.Controls.CheckBox;
 using DataFormats = System.Windows.DataFormats;
@@ -15,7 +19,10 @@ namespace Smart_Tools.WPF.Views
     /// <summary>Icon Maker - UI only. Resizing, the .ico and the favicon set are <see cref="IconMakerManager"/>'s.</summary>
     public partial class IconMakerView : UserControl
     {
-        public sealed record IconPreview(int Size, int Box, string Label, BitmapSource Picture);
+        public sealed record IconPreview(int Size, int Display, int Box, string Label, string Note, BitmapSource Picture);
+
+        private readonly List<(int Size, BitmapSource Picture)> _pictures = new();
+        private double _zoom = 1;
 
         private static readonly string[] Extensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".ico", ".webp" };
 
@@ -151,18 +158,103 @@ namespace Smart_Tools.WPF.Views
             }
 
             var sizes = ChosenSizes();
-            var items = new List<IconPreview>();
+            _pictures.Clear();
             foreach (int size in sizes)
             {
                 var square = IconMakerManager.ToSquare(_bgra, _width, _height, size, Fit);
-                items.Add(new IconPreview(size, size + 8, $"{size} × {size}", SpritePackerManager.CreateBitmap(square, size, size)));
+                _pictures.Add((size, SpritePackerManager.CreateBitmap(square, size, size)));
             }
-            PreviewList.ItemsSource = items;
-            PreviewEmpty.Visibility = Visibility.Collapsed;
+            ShowCards();
+            PreviewEmpty.Visibility = sizes.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
             BtnIco.IsEnabled = sizes.Count > 0;
             BtnSet.IsEnabled = true;
             if (sizes.Count == 0) ShowStatus("Tick at least one size for the .ico.", error: false);
             else StatusBanner.Visibility = Visibility.Collapsed;
+        }
+
+        // =================================================================
+        //  Zoom (mouse wheel) and the per-size cards
+        // =================================================================
+
+        /// <summary>One card per size, drawn at size x zoom.</summary>
+        private void ShowCards()
+        {
+            var items = _pictures
+                .Select(p =>
+                {
+                    int display = Math.Max(1, (int)Math.Round(p.Size * _zoom));
+                    return new IconPreview(p.Size, display, display + 8, $"{p.Size} × {p.Size}", UseNote(p.Size), p.Picture);
+                })
+                .ToList();
+            PreviewList.ItemsSource = items;
+            ZoomBadge.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            TxtZoom.Text = "×" + _zoom.ToString("0.##", CultureInfo.InvariantCulture);
+            FitWrapWidth(items);
+        }
+
+        /// <summary>
+        /// The cards wrap to the width of the window; if one card is wider than that (a big zoom), the area gets
+        /// exactly that wide and the horizontal scroll bar appears instead of the card being cut off.
+        /// </summary>
+        private void FitWrapWidth(IReadOnlyList<IconPreview>? items = null)
+        {
+            items ??= PreviewList.ItemsSource as IReadOnlyList<IconPreview>;
+            if (items == null || items.Count == 0) { PreviewList.ClearValue(WidthProperty); return; }
+            double widest = items.Max(i => i.Box) + 70;   // card padding and margins around the picture
+            double room = Math.Max(0, PreviewScroll.ActualWidth - 12);
+            PreviewList.Width = Math.Max(room, widest);
+        }
+
+        private void PreviewScroll_SizeChanged(object sender, SizeChangedEventArgs e) => FitWrapWidth();
+
+        private static string UseNote(int size) => size switch
+        {
+            16 => "Title bars, small lists",
+            24 => "Toolbars",
+            32 => "Desktop shortcuts, lists",
+            48 => "Large lists, Explorer",
+            64 => "Large views",
+            128 => "Big thumbnails",
+            256 => "Largest, the jumbo size",
+            _ => "",
+        };
+
+        private void Preview_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (_bgra == null || _pictures.Count == 0) return;
+            double next = e.Delta > 0 ? _zoom * 1.25 : _zoom / 1.25;
+            _zoom = Math.Clamp(Math.Round(next, 3), 0.5, 8);
+            ShowCards();
+            e.Handled = true;   // the wheel zooms here; the scroll bars still scroll
+        }
+
+        private void BtnZoomReset_Click(object sender, RoutedEventArgs e) => ResetZoom();
+
+        private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2) ResetZoom();
+        }
+
+        private void ResetZoom()
+        {
+            _zoom = 1;
+            ShowCards();
+        }
+
+        private void BtnSavePng_Click(object sender, RoutedEventArgs e)
+        {
+            if (_bgra == null || (sender as FrameworkElement)?.Tag is not int size) return;
+            var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Save PNG", Filter = "PNG picture|*.png", FileName = $"{(_name.Length > 0 ? _name : "icon")}-{size}.png", OverwritePrompt = true };
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+            try
+            {
+                File.WriteAllBytes(dialog.FileName, IconMakerManager.ToPng(IconMakerManager.ToSquare(_bgra, _width, _height, size, Fit), size));
+                ShowDone($"Saved {Path.GetFileName(dialog.FileName)}");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ShowStatus("Couldn't save: " + ex.Message, error: true);
+            }
         }
 
         private void BtnIco_Click(object sender, RoutedEventArgs e)

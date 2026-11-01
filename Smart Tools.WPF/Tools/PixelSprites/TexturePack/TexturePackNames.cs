@@ -12,6 +12,9 @@ namespace Smart_Tools.WPF.Controllers
         // Label, resource pack format, UsesMinMax (1.21.9 and newer write min_format/max_format instead of pack_format).
         public static readonly IReadOnlyList<PackVersion> Versions = new PackVersion[]
         {
+            new("26.3", 97, true),
+            new("26.2", 88, true),
+            new("26.1 - 26.1.2", 84, true),
             new("1.21.11", 75, true),
             new("1.21.9 - 1.21.10", 69, true),
             new("1.21.7 - 1.21.8", 64, false),
