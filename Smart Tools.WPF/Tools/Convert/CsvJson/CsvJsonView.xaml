@@ -1,0 +1,152 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.CsvJsonView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/CsvJsonManager.cs (CSV reader/writer, CSV<->JSON). UI only here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="CjLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Margin" Value="2,10,0,4" />
+        </Style>
+        <Style x:Key="CjHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,6,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="CONVERT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SwapHorizontal}" />
+                            <UniformGrid Margin="0,6,0,0" Columns="2">
+                                <RadioButton x:Name="RadioCsvToJson" Margin="0,0,2,0" Click="Direction_Click" Content="CSV → JSON" GroupName="CjDir" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="CsvToJson" />
+                                <RadioButton x:Name="RadioJsonToCsv" Margin="2,0,0,0" Click="Direction_Click" Content="JSON → CSV" GroupName="CjDir" Style="{StaticResource ModeToggleButtonStyle}" Tag="JsonToCsv" />
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="OPTIONS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+                            <TextBlock Style="{StaticResource CjLabel}" Text="Separator" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox x:Name="CmbDelimiter" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}">
+                                    <ComboBoxItem Content="Detect automatically" Tag="Auto" />
+                                    <ComboBoxItem Content="Comma ( , )" Tag="Comma" />
+                                    <ComboBoxItem Content="Semicolon ( ; )" Tag="Semicolon" />
+                                    <ComboBoxItem Content="Tab" Tag="Tab" />
+                                    <ComboBoxItem Content="Pipe ( | )" Tag="Pipe" />
+                                </ComboBox>
+                            </Border>
+                            <StackPanel x:Name="PanelCsvOptions" Margin="0,10,0,0">
+                                <CheckBox x:Name="ChkHeader" Click="Option_Click" Content="First row is the header" IsChecked="True" />
+                                <CheckBox x:Name="ChkTypes" Margin="0,6,0,0" Click="Option_Click" Content="Keep numbers and true/false" IsChecked="True" ToolTip="Numbers like 007 stay text so IDs and zip codes keep their zeros." />
+                                <CheckBox x:Name="ChkIndented" Margin="0,6,0,0" Click="Option_Click" Content="Pretty JSON (indented)" IsChecked="True" />
+                            </StackPanel>
+                            <TextBlock x:Name="TxtHint" Style="{StaticResource CjHint}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="260" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" MinWidth="260" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ========== Summary ==========  -->
+                <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel>
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="RESULT" />
+                                <TextBlock x:Name="TxtInfo" Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="Paste or open something to convert" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Border x:Name="ErrorBanner" Margin="0,10,0,0" Padding="12,9" HorizontalAlignment="Left" Background="{DynamicResource StatusErrorBg}" CornerRadius="10" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtError" MaxWidth="900" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!--  ========== Input ==========  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,10">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Margin="0,0,6,0" Click="BtnOpen_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Open a file">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button Click="BtnClear_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Clear">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="Close" />
+                                </Button>
+                            </StackPanel>
+                            <ContentControl x:Name="TxtInputTitle" Content="CSV" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
+                        </DockPanel>
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <TextBox x:Name="TxtInput" Padding="12" AcceptsReturn="True" AcceptsTab="True" AllowDrop="True" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" PreviewDragOver="Input_PreviewDragOver" PreviewDrop="Input_PreviewDrop" TextChanged="Input_TextChanged" VerticalScrollBarVisibility="Auto" />
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!--  ========== Output ==========  -->
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,10">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the result">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
+                                </Button>
+                                <Button x:Name="BtnSave" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save the result to a file">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
+                                </Button>
+                            </StackPanel>
+                            <ContentControl x:Name="TxtOutputTitle" Content="JSON" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CodeJson}" />
+                        </DockPanel>
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <TextBox x:Name="TxtOutput" Padding="12" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

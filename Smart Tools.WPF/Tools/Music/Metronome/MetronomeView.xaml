@@ -1,0 +1,115 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.MetronomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Focusable="True"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/MetronomeManager.cs (tempo, tap tempo, one bar of clicks). UI and the sound device here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="MtLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Margin" Value="2,10,0,4" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource SidebarPanelStyle}">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16,12,16,16">
+                        <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl Content="BEAT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MusicNoteQuarter}" />
+                                <TextBlock Style="{StaticResource MtLabel}" Text="Beats per bar" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <ComboBox x:Name="CmbBeats" VerticalContentAlignment="Center" SelectionChanged="Beats_SelectionChanged" Style="{StaticResource BareComboBox}" />
+                                </Border>
+                                <CheckBox x:Name="ChkAccent" Margin="0,12,0,0" Click="Accent_Click" Content="Accent the first beat" IsChecked="True" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl Content="VOLUME" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.VolumeHigh}" />
+                                <Slider x:Name="SliderVolume" Margin="0,10,0,0" Maximum="100" Minimum="0" SmallChange="5" LargeChange="10" Value="70" ValueChanged="Volume_ValueChanged" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Margin="4,4,4,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Space starts and stops. Up and Down change the tempo by 1 (hold Ctrl for 10)." />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <ContentControl Margin="0,0,0,10" Content="Metronome" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Metronome}" />
+
+                    <StackPanel Grid.Row="1" MaxWidth="560" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                            <Button x:Name="BtnMinus" Width="48" Height="48" Margin="0,0,16,0" VerticalAlignment="Center" Click="BtnMinus_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Slower">
+                                <materialDesign:PackIcon Width="22" Height="22" Kind="Minus" />
+                            </Button>
+                            <StackPanel>
+                                <TextBlock x:Name="TxtBpm" HorizontalAlignment="Center" FontSize="84" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="100" />
+                                <TextBlock HorizontalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="BEATS PER MINUTE" />
+                            </StackPanel>
+                            <Button x:Name="BtnPlus" Width="48" Height="48" Margin="16,0,0,0" VerticalAlignment="Center" Click="BtnPlus_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Faster">
+                                <materialDesign:PackIcon Width="22" Height="22" Kind="Plus" />
+                            </Button>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtTempoName" Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="14" FontStyle="Italic" Foreground="{DynamicResource AccentColor}" />
+
+                        <Slider x:Name="SliderBpm" Margin="0,20,0,0" IsMoveToPointEnabled="True" LargeChange="10" Maximum="300" Minimum="20" SmallChange="1" TickFrequency="10" Value="100" ValueChanged="Bpm_ValueChanged" />
+
+                        <ItemsControl x:Name="BeatDots" Margin="0,24,0,0" HorizontalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Ellipse Width="26" Height="26" Margin="7,0" Fill="{Binding Fill}" Stroke="{DynamicResource CardBorder}" StrokeThickness="1" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel Margin="0,28,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
+                            <Button x:Name="BtnStart" MinWidth="140" MinHeight="42" Margin="0,0,12,0" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon x:Name="IconStart" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Play" />
+                                    <TextBlock x:Name="TxtStart" VerticalAlignment="Center" Text="Start" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnTap" MinWidth="100" MinHeight="42" Click="BtnTap_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Tap along to the beat to set the tempo">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center" Kind="GestureTap" />
+                                    <TextBlock VerticalAlignment="Center" Text="Tap tempo" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtMessage" Margin="0,14,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" TextAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

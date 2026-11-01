@@ -261,6 +261,19 @@ namespace Smart_Tools.WPF
             Add<ServicesView>("services", v => v.CancelActiveRun());
             Add<PixelArtView>("pixel-art", v => v.CancelActiveRun());   // stops the preview, saves the setup
             Add<SpritePackerView>("sprite-packer", v => v.CancelActiveRun());   // stops a running save (finished files stay), saves the setup
+            Add<TexturePackView>("texture-pack", v => v.CancelActiveRun());   // stops a running save, saves the setup
+            Add<ContrastCheckerView>("contrast-checker", v => v.CancelActiveRun());   // saves the two colors
+            Add<SubnetCalculatorView>("subnet-calc", v => v.CancelActiveRun());   // saves the last address
+            Add<TotpCodeView>("totp-code", v => v.CancelActiveRun());   // stops the clock and forgets the secret
+            Add<IdGeneratorView>("id-generator", v => v.CancelActiveRun());   // saves the setup
+            Add<TimerStopwatchView>("timer-stopwatch", v => v.CancelActiveRun());   // stops the clock, saves the setup
+            Add<CsvJsonView>("csv-json", v => v.CancelActiveRun());   // saves the setup
+            Add<EmptyFoldersView>("empty-folders", v => v.CancelActiveRun());   // stops a running search or delete
+            Add<BatteryHealthView>("battery-health", v => v.CancelActiveRun());
+            Add<IconMakerView>("icon-maker", v => v.CancelActiveRun());   // saves the setup
+            Add<ImageToPixelView>("image-to-pixel", v => v.CancelActiveRun());   // stops the preview, saves the setup
+            Add<MetronomeView>("metronome", v => v.CancelActiveRun());   // stops the sound, saves the setup
+            Add<FrameExtractorView>("frame-extractor", v => v.CancelActiveRun());   // stops ffmpeg (saved frames stay)
             Add<MarkdownHtmlEditorView>("md-html-editor", v => v.CancelActiveRun());   // saves options, closes the preview
 
             // Remaining planned tools (ids start "future-"; see FUTURE_IDEAS.md): one shared "coming soon" page each

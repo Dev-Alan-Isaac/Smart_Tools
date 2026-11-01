@@ -1,0 +1,94 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.BatteryHealthView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/BatteryHealthManager.cs (WMI reading, wear level, Windows battery report). UI only here.  -->
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="BatteryTemplate">
+            <Border Margin="0,0,0,14" Padding="20" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="14">
+                <StackPanel>
+                    <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="{Binding Title}" />
+                    <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center" FontSize="44" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{Binding HealthText}" />
+                        <TextBlock Margin="12,0,0,0" VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextSecondary}" Text="battery health" />
+                    </StackPanel>
+                    <ProgressBar Height="8" Margin="0,8,0,0" Maximum="100" Value="{Binding HealthValue, Mode=OneWay}" />
+                    <TextBlock Margin="0,8,0,0" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" Text="{Binding Verdict}" TextWrapping="Wrap" />
+                    <ItemsControl Margin="0,14,0,0" ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="190" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock FontSize="12.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" />
+                                    <TextBlock Grid.Column="1" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Value}" TextWrapping="Wrap" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Border Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentControl VerticalAlignment="Center" Content="Battery" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.BatteryHeartVariant}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button x:Name="BtnReport" Margin="0,0,8,0" Click="BtnReport_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Make Windows' own detailed battery report and open it">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FileChartOutline" />
+                                    <TextBlock x:Name="TxtReport" Text="Windows battery report" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnRefresh" Click="BtnRefresh_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Read the battery again">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="Refresh" />
+                                    <TextBlock Text="Refresh" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border x:Name="StatusBanner" Grid.Row="1" Margin="0,0,0,10" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtStatus" MaxWidth="760" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </Border>
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <ItemsControl x:Name="BatteryList" MaxWidth="720" HorizontalAlignment="Left" ItemTemplate="{StaticResource BatteryTemplate}" />
+                            <StackPanel x:Name="PanelNone" MaxWidth="360" Margin="0,40,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Visibility="Collapsed">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.BatteryOff}" />
+                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="No battery found" />
+                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="This PC doesn't report a battery - that is normal for a desktop." TextAlignment="Center" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <TextBlock x:Name="TxtNote" Margin="0,0,0,0" VerticalAlignment="Bottom" FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Visibility="Collapsed" Text="Health is the battery's full-charge capacity compared with the capacity it was designed for. Some laptops don't report every value." />
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,144 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.IdGeneratorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/IdGeneratorManager.cs (UUID v4/v7, ULID, hex, lorem ipsum). UI only here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="IgLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Margin" Value="2,10,0,4" />
+        </Style>
+        <Style x:Key="IgHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,6,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="WHAT TO MAKE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Creation}" />
+                            <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}">
+                                <ComboBox x:Name="CmbKind" VerticalContentAlignment="Center" SelectionChanged="Kind_SelectionChanged" Style="{StaticResource BareComboBox}">
+                                    <ComboBoxItem Content="UUID v4 (random)" Tag="Uuid4" />
+                                    <ComboBoxItem Content="UUID v7 (sorted by time)" Tag="Uuid7" />
+                                    <ComboBoxItem Content="ULID (sorted by time)" Tag="Ulid" />
+                                    <ComboBoxItem Content="Random hex" Tag="Hex" />
+                                    <ComboBoxItem Content="Lorem ipsum" Tag="Lorem" />
+                                </ComboBox>
+                            </Border>
+                            <TextBlock x:Name="TxtKindHint" Style="{StaticResource IgHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="OPTIONS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+
+                            <StackPanel x:Name="PanelCount">
+                                <TextBlock Style="{StaticResource IgLabel}" Text="How many (1-1000)" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtCount" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel x:Name="PanelHex" Visibility="Collapsed">
+                                <TextBlock Style="{StaticResource IgLabel}" Text="Bytes per value (1-128)" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtHexBytes" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel x:Name="PanelLorem" Visibility="Collapsed">
+                                <TextBlock Style="{StaticResource IgLabel}" Text="Paragraphs (1-50)" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtParagraphs" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel x:Name="PanelCase" Margin="0,10,0,0">
+                                <CheckBox x:Name="ChkUpper" Click="Option_Click" Content="Upper case" />
+                                <CheckBox x:Name="ChkNoHyphens" Margin="0,6,0,0" Click="Option_Click" Content="Remove hyphens" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  ========== Actions ==========  -->
+                <Border Style="{StaticResource CardStyle}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button x:Name="BtnSave" Margin="0,0,8,0" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save to a text file">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentSaveOutline" />
+                                    <TextBlock Text="Save" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnCopy" Margin="0,0,8,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy everything">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
+                                    <TextBlock Text="Copy" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnGenerate" MinHeight="36" Click="BtnGenerate_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Refresh" />
+                                    <TextBlock VerticalAlignment="Center" Text="Generate again" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="RESULT" />
+                            <TextBlock x:Name="TxtInfo" Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!--  ========== Output ==========  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,10" Content="Values" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <TextBox x:Name="TxtOutput" Padding="14" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="14" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

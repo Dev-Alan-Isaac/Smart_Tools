@@ -1,0 +1,221 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.SubnetCalculatorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:ctrl="clr-namespace:Smart_Tools.WPF.Controllers"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/SubnetCalculatorManager.cs (parsing, subnet maths, splitting). UI only here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="ScChip" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,4,4" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Padding="8,4" Background="{DynamicResource SidebarInputBg}" BorderBrush="{DynamicResource SidebarInputBorder}" BorderThickness="1" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ScLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Margin" Value="2,10,0,4" />
+        </Style>
+
+        <Style x:Key="StatLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+        </Style>
+
+        <Style x:Key="StatValue" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <DataTemplate x:Key="PieceTemplate" DataType="{x:Type ctrl:SubnetPiece}">
+            <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock FontFamily="Cascadia Mono, Consolas" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Cidr}" />
+                <TextBlock Grid.Column="1" FontFamily="Cascadia Mono, Consolas" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding Range}" TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="EXAMPLES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LightbulbOutline}" />
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button Click="Example_Click" Content="192.168.1.10/24" Style="{StaticResource ScChip}" />
+                                <Button Click="Example_Click" Content="10.0.0.0/8" Style="{StaticResource ScChip}" />
+                                <Button Click="Example_Click" Content="172.16.0.0/12" Style="{StaticResource ScChip}" />
+                                <Button Click="Example_Click" Content="192.168.0.0/16" Style="{StaticResource ScChip}" />
+                                <Button Click="Example_Click" Content="10.1.2.3/30" Style="{StaticResource ScChip}" />
+                                <Button Click="Example_Click" Content="10.0.0.5 255.255.0.0" Style="{StaticResource ScChip}" />
+                                <Button Click="Example_Click" Content="2001:db8::/32" Style="{StaticResource ScChip}" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="SPLIT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
+                            <TextBlock Style="{StaticResource ScLabel}" Text="Split into prefix (for example 26)" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtSplit" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Input_TextChanged" />
+                            </Border>
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button Click="SplitChip_Click" Content="/25" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="/26" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="/27" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="/28" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="/30" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="None" Style="{StaticResource ScChip}" />
+                            </WrapPanel>
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Splitting a /24 into /26 gives 4 equal subnets." />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="320" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" MinWidth="320" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ========== Address and the key numbers ==========  -->
+                <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button x:Name="BtnCopy" MinWidth="110" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy everything shown">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
+                                    <TextBlock x:Name="TxtCopy" Text="Copy" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Width="70" VerticalAlignment="Center" DockPanel.Dock="Left" Style="{StaticResource StatLabel}" Text="ADDRESS" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtAddress" VerticalContentAlignment="Center" FontFamily="Consolas" FontSize="15" Style="{StaticResource BareTextBox}" TextChanged="Input_TextChanged" ToolTip="192.168.1.10/24, 192.168.1.10 255.255.255.0 or 2001:db8::/32" />
+                            </Border>
+                        </DockPanel>
+                        <TextBlock x:Name="TxtError" Margin="70,8,0,0" FontSize="11.5" Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" />
+
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="1.5*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource StatLabel}" Text="NETWORK" />
+                                <TextBlock x:Name="StatNetwork" Style="{StaticResource StatValue}" Text="-" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource StatLabel}" Text="SUBNET MASK" />
+                                <TextBlock x:Name="StatMask" Style="{StaticResource StatValue}" Text="-" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                                <TextBlock Style="{StaticResource StatLabel}" Text="USABLE HOSTS" />
+                                <TextBlock x:Name="StatHosts" Style="{StaticResource StatValue}" Text="-" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Style="{StaticResource StatLabel}" Text="FIRST - LAST USABLE" />
+                                <TextBlock x:Name="StatRange" Style="{StaticResource StatValue}" FontSize="16" Text="-" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!--  ========== All the details ==========  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,8" Content="Details" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="RowList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" />
+                                            <TextBox Grid.Column="1" Padding="0" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" IsReadOnly="True" Text="{Binding Value, Mode=OneWay}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!--  ========== Subnets ==========  -->
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,6" Content="Subnets" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
+                        <TextBlock x:Name="TxtSplitTitle" Grid.Row="1" Margin="0,0,0,8" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                        <ListBox x:Name="PieceList" Grid.Row="2" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource PieceTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                        <TextBlock x:Name="TxtSplitEmpty" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Type a prefix (or click one) in the sidebar to split the network." TextAlignment="Center" TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
