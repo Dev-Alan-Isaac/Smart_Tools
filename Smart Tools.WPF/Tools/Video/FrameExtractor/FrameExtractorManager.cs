@@ -316,9 +316,13 @@ namespace Smart_Tools.WPF.Controllers
                 foreach (string a in new[] { "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", path }) info.ArgumentList.Add(a);
                 using var p = Process.Start(info);
                 if (p == null) { problem = "Couldn't start ffprobe."; return null; }
-                string output = p.StandardOutput.ReadToEnd().Trim();
-                string error = p.StandardError.ReadToEnd().Trim();
-                if (!p.WaitForExit(20_000)) { try { p.Kill(); } catch (InvalidOperationException) { } problem = "ffprobe took too long."; return null; }
+                // Read both pipes at once - reading one to the end first can deadlock when the other fills up.
+                var outTask = p.StandardOutput.ReadToEndAsync();
+                var errTask = p.StandardError.ReadToEndAsync();
+                if (!p.WaitForExit(20_000)) { try { p.Kill(entireProcessTree: true); } catch (InvalidOperationException) { } problem = "ffprobe took too long."; return null; }
+                p.WaitForExit();   // flush the pipes
+                string output = outTask.GetAwaiter().GetResult().Trim();
+                string error = errTask.GetAwaiter().GetResult().Trim();
                 if (double.TryParse(output.Split('\n')[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double d) && d > 0) return d;
                 problem = error.Length > 0 ? "That file couldn't be read as a video: " + error.Split('\n')[0] : "That file doesn't look like a video (no length found).";
                 return null;

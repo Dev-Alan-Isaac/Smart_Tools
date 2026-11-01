@@ -61,7 +61,7 @@ namespace Smart_Tools.WPF.Controllers
             var outTask = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
             var errTask = process.StandardError.ReadToEndAsync(CancellationToken.None);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            timeout.CancelAfter(ProbeTimeout.For(path));
             try
             {
                 await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);

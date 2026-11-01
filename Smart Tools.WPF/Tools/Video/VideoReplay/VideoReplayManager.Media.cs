@@ -208,9 +208,7 @@ namespace Smart_Tools.WPF.Controllers
             try
             {
                 // Big files (or slow / network drives) need longer than a small clip.
-                long bytes = 0;
-                try { bytes = new FileInfo(path).Length; } catch (IOException) { } catch (UnauthorizedAccessException) { }
-                var timeout = TimeSpan.FromSeconds(20 + bytes / (100L * 1024 * 1024));
+                var timeout = ProbeTimeout.For(path);
 
                 var run = await RunAsync(exe, new[] { "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", path }, null, timeout, token).ConfigureAwait(false);
                 if (run.ExitCode == 0 && ParseSeconds(run.Output) is double s) return TimeSpan.FromSeconds(s);
@@ -230,7 +228,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string? exe = FfprobeExe;
             if (exe == null) return false;
-            var run = await RunAsync(exe, new[] { "-v", "error", "-show_entries", "stream=codec_type,codec_name", "-of", "csv=p=0", path }, null, TimeSpan.FromSeconds(30), token).ConfigureAwait(false);
+            var run = await RunAsync(exe, new[] { "-v", "error", "-show_entries", "stream=codec_type,codec_name", "-of", "csv=p=0", path }, null, ProbeTimeout.For(path), token).ConfigureAwait(false);
             if (run.ExitCode != 0) return false;
             bool video = false;
             foreach (string line in run.Output.Split('\n'))

@@ -22,7 +22,7 @@ namespace Smart_Tools.WPF.Controllers
             await ProbeGate.WaitAsync(token).ConfigureAwait(false);
             try
             {
-                var run = await RunToolAsync(exe, new[] { "-v", "error", "-print_format", "json", "-show_format", "-show_streams", path }, null, TimeSpan.FromSeconds(30), token).ConfigureAwait(false);
+                var run = await RunToolAsync(exe, new[] { "-v", "error", "-print_format", "json", "-show_format", "-show_streams", path }, null, ProbeTimeout.For(path), token).ConfigureAwait(false);
                 return run.ExitCode == 0 ? ParseProbe(run.Output) : null;
             }
             finally
@@ -391,6 +391,8 @@ namespace Smart_Tools.WPF.Controllers
         //  Running a tool
         // =================================================================
 
+        private const long StallLimitMs = 15 * 60 * 1000;
+
         private sealed record ToolRun(int ExitCode, string Output, List<string> Errors, bool TimedOut);
 
         /// <summary>
@@ -414,9 +416,20 @@ namespace Smart_Tools.WPF.Controllers
             using var p = new Process { StartInfo = psi };
             var output = new StringBuilder();
             var errors = new List<string>();
+            long lastAdvance = Environment.TickCount64;   // when ffmpeg's progress last moved (stall watchdog)
+            string lastProgress = "";
             p.OutputDataReceived += (_, e) =>
             {
                 if (e.Data == null) return;
+                // -progress repeats its lines even when stuck, so only a changed position or size counts as life.
+                if (e.Data.StartsWith("out_time_us=", StringComparison.Ordinal) || e.Data.StartsWith("total_size=", StringComparison.Ordinal))
+                {
+                    if (!string.Equals(e.Data, lastProgress, StringComparison.Ordinal) && !e.Data.EndsWith("N/A", StringComparison.Ordinal))
+                    {
+                        Volatile.Write(ref lastAdvance, Environment.TickCount64);
+                        if (e.Data.StartsWith("out_time_us=", StringComparison.Ordinal)) lastProgress = e.Data;
+                    }
+                }
                 lock (output) output.AppendLine(e.Data);
                 onOutputLine?.Invoke(e.Data);
             };
@@ -441,6 +454,28 @@ namespace Smart_Tools.WPF.Controllers
 
             using var limit = CancellationTokenSource.CreateLinkedTokenSource(token);
             if (timeout != Timeout.InfiniteTimeSpan) limit.CancelAfter(timeout);
+            // No fixed limit means a long render is allowed - but not a stuck one: kill after 15 min with no progress.
+            bool stalled = false;
+            Task? watchdog = null;
+            if (timeout == Timeout.InfiniteTimeSpan)
+            {
+                watchdog = Task.Run(async () =>
+                {
+                    try
+                    {
+                        while (!limit.IsCancellationRequested)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(10), limit.Token).ConfigureAwait(false);
+                            if (Environment.TickCount64 - Volatile.Read(ref lastAdvance) > StallLimitMs)
+                            {
+                                stalled = true;
+                                limit.Cancel();
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException) { /* finished or cancelled */ }
+                });
+            }
             try
             {
                 await p.WaitForExitAsync(limit.Token).ConfigureAwait(false);
@@ -450,7 +485,16 @@ namespace Smart_Tools.WPF.Controllers
                 try { p.Kill(entireProcessTree: true); } catch (Exception) { /* already gone */ }
                 await p.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
                 token.ThrowIfCancellationRequested();
-                lock (errors) return new ToolRun(-1, "", errors.ToList(), true);
+                lock (errors)
+                {
+                    if (stalled) errors.Add("ffmpeg stopped making progress and was ended.");
+                    return new ToolRun(-1, "", errors.ToList(), true);
+                }
+            }
+            finally
+            {
+                limit.Cancel();   // ends the watchdog
+                if (watchdog != null) await watchdog.ConfigureAwait(false);
             }
             p.WaitForExit();   // flush the output events
             lock (output) lock (errors) return new ToolRun(p.ExitCode, output.ToString(), errors.ToList(), false);
