@@ -42,7 +42,7 @@ namespace Smart_Tools.WPF.Controllers
     {
         public static TimeSpan MatchTimeout { get; set; } = TimeSpan.FromSeconds(1);
         public static int MaxResults { get; set; } = 200_000;
-        public const int MaxOtherFilesListed = 10;
+        public const int MaxOtherFilesListed = 1000;
         private const int BinarySniffBytes = 8192;
         private const int MaxLineTextChars = 300;
         private static readonly TimeSpan ReportEvery = TimeSpan.FromMilliseconds(100);

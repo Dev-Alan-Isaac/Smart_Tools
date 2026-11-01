@@ -113,7 +113,7 @@ namespace Smart_Tools.WPF.Controllers
         private static void WriteCsv(TextWriter w, IReadOnlyList<FileSearchResult> rows, bool unique)
         {
             bool segments = rows.Any(r => r.Segments.Count > 0);
-            w.WriteLine("Match,File,Folder,Line,Column,Type,Pattern" + (segments ? ",Parts" : "") + (unique ? ",Times found,Files" : ""));
+            w.WriteLine("Match,File,Folder,Line,Column,Type,Pattern" + (segments ? ",Parts" : "") + (unique ? ",Times found,Found in,Located in" : ""));
             foreach (var r in rows)
             {
                 var cells = new List<string>
@@ -127,10 +127,31 @@ namespace Smart_Tools.WPF.Controllers
                 if (unique)
                 {
                     cells.Add(r.Occurrences.ToString(CultureInfo.InvariantCulture));
-                    cells.Add(r.FileCount.ToString(CultureInfo.InvariantCulture));
+                    var (names, folders) = FoundInColumns(r);
+                    cells.Add(CsvCell(names));
+                    cells.Add(CsvCell(folders));
                 }
                 w.WriteLine(string.Join(",", cells));
             }
+        }
+
+        /// <summary>
+        /// Unique mode: every file the value was found in (first one first). Names go in one
+        /// cell and their folders in another, in the same order, each joined with " | ".
+        /// </summary>
+        private static (string Names, string Folders) FoundInColumns(FileSearchResult r)
+        {
+            var paths = new List<string> { r.FullPath };
+            paths.AddRange(r.OtherFiles);
+            string names = string.Join(" | ", paths.Select(Path.GetFileName));
+            string folders = string.Join(" | ", paths.Select(p => Path.GetDirectoryName(p) ?? ""));
+            int more = r.FileCount - paths.Count;
+            if (more > 0)
+            {
+                names += $" | … and {more:N0} more";
+                folders += " | …";
+            }
+            return (names, folders);
         }
 
         /// <summary>Readable report for Notepad or an email: where each match is, which pattern found it, and the match.</summary>
@@ -145,6 +166,14 @@ namespace Smart_Tools.WPF.Controllers
                 if (r.Segments.Count > 0) w.WriteLine("    " + r.SegmentsText);
                 if (unique && r.Occurrences > 1)
                     w.WriteLine($"    found {r.Occurrences:N0} times in {r.FileCount:N0} {FileSearchText.Plural(r.FileCount, "file", "files")}");
+                if (unique && r.FileCount > 1)
+                {
+                    w.WriteLine("    found in:");
+                    w.WriteLine("        " + r.FullPath);
+                    foreach (string other in r.OtherFiles) w.WriteLine("        " + other);
+                    int more = r.FileCount - 1 - r.OtherFiles.Count;
+                    if (more > 0) w.WriteLine($"        … and {more:N0} more");
+                }
                 w.WriteLine();
             }
         }
