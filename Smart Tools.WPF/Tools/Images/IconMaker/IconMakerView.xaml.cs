@@ -129,6 +129,10 @@ namespace Smart_Tools.WPF.Views
             TxtFileName.Text = Path.GetFileName(path);
             TxtSourceInfo.Text = $"{_width} × {_height} px" + (Math.Min(_width, _height) < 256 ? " - a bigger picture gives sharper large icons." : "");
             StatusBanner.Visibility = Visibility.Collapsed;
+            HeroImage.Source = SpritePackerManager.CreateBitmap(_bgra, _width, _height);
+            HeroPlaceholder.Visibility = Visibility.Collapsed;
+            HeroName.Text = Path.GetFileName(path);
+            HeroInfo.Text = TxtSourceInfo.Text;
             BuildPreview();
         }
 

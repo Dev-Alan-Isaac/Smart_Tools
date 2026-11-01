@@ -32,148 +32,148 @@
     <Grid Background="{DynamicResource ContentBg}">
         <Grid Margin="16,8,16,16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource SidebarPanelStyle}">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="SidebarStack" Margin="16,12,16,16">
-                        <Border Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="VIDEO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
-                                <Button Margin="0,8,0,0" HorizontalContentAlignment="Left" Click="BtnOpen_Click" Style="{StaticResource ListToolButtonStyle}">
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel x:Name="SidebarStack">
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="VIDEO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
+                            <Button Margin="0,8,0,0" MinHeight="36" HorizontalContentAlignment="Left" Click="BtnOpen_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
+                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="Choose a video" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock x:Name="TxtVideoInfo" Style="{StaticResource FeHint}" Text="Or drop a video anywhere on this page." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="WHICH FRAMES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
+                            <RadioButton x:Name="RadioOne" Margin="0,8,0,0" Click="Mode_Click" Content="One frame at a time" GroupName="FeMode" IsChecked="True" />
+                            <RadioButton x:Name="RadioEvery" Margin="0,6,0,0" Click="Mode_Click" Content="One every few seconds" GroupName="FeMode" />
+                            <RadioButton x:Name="RadioEven" Margin="0,6,0,0" Click="Mode_Click" Content="A set number, evenly spread" GroupName="FeMode" />
+
+                            <StackPanel x:Name="PanelAt">
+                                <TextBlock Style="{StaticResource FeLabel}" Text="At (1:30, 90, 1m30s)" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtAt" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                </Border>
+                            </StackPanel>
+                            <StackPanel x:Name="PanelEvery" Visibility="Collapsed">
+                                <TextBlock Style="{StaticResource FeLabel}" Text="Every how many seconds" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtEvery" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                </Border>
+                            </StackPanel>
+                            <StackPanel x:Name="PanelCount" Visibility="Collapsed">
+                                <TextBlock Style="{StaticResource FeLabel}" Text="How many frames (1 - 500)" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <TextBox x:Name="TxtCount" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                                </Border>
+                            </StackPanel>
+
+                            <TextBlock Style="{StaticResource FeLabel}" Text="Picture type" />
+                            <UniformGrid Columns="2">
+                                <RadioButton x:Name="RadioPng" Margin="0,0,2,0" Click="Format_Click" Content="PNG" GroupName="FeFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton x:Name="RadioJpg" Margin="2,0,0,0" Click="Format_Click" Content="JPG" GroupName="FeFormat" Style="{StaticResource ModeToggleButtonStyle}" />
+                            </UniformGrid>
+                            <TextBlock Style="{StaticResource FeHint}" Text="PNG is lossless and bigger. JPG is smaller." />
+                        </StackPanel>
+                    </Border>
+
+                    <controls:OutputFolderCard
+                        x:Name="OutputCard"
+                        Header="Save frames to"
+                        HeaderIcon="FolderOutline"
+                        ToolName="Frame Extractor" />
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  ========== The video and the run ==========  -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Border x:Name="DonePill" Margin="0,0,10,0" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                                    <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
+                                </Border>
+                                <Button x:Name="BtnOpenFolder" Margin="0,0,8,0" Click="BtnOpenFolder_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Open the folder" Visibility="Collapsed">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button x:Name="BtnRun" MinHeight="38" Click="BtnRun_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
-                                        <TextBlock x:Name="TxtFileName" MaxWidth="190" Text="Choose a video" TextTrimming="CharacterEllipsis" />
+                                        <materialDesign:PackIcon x:Name="IconRun" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ImageMultipleOutline" />
+                                        <TextBlock x:Name="TxtRun" VerticalAlignment="Center" Text="Take frames" />
                                     </StackPanel>
                                 </Button>
-                                <TextBlock x:Name="TxtVideoInfo" Style="{StaticResource FeHint}" Text="Or drop a video anywhere on this page." />
                             </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="WHICH FRAMES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
-                                <RadioButton x:Name="RadioOne" Margin="0,8,0,0" Click="Mode_Click" Content="One frame at a time" GroupName="FeMode" IsChecked="True" />
-                                <RadioButton x:Name="RadioEvery" Margin="0,6,0,0" Click="Mode_Click" Content="One every few seconds" GroupName="FeMode" />
-                                <RadioButton x:Name="RadioEven" Margin="0,6,0,0" Click="Mode_Click" Content="A set number, evenly spread" GroupName="FeMode" />
-
-                                <StackPanel x:Name="PanelAt">
-                                    <TextBlock Style="{StaticResource FeLabel}" Text="At (1:30, 90, 1m30s)" />
-                                    <Border Style="{StaticResource InputBarStyle}">
-                                        <TextBox x:Name="TxtAt" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
-                                    </Border>
-                                </StackPanel>
-                                <StackPanel x:Name="PanelEvery" Visibility="Collapsed">
-                                    <TextBlock Style="{StaticResource FeLabel}" Text="Every how many seconds" />
-                                    <Border Style="{StaticResource InputBarStyle}">
-                                        <TextBox x:Name="TxtEvery" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
-                                    </Border>
-                                </StackPanel>
-                                <StackPanel x:Name="PanelCount" Visibility="Collapsed">
-                                    <TextBlock Style="{StaticResource FeLabel}" Text="How many frames (1 - 500)" />
-                                    <Border Style="{StaticResource InputBarStyle}">
-                                        <TextBox x:Name="TxtCount" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
-                                    </Border>
-                                </StackPanel>
-
-                                <TextBlock Style="{StaticResource FeLabel}" Text="Picture type" />
-                                <UniformGrid Columns="2">
-                                    <RadioButton x:Name="RadioPng" Margin="0,0,2,0" Click="Format_Click" Content="PNG" GroupName="FeFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
-                                    <RadioButton x:Name="RadioJpg" Margin="2,0,0,0" Click="Format_Click" Content="JPG" GroupName="FeFormat" Style="{StaticResource ModeToggleButtonStyle}" />
-                                </UniformGrid>
-                                <TextBlock Style="{StaticResource FeHint}" Text="PNG is lossless and bigger. JPG is smaller." />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="VIDEO" />
+                                <TextBlock x:Name="HeroName" Margin="0,2,0,0" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="No video yet" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="TxtActionInfo" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Choose or drop a video to start." TextWrapping="Wrap" />
                             </StackPanel>
+                        </DockPanel>
+                        <ProgressBar x:Name="RunProgress" Height="5" Margin="0,12,0,0" Visibility="Collapsed" />
+                        <Border x:Name="StatusBanner" Margin="0,12,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtStatus" MaxWidth="900" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </Border>
-
-                        <controls:OutputFolderCard
-                            x:Name="OutputCard"
-                            Margin="0,10,0,0"
-                            Header="Save frames to"
-                            HeaderIcon="FolderOutline"
-                            ToolName="Frame Extractor" />
                     </StackPanel>
-                </ScrollViewer>
-            </Border>
+                </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ContentControl VerticalAlignment="Center" Content="Frames" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
-                        <Border x:Name="DonePill" Grid.Column="1" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
-                            <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
+                <!--  ========== The frames ==========  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,10" Content="Frames" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="ResultList" Margin="14">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Width="190" Margin="0,0,14,14" ToolTip="{Binding Path}">
+                                                    <Border Height="110" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
+                                                        <Image Margin="2" Source="{Binding Picture}" Stretch="Uniform" />
+                                                    </Border>
+                                                    <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                <StackPanel x:Name="ListEmpty" MaxWidth="340" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
+                                    <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Choose a video" />
+                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Pick which frames to take, then press Take frames. The pictures show up here." TextAlignment="Center" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
                     </Grid>
-
-                    <Border x:Name="StatusBanner" Grid.Row="1" Margin="0,0,0,10" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
-                        <TextBlock x:Name="TxtStatus" MaxWidth="760" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                    </Border>
-
-                    <Border Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                        <Grid>
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl x:Name="ResultList" Margin="14">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Width="150" Margin="0,0,12,12" ToolTip="{Binding Path}">
-                                                <Border Height="90" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
-                                                    <Image Margin="2" Source="{Binding Picture}" Stretch="Uniform" />
-                                                </Border>
-                                                <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                            <StackPanel x:Name="ListEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
-                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
-                                <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Choose a video" />
-                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Pick which frames to take, then press Take frames. The pictures show up here." TextAlignment="Center" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Grid Grid.Row="3" Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock x:Name="TxtActionInfo" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
-                            <ProgressBar x:Name="RunProgress" Height="4" Margin="0,6,12,0" Visibility="Collapsed" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button x:Name="BtnOpenFolder" Margin="0,0,8,0" Click="BtnOpenFolder_Click" ToolTip="Open the folder" Visibility="Collapsed" Style="{StaticResource ListToolButtonStyle}">
-                                <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
-                            </Button>
-                            <Button x:Name="BtnRun" MinHeight="36" Click="BtnRun_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon x:Name="IconRun" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ImageMultipleOutline" />
-                                    <TextBlock x:Name="TxtRun" VerticalAlignment="Center" Text="Take frames" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </Grid>
-            </Border>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

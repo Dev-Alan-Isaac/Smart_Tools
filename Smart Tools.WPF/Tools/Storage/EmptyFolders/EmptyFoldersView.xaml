@@ -135,8 +135,8 @@
                         </Grid.RowDefinitions>
                         <DockPanel Margin="0,0,0,10">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button x:Name="BtnSelectAll" Margin="0,0,6,0" Click="BtnSelectAll_Click" Content="Select all" Style="{StaticResource ListToolButtonStyle}" />
-                                <Button x:Name="BtnSelectNone" Click="BtnSelectNone_Click" Content="Select none" Style="{StaticResource ListToolButtonStyle}" />
+                                <Button x:Name="BtnSelectAll" MinHeight="32" Margin="0,0,6,0" Click="BtnSelectAll_Click" Content="Select all" />
+                                <Button x:Name="BtnSelectNone" MinHeight="32" Click="BtnSelectNone_Click" Content="Select none" />
                             </StackPanel>
                             <ContentControl Content="Found" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FolderRemoveOutline}" />
                         </DockPanel>

@@ -144,6 +144,11 @@ namespace Smart_Tools.WPF.Views
         private void BtnMinus_Click(object sender, RoutedEventArgs e) => SetBpm(_bpm - (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 10 : 1));
         private void BtnPlus_Click(object sender, RoutedEventArgs e) => SetBpm(_bpm + (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 10 : 1));
 
+        private void Preset_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is string t && int.TryParse(t, out int bpm)) SetBpm(bpm);
+        }
+
         private void BtnTap_Click(object sender, RoutedEventArgs e)
         {
             int? bpm = _tap.Tap(DateTime.UtcNow.Ticks);

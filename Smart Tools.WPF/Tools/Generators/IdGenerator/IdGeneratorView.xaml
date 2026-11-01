@@ -99,13 +99,13 @@
                 <Border Style="{StaticResource CardStyle}">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button x:Name="BtnSave" Margin="0,0,8,0" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save to a text file">
+                            <Button x:Name="BtnSave" MinHeight="36" Margin="0,0,8,0" Click="BtnSave_Click" ToolTip="Save to a text file">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentSaveOutline" />
                                     <TextBlock Text="Save" />
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="BtnCopy" Margin="0,0,8,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy everything">
+                            <Button x:Name="BtnCopy" MinHeight="36" Margin="0,0,8,0" Click="BtnCopy_Click" ToolTip="Copy everything">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
                                     <TextBlock Text="Copy" />
@@ -134,7 +134,7 @@
                         </Grid.RowDefinitions>
                         <ContentControl Margin="0,0,0,10" Content="Values" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                            <TextBox x:Name="TxtOutput" Padding="14" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="14" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+                            <TextBox x:Name="TxtOutput" Height="Auto" Padding="14" VerticalContentAlignment="Top" TextWrapping="NoWrap" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="14" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
                         </Border>
                     </Grid>
                 </Border>

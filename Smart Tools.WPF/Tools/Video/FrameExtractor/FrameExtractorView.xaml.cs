@@ -106,7 +106,7 @@ namespace Smart_Tools.WPF.Views
 
             if (_video == null || _duration <= 0)
             {
-                TxtActionInfo.Text = "";
+                TxtActionInfo.Text = "Choose or drop a video to start.";
                 BtnRun.IsEnabled = false;
                 return;
             }
@@ -163,6 +163,7 @@ namespace Smart_Tools.WPF.Views
             _video = path;
             _duration = duration.Value;
             TxtVideoInfo.Text = "Length: " + TimerStopwatchManager.Format(TimeSpan.FromSeconds(_duration), false);
+            HeroName.Text = Path.GetFileName(path) + "  ·  " + TimerStopwatchManager.Format(TimeSpan.FromSeconds(_duration), false);
             StatusBanner.Visibility = Visibility.Collapsed;
             ResultList.ItemsSource = null;
             ListEmpty.Visibility = Visibility.Visible;

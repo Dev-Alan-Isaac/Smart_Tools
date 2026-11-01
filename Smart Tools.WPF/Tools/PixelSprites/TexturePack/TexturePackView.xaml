@@ -103,15 +103,14 @@
         <Grid Margin="16,8,16,16">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!--  ================= SIDEBAR =================  -->
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
-                <ScrollViewer x:Name="OptionsScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="SidebarStack" Margin="16,12,16,16">
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                    <StackPanel x:Name="SidebarStack">
 
                         <!--  ============ PICTURES ============  -->
                         <controls:InputFolderCard
@@ -150,7 +149,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Button x:Name="BtnChooseIcon" Click="BtnChooseIcon_Click" Style="{StaticResource ListToolButtonStyle}" HorizontalContentAlignment="Left" ToolTip="Choose a PNG to use as pack.png">
+                                    <Button x:Name="BtnChooseIcon" MinHeight="34" Click="BtnChooseIcon_Click" HorizontalContentAlignment="Left" ToolTip="Choose a PNG to use as pack.png">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ImageOutline" />
                                             <TextBlock x:Name="TxtIconName" MaxWidth="150" Text="Choose a PNG" TextTrimming="CharacterEllipsis" />
@@ -182,53 +181,72 @@
                             ShowFileName="True"
                             ToolName="Texture Pack" />
                     </StackPanel>
-                </ScrollViewer>
-            </Border>
+            </controls:ToolSidebar>
 
-            <!--  ================= MAIN =================  -->
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                    <!--  Header: counts, saved pill  -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ContentControl VerticalAlignment="Center" Content="Textures" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
-                        <WrapPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                            <Border Margin="0,0,6,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}">
-                                <TextBlock x:Name="TxtPillCount" Style="{StaticResource TpPillText}" />
-                            </Border>
-                            <Border x:Name="PillIssues" Margin="0,0,6,0" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
-                                <TextBlock x:Name="TxtPillIssues" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
-                            </Border>
-                        </WrapPanel>
-                        <Border x:Name="DonePill" Grid.Column="2" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                <!--  ========== Summary and the Create button ==========  -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Border x:Name="DonePill" Margin="0,0,10,0" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="Check" />
+                                        <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Button x:Name="BtnOpenResult" Margin="0,0,8,0" Click="BtnOpenResult_Click" ToolTip="Show the saved pack" Visibility="Collapsed" Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                                </Button>
+                                <Button x:Name="BtnRun" MinHeight="38" Click="BtnRun_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="PackageVariantClosed" />
+                                        <TextBlock VerticalAlignment="Center" Text="Create texture pack" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="MINECRAFT TEXTURE PACK" />
+                                <WrapPanel Margin="0,4,0,0">
+                                    <Border Margin="0,0,6,0" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}">
+                                        <TextBlock x:Name="TxtPillCount" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
+                                    </Border>
+                                    <Border x:Name="PillIssues" Margin="0,0,6,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                                        <TextBlock x:Name="TxtPillIssues" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                    </Border>
+                                </WrapPanel>
+                                <TextBlock x:Name="TxtActionInfo" Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!--  Messages  -->
+                        <Border x:Name="StatusBanner" Margin="0,12,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="Check" />
-                                <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
+                                <materialDesign:PackIcon x:Name="StatusIcon" Width="16" Height="16" Margin="0,1,8,0" VerticalAlignment="Top" />
+                                <TextBlock x:Name="TxtStatus" MaxWidth="900" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
-                    </Grid>
+                    </StackPanel>
+                </Border>
 
-                    <!--  Messages  -->
-                    <Border x:Name="StatusBanner" Grid.Row="1" Margin="0,0,0,10" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon x:Name="StatusIcon" Width="16" Height="16" Margin="0,1,8,0" VerticalAlignment="Top" />
-                            <TextBlock x:Name="TxtStatus" MaxWidth="760" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Border>
+                <!--  ========== The textures ==========  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,10" Content="Textures" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
 
                     <!--  The list  -->
-                    <Border x:Name="ListArea" Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                    <Border x:Name="ListArea" Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                         <Grid>
                             <ListBox
                                 x:Name="TextureList"
@@ -247,28 +265,9 @@
                             </StackPanel>
                         </Grid>
                     </Border>
-
-                    <!--  Action bar  -->
-                    <Grid Grid.Row="3" Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock x:Name="TxtActionInfo" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button x:Name="BtnOpenResult" Margin="0,0,8,0" Click="BtnOpenResult_Click" ToolTip="Show the saved pack" Visibility="Collapsed" Style="{StaticResource ListToolButtonStyle}">
-                                <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
-                            </Button>
-                            <Button x:Name="BtnRun" MinHeight="36" Click="BtnRun_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="PackageVariantClosed" />
-                                    <TextBlock VerticalAlignment="Center" Text="Create texture pack" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
                     </Grid>
-                </Grid>
-            </Border>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

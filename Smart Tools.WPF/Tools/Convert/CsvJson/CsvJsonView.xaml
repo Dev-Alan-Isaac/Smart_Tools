@@ -118,7 +118,7 @@
                             <ContentControl x:Name="TxtInputTitle" Content="CSV" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                            <TextBox x:Name="TxtInput" Padding="12" AcceptsReturn="True" AcceptsTab="True" AllowDrop="True" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" PreviewDragOver="Input_PreviewDragOver" PreviewDrop="Input_PreviewDrop" TextChanged="Input_TextChanged" VerticalScrollBarVisibility="Auto" />
+                            <TextBox x:Name="TxtInput" Height="Auto" Padding="12" VerticalContentAlignment="Top" TextWrapping="NoWrap" AcceptsReturn="True" AcceptsTab="True" AllowDrop="True" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" PreviewDragOver="Input_PreviewDragOver" PreviewDrop="Input_PreviewDrop" TextChanged="Input_TextChanged" VerticalScrollBarVisibility="Auto" />
                         </Border>
                     </Grid>
                 </Border>
@@ -142,7 +142,7 @@
                             <ContentControl x:Name="TxtOutputTitle" Content="JSON" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CodeJson}" />
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                            <TextBox x:Name="TxtOutput" Padding="12" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+                            <TextBox x:Name="TxtOutput" Height="Auto" Padding="12" VerticalContentAlignment="Top" TextWrapping="NoWrap" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
                         </Border>
                     </Grid>
                 </Border>

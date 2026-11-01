@@ -221,7 +221,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Border x:Name="SwatchAa" Width="28" Height="28" Margin="0,0,10,0" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="7" />
                                     <TextBlock x:Name="TxtAa" Grid.Column="1" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" />
-                                    <Button x:Name="BtnUseAa" Grid.Column="2" Click="BtnUseAa_Click" Content="Use it" Style="{StaticResource ListToolButtonStyle}" />
+                                    <Button x:Name="BtnUseAa" Grid.Column="2" Click="BtnUseAa_Click" MinHeight="32" Content="Use it" />
                                 </Grid>
                             </Border>
                             <Border Padding="10,8" Background="{DynamicResource RowBg}" CornerRadius="10">
@@ -233,7 +233,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Border x:Name="SwatchAaa" Width="28" Height="28" Margin="0,0,10,0" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="7" />
                                     <TextBlock x:Name="TxtAaa" Grid.Column="1" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" />
-                                    <Button x:Name="BtnUseAaa" Grid.Column="2" Click="BtnUseAaa_Click" Content="Use it" Style="{StaticResource ListToolButtonStyle}" />
+                                    <Button x:Name="BtnUseAaa" Grid.Column="2" Click="BtnUseAaa_Click" MinHeight="32" Content="Use it" />
                                 </Grid>
                             </Border>
                             <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="Only the lightness of the text color changes, so the hue stays the same." />

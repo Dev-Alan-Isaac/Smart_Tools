@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.ImageToPixelView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
     Focusable="True"
@@ -31,143 +32,172 @@
     <Grid Background="{DynamicResource ContentBg}">
         <Grid Margin="16,8,16,16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource SidebarPanelStyle}">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16,12,16,16">
-                        <Border Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="PICTURE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
-                                <Button Margin="0,8,0,0" HorizontalContentAlignment="Left" Click="BtnOpen_Click" Style="{StaticResource ListToolButtonStyle}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
-                                        <TextBlock x:Name="TxtFileName" MaxWidth="190" Text="Choose a picture" TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </Button>
-                                <TextBlock x:Name="TxtSourceInfo" Style="{StaticResource IpHint}" Text="Or drop a picture anywhere on this page." />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="PIXELS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.GridLarge}" />
-                                <TextBlock Style="{StaticResource IpLabel}" Text="Pixels across (4 - 256)" />
-                                <Border Style="{StaticResource InputBarStyle}">
-                                    <TextBox x:Name="TxtGrid" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
-                                </Border>
-                                <WrapPanel Margin="0,8,0,0">
-                                    <Button Margin="0,0,4,4" Click="GridChip_Click" Content="16" Tag="16" Style="{StaticResource ListToolButtonStyle}" />
-                                    <Button Margin="0,0,4,4" Click="GridChip_Click" Content="32" Tag="32" Style="{StaticResource ListToolButtonStyle}" />
-                                    <Button Margin="0,0,4,4" Click="GridChip_Click" Content="48" Tag="48" Style="{StaticResource ListToolButtonStyle}" />
-                                    <Button Margin="0,0,4,4" Click="GridChip_Click" Content="64" Tag="64" Style="{StaticResource ListToolButtonStyle}" />
-                                    <Button Margin="0,0,4,4" Click="GridChip_Click" Content="128" Tag="128" Style="{StaticResource ListToolButtonStyle}" />
-                                </WrapPanel>
-                                <TextBlock x:Name="TxtGridInfo" Style="{StaticResource IpHint}" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="COLORS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
-                                <TextBlock Style="{StaticResource IpLabel}" Text="Palette" />
-                                <Border Style="{StaticResource InputBarStyle}">
-                                    <ComboBox x:Name="CmbPalette" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}" />
-                                </Border>
-                                <StackPanel x:Name="PanelColors">
-                                    <TextBlock Style="{StaticResource IpLabel}" Text="Number of colors (2 - 64, 0 = all)" />
-                                    <Border Style="{StaticResource InputBarStyle}">
-                                        <TextBox x:Name="TxtColors" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
-                                    </Border>
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="PICTURE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+                            <Button Margin="0,8,0,0" MinHeight="36" HorizontalContentAlignment="Left" Click="BtnOpen_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
+                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="Choose a picture" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <CheckBox x:Name="ChkDither" Margin="0,12,0,0" Click="Option_Click" Content="Dither (smoother gradients)" ToolTip="Mixes neighbouring pixels so a few colors can fake the colors in between." />
-                            </StackPanel>
-                        </Border>
+                            </Button>
+                            <TextBlock x:Name="TxtSourceInfo" Style="{StaticResource IpHint}" Text="Or drop a picture anywhere on this page." />
+                        </StackPanel>
+                    </Border>
 
-                        <Border Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="SAVE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ContentSaveOutline}" />
-                                <TextBlock Style="{StaticResource IpLabel}" Text="Make each pixel this many pixels wide" />
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="PIXELS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.GridLarge}" />
+                            <TextBlock Style="{StaticResource IpLabel}" Text="Pixels across (4 - 256)" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtGrid" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
+                            </Border>
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button Margin="0,0,4,4" MinHeight="30" Click="GridChip_Click" Content="16" Tag="16" />
+                                <Button Margin="0,0,4,4" MinHeight="30" Click="GridChip_Click" Content="32" Tag="32" />
+                                <Button Margin="0,0,4,4" MinHeight="30" Click="GridChip_Click" Content="48" Tag="48" />
+                                <Button Margin="0,0,4,4" MinHeight="30" Click="GridChip_Click" Content="64" Tag="64" />
+                                <Button Margin="0,0,4,4" MinHeight="30" Click="GridChip_Click" Content="128" Tag="128" />
+                            </WrapPanel>
+                            <TextBlock x:Name="TxtGridInfo" Style="{StaticResource IpHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="COLORS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
+                            <TextBlock Style="{StaticResource IpLabel}" Text="Palette" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox x:Name="CmbPalette" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}" />
+                            </Border>
+                            <StackPanel x:Name="PanelColors">
+                                <TextBlock Style="{StaticResource IpLabel}" Text="Number of colors (2 - 64, 0 = all)" />
                                 <Border Style="{StaticResource InputBarStyle}">
-                                    <ComboBox x:Name="CmbScale" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}" />
+                                    <TextBox x:Name="TxtColors" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
                                 </Border>
-                                <TextBlock x:Name="TxtSaveInfo" Style="{StaticResource IpHint}" />
                             </StackPanel>
+                            <CheckBox x:Name="ChkDither" Margin="0,12,0,0" Click="Option_Click" Content="Dither (smoother gradients)" ToolTip="Mixes neighbouring pixels so a few colors can fake the colors in between." />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="SAVE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ContentSaveOutline}" />
+                            <TextBlock Style="{StaticResource IpLabel}" Text="Make each pixel this many pixels wide" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox x:Name="CmbScale" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}" />
+                            </Border>
+                            <TextBlock x:Name="TxtSaveInfo" Style="{StaticResource IpHint}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="240" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" MinWidth="240" />
+                </Grid.ColumnDefinitions>
+
+                <!--  ========== Summary and saving ==========  -->
+                <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button x:Name="BtnSave" MinHeight="38" DockPanel.Dock="Right" Click="BtnSave_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentSaveOutline" />
+                                    <TextBlock VerticalAlignment="Center" Text="Save PNG" />
+                                </StackPanel>
+                            </Button>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="PIXEL ART" />
+                                <WrapPanel Margin="0,4,0,0">
+                                    <Border x:Name="PillSize" Margin="0,0,6,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                                        <TextBlock x:Name="TxtPillSize" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                    </Border>
+                                    <Border x:Name="PillColors" Margin="0,0,6,0" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                                        <TextBlock x:Name="TxtPillColors" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
+                                    </Border>
+                                    <Border x:Name="DonePill" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                                        <TextBlock x:Name="TxtDonePill" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </Border>
+                                    <TextBlock x:Name="TxtHeroHint" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" Text="Choose a picture to start." />
+                                </WrapPanel>
+                            </StackPanel>
+                        </DockPanel>
+                        <Border x:Name="StatusBanner" Margin="0,10,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtStatus" MaxWidth="900" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                         </Border>
                     </StackPanel>
-                </ScrollViewer>
-            </Border>
+                </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ContentControl VerticalAlignment="Center" Content="Pixel art" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
-                        <WrapPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                            <Border x:Name="PillSize" Margin="0,0,6,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
-                                <TextBlock x:Name="TxtPillSize" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                            </Border>
-                            <Border x:Name="PillColors" Margin="0,0,6,0" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
-                                <TextBlock x:Name="TxtPillColors" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
-                            </Border>
-                            <Border x:Name="DonePill" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
-                                <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
-                            </Border>
-                        </WrapPanel>
+                <!--  ========== The original ==========  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,10" Content="Original" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <Image x:Name="OriginalImage" Margin="14" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Uniform" />
+                                <TextBlock x:Name="OriginalEmpty" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Your picture shows here." />
+                            </Grid>
+                        </Border>
                     </Grid>
+                </Border>
 
-                    <Border x:Name="StatusBanner" Grid.Row="1" Margin="0,0,0,10" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
-                        <TextBlock x:Name="TxtStatus" MaxWidth="760" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                    </Border>
-
-                    <Border Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                        <Grid>
-                            <Viewbox x:Name="ResultBox" Margin="16" Stretch="Uniform" StretchDirection="Both" Visibility="Collapsed">
-                                <Grid x:Name="ResultGrid">
-                                    <Grid.Background>
-                                        <DrawingBrush TileMode="Tile" Viewport="0,0,2,2" ViewportUnits="Absolute">
-                                            <DrawingBrush.Drawing>
-                                                <DrawingGroup>
-                                                    <GeometryDrawing Brush="{DynamicResource InputBg}"><GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,2,2" /></GeometryDrawing.Geometry></GeometryDrawing>
-                                                    <GeometryDrawing Brush="{DynamicResource InputBorder}"><GeometryDrawing.Geometry><GeometryGroup><RectangleGeometry Rect="0,0,1,1" /><RectangleGeometry Rect="1,1,1,1" /></GeometryGroup></GeometryDrawing.Geometry></GeometryDrawing>
-                                                </DrawingGroup>
-                                            </DrawingBrush.Drawing>
-                                        </DrawingBrush>
-                                    </Grid.Background>
-                                    <Image x:Name="ResultImage" RenderOptions.BitmapScalingMode="NearestNeighbor" Stretch="Fill" />
-                                </Grid>
-                            </Viewbox>
-                            <StackPanel x:Name="PreviewEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
-                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
-                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Turn a picture into pixel art" />
-                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Choose a picture or drop one here. Fewer pixels and fewer colors give a more retro look." TextAlignment="Center" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <StackPanel Grid.Row="3" Margin="0,12,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
-                        <Button x:Name="BtnSave" MinHeight="36" Click="BtnSave_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentSaveOutline" />
-                                <TextBlock VerticalAlignment="Center" Text="Save PNG" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                <!--  ========== The pixel art ==========  -->
+                <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Margin="0,0,0,10" Content="Pixel art" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
+                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                            <Grid>
+                                <Viewbox x:Name="ResultBox" Margin="14" Stretch="Uniform" StretchDirection="Both" Visibility="Collapsed">
+                                    <Grid x:Name="ResultGrid">
+                                        <Grid.Background>
+                                            <DrawingBrush TileMode="Tile" Viewport="0,0,2,2" ViewportUnits="Absolute">
+                                                <DrawingBrush.Drawing>
+                                                    <DrawingGroup>
+                                                        <GeometryDrawing Brush="{DynamicResource InputBg}"><GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,2,2" /></GeometryDrawing.Geometry></GeometryDrawing>
+                                                        <GeometryDrawing Brush="{DynamicResource InputBorder}"><GeometryDrawing.Geometry><GeometryGroup><RectangleGeometry Rect="0,0,1,1" /><RectangleGeometry Rect="1,1,1,1" /></GeometryGroup></GeometryDrawing.Geometry></GeometryDrawing>
+                                                    </DrawingGroup>
+                                                </DrawingBrush.Drawing>
+                                            </DrawingBrush>
+                                        </Grid.Background>
+                                        <Image x:Name="ResultImage" RenderOptions.BitmapScalingMode="NearestNeighbor" Stretch="Fill" />
+                                    </Grid>
+                                </Viewbox>
+                                <StackPanel x:Name="PreviewEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
+                                    <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Turn a picture into pixel art" />
+                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Choose a picture or drop one here. Fewer pixels and fewer colors give a more retro look." TextAlignment="Center" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

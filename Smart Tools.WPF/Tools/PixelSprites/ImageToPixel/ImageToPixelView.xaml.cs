@@ -173,6 +173,9 @@ namespace Smart_Tools.WPF.Views
             TxtFileName.Text = Path.GetFileName(path);
             TxtSourceInfo.Text = $"{_width} × {_height} px";
             StatusBanner.Visibility = Visibility.Collapsed;
+            OriginalImage.Source = SpritePackerManager.CreateBitmap(_bgra, _width, _height);
+            OriginalEmpty.Visibility = Visibility.Collapsed;
+            TxtHeroHint.Visibility = Visibility.Collapsed;
             UpdateInfo();
             await ProcessAsync();
         }

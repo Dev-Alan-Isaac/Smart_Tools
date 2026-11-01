@@ -134,7 +134,7 @@
                 <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
-                            <Button x:Name="BtnCopy" MinWidth="110" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy everything shown">
+                            <Button x:Name="BtnCopy" MinHeight="36" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" ToolTip="Copy everything shown">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
                                     <TextBlock x:Name="TxtCopy" Text="Copy" />
@@ -147,30 +147,24 @@
                         </DockPanel>
                         <TextBlock x:Name="TxtError" Margin="70,8,0,0" FontSize="11.5" Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" />
 
-                        <Grid Margin="0,16,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="1.5*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,12,0">
+                        <WrapPanel Margin="0,16,0,0">
+                            <StackPanel MinWidth="190" Margin="0,0,28,8">
                                 <TextBlock Style="{StaticResource StatLabel}" Text="NETWORK" />
                                 <TextBlock x:Name="StatNetwork" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                            <StackPanel MinWidth="190" Margin="0,0,28,8">
                                 <TextBlock Style="{StaticResource StatLabel}" Text="SUBNET MASK" />
                                 <TextBlock x:Name="StatMask" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                            <StackPanel MinWidth="150" Margin="0,0,28,8">
                                 <TextBlock Style="{StaticResource StatLabel}" Text="USABLE HOSTS" />
                                 <TextBlock x:Name="StatHosts" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
-                            <StackPanel Grid.Column="3">
+                            <StackPanel Margin="0,0,0,8">
                                 <TextBlock Style="{StaticResource StatLabel}" Text="FIRST - LAST USABLE" />
-                                <TextBlock x:Name="StatRange" Style="{StaticResource StatValue}" FontSize="16" Text="-" TextWrapping="Wrap" />
+                                <TextBlock x:Name="StatRange" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
-                        </Grid>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 
