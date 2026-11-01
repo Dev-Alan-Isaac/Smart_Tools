@@ -991,7 +991,8 @@ namespace Smart_Tools.WPF.Views
                 _pauseWhenOpened = false;
                 Pause();
             }
-            if (_backend.Duration is not TimeSpan duration) return;
+            _seekTarget = null;
+            if (EffectiveDuration is not TimeSpan duration) return;
             SliderPosition.Maximum = Math.Max(1, duration.TotalSeconds);
             TxtTotalTime.Text = ReplayText.FormatTime(duration);
             if (_current != null && _current.Duration == null)
@@ -1094,8 +1095,24 @@ namespace Smart_Tools.WPF.Views
         private void SeekBy(TimeSpan delta)
         {
             if (!_backend.HasMedia) return;
-            _backend.Position = VideoReplayManager.Seek(_backend.Position, delta, _backend.Duration);
+            var target = VideoReplayManager.Seek(_backend.Position, delta, EffectiveDuration);
+            BeginSeek(target);
             UpdatePosition();
+        }
+
+        // A seek can take a while (sparse keyframes / no index). Until the engine catches up the slider keeps showing
+        // the target instead of snapping back to the old position on the next timer tick.
+        private TimeSpan? _seekTarget;
+        private DateTime _seekDeadline;
+
+        /// <summary>Engine length, or the ffprobe length when the file doesn't store one (browser-recorded WebM).</summary>
+        private TimeSpan? EffectiveDuration => _backend.Duration ?? _current?.Duration;
+
+        private void BeginSeek(TimeSpan target)
+        {
+            _seekTarget = target;
+            _seekDeadline = DateTime.UtcNow.AddSeconds(8);
+            _backend.Position = target;
         }
 
         private void PositionTimer_Tick(object? sender, EventArgs e)
@@ -1108,16 +1125,27 @@ namespace Smart_Tools.WPF.Views
         {
             if (_isUserSeeking || !_backend.HasMedia) return;
             var position = _backend.Position;
-            if (position > TimeSpan.Zero) _lastPosition = position;
-            _lastDuration = _backend.Duration;
-            if (_backend.Duration is TimeSpan d && Math.Abs(SliderPosition.Maximum - d.TotalSeconds) > 0.5)
+            if (_seekTarget is TimeSpan pending)
             {
-                SliderPosition.Maximum = Math.Max(1, d.TotalSeconds);
-                TxtTotalTime.Text = ReplayText.FormatTime(d);
+                if (DateTime.UtcNow < _seekDeadline && Math.Abs((position - pending).TotalSeconds) > 2)
+                    position = pending;   // engine still seeking - don't let the bar jump back
+                else
+                    _seekTarget = null;
             }
-            else if (_backend.Duration == null)
+            if (position > TimeSpan.Zero) _lastPosition = position;
+            var duration = EffectiveDuration;
+            _lastDuration = duration;
+            if (duration is TimeSpan d)
             {
-                TxtTotalTime.Text = "--:--";   // no length stored in the file (common for browser-recorded WebM)
+                if (Math.Abs(SliderPosition.Maximum - d.TotalSeconds) > 0.5)
+                {
+                    SliderPosition.Maximum = Math.Max(1, d.TotalSeconds);
+                    TxtTotalTime.Text = ReplayText.FormatTime(d);
+                }
+            }
+            else
+            {
+                TxtTotalTime.Text = "--:--";   // no length anywhere (engine and ffprobe both unknown)
                 TxtCurrentTime.Text = ReplayText.FormatTime(position);
                 return;
             }
@@ -1132,7 +1160,8 @@ namespace Smart_Tools.WPF.Views
         private void SliderPosition_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             _isUserSeeking = false;
-            if (_backend.HasMedia) _backend.Position = TimeSpan.FromSeconds(SliderPosition.Value);
+            // Without any known length the slider range is meaningless (max 1 s) - seeking would just restart the clip.
+            if (_backend.HasMedia && EffectiveDuration != null) BeginSeek(TimeSpan.FromSeconds(SliderPosition.Value));
         }
 
         /// <summary>While dragging, the time follows the thumb (the old one stayed frozen until release).</summary>
@@ -1140,7 +1169,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_viewConstructed || _updatingSlider) return;
             TxtCurrentTime.Text = ReplayText.FormatTime(TimeSpan.FromSeconds(e.NewValue));
-            if (!_isUserSeeking && _backend.HasMedia) _backend.Position = TimeSpan.FromSeconds(e.NewValue);
+            if (!_isUserSeeking && _backend.HasMedia && EffectiveDuration != null) BeginSeek(TimeSpan.FromSeconds(e.NewValue));
         }
 
         // ---------------- Volume and speed ----------------

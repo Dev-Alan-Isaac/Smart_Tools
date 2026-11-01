@@ -343,8 +343,10 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     token.ThrowIfCancellationRequested();
                     onEncoder?.Invoke(encoder);
-                    var args = new List<string> { "-hide_banner", "-nostdin", "-y", "-i", source, "-map", "0:v:0?", "-map", "0:a:0?" };
+                    var args = new List<string> { "-hide_banner", "-nostdin", "-y", "-fflags", "+genpts", "-i", source, "-map", "0:v:0?", "-map", "0:a:0?" };
                     args.AddRange(EncoderArgs(encoder));
+                    // A keyframe at least every 30 frames: otherwise seeking decodes from a keyframe that can be minutes back (long hangs).
+                    args.AddRange(new[] { "-g", "30" });
                     args.AddRange(new[] { "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-f", "mp4", "-progress", "pipe:1", "-nostats", part });
 
                     var run = await RunAsync(exe, args, line =>
