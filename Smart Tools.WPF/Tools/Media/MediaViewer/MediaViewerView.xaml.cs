@@ -1,4 +1,6 @@
+using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -6,6 +8,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
@@ -16,6 +19,7 @@ using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using OpenFolderDialog = Microsoft.Win32.OpenFolderDialog;
 using Point = System.Windows.Point;
+using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
@@ -24,21 +28,37 @@ namespace Smart_Tools.WPF.Views
     /// Media Viewer - UI only. Logic lives in MediaViewerManager.
     /// One list for pictures, video and sound: pictures show with zoom, pan
     /// and an optional slideshow; video and sound play in the same window.
+    /// Laid out like Video Replay and Image Viewer.
     /// </summary>
     public partial class MediaViewerView : UserControl
     {
+        private const double SidebarExpandedWidth = 280;
+        private const double SidebarCollapsedWidth = 56;
+        private const double PlaylistExpandedWidth = 380;
+
         private readonly ObservableCollection<MediaItem> _items = new();
         private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };
         private readonly DispatcherTimer _slide = new() { Interval = TimeSpan.FromSeconds(4) };
         private readonly bool _ready;
+        private readonly List<MediaSource> _sources = new();                  // what was added: files and folders
+        private readonly ObservableCollection<MediaQueueGroup> _groups = new();   // the input card's rows
+        private double _speed = 1;
 
         private int _index = -1;
         private int _loadVersion;
-        private bool _syncingList;
+        private MediaItem? _nowPlaying;
         private bool _updatingSlider;
         private bool _slideshow;
         private bool _playing;
         private bool _mediaOpen;
+        private bool _optionsCollapsed;
+        private bool _playlistCollapsed;
+        private bool _theater;
+
+        private readonly MediaViewerManager.ShuffleBag _bag = new();
+        private readonly List<MediaItem> _history = new();   // shuffle: what played before, for Previous
+        private double _angle;                               // picture rotation: 0, 90, 180, 270
+        private bool _goingBack;
 
         // Picture zoom: 0 = fit to the window, otherwise a scale (1 = 100%).
         private double _zoom;
@@ -50,11 +70,16 @@ namespace Smart_Tools.WPF.Views
         public MediaViewerView()
         {
             InitializeComponent();
-            PlaylistBox.ItemsSource = _items;
+            DataGridQueue.ItemsSource = _items;
+            InputCard.ItemsSource = _groups;
+            InputCard.FileFilter = MediaViewerManager.FileDialogFilter;
             _tick.Tick += (_, _) => UpdateProgress();
             _slide.Tick += (_, _) => StepForSlideshow();
             _ready = true;
             Player.Volume = VolumeSlider.Value;
+            ApplyPanels();
+            UpdateOrderUi();
+            RebuildGroups();
             UpdateUi();
         }
 
@@ -64,42 +89,107 @@ namespace Smart_Tools.WPF.Views
         private MediaItem? Current => _index >= 0 && _index < _items.Count ? _items[_index] : null;
 
         // =================================================================
+        //  Panels
+        // =================================================================
+
+        private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
+        {
+            _optionsCollapsed = !_optionsCollapsed;
+            ApplyPanels();
+        }
+
+        private void BtnTogglePlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            _playlistCollapsed = !_playlistCollapsed;
+            if (!_playlistCollapsed && _theater) _theater = false;
+            ApplyPanels();
+        }
+
+        private void BtnTheater_Click(object sender, RoutedEventArgs e) => ToggleTheater();
+
+        private void ToggleTheater()
+        {
+            _theater = !_theater;
+            ApplyPanels();
+        }
+
+        private void ApplyPanels()
+        {
+            OptionsSidebar.Visibility = _theater ? Visibility.Collapsed : Visibility.Visible;
+            OptionsColumn.Width = new GridLength(_theater ? 0 : _optionsCollapsed ? SidebarCollapsedWidth : SidebarExpandedWidth);
+            OptionsGapColumn.Width = new GridLength(_theater ? 0 : 14);
+            var v = _optionsCollapsed ? Visibility.Collapsed : Visibility.Visible;
+            TxtOptionsHeaderLabel.Visibility = v;
+            SepHeader.Visibility = v;
+            OptionsScrollViewer.Visibility = v;
+
+            bool playlistHidden = _theater || _playlistCollapsed;
+            PlaylistColumn.Width = new GridLength(playlistHidden ? 0 : PlaylistExpandedWidth);
+            PlaylistPanel.Visibility = playlistHidden ? Visibility.Collapsed : Visibility.Visible;
+            IconTogglePlaylist.Kind = playlistHidden ? PackIconKind.ChevronLeft : PackIconKind.ChevronRight;
+            IconTheater.Kind = _theater ? PackIconKind.ArrowCollapse : PackIconKind.ArrowExpand;
+        }
+
+        // =================================================================
         //  Opening
         // =================================================================
 
-        private void BtnOpenFiles_Click(object sender, RoutedEventArgs e)
+        /// <summary>Play with an empty list: ask for files (the input card in the sidebar does the same).</summary>
+        private void OpenFilesDialog()
         {
             var dialog = new OpenFileDialog { Title = S("Str_MediaViewer_OpenFiles", "Open files"), Multiselect = true, Filter = MediaViewerManager.FileDialogFilter };
             if (dialog.ShowDialog() == true) _ = AddPathsAsync(dialog.FileNames);
         }
 
-        private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFolderDialog { Title = S("Str_MediaViewer_OpenFolder", "Open folder") };
-            if (dialog.ShowDialog() == true) _ = AddPathsAsync(new[] { dialog.FolderName });
-        }
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e) => _ = AddPathsAsync(e.Paths);
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e)
+        private void InputCard_IncludeSubfoldersChanged(object? sender, EventArgs e) => RebuildGroups();
+
+        private void BtnClear_Click(object sender, RoutedEventArgs e) => InputCard_ClearRequested(sender, EventArgs.Empty);
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
             _items.Clear();
+            _sources.Clear();
+            _bag.Reset();
+            _history.Clear();
+            RebuildGroups();
             Show(-1);
         }
 
+        // Dragging over the page lights up the input card (like Video Replay).
         private void Root_DragOver(object sender, DragEventArgs e)
         {
-            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+            bool ok = e.Data.GetDataPresent(DataFormats.FileDrop);
+            e.Effects = ok ? DragDropEffects.Copy : DragDropEffects.None;
+            if (ok) InputCard.SetDropHighlight(true);
             e.Handled = true;
         }
 
+        private void Root_DragLeave(object sender, DragEventArgs e) => InputCard.SetDropHighlight(false);
+
         private void Root_Drop(object sender, DragEventArgs e)
         {
+            InputCard.SetDropHighlight(false);
             if (e.Data.GetData(DataFormats.FileDrop) is string[] paths) _ = AddPathsAsync(paths);
             e.Handled = true;
         }
 
+        /// <summary>Lists the new files/folders off the UI thread, then appends them (nothing already listed is touched).</summary>
         private async Task AddPathsAsync(IEnumerable<string> paths)
         {
-            var found = await Task.Run(() => MediaViewerManager.Expand(paths.ToList()));
+            var fresh = new List<MediaSource>();
+            foreach (string path in paths)
+            {
+                bool isFolder = Directory.Exists(path);
+                if (!isFolder && !File.Exists(path)) continue;
+                if (_sources.Any(s => string.Equals(s.FullPath, path, StringComparison.OrdinalIgnoreCase))) continue;
+                fresh.Add(new MediaSource { FullPath = path, IsFolder = isFolder });
+            }
+            if (fresh.Count == 0) return;
+
+            bool subfolders = InputCard.IncludeSubfolders;
+            var found = await Task.Run(() => MediaViewerManager.Expand(fresh.Select(f => f.FullPath).ToList(), subfolders));
             var known = new HashSet<string>(_items.Select(i => i.Path), StringComparer.OrdinalIgnoreCase);
             int firstNew = _items.Count;
             foreach (var item in found)
@@ -107,11 +197,43 @@ namespace Smart_Tools.WPF.Views
 
             if (_items.Count == firstNew)
             {
-                if (_items.Count == 0) ShowError(S("Str_MediaViewer_NothingFound", "No pictures, videos or music found there."));
+                ShowError(S("Str_MediaViewer_NothingFound", "No pictures, videos or music found there."));
                 return;
             }
+            _sources.AddRange(fresh);
+            RebuildGroups();
+            InputCard.PopDropArea();
             if (_index < 0 || Current == null) Show(firstNew);
             else UpdateUi();
+        }
+
+        /// <summary>Rebuilds the input card's rows from what was added; sources with nothing left drop out.</summary>
+        private void RebuildGroups()
+        {
+            var present = new HashSet<string>(_items.Select(i => i.Path), StringComparer.OrdinalIgnoreCase);
+            _sources.RemoveAll(s => s.IsFolder
+                ? !_items.Any(i => i.Path.StartsWith(s.FullPath.TrimEnd('\\', '/') + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                : !present.Contains(s.FullPath));
+
+            bool subfolders = InputCard.IncludeSubfolders;
+            _groups.Clear();
+            foreach (var g in MediaViewerManager.BuildGroups(_sources, _items))
+            {
+                g.Subtitle = g.IsFolder
+                    ? string.Format(CultureInfo.CurrentCulture, S("Str_MediaViewer_ItemsCount", "{0:N0} items"), g.ItemCount)
+                      + " · " + S(subfolders ? "Str_MediaViewer_WithSubfolders" : "Str_MediaViewer_FolderOnly", subfolders ? "with subfolders" : "this folder only")
+                    : g.FilePaths.Count == 1
+                        ? Path.GetFileName(g.FilePaths[0])
+                        : string.Format(CultureInfo.CurrentCulture, S("Str_MediaViewer_FilesCount", "{0:N0} files"), g.FilePaths.Count);
+                _groups.Add(g);
+            }
+            InputCard.SetEmpty(_groups.Count == 0);
+        }
+
+        private void BtnRemoveQueueGroup_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: MediaQueueGroup group }) return;
+            RemoveItems(MediaViewerManager.ItemsOf(group, _items));
         }
 
         // =================================================================
@@ -140,15 +262,24 @@ namespace Smart_Tools.WPF.Views
             Player.Visibility = Visibility.Collapsed;
             AudioPanel.Visibility = Visibility.Collapsed;
             EmptyPanel.Visibility = Visibility.Collapsed;
-            TxtError.Visibility = Visibility.Collapsed;
+            ErrorBanner.Visibility = Visibility.Collapsed;
         }
 
         private void ShowError(string text)
         {
-            HideStage();
             TxtError.Text = text;
-            TxtError.Visibility = Visibility.Visible;
+            ErrorBanner.Visibility = Visibility.Visible;
+            if (Current == null) EmptyPanel.Visibility = Visibility.Visible;
             UpdateUi();
+        }
+
+        private void BtnDismissError_Click(object sender, RoutedEventArgs e) => ErrorBanner.Visibility = Visibility.Collapsed;
+
+        private void SetNowPlaying(MediaItem? item)
+        {
+            if (_nowPlaying != null) _nowPlaying.IsNowPlaying = false;
+            _nowPlaying = item;
+            if (item != null) item.IsNowPlaying = true;
         }
 
         private void Show(int index)
@@ -158,6 +289,8 @@ namespace Smart_Tools.WPF.Views
             _loadVersion++;
             HideStage();
             ImageView.Source = null;
+            _angle = 0;
+            ImageRotate.Angle = 0;
             PosSlider.Value = 0;
             TxtPosition.Text = TxtDuration.Text = "0:00";
             TxtInfo.Text = "";
@@ -165,6 +298,7 @@ namespace Smart_Tools.WPF.Views
             if (index < 0 || index >= _items.Count)
             {
                 _index = -1;
+                SetNowPlaying(null);
                 TxtNowPlaying.Text = "";
                 EmptyPanel.Visibility = Visibility.Visible;
                 UpdateUi();
@@ -173,10 +307,15 @@ namespace Smart_Tools.WPF.Views
 
             _index = index;
             var item = _items[index];
-            _syncingList = true;
-            PlaylistBox.SelectedIndex = index;
-            PlaylistBox.ScrollIntoView(item);
-            _syncingList = false;
+            if (!_goingBack && _nowPlaying != null && !ReferenceEquals(_nowPlaying, item) && _items.Contains(_nowPlaying))
+            {
+                _history.Add(_nowPlaying);   // for Previous while shuffling
+                if (_history.Count > 200) _history.RemoveAt(0);
+            }
+            _goingBack = false;
+            _bag.Played(item);
+            SetNowPlaying(item);
+            DataGridQueue.ScrollIntoView(item);
             TxtNowPlaying.Text = item.Name;
 
             if (item.Kind == ViewerMediaKind.Image) ShowImage(item);
@@ -236,25 +375,234 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
-        private void PlaylistBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        // =================================================================
+        //  Playlist
+        // =================================================================
+
+        private void DataGridQueue_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (_syncingList || PlaylistBox.SelectedIndex < 0) return;
-            if (PlaylistBox.SelectedIndex != _index) Show(PlaylistBox.SelectedIndex);
+            if (e.OriginalSource is not DependencyObject source) return;
+            if (ItemsControl.ContainerFromElement(DataGridQueue, source) is DataGridRow { Item: MediaItem item })
+            {
+                Show(_items.IndexOf(item));
+                e.Handled = true;
+            }
+        }
+
+        private void DataGridQueue_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && DataGridQueue.SelectedItem is MediaItem item)
+            {
+                Show(_items.IndexOf(item));
+                e.Handled = true;
+            }
+        }
+
+        private void BtnRemoveFromList_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is MediaItem item) RemoveItems(new[] { item });
+        }
+
+        private void BtnRemoveSelected_Click(object sender, RoutedEventArgs e) =>
+            RemoveItems(DataGridQueue.SelectedItems.OfType<MediaItem>().ToList());
+
+        private void BtnSelectAll_Click(object sender, RoutedEventArgs e) => DataGridQueue.SelectAll();
+
+        /// <summary>Takes items off the list (the files themselves are never deleted).</summary>
+        private void RemoveItems(IReadOnlyCollection<MediaItem> victims)
+        {
+            if (victims.Count == 0) return;
+            var current = Current;
+            int oldIndex = _index;
+            bool removingCurrent = current != null && victims.Contains(current);
+            foreach (var v in victims.ToList()) _items.Remove(v);
+            RebuildGroups();
+
+            if (removingCurrent)
+            {
+                Show(_items.Count == 0 ? -1 : Math.Min(oldIndex, _items.Count - 1));
+            }
+            else
+            {
+                _index = current == null ? -1 : _items.IndexOf(current);
+                UpdateUi();
+            }
         }
 
         // =================================================================
         //  Playback
         // =================================================================
 
-        private double CurrentSpeed =>
-            ComboSpeed.SelectedItem is ComboBoxItem { Tag: string tag } && double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out double s) ? s : 1;
+        private static string DialogTitle => S("Str_Tool_media-viewer_Name", "Media Viewer");
+
+        /// <summary>The ticked rows; with none, the one on the stage.</summary>
+        private List<MediaItem> Targets()
+        {
+            var selected = DataGridQueue.SelectedItems.OfType<MediaItem>().ToList();
+            if (selected.Count == 0 && Current != null) selected.Add(Current);
+            return selected;
+        }
+
+        /// <summary>A right-click picks the row under the pointer (unless it's already part of the selection).</summary>
+        private void DataGridQueue_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is not DependencyObject source) return;
+            if (ItemsControl.ContainerFromElement(DataGridQueue, source) is DataGridRow { Item: MediaItem item } row && !row.IsSelected)
+            {
+                DataGridQueue.SelectedItems.Clear();
+                row.IsSelected = true;
+                DataGridQueue.SelectedItem = item;
+            }
+        }
+
+        private void MenuPlay_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataGridQueue.SelectedItem is MediaItem item) Show(_items.IndexOf(item));
+        }
+
+        private void MenuRemove_Click(object sender, RoutedEventArgs e) => RemoveItems(Targets());
+
+        private void MenuShowInFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataGridQueue.SelectedItem is not MediaItem item) return;
+            if (ShellExplorer.Show(item.Path) == ShellExplorer.ShowResult.NotFound)
+                System.Windows.MessageBox.Show(string.Format(S("Str_MediaViewer_NoLongerThere", "\"{0}\" is no longer there."), item.Name),
+                    DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        private void MenuDeleteFile_Click(object sender, RoutedEventArgs e) => DeleteFiles(Targets());
+
+        private void BtnDeleteFiles_Click(object sender, RoutedEventArgs e) => DeleteFiles(Targets());
+
+        /// <summary>Deletes the files from the computer (Recycle Bin where there is one) after asking, then takes them off the list.</summary>
+        private void DeleteFiles(List<MediaItem> targets)
+        {
+            if (targets.Count == 0) return;
+            bool bin = targets.All(t => ImageViewerManager.HasRecycleBin(t.Path));
+            string text = targets.Count == 1
+                ? string.Format(S(bin ? "Str_MediaViewer_DeleteBinOne" : "Str_MediaViewer_DeletePermOne",
+                    bin ? "Move \"{0}\" to the Recycle Bin?\n\nThis deletes the file from your computer, not just from the list."
+                        : "Delete \"{0}\" PERMANENTLY?\n\nIt's on a drive without a Recycle Bin, so it can't be undone."), targets[0].Name)
+                : string.Format(S(bin ? "Str_MediaViewer_DeleteBinMany" : "Str_MediaViewer_DeletePermMany",
+                    bin ? "Move {0} files to the Recycle Bin?\n\nThis deletes them from your computer, not just from the list."
+                        : "Delete {0} files PERMANENTLY?\n\nSome are on a drive without a Recycle Bin, so this can't be undone."), targets.Count);
+            if (System.Windows.MessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo,
+                    bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                return;
+
+            // A file that's playing is held open by the player - let go of it first.
+            var current = Current;
+            bool stoppedCurrent = current != null && targets.Contains(current) && current.Kind != ViewerMediaKind.Image;
+            if (stoppedCurrent) StopMedia();
+
+            var deleted = new List<MediaItem>();
+            string? failure = null;
+            foreach (var item in targets)
+            {
+                try
+                {
+                    ImageViewerManager.DeleteImage(item.Path);   // works for any file: Recycle Bin, else permanent
+                    deleted.Add(item);
+                }
+                catch (Exception ex)
+                {
+                    failure = string.Format(S("Str_MediaViewer_DeleteFailed", "Couldn't delete \"{0}\": {1}"), item.Name, ex.Message);
+                    break;
+                }
+            }
+
+            if (deleted.Count > 0) RemoveItems(deleted);
+            else if (stoppedCurrent && current != null && _items.Contains(current)) Show(_items.IndexOf(current));   // nothing deleted - carry on playing
+            if (failure != null)
+                System.Windows.MessageBox.Show(failure, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void BtnMoveUp_Click(object sender, RoutedEventArgs e) => MoveSelected(-1);
+
+        private void BtnMoveDown_Click(object sender, RoutedEventArgs e) => MoveSelected(+1);
+
+        /// <summary>Moves the selected rows one step; a block of rows moves together and stops at the edge.</summary>
+        private void MoveSelected(int delta)
+        {
+            var selected = DataGridQueue.SelectedItems.OfType<MediaItem>().ToList();
+            if (selected.Count == 0) return;
+            var chosen = new HashSet<MediaItem>(selected);
+            var current = Current;
+            var ordered = selected.OrderBy(i => _items.IndexOf(i)).ToList();
+            if (delta > 0) ordered.Reverse();
+
+            foreach (var item in ordered)
+            {
+                int at = _items.IndexOf(item);
+                int to = at + delta;
+                if (to < 0 || to >= _items.Count || chosen.Contains(_items[to])) continue;
+                _items.Move(at, to);
+            }
+            _index = current == null ? -1 : _items.IndexOf(current);
+            _bag.Reset();
+            UpdateUi();
+        }
+
+        private void BtnSortByName_Click(object sender, RoutedEventArgs e) => SortList(byDate: false);
+
+        private void BtnSortByDate_Click(object sender, RoutedEventArgs e) => SortList(byDate: true);
+
+        private void SortList(bool byDate)
+        {
+            if (_items.Count < 2) return;
+            var current = Current;
+            var sorted = MediaViewerManager.Sort(_items, byDate);
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                int at = _items.IndexOf(sorted[i]);
+                if (at != i) _items.Move(at, i);
+            }
+            _index = current == null ? -1 : _items.IndexOf(current);
+            _bag.Reset();
+            UpdateUi();
+        }
+
+        private double CurrentSpeed => _speed;
+
+        private RadioButton[] SlideRadios => new[] { RadioSlide2, RadioSlide4, RadioSlide7, RadioSlide10 };
+
+        // The speed pill on the player: click for faster, right-click (or Shift+S) for slower, like Video Replay.
+        private void BtnSpeed_Click(object sender, RoutedEventArgs e) => StepSpeed(+1);
+
+        private void BtnSpeed_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            StepSpeed(-1);
+            e.Handled = true;
+        }
+
+        private void StepSpeed(int direction)
+        {
+            var speeds = MediaViewerManager.Speeds.ToList();
+            int i = speeds.IndexOf(MediaViewerManager.ClampSpeed(_speed));
+            i = (i + direction + speeds.Count) % speeds.Count;
+            SetSpeed(speeds[i]);
+            UiMotion.Pop(BtnSpeed, 0.9);
+        }
+
+        private void SetSpeed(double speed)
+        {
+            _speed = MediaViewerManager.ClampSpeed(speed);
+            if (_mediaOpen) Player.SpeedRatio = _speed;
+            BtnSpeed.Content = MediaViewerManager.SpeedLabel(_speed);
+        }
+
+        private void Slide_Click(object sender, RoutedEventArgs e)
+        {
+            int seconds = SlideRadios.FirstOrDefault(r => r.IsChecked == true)?.Tag is string tag && int.TryParse(tag, out int v) ? v : 4;
+            _slide.Interval = TimeSpan.FromSeconds(seconds);
+        }
 
         private void TogglePlay()
         {
             var item = Current;
             if (item == null)
             {
-                BtnOpenFiles_Click(this, new RoutedEventArgs());
+                OpenFilesDialog();
                 return;
             }
 
@@ -278,22 +626,104 @@ namespace Smart_Tools.WPF.Views
             UpdateUi();
         }
 
+        private ViewerPlayOrder Order =>
+            RadioOrderShuffle.IsChecked == true ? ViewerPlayOrder.Shuffle
+            : RadioOrderRepeatOne.IsChecked == true ? ViewerPlayOrder.RepeatOne
+            : ViewerPlayOrder.Sequential;
+
+        private bool Repeat => ChkRepeatPlaylist.IsChecked == true && Order != ViewerPlayOrder.RepeatOne;
+
+        private void Order_Click(object sender, RoutedEventArgs e)
+        {
+            _bag.Reset();
+            _history.Clear();
+            UpdateOrderUi();
+        }
+
+        private void Repeat_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_ready) UpdateOrderUi();
+        }
+
+        /// <summary>The line under the order tiles says what the choice does, and "repeat the playlist" only applies when a list plays through.</summary>
+        private void UpdateOrderUi()
+        {
+            ChkRepeatPlaylist.IsEnabled = Order != ViewerPlayOrder.RepeatOne;
+            string key = Order switch
+            {
+                ViewerPlayOrder.Shuffle => Repeat ? "Str_MediaViewer_Hint_ShuffleRepeat" : "Str_MediaViewer_Hint_Shuffle",
+                ViewerPlayOrder.RepeatOne => "Str_MediaViewer_Hint_RepeatOne",
+                _ => Repeat ? "Str_MediaViewer_Hint_SequentialRepeat" : "Str_MediaViewer_Hint_Sequential",
+            };
+            TxtOrderHint.Text = S(key, key);
+        }
+
+        /// <summary>
+        /// What plays after the current item. Pressing Next (<paramref name="userAsked"/>)
+        /// always moves on, even when "repeat one" is chosen, and wraps round to the start.
+        /// Null = the end of the list.
+        /// </summary>
+        private MediaItem? ChooseNext(bool userAsked)
+        {
+            if (_items.Count == 0) return null;
+            var order = userAsked && Order == ViewerPlayOrder.RepeatOne ? ViewerPlayOrder.Sequential : Order;
+            if (order == ViewerPlayOrder.RepeatOne) return Current;
+            if (order == ViewerPlayOrder.Shuffle) return _bag.Next(_items, Current, Repeat || userAsked);
+            int next = _index + 1;
+            if (next < _items.Count) return _items[next];
+            return Repeat || userAsked ? _items[0] : null;
+        }
+
         private void StepForSlideshow()
         {
             if (_items.Count == 0 || Current?.Kind != ViewerMediaKind.Image) return;
-            Show((_index + 1) % _items.Count);
+            if (ChooseNext(userAsked: true) is { } next) Show(_items.IndexOf(next));
         }
 
         private void GoNext()
         {
-            if (_items.Count == 0) return;
-            Show(_index + 1 < _items.Count ? _index + 1 : 0);
+            if (ChooseNext(userAsked: true) is { } next) Show(_items.IndexOf(next));
         }
 
         private void GoPrevious()
         {
             if (_items.Count == 0) return;
+
+            // More than 3 s into a video or song: Previous starts it again.
+            if (Current is { Kind: not ViewerMediaKind.Image } && _mediaOpen && Player.Position > TimeSpan.FromSeconds(3))
+            {
+                Player.Position = TimeSpan.Zero;
+                return;
+            }
+
+            if (Order == ViewerPlayOrder.Shuffle)
+            {
+                while (_history.Count > 0)
+                {
+                    var back = _history[^1];
+                    _history.RemoveAt(_history.Count - 1);
+                    int at = _items.IndexOf(back);
+                    if (at < 0) continue;   // taken off the list since
+                    _goingBack = true;   // going back shouldn't be recorded, or Previous would bounce between two items
+                    Show(at);
+                    return;
+                }
+            }
             Show(_index > 0 ? _index - 1 : _items.Count - 1);
+        }
+
+        private void BtnSkipBack_Click(object sender, RoutedEventArgs e) => SkipBy(TimeSpan.FromSeconds(-10));
+
+        private void BtnSkipForward_Click(object sender, RoutedEventArgs e) => SkipBy(TimeSpan.FromSeconds(10));
+
+        private void SkipBy(TimeSpan delta)
+        {
+            if (!_mediaOpen || Current is not { Kind: not ViewerMediaKind.Image }) return;
+            var target = Player.Position + delta;
+            if (target < TimeSpan.Zero) target = TimeSpan.Zero;
+            if (Player.NaturalDuration.HasTimeSpan && target > Player.NaturalDuration.TimeSpan) target = Player.NaturalDuration.TimeSpan;
+            Player.Position = target;
+            TxtPosition.Text = MediaViewerManager.FormatTime(target);
         }
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e) => TogglePlay();
@@ -317,9 +747,16 @@ namespace Smart_Tools.WPF.Views
 
         private void Player_MediaEnded(object sender, RoutedEventArgs e)
         {
-            if (_index + 1 < _items.Count)
+            var next = ChooseNext(userAsked: false);
+            if (next != null && ReferenceEquals(next, Current))
             {
-                Show(_index + 1);   // plays on to the next one
+                Player.Position = TimeSpan.Zero;   // repeat one
+                Player.Play();
+                return;
+            }
+            if (next != null)
+            {
+                Show(_items.IndexOf(next));   // plays on to the next one
                 return;
             }
             Player.Stop();
@@ -355,11 +792,6 @@ namespace Smart_Tools.WPF.Views
             TxtPosition.Text = MediaViewerManager.FormatTime(Player.Position);
         }
 
-        private void ComboSpeed_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_ready && _mediaOpen) Player.SpeedRatio = CurrentSpeed;
-        }
-
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!_ready) return;
@@ -383,9 +815,25 @@ namespace Smart_Tools.WPF.Views
             get
             {
                 if (_pixelWidth == 0 || _pixelHeight == 0) return 1;
-                return Math.Min(ImageScroll.ActualWidth / _pixelWidth, ImageScroll.ActualHeight / _pixelHeight);
+                double w = Sideways ? _pixelHeight : _pixelWidth;   // a picture turned a quarter occupies the other way round
+                double h = Sideways ? _pixelWidth : _pixelHeight;
+                return Math.Min(ImageScroll.ActualWidth / w, ImageScroll.ActualHeight / h);
             }
         }
+
+        private bool Sideways => _angle % 180 != 0;
+
+        private void Rotate(double delta)
+        {
+            if (ImageView.Source == null) return;
+            _angle = (_angle + delta + 360) % 360;
+            ImageRotate.Angle = _angle;
+            ApplyZoom();
+        }
+
+        private void BtnRotateLeft_Click(object sender, RoutedEventArgs e) => Rotate(-90);
+
+        private void BtnRotateRight_Click(object sender, RoutedEventArgs e) => Rotate(90);
 
         private void ApplyZoom()
         {
@@ -394,15 +842,16 @@ namespace Smart_Tools.WPF.Views
             {
                 ImageScroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
                 ImageScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-                ImageView.Stretch = System.Windows.Media.Stretch.Uniform;
-                ImageView.Width = Math.Max(1, ImageScroll.ActualWidth);
-                ImageView.Height = Math.Max(1, ImageScroll.ActualHeight);
+                ImageView.Stretch = Stretch.Uniform;
+                // Before it's turned, the box is the window's the other way round when sideways.
+                ImageView.Width = Math.Max(1, Sideways ? ImageScroll.ActualHeight : ImageScroll.ActualWidth);
+                ImageView.Height = Math.Max(1, Sideways ? ImageScroll.ActualWidth : ImageScroll.ActualHeight);
             }
             else
             {
                 ImageScroll.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
                 ImageScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-                ImageView.Stretch = System.Windows.Media.Stretch.Fill;
+                ImageView.Stretch = Stretch.Fill;
                 ImageView.Width = _pixelWidth * _zoom;
                 ImageView.Height = _pixelHeight * _zoom;
             }
@@ -466,9 +915,19 @@ namespace Smart_Tools.WPF.Views
         //  Keyboard
         // =================================================================
 
+        private bool IsInsideGrid(object? source)
+        {
+            for (var d = source as DependencyObject; d != null; d = d is Visual or System.Windows.Media.Media3D.Visual3D ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d))
+                if (ReferenceEquals(d, DataGridQueue)) return true;
+            return false;
+        }
+
         private void Root_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase) return;
+            bool inGrid = IsInsideGrid(e.OriginalSource);
+            if (inGrid && e.Key is Key.Up or Key.Down or Key.Enter) return;   // the list keeps its own arrows and Enter
+
             bool media = Current is { Kind: not ViewerMediaKind.Image };
             switch (e.Key)
             {
@@ -498,21 +957,35 @@ namespace Smart_Tools.WPF.Views
                 case Key.M:
                     BtnMute_Click(this, new RoutedEventArgs());
                     break;
-                case Key.Delete when Current != null:
-                    RemoveCurrent();
+                case Key.Delete when Keyboard.Modifiers.HasFlag(ModifierKeys.Shift):
+                    DeleteFiles(inGrid ? Targets() : Current != null ? new List<MediaItem> { Current } : new List<MediaItem>());
+                    break;
+                case Key.Delete:
+                    if (inGrid && DataGridQueue.SelectedItems.Count > 0) RemoveItems(DataGridQueue.SelectedItems.OfType<MediaItem>().ToList());
+                    else if (Current != null) RemoveItems(new[] { Current });
+                    break;
+                case Key.N:
+                    GoNext();
+                    break;
+                case Key.P:
+                    GoPrevious();
+                    break;
+                case Key.T:
+                    ToggleTheater();
+                    break;
+                case Key.Escape when _theater:
+                    ToggleTheater();
+                    break;
+                case Key.S:
+                    StepSpeed(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : +1);
+                    break;
+                case Key.R:
+                    Rotate(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -90 : 90);
                     break;
                 default:
                     return;
             }
             e.Handled = true;
-        }
-
-        /// <summary>Takes the item off the list (the file itself is never deleted).</summary>
-        private void RemoveCurrent()
-        {
-            int at = _index;
-            _items.RemoveAt(at);
-            Show(_items.Count == 0 ? -1 : Math.Min(at, _items.Count - 1));
         }
 
         // =================================================================
@@ -528,19 +1001,28 @@ namespace Smart_Tools.WPF.Views
             bool media = has && !image;
 
             bool running = image ? _slideshow : _playing;
-            PlayIcon.Kind = running ? MaterialDesignThemes.Wpf.PackIconKind.Pause : MaterialDesignThemes.Wpf.PackIconKind.Play;
+            PlayIcon.Kind = running ? PackIconKind.Pause : PackIconKind.Play;
             BtnPrev.IsEnabled = BtnNext.IsEnabled = _items.Count > 1;
             BtnPlay.IsEnabled = has;
 
             SeekRow.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
-            ComboSpeed.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
             BtnMute.Visibility = VolumeSlider.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            BtnSpeed.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            BtnSkipBack.Visibility = BtnSkipForward.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            BtnRotateLeft.Visibility = BtnRotateRight.Visibility = image ? Visibility.Visible : Visibility.Collapsed;
             BtnFit.Visibility = image && _zoom > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-            MuteIcon.Kind = Player.IsMuted || VolumeSlider.Value <= 0
-                ? MaterialDesignThemes.Wpf.PackIconKind.VolumeOff
-                : MaterialDesignThemes.Wpf.PackIconKind.VolumeHigh;
-            TxtCount.Text = has ? $"{_index + 1} / {_items.Count}" : (_items.Count > 0 ? _items.Count.ToString(CultureInfo.CurrentCulture) : "");
+            MuteIcon.Kind = Player.IsMuted || VolumeSlider.Value <= 0 ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
+
+            bool any = _items.Count > 0;
+            EmptyStatePanel.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
+            DataGridQueue.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            BtnSelectAll.IsEnabled = BtnRemoveSelected.IsEnabled = BtnClearQueue.IsEnabled = BtnDeleteFiles.IsEnabled = any;
+            BtnMoveUp.IsEnabled = BtnMoveDown.IsEnabled = BtnSortByName.IsEnabled = BtnSortByDate.IsEnabled = _items.Count > 1;
+            SummaryPill.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            TxtCount.Text = _items.Count.ToString(CultureInfo.CurrentCulture);
+            PillPosition.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
+            TxtPositionPill.Text = has ? $"{_index + 1} / {_items.Count}" : "";
         }
 
         private void Root_Unloaded(object sender, RoutedEventArgs e)
