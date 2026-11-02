@@ -58,7 +58,8 @@ namespace Smart_Tools.WPF.Views
         private bool _updatingSlider;
         private int _consecutiveFailures;
         private bool _keepNotice;                 // a skip reason is showing - the next clip's load must not wipe it
-        private TimeSpan _lastPosition;           // where the clip was at the last timer tick (VLC resets it when a clip ends)
+        private bool _retriedEarlyEnd;            // the current clip already got its one retry after ending too early
+        private TimeSpan _lastPosition;          // where the clip was at the last timer tick (VLC resets it when a clip ends)
         private TimeSpan? _lastDuration;
         private double _speed = 1.0;
         private bool _muted;
@@ -898,6 +899,7 @@ namespace Smart_Tools.WPF.Views
             var cts = _loadCts = new CancellationTokenSource();
 
             if (_current != null && !ReferenceEquals(_current, item) && _current.Status != ClipStatus.Failed) _current.Status = ClipStatus.Ready;
+            if (!ReferenceEquals(_current, item)) _retriedEarlyEnd = false;
             _current = item;
             _lastPosition = TimeSpan.Zero;
             _lastDuration = null;
@@ -1036,6 +1038,14 @@ namespace Smart_Tools.WPF.Views
                 bool early = _lastDuration is TimeSpan d
                     ? _lastPosition < d - TimeSpan.FromSeconds(3)
                     : _lastPosition < TimeSpan.FromSeconds(10);
+                if (early && !_retriedEarlyEnd)
+                {
+                    // One more try before skipping: a good clip shouldn't be lost to a glitch in the engine.
+                    _retriedEarlyEnd = true;
+                    VideoReplayManager.LogSkip(_current.FullPath, _backend.Name, $"Ended at {ReplayText.FormatTime(_lastPosition)} - trying it once more.");
+                    _ = LoadAndPlayAsync(_current);
+                    return;
+                }
                 if (early)
                 {
                     string where = _lastDuration is TimeSpan len

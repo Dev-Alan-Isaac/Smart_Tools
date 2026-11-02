@@ -128,6 +128,15 @@ namespace Smart_Tools.WPF.Views
         private long? _pendingSeekMs;
         private int _playingPolls;
 
+        // Right after Open, VLC 3 still answers with the PREVIOUS clip's state (Ended)
+        // and time until its new input starts. Taking that for the new clip made good
+        // clips "end" at once and cascade through the playlist. So state and time are
+        // only trusted once this clip has been seen starting.
+        private bool _mediaStarted;
+        private bool _staleLogged;
+        private DateTime _openedAtUtc;
+        private static readonly TimeSpan StartGrace = TimeSpan.FromSeconds(3);
+
         public VlcBackend(VlcVideoHost host)
         {
             _host = host;
@@ -145,6 +154,7 @@ namespace Smart_Tools.WPF.Views
         {
             get
             {
+                if (!_mediaStarted) return TimeSpan.Zero;   // a time VLC still holds from the previous clip
                 long ms = _vlc.TimeMs;
                 return ms > 0 ? TimeSpan.FromMilliseconds(ms) : TimeSpan.Zero;
             }
@@ -171,6 +181,9 @@ namespace Smart_Tools.WPF.Views
             _endRaised = false;
             _pendingSeekMs = null;
             _playingPolls = 0;
+            _mediaStarted = false;
+            _staleLogged = false;
+            _openedAtUtc = DateTime.UtcNow;
             _hasMedia = true;
             _vlc.Open(path);
         }
@@ -182,6 +195,9 @@ namespace Smart_Tools.WPF.Views
             {
                 _openedRaised = false;
                 _playingPolls = 0;
+                _mediaStarted = false;   // starting again after the end: the old "Ended" is stale until it restarts
+                _staleLogged = false;
+                _openedAtUtc = DateTime.UtcNow;
             }
             _vlc.Play();   // resumes, or starts again after the end (decided on VLC's command thread)
         }
@@ -192,6 +208,7 @@ namespace Smart_Tools.WPF.Views
         {
             _hasMedia = false;
             _openedRaised = false;
+            _mediaStarted = false;
             _vlc.Stop();
         }
 
@@ -229,6 +246,34 @@ namespace Smart_Tools.WPF.Views
             }
             if (_vlc.IsBusy) return;   // a command is still running - judge the state afterwards
             var state = _vlc.State;
+            if (state is VlcPlayer.VlcState.Opening or VlcPlayer.VlcState.Buffering or VlcPlayer.VlcState.Playing or VlcPlayer.VlcState.Paused)
+                _mediaStarted = true;
+            else if (!_mediaStarted && (state is VlcPlayer.VlcState.Ended or VlcPlayer.VlcState.Error))
+            {
+                // Not started yet, so this is most likely the previous clip's leftover state.
+                if (DateTime.UtcNow - _openedAtUtc < StartGrace)
+                {
+                    if (!_staleLogged)
+                    {
+                        _staleLogged = true;
+                        Smart_Tools.WPF.Log.Info($"VLC still reports {state} from the previous clip - ignoring it until the new clip starts.");
+                    }
+                    return;
+                }
+                if (state == VlcPlayer.VlcState.Ended && _vlc.LengthMs > 0)
+                {
+                    _mediaStarted = true;   // a very short clip that ended between two polls - a real end
+                }
+                else
+                {
+                    // Three seconds and it never started: a real failure, not a leftover.
+                    _hasMedia = false;
+                    Failed?.Invoke(state == VlcPlayer.VlcState.Error
+                        ? VlcPlayer.ErrorMessage ?? "VLC couldn't play it."
+                        : "VLC never started this file.");
+                    return;
+                }
+            }
             if (state == VlcPlayer.VlcState.Playing) _playingPolls++;
             switch (state)
             {
