@@ -228,7 +228,12 @@ namespace Smart_Tools.WPF.Views
             }
             Show(PanelFindReplace, RenameMethod.FindReplace);
             Show(PanelPrefixSuffix, RenameMethod.PrefixSuffix);
+            Show(PanelReplaceName, RenameMethod.ReplaceName);
             Show(PanelNumberSequence, RenameMethod.NumberSequence);
+            // Replace-whole-name reuses the numbering boxes (not the before/after choice).
+            bool replaceName = method == RenameMethod.ReplaceName;
+            if (replaceName) PanelNumberSequence.Visibility = Visibility.Visible;
+            PanelNumberPosition.Visibility = replaceName ? Visibility.Collapsed : Visibility.Visible;
             Show(PanelChangeCase, RenameMethod.ChangeCase);
             Show(PanelTrimStrip, RenameMethod.TrimStrip);
             Show(PanelRegexReplace, RenameMethod.RegexReplace);
@@ -239,6 +244,7 @@ namespace Smart_Tools.WPF.Views
             {
                 RenameMethod.PrefixSuffix => "Adds text before and after each name.",
                 RenameMethod.NumberSequence => "Numbers the files - by name or by date, per folder or across them all.",
+                RenameMethod.ReplaceName => "Gives every file the same new name plus a number: 1.png and abc.png become album_001.png and album_002.png.",
                 RenameMethod.ChangeCase => "Changes upper and lower case. A change of case alone works too.",
                 RenameMethod.TrimStrip => "Cuts characters off the start or end of each name.",
                 RenameMethod.RegexReplace => "For advanced patterns. A pattern that isn't valid is explained above the list.",
@@ -293,6 +299,8 @@ namespace Smart_Tools.WPF.Views
                 Suffix = TxtSuffix.Text,
                 SuffixBeforeExtension = ChkSuffixBeforeExtension.IsChecked == true,
 
+                NewName = TxtNewName.Text,
+
                 StartAt = ReadInt(TxtStartAt, "Start", 1, -1_000_000_000, 1_000_000_000, problems),
                 Increment = ReadInt(TxtIncrement, "Step", 1, -1_000_000, 1_000_000, problems),
                 Padding = ReadInt(TxtPadding, "Digits", 0, 0, 10, problems),
@@ -327,7 +335,7 @@ namespace Smart_Tools.WPF.Views
             };
 
             // Only the chosen method's boxes matter.
-            bool relevant = o.Method is RenameMethod.NumberSequence or RenameMethod.TrimStrip;
+            bool relevant = o.Method is RenameMethod.NumberSequence or RenameMethod.ReplaceName or RenameMethod.TrimStrip;
             TxtSettingError.Text = relevant ? string.Join(" ", problems) : "";
             TxtSettingError.Visibility = relevant && problems.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             return o;
@@ -355,6 +363,7 @@ namespace Smart_Tools.WPF.Views
                 TxtSuffix.Text = o.Suffix;
                 ChkSuffixBeforeExtension.IsChecked = o.SuffixBeforeExtension;
 
+                TxtNewName.Text = o.NewName;
                 TxtStartAt.Text = o.StartAt.ToString(CultureInfo.CurrentCulture);
                 TxtIncrement.Text = o.Increment.ToString(CultureInfo.CurrentCulture);
                 TxtPadding.Text = o.Padding.ToString(CultureInfo.CurrentCulture);

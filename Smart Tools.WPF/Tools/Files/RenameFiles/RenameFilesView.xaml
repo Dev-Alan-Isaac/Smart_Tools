@@ -482,6 +482,17 @@
                                                 <TextBlock Style="{StaticResource MethodItemText}" Text="{DynamicResource Str_RenameFiles_CleanSuffixes}" />
                                             </StackPanel>
                                         </ComboBoxItem>
+                                        <ComboBoxItem Tag="ReplaceName">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="RenameBox" />
+                                                <TextBlock Style="{StaticResource MethodItemText}" Text="{DynamicResource Str_RenameFiles_ReplaceName}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
                                     </ComboBox>
 
                                     <TextBlock
@@ -564,6 +575,21 @@
                                     </StackPanel>
 
                                     <StackPanel
+                                        x:Name="PanelReplaceName"
+                                        Margin="0,6,0,0"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            Margin="0,6,0,4"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_RenameFiles_NewName}" />
+                                        <TextBox
+                                            x:Name="TxtNewName"
+                                            Tag="For example: album"
+                                            TextChanged="Setting_Changed"
+                                            ToolTip="{DynamicResource Str_RenameFiles_NewNameTooltip}" />
+                                    </StackPanel>
+
+                                    <StackPanel
                                         x:Name="PanelNumberSequence"
                                         Margin="0,6,0,0"
                                         Visibility="Collapsed">
@@ -621,6 +647,7 @@
                                             TextChanged="Setting_Changed"
                                             ToolTip="{DynamicResource Str_RenameFiles_WhatGoesBetweenThe}" />
 
+                                        <StackPanel x:Name="PanelNumberPosition">
                                         <TextBlock
                                             Margin="0,10,0,6"
                                             Style="{StaticResource FieldLabel}"
@@ -655,6 +682,7 @@
                                                 Tag="ReplaceEntireName"
                                                 ToolTip="{DynamicResource Str_RenameFiles_001TheNumberReplaces}" />
                                         </UniformGrid>
+                                        </StackPanel>
 
                                         <TextBlock
                                             Margin="0,10,0,6"

@@ -23,6 +23,9 @@ namespace Smart_Tools.WPF.Models
 
         /// <summary>Strips leftovers of copies from the end of the name: "_1", "-1", " - Copy", a second "(2)".</summary>
         CleanSuffixes,
+
+        /// <summary>Throws the old names away: every file gets <see cref="RenameOptions.NewName"/> plus a number ("album_001.png").</summary>
+        ReplaceName,
     }
 
     public enum RenameCaseStyle
@@ -107,6 +110,9 @@ namespace Smart_Tools.WPF.Models
         public string Prefix { get; set; } = "";
         public string Suffix { get; set; } = "";
         public bool SuffixBeforeExtension { get; set; } = true;
+
+        // Replace whole name (numbering below is shared with Number sequence)
+        public string NewName { get; set; } = "";
 
         // Number sequence
         public int StartAt { get; set; } = 1;

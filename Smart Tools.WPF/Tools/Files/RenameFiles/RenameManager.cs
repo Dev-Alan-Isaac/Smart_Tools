@@ -177,6 +177,9 @@ namespace Smart_Tools.WPF.Controllers
                         _ => name + o.Separator + n,
                     };
                     break;
+                case RenameMethod.ReplaceName:
+                    name = (o.NewName ?? "").Trim() + o.Separator + FormatNumber(number, o.Padding);
+                    break;
                 case RenameMethod.ChangeCase:
                     name = ApplyCase(name, o.CaseStyle);
                     // The extension only follows UPPER; every other style makes it lower
@@ -267,6 +270,8 @@ namespace Smart_Tools.WPF.Controllers
         public static string? ValidateOptions(RenameOptions o, out Regex? regex)
         {
             regex = null;
+            if (o.Method == RenameMethod.ReplaceName && string.IsNullOrWhiteSpace(o.NewName))
+                return "Type the new name for the files.";
             if (o.Method == RenameMethod.RegexReplace)
             {
                 if (string.IsNullOrEmpty(o.Pattern)) return "Type a pattern to search for.";
@@ -327,7 +332,7 @@ namespace Smart_Tools.WPF.Controllers
         public static List<RenameSourceFile> Order(IEnumerable<RenameSourceFile> files, RenameOptions o)
         {
             var byFolder = files.OrderBy(f => f.Folder, NaturalComparer.Instance);
-            return (o.Method == RenameMethod.NumberSequence && o.NumberOrder == RenameNumberOrder.DateModified
+            return ((o.Method == RenameMethod.NumberSequence || o.Method == RenameMethod.ReplaceName) && o.NumberOrder == RenameNumberOrder.DateModified
                     ? byFolder.ThenBy(f => f.Modified).ThenBy(f => f.FileName, NaturalComparer.Instance)
                     : byFolder.ThenBy(f => f.FileName, NaturalComparer.Instance))
                 .ToList();
