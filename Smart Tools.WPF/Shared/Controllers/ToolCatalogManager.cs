@@ -72,6 +72,7 @@ namespace Smart_Tools.WPF.Controllers
 
             // Video
             new ToolInfo { Id = "video-replay", Name = "Video Replay", Icon = "MovieOpen", CategoryId = "video", Description = "Play videos and playlists", Keywords = "player watch mp4 mkv movie" },
+            new ToolInfo { Id = "media-viewer", Name = "Media Viewer", Icon = "PlayBoxMultipleOutline", CategoryId = "video", Description = "View pictures and play videos and music in one place", Keywords = "media viewer player movies tv photos pictures images video audio music slideshow gallery visor reproductor multimedia peliculas fotos musica" },
             new ToolInfo { Id = "video-editor", Name = "Video Stitcher", Icon = "FilmstripBoxMultiple", CategoryId = "video", Description = "Join video clips into one, with optional trims and fades", Keywords = "stitch join merge combine concat clips edit cut trim fade unir juntar" },
             new ToolInfo { Id = "video-to-audio", Name = "Video to Audio", Title = "Video to Audio Extractor", Icon = "FileMusicOutline", CategoryId = "video", Description = "Pull the audio track out of videos, in bulk", Keywords = "extract audio video mp3 m4a wav flac sound track rip" },
             new ToolInfo { Id = "video-compressor", Name = "Video Compressor", Title = "Video Compressor & Trimmer", Icon = "VideoMinusOutline", CategoryId = "video", Description = "Make videos smaller, or cut out the part you want", Keywords = "compress compressor reduce shrink smaller size trim cut clip speed resize 720p 1080p mp4 comprimir reducir recortar cortar peso" },

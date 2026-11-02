@@ -160,6 +160,7 @@ namespace Smart_Tools.WPF
 
             // Video
             Add<VideoReplayView>("video-replay", v => v.CancelActiveRun());
+            Add<MediaViewerView>("media-viewer", v => v.CancelActiveRun());   // stops playback and the slideshow, lets go of the file
             Add<VideoEditingView>("video-editor", v => v.CancelActiveRun());
             Add<VideoToAudioExtractorView>("video-to-audio", v => v.CancelActiveRun());   // stops ffmpeg/ffprobe
             Add<VideoCompressorView>("video-compressor", v => v.CancelActiveRun());   // stops ffmpeg/ffprobe
