@@ -114,6 +114,9 @@ namespace Smart_Tools.WPF.Models
         // Replace whole name (numbering below is shared with Number sequence)
         public string NewName { get; set; } = "";
 
+        /// <summary>Number like Windows does: "album (1).png" instead of using the separator ("album_001.png").</summary>
+        public bool WindowsStyleNumbering { get; set; } = true;
+
         // Number sequence
         public int StartAt { get; set; } = 1;
         public int Padding { get; set; } = 3;

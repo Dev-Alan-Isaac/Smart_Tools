@@ -234,6 +234,7 @@ namespace Smart_Tools.WPF.Views
             bool replaceName = method == RenameMethod.ReplaceName;
             if (replaceName) PanelNumberSequence.Visibility = Visibility.Visible;
             PanelNumberPosition.Visibility = replaceName ? Visibility.Collapsed : Visibility.Visible;
+            PanelSeparator.Visibility = replaceName && ChkWindowsStyle.IsChecked == true ? Visibility.Collapsed : Visibility.Visible;
             Show(PanelChangeCase, RenameMethod.ChangeCase);
             Show(PanelTrimStrip, RenameMethod.TrimStrip);
             Show(PanelRegexReplace, RenameMethod.RegexReplace);
@@ -300,6 +301,7 @@ namespace Smart_Tools.WPF.Views
                 SuffixBeforeExtension = ChkSuffixBeforeExtension.IsChecked == true,
 
                 NewName = TxtNewName.Text,
+                WindowsStyleNumbering = ChkWindowsStyle.IsChecked == true,
 
                 StartAt = ReadInt(TxtStartAt, "Start", 1, -1_000_000_000, 1_000_000_000, problems),
                 Increment = ReadInt(TxtIncrement, "Step", 1, -1_000_000, 1_000_000, problems),
@@ -364,6 +366,7 @@ namespace Smart_Tools.WPF.Views
                 ChkSuffixBeforeExtension.IsChecked = o.SuffixBeforeExtension;
 
                 TxtNewName.Text = o.NewName;
+                ChkWindowsStyle.IsChecked = o.WindowsStyleNumbering;
                 TxtStartAt.Text = o.StartAt.ToString(CultureInfo.CurrentCulture);
                 TxtIncrement.Text = o.Increment.ToString(CultureInfo.CurrentCulture);
                 TxtPadding.Text = o.Padding.ToString(CultureInfo.CurrentCulture);

@@ -178,7 +178,10 @@ namespace Smart_Tools.WPF.Controllers
                     };
                     break;
                 case RenameMethod.ReplaceName:
-                    name = (o.NewName ?? "").Trim() + o.Separator + FormatNumber(number, o.Padding);
+                    string baseName = (o.NewName ?? "").Trim();
+                    name = o.WindowsStyleNumbering
+                        ? $"{baseName} ({FormatNumber(number, o.Padding)})"
+                        : baseName + o.Separator + FormatNumber(number, o.Padding);
                     break;
                 case RenameMethod.ChangeCase:
                     name = ApplyCase(name, o.CaseStyle);

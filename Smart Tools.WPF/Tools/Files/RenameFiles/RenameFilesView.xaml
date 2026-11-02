@@ -587,6 +587,15 @@
                                             Tag="For example: album"
                                             TextChanged="Setting_Changed"
                                             ToolTip="{DynamicResource Str_RenameFiles_NewNameTooltip}" />
+                                        <CheckBox
+                                            x:Name="ChkWindowsStyle"
+                                            Margin="0,10,0,0"
+                                            Checked="Setting_Changed"
+                                            Content="{DynamicResource Str_RenameFiles_WindowsStyle}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_RenameFiles_WindowsStyleTooltip}"
+                                            Unchecked="Setting_Changed" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -636,6 +645,7 @@
                                             </StackPanel>
                                         </Grid>
 
+                                        <StackPanel x:Name="PanelSeparator">
                                         <TextBlock
                                             Margin="0,10,0,4"
                                             Style="{StaticResource FieldLabel}"
@@ -646,6 +656,7 @@
                                             Text="_"
                                             TextChanged="Setting_Changed"
                                             ToolTip="{DynamicResource Str_RenameFiles_WhatGoesBetweenThe}" />
+                                        </StackPanel>
 
                                         <StackPanel x:Name="PanelNumberPosition">
                                         <TextBlock
