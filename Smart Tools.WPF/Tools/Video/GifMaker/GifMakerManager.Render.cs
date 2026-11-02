@@ -59,7 +59,9 @@ namespace Smart_Tools.WPF.Controllers
             _frames = frames;
             Width = width;
             Height = height;
-            _canvas = new byte[width * height * 4];
+            long canvasBytes = (long)width * height * 4;   // long: int math overflows above ~23k x 23k
+            if (canvasBytes > int.MaxValue) throw new InvalidOperationException("GIF is too large to preview.");   // caught in FromBytes -> null
+            _canvas = new byte[canvasBytes];
             Bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
         }
 

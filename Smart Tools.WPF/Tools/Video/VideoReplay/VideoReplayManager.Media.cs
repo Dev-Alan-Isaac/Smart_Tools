@@ -360,6 +360,8 @@ namespace Smart_Tools.WPF.Controllers
             if (File.Exists(target)) return target;
             string exe = FfmpegExe ?? throw new InvalidOperationException($"This format needs a preview copy, and ffmpeg wasn't found in {FfmpegFolder}.");
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            try { OutputFolderManager.EnsureFreeSpace(Path.GetDirectoryName(target)!, new FileInfo(source).Length); }   // the copy is about as big as the source
+            catch (FileNotFoundException) { }
 
             double duration = (await ProbeDurationAsync(source, token).ConfigureAwait(false))?.TotalSeconds ?? 0;
             string part = target + ".part";
@@ -465,7 +467,11 @@ namespace Smart_Tools.WPF.Controllers
             p.OutputDataReceived += (_, e) =>
             {
                 if (e.Data == null) return;
-                lock (output) output.AppendLine(e.Data);
+                lock (output)
+                {
+                    output.AppendLine(e.Data);
+                    if (output.Length > 131_072) output.Remove(0, output.Length - 65_536);   // multi-hour renders: keep only the tail
+                }
                 onOutputLine?.Invoke(e.Data);
             };
             p.ErrorDataReceived += (_, e) =>

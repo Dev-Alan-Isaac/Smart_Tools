@@ -319,7 +319,7 @@ namespace Smart_Tools.WPF.Controllers
                 // Read both pipes at once - reading one to the end first can deadlock when the other fills up.
                 var outTask = p.StandardOutput.ReadToEndAsync();
                 var errTask = p.StandardError.ReadToEndAsync();
-                if (!p.WaitForExit(20_000)) { try { p.Kill(entireProcessTree: true); } catch (InvalidOperationException) { } problem = "ffprobe took too long."; return null; }
+                if (!p.WaitForExit((int)Smart_Tools.WPF.Controllers.ProbeTimeout.For(path).TotalMilliseconds)) { try { p.Kill(entireProcessTree: true); } catch (InvalidOperationException) { } problem = "ffprobe took too long."; return null; }
                 p.WaitForExit();   // flush the pipes
                 string output = outTask.GetAwaiter().GetResult().Trim();
                 string error = errTask.GetAwaiter().GetResult().Trim();

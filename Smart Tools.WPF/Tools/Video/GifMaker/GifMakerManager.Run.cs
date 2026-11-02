@@ -165,7 +165,7 @@ namespace Smart_Tools.WPF.Controllers
             var (exit, output, error) = await CaptureAsync(exe, new[]
             {
                 "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x", path,
-            }, TimeSpan.FromSeconds(20), token);
+            }, Smart_Tools.WPF.Controllers.ProbeTimeout.For(path), token);
             string text = System.Text.Encoding.UTF8.GetString(output).Trim();
             string[] parts = text.Split('x', '\n');
             if (exit == 0 && parts.Length >= 2

@@ -85,6 +85,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     _writer = new WaveFileWriter(path, waveFormat);
                     _dataBytes = 0;
+                    _limitReached = false;
                     _format = format;
                 }
                 _paused = false;
@@ -160,16 +161,27 @@ namespace Smart_Tools.WPF.Controllers
             return take;
         }
 
+        // A classic RIFF WAV holds at most 4 GiB; stop a little short of that so the header stays valid.
+        private const long MaxWavDataBytes = 4_000_000_000;
+        private bool _limitReached;
+
         private void WaveIn_DataAvailable(object? sender, WaveInEventArgs e)
         {
+            bool hitLimit = false;
             lock (_gate)
             {
-                if (!_paused && _writer != null)
+                if (!_paused && _writer != null && !_limitReached)
                 {
-                    _writer.Write(e.Buffer, 0, e.BytesRecorded);
-                    _dataBytes += e.BytesRecorded;
+                    int count = (int)Math.Min(e.BytesRecorded, MaxWavDataBytes - _dataBytes);
+                    if (count > 0)
+                    {
+                        _writer.Write(e.Buffer, 0, count);
+                        _dataBytes += count;
+                    }
+                    if (_dataBytes >= MaxWavDataBytes) { _limitReached = true; hitLimit = true; }
                 }
             }
+            if (hitLimit) System.Threading.Tasks.Task.Run(Stop);
             if (!_paused) _monitorBuffer?.AddSamples(e.Buffer, 0, e.BytesRecorded);
             int bits = (sender as WaveInEvent)?.WaveFormat.BitsPerSample ?? 16;
             LevelChanged?.Invoke(MeterPercent(PeakLevel(e.Buffer, e.BytesRecorded, bits)));
@@ -187,6 +199,11 @@ namespace Smart_Tools.WPF.Controllers
             var take = FinishTake();
             // The old view ignored e.Exception: an unplugged mic ended the take with no word why.
             string? error = e.Exception == null ? null : "The microphone stopped: " + e.Exception.Message;
+            if (_limitReached)
+            {
+                error ??= "Recording stopped at the 4 GB limit of a WAV file. Your recording so far is saved; start a new one to continue.";
+                _limitReached = false;
+            }
             RecordingFinished?.Invoke(take, error);
         }
 

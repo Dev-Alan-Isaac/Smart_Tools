@@ -335,7 +335,7 @@ namespace Smart_Tools.WPF.Controllers
             switch (o.Format)
             {
                 case AudioTrimFormat.Wav:
-                    args.AddRange(new[] { "-c:a", "pcm_s16le", "-f", "wav" });
+                    args.AddRange(new[] { "-c:a", "pcm_s16le", "-rf64", "auto", "-f", "wav" });
                     break;
                 case AudioTrimFormat.Flac:
                     args.AddRange(new[] { "-c:a", "flac", "-f", "flac" });

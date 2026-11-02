@@ -430,7 +430,11 @@ namespace Smart_Tools.WPF.Controllers
                         if (e.Data.StartsWith("out_time_us=", StringComparison.Ordinal)) lastProgress = e.Data;
                     }
                 }
-                lock (output) output.AppendLine(e.Data);
+                lock (output)
+                {
+                    output.AppendLine(e.Data);
+                    if (output.Length > 131_072) output.Remove(0, output.Length - 65_536);   // multi-hour renders: keep only the tail
+                }
                 onOutputLine?.Invoke(e.Data);
             };
             p.ErrorDataReceived += (_, e) =>

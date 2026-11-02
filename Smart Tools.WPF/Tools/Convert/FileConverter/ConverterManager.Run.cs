@@ -513,10 +513,10 @@ namespace Smart_Tools.WPF.Controllers
                 using var p = Process.Start(psi)!;
                 var errTask = p.StandardError.ReadToEndAsync();
                 var outTask = p.StandardOutput.ReadToEndAsync();
-                if (!p.WaitForExit(15_000))
+                if (!p.WaitForExit((int)Smart_Tools.WPF.Controllers.ProbeTimeout.For(input).TotalMilliseconds))
                 {
                     try { p.Kill(true); } catch (Exception) { }
-                    return 0;
+                    return 0;   // unknown length: RunFfmpegAsync should show indeterminate progress
                 }
                 return ParseDuration(outTask.Result);
             }

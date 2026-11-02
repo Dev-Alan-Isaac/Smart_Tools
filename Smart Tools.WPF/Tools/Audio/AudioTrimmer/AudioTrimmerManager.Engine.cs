@@ -57,7 +57,7 @@ namespace Smart_Tools.WPF.Controllers
             var outTask = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
             var errTask = process.StandardError.ReadToEndAsync(CancellationToken.None);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            timeout.CancelAfter(Smart_Tools.WPF.Controllers.ProbeTimeout.For(path));
             try
             {
                 await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
@@ -239,12 +239,14 @@ namespace Smart_Tools.WPF.Controllers
             Directory.CreateDirectory(PreviewFolder);
             string wav = Path.Combine(PreviewFolder, $"{Guid.NewGuid():N}.wav");
             string temp = wav + ".tmp";
+            // 16-bit stereo at up to 48 kHz is ~192 KB per second.
+            Smart_Tools.WPF.Controllers.OutputFolderManager.EnsureFreeSpace(PreviewFolder, (long)(Math.Max(0, duration) * 192_000));
             try
             {
                 var args = new List<string>
                 {
                     "-nostdin", "-y", "-progress", "pipe:1", "-nostats", "-i", path, "-map", "0:a:0", "-vn",
-                    "-c:a", "pcm_s16le", "-f", "wav", temp,
+                    "-c:a", "pcm_s16le", "-rf64", "auto", "-f", "wav", temp,
                 };
                 await RunFfmpegAsync(args, duration, null, token).ConfigureAwait(false);
                 File.Move(temp, wav, overwrite: true);

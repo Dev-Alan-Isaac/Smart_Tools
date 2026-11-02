@@ -62,6 +62,17 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>
+        /// Throws an IOException with a readable message when the drive holding <paramref name="folder"/> clearly
+        /// can't take <paramref name="neededBytes"/> (plus a 256 MB margin). Does nothing when free space can't be told.
+        /// </summary>
+        public static void EnsureFreeSpace(string folder, long neededBytes)
+        {
+            if (neededBytes <= 0 || FreeSpace(folder) is not long free) return;
+            if (free < neededBytes + 256L * 1024 * 1024)
+                throw new IOException($"Not enough free disk space: about {neededBytes / (1024 * 1024)} MB is needed, {free / (1024 * 1024)} MB is free.");
+        }
+
         /// <summary>Free bytes on the drive holding the folder, or null if it can't be told (some network shares).</summary>
         public static long? FreeSpace(string folder)
         {

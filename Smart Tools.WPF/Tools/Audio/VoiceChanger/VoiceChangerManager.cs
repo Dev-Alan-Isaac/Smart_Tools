@@ -110,16 +110,40 @@ namespace Smart_Tools.WPF.Controllers
 
         private static VoiceChangerTake RenderOne(string path, VoiceChangerEffect effect, string summary, CancellationToken token)
         {
-            var (samples, format) = Decode(path, token);
-            token.ThrowIfCancellationRequested();
-            float[] processed = VoiceChangerDsp.Apply(samples, format.SampleRate, format.Channels, effect);
-            token.ThrowIfCancellationRequested();
-            double gain = LimitPeak(processed);
+            // Two streaming passes, so memory stays flat however long the file is:
+            // pass 1 finds the loudest sample (for the limiter), pass 2 writes with the gain applied.
+            float peak = 0;
+            var (format, total) = Stream(path, effect, token, (buf, n) =>
+            {
+                for (int i = 0; i < n; i++)
+                {
+                    float a = Math.Abs(buf[i]);
+                    if (a > peak && !float.IsNaN(a) && !float.IsInfinity(a)) peak = a;
+                }
+            });
+            if (total * 2 > MaxWavDataBytes)
+                throw new InvalidOperationException("the result would be over 4 GB, which a WAV file can't hold");
 
+            double gain = peak <= 0.98f ? 1 : 0.98 / peak;
             string output = NewResultPath(path, effect);
             try
             {
-                WriteWav16(output, processed, format.SampleRate, format.Channels);
+                using var writer = new WaveFileWriter(output, new WaveFormat(format.SampleRate, 16, format.Channels));
+                var bytes = new byte[8192 * 2];
+                Stream(path, effect, token, (buf, n) =>
+                {
+                    int count = 0;
+                    for (int i = 0; i < n; i++)
+                    {
+                        float f = buf[i];
+                        if (float.IsNaN(f) || float.IsInfinity(f)) f = 0;   // a broken effect sample would otherwise be noise
+                        short v = (short)Math.Round(Math.Clamp((float)(f * gain), -1f, 1f) * short.MaxValue);
+                        bytes[count++] = (byte)v;
+                        bytes[count++] = (byte)(v >> 8);
+                        if (count == bytes.Length) { writer.Write(bytes, 0, count); count = 0; }
+                    }
+                    if (count > 0) writer.Write(bytes, 0, count);
+                });
             }
             catch
             {
@@ -131,46 +155,51 @@ namespace Smart_Tools.WPF.Controllers
                 FilePath = output,
                 SourceName = Path.GetFileName(path),
                 EffectSummary = summary,
-                Duration = TimeSpan.FromSeconds(processed.Length / (double)(format.SampleRate * format.Channels)),
+                Duration = TimeSpan.FromSeconds(total / (double)((long)format.SampleRate * format.Channels)),
                 WasLimited = gain < 1,
             };
         }
 
-        /// <summary>Writes floats (already limited to ±1) as a 16-bit PCM WAV.</summary>
-        private static void WriteWav16(string path, float[] samples, int sampleRate, int channels)
-        {
-            using var writer = new WaveFileWriter(path, new WaveFormat(sampleRate, 16, channels));
-            var bytes = new byte[8192 * 2];
-            int n = 0;
-            foreach (float s in samples)
-            {
-                short v = (short)Math.Round(Math.Clamp(s, -1f, 1f) * short.MaxValue);
-                bytes[n++] = (byte)v;
-                bytes[n++] = (byte)(v >> 8);
-                if (n == bytes.Length)
-                {
-                    writer.Write(bytes, 0, n);
-                    n = 0;
-                }
-            }
-            if (n > 0) writer.Write(bytes, 0, n);
-        }
+        // A classic RIFF WAV can't hold more than 4 GiB of audio; refuse cleanly before that.
+        private const long MaxWavDataBytes = 4_000_000_000;
 
-        /// <summary>Any format Windows can decode (wav, mp3, wma, aac, flac...) to interleaved floats at its own rate.</summary>
-        private static (float[] Samples, WaveFormat Format) Decode(string path, CancellationToken token)
+        /// <summary>
+        /// Decodes any format Windows can read (wav, mp3, wma, aac, flac...) one second at a time,
+        /// runs the effect over each block (a fresh chain per call, so both passes sound identical),
+        /// appends the echo tail, and hands each block to <paramref name="sink"/>.
+        /// Returns the format and the total number of samples delivered.
+        /// </summary>
+        private static (WaveFormat Format, long Total) Stream(string path, VoiceChangerEffect effect, CancellationToken token, Action<float[], int> sink)
         {
             using var reader = new AudioFileReader(path);
             ISampleProvider samples = reader;   // NAudio 3: AudioFileReader is also a Stream, whose Read takes bytes
             var format = WaveFormat.CreateIeeeFloatWaveFormat(reader.WaveFormat.SampleRate, reader.WaveFormat.Channels);
+            int channels = Math.Max(1, format.Channels);
             var chunk = new float[format.SampleRate * format.Channels];
-            var all = new List<float>(reader.Length > 0 ? (int)Math.Min(int.MaxValue / 2, reader.Length / 4) : chunk.Length * 8);
+            VoiceChangerChain? chain = effect.IsNeutral ? null : new VoiceChangerChain(format.SampleRate, channels, effect);
+            long total = 0;
             int read;
             while ((read = samples.Read(chunk)) > 0)
             {
                 token.ThrowIfCancellationRequested();
-                for (int i = 0; i < read; i++) all.Add(chunk[i]);
+                chain?.Process(chunk, 0, read);
+                sink(chunk, read);
+                total += read;
             }
-            return (all.ToArray(), format);
+
+            // Echo tail: silence in, the repeats ring out.
+            long tail = (long)VoiceChangerDsp.EchoTailFrames(format.SampleRate, effect) * channels;
+            while (tail > 0)
+            {
+                token.ThrowIfCancellationRequested();
+                int n = (int)Math.Min(chunk.Length, tail);
+                Array.Clear(chunk, 0, n);
+                chain?.Process(chunk, 0, n);
+                sink(chunk, n);
+                total += n;
+                tail -= n;
+            }
+            return (format, total);
         }
 
         // =================================================================

@@ -82,7 +82,7 @@ namespace Smart_Tools.WPF.Controllers
                     a.AddRange(new[] { "-c:a", "aac", "-b:a", kbps, "-movflags", "+faststart", "-f", "ipod" });
                     break;
                 case VtaFormat.Wav:
-                    a.AddRange(new[] { "-c:a", "pcm_s16le", "-f", "wav" });
+                    a.AddRange(new[] { "-c:a", "pcm_s16le", "-rf64", "auto", "-f", "wav" });
                     break;
                 case VtaFormat.Flac:
                     a.AddRange(new[] { "-c:a", "flac", "-compression_level", "5", "-f", "flac" });
