@@ -66,7 +66,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "organize-files", Name = "Organize Files", Icon = "FolderFile", CategoryId = "files", Description = "Sort files into folders", Keywords = "sort tidy folders move by type date" },
             new ToolInfo { Id = "search-files", Name = "Search Files", Icon = "FileSearch", CategoryId = "files", Description = "Find text and patterns inside files", Keywords = "grep find text regex content" },
             new ToolInfo { Id = "copy-queue", Name = "Copy Queue", Icon = "FolderMoveOutline", CategoryId = "files", Description = "Copy or move big sets of files safely, with pause and verify", Keywords = "copy move batch queue backup transfer verify pause resume checksum copiar mover cola respaldo" },
-
             new ToolInfo { Id = "folder-tree", Name = "Folder Tree Exporter", Icon = "FileTreeOutline", CategoryId = "files", Description = "Export a folder's structure as a text tree, Markdown, JSON or CSV", Keywords = "folder tree structure export directory listing map tree command markdown json csv arbol carpetas estructura exportar" },
             new ToolInfo { Id = "metadata-extract", Name = "Metadata Extractor", Icon = "TagMultiple", CategoryId = "files", Description = "Read the hidden details in files", Keywords = "metadata exif tags properties" },
 
@@ -96,11 +95,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "loudness-meter", Name = "Loudness Meter & Normalizer", Icon = "Speedometer", CategoryId = "audio", Description = "Measure LUFS and peak, and make normalized copies for YouTube, Spotify or podcasts", Keywords = "loudness lufs normalize volume level peak ebu r128 replaygain podcast youtube spotify nivelar volumen sonoridad" },
             new ToolInfo { Id = "audio-trimmer", Name = "Audio Trimmer & Joiner", Icon = "ContentCut", CategoryId = "audio", Description = "Cut, join, fade and normalize audio", Keywords = "audio trim cut join merge fade normalize waveform mp3 wav flac split recortar unir" },
 
-            // Music
-            new ToolInfo { Id = "instrument-tuner", Name = "Instrument Tuner", Icon = "MusicClefTreble", CategoryId = "music", Description = "Tune guitar, bass, violin and more", Keywords = "tuner guitar bass violin ukulele pitch note afinador" },
-            new ToolInfo { Id = "synthesizer", Name = "Synthesizer", Icon = "Piano", CategoryId = "music", Description = "Play notes and shape sounds", Keywords = "synth piano keyboard notes oscillator" },
-            new ToolInfo { Id = "midi-instruments", Name = "MIDI Instruments", Icon = "Midi", CategoryId = "music", Description = "Play 128 instruments and drum kits, record to .mid", Keywords = "midi instruments drums drum kit record mid general gm keyboard orchestra violin trumpet sax instrumentos bateria teclado musica grabar" },
-
             // Images
             new ToolInfo { Id = "image-editor", Name = "Image Editor", Icon = "ImageEditOutline", CategoryId = "images", Description = "Crop, resize and adjust images", Keywords = "edit crop resize rotate photo" },
             new ToolInfo { Id = "bulk-image-resizer", Name = "Bulk Image Resizer", Icon = "ImageMultipleOutline", CategoryId = "images", Description = "Shrink and recompress many pictures at once, with a target file size", Keywords = "resize compress shrink batch bulk images photos jpg png webp quality size redimensionar comprimir imagenes" },
@@ -110,8 +104,12 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "color-wheel", Name = "Color Wheel", Title = "Color Wheel & Gradients", Icon = "PaletteOutline", CategoryId = "colors", Description = "Build palettes and gradients", Keywords = "colour palette gradient harmony" },
             new ToolInfo { Id = "palette-extractor", Name = "Palette Extractor", Title = "Image Color Palette Extractor", Icon = "PaletteSwatchOutline", CategoryId = "colors", Description = "Pull the main colors out of a picture", Keywords = "colour color palette extract dominant image picture swatch kmeans median cut contrast wcag hex css paleta colores imagen" },
             new ToolInfo { Id = "svg-tool", Name = "SVG Viewer & Optimizer", Icon = "VectorSquare", CategoryId = "images", Description = "Preview SVG files, make them smaller and export PNGs", Keywords = "svg vector optimize minify png svgo viewer export" },
-
             new ToolInfo { Id = "screenshot", Name = "Screenshot", Title = "Screenshot & Markup", Icon = "Camera", CategoryId = "images", Description = "Capture an area, a window, or the whole screen, mark it up, then copy or save", Keywords = "screenshot screen capture snip snipping print screen grab region window annotate arrow blur pixelate highlight text copy captura pantalla recorte" },
+
+            // Music
+            new ToolInfo { Id = "instrument-tuner", Name = "Instrument Tuner", Icon = "MusicClefTreble", CategoryId = "music", Description = "Tune guitar, bass, violin and more", Keywords = "tuner guitar bass violin ukulele pitch note afinador" },
+            new ToolInfo { Id = "synthesizer", Name = "Synthesizer", Icon = "Piano", CategoryId = "music", Description = "Play notes and shape sounds", Keywords = "synth piano keyboard notes oscillator" },
+            new ToolInfo { Id = "midi-instruments", Name = "MIDI Instruments", Icon = "Midi", CategoryId = "music", Description = "Play 128 instruments and drum kits, record to .mid", Keywords = "midi instruments drums drum kit record mid general gm keyboard orchestra violin trumpet sax instrumentos bateria teclado musica grabar" },
 
             // Storage
             new ToolInfo { Id = "drive-health", Name = "Drive Health", Title = "Drive Health Monitor", Icon = "Harddisk", CategoryId = "storage", Description = "Check the health of your drives and track it over time", Keywords = "smart ssd hdd health temperature" },
@@ -137,9 +135,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "monitor-test", Name = "Monitor Test", Title = "Monitor Test & Pixel Inspector", Icon = "Monitor", CategoryId = "hardware", Description = "Full-screen patterns for dead pixels, light bleed, banding, calibration and refresh rate", Keywords = "monitor screen display dead pixel stuck bleed backlight burn-in retention gradient banding gamma calibration refresh rate hz ufo oled lcd test" },
             new ToolInfo { Id = "monitor-hdr", Name = "Monitor HDR & Color Depth", Title = "Monitor HDR & Color Depth Checker", Icon = "Hdr", CategoryId = "hardware", Description = "See what each screen supports: HDR, bits per color, brightness and color range", Keywords = "monitor screen display hdr hdr10 10-bit 8-bit color depth bit depth gamut srgb p3 rec2020 nits brightness banding gradient ycbcr chroma edid dxgi" },
             new ToolInfo { Id = "keyboard-mouse-test", Name = "Keyboard & Mouse Test", Title = "Keyboard & Mouse Event Tester", Icon = "Keyboard", CategoryId = "hardware", Description = "Key map, ghosting, rollover, mouse polling rate, chatter and reaction time", Keywords = "keyboard mouse test ghosting rollover nkro polling rate hz dpi chatter double click latency reaction wheel switch key" },
-
             new ToolInfo { Id = "mic-test", Name = "Microphone Test", Title = "Microphone Level Tester", Icon = "MicrophoneOutline", CategoryId = "hardware", Description = "Check your microphone: live level, peak, clipping, and hear yourself", Keywords = "microphone mic test level meter db peak clipping noise record input headset usb privacy micrófono prueba nivel" },
-
             new ToolInfo { Id = "webcam-test", Name = "Webcam Test", Title = "Webcam Tester", Icon = "Webcam", CategoryId = "hardware", Description = "See your camera live: resolution, frame rate, brightness, and a snapshot", Keywords = "webcam camera test preview resolution fps frame rate brightness snapshot usb privacy video cámara prueba" },
 
             // Security
@@ -159,7 +155,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "tcp-udp-client", Name = "TCP / UDP Client", Icon = "SwapHorizontal", CategoryId = "network", Description = "Send text or bytes to a device or server", Keywords = "tcp udp socket client hercules terminal device network tools" },
             new ToolInfo { Id = "device-scanner", Name = "Device Scanner", Icon = "Radar", CategoryId = "network", Description = "Find devices on your network", Keywords = "lan scan ip devices" },
             new ToolInfo { Id = "internet-speed", Name = "Internet Speed Test", Icon = "Speedometer", CategoryId = "network", Description = "Measure download and upload speed", Keywords = "speed test bandwidth ping wifi" },
-            new ToolInfo { Id = "net-speed-widget", Name = "Network Speed Widget", Icon = "SpeedometerMedium", CategoryId = "network", Description = "A floating live download and upload meter, with the adapter's manufacturer", Keywords = "network speed widget upload download bandwidth monitor mac manufacturer oui adapter overlay" },
+            new ToolInfo { Id = "net-speed", Name = "Network Speed Widget", Icon = "SpeedometerMedium", CategoryId = "network", Description = "A floating live download and upload meter, with the adapter's manufacturer", Keywords = "network speed widget upload download bandwidth monitor mac manufacturer oui adapter overlay" },
 
             // Developer
             new ToolInfo { Id = "api-tester", Name = "API Tester", Icon = "Webhook", CategoryId = "developer", Description = "Send web requests and read the replies", Keywords = "http rest request json postman" },
@@ -170,7 +166,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "code-toolkit", Name = "Code Toolkit", Icon = "CodeBraces", CategoryId = "developer", Description = "Format, encode and convert code", Keywords = "json format base64 encode hash" },
             new ToolInfo { Id = "md-html-editor", Name = "MD & HTML Editor", Title = "MD & HTML Previewer / Editor", Icon = "LanguageMarkdownOutline", CategoryId = "developer", Description = "Write Markdown or HTML with a live preview, export to HTML or PDF", Keywords = "markdown md html preview editor readme webview2 pdf export" },
             new ToolInfo { Id = "db-migrate", Name = "Database Migrator", Icon = "DatabaseSyncOutline", CategoryId = "developer", Description = "Copy a SQL Server database to a newer or older server version, no backup file needed", Keywords = "sql server database migrate migration copy move restore bak backup version upgrade downgrade downlevel schema data transfer base de datos migrar copiar mover versión" },
-
             new ToolInfo { Id = "encode-decode", Name = "Base64 & URL Encoder", Title = "Base64 & URL Encoder / Decoder", Icon = "SwapHorizontal", CategoryId = "developer", Description = "Encode and decode Base64, URLs, HTML entities and files", Keywords = "base64 url percent encode decode html entities data uri urlencode escape unescape codificar decodificar" },
 
             // Calculators
@@ -188,7 +183,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "notes", Name = "Notes", Icon = "Notebook", CategoryId = "utilities", Description = "Write quick notes", Keywords = "notes notepad text memo" },
             new ToolInfo { Id = "clipboard-history", Name = "Clipboard History", Icon = "ClipboardTextOutline", CategoryId = "utilities", Description = "Everything you copied, searchable, with pins. Saved only if you turn it on", Keywords = "clipboard history paste copy pin portapapeles historial copiar" },
             new ToolInfo { Id = "screen-ocr", Name = "Screen OCR", Title = "Screen Text Extractor", Icon = "TextRecognition", CategoryId = "utilities", Description = "Extract text from a screenshot or screen region", Keywords = "ocr text extract screenshot capture recognize image to text" },
-
             new ToolInfo { Id = "translate", Name = "Translate", Icon = "Translate", CategoryId = "utilities", Description = "Translate text offline between English and Spanish", Keywords = "translate translator language english spanish offline traducir traductor idioma ingles espanol" },
 
             // Pixel & Sprites
