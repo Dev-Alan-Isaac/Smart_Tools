@@ -20,8 +20,9 @@
     <!--
         Backend: Controllers/VideoReplayManager.cs (PlayOrder, file lists,
         settings), VideoReplayManager.Media.cs (folders, ffprobe durations,
-        preview copies, deleting). Playback is WPF's MediaElement (Windows
-        Media Foundation). This file and the code-behind are UI only.
+        deleting). Playback is VLC (VideoReplayView.Players.cs) with WPF's
+        MediaElement as the fallback if VLC can't load; no FFmpeg preview
+        copies are made here. This file and the code-behind are UI only.
         The stage is fixed-dark (#0E0F12) with its own player chrome, like
         Find Similar Files; everything around it uses theme tokens.
     -->

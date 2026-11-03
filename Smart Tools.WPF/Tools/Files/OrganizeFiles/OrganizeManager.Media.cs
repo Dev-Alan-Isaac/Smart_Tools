@@ -14,29 +14,7 @@ namespace Smart_Tools.WPF.Controllers
         public static string FfmpegFolder => Smart_Tools.WPF.Controllers.FfmpegLocator.Folder;
 
         /// <summary>The bundled Engines\FFMPEG copy, else one on PATH, else null.</summary>
-        public static string? FfprobeExe
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(FfprobePathOverride)) return File.Exists(FfprobePathOverride) ? FfprobePathOverride : null;
-                string exe = OperatingSystem.IsWindows() ? "ffprobe.exe" : "ffprobe";
-                string bundled = Path.Combine(FfmpegFolder, exe);
-                if (File.Exists(bundled)) return bundled;
-                foreach (string dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    try
-                    {
-                        string candidate = Path.Combine(dir.Trim('"'), exe);
-                        if (File.Exists(candidate)) return candidate;
-                    }
-                    catch (ArgumentException)
-                    {
-                        // bad PATH entry
-                    }
-                }
-                return null;
-            }
-        }
+        public static string? FfprobeExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffprobe", FfprobePathOverride);
 
         private const int ProbeTimeoutMs = 15_000;
 

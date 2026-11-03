@@ -20,31 +20,8 @@ namespace Smart_Tools.WPF.Controllers
         public static string FfmpegFolder => Smart_Tools.WPF.Controllers.FfmpegLocator.Folder;
 
         /// <summary>The bundled Engines\FFMPEG copy, else one on PATH, else null.</summary>
-        public static string? FfmpegExe => ResolveTool("ffmpeg", FfmpegPathOverride);
-        public static string? FfprobeExe => ResolveTool("ffprobe", FfprobePathOverride);
-
-        private static string? ResolveTool(string name, string? overridePath)
-        {
-            if (!string.IsNullOrEmpty(overridePath)) return File.Exists(overridePath) ? overridePath : null;
-
-            string exe = OperatingSystem.IsWindows() ? name + ".exe" : name;
-            string bundled = Path.Combine(FfmpegFolder, exe);
-            if (File.Exists(bundled)) return bundled;
-
-            foreach (string dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-            {
-                try
-                {
-                    string candidate = Path.Combine(dir.Trim('"'), exe);
-                    if (File.Exists(candidate)) return candidate;
-                }
-                catch (ArgumentException)
-                {
-                    // bad PATH entry
-                }
-            }
-            return null;
-        }
+        public static string? FfmpegExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffmpeg", FfmpegPathOverride);
+        public static string? FfprobeExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffprobe", FfprobePathOverride);
 
         private static readonly object SvtLock = new();
         private static string? _svtCheckedFor;

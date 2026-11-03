@@ -158,8 +158,8 @@ namespace Smart_Tools.WPF.Controllers
 
     /// <summary>
     /// Video Replay - play order helpers, file lists, wording and settings.
-    /// Folders, durations and preview copies are in VideoReplayManager.Media.cs.
-    /// Playback itself is WPF's MediaElement (Windows Media Foundation).
+    /// Folders, durations and preview copies (used by Video Stitcher) are in VideoReplayManager.Media.cs.
+    /// Playback itself is VLC, with WPF's MediaElement as the fallback.
     /// </summary>
     public static partial class VideoReplayManager
     {

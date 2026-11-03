@@ -19,32 +19,9 @@ namespace Smart_Tools.WPF.Controllers
         public static string? FfprobePathOverride { get; set; }
 
         public static string FfmpegFolder => Smart_Tools.WPF.Controllers.FfmpegLocator.Folder;
-        public static string? FfmpegExe => ResolveTool("ffmpeg", FfmpegPathOverride);
-        public static string? FfprobeExe => ResolveTool("ffprobe", FfprobePathOverride);
+        public static string? FfmpegExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffmpeg", FfmpegPathOverride);
+        public static string? FfprobeExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffprobe", FfprobePathOverride);
         public static bool HasFfmpeg => FfmpegExe != null && FfprobeExe != null;
-
-        private static string? ResolveTool(string name, string? overridePath)
-        {
-            if (overridePath != null) return File.Exists(overridePath) ? overridePath : null;
-
-            string exe = OperatingSystem.IsWindows() ? name + ".exe" : name;
-            string bundled = Path.Combine(FfmpegFolder, exe);
-            if (File.Exists(bundled)) return bundled;
-
-            foreach (string dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-            {
-                try
-                {
-                    string candidate = Path.Combine(dir.Trim('"'), exe);
-                    if (File.Exists(candidate)) return candidate;
-                }
-                catch (ArgumentException)
-                {
-                    // bad PATH entry
-                }
-            }
-            return null;
-        }
 
         /// <summary>At most this many ffmpeg decodes at once (each already uses several cores).</summary>
         private static readonly SemaphoreSlim DecodeGate = new(Math.Max(1, Environment.ProcessorCount / 4));

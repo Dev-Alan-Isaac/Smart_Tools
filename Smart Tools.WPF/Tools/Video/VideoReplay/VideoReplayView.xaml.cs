@@ -115,7 +115,6 @@ namespace Smart_Tools.WPF.Views
             StopPlayback();
             _positionTimer.Stop();
             ShutDownVlc();
-            VideoReplayManager.SweepPreviews();
         }
 
         private bool _vlcShutDown;
@@ -152,7 +151,6 @@ namespace Smart_Tools.WPF.Views
             {
                 _loadedOnce = true;
                 ApplySettings(VideoReplayManager.LoadSettings());
-                _ = Task.Run(() => VideoReplayManager.SweepPreviews());   // leftovers from a crash
                 _vlcStart = StartVlcAsync();
             }
             else if (_resume is { } r)
@@ -895,7 +893,7 @@ namespace Smart_Tools.WPF.Views
         /// copy first, with progress; anything else that fails to open gets
         /// one try with a preview copy before it's marked failed.
         /// </summary>
-        private async Task LoadAndPlayAsync(PlaylistItem item, bool forcePreview = false, TimeSpan? startAt = null)
+        private async Task LoadAndPlayAsync(PlaylistItem item, TimeSpan? startAt = null)
         {
             CancelPendingSkip();
             _loadCts?.Cancel();
@@ -927,44 +925,9 @@ namespace Smart_Tools.WPF.Views
             }
 
             UseBestBackend();
+            // VLC plays every format directly. No FFmpeg preview copies any more: if VLC isn't running
+            // and Windows' player can't open the file, it fails and is skipped like any other bad clip.
             string source = item.FullPath;
-            // VLC plays everything directly; only Windows' player needs preview copies.
-            bool needsCopy = !_backend.PlaysEverything &&
-                             (forcePreview || VideoReplayManager.NeedsPreviewCopy.Contains(Path.GetExtension(item.FullPath)));
-            // Without ffmpeg, try the original anyway - some PCs have the codec.
-            if (needsCopy && VideoReplayManager.FfmpegExe != null)
-            {
-                _backend.Stop();
-                ShowSurface(false);
-                item.Status = ClipStatus.Converting;
-                ProgressConvert.IsIndeterminate = true;
-                TxtConvert.Text = $"{Path.GetExtension(item.FullPath).ToUpperInvariant().TrimStart('.')} can't be played by Windows directly.";
-                UiMotion.FadeVisibility(ConvertingPanel, true);
-                string encoderLabel = "graphics card";
-                try
-                {
-                    source = await VideoReplayManager.CreatePreviewAsync(item.FullPath, p => Dispatcher.InvokeAsync(() =>
-                    {
-                        if (cts.IsCancellationRequested) return;
-                        ProgressConvert.IsIndeterminate = false;
-                        ProgressConvert.Value = p;
-                        TxtConvert.Text = $"{p:0}% with the {encoderLabel} - VLC isn't in use, so WebM needs this step (hover the engine pill for why).";
-                    }), cts.Token, onEncoder: enc => encoderLabel = VideoReplayManager.EncoderLabel(enc));
-                }
-                catch (OperationCanceledException)
-                {
-                    if (item.Status == ClipStatus.Converting) item.Status = ClipStatus.Ready;
-                    return;   // another clip was chosen
-                }
-                catch (Exception ex)
-                {
-                    ConvertingPanel.Visibility = Visibility.Collapsed;
-                    FailCurrent(item, ex.Message);
-                    return;
-                }
-                ConvertingPanel.Visibility = Visibility.Collapsed;
-                if (cts.IsCancellationRequested) return;
-            }
 
             item.Status = ClipStatus.Playing;
             _currentSource = source;
@@ -1076,15 +1039,9 @@ namespace Smart_Tools.WPF.Views
         {
             var item = _current;
             if (item == null) return;
-            bool alreadyCopy = _currentSource != null && _currentSource.StartsWith(VideoReplayManager.PreviewFolder, StringComparison.OrdinalIgnoreCase);
-
-            // Windows' player: one retry through a preview copy for any format it refuses (not just WEBM).
-            if (!_backend.PlaysEverything && !alreadyCopy && VideoReplayManager.FfmpegExe != null)
-            {
-                VideoReplayManager.LogSkip(item.FullPath, _backend.Name, "Windows' player refused it (" + reason + ") - retrying through a preview copy.");
-                _ = LoadAndPlayAsync(item, forcePreview: true);
-                return;
-            }
+            // No preview-copy retry any more. Say plainly when the real cause is that VLC isn't running.
+            if (!_backend.PlaysEverything && VideoReplayManager.NeedsPreviewCopy.Contains(Path.GetExtension(item.FullPath)))
+                reason += " (this format needs VLC, which isn't running - hover the engine pill for why)";
             FailCurrent(item, reason);
         }
 

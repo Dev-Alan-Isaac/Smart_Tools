@@ -15,5 +15,32 @@ namespace Smart_Tools.WPF.Controllers
         public static string FfprobeExe { get; } = Path.Combine(Folder, "ffprobe.exe");
 
         public static bool IsAvailable => File.Exists(FfmpegExe);
+
+        /// <summary>
+        /// Finds a tool: the test override if one is set (a missing path means "not installed"), else the
+        /// bundled Engines\FFMPEG copy, else one on PATH, else null. <paramref name="name"/> is "ffmpeg" or "ffprobe".
+        /// </summary>
+        public static string? Resolve(string name, string? overridePath = null)
+        {
+            if (!string.IsNullOrEmpty(overridePath)) return File.Exists(overridePath) ? overridePath : null;
+
+            string exe = OperatingSystem.IsWindows() ? name + ".exe" : name;
+            string bundled = Path.Combine(Folder, exe);
+            if (File.Exists(bundled)) return bundled;
+
+            foreach (string dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                try
+                {
+                    string candidate = Path.Combine(dir.Trim('"'), exe);
+                    if (File.Exists(candidate)) return candidate;
+                }
+                catch (ArgumentException)
+                {
+                    // bad PATH entry
+                }
+            }
+            return null;
+        }
     }
 }

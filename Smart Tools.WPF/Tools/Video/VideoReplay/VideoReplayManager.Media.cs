@@ -20,30 +20,8 @@ namespace Smart_Tools.WPF.Controllers
         public static string? FfprobePathOverride { get; set; }
 
         public static string FfmpegFolder => Smart_Tools.WPF.Controllers.FfmpegLocator.Folder;
-        public static string? FfmpegExe => ResolveTool("ffmpeg", FfmpegPathOverride);
-        public static string? FfprobeExe => ResolveTool("ffprobe", FfprobePathOverride);
-
-        /// <summary>The bundled Engines\FFMPEG copy, else one on PATH (the old view only looked in the bundle).</summary>
-        private static string? ResolveTool(string name, string? overridePath)
-        {
-            if (overridePath != null) return File.Exists(overridePath) ? overridePath : null;
-            string exe = OperatingSystem.IsWindows() ? name + ".exe" : name;
-            string bundled = Path.Combine(FfmpegFolder, exe);
-            if (File.Exists(bundled)) return bundled;
-            foreach (string dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-            {
-                try
-                {
-                    string candidate = Path.Combine(dir.Trim('"'), exe);
-                    if (File.Exists(candidate)) return candidate;
-                }
-                catch (ArgumentException)
-                {
-                    // bad PATH entry
-                }
-            }
-            return null;
-        }
+        public static string? FfmpegExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffmpeg", FfmpegPathOverride);
+        public static string? FfprobeExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffprobe", FfprobePathOverride);
 
         // =================================================================
         //  Folders
