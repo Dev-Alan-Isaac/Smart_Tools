@@ -106,7 +106,10 @@ namespace Smart_Tools.WPF.Controllers
                 bool wireless = (caps.Flags & 0x0002) != 0;
                 int battery = BatteryPercent(slot);
                 string detail = wireless ? "Wireless (XInput)" : "Wired or dongle (XInput)";
-                list.Add(new ControllerInfo($"xi:{slot}", ControllerApi.XInput, (int)slot, $"{kind} {slot + 1}", detail, 6, 14, true, wireless, battery));
+                list.Add(new ControllerInfo($"xi:{slot}", ControllerApi.XInput, (int)slot, $"{kind} {slot + 1}", detail, 6, 14, true, wireless, battery)
+                {
+                    Family = DetectFamily(ControllerApi.XInput, kind, 0, 0, 14),
+                });
             }
 
             bool haveXInput = list.Count > 0;
@@ -129,7 +132,10 @@ namespace Smart_Tools.WPF.Controllers
 
                     string detail = $"HID · VID_{caps.Mid:X4} PID_{caps.Pid:X4}";
                     list.Add(new ControllerInfo($"joy:{id}", ControllerApi.Joystick, (int)id, name, detail,
-                        (int)caps.NumAxes, (int)caps.NumButtons, (caps.Caps & 0x10) != 0, false, -1));
+                        (int)caps.NumAxes, (int)caps.NumButtons, (caps.Caps & 0x10) != 0, false, -1)
+                    {
+                        Family = DetectFamily(ControllerApi.Joystick, name, caps.Mid, caps.Pid, (int)caps.NumButtons),
+                    });
                 }
             }
             catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException)

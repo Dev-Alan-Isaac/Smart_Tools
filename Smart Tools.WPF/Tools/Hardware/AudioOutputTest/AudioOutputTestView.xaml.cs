@@ -28,9 +28,6 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class AudioOutputTestView : UserControl
     {
-        private const double SidebarExpandedWidth = 280;
-        private const double SidebarCollapsedWidth = 56;
-
         private sealed class Tile
         {
             public required Border Frame;
@@ -51,7 +48,6 @@ namespace Smart_Tools.WPF.Views
         private AudioOutputSession? _session;
         private uint _mask = uint.MaxValue;
         private bool _playing;
-        private bool _optionsCollapsed;
         private bool _loadedOnce;
         private bool _settingControls;
 
@@ -74,7 +70,7 @@ namespace Smart_Tools.WPF.Views
             };
 
             ApplySettingsToControls();
-            if (_settings.SidebarCollapsed) SetSidebarCollapsed(true);
+            if (_settings.SidebarCollapsed) Sidebar.IsCollapsed = true;
 
             _viewConstructed = true;
             UpdateValueTexts();
@@ -172,7 +168,7 @@ namespace Smart_Tools.WPF.Views
                 _settings.SweepSeconds = c.SweepSeconds;
                 _settings.Phase = c.Phase;
                 _settings.Noise = c.Noise;
-                _settings.SidebarCollapsed = _optionsCollapsed;
+                _settings.SidebarCollapsed = Sidebar.IsCollapsed;
                 _settings.Look = CurrentLook;
                 AudioOutputTestManager.SaveSettings(_settings);
             }
@@ -180,18 +176,6 @@ namespace Smart_Tools.WPF.Views
             {
                 Log.Info($"Audio output test settings: {ex.Message}");
             }
-        }
-
-        private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e) => SetSidebarCollapsed(!_optionsCollapsed);
-
-        private void SetSidebarCollapsed(bool collapsed)
-        {
-            _optionsCollapsed = collapsed;
-            var visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
-            TxtOptionsHeaderLabel.Visibility = visibility;
-            SepHeader.Visibility = visibility;
-            OptionsScrollViewer.Visibility = visibility;
-            OptionsColumn.Width = new GridLength(collapsed ? SidebarCollapsedWidth : SidebarExpandedWidth);
         }
 
         // =================================================================
@@ -221,6 +205,7 @@ namespace Smart_Tools.WPF.Views
         private void UpdateValueTexts()
         {
             TxtLevelValue.Text = AudioOutputTestManager.FormatDb(SliderLevel.Value);
+            TxtHeroLevel.Text = TxtLevelValue.Text;
             TxtFreqValue.Text = AudioOutputTestManager.FormatFrequency(AudioOutputTestManager.SliderToFrequency(SliderFreq.Value));
             TxtSweepValue.Text = string.Format(CultureInfo.CurrentCulture, "{0} s", (int)SliderSweep.Value);
         }
@@ -333,7 +318,7 @@ namespace Smart_Tools.WPF.Views
         private void ApplyLook()
         {
             string look = CurrentLook;
-            bool picture = look != "Speakers" && _device?.Channels == 2;
+            bool picture = look != "Speakers" && _device?.Channels is 1 or 2;
             HeroStage.Visibility = picture ? Visibility.Visible : Visibility.Collapsed;
             if (Enum.TryParse(look == "Speakers" ? "Headphones" : look, out PackIconKind kind))
                 HeroLeft.Kind = HeroRight.Kind = kind;
@@ -364,16 +349,19 @@ namespace Smart_Tools.WPF.Views
                 var number = new TextBlock { Text = (i + 1).ToString(CultureInfo.CurrentCulture), FontSize = 10.5, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 1, 0, 0) };
                 number.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
 
-                var meter = new Border { Height = 8, CornerRadius = new CornerRadius(4), HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
+                // Like the battery bar on Battery Health: a rounded outline with the fill inside
+                var meter = new Border { Height = 10, CornerRadius = new CornerRadius(5), HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
                 meter.SetResourceReference(Border.BackgroundProperty, "AccentFill");
-                var track = new Border { Height = 8, CornerRadius = new CornerRadius(4), Margin = new Thickness(0, 14, 0, 0), Child = meter };
-                track.SetResourceReference(Border.BackgroundProperty, "CardBorder");
+                var track = new Border { Height = 10, CornerRadius = new CornerRadius(5), Child = meter };
+                var outline = new Border { Margin = new Thickness(0, 14, 0, 0), Padding = new Thickness(3), BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(10), Child = track };
+                outline.SetResourceReference(Border.BorderBrushProperty, "TextSecondary");
+                outline.SetResourceReference(Border.BackgroundProperty, "ContentBg");
 
                 var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
                 stack.Children.Add(shortText);
                 stack.Children.Add(nameText);
                 stack.Children.Add(number);
-                stack.Children.Add(track);
+                stack.Children.Add(outline);
 
                 var frame = new Border
                 {
@@ -381,7 +369,7 @@ namespace Smart_Tools.WPF.Views
                     MaxHeight = 320,
                     Margin = new Thickness(0, 0, 8, 8),
                     Padding = new Thickness(14, 12, 14, 12),
-                    CornerRadius = new CornerRadius(14),
+                    CornerRadius = new CornerRadius(12),
                     BorderThickness = new Thickness(2),
                     Cursor = Cursors.Hand,
                     Child = stack,
@@ -487,7 +475,11 @@ namespace Smart_Tools.WPF.Views
                 double width = Math.Clamp(Math.Pow(peak, 0.5) * Math.Max(0, t.MeterTrack.ActualWidth), 0, t.MeterTrack.ActualWidth);
                 t.Meter.Width = width;
                 double level = Math.Clamp(Math.Pow(peak, 0.5), 0, 1);
-                if (t.Index == 0) HeroLeft.Level = level;
+                if (t.Index == 0)
+                {
+                    HeroLeft.Level = level;
+                    if (_tiles.Count == 1) HeroRight.Level = level;   // mono (Bluetooth hands-free): one signal feeds both sides
+                }
                 else if (t.Index == 1) HeroRight.Level = level;
 
                 bool highlight = channelsTest && t.Index == active;

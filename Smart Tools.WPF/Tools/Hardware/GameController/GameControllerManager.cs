@@ -20,6 +20,53 @@ namespace Smart_Tools.WPF.Controllers
         public const double MinRestSamples = 30;
 
         // =================================================================
+        //  Which kind of controller
+        // =================================================================
+
+        private const ushort VendorSony = 0x054C, VendorMicrosoft = 0x045E;
+
+        // Xbox Elite Series 1 and 2 (USB and Bluetooth) as the legacy joystick API sees them.
+        private static readonly ushort[] EliteProductIds = { 0x02E3, 0x0B00, 0x0B05, 0x0B22 };
+
+        /// <summary>
+        /// A guess at what the controller is. XInput pads are Xbox-style (Windows doesn't say if one is an Elite: its
+        /// paddles are not part of the XInput report). Other devices are told apart by the maker's USB id, then the name,
+        /// then by having more buttons than the usual set.
+        /// </summary>
+        public static ControllerFamily DetectFamily(ControllerApi api, string name, ushort vendorId, ushort productId, int buttons)
+        {
+            bool Has(string text) => name.Contains(text, StringComparison.OrdinalIgnoreCase);
+
+            if (api == ControllerApi.XInput) return ControllerFamily.Xbox;
+            if (vendorId == VendorSony || Has("dualsense") || Has("dualshock") || Has("playstation") || Has("ps4 ") || Has("ps5 ")) return ControllerFamily.PlayStation;
+            if (Has("elite") || (vendorId == VendorMicrosoft && EliteProductIds.Contains(productId))) return ControllerFamily.ExtraButtons;
+            if (vendorId == VendorMicrosoft || Has("xbox")) return ControllerFamily.Xbox;
+            return buttons > 16 ? ControllerFamily.ExtraButtons : ControllerFamily.Generic;
+        }
+
+        // The legacy joystick API numbers a DualShock / DualSense like this (button 1 is the first).
+        private static readonly string[] PlayStationJoystickLabels =
+            { "□", "✕", "○", "△", "L1", "R1", "L2", "R2", "Share", "Options", "L3", "R3", "PS", "Pad" };
+
+        /// <summary>The label for a button of a generic (non-XInput) device; PlayStation pads get their symbols.</summary>
+        public static string JoystickButtonLabel(ControllerFamily family, int index, int buttonCount)
+        {
+            if (family == ControllerFamily.PlayStation && buttonCount >= 12 && index < PlayStationJoystickLabels.Length)
+                return PlayStationJoystickLabels[index];
+            return (index + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>The XInput buttons with the names that family uses (a PlayStation view calls A "✕" and Back "Share").</summary>
+        public static (int Bit, string Label)[] XInputButtonsFor(ControllerFamily family) =>
+            family == ControllerFamily.PlayStation
+                ? new[]
+                {
+                    (12, "✕"), (13, "○"), (14, "□"), (15, "△"), (8, "L1"), (9, "R1"), (5, "Share"), (4, "Options"), (6, "L3"), (7, "R3"),
+                    (0, "↑"), (1, "↓"), (2, "←"), (3, "→"),
+                }
+                : XInputButtons;
+
+        // =================================================================
         //  Numbers
         // =================================================================
 

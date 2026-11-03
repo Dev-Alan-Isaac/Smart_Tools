@@ -17,9 +17,6 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class MicTestView : UserControl
     {
-        private const double SidebarExpandedWidth = 280;
-        private const double SidebarCollapsedWidth = 56;
-
         /// <summary>If nothing louder than this (dB) is heard for this long, suggest checking Windows' privacy setting.</summary>
         private static readonly TimeSpan SilentHintAfter = TimeSpan.FromSeconds(4);
 
@@ -32,7 +29,6 @@ namespace Smart_Tools.WPF.Views
         private double _peakMeter;
         private bool _loadedOnce;
         private bool _applying;
-        private bool _optionsCollapsed;
 
         public MicTestView()
         {
@@ -79,21 +75,6 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
         //  Sidebar
         // =================================================================
-
-        private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
-        {
-            _optionsCollapsed = !_optionsCollapsed;
-            OptionsColumn.Width = new GridLength(_optionsCollapsed ? SidebarCollapsedWidth : SidebarExpandedWidth);
-            var visibility = _optionsCollapsed ? Visibility.Collapsed : Visibility.Visible;
-            TxtOptionsHeaderLabel.Visibility = visibility;
-            SepHeader.Visibility = visibility;
-            OptionsScrollViewer.Visibility = visibility;
-            BtnCollapseOptions.HorizontalContentAlignment = _optionsCollapsed
-                ? System.Windows.HorizontalAlignment.Center
-                : System.Windows.HorizontalAlignment.Left;
-            if (BtnCollapseOptions.Content is StackPanel header)
-                header.Margin = _optionsCollapsed ? new Thickness(0) : new Thickness(16, 0, 0, 0);
-        }
 
         private void BtnRefreshDevices_Click(object sender, RoutedEventArgs e)
         {
@@ -305,6 +286,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (TxtVerdict.Text != text) TxtVerdict.Text = text;
             TxtVerdict.SetResourceReference(TextBlock.ForegroundProperty, error ? "StatusErrorFg" : "TextSecondary");
+            VerdictPill.SetResourceReference(Border.BackgroundProperty, error ? "StatusErrorBg" : "RowBg");
         }
     }
 }

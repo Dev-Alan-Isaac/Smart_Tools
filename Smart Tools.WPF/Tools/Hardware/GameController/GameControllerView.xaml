@@ -5,6 +5,7 @@
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
     IsVisibleChanged="Root_IsVisibleChanged"
     Loaded="Root_Loaded">
@@ -17,70 +18,14 @@
     <Grid Background="{DynamicResource ContentBg}">
         <Grid Margin="16,8,16,16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!--  ================= OPTIONS SIDEBAR =================  -->
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel>
-                        <Button
-                            x:Name="BtnCollapseOptions"
-                            MinHeight="45"
-                            HorizontalContentAlignment="Left"
-                            Click="BtnCollapseOptions_Click"
-                            Cursor="Hand"
-                            FocusVisualStyle="{x:Null}"
-                            Foreground="{DynamicResource SidebarText}"
-                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderBrush" Value="Transparent" />
-                                    <Setter Property="OverridesDefaultStyle" Value="True" />
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}">
-                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="20"
-                                    Height="20"
-                                    VerticalAlignment="Center"
-                                    Kind="TuneVariant" />
-                                <TextBlock
-                                    x:Name="TxtOptionsHeaderLabel"
-                                    Margin="10,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontWeight="SemiBold"
-                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
-                            </StackPanel>
-                        </Button>
-                        <Separator
-                            x:Name="SepHeader"
-                            Margin="16,4"
-                            Style="{StaticResource SidebarSeparatorStyle}" />
-                    </StackPanel>
-
-                    <ScrollViewer
-                        x:Name="OptionsScrollViewer"
-                        Grid.Row="1"
-                        VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="16">
+            <controls:ToolSidebar x:Name="Sidebar">
+                        <StackPanel>
 
                             <!--  ============ CONTROLLER ============  -->
                             <Border ctl:Tour.Key="Str_Tour_GameCtl_Controller" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
@@ -94,7 +39,33 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="40" />
                                         </Grid.ColumnDefinitions>
-                                        <ComboBox x:Name="CmbController" SelectionChanged="CmbController_SelectionChanged" />
+                                        <ComboBox x:Name="CmbController" SelectionChanged="CmbController_SelectionChanged">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                            <materialDesign:PackIcon.Style>
+                                                                <Style TargetType="materialDesign:PackIcon">
+                                                                    <Setter Property="Kind" Value="GamepadVariantOutline" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Family}" Value="{x:Static models:ControllerFamily.Xbox}">
+                                                                            <Setter Property="Kind" Value="MicrosoftXboxController" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Family}" Value="{x:Static models:ControllerFamily.PlayStation}">
+                                                                            <Setter Property="Kind" Value="SonyPlaystation" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Family}" Value="{x:Static models:ControllerFamily.ExtraButtons}">
+                                                                            <Setter Property="Kind" Value="GamepadSquare" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </materialDesign:PackIcon.Style>
+                                                        </materialDesign:PackIcon>
+                                                        <TextBlock VerticalAlignment="Center" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
                                         <Button
                                             Grid.Column="1"
                                             Margin="6,0,0,0"
@@ -114,6 +85,43 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         Opacity="0.85"
                                         TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ CONTROLLER TYPE ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="CONTROLLER TYPE"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.GamepadVariant}" />
+                                    <UniformGrid Margin="0,8,0,0" Columns="2">
+                                        <RadioButton x:Name="FamXbox" Margin="0,0,2,4" Checked="Family_Checked" GroupName="GcFamily" IsChecked="True" Style="{StaticResource ModeToggleTallStyle}" Tag="Xbox" ToolTip="Xbox, Xbox 360 and other Xbox-style pads">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="MicrosoftXboxController" />
+                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="Xbox" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="FamPlayStation" Margin="2,0,0,4" Checked="Family_Checked" GroupName="GcFamily" Style="{StaticResource ModeToggleTallStyle}" Tag="PlayStation" ToolTip="DualShock, DualSense and other PlayStation pads">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="SonyPlaystation" />
+                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="PlayStation" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="FamExtra" Margin="0,0,2,0" Checked="Family_Checked" GroupName="GcFamily" Style="{StaticResource ModeToggleTallStyle}" Tag="ExtraButtons" ToolTip="Xbox Elite-style pads and any pad with paddles, back buttons or other extra buttons">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="GamepadSquare" />
+                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="Extra buttons" TextAlignment="Center" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton x:Name="FamGeneric" Margin="2,0,0,0" Checked="Family_Checked" GroupName="GcFamily" Style="{StaticResource ModeToggleTallStyle}" Tag="Generic" ToolTip="Any other gamepad or joystick">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="GamepadVariantOutline" />
+                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="Generic" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                    <TextBlock x:Name="TxtFamilyNote" Style="{StaticResource SidebarHint}" />
                                 </StackPanel>
                             </Border>
 
@@ -398,9 +406,7 @@
                             </Border>
 
                         </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
+            </controls:ToolSidebar>
 
             <!--  ================= MAIN AREA =================  -->
             <Border ctl:Tour.Key="Str_Tour_GameCtl_Pad" ctl:Tour.Order="4" Grid.Column="2" Style="{StaticResource CardStyle}">
@@ -420,6 +426,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <ContentControl
+                            x:Name="HeaderCard"
                             VerticalAlignment="Center"
                             Content="{DynamicResource Str_GameCtl_Header}"
                             Style="{StaticResource CardHeader}"
@@ -707,7 +714,7 @@
                                             VerticalAlignment="Center"
                                             FontWeight="SemiBold"
                                             Foreground="{DynamicResource TextPrimary}"
-                                            Text="LT" />
+                                            x:Name="TxtLTName" Text="LT" />
                                         <ProgressBar
                                             x:Name="BarLT"
                                             Grid.Column="1"
@@ -732,7 +739,7 @@
                                             VerticalAlignment="Center"
                                             FontWeight="SemiBold"
                                             Foreground="{DynamicResource TextPrimary}"
-                                            Text="RT" />
+                                            x:Name="TxtRTName" Text="RT" />
                                         <ProgressBar
                                             x:Name="BarRT"
                                             Grid.Column="1"

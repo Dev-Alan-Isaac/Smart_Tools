@@ -17,70 +17,14 @@
     <Grid Background="{DynamicResource ContentBg}">
         <Grid Margin="16,8,16,16">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!--  ================= OPTIONS SIDEBAR =================  -->
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel>
-                        <Button
-                            x:Name="BtnCollapseOptions"
-                            MinHeight="45"
-                            HorizontalContentAlignment="Left"
-                            Click="BtnCollapseOptions_Click"
-                            Cursor="Hand"
-                            FocusVisualStyle="{x:Null}"
-                            Foreground="{DynamicResource SidebarText}"
-                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderBrush" Value="Transparent" />
-                                    <Setter Property="OverridesDefaultStyle" Value="True" />
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}">
-                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="20"
-                                    Height="20"
-                                    VerticalAlignment="Center"
-                                    Kind="TuneVariant" />
-                                <TextBlock
-                                    x:Name="TxtOptionsHeaderLabel"
-                                    Margin="10,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontWeight="SemiBold"
-                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
-                            </StackPanel>
-                        </Button>
-                        <Separator
-                            x:Name="SepHeader"
-                            Margin="16,4"
-                            Style="{StaticResource SidebarSeparatorStyle}" />
-                    </StackPanel>
-
-                    <ScrollViewer
-                        x:Name="OptionsScrollViewer"
-                        Grid.Row="1"
-                        VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="16">
+            <controls:ToolSidebar x:Name="Sidebar">
+                        <StackPanel>
 
                             <!--  ============ DEVICE ============  -->
                             <Border ctl:Tour.Key="Str_Tour_AudioOut_Device" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
@@ -392,9 +336,7 @@
                             </Border>
 
                         </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
+            </controls:ToolSidebar>
 
             <!--  ================= MAIN AREA =================  -->
             <Grid Grid.Column="2">
@@ -616,6 +558,11 @@
 
                     <!--  Channels + what to listen for  -->
                     <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="*" MinWidth="170" />
+                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -623,6 +570,14 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+
+                        <!--  The big reading, like the percentage on Battery Health: the output level you set  -->
+                        <Viewbox Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtHeroLevel" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-30 dB" />
+                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="OUTPUT LEVEL" />
+                            </StackPanel>
+                        </Viewbox>
                         <Grid>
                             <TextBlock
                                 x:Name="TxtChannelsHeader"
@@ -673,10 +628,11 @@
 
                         <Border
                             Grid.Row="4"
-                            Margin="0,12,0,0"
-                            Padding="12,10"
+                            Grid.ColumnSpan="3"
+                            Margin="0,14,0,0"
+                            Padding="14,10"
                             Background="{DynamicResource StatusInfoBg}"
-                            CornerRadius="8">
+                            CornerRadius="12">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />

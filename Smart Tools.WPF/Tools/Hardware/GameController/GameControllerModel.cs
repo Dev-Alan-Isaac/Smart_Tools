@@ -19,6 +19,16 @@ namespace Smart_Tools.WPF.Models
         ScaledRadial,
     }
 
+    /// <summary>What the controller looks like and what its buttons are called. Only changes the picture and the labels.</summary>
+    public enum ControllerFamily
+    {
+        Xbox,
+        PlayStation,
+        /// <summary>An Xbox Elite-style pad or any pad with more buttons than the usual set (paddles, back buttons, extra triggers).</summary>
+        ExtraButtons,
+        Generic,
+    }
+
     /// <summary>A controller Windows reports right now.</summary>
     public sealed record ControllerInfo(
         string Id,
@@ -32,6 +42,9 @@ namespace Smart_Tools.WPF.Models
         bool IsWireless,
         int BatteryPercent)
     {
+        /// <summary>The best guess from the name, the USB ids and the button count; the page lets the user change it.</summary>
+        public ControllerFamily Family { get; init; } = ControllerFamily.Generic;
+
         public override string ToString() => Name;
     }
 

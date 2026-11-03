@@ -30,8 +30,6 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class GameControllerView : UserControl
     {
-        private const double SidebarExpandedWidth = 280;
-        private const double SidebarCollapsedWidth = 56;
         private const double RestSeconds = 3, RangeSeconds = 10, TriggerMaxSeconds = 8;
 
         private enum Test { None, Rest, Range, Trigger }
@@ -48,10 +46,10 @@ namespace Smart_Tools.WPF.Views
 
         private List<ControllerInfo> _controllers = new();
         private ControllerInfo? _current;
+        private ControllerFamily _family;
         private ControllerPoller? _poller;
         private ulong _shownButtons = ulong.MaxValue;
         private DateTime _lastRate = DateTime.MinValue;
-        private bool _optionsCollapsed;
         private bool _loadedOnce;
         private bool _settingControls;
         private bool _wasConnected;
@@ -84,7 +82,7 @@ namespace Smart_Tools.WPF.Views
             };
 
             ApplySettingsToControls();
-            if (_settings.SidebarCollapsed) SetSidebarCollapsed(true);
+            if (_settings.SidebarCollapsed) Sidebar.IsCollapsed = true;
             ThemePlots();
 
             _viewConstructed = true;
@@ -185,25 +183,13 @@ namespace Smart_Tools.WPF.Views
                 _settings.LeftDeadzonePercent = (int)SliderDzLeft.Value;
                 _settings.RightDeadzonePercent = (int)SliderDzRight.Value;
                 _settings.TriggerThresholdPercent = (int)SliderDzTrig.Value;
-                _settings.SidebarCollapsed = _optionsCollapsed;
+                _settings.SidebarCollapsed = Sidebar.IsCollapsed;
                 GameControllerManager.SaveSettings(_settings);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 Log.Info($"Game controller settings: {ex.Message}");
             }
-        }
-
-        private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e) => SetSidebarCollapsed(!_optionsCollapsed);
-
-        private void SetSidebarCollapsed(bool collapsed)
-        {
-            _optionsCollapsed = collapsed;
-            var visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
-            TxtOptionsHeaderLabel.Visibility = visibility;
-            SepHeader.Visibility = visibility;
-            OptionsScrollViewer.Visibility = visibility;
-            OptionsColumn.Width = new GridLength(collapsed ? SidebarCollapsedWidth : SidebarExpandedWidth);
         }
 
         private void Dz_Changed(object sender, RoutedEventArgs e)
@@ -299,6 +285,7 @@ namespace Smart_Tools.WPF.Views
             if (info == null)
             {
                 TxtControllerInfo.Text = Str("Str_GameCtl_NoneFound");
+                HeaderCard.Tag = PackIconKind.Gamepad;
                 return;
             }
 
@@ -316,8 +303,16 @@ namespace Smart_Tools.WPF.Views
             TxtLeftTitle.Text = Str(xinput ? "Str_GameCtl_LeftStick" : "Str_GameCtl_AxesXY");
             TxtRightTitle.Text = Str(xinput ? "Str_GameCtl_RightStick" : "Str_GameCtl_AxesZR");
 
-            BuildButtons(info);
             BuildExtraAxes(info);
+
+            // Start from what the pad looks like to Windows; the Controller type card lets the user change it.
+            _settingControls = true;
+            FamXbox.IsChecked = info.Family == ControllerFamily.Xbox;
+            FamPlayStation.IsChecked = info.Family == ControllerFamily.PlayStation;
+            FamExtra.IsChecked = info.Family == ControllerFamily.ExtraButtons;
+            FamGeneric.IsChecked = info.Family == ControllerFamily.Generic;
+            _settingControls = false;
+            ApplyFamily(info.Family);
 
             if (IsVisible)
             {
@@ -326,14 +321,60 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+        // =================================================================
+        //  Controller type: the icon and the names of the buttons
+        // =================================================================
+
+        private void Family_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!_viewConstructed || _settingControls || _current == null) return;
+            if (sender is RadioButton { Tag: string tag } && Enum.TryParse(tag, out ControllerFamily family)) ApplyFamily(family);
+        }
+
+        private static PackIconKind IconFor(ControllerFamily family) => family switch
+        {
+            ControllerFamily.Xbox => PackIconKind.MicrosoftXboxController,
+            ControllerFamily.PlayStation => PackIconKind.SonyPlaystation,
+            ControllerFamily.ExtraButtons => PackIconKind.GamepadSquare,
+            _ => PackIconKind.GamepadVariantOutline,
+        };
+
+        /// <summary>Shows the picture and button names of one controller type. Only changes how things are drawn, never how the pad is read.</summary>
+        private void ApplyFamily(ControllerFamily family)
+        {
+            _family = family;
+            HeaderCard.Tag = IconFor(family);
+
+            bool ps = family == ControllerFamily.PlayStation;
+            TxtLTName.Text = ps ? "L2" : "LT";
+            TxtRTName.Text = ps ? "R2" : "RT";
+
+            bool xinput = _current?.Api == ControllerApi.XInput;
+            TxtFamilyNote.Text = family switch
+            {
+                ControllerFamily.Xbox => "Buttons are named A, B, X, Y, LB, RB, Back and Start.",
+                ControllerFamily.PlayStation => xinput
+                    ? "Buttons are shown with PlayStation symbols. This pad reports through XInput, so Share and Options are its Back and Start."
+                    : "Buttons are shown with PlayStation symbols. Windows numbers some PlayStation pads differently, so a symbol may sit on another button.",
+                ControllerFamily.ExtraButtons => xinput
+                    ? "Elite paddles are not part of what Windows' XInput reports. In the Xbox Accessories app, give a paddle the job of a normal button, then test it here."
+                    : "Every button the device reports is shown, numbered, including the extra ones.",
+                _ => "Buttons are shown as numbers, in the order the device reports them.",
+            };
+
+            if (_current != null) BuildButtons(_current);
+        }
+
         private void BuildButtons(ControllerInfo info)
         {
             ButtonsPanel.Children.Clear();
             _buttonChips.Clear();
+            _shownButtons = ulong.MaxValue;
 
+            int count = Math.Clamp(info.Buttons, 0, 32);
             IEnumerable<(int Bit, string Label)> list = info.Api == ControllerApi.XInput
-                ? GameControllerManager.XInputButtons
-                : Enumerable.Range(0, Math.Clamp(info.Buttons, 0, 32)).Select(i => (i, (i + 1).ToString(CultureInfo.InvariantCulture)));
+                ? GameControllerManager.XInputButtonsFor(_family)
+                : Enumerable.Range(0, count).Select(i => (i, GameControllerManager.JoystickButtonLabel(_family, i, count)));
 
             foreach (var (bit, label) in list)
             {
