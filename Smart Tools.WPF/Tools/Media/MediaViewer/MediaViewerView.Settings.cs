@@ -93,6 +93,7 @@ namespace Smart_Tools.WPF.Views
 
                 (SlideRadios.FirstOrDefault(r => (string?)r.Tag == s.SlideshowSeconds.ToString(CultureInfo.InvariantCulture)) ?? RadioSlide4).IsChecked = true;
                 _slide.Interval = TimeSpan.FromSeconds(s.SlideshowSeconds);
+                _skipImmediately = s.SkipFailedImmediately;
 
                 _playlistCollapsed = s.PlaylistCollapsed;
                 ApplyPanels();
@@ -150,8 +151,9 @@ namespace Smart_Tools.WPF.Views
         {
             Dispatcher.BeginInvoke(() =>
             {
-                if (_widget == null) return;
                 var s = MediaViewerManager.LoadSettings();
+                _skipImmediately = s.SkipFailedImmediately;
+                if (_widget == null) return;
                 if (s.WidgetLeft == null && s.WidgetTop == null && s.WidgetWidth == null && s.WidgetHeight == null)
                     _widget.ResetPlacement();
             });

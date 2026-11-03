@@ -39,6 +39,13 @@ namespace Smart_Tools.WPF.Views
         private readonly ObservableCollection<MediaItem> _items = new();
         private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };
         private readonly DispatcherTimer _slide = new() { Interval = TimeSpan.FromSeconds(4) };
+        private readonly DispatcherTimer _skipTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+        private const int SkipWaitSeconds = 5;
+        private int _skipLeft;
+        private int _failStreak;                 // unplayable files in a row, so a list of bad files can't loop forever
+        private bool _skipImmediately;
+        private string _skipMessage = "";
+        private MediaItem? _skipTarget;
         private readonly bool _ready;
         private readonly List<MediaSource> _sources = new();                  // what was added: files and folders
         private readonly ObservableCollection<MediaQueueGroup> _groups = new();   // the input card's rows
@@ -75,6 +82,7 @@ namespace Smart_Tools.WPF.Views
             InputCard.FileFilter = MediaViewerManager.FileDialogFilter;
             _tick.Tick += (_, _) => UpdateProgress();
             _slide.Tick += (_, _) => StepForSlideshow();
+            _skipTimer.Tick += (_, _) => SkipTimer_Tick();
             _ready = true;
             Player.Volume = VolumeSlider.Value;
             ApplyPanels();
@@ -280,7 +288,70 @@ namespace Smart_Tools.WPF.Views
             UpdateUi();
         }
 
-        private void BtnDismissError_Click(object sender, RoutedEventArgs e) => ErrorBanner.Visibility = Visibility.Collapsed;
+        // Dismissing the banner also cancels a pending skip, so the user can stay on the file.
+        private void BtnDismissError_Click(object sender, RoutedEventArgs e)
+        {
+            CancelSkip();
+            ErrorBanner.Visibility = Visibility.Collapsed;
+        }
+
+        private void CancelSkip()
+        {
+            _skipTimer.Stop();
+            _skipTarget = null;
+        }
+
+        /// <summary>
+        /// The current file can't be played or shown: tell the user, then move on to the next one -
+        /// after 5 seconds, or at once when the Settings page says so.
+        /// </summary>
+        private void HandleUnplayable(string message)
+        {
+            CancelSkip();
+            ShowError(message);
+            _failStreak++;
+
+            // RepeatOne would hand back the same broken file, so it skips like Sequential.
+            var next = ChooseNext(userAsked: Order == ViewerPlayOrder.RepeatOne);
+            if (next == null || ReferenceEquals(next, Current) || _failStreak >= _items.Count)
+            {
+                TxtError.Text = message + "\n\n" + S("Str_MediaViewer_SkippedLast", "No more files to play.");
+                _failStreak = 0;
+                return;
+            }
+
+            _skipTarget = next;
+            _skipMessage = message;
+            if (_skipImmediately)
+            {
+                SkipToTarget();
+                return;
+            }
+            _skipLeft = SkipWaitSeconds;
+            UpdateSkipText();
+            _skipTimer.Start();
+        }
+
+        private void UpdateSkipText() =>
+            TxtError.Text = _skipMessage + "\n\n" + string.Format(S("Str_MediaViewer_SkippingIn", "Skipping to the next file in {0} s…"), _skipLeft);
+
+        private void SkipTimer_Tick()
+        {
+            if (--_skipLeft > 0)
+            {
+                UpdateSkipText();
+                return;
+            }
+            SkipToTarget();
+        }
+
+        private void SkipToTarget()
+        {
+            var target = _skipTarget;
+            CancelSkip();
+            int at = target == null ? -1 : _items.IndexOf(target);
+            if (at >= 0) Show(at);
+        }
 
         private void SetNowPlaying(MediaItem? item)
         {
@@ -292,6 +363,7 @@ namespace Smart_Tools.WPF.Views
         private void Show(int index)
         {
             _restoredIdle = false;
+            CancelSkip();
             StopMedia();
             _slide.Stop();
             _loadVersion++;
@@ -347,9 +419,10 @@ namespace Smart_Tools.WPF.Views
             if (version != _loadVersion) return;   // another item was chosen meanwhile
             if (loaded is not { } result)
             {
-                ShowError(S("Str_MediaViewer_ImageFailed", "This picture couldn't be opened."));
+                HandleUnplayable(S("Str_MediaViewer_ImageFailed", "This picture couldn't be opened."));
                 return;
             }
+            _failStreak = 0;
             ImageView.Source = result.Bitmap;
             _pixelWidth = result.Bitmap.PixelWidth;
             _pixelHeight = result.Bitmap.PixelHeight;
@@ -380,7 +453,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ShowError(ex.Message);
+                HandleUnplayable(ex.Message);
             }
         }
 
@@ -755,6 +828,7 @@ namespace Smart_Tools.WPF.Views
         private void Player_MediaOpened(object sender, RoutedEventArgs e)
         {
             _mediaOpen = true;
+            _failStreak = 0;
             Player.SpeedRatio = CurrentSpeed;   // MediaElement forgets the speed when the source changes
             if (Player.NaturalDuration.HasTimeSpan)
             {
@@ -791,7 +865,7 @@ namespace Smart_Tools.WPF.Views
         {
             _playing = false;
             string ext = Path.GetExtension(Current?.Path ?? "");
-            ShowError(string.Format(S("Str_MediaViewer_PlayFailed", "Windows can't play {0} files here. Try Video Replay, which has the VLC player.") + "\n\n{1}",
+            HandleUnplayable(string.Format(S("Str_MediaViewer_PlayFailed", "Windows can't play {0} files here. Try Video Replay, which has the VLC player.") + "\n\n{1}",
                 ext, e.ErrorException?.Message));
         }
 

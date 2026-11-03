@@ -1766,6 +1766,25 @@
                                         ToolTip="{DynamicResource Str_Settings_MediaForgetTip}" />
                                 </StackPanel>
                             </Border>
+
+                            <Border Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Settings_MediaSkipHeader}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.SkipNext}" />
+                                    <TextBlock
+                                        Margin="0,4,0,14"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Settings_MediaSkipIntro}"
+                                        TextWrapping="Wrap" />
+                                    <CheckBox
+                                        x:Name="ChkMvSkipFast"
+                                        Click="ChkMvSkipFast_Click"
+                                        Content="{DynamicResource Str_Settings_MediaSkipImmediately}" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 

@@ -213,6 +213,7 @@ namespace Smart_Tools.WPF.Views
                 var s = MediaViewerManager.LoadSettings();
                 ChkMvWidgetStartup.IsChecked = s.ShowWidgetAtStartup;
                 ChkMvRemember.IsChecked = s.RememberPlaylist;
+                ChkMvSkipFast.IsChecked = s.SkipFailedImmediately;
             }
             finally
             {
@@ -231,6 +232,12 @@ namespace Smart_Tools.WPF.Views
         {
             bool on = ChkMvWidgetStartup.IsChecked == true;
             ChangeMediaViewerSettings(s => s.ShowWidgetAtStartup = on);
+        }
+
+        private void ChkMvSkipFast_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = ChkMvSkipFast.IsChecked == true;
+            ChangeMediaViewerSettings(s => s.SkipFailedImmediately = on);
         }
 
         /// <summary>Turning "remember" off also drops what was saved, so nothing old comes back if it's turned on later.</summary>

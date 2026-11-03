@@ -52,6 +52,9 @@ namespace Smart_Tools.WPF.Models
 
         // The list (saved by the tool; RememberPlaylist is set on the Settings page).
         public bool RememberPlaylist { get; set; } = true;
+
+        // A file that can't be played is skipped: after a 5 s notice, or at once when this is on (Settings page).
+        public bool SkipFailedImmediately { get; set; }
         public List<MediaSavedSource> Sources { get; set; } = new();
         public string LastItem { get; set; } = "";
 
