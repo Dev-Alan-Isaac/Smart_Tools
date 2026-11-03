@@ -14,7 +14,7 @@ A Windows desktop app with **110 everyday tools** in one place: manage and clean
 
 - **Data Quality** (6): Validate Data, Duplicate Data, Find Similar Files, File Differences, Text Diff, Hash & Checksum Verifier
 - **Files** (6): Rename Files, Organize Files, Search Files, Copy Queue, Folder Tree Exporter, Metadata Extractor
-- **Convert & PDF** (6): Convert Files, Images to PDF, Watermarker, PDF Extras, PDF Toolkit, CSV / JSON Converter
+- **Convert & PDF** (5): Convert Files, Images to PDF, Watermarker, PDF Tools, CSV / JSON Converter
 - **Media** (1): Media Viewer
 - **Video** (6): Video Stitcher, Video to Audio, Video Compressor, GIF Maker, Screen Recorder, Video Frame Extractor
 - **Audio** (7): Audio Recorder, Spectrogram, Voice Changer, Speech to Text, Text to Speech, Loudness Meter & Normalizer, Audio Trimmer & Joiner

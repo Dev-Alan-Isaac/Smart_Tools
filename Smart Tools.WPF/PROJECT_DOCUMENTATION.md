@@ -51,8 +51,7 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 | **Convert Files** | `convert-files` | Convert files between formats |
 | **Images to PDF** | `images-to-pdf` | Turn images into a PDF |
 | **Watermarker** | `watermark` | Stamp text or a logo on many pictures, videos and PDFs |
-| **PDF Extras** | `pdf-extras` | Rotate or remove pages, add page numbers, edit properties, and add or remove a password |
-| **PDF Toolkit** | `pdf-toolkit` | Merge, split and edit PDFs |
+| **PDF Tools** | `pdf-toolkit` | Merge, split and compress PDFs; rotate, remove or number pages; edit details; add or remove a password. One tool, two pages (`Tools/Convert/PdfHub`): Merge and split is the PDF Toolkit, Pages and protect is the former PDF Extras |
 | **CSV / JSON Converter** | `csv-json` | Turn CSV into JSON and JSON back into CSV, with quotes and separators handled |
 
 ### Media

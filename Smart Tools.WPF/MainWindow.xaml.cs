@@ -184,8 +184,7 @@ namespace Smart_Tools.WPF
             // Convert & PDF
             Add<FileConverterView>("convert-files", v => v.CancelActiveRun());
             Add<ImageConvertView>("images-to-pdf", v => v.CancelActiveRun());
-            Add<PdfExtrasView>("pdf-extras", v => v.CancelActiveRun());   // stops a run (nothing half-written is kept), saves the setup
-            Add<PdfToolkitView>("pdf-toolkit", v => v.CancelActiveRun());
+            Add<PdfHubView>("pdf-toolkit", v => v.CancelActiveRun());   // one tool, two pages (merge and split, pages and protect); closing lets each opened page stop its run and save its setup
             Add<WatermarkView>("watermark", v => v.CancelActiveRun());   // stops a running batch (finished files stay), saves the setup
 
             // Video
