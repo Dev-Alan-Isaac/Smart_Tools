@@ -28,6 +28,8 @@ namespace Smart_Tools.WPF.Views
         private bool _busy;
         private bool _loadedOnce;
         private bool _restoring;
+        private bool _hasResult;
+        private IReadOnlyList<CopyQueueItem> _items = Array.Empty<CopyQueueItem>();
 
         public CopyQueueView()
         {
@@ -112,10 +114,31 @@ namespace Smart_Tools.WPF.Views
         private void ResetResults()
         {
             if (_busy) return;
-            ItemList.ItemsSource = null;
-            DonePill.Visibility = Visibility.Collapsed;
+            SetItems(Array.Empty<CopyQueueItem>());
+            _hasResult = false;
+            Bar.Value = 0;
+            TxtProgressPercent.Text = "";
             HideStatus();
             UpdateState();
+        }
+
+        private void SetItems(IReadOnlyList<CopyQueueItem> items)
+        {
+            _items = items;
+            ItemList.ItemsSource = items.Count == 0 ? null : items;
+        }
+
+        private void BtnOpenDestination_Click(object sender, RoutedEventArgs e)
+        {
+            if (ShellExplorer.Show(DestinationCard.FolderPath) != ShellExplorer.ShowResult.Shown)
+                System.Windows.MessageBox.Show("Choose a folder first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void BtnClearQueue_Click(object sender, RoutedEventArgs e)
+        {
+            if (_busy) return;
+            _sources.Clear();
+            ResetResults();
         }
 
         private CopyQueueOptions ReadOptions() => new()
@@ -154,10 +177,12 @@ namespace Smart_Tools.WPF.Views
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
             HideStatus();
-            DonePill.Visibility = Visibility.Collapsed;
+            _hasResult = false;
+            SetItems(Array.Empty<CopyQueueItem>());
             SetBusy(true);
-            TxtCurrent.Text = "Looking through the files...";
-            ProgressPanel.Visibility = Visibility.Visible;
+            Bar.Value = 0;
+            TxtProgressPercent.Text = "";
+            TxtProgress.Text = "Looking through the files...";
             Bar.IsIndeterminate = true;
 
             CopyQueuePlan plan;
@@ -205,8 +230,8 @@ namespace Smart_Tools.WPF.Views
                 }
             }
 
-            ItemList.ItemsSource = plan.Items;
-            UpdateState(plan.Items.Count);
+            SetItems(plan.Items);
+            UpdateState();
             CopyQueueManager.SaveJob(new CopyQueueSavedJob
             {
                 Sources = _sources.Select(s => s.Path).ToList(),
@@ -276,7 +301,7 @@ namespace Smart_Tools.WPF.Views
         private void UpdatePauseButton()
         {
             bool paused = _manager.IsPaused;
-            TxtPause.Text = paused ? "Resume" : "Pause";
+            BtnPause.ToolTip = paused ? "Resume" : "Pause";
             IconPause.Kind = paused ? PackIconKind.Play : PackIconKind.Pause;
         }
 
@@ -302,11 +327,12 @@ namespace Smart_Tools.WPF.Views
 
             _cts = new CancellationTokenSource();
             HideStatus();
-            DonePill.Visibility = Visibility.Collapsed;
-            ItemList.ItemsSource = plan.Items;
+            _hasResult = false;
+            Bar.Value = 0;
+            TxtProgressPercent.Text = "";
+            SetItems(plan.Items);
             SetBusy(true);
-            ProgressPanel.Visibility = Visibility.Visible;
-            UpdateState(plan.Items.Count);
+            UpdateState();
 
             var o = new CopyQueueOptions { Mode = CopyQueueMode.Move, Conflict = CopyQueueConflict.KeepBoth, Verify = true };
             CopyQueueResult result;
@@ -351,19 +377,56 @@ namespace Smart_Tools.WPF.Views
 
         private void ShowProgress(CopyQueueProgress p)
         {
-            Bar.Value = p.BytesTotal > 0
+            double percent = p.BytesTotal > 0
                 ? Math.Min(100.0, p.BytesDone * 100.0 / p.BytesTotal)
                 : p.FilesTotal > 0 ? p.FilesDone * 100.0 / p.FilesTotal : 0;
-            TxtCurrent.Text = $"{p.FilesDone:N0} of {p.FilesTotal:N0} · {p.CurrentFile}";
-            TxtSpeed.Text = p.BytesPerSecond > 0 ? $"{CopyQueueManager.FormatSize((long)p.BytesPerSecond)}/s" : "";
-            TxtPillCount.Text = string.Format(CultureInfo.CurrentCulture, "{0:N0} of {1:N0} files · {2} of {3}", p.FilesDone, p.FilesTotal,
-                CopyQueueManager.FormatSize(p.BytesDone), CopyQueueManager.FormatSize(p.BytesTotal));
+            Bar.Value = percent;
+            TxtProgressPercent.Text = string.Format(CultureInfo.CurrentCulture, "{0:0}%", percent);
+            string speed = p.BytesPerSecond > 0 ? $" · {CopyQueueManager.FormatSize((long)p.BytesPerSecond)}/s" : "";
+            TxtProgress.Text = $"{p.FilesDone:N0} of {p.FilesTotal:N0} · {CopyQueueManager.FormatSize(p.BytesDone)} of {CopyQueueManager.FormatSize(p.BytesTotal)}{speed} · {p.CurrentFile}";
+            UpdateSummary();
         }
+
+        /// <summary>The pills above the list: what is queued and, as the run goes, how each file ended up.</summary>
+        private void UpdateSummary()
+        {
+            int files = _items.Count > 0 ? _items.Count : 0;
+            long bytes = _items.Sum(i => i.Size);
+            int done = _items.Count(i => i.Status == CopyQueueStatus.Done);
+            int already = _items.Count(i => i.Status == CopyQueueStatus.AlreadyThere);
+            int skipped = _items.Count(i => i.Status == CopyQueueStatus.Skipped);
+            int failed = _items.Count(i => i.Status == CopyQueueStatus.Failed);
+            int verified = _items.Count(i => i.Status == CopyQueueStatus.Done && i.Verified);
+
+            TxtSummaryFiles.Text = files > 0
+                ? $"{files:N0} file{(files == 1 ? "" : "s")} · {CopyQueueManager.FormatSize(bytes)}"
+                : $"{_sources.Count:N0} item{(_sources.Count == 1 ? "" : "s")} in the queue";
+            TxtSummaryDone.Text = $"{done:N0} {(Mode() == CopyQueueMode.Move ? "moved" : "copied")}";
+            TxtSummaryVerified.Text = $"{verified:N0} verified";
+            TxtSummaryAlready.Text = $"{already:N0} already there";
+            TxtSummarySkipped.Text = $"{skipped:N0} skipped";
+            TxtSummaryFailed.Text = $"{failed:N0} failed";
+            PillDone.Visibility = done > 0 ? Visibility.Visible : Visibility.Collapsed;
+            PillVerified.Visibility = verified > 0 ? Visibility.Visible : Visibility.Collapsed;
+            PillAlready.Visibility = already > 0 ? Visibility.Visible : Visibility.Collapsed;
+            PillSkipped.Visibility = skipped > 0 ? Visibility.Visible : Visibility.Collapsed;
+            PillFailed.Visibility = failed > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            bool show = _sources.Count > 0 || files > 0;
+            bool firstShow = show && SummaryPanel.Visibility != Visibility.Visible;
+            SummaryPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            if (firstShow) UiMotion.Pop(SummaryPanel, 0.9);
+        }
+
+        private CopyQueueMode Mode() => RadioMove.IsChecked == true ? CopyQueueMode.Move : CopyQueueMode.Copy;
 
         private void ShowResult(CopyQueueResult r, CopyQueueMode mode, List<string> notes, bool undo = false)
         {
-            TxtDonePill.Text = undo ? CopyQueueManager.DescribeRun(r, CopyQueueMode.Move).Replace("Moved", "Put back") : CopyQueueManager.DescribeRun(r, mode);
-            DonePill.Visibility = Visibility.Visible;
+            _hasResult = true;
+            Bar.Value = r.Cancelled > 0 ? Bar.Value : 100;
+            TxtProgressPercent.Text = r.Cancelled > 0 ? TxtProgressPercent.Text : "100%";
+            TxtProgress.Text = undo ? CopyQueueManager.DescribeRun(r, CopyQueueMode.Move).Replace("Moved", "Put back") : CopyQueueManager.DescribeRun(r, mode);
+            UpdateSummary();
 
             var messages = new List<string>(notes);
             if (r.Failed > 0) messages.Add($"{r.Failed:N0} file{(r.Failed == 1 ? "" : "s")} failed - the originals were not touched. Hover a row for details; press Start again to retry.");
@@ -386,15 +449,14 @@ namespace Smart_Tools.WPF.Views
         {
             _manager.Resume();
             SetBusy(false);
-            ProgressPanel.Visibility = Visibility.Collapsed;
             Bar.IsIndeterminate = false;
             UpdateState();
         }
 
-        private void UpdateState(int? files = null)
+        private void UpdateState()
         {
-            bool hasItems = ItemList.ItemsSource != null && ItemList.HasItems;
-            ListEmpty.Visibility = hasItems || files > 0 ? Visibility.Collapsed : Visibility.Visible;
+            bool hasItems = _items.Count > 0;
+            ListEmpty.Visibility = hasItems ? Visibility.Collapsed : Visibility.Visible;
             if (!hasItems)
             {
                 TxtEmptyTitle.Text = _sources.Count == 0 ? "Add files or folders" : "Ready to start";
@@ -403,15 +465,11 @@ namespace Smart_Tools.WPF.Views
                     : "Pick the destination if you haven't, then press Start.";
             }
 
-            if (_sources.Count > 0)
-            {
-                PillCount.Visibility = Visibility.Visible;
-                if (!_busy) TxtPillCount.Text = $"{_sources.Count:N0} item{(_sources.Count == 1 ? "" : "s")} in the queue";
-            }
-            else
-            {
-                PillCount.Visibility = Visibility.Collapsed;
-            }
+            // The line under the bar says what to do next until a run has something to report.
+            if (!_busy && !_hasResult)
+                TxtProgress.Text = _sources.Count == 0 ? "Add files or folders to start." : "Ready - press Start.";
+
+            UpdateSummary();
         }
 
         // =================================================================
@@ -426,6 +484,8 @@ namespace Smart_Tools.WPF.Views
             string fg = kind == StatusKind.Error ? "StatusErrorFg" : "StatusWarningFg";
             StatusBanner.SetResourceReference(Border.BackgroundProperty, bg);
             TxtStatus.SetResourceReference(TextBlock.ForegroundProperty, fg);
+            StatusIcon.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, fg);
+            StatusIcon.Kind = kind == StatusKind.Error ? PackIconKind.AlertCircleOutline : PackIconKind.AlertOutline;
             TxtStatus.Text = text;
             StatusBanner.Visibility = Visibility.Visible;
         }

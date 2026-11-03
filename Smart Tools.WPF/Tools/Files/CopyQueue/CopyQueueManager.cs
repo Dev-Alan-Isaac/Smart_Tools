@@ -87,9 +87,24 @@ namespace Smart_Tools.WPF.Controllers
                 bool sameVolumeMove = o.Mode == CopyQueueMode.Move && SafeFileOps.SameVolume(item.Source, o.DestinationFolder);
                 bool verifies = !sameVolumeMove && (o.Verify || moveAcrossDrives);
                 item.PlannedBytes = sameVolumeMove ? 0 : item.Size * (verifies ? 2 : 1);
+                // A file already at the target is compared with it first (one read pass of the data).
+                if (TargetHoldsSameSize(item)) item.PlannedBytes += item.Size;
                 plan.BytesTotal += item.PlannedBytes;
             }
             return plan;
+        }
+
+        private static bool TargetHoldsSameSize(CopyQueueItem item)
+        {
+            try
+            {
+                var target = new FileInfo(item.Destination);
+                return target.Exists && target.Length == item.Size && !SamePath(item.Destination, item.Source);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static void Add(CopyQueuePlan plan, string file, string destination)
@@ -218,7 +233,7 @@ namespace Smart_Tools.WPF.Controllers
                         return;
                     }
                     // Same name: only an identical file (by content) counts as already done.
-                    if (SafeFileOps.FilesAreIdentical(item.Source, dest))
+                    if (SafeFileOps.FilesAreIdentical(item.Source, dest, onBytes, gate, token))
                     {
                         item.Status = CopyQueueStatus.AlreadyThere;
                         result.AlreadyThere++;
@@ -276,6 +291,7 @@ namespace Smart_Tools.WPF.Controllers
                         string copyHash = SafeFileOps.HashFile(temp, onBytes, gate, token);
                         if (!string.Equals(sourceHash, copyHash, StringComparison.Ordinal))
                             throw new IOException("The copy didn't match the original - the original was left where it is.");
+                        item.Verified = true;
                         result.Verified++;
                     }
 

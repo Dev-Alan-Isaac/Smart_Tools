@@ -61,6 +61,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>True once the file is at its target and (for a move) gone from the source - what Undo walks back.</summary>
         public bool Moved { get; set; }
 
+        /// <summary>True once the copy was compared to the original and matched.</summary>
+        public bool Verified { get; set; }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private bool Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
