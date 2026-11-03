@@ -6066,6 +6066,10 @@
     <system:String x:Key="Str_Cat_storage_Blurb">Free up space, check your drives</system:String>
     <system:String x:Key="Str_Cat_performance_Title">Performance</system:String>
     <system:String x:Key="Str_Cat_performance_Blurb">Live readings across your whole PC</system:String>
+    <system:String x:Key="Str_Cat_system_Title">System</system:String>
+    <system:String x:Key="Str_Cat_system_Blurb">Manage Windows itself</system:String>
+    <system:String x:Key="Str_Cat_calculators_Title">Calculators</system:String>
+    <system:String x:Key="Str_Cat_calculators_Blurb">Work things out</system:String>
     <system:String x:Key="Str_Cat_hardware_Title">Hardware Tests</system:String>
     <system:String x:Key="Str_Cat_hardware_Blurb">Test keyboards, mice, screens, controllers and sound</system:String>
     <system:String x:Key="Str_Cat_security_Title">Security</system:String>
@@ -6385,11 +6389,9 @@
     <system:String x:Key="Str_Tool_svg-tool_Description">Preview SVG files, make them smaller and export PNGs</system:String>
     <system:String x:Key="Str_Tool_wifi-analyzer_Name">Wi-Fi Analyzer</system:String>
     <system:String x:Key="Str_Tool_wifi-analyzer_Description">See nearby networks, signal and channels, and which channel is least crowded</system:String>
-    <system:String x:Key="Str_Tool_smart-history_Name">SMART Trend History</system:String>
-    <system:String x:Key="Str_Tool_smart-history_Description">Track drive health over time and spot a drive that is getting worse</system:String>
     <system:String x:Key="Str_Tool_drive-health_Name">Drive Health</system:String>
     <system:String x:Key="Str_Tool_drive-health_Title">Drive Health Monitor</system:String>
-    <system:String x:Key="Str_Tool_drive-health_Description">Check the health of your drives</system:String>
+    <system:String x:Key="Str_Tool_drive-health_Description">Check the health of your drives and track it over time</system:String>
     <system:String x:Key="Str_Tool_disk-space_Name">Disk Space Analyzer</system:String>
     <system:String x:Key="Str_Tool_disk-space_Description">See what's using your disk</system:String>
     <system:String x:Key="Str_Tool_large-files_Name">Large File Finder</system:String>
@@ -8548,16 +8550,6 @@
     <system:String x:Key="Str_Tour_Loudness_Normalize_Text">Writes a copy of each file brought to your target, then measures the copy again so you see what you really got. Originals stay untouched.</system:String>
     <system:String x:Key="Str_Tour_Loudness_Results_Title">Results</system:String>
     <system:String x:Key="Str_Tour_Loudness_Results_Text">Each file shows its loudness, peak, range, the difference from the target and a verdict: on target, too loud, too quiet or may clip.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Drive_Title">Drive</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Drive_Text">Choose which drive's history to look at. Drives are tracked by serial number, so a renamed or re-lettered drive keeps its history.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Chart_Title">What to chart</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Chart_Text">Pick a value, such as temperature, reallocated sectors or life remaining, and the period to show.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Record_Title">Record now</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Record_Text">Reads every drive's SMART numbers and adds a reading. Opening this tool also records one, at most every 6 hours.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Trend_Title">The trend</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Trend_Text">Red dots mark readings where a value that should stay low went up. A steady line is a healthy sign.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Readings_Title">Every reading</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Readings_Text">The table lists each reading with what got worse since the one before. Rising error counters mean the drive may be failing: back it up.</system:String>
     <system:String x:Key="Str_Tour_Wifi_ThisPc_Title">This PC</system:String>
     <system:String x:Key="Str_Tour_Wifi_ThisPc_Text">Shows your Wi-Fi adapter and the network you are connected to, with its standard and link speed.</system:String>
     <system:String x:Key="Str_Tour_Wifi_View_Title">Nearby or saved</system:String>
@@ -8798,5 +8790,15 @@
     <system:String x:Key="Str_Tour_AudioReplay_Play_Text">Starts and pauses playback. Previous and next sit beside it.</system:String>
     <system:String x:Key="Str_Tour_AudioReplay_Volume_Title">Volume</system:String>
     <system:String x:Key="Str_Tour_AudioReplay_Volume_Text">Sets how loud it plays.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryToggle_Title">Drives or History</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryToggle_Text">Drives shows each drive as it is now. History shows how its SMART numbers changed over time, with a chart and a table of readings.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryPick_Title">Choose what to look at</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryPick_Text">Pick a drive, a value such as temperature, reallocated sectors or life remaining, and the period. Press Record now to add a reading at once; refreshing Drive Health adds one too, at most every 6 hours.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryRecord_Title">Record now</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryRecord_Text">Reads every drive again and adds a reading even if the last one is recent.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryChart_Title">The trend</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryChart_Text">Red dots mark readings where a value that should stay low went up. A steady line is a healthy sign.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Title">Every reading</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Text">Each reading with what got worse since the one before. Rising error counters mean the drive may be failing: back it up.</system:String>
 
 </ResourceDictionary>

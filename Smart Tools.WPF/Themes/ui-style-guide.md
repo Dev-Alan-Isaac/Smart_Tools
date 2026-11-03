@@ -863,11 +863,11 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 - Use `GroupStyle ContainerStyle="{StaticResource CollapsibleGroupItemStyle}"`. The open/closed state is the group's own `IsExpanded` property (bound through the group header), so "fold all / unfold all" just sets it and scrolling or row recycling cannot mix states up.
 - Give the toolbar a fold-all and an unfold-all button and register shortcuts for them (`ShortcutManager`).
 
-## Charts drawn by the app (learned on SMART Trend History and Wi-Fi Analyzer)
+## Charts drawn by the app (learned on the Drive Health History view and Wi-Fi Analyzer)
 - `TrendChart` (values over time) and `ChannelChart` (Wi-Fi hills) are small `FrameworkElement`s that draw in `OnRender` with brushes set through `SetResourceReference`, so a theme change repaints them. Reuse or extend them before writing a new chart; keep the chart in a `RowBg` card with a `CardBorder` outline and a bold title in its top-left corner.
 - Mark "worse" with the error colour (a rising error counter), never with colour alone: the table next to the chart repeats it in words.
 
-## Tools that only read the machine (learned on Wi-Fi Analyzer and SMART Trend History)
+## Tools that only read the machine (learned on Wi-Fi Analyzer and the Drive Health History view)
 - Say plainly in "Good to know" that nothing is changed. Anything sensitive (a saved Wi-Fi password) appears only when asked for, hides itself again, and explains when Windows needs administrator rights.
 - When Windows can return nothing (Location access off, no Wi-Fi adapter, no SMART data), show a banner that says why and what to do, with a button to the right Settings page where possible.
 - Keep what is remembered small and local (`AppPaths.DataRoot`), replace files atomically, and set a damaged file aside as `.bad`.
@@ -875,3 +875,6 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 ## Measuring then writing copies (learned on Loudness Meter)
 - Two buttons in the run bar: the primary one only reads (Measure), the secondary writes copies (Normalize). Re-judge from stored measurements when a target changes instead of reading the files again.
 - A written copy is measured again before it is reported, so the row shows what the file really has, not what was asked for.
+
+## Related views live in one tool (learned on Drive Health)
+- When a second view only looks at the same thing from another angle (Drive Health's SMART history), make it a `Drives | History` toggle in the page's run-bar card (`ModeToggleButtonStyle` radios) and host it as a panel in the same row, instead of adding a separate tool. The page's Refresh feeds both views, so nothing is read twice.

@@ -42,6 +42,7 @@ namespace Smart_Tools.WPF.Views
         private bool _loadedOnce;
         private bool _bannerDismissed;
         private bool _hasResults;
+        private bool _forceRecord;
 
         public DriveHealthView()
         {
@@ -66,6 +67,27 @@ namespace Smart_Tools.WPF.Views
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
         {
             // Drives may have been plugged in or removed - scan tools should see that too.
+            DriveHealthManager.InvalidateCache();
+            await LoadDrivesAsync();
+        }
+
+        // =================================================================
+        //  Drives / History
+        // =================================================================
+
+        private void View_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            bool history = RadioHistory.IsChecked == true;
+            DrivesArea.Visibility = history ? Visibility.Collapsed : Visibility.Visible;
+            History.Visibility = history ? Visibility.Visible : Visibility.Collapsed;
+            if (history) UiMotion.FadeIn(History, 8);
+        }
+
+        /// <summary>Record now in the History view: read the drives again and add a reading even if the last one is recent.</summary>
+        private async void History_RecordNowRequested(object? sender, EventArgs e)
+        {
+            _forceRecord = true;
             DriveHealthManager.InvalidateCache();
             await LoadDrivesAsync();
         }
@@ -139,6 +161,10 @@ namespace Smart_Tools.WPF.Views
 
             DriveList.ItemsSource = scan.Drives;
             _hasResults = scan.Drives.Count > 0;
+
+            // Every scan also adds a SMART reading to the history (at most one per 6 hours unless asked).
+            History.ApplyScan(scan, _forceRecord);
+            _forceRecord = false;
 
             if (!_hasResults)
             {

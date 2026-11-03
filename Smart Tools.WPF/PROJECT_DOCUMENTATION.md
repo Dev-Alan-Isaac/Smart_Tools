@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 114 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 113 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **113 tools** in 19 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -41,6 +41,7 @@ Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside 
 | **Search Files** | `search-files` | Find text and patterns inside files |
 | **Copy Queue** | `copy-queue` | Copy or move big sets of files safely, with pause and verify |
 | **Folder Tree Exporter** | `folder-tree` | Export a folder's structure as a text tree, Markdown, JSON or CSV |
+| **Metadata Extractor** | `metadata-extract` | Read the hidden details in files |
 
 ### Convert & PDF
 *Change formats, work with PDFs*
@@ -121,8 +122,7 @@ Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Drive Health** | `drive-health` | Check the health of your drives |
-| **SMART Trend History** | `smart-history` | Track drive health over time and spot a drive that is getting worse |
+| **Drive Health** | `drive-health` | Check the health of your drives and track it over time |
 | **Disk Space Analyzer** | `disk-space` | See what's using your disk |
 | **Large File Finder** | `large-files` | Find the biggest files |
 | **Junk File Cleaner** | `junk-cleaner` | Clear temporary files and caches |
@@ -137,8 +137,16 @@ Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside 
 | **System Monitor** | `system-monitor` | Live CPU, memory, disks, network and GPU, like Task Manager |
 | **Hardware Sensors** | `hardware-sensors` | Temperatures, fans, clocks, voltages and power, part by part |
 | **Process Killer** | `process-killer` | See every running process and end the stuck ones safely |
+
+### System
+*Manage Windows itself*
+
+| Tool | Id | What it does |
+|---|---|---|
 | **Startup Apps** | `startup-apps` | See what starts with Windows and switch each app on or off |
 | **Services** | `services` | See every Windows service and start, stop, restart, or change how each one starts |
+| **Environment Variables** | `environment-variables` | Edit user and system variables, and clean up the PATH folder by folder |
+| **Event Log Explorer** | `event-log-explorer` | Browse, filter and export Windows event logs |
 
 ### Hardware Tests
 *Test keyboards, mice, screens, controllers and sound*
@@ -181,7 +189,6 @@ Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside 
 | **Device Scanner** | `device-scanner` | Find devices on your network |
 | **Internet Speed Test** | `internet-speed` | Measure download and upload speed |
 | **Network Speed Widget** | `net-speed-widget` | A floating live download and upload meter, with the adapter's manufacturer |
-| **Subnet Calculator** | `subnet-calc` | Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets |
 
 ### Developer
 *Test, inspect and format*
@@ -192,13 +199,20 @@ Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside 
 | **Regex Tester** | `regex-tester` | Build and test regular expressions |
 | **JWT Decoder** | `jwt-decoder` | Read a token's header, payload, and expiry. Offline, and the signature is not checked |
 | **JSON / YAML / XML Formatter** | `data-formatter` | Format, minify, validate, and convert between JSON, YAML, and XML |
-| **Metadata Extractor** | `metadata-extract` | Read the hidden details in files |
 | **Log Viewer** | `log-viewer` | Open and filter log files |
 | **Code Toolkit** | `code-toolkit` | Format, encode and convert code |
 | **MD & HTML Editor** | `md-html-editor` | Write Markdown or HTML with a live preview, export to HTML or PDF |
-| **Event Log Explorer** | `event-log-explorer` | Browse, filter and export Windows event logs |
 | **Database Migrator** | `db-migrate` | Copy a SQL Server database to a newer or older server version, no backup file needed |
 | **Base64 & URL Encoder** | `encode-decode` | Encode and decode Base64, URLs, HTML entities and files |
+
+### Calculators
+*Work things out*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Subnet Calculator** | `subnet-calc` | Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets |
+| **Unit & Currency Converter** | `unit-converter` | Convert length, weight, temperature, data size, money, and more |
+| **Date & Time Toolkit** | `date-time` | Timestamps, time zones and date maths in one place |
 
 ### Generators
 *Make files and codes*
@@ -218,9 +232,6 @@ Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **Notes** | `notes` | Write quick notes |
 | **Clipboard History** | `clipboard-history` | Everything you copied, searchable, with pins. Saved only if you turn it on |
-| **Environment Variables** | `environment-variables` | Edit user and system variables, and clean up the PATH folder by folder |
-| **Date & Time Toolkit** | `date-time` | Timestamps, time zones and date maths in one place |
-| **Unit & Currency Converter** | `unit-converter` | Convert length, weight, temperature, data size, money, and more |
 | **Screen OCR** | `screen-ocr` | Extract text from a screenshot or screen region |
 | **Translate** | `translate` | Translate text offline between English and Spanish |
 | **Timer & Stopwatch** | `timer-stopwatch` | Stopwatch with laps, countdown timer and a Pomodoro cycle |
@@ -375,7 +386,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 - `SystemMonitorManager` - Monitor system resources
 - `SpaceAnalyzerManager` - Analyze disk space
 - `DriveHealthManager` - Monitor drive health
-- `SmartHistoryManager` - Keep SMART readings over time and flag drives that get worse
+- `SmartHistoryManager` - Keeps SMART readings over time (the History view of Drive Health) and flags drives that get worse
 - `DiskSpeedTestManager` - Test disk performance
 - `InternetSpeedTestManager` - Test internet speed
 - `NetworkToolsManager` - Network utilities
@@ -415,7 +426,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 114 tools have one. The tour only covers the page that is open.
+All 113 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -460,7 +471,7 @@ Used by Organize Files, Copy Queue, Folder Tree Exporter, Loudness Meter and oth
 | `ToolSidebar` | `Shared/Views/Extentions` | The collapsible options column every tool has |
 | `InputFolderCard`, `OutputFolderCard` | `Shared/Views/Extentions` | Choosing files/folders in and where results go (with free-space and writability checks) |
 | `EmptyStateCard`, `ElevationBannerCard` | `Shared/Views/Extentions` | Dotted empty state; "needs administrator" banner |
-| `TrendChart`, `ChannelChart` | `Controls` | Line chart over time (SMART Trend History); Wi-Fi channel graph |
+| `TrendChart`, `ChannelChart` | `Controls` | Line chart over time (Drive Health History view); Wi-Fi channel graph |
 | Theme styles | `Themes/Controls.xaml` | `ModeToggleButtonStyle`, `AccentPrimaryButtonStyle`, `CardStyle`, `SidebarGroupCardStyle`, DataGrid, collapsible group (`CollapsibleGroupItemStyle`), ... |
 | `FfmpegLocator` | `Shared/Controllers` | Finds the bundled FFmpeg/ffprobe |
 | `OuiLookupManager` | `Shared/Controllers` | MAC address -> manufacturer (`Data/oui.txt`) |
@@ -472,7 +483,7 @@ Result lists use a real `DataGrid` with the app's global styles (no custom list 
 ## Where Data Is Saved
 
 Everything the app remembers lives under `AppPaths.DataRoot`: `%AppData%\Smart Tools` for an installed copy, or a `UserData` folder beside the exe when a `portable.txt` file is next to it.
-Examples: `settings.json`, tool settings (`pixel_art.json`, `sprite_packer.json`, `encode_tool.json`, ...), `smart_history.json` (SMART Trend History readings), `copy_queue_job.json` / `copy_queue_undo.json` (Copy Queue resume and undo). Files are replaced atomically, and a damaged file is set aside as `.bad` instead of stopping the tool.
+Examples: `settings.json`, tool settings (`pixel_art.json`, `sprite_packer.json`, `encode_tool.json`, ...), `smart_history.json` (the Drive Health History readings), `copy_queue_job.json` / `copy_queue_undo.json` (Copy Queue resume and undo). Files are replaced atomically, and a damaged file is set aside as `.bad` instead of stopping the tool.
 
 ---
 
@@ -621,3 +632,4 @@ For issues, suggestions, or questions:
 - **Pixel Art Editor** (`pixel-art`): `Controllers/PixelArtManager.cs` (drawing, flood fill, line / rectangle / ellipse, symmetry, undo history of pixel diffs and snapshots, frames) + `.Export.cs` (colours, palettes, scaling and sheet export, settings in `pixel_art.json`) + `.Render.cs` (WPF pictures, image import), `Controllers/PngWriter.cs`, `Models/PixelArtModel.cs`, `Views/PixelArtView`, `Controls/PixelCanvasControl`. Colours are packed ARGB; fully transparent is always 0.
 - **Sprite Sheet Packer** (`sprite-packer`): `Controllers/SpritePackerManager.cs` (MaxRects packing into the smallest sheet or several sheets, trim, compose, JSON / CSS / XML coordinates, safe sets of files, slicing, settings in `sprite_packer.json`) + `.Files.cs` (finding images, Files card rows, ordering) + `.Render.cs` (WPF decoding, thumbnails, pictures), `Controllers/PngWriter.cs`, `Models/SpritePackerModel.cs`, `Views/SpritePackerView`, the shared `OutputFolderCard`.
 - **Batch Watermarker** (`watermark`): `Controllers/WatermarkManager.cs` (layout of one or tiled marks, output names, presets, settings, app-owned logo copies) + `.Render.cs` (the mark as a transparent picture) + `.Engines.cs` (ImageMagick, PDFsharp and ffmpeg engines and the batch) + `.Files.cs` (finding files, Files card rows) + `.Preview.cs` (picture, video frame, Windows PDF page), `Models/WatermarkModel.cs`, `Views/WatermarkView`, the shared `OutputFolderCard`. The mark is percentages of each file, so one setup suits any size.
+

@@ -1,0 +1,221 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.SmartHistoryPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root">
+
+    <!--
+        The History view of Drive Health (not a tool of its own). Backend: Controllers/SmartHistoryManager.cs (readings file,
+        warnings, CSV). Drive Health reads the drives and hands the scan to ApplyScan; this panel only shows and exports.
+    -->
+
+    <UserControl.Resources>
+        <!--  One warning line  -->
+        <DataTemplate x:Key="WarningTemplate" DataType="{x:Type models:SmartWarning}">
+            <Border x:Name="Bd" Margin="0,0,0,6" Padding="10,8" Background="{DynamicResource StatusInfoBg}" CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon x:Name="Icon" Width="14" Height="14" Margin="0,1,8,0" VerticalAlignment="Top" Foreground="{DynamicResource StatusInfoFg}" Kind="InformationOutline" />
+                    <TextBlock x:Name="Msg" Grid.Column="1" FontSize="11.5" Foreground="{DynamicResource StatusInfoFg}" Text="{Binding Text}" TextWrapping="Wrap" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Warning">
+                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="Icon" Property="Kind" Value="AlertOutline" />
+                    <Setter TargetName="Msg" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Danger">
+                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="Icon" Property="Kind" Value="AlertCircleOutline" />
+                    <Setter TargetName="Msg" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  What got worse since the reading before  -->
+        <DataTemplate x:Key="ChangeCellTemplate" DataType="{x:Type models:SmartReadingRow}">
+            <TextBlock x:Name="Txt" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Change}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Change}" />
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Worsened}" Value="True">
+                    <Setter TargetName="Txt" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="Txt" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Choose what to look at  -->
+        <Border ctl:Tour.Key="Str_Tour_DriveHealth_HistoryPick" ctl:Tour.Order="6" Grid.Row="0" Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="160" />
+                    <ColumnDefinition Width="*" MinWidth="140" />
+                    <ColumnDefinition Width="*" MinWidth="140" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Margin="2,0,0,4" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="Drive" />
+                    <ComboBox x:Name="CmbDrive" SelectionChanged="CmbDrive_SelectionChanged" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                    <TextBlock Margin="2,0,0,4" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="Show" />
+                    <ComboBox x:Name="CmbMetric" SelectionChanged="CmbMetric_SelectionChanged" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                    <TextBlock Margin="2,0,0,4" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="Period" />
+                    <ComboBox x:Name="CmbPeriod" SelectedIndex="0" SelectionChanged="CmbPeriod_SelectionChanged">
+                        <ComboBoxItem Content="Everything recorded" Tag="0" />
+                        <ComboBoxItem Content="Last year" Tag="365" />
+                        <ComboBoxItem Content="Last 90 days" Tag="90" />
+                        <ComboBoxItem Content="Last 30 days" Tag="30" />
+                        <ComboBoxItem Content="Last 7 days" Tag="7" />
+                    </ComboBox>
+                </StackPanel>
+                <Button x:Name="BtnRecord" ctl:Tour.Key="Str_Tour_DriveHealth_HistoryRecord" ctl:Tour.Order="7" Grid.Column="3" MinWidth="150" VerticalAlignment="Bottom" Click="BtnRecord_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Read every drive now and add a reading to the history">
+                    <Grid HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="PlaylistPlus" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Record now" TextWrapping="Wrap" />
+                    </Grid>
+                </Button>
+
+                <TextBlock x:Name="TxtProgress" Grid.Row="1" Grid.ColumnSpan="4" Margin="2,10,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap"
+                           Text="Each time Drive Health reads your drives it adds a reading here (at most one every 6 hours), so the history grows as you use the app. Press Record now to add one at once." />
+            </Grid>
+        </Border>
+
+        <!--  History  -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="230" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid x:Name="HeaderRow" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ContentControl VerticalAlignment="Center" Content="Trend" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ChartLine}" />
+
+                    <WrapPanel x:Name="SummaryPanel" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
+                        <Border Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Readings kept for this drive">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusInfoFg}" Kind="ClockOutline" />
+                                <TextBlock x:Name="TxtSummaryReadings" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="PillOk" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Nothing has got worse">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="CheckCircleOutline" />
+                                <TextBlock x:Name="TxtSummaryOk" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Text="Stable" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="PillWarn" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Things to keep an eye on" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusWarningFg}" Kind="AlertOutline" />
+                                <TextBlock x:Name="TxtSummaryWarn" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" />
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="PillDanger" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Back up this drive" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusErrorFg}" Kind="AlertCircleOutline" />
+                                <TextBlock x:Name="TxtSummaryDanger" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" />
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+                        <Button x:Name="BtnCopyCsv" Margin="0,0,6,0" Click="BtnCopyCsv_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy this drive's history (CSV)">
+                            <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
+                        </Button>
+                        <Button x:Name="BtnSaveCsv" Margin="0,0,6,0" Click="BtnSaveCsv_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save this drive's history as a CSV file">
+                            <materialDesign:PackIcon Width="16" Height="16" Kind="FileDelimitedOutline" />
+                        </Button>
+                        <Button x:Name="BtnClearDrive" Click="BtnClearDrive_Click" Style="{StaticResource ListToolDangerButtonStyle}" ToolTip="Forget the history of this drive">
+                            <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteSweepOutline" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!--  Warnings and facts  -->
+                <StackPanel x:Name="WarningsPanel" Grid.Row="1" Margin="0,0,0,10" Visibility="Collapsed">
+                    <ItemsControl x:Name="WarningList" ItemTemplate="{StaticResource WarningTemplate}" />
+                    <TextBlock x:Name="TxtFacts" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Visibility="Collapsed" />
+                </StackPanel>
+
+                <Border x:Name="ChartCard" ctl:Tour.Key="Str_Tour_DriveHealth_HistoryChart" ctl:Tour.Order="8" Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                    <Grid>
+                        <TextBlock x:Name="TxtChartTitle" Margin="14,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                        <controls:TrendChart x:Name="Chart" Margin="6,26,6,6" />
+                    </Grid>
+                </Border>
+
+                <DataGrid
+                    x:Name="ReadingsGrid"
+                    ctl:Tour.Key="Str_Tour_DriveHealth_HistoryReadings"
+                    ctl:Tour.Order="9"
+                    Grid.Row="4"
+                    AutoGenerateColumns="False"
+                    CanUserAddRows="False"
+                    CanUserSortColumns="False"
+                    FontSize="12"
+                    IsReadOnly="True"
+                    MinRowHeight="38"
+                    SelectionMode="Extended"
+                    VirtualizingPanel.IsVirtualizing="True"
+                    VirtualizingPanel.ScrollUnit="Pixel"
+                    VirtualizingPanel.VirtualizationMode="Recycling">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Width="130" Binding="{Binding When}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="When" />
+                        <DataGridTextColumn Width="76" Binding="{Binding Temperature}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Temp" />
+                        <DataGridTextColumn Width="100" Binding="{Binding PowerOn}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Power-on" />
+                        <DataGridTextColumn Width="90" Binding="{Binding Reallocated}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Reallocated" />
+                        <DataGridTextColumn Width="76" Binding="{Binding Pending}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Pending" />
+                        <DataGridTextColumn Width="96" Binding="{Binding Written}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Written" />
+                        <DataGridTextColumn Width="70" Binding="{Binding Life}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Life left" />
+                        <DataGridTemplateColumn Width="2*" MinWidth="120" CellTemplate="{StaticResource ChangeCellTemplate}" Header="Changed since the one before" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <controls:EmptyStateCard
+                    x:Name="EmptyStatePanel"
+                    Grid.Row="2"
+                    Grid.RowSpan="3"
+                    Description="No readings for this drive yet. Each time Drive Health reads your drives it adds one; press Record now to add one at once, and the trend builds up."
+                    Icon="ChartLine"
+                    IsHitTestVisible="False" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

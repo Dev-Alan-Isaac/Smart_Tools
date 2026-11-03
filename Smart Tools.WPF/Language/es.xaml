@@ -6068,6 +6068,10 @@
     <system:String x:Key="Str_Cat_storage_Blurb">Libera espacio y revisa tus unidades</system:String>
     <system:String x:Key="Str_Cat_performance_Title">Rendimiento</system:String>
     <system:String x:Key="Str_Cat_performance_Blurb">Lecturas en vivo de todo tu PC</system:String>
+    <system:String x:Key="Str_Cat_system_Title">Sistema</system:String>
+    <system:String x:Key="Str_Cat_system_Blurb">Administra Windows</system:String>
+    <system:String x:Key="Str_Cat_calculators_Title">Calculadoras</system:String>
+    <system:String x:Key="Str_Cat_calculators_Blurb">Haz cuentas y conversiones</system:String>
     <system:String x:Key="Str_Cat_hardware_Title">Pruebas de hardware</system:String>
     <system:String x:Key="Str_Cat_hardware_Blurb">Prueba teclados, ratones, pantallas, mandos y sonido</system:String>
     <system:String x:Key="Str_Cat_security_Title">Seguridad</system:String>
@@ -6387,11 +6391,9 @@
     <system:String x:Key="Str_Tool_svg-tool_Description">Previsualiza archivos SVG, hazlos más pequeños y exporta PNG</system:String>
     <system:String x:Key="Str_Tool_wifi-analyzer_Name">Analizador Wi-Fi</system:String>
     <system:String x:Key="Str_Tool_wifi-analyzer_Description">Ve las redes cercanas, su señal y canales, y qué canal está menos saturado</system:String>
-    <system:String x:Key="Str_Tool_smart-history_Name">Historial SMART</system:String>
-    <system:String x:Key="Str_Tool_smart-history_Description">Sigue la salud de tus discos con el tiempo y detecta uno que empeora</system:String>
     <system:String x:Key="Str_Tool_drive-health_Name">Salud de unidades</system:String>
     <system:String x:Key="Str_Tool_drive-health_Title">Monitor de salud de unidades</system:String>
-    <system:String x:Key="Str_Tool_drive-health_Description">Comprueba la salud de tus unidades</system:String>
+    <system:String x:Key="Str_Tool_drive-health_Description">Comprueba la salud de tus discos y sigue su evolución en el tiempo</system:String>
     <system:String x:Key="Str_Tool_disk-space_Name">Analizador de espacio en disco</system:String>
     <system:String x:Key="Str_Tool_disk-space_Description">Mira qué ocupa tu disco</system:String>
     <system:String x:Key="Str_Tool_large-files_Name">Buscador de archivos grandes</system:String>
@@ -8550,16 +8552,6 @@
     <system:String x:Key="Str_Tour_Loudness_Normalize_Text">Escribe una copia de cada archivo llevada a tu objetivo y la vuelve a medir para que veas lo que realmente obtuviste. Los originales no se tocan.</system:String>
     <system:String x:Key="Str_Tour_Loudness_Results_Title">Resultados</system:String>
     <system:String x:Key="Str_Tour_Loudness_Results_Text">Cada archivo muestra su sonoridad, pico, rango, la diferencia con el objetivo y un veredicto: en objetivo, muy fuerte, muy bajo o puede saturar.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Drive_Title">Disco</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Drive_Text">Elige el historial de qué disco ver. Los discos se identifican por número de serie, así que un disco renombrado o con otra letra conserva su historial.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Chart_Title">Qué graficar</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Chart_Text">Elige un valor, como temperatura, sectores reasignados o vida restante, y el periodo a mostrar.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Record_Title">Registrar ahora</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Record_Text">Lee los datos SMART de cada disco y añade una lectura. Abrir esta herramienta también registra una, como mucho cada 6 horas.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Trend_Title">La tendencia</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Trend_Text">Los puntos rojos marcan lecturas en que subió un valor que debería mantenerse bajo. Una línea estable es buena señal.</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Readings_Title">Cada lectura</system:String>
-    <system:String x:Key="Str_Tour_SmartHistory_Readings_Text">La tabla lista cada lectura con lo que empeoró desde la anterior. Si suben los contadores de errores, el disco puede estar fallando: haz una copia de seguridad.</system:String>
     <system:String x:Key="Str_Tour_Wifi_ThisPc_Title">Este equipo</system:String>
     <system:String x:Key="Str_Tour_Wifi_ThisPc_Text">Muestra tu adaptador Wi-Fi y la red a la que estás conectado, con su estándar y velocidad de enlace.</system:String>
     <system:String x:Key="Str_Tour_Wifi_View_Title">Cercanas o guardadas</system:String>
@@ -8800,5 +8792,15 @@
     <system:String x:Key="Str_Tour_AudioReplay_Play_Text">Inicia y pausa la reproducción. Anterior y siguiente están a su lado.</system:String>
     <system:String x:Key="Str_Tour_AudioReplay_Volume_Title">Volumen</system:String>
     <system:String x:Key="Str_Tour_AudioReplay_Volume_Text">Define qué tan fuerte suena.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryToggle_Title">Discos o Historial</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryToggle_Text">Discos muestra cada disco tal como está ahora. Historial muestra cómo cambiaron sus datos SMART con el tiempo, con un gráfico y una tabla de lecturas.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryPick_Title">Elige qué ver</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryPick_Text">Elige un disco, un valor como temperatura, sectores reasignados o vida restante, y el periodo. Pulsa Registrar ahora para añadir una lectura al instante; al actualizar Drive Health también se añade una, como mucho cada 6 horas.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryRecord_Title">Registrar ahora</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryRecord_Text">Vuelve a leer todos los discos y añade una lectura aunque la última sea reciente.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryChart_Title">La tendencia</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryChart_Text">Los puntos rojos marcan lecturas en que subió un valor que debería mantenerse bajo. Una línea estable es buena señal.</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Title">Cada lectura</system:String>
+    <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Text">Cada lectura con lo que empeoró desde la anterior. Si suben los contadores de errores, el disco puede estar fallando: haz una copia de seguridad.</system:String>
 
 </ResourceDictionary>

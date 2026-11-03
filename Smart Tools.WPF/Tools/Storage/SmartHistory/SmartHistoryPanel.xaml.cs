@@ -1,6 +1,5 @@
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
-using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,111 +9,70 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace Smart_Tools.WPF.Views
 {
     /// <summary>
-    /// SMART Trend History - UI only. Reading the drives is <see cref="DriveHealthManager"/>; the saved
-    /// readings, warnings and CSV are in <see cref="SmartHistoryManager"/>.
+    /// The History view of Drive Health - UI only. Drive Health reads the drives and calls <see cref="ApplyScan"/>;
+    /// the saved readings, warnings and CSV are in <see cref="SmartHistoryManager"/>.
     /// </summary>
-    public partial class SmartHistoryView : UserControl
+    public partial class SmartHistoryPanel : UserControl
     {
-        private const string DialogTitle = "SMART Trend History";
+        private const string DialogTitle = "SMART history";
 
         private SmartHistoryFile _file = new();
-        private CancellationTokenSource? _cts;
-        private bool _loadedOnce;
-        private bool _busy;
         private bool _updating;
 
-        public SmartHistoryView()
+        public SmartHistoryPanel()
         {
             InitializeComponent();
             foreach (SmartMetric m in Enum.GetValues<SmartMetric>())
                 CmbMetric.Items.Add(new ComboBoxItem { Content = SmartHistoryText.Label(m), Tag = m });
             CmbMetric.SelectedIndex = 0;
-        }
 
-        private async void Root_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (_loadedOnce) return;
-            _loadedOnce = true;
             _file = SmartHistoryManager.Load();
             FillDrives(null);
             Refresh();
-            await ReadDrivesAsync(force: false);
         }
 
+        /// <summary>Raised by Record now; Drive Health reads the drives again and calls <see cref="ApplyScan"/> with force on.</summary>
+        public event EventHandler? RecordNowRequested;
+
         // =================================================================
-        //  Reading the drives
+        //  Fed by Drive Health
         // =================================================================
 
-        private void BtnRecord_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Adds a reading for every drive that reports SMART (at most one per <see cref="SmartHistoryManager.AutoGap"/>
+        /// unless <paramref name="force"/>) and shows the result.
+        /// </summary>
+        public void ApplyScan(DriveHealthScan scan, bool force)
         {
-            if (_busy)
+            if (scan.ErrorMessage != null) return;
+            string? keep = (CmbDrive.SelectedItem as SmartDriveHistory)?.Key;
+            int added = SmartHistoryManager.Record(_file, scan.Drives, DateTime.Now, SmartHistoryManager.AutoGap, force);
+            if (added > 0)
             {
-                _cts?.Cancel();
-                return;
+                try
+                {
+                    SmartHistoryManager.Save(_file);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    TxtProgress.Text = "The readings couldn't be saved: " + ex.Message;
+                }
             }
-            _ = ReadDrivesAsync(force: true);
-        }
 
-        private async Task ReadDrivesAsync(bool force)
-        {
-            if (_busy) return;
-            _busy = true;
-            _cts = new CancellationTokenSource();
-            BtnRecord.IsEnabled = true;
-            Bar.IsIndeterminate = true;
-            TxtProgress.Text = "Reading the drives...";
-            DriveHealthManager.InvalidateCache();
-
-            try
+            int withSmart = scan.Drives.Count(d => d.Smart != null);
+            if (force || added > 0 || withSmart == 0)
             {
-                var scan = await DriveHealthManager.GetAllDrivesAsync(_cts.Token);
-                if (scan.ErrorMessage != null)
-                {
-                    TxtProgress.Text = "Windows' storage information couldn't be read: " + scan.ErrorMessage;
-                    return;
-                }
-
-                string? keep = (CmbDrive.SelectedItem as SmartDriveHistory)?.Key;
-                int added = SmartHistoryManager.Record(_file, scan.Drives, DateTime.Now, SmartHistoryManager.AutoGap, force);
-                if (added > 0)
-                {
-                    try
-                    {
-                        SmartHistoryManager.Save(_file);
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                    {
-                        TxtProgress.Text = "The readings couldn't be saved: " + ex.Message;
-                        FillDrives(keep);
-                        Refresh();
-                        return;
-                    }
-                }
-
-                int withSmart = scan.Drives.Count(d => d.Smart != null);
                 TxtProgress.Text = withSmart == 0
                     ? "None of the drives reported SMART data" + (scan.IsElevated ? "." : " - running Smart Tools as administrator may help.")
                     : added > 0
                         ? $"Recorded {added:N0} reading{(added == 1 ? "" : "s")} at {DateTime.Now:t}."
-                        : $"Up to date - the last reading is less than {SmartHistoryManager.AutoGap.TotalHours:0} hours old. Press Record now to add one anyway.";
-                FillDrives(keep);
-                Refresh();
+                        : "Nothing new to record.";
             }
-            catch (OperationCanceledException)
-            {
-                TxtProgress.Text = "Stopped.";
-            }
-            catch (Exception ex)
-            {
-                TxtProgress.Text = "The drives couldn't be read: " + ex.Message;
-            }
-            finally
-            {
-                _busy = false;
-                Bar.IsIndeterminate = false;
-                Bar.Value = 0;
-            }
+            FillDrives(keep);
+            Refresh();
         }
+
+        private void BtnRecord_Click(object sender, RoutedEventArgs e) => RecordNowRequested?.Invoke(this, EventArgs.Empty);
 
         // =================================================================
         //  Drive / metric / period
@@ -161,7 +119,6 @@ namespace Smart_Tools.WPF.Views
             if (!has)
             {
                 WarningsPanel.Visibility = Visibility.Collapsed;
-                TxtDriveInfo.Text = _file.Drives.Count == 0 ? "No drive has been recorded yet." : "";
                 ReadingsGrid.ItemsSource = null;
                 Chart.SetData(Array.Empty<(DateTime, double)>(), v => v.ToString("0"), false);
                 return;
@@ -170,12 +127,10 @@ namespace Smart_Tools.WPF.Views
             var visible = drive!.Readings.Where(r => PeriodDays == 0 || DateTime.Now - r.When <= TimeSpan.FromDays(PeriodDays)).ToList();
             var view = new SmartDriveHistory { Key = drive.Key, Name = drive.Name, IsNvme = drive.IsNvme, IsSsd = drive.IsSsd, Readings = visible };
 
-            // chart
             var metric = Metric;
             TxtChartTitle.Text = SmartHistoryText.Label(metric) + (SmartHistoryManager.HasMetric(drive, metric) ? "" : " - this drive doesn't report it");
             Chart.SetData(SmartHistoryManager.Series(view, metric), v => SmartHistoryText.Format(metric, v), HigherIsWorse(metric));
 
-            // grid, newest first
             var rows = new List<SmartReadingRow>(visible.Count);
             SmartReading? prev = null;
             foreach (var r in visible) { rows.Add(new SmartReadingRow(r, prev)); prev = r; }
@@ -192,14 +147,13 @@ namespace Smart_Tools.WPF.Views
 
             int danger = warnings.Count(w => w.Level == SmartWarningLevel.Danger);
             int warn = warnings.Count(w => w.Level == SmartWarningLevel.Warning);
-            TxtSummaryReadings.Text = $"{drive.Readings.Count:N0} reading{(drive.Readings.Count == 1 ? "" : "s")} · {SpanText(drive)}";
+            TxtSummaryReadings.Text = $"{drive.Readings.Count:N0} reading{(drive.Readings.Count == 1 ? "" : "s")} since {drive.Readings[0].When:d MMM yyyy} · {SpanText(drive)}";
             TxtSummaryDanger.Text = $"{danger:N0} serious";
             TxtSummaryWarn.Text = $"{warn:N0} to watch";
             PillDanger.Visibility = danger > 0 ? Visibility.Visible : Visibility.Collapsed;
             PillWarn.Visibility = warn > 0 ? Visibility.Visible : Visibility.Collapsed;
             PillOk.Visibility = danger + warn == 0 ? Visibility.Visible : Visibility.Collapsed;
             TxtSummaryOk.Text = drive.Readings.Count < 2 ? "Not enough readings to compare" : "Stable";
-            TxtDriveInfo.Text = $"{drive.Readings.Count:N0} readings since {drive.Readings[0].When:d MMM yyyy}. " + (drive.IsNvme ? "NVMe SSD." : drive.IsSsd ? "SSD." : "Hard disk.");
         }
 
         private static string SpanText(SmartDriveHistory d)
@@ -247,7 +201,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (CmbDrive.SelectedItem is not SmartDriveHistory d) return;
             var answer = System.Windows.MessageBox.Show(
-                $"Forget all {d.Readings.Count:N0} readings of {d.Name}?\n\nThe drive itself isn't touched; only this history is removed. It starts again the next time you open the tool.",
+                $"Forget all {d.Readings.Count:N0} readings of {d.Name}?\n\nThe drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.",
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (answer != MessageBoxResult.Yes) return;
             _file.Drives.Remove(d);
@@ -262,8 +216,5 @@ namespace Smart_Tools.WPF.Views
             FillDrives(null);
             Refresh();
         }
-
-        /// <summary>Called when the window closes: stops a drive read in progress. Readings already saved stay.</summary>
-        public void CancelActiveRun() => _cts?.Cancel();
     }
 }

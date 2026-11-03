@@ -241,7 +241,6 @@ namespace Smart_Tools.WPF
             Add<HardwareSensorsView>("hardware-sensors", v => v.CancelActiveRun());   // stops reading, closes the sensor library
             Add<DriveHealthView>("drive-health", v => v.CancelActiveRun());
             Add<WifiView>("wifi-analyzer", v => v.CancelActiveRun());   // stops a scan and the auto-refresh; it only listens, nothing is changed
-            Add<SmartHistoryView>("smart-history", v => v.CancelActiveRun());   // stops a drive read; saved readings stay
             Add<DiskSpeedTestView>("disk-speed", v => v.CancelActiveRun());
 
             // Security

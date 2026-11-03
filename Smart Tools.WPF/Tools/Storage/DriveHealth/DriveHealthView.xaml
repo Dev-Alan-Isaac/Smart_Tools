@@ -5,6 +5,7 @@
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:views="clr-namespace:Smart_Tools.WPF.Views"
     x:Name="Root"
     Loaded="Root_Loaded">
 
@@ -721,6 +722,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <Button
@@ -751,7 +753,7 @@
                     </Button>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <WrapPanel ctl:Tour.Key="Str_Tour_DriveHealth_Summary" ctl:Tour.Order="2" x:Name="SummaryPanel" Visibility="Collapsed">
+                        <WrapPanel ctl:Tour.Key="Str_Tour_DriveHealth_Summary" ctl:Tour.Order="3" x:Name="SummaryPanel" Visibility="Collapsed">
                             <Border
                                 Margin="0,0,6,4"
                                 Background="{DynamicResource StatusInfoBg}"
@@ -847,10 +849,37 @@
                             TextWrapping="NoWrap" />
                     </StackPanel>
 
-                    <!--  Elevation state  -->
-                    <Border ctl:Tour.Key="Str_Tour_DriveHealth_Admin" ctl:Tour.Order="3"
-                        x:Name="AdminPill"
+                    <!--  Drives now / history over time  -->
+                    <UniformGrid
+                        ctl:Tour.Key="Str_Tour_DriveHealth_HistoryToggle"
+                        ctl:Tour.Order="2"
                         Grid.Column="2"
+                        Width="210"
+                        VerticalAlignment="Center"
+                        Columns="2">
+                        <RadioButton
+                            x:Name="RadioDrives"
+                            Margin="0,0,2,0"
+                            Checked="View_Changed"
+                            Content="Drives"
+                            GroupName="DhView"
+                            IsChecked="True"
+                            Style="{StaticResource ModeToggleButtonStyle}"
+                            ToolTip="Every drive and its health right now" />
+                        <RadioButton
+                            x:Name="RadioHistory"
+                            Margin="2,0,0,0"
+                            Checked="View_Changed"
+                            Content="History"
+                            GroupName="DhView"
+                            Style="{StaticResource ModeToggleButtonStyle}"
+                            ToolTip="How each drive's SMART numbers changed over time" />
+                    </UniformGrid>
+
+                    <!--  Elevation state  -->
+                    <Border ctl:Tour.Key="Str_Tour_DriveHealth_Admin" ctl:Tour.Order="4"
+                        x:Name="AdminPill"
+                        Grid.Column="3"
                         Margin="16,0,0,0"
                         VerticalAlignment="Center"
                         Background="{DynamicResource RowBg}"
@@ -968,11 +997,11 @@
             </Border>
 
             <!--  ================= DRIVES =================  -->
-            <Grid Grid.Row="2">
+            <Grid x:Name="DrivesArea" Grid.Row="2">
                 <ScrollViewer
                     x:Name="DriveScroller"
                     ctl:Tour.Key="Str_Tour_DriveHealth_Drives"
-                    ctl:Tour.Order="4"
+                    ctl:Tour.Order="5"
                     HorizontalScrollBarVisibility="Disabled"
                     SizeChanged="DriveScroller_SizeChanged"
                     VerticalScrollBarVisibility="Auto">
@@ -1008,6 +1037,9 @@
                         TextWrapping="Wrap" />
                 </StackPanel>
             </Grid>
+
+            <!--  ================= HISTORY =================  -->
+            <views:SmartHistoryPanel x:Name="History" Grid.Row="2" RecordNowRequested="History_RecordNowRequested" Visibility="Collapsed" />
         </Grid>
     </Grid>
 </UserControl>
