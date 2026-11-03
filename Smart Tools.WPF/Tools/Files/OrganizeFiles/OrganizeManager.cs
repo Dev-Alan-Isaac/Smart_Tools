@@ -453,18 +453,7 @@ namespace Smart_Tools.WPF.Controllers
             return string.Join(" · ", parts);
         }
 
-        public static string UniquePath(string path)
-        {
-            if (!File.Exists(path) && !Directory.Exists(path)) return path;
-            string dir = Path.GetDirectoryName(path) ?? "";
-            string stem = Path.GetFileNameWithoutExtension(path);
-            string ext = Path.GetExtension(path);
-            for (int i = 2; ; i++)
-            {
-                string candidate = Path.Combine(dir, $"{stem} ({i}){ext}");
-                if (!File.Exists(candidate) && !Directory.Exists(candidate)) return candidate;
-            }
-        }
+        public static string UniquePath(string path) => SafeFileOps.UniquePath(path);
 
         // =================================================================
         //  ffprobe JSON

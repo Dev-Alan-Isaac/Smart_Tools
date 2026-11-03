@@ -363,6 +363,9 @@ namespace Smart_Tools.WPF.Controllers
                     var source = new FileInfo(item.FullPath);
                     if (new FileInfo(temp).Length != source.Length)
                         throw new IOException("The copy came out a different size - nothing was changed.");
+                    // A move deletes the original next, so prove the copy is identical first (size alone can't).
+                    if (o.MoveFiles && !FilesAreIdentical(item.FullPath, temp))
+                        throw new IOException("The copy didn't match the original byte for byte - the original was left where it is.");
 
                     // A read-only original gives a read-only copy, and times can't be set on those.
                     var tempAttrs = File.GetAttributes(temp);
@@ -389,6 +392,9 @@ namespace Smart_Tools.WPF.Controllers
                     temp = null;
                     if (o.MoveFiles)
                     {
+                        // Only remove the original once the verified copy is really at its final place.
+                        if (!File.Exists(final) || new FileInfo(final).Length != source.Length)
+                            throw new IOException("The copy isn't where it should be - the original was left where it is.");
                         ClearReadOnly(item.FullPath);
                         RetryIo(() => File.Delete(item.FullPath));
                     }
@@ -426,36 +432,9 @@ namespace Smart_Tools.WPF.Controllers
         /// moment (antivirus scanning a fresh zip, Explorer's preview pane...).
         /// Missing files and folders fail at once - waiting won't bring them back.
         /// </summary>
-        private static void RetryIo(Action action)
-        {
-            const int attempts = 5;
-            for (int attempt = 1; ; attempt++)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (Exception ex) when (attempt < attempts
-                    && (ex is UnauthorizedAccessException || ex is IOException && ex is not FileNotFoundException and not DirectoryNotFoundException and not PathTooLongException))
-                {
-                    Thread.Sleep(100 << (attempt - 1));   // 100, 200, 400, 800 ms
-                }
-            }
-        }
+        private static void RetryIo(Action action) => SafeFileOps.RetryIo(action);
 
-        private static void ClearReadOnly(string path)
-        {
-            try
-            {
-                var attrs = File.GetAttributes(path);
-                if (attrs.HasFlag(FileAttributes.ReadOnly)) File.SetAttributes(path, attrs & ~FileAttributes.ReadOnly);
-            }
-            catch (Exception)
-            {
-                // the operation itself will report the real problem
-            }
-        }
+        private static void ClearReadOnly(string path) => SafeFileOps.ClearReadOnly(path);
 
         /// <summary>A row message that names the cause instead of a bare framework error.</summary>
         private static string DescribeFailure(OrganizeFileItem item, Exception ex)
@@ -506,37 +485,9 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         /// <summary>Byte-level proof (size, then SHA-256) - a matching name and size alone isn't.</summary>
-        public static bool FilesAreIdentical(string a, string b)
-        {
-            try
-            {
-                var fa = new FileInfo(a);
-                var fb = new FileInfo(b);
-                if (!fa.Exists || !fb.Exists || fa.Length != fb.Length) return false;
-                using var sa = File.OpenRead(a);
-                using var sb = File.OpenRead(b);
-                return SHA256.HashData(sa).AsSpan().SequenceEqual(SHA256.HashData(sb));
-            }
-            catch (Exception)
-            {
-                return false;   // can't prove it - treat as different (safe direction)
-            }
-        }
+        public static bool FilesAreIdentical(string a, string b) => SafeFileOps.FilesAreIdentical(a, b);
 
-        public static bool HasRecycleBin(string path)
-        {
-            if (!OperatingSystem.IsWindows()) return false;
-            try
-            {
-                string? root = Path.GetPathRoot(Path.GetFullPath(path));
-                if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
-                return new DriveInfo(root).DriveType == DriveType.Fixed;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+        public static bool HasRecycleBin(string path) => SafeFileOps.HasRecycleBin(path);
 
         private static void DeleteToRecycleBin(string path)
         {

@@ -178,6 +178,7 @@ namespace Smart_Tools.WPF
             Add<RenameFilesView>("rename-files", v => v.CancelActiveRun());
             Add<OrganizeFilesView>("organize-files", v => v.CancelActiveRun());
             Add<FileSearchView>("search-files", v => v.CancelActiveRun());
+            Add<CopyQueueView>("copy-queue", v => v.CancelActiveRun());   // stops the queue; originals are never touched mid-file, the job is kept to continue
 
             // Convert & PDF
             Add<FileConverterView>("convert-files", v => v.CancelActiveRun());

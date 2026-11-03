@@ -62,6 +62,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "rename-files", Name = "Rename Files", Icon = "FileEdit", CategoryId = "files", Description = "Rename many files at once", Keywords = "batch rename pattern numbering" },
             new ToolInfo { Id = "organize-files", Name = "Organize Files", Icon = "FolderFile", CategoryId = "files", Description = "Sort files into folders", Keywords = "sort tidy folders move by type date" },
             new ToolInfo { Id = "search-files", Name = "Search Files", Icon = "FileSearch", CategoryId = "files", Description = "Find text and patterns inside files", Keywords = "grep find text regex content" },
+            new ToolInfo { Id = "copy-queue", Name = "Copy Queue", Icon = "FolderMoveOutline", CategoryId = "files", Description = "Copy or move big sets of files safely, with pause and verify", Keywords = "copy move batch queue backup transfer verify pause resume checksum copiar mover cola respaldo" },
 
             // Convert & PDF
             new ToolInfo { Id = "convert-files", Name = "Convert Files", Icon = "SwapHorizontal", CategoryId = "convert", Description = "Convert files between formats", Keywords = "converter format mp3 mp4 docx png" },
