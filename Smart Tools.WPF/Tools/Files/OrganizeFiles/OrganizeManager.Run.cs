@@ -452,6 +452,8 @@ namespace Smart_Tools.WPF.Controllers
                     return $"{item.Name}: access denied - the file or folder is protected or read-only.";
                 case IOException when ex.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021):
                     return $"{item.Name} is in use by another program (antivirus, Explorer, an unzip tool...). Close it and run again.";
+                case IOException when ex.HResult is unchecked((int)0x80070070) or unchecked((int)0x80070027):
+                    return $"{item.Name}: the destination is full - the original was left where it is.";
                 default:
                     return $"{item.Name}: {ex.Message}";
             }

@@ -102,12 +102,17 @@
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="WHAT TO DO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
-                            <RadioButton x:Name="RadioCopy" Margin="2,8,0,0" Checked="Option_Changed" Content="Copy - keep the originals" GroupName="Mode" IsChecked="True" />
-                            <RadioButton x:Name="RadioMove" Margin="2,4,0,0" Checked="Option_Changed" Content="Move - remove each original after its copy is checked" GroupName="Mode" />
+                            <UniformGrid Margin="0,8,0,0" Columns="2">
+                                <RadioButton x:Name="RadioCopy" Margin="0,0,2,0" Checked="Option_Changed" Content="Copy" GroupName="CqMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Copy - keep the originals" />
+                                <RadioButton x:Name="RadioMove" Margin="2,0,0,0" Checked="Option_Changed" Content="Move" GroupName="CqMode" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Move - remove each original after its copy is checked" />
+                            </UniformGrid>
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Copy keeps the originals. Move removes each original only after its copy is checked." />
                             <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="If a different file has the same name" />
-                            <RadioButton x:Name="RadioKeepBoth" Margin="2,6,0,0" Checked="Option_Changed" Content="Keep both (adds ' (2)')" GroupName="Conflict" IsChecked="True" />
-                            <RadioButton x:Name="RadioSkip" Margin="2,4,0,0" Checked="Option_Changed" Content="Skip it" GroupName="Conflict" />
-                            <CheckBox x:Name="ChkVerify" Margin="2,12,0,0" Checked="Option_Changed" Content="Verify every copy" IsChecked="True" Unchecked="Option_Changed" />
+                            <UniformGrid Margin="0,6,0,0" Columns="2">
+                                <RadioButton x:Name="RadioKeepBoth" Margin="0,0,2,0" Checked="Option_Changed" Content="Keep both" GroupName="CqConflict" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Keep both (adds ' (2)')" />
+                                <RadioButton x:Name="RadioSkip" Margin="2,0,0,0" Checked="Option_Changed" Content="Skip it" GroupName="CqConflict" Style="{StaticResource ModeToggleButtonStyle}" />
+                            </UniformGrid>
+                            <CheckBox x:Name="ChkVerify" Margin="2,12,0,0" Checked="Option_Changed" Content="Verify every copy" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
                             <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Compares each copy to its original (SHA-256) before it counts. Moves are always verified." />
                         </StackPanel>
                     </Border>

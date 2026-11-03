@@ -181,6 +181,17 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
+            bool isMove = o.Mode == CopyQueueMode.Move;
+            var shortfalls = OutputFolderManager.CheckSpace(plan.Items.Select(i =>
+                (i.Destination, i.Size, NeedsSpace: !(isMove && SafeFileOps.SameVolume(i.Source, i.Destination)))));
+            if (shortfalls.Count > 0)
+            {
+                FinishUi();
+                ShowStatus(OutputFolderManager.DescribeShortfalls(shortfalls) + " Free some space or choose another folder.", StatusKind.Error);
+                DestinationCard.PopDropArea();
+                return;
+            }
+
             if (o.Mode == CopyQueueMode.Move)
             {
                 var answer = System.Windows.MessageBox.Show(

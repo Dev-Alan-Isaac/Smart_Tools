@@ -6,17 +6,12 @@ using Smart_Tools.WPF.Models;
 using Smart_Tools.WPF.Modules;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
-using Border = System.Windows.Controls.Border;
 using Button = System.Windows.Controls.Button;
-using DataFormats = System.Windows.DataFormats;
-using DragDropEffects = System.Windows.DragDropEffects;
-using DragEventArgs = System.Windows.DragEventArgs;
 using MessageBox = System.Windows.MessageBox;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -646,6 +641,16 @@ namespace Smart_Tools.WPF.Views
             }
 
             var options = BuildOptions();
+            var shortfalls = OutputFolderManager.CheckSpace(pending.Select(i =>
+                (i.Destination, i.SizeBytes, NeedsSpace: !(options.MoveFiles && SafeFileOps.SameVolume(i.FullPath, i.Destination)))));
+            if (shortfalls.Count > 0)
+            {
+                string msg = OutputFolderManager.DescribeShortfalls(shortfalls);
+                TxtProgress.Text = msg;
+                MessageBox.Show(msg + "\n\nFree some space or choose another destination folder.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _runCts?.Dispose();
             _runCts = new CancellationTokenSource();
             SetBusy(true, undo: false);

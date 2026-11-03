@@ -73,13 +73,15 @@ namespace Smart_Tools.WPF.Controllers
                 throw new IOException($"Not enough free disk space: about {neededBytes / (1024 * 1024)} MB is needed, {free / (1024 * 1024)} MB is free.");
         }
 
-        /// <summary>Free bytes on the drive holding the folder, or null if it can't be told (some network shares).</summary>
+        /// <summary>Free bytes on the drive holding the folder, or null if it can't be told.</summary>
         public static long? FreeSpace(string folder)
         {
             try
             {
-                string? root = Path.GetPathRoot(Path.GetFullPath(folder));
-                if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return null;
+                string full = Path.GetFullPath(folder);
+                string? root = Path.GetPathRoot(full);
+                if (string.IsNullOrEmpty(root)) return null;
+                if (root.StartsWith(@"\\", StringComparison.Ordinal)) return UncFreeSpace(full);
                 var drive = new DriveInfo(root);
                 return drive.IsReady ? drive.AvailableFreeSpace : null;
             }
@@ -88,6 +90,52 @@ namespace Smart_Tools.WPF.Controllers
                 return null;
             }
         }
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        private static extern bool GetDiskFreeSpaceEx(string directory, out ulong freeToCaller, out ulong total, out ulong totalFree);
+
+        /// <summary>Free bytes on a network share (DriveInfo can't read \server\share), or null if it can't be told.</summary>
+        private static long? UncFreeSpace(string path)
+        {
+            string? dir = path;
+            while (dir != null && !Directory.Exists(dir)) dir = Path.GetDirectoryName(dir);
+            if (dir == null) return null;
+            return GetDiskFreeSpaceEx(dir, out ulong free, out _, out _) ? (long)free : null;
+        }
+
+        /// <summary>One volume that can't hold what is about to be written to it.</summary>
+        public sealed record SpaceShortfall(string Volume, long Needed, long Free);
+
+        /// <summary>
+        /// Adds up what a copy/move plan will write per destination volume and returns every volume that
+        /// can't take it (plus a 256 MB margin). A move inside one volume writes nothing, so pass
+        /// <c>needsSpace: false</c> for it. Volumes whose free space can't be told are not reported.
+        /// </summary>
+        public static List<SpaceShortfall> CheckSpace(IEnumerable<(string DestinationPath, long Bytes, bool NeedsSpace)> items)
+        {
+            var needed = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (dest, bytes, needsSpace) in items)
+            {
+                if (!needsSpace || bytes <= 0) continue;
+                string root;
+                try { root = Path.GetPathRoot(Path.GetFullPath(dest)) ?? ""; }
+                catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException) { continue; }
+                if (root.Length == 0) continue;
+                needed[root] = needed.GetValueOrDefault(root) + bytes;
+            }
+
+            var result = new List<SpaceShortfall>();
+            foreach (var (root, bytes) in needed)
+                if (FreeSpace(root) is long free && free < bytes + 256L * 1024 * 1024)
+                    result.Add(new SpaceShortfall(root, bytes, free));
+            return result;
+        }
+
+        /// <summary>"Not enough space on D:\ - 12.4 GB needed, 3.1 GB free."</summary>
+        public static string DescribeShortfalls(IReadOnlyList<SpaceShortfall> shortfalls) =>
+            string.Join(" ", shortfalls.Select(s =>
+                $"Not enough space on {s.Volume} - {FormatBytes(s.Needed)} needed, {FormatBytes(s.Free)} free."));
 
         /// <summary>
         /// Really tries: creates and deletes a hidden probe file. Checking the
