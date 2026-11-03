@@ -65,7 +65,8 @@ namespace Smart_Tools.WPF.Views
             (job.Mode == CopyQueueMode.Move ? RadioMove : RadioCopy).IsChecked = true;
             (job.Conflict == CopyQueueConflict.Skip ? RadioSkip : RadioKeepBoth).IsChecked = true;
             ChkVerify.IsChecked = job.Verify;
-            if (Directory.Exists(job.DestinationFolder)) DestinationCard.FolderPath = job.DestinationFolder;
+            ApplyModeCards(animate: false);
+            if (Directory.Exists(job.DestinationFolder)) ActiveDestination.FolderPath = job.DestinationFolder;
             _restoring = false;
             ShowStatus("Your last queue was interrupted. Press Start to continue - files that were already done are recognised and skipped.", StatusKind.Warning);
         }
@@ -108,7 +109,22 @@ namespace Smart_Tools.WPF.Views
         private void Option_Changed(object sender, RoutedEventArgs e)
         {
             if (!IsLoaded || _busy || _restoring) return;
+            ApplyModeCards(animate: true);
             UpdateState();
+        }
+
+        /// <summary>The card for the current mode: "Move to" while Move is chosen, otherwise "Copy to". Each keeps its own folder.</summary>
+        private InputFolderCard ActiveDestination => RadioMove.IsChecked == true ? MoveDestinationCard : DestinationCard;
+
+        private void ApplyModeCards(bool animate)
+        {
+            bool move = RadioMove.IsChecked == true;
+            var shown = move ? MoveDestinationCard : DestinationCard;
+            var hidden = move ? DestinationCard : MoveDestinationCard;
+            hidden.Visibility = Visibility.Collapsed;
+            bool wasHidden = shown.Visibility != Visibility.Visible;
+            shown.Visibility = Visibility.Visible;
+            if (animate && wasHidden) UiMotion.Pop(shown, 0.97);
         }
 
         private void ResetResults()
@@ -130,7 +146,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnOpenDestination_Click(object sender, RoutedEventArgs e)
         {
-            if (ShellExplorer.Show(DestinationCard.FolderPath) != ShellExplorer.ShowResult.Shown)
+            if (ShellExplorer.Show(ActiveDestination.FolderPath) != ShellExplorer.ShowResult.Shown)
                 System.Windows.MessageBox.Show("Choose a folder first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -146,7 +162,7 @@ namespace Smart_Tools.WPF.Views
             Mode = RadioMove.IsChecked == true ? CopyQueueMode.Move : CopyQueueMode.Copy,
             Conflict = RadioSkip.IsChecked == true ? CopyQueueConflict.Skip : CopyQueueConflict.KeepBoth,
             Verify = ChkVerify.IsChecked == true,
-            DestinationFolder = DestinationCard.FolderPath,
+            DestinationFolder = ActiveDestination.FolderPath,
         };
 
         // =================================================================
@@ -169,8 +185,8 @@ namespace Smart_Tools.WPF.Views
             var o = ReadOptions();
             if (string.IsNullOrWhiteSpace(o.DestinationFolder) || !Directory.Exists(o.DestinationFolder))
             {
-                ShowStatus("Choose the folder to copy to.", StatusKind.Warning);
-                DestinationCard.PopDropArea();
+                ShowStatus(o.Mode == CopyQueueMode.Move ? "Choose the folder to move to." : "Choose the folder to copy to.", StatusKind.Warning);
+                ActiveDestination.PopDropArea();
                 return;
             }
 
@@ -213,7 +229,7 @@ namespace Smart_Tools.WPF.Views
             {
                 FinishUi();
                 ShowStatus(OutputFolderManager.DescribeShortfalls(shortfalls) + " Free some space or choose another folder.", StatusKind.Error);
-                DestinationCard.PopDropArea();
+                ActiveDestination.PopDropArea();
                 return;
             }
 

@@ -174,7 +174,7 @@
 
                         <Border Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
-                                <TextBox x:Name="TxtPreview" Padding="12" Background="Transparent" BorderThickness="0" FontFamily="Consolas" FontSize="12" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
+                                <TextBox x:Name="TxtPreview" Padding="12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" BorderThickness="0" FontSize="13" Foreground="{DynamicResource TextPrimary}" IsReadOnly="True" PreviewMouseWheel="TxtPreview_PreviewMouseWheel" Style="{StaticResource CodeTextBoxNoWrap}" ToolTip="Ctrl + mouse wheel to zoom" />
                                 <StackPanel x:Name="PreviewEmpty" MaxWidth="340" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
                                     <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Pick a folder" />

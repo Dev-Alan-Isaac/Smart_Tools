@@ -99,6 +99,15 @@
                         Mode="SingleFolder"
                         ShowSubfolders="False" />
 
+                    <controls:InputFolderCard
+                        x:Name="MoveDestinationCard"
+                        FolderChanged="DestinationCard_FolderChanged"
+                        Header="Move to"
+                        HeaderIcon="FolderMoveOutline"
+                        Mode="SingleFolder"
+                        ShowSubfolders="False"
+                        Visibility="Collapsed" />
+
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="WHAT TO DO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />

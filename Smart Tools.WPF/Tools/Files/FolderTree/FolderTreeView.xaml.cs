@@ -214,6 +214,13 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+        private void TxtPreview_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if ((System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == 0) return;
+            TxtPreview.FontSize = Math.Clamp(TxtPreview.FontSize + (e.Delta > 0 ? 1 : -1), 9, 24);
+            e.Handled = true;
+        }
+
         private static string SafeName(string name)
         {
             foreach (char c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
