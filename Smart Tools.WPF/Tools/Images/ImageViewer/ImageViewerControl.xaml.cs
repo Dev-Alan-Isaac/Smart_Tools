@@ -60,9 +60,7 @@ namespace Smart_Tools.WPF.Controls
         private double _panStartH, _panStartV;
 
         private readonly DispatcherTimer _slideshowTimer;
-        private readonly DispatcherTimer _ringTimer;
         private bool _slideshowPlaying;
-        private DateTime _slideStart;
 
         private CancellationTokenSource _addCts = new();
         private CancellationTokenSource? _loadCts;
@@ -84,8 +82,6 @@ namespace Smart_Tools.WPF.Controls
 
             _slideshowTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _slideshowTimer.Tick += SlideshowTimer_Tick;
-            _ringTimer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(40) };
-            _ringTimer.Tick += (_, _) => DrawRing();
             _viewConstructed = true;
         }
 
@@ -260,7 +256,7 @@ namespace Smart_Tools.WPF.Controls
             {
                 _slideshowTimer.Stop();
                 _slideshowTimer.Start();
-                _slideStart = DateTime.UtcNow;
+                SlideshowCountdownRing.Start(_slideshowTimer.Interval);
             }
             SaveSettings();
         }
@@ -782,11 +778,8 @@ namespace Smart_Tools.WPF.Controls
             IconSlideshowPlayPause.Kind = PackIconKind.Pause;
             _slideshowTimer.Interval = TimeSpan.FromSeconds(SelectedSeconds);
             _slideshowTimer.Start();
-            _slideStart = DateTime.UtcNow;
-            _ringTimer.Start();
             // The ring shows in Shuffle too - it counts down to the next image either way.
-            SlideshowCountdownTrack.Visibility = Visibility.Visible;
-            SlideshowCountdownArc.Visibility = Visibility.Visible;
+            SlideshowCountdownRing.Start(_slideshowTimer.Interval);
             if (_current == null) Step(+1);
         }
 
@@ -794,25 +787,14 @@ namespace Smart_Tools.WPF.Controls
         {
             _slideshowPlaying = false;
             _slideshowTimer.Stop();
-            _ringTimer.Stop();
             IconSlideshowPlayPause.Kind = PackIconKind.Play;
-            SlideshowCountdownTrack.Visibility = Visibility.Collapsed;
-            SlideshowCountdownArc.Visibility = Visibility.Collapsed;
-            SlideshowCountdownArc.Data = null;
+            SlideshowCountdownRing.Stop();
         }
 
         private void SlideshowTimer_Tick(object? sender, EventArgs e)
         {
-            _slideStart = DateTime.UtcNow;
+            SlideshowCountdownRing.Restart();
             Step(+1);
-        }
-
-        private void DrawRing()
-        {
-            double interval = _slideshowTimer.Interval.TotalSeconds;
-            if (interval <= 0) return;
-            double fraction = Math.Clamp((DateTime.UtcNow - _slideStart).TotalSeconds / interval, 0, 1);
-            SlideshowCountdownArc.Data = ImageViewerManager.BuildRingGeometry(fraction * 360);
         }
 
 

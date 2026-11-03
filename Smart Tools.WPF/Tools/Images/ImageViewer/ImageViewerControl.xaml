@@ -756,23 +756,7 @@
                                             Width="68"
                                             Height="68"
                                             Margin="8,0">
-                                            <Ellipse
-                                                x:Name="SlideshowCountdownTrack"
-                                                Width="62"
-                                                Height="62"
-                                                Stroke="#26FFFFFF"
-                                                StrokeThickness="3"
-                                                Visibility="Collapsed" />
-                                            <Path
-                                                x:Name="SlideshowCountdownArc"
-                                                Width="68"
-                                                Height="68"
-                                                Stretch="None"
-                                                Stroke="{DynamicResource AccentColor}"
-                                                StrokeEndLineCap="Round"
-                                                StrokeStartLineCap="Round"
-                                                StrokeThickness="3"
-                                                Visibility="Collapsed" />
+                                            <controls:CountdownRing x:Name="SlideshowCountdownRing" />
                                             <Button
                                                 x:Name="BtnSlideshowPlayPause"
                                                 HorizontalAlignment="Center"

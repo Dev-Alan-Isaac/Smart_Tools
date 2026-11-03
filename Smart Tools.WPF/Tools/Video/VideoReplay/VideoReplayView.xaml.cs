@@ -94,6 +94,7 @@ namespace Smart_Tools.WPF.Views
             InputCard.FileFilter = VideoReplayManager.FileDialogFilter;
             _positionTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
             _positionTimer.Tick += PositionTimer_Tick;
+            SkipRing.Completed += SkipRing_Completed;
             _windowsBackend = new MediaElementBackend(Player);
             _backend = _windowsBackend;
             HookBackend(_windowsBackend);
@@ -859,6 +860,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Next clip (for Next, a finished clip, or a failed one). Loop only repeats on its own, not when you press Next.</summary>
         private void PlayNext(bool userAsked)
         {
+            CancelPendingSkip();
             if (_queue.Count == 0) return;
             if (_order.Count != _queue.Count) _order.Rebuild(_queue, Mode, _current);
             var mode = userAsked && Mode == ReplayMode.Loop ? ReplayMode.Sequential : Mode;
@@ -895,6 +897,7 @@ namespace Smart_Tools.WPF.Views
         /// </summary>
         private async Task LoadAndPlayAsync(PlaylistItem item, bool forcePreview = false, TimeSpan? startAt = null)
         {
+            CancelPendingSkip();
             _loadCts?.Cancel();
             var cts = _loadCts = new CancellationTokenSource();
 
@@ -984,6 +987,7 @@ namespace Smart_Tools.WPF.Views
 
         private void StopPlayback()
         {
+            CancelPendingSkip();
             _loadCts?.Cancel();
             _positionTimer.Stop();
             _backend.Stop();   // releases the file
@@ -1106,7 +1110,14 @@ namespace Smart_Tools.WPF.Views
 
             if (Mode != ReplayMode.Loop && _consecutiveFailures < _queue.Count)
             {
-                PlayNext(userAsked: false);
+                // Show the reason for 5 s (the ring counts it down), unless Settings says skip right away.
+                if (MediaViewerManager.LoadSettings().SkipFailedImmediately)
+                {
+                    PlayNext(userAsked: false);
+                    return;
+                }
+                SkipRingHost.Visibility = Visibility.Visible;
+                SkipRing.Start(TimeSpan.FromSeconds(5));
                 return;
             }
             _consecutiveFailures = 0;
@@ -1291,7 +1302,24 @@ namespace Smart_Tools.WPF.Views
 
         private void HideNotice() => ErrorBanner.Visibility = Visibility.Collapsed;
 
-        private void BtnDismissError_Click(object sender, RoutedEventArgs e) => UiMotion.FadeVisibility(ErrorBanner, false);
+        // Dismissing the banner also cancels a pending skip, so the user can stay on the clip.
+        private void BtnDismissError_Click(object sender, RoutedEventArgs e)
+        {
+            CancelPendingSkip();
+            UiMotion.FadeVisibility(ErrorBanner, false);
+        }
+
+        private void CancelPendingSkip()
+        {
+            SkipRing.Stop();
+            SkipRingHost.Visibility = Visibility.Collapsed;
+        }
+
+        private void SkipRing_Completed(object? sender, EventArgs e)
+        {
+            SkipRingHost.Visibility = Visibility.Collapsed;
+            PlayNext(userAsked: false);
+        }
 
         private void Stage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {

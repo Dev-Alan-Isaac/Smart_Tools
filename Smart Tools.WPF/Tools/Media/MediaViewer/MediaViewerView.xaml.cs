@@ -39,12 +39,9 @@ namespace Smart_Tools.WPF.Views
         private readonly ObservableCollection<MediaItem> _items = new();
         private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };
         private readonly DispatcherTimer _slide = new() { Interval = TimeSpan.FromSeconds(4) };
-        private readonly DispatcherTimer _skipTimer = new() { Interval = TimeSpan.FromSeconds(1) };
         private const int SkipWaitSeconds = 5;
-        private int _skipLeft;
-        private int _failStreak;                 // unplayable files in a row, so a list of bad files can't loop forever
+        private int _failStreak;                // unplayable files in a row, so a list of bad files can't loop forever
         private bool _skipImmediately;
-        private string _skipMessage = "";
         private MediaItem? _skipTarget;
         private readonly bool _ready;
         private readonly List<MediaSource> _sources = new();                  // what was added: files and folders
@@ -82,7 +79,7 @@ namespace Smart_Tools.WPF.Views
             InputCard.FileFilter = MediaViewerManager.FileDialogFilter;
             _tick.Tick += (_, _) => UpdateProgress();
             _slide.Tick += (_, _) => StepForSlideshow();
-            _skipTimer.Tick += (_, _) => SkipTimer_Tick();
+            SkipRing.Completed += SkipRing_Completed;
             _ready = true;
             Player.Volume = VolumeSlider.Value;
             ApplyPanels();
@@ -297,7 +294,8 @@ namespace Smart_Tools.WPF.Views
 
         private void CancelSkip()
         {
-            _skipTimer.Stop();
+            SkipRing.Stop();
+            SkipRingHost.Visibility = Visibility.Collapsed;
             _skipTarget = null;
         }
 
@@ -321,29 +319,17 @@ namespace Smart_Tools.WPF.Views
             }
 
             _skipTarget = next;
-            _skipMessage = message;
             if (_skipImmediately)
             {
                 SkipToTarget();
                 return;
             }
-            _skipLeft = SkipWaitSeconds;
-            UpdateSkipText();
-            _skipTimer.Start();
+            TxtError.Text = message + "\n\n" + S("Str_MediaViewer_SkippingIn", "Skipping to the next file…");
+            SkipRingHost.Visibility = Visibility.Visible;
+            SkipRing.Start(TimeSpan.FromSeconds(SkipWaitSeconds));
         }
 
-        private void UpdateSkipText() =>
-            TxtError.Text = _skipMessage + "\n\n" + string.Format(S("Str_MediaViewer_SkippingIn", "Skipping to the next file in {0} s…"), _skipLeft);
-
-        private void SkipTimer_Tick()
-        {
-            if (--_skipLeft > 0)
-            {
-                UpdateSkipText();
-                return;
-            }
-            SkipToTarget();
-        }
+        private void SkipRing_Completed(object? sender, EventArgs e) => SkipToTarget();
 
         private void SkipToTarget()
         {
@@ -366,6 +352,7 @@ namespace Smart_Tools.WPF.Views
             CancelSkip();
             StopMedia();
             _slide.Stop();
+            SlideRing.Stop();
             _loadVersion++;
             HideStage();
             ImageView.Source = null;
@@ -410,7 +397,7 @@ namespace Smart_Tools.WPF.Views
             ImageScroll.Visibility = Visibility.Visible;
             _zoom = 0;
             _ = LoadImageAsync(item.Path, _loadVersion);
-            if (_slideshow) _slide.Start();
+            if (_slideshow) StartSlideshowTimer();
         }
 
         private async Task LoadImageAsync(string path, int version)
@@ -678,7 +665,22 @@ namespace Smart_Tools.WPF.Views
         {
             int seconds = SlideRadios.FirstOrDefault(r => r.IsChecked == true)?.Tag is string tag && int.TryParse(tag, out int v) ? v : 4;
             _slide.Interval = TimeSpan.FromSeconds(seconds);
+            if (_slideshow && _slide.IsEnabled) StartSlideshowTimer();   // the ring starts over at the new length
             ScheduleSave();
+        }
+
+        /// <summary>(Re)starts the picture timer and its ring together, so the ring always shows the time left.</summary>
+        private void StartSlideshowTimer()
+        {
+            _slide.Stop();
+            _slide.Start();
+            SlideRing.Start(_slide.Interval);
+        }
+
+        private void StopSlideshowTimer()
+        {
+            _slide.Stop();
+            SlideRing.Stop();
         }
 
         private void TogglePlay()
@@ -699,8 +701,8 @@ namespace Smart_Tools.WPF.Views
             if (item.Kind == ViewerMediaKind.Image)
             {
                 _slideshow = !_slideshow;
-                if (_slideshow) _slide.Start();
-                else _slide.Stop();
+                if (_slideshow) StartSlideshowTimer();
+                else StopSlideshowTimer();
             }
             else if (_playing)
             {
@@ -1150,7 +1152,7 @@ namespace Smart_Tools.WPF.Views
             // Leaving the page: with the player out in the mini window it carries on there (it has its own
             // controls). Otherwise there'd be no way to stop it from another tool, so it pauses.
             if (_widget != null) return;
-            _slide.Stop();
+            StopSlideshowTimer();
             _slideshow = false;
             if (_playing)
             {
@@ -1165,7 +1167,8 @@ namespace Smart_Tools.WPF.Views
         public void CancelActiveRun()
         {
             _loadVersion++;
-            _slide.Stop();
+            StopSlideshowTimer();
+            CancelSkip();
             _slideshow = false;
             StopMedia();
             _saveTimer.Stop();

@@ -661,6 +661,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <materialDesign:PackIcon
                                             Width="16"
@@ -674,8 +675,23 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource StatusErrorFg}"
                                             TextWrapping="Wrap" />
-                                        <Button
+                                        <!--  Counts down to skipping this clip.  -->
+                                        <Viewbox
+                                            x:Name="SkipRingHost"
                                             Grid.Column="2"
+                                            Width="26"
+                                            Height="26"
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Top"
+                                            Visibility="Collapsed">
+                                            <controls:CountdownRing
+                                                x:Name="SkipRing"
+                                                ArcBrush="{DynamicResource StatusErrorFg}"
+                                                RingThickness="7"
+                                                TrackBrush="#33808080" />
+                                        </Viewbox>
+                                        <Button
+                                            Grid.Column="3"
                                             Width="22"
                                             Height="22"
                                             Margin="8,0,0,0"

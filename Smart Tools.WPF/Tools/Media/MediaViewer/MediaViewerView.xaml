@@ -722,6 +722,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <materialDesign:PackIcon
                                                 Width="18"
@@ -730,6 +731,21 @@
                                                 VerticalAlignment="Top"
                                                 Foreground="{DynamicResource StatusErrorFg}"
                                                 Kind="AlertCircleOutline" />
+                                            <!--  Counts down to skipping this file.  -->
+                                            <Viewbox
+                                                x:Name="SkipRingHost"
+                                                Grid.Column="2"
+                                                Width="28"
+                                                Height="28"
+                                                Margin="10,0,0,0"
+                                                VerticalAlignment="Top"
+                                                Visibility="Collapsed">
+                                                <controls:CountdownRing
+                                                    x:Name="SkipRing"
+                                                    ArcBrush="{DynamicResource StatusErrorFg}"
+                                                    RingThickness="7"
+                                                    TrackBrush="#33808080" />
+                                            </Viewbox>
                                             <TextBlock
                                                 x:Name="TxtError"
                                                 Grid.Column="1"
@@ -738,7 +754,7 @@
                                                 Foreground="{DynamicResource StatusErrorFg}"
                                                 TextWrapping="Wrap" />
                                             <Button
-                                                Grid.Column="2"
+                                                Grid.Column="3"
                                                 Width="24"
                                                 Height="24"
                                                 Margin="10,0,0,0"
@@ -855,18 +871,27 @@
                                                 ToolTip="{DynamicResource Str_MediaViewer_SkipBack}">
                                                 <materialDesign:PackIcon Kind="Rewind_10" />
                                             </Button>
-                                            <Button
-                                                x:Name="BtnPlay"
-                                                Margin="8,0"
-                                                Click="BtnPlay_Click"
-                                                Style="{StaticResource PlayerPrimaryButtonStyle}"
-                                                ToolTip="{DynamicResource Str_MediaViewer_PlayPause}">
-                                                <materialDesign:PackIcon
-                                                    x:Name="PlayIcon"
-                                                    Width="26"
-                                                    Height="26"
-                                                    Kind="Play" />
-                                            </Button>
+                                            <!--  The ring fills up until the next picture of the slideshow.  -->
+                                            <Grid
+                                                Width="68"
+                                                Height="68"
+                                                Margin="0"
+                                                VerticalAlignment="Center">
+                                                <controls:CountdownRing x:Name="SlideRing" />
+                                                <Button
+                                                    x:Name="BtnPlay"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Click="BtnPlay_Click"
+                                                    Style="{StaticResource PlayerPrimaryButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_MediaViewer_PlayPause}">
+                                                    <materialDesign:PackIcon
+                                                        x:Name="PlayIcon"
+                                                        Width="26"
+                                                        Height="26"
+                                                        Kind="Play" />
+                                                </Button>
+                                            </Grid>
                                             <Button
                                                 x:Name="BtnSkipForward"
                                                 Margin="0,0,8,0"
