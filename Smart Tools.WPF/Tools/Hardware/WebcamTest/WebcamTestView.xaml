@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.WebcamTestView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
     Loaded="Root_Loaded"
@@ -88,7 +89,7 @@
                         <StackPanel Margin="16">
 
                             <!--  ============ CAMERA ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_WebcamTest_Device" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <Grid>
                                         <ContentControl
@@ -135,7 +136,7 @@
                                             ToolTip="{DynamicResource Str_WebcamTest_SizeTip}" />
                                     </Border>
 
-                                    <CheckBox
+                                    <CheckBox ctl:Tour.Key="Str_Tour_WebcamTest_Mirror" ctl:Tour.Order="2"
                                         x:Name="ChkMirror"
                                         Margin="0,12,0,0"
                                         Checked="ChkMirror_Changed"
@@ -193,7 +194,7 @@
                                 TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button
+                            <Button ctl:Tour.Key="Str_Tour_WebcamTest_Snapshot" ctl:Tour.Order="5"
                                 x:Name="BtnSnapshot"
                                 MinWidth="120"
                                 Click="BtnSnapshot_Click"
@@ -201,7 +202,7 @@
                                 IsEnabled="False"
                                 Style="{StaticResource NeutralIconButtonStyle}"
                                 ToolTip="{DynamicResource Str_WebcamTest_SnapshotTip}" />
-                            <Button
+                            <Button ctl:Tour.Key="Str_Tour_WebcamTest_Start" ctl:Tour.Order="3"
                                 x:Name="BtnStart"
                                 MinWidth="130"
                                 Margin="8,0,0,0"
@@ -218,7 +219,7 @@
                         ClipToBounds="True"
                         CornerRadius="8">
                         <Grid>
-                            <Image
+                            <Image ctl:Tour.Key="Str_Tour_WebcamTest_Preview" ctl:Tour.Order="4"
                                 x:Name="Preview"
                                 RenderTransformOrigin="0.5,0.5"
                                 Stretch="Uniform">
@@ -275,7 +276,7 @@
                         <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
                             <StackPanel>
                                 <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_WebcamTest_Resolution}" />
-                                <TextBlock x:Name="TxtResolution" FontFamily="Consolas" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                                <TextBlock ctl:Tour.Key="Str_Tour_WebcamTest_Readings" ctl:Tour.Order="6" x:Name="TxtResolution" FontFamily="Consolas" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
                             </StackPanel>
                         </Border>
                         <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8" ToolTip="{DynamicResource Str_WebcamTest_FpsTip}">

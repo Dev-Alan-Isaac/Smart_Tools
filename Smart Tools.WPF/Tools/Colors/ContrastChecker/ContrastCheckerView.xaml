@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.ContrastCheckerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:models="clr-namespace:Smart_Tools.WPF.Controllers"
@@ -94,7 +95,7 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel>
-                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Pairs" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="QUICK PAIRS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteSwatchOutline}" />
                             <WrapPanel Margin="0,8,0,0">
@@ -111,7 +112,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Rules" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="WHAT PASSES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
                             <TextBlock Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="Normal text needs 4.5 : 1 (AA) or 7 : 1 (AAA). Large text (18 pt, or 14 pt bold) needs 3 : 1 or 4.5 : 1. Icons, borders and form fields need 3 : 1." />
@@ -206,7 +207,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <ContentControl Margin="0,0,0,10" Content="Live preview" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatText}" />
-                        <Border x:Name="Preview" Grid.Row="1" Padding="28" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                        <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Preview" ctl:Tour.Order="3" x:Name="Preview" Grid.Row="1" Padding="28" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock x:Name="PreviewLarge" FontSize="34" FontWeight="Bold" Text="Large text sample" TextWrapping="Wrap" />
@@ -226,7 +227,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <ContentControl Margin="0,0,0,6" Content="WCAG checks" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
-                            <ItemsControl x:Name="CheckList" ItemTemplate="{StaticResource CheckTemplate}" />
+                            <ItemsControl ctl:Tour.Key="Str_Tour_ContrastChecker_Checks" ctl:Tour.Order="4" x:Name="CheckList" ItemTemplate="{StaticResource CheckTemplate}" />
 
                             <TextBlock Margin="0,20,0,6" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="CLOSEST TEXT COLOR THAT PASSES" />
                             <Border Margin="0,0,0,8" Padding="10,8" Background="{DynamicResource RowBg}" CornerRadius="10">

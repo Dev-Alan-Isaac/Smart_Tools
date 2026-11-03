@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.CsvJsonView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -37,7 +38,7 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel>
-                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_CsvJson_Direction" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="CONVERT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SwapHorizontal}" />
                             <UniformGrid Margin="0,6,0,0" Columns="2">
@@ -47,7 +48,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_CsvJson_Options" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="OPTIONS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
                             <TextBlock Style="{StaticResource CjLabel}" Text="Separator" />
@@ -115,7 +116,7 @@
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="Close" />
                                 </Button>
                             </StackPanel>
-                            <ContentControl x:Name="TxtInputTitle" Content="CSV" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
+                            <ContentControl ctl:Tour.Key="Str_Tour_CsvJson_Input" ctl:Tour.Order="3" x:Name="TxtInputTitle" Content="CSV" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <TextBox x:Name="TxtInput" Height="Auto" Padding="12" VerticalContentAlignment="Top" TextWrapping="NoWrap" AcceptsReturn="True" AcceptsTab="True" AllowDrop="True" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" PreviewDragOver="Input_PreviewDragOver" PreviewDrop="Input_PreviewDrop" TextChanged="Input_TextChanged" VerticalScrollBarVisibility="Auto" />
@@ -132,14 +133,14 @@
                         </Grid.RowDefinitions>
                         <DockPanel Margin="0,0,0,10">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the result">
+                                <Button ctl:Tour.Key="Str_Tour_CsvJson_Copy" ctl:Tour.Order="5" x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the result">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
                                 <Button x:Name="BtnSave" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save the result to a file">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
                                 </Button>
                             </StackPanel>
-                            <ContentControl x:Name="TxtOutputTitle" Content="JSON" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CodeJson}" />
+                            <ContentControl ctl:Tour.Key="Str_Tour_CsvJson_Output" ctl:Tour.Order="4" x:Name="TxtOutputTitle" Content="JSON" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CodeJson}" />
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <TextBox x:Name="TxtOutput" Height="Auto" Padding="12" VerticalContentAlignment="Top" TextWrapping="NoWrap" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />

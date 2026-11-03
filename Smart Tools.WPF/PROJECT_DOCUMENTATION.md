@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 50+ specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 114 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -15,108 +15,248 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ---
 
-## Core Features
+## Tools
 
-### File Management Tools
-- **File Search** - Advanced file discovery with search and export
-- **Duplicate Finder** - Identify and manage duplicate files
-- **Large File Finder** - Locate large files consuming disk space
-- **Find Similar Files** - Compare files for similarity detection
-- **File Differences** - Visual comparison between files/folders
-- **Organize Files** - Batch file organization and sorting
-- **Rename Files** - Bulk rename with pattern matching
-- **File Generator** - Create test/sample files in various formats
-- **Secure File Shredder** - Permanent deletion with secure overwriting
-- **File Validator** - Validate file integrity and structure
+Smart Tools has **114 tools** in 17 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
-### Image & Media Tools
-- **Image Viewer** - Advanced image viewing with zoom/pan
-- **Image Editor** - Image editing with filters and effects
-- **Image to PDF** - Convert images to PDF documents
-- **Background Remover** - AI-powered background removal, with an eyedropper to pick the colour to remove
+### Data Quality
+*Check, de-duplicate and compare*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Validate Data** | `validate-data` | Check files for broken or invalid data |
+| **Duplicate Data** | `duplicate-data` | Find and remove duplicate files |
+| **Find Similar Files** | `find-similar` | Spot near-identical files and images |
+| **File Differences** | `file-differences` | Compare two files side by side |
+| **Text Diff** | `text-diff` | Paste two texts and see what changed, line by line |
+| **Hash & Checksum Verifier** | `hash-verifier` | Check a file is what it claims to be |
+
+### Files
+*Rename, sort and search*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Rename Files** | `rename-files` | Rename many files at once |
+| **Organize Files** | `organize-files` | Sort files into folders |
+| **Search Files** | `search-files` | Find text and patterns inside files |
+| **Copy Queue** | `copy-queue` | Copy or move big sets of files safely, with pause and verify |
+| **Folder Tree Exporter** | `folder-tree` | Export a folder's structure as a text tree, Markdown, JSON or CSV |
+
+### Convert & PDF
+*Change formats, work with PDFs*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Convert Files** | `convert-files` | Convert files between formats |
+| **Images to PDF** | `images-to-pdf` | Turn images into a PDF |
+| **Watermarker** | `watermark` | Stamp text or a logo on many pictures, videos and PDFs |
+| **PDF Extras** | `pdf-extras` | Rotate or remove pages, add page numbers, edit properties, and add or remove a password |
+| **PDF Toolkit** | `pdf-toolkit` | Merge, split and edit PDFs |
+| **CSV / JSON Converter** | `csv-json` | Turn CSV into JSON and JSON back into CSV, with quotes and separators handled |
+
+### Video
+*Watch and edit*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Video Replay** | `video-replay` | Play videos and playlists |
+| **Media Viewer** | `media-viewer` | View pictures and play videos and music in one place |
+| **Video Stitcher** | `video-editor` | Join video clips into one, with optional trims and fades |
+| **Video to Audio** | `video-to-audio` | Pull the audio track out of videos, in bulk |
+| **Video Compressor** | `video-compressor` | Make videos smaller, or cut out the part you want |
+| **GIF Maker** | `gif-maker` | Create optimized GIFs from video or images |
+| **Screen Recorder** | `screen-recorder` | Record a screen, a window, or an area to an MP4, with your microphone if you like |
+| **Video Frame Extractor** | `frame-extractor` | Save still pictures from a video: one frame, one every few seconds, or an even spread |
+
+### Audio
+*Play, record and transform sound*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Audio Replay** | `audio-replay` | Play audio files |
+| **Audio Recorder** | `audio-recorder` | Record from your microphone |
+| **Spectrogram** | `spectrogram` | See the frequencies in a sound |
+| **Voice Changer** | `voice-changer` | Change how a voice sounds |
+| **Speech to Text** | `speech-to-text` | Turn speech in audio or video into text and subtitles, offline |
+| **Text to Speech** | `text-to-speech` | Read text aloud or save it as audio |
+| **Loudness Meter & Normalizer** | `loudness-meter` | Measure LUFS and peak, and make normalized copies for YouTube, Spotify or podcasts |
+| **Audio Trimmer & Joiner** | `audio-trimmer` | Cut, join, fade and normalize audio |
+
+### Music
+*Tune and play instruments*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Instrument Tuner** | `instrument-tuner` | Tune guitar, bass, violin and more |
+| **Synthesizer** | `synthesizer` | Play notes and shape sounds |
+| **MIDI Instruments** | `midi-instruments` | Play 128 instruments and drum kits, record to .mid |
+| **Metronome** | `metronome` | A steady click at any tempo, with beats per bar and tap tempo |
+
+### Images
+*View, edit and clean up pictures*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Image Viewer** | `image-viewer` | View images |
+| **Image Editor** | `image-editor` | Crop, resize and adjust images |
+| **Bulk Image Resizer** | `bulk-image-resizer` | Shrink and recompress many pictures at once, with a target file size |
+| **Background Remover** | `background-remover` | Cut the background out of a picture |
+| **SVG Viewer & Optimizer** | `svg-tool` | Preview SVG files, make them smaller and export PNGs |
+| **Screenshot** | `screenshot` | Capture an area, a window, or the whole screen, mark it up, then copy or save |
+| **Icon Maker** | `icon-maker` | Turn any picture into a Windows .ico or a full website favicon set |
+
+### Colors
+*Pick colors, build palettes and gradients*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Color Picker** | `color-picker` | Pick colors and convert color codes |
+| **Screen Color Picker** | `screen-color-picker` | Pick any color from anywhere on screen with a magnifier |
+| **Color Wheel** | `color-wheel` | Build palettes and gradients |
+| **Palette Extractor** | `palette-extractor` | Pull the main colors out of a picture |
+| **Contrast Checker** | `contrast-checker` | Check WCAG contrast between two colors and find the closest passing text color |
+
+### Storage
+*Free up space, check your drives*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Drive Health** | `drive-health` | Check the health of your drives |
+| **SMART Trend History** | `smart-history` | Track drive health over time and spot a drive that is getting worse |
+| **Disk Space Analyzer** | `disk-space` | See what's using your disk |
+| **Large File Finder** | `large-files` | Find the biggest files |
+| **Junk File Cleaner** | `junk-cleaner` | Clear temporary files and caches |
+| **Disk Speed Test** | `disk-speed` | Measure read and write speed |
+| **Empty Folder Cleaner** | `empty-folders` | Find folders with nothing in them and send them to the Recycle Bin |
+
+### Performance
+*Live readings across your whole PC*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **System Monitor** | `system-monitor` | Live CPU, memory, disks, network and GPU, like Task Manager |
+| **Hardware Sensors** | `hardware-sensors` | Temperatures, fans, clocks, voltages and power, part by part |
+| **Process Killer** | `process-killer` | See every running process and end the stuck ones safely |
+| **Startup Apps** | `startup-apps` | See what starts with Windows and switch each app on or off |
+| **Services** | `services` | See every Windows service and start, stop, restart, or change how each one starts |
+
+### Hardware Tests
+*Test keyboards, mice, screens, controllers and sound*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Audio Output Test** | `audio-output-test` | Check every channel, phase and level of speakers, headphones and IEMs |
+| **Game Controller Test** | `game-controller` | Read gamepads and joysticks: dead zones, drift, range and triggers |
+| **Monitor Test** | `monitor-test` | Full-screen patterns for dead pixels, light bleed, banding, calibration and refresh rate |
+| **Monitor HDR & Color Depth** | `monitor-hdr` | See what each screen supports: HDR, bits per color, brightness and color range |
+| **Keyboard & Mouse Test** | `keyboard-mouse-test` | Key map, ghosting, rollover, mouse polling rate, chatter and reaction time |
+| **Microphone Test** | `mic-test` | Check your microphone: live level, peak, clipping, and hear yourself |
+| **Webcam Test** | `webcam-test` | See your camera live: resolution, frame rate, brightness, and a snapshot |
+| **Battery Health** | `battery-health` | See how worn your laptop battery is: design vs. full-charge capacity and cycles |
+
+### Security
+*Protect, destroy, make passwords*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Secure File Shredder** | `file-shredder` | Delete files so they can't be recovered |
+| **File Encryption** | `file-encryption` | Lock files with a password |
+| **Password Generator** | `password-generator` | Make strong passwords and passphrases |
+| **Password Vault** | `password-vault` | Encrypted password manager with 2FA codes, a health check and a quick-access widget |
+| **2FA Code Generator** | `totp-code` | Make the 6-digit two-factor codes from a secret key or otpauth link, without saving it |
+
+### Network
+*Diagnose your connection*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **My IP & Adapters** | `network-adapters` | Your addresses, every adapter, edit IP, enable or disable |
+| **Wi-Fi Analyzer** | `wifi-analyzer` | See nearby networks, signal and channels, and which channel is least crowded |
+| **Ping** | `ping` | Is a host reachable, and how fast - from the adapter you choose |
+| **Port Scanner** | `port-scanner` | Find which TCP ports are open on a host |
+| **Network Connections** | `network-connections` | See which apps are connected outside your PC, and to where |
+| **DNS, WHOIS & Traceroute** | `dns-tools` | Look up DNS records, see who owns a name, and trace the path to a host |
+| **Hosts File Editor** | `hosts-editor` | Edit the hosts file safely: switch lines on and off, with a backup on every save |
+| **TCP / UDP Client** | `tcp-udp-client` | Send text or bytes to a device or server |
+| **Device Scanner** | `device-scanner` | Find devices on your network |
+| **Internet Speed Test** | `internet-speed` | Measure download and upload speed |
+| **Network Speed Widget** | `net-speed-widget` | A floating live download and upload meter, with the adapter's manufacturer |
+| **Subnet Calculator** | `subnet-calc` | Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets |
+
+### Developer
+*Test, inspect and format*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **API Tester** | `api-tester` | Send web requests and read the replies |
+| **Regex Tester** | `regex-tester` | Build and test regular expressions |
+| **JWT Decoder** | `jwt-decoder` | Read a token's header, payload, and expiry. Offline, and the signature is not checked |
+| **JSON / YAML / XML Formatter** | `data-formatter` | Format, minify, validate, and convert between JSON, YAML, and XML |
+| **Metadata Extractor** | `metadata-extract` | Read the hidden details in files |
+| **Log Viewer** | `log-viewer` | Open and filter log files |
+| **Code Toolkit** | `code-toolkit` | Format, encode and convert code |
+| **MD & HTML Editor** | `md-html-editor` | Write Markdown or HTML with a live preview, export to HTML or PDF |
+| **Event Log Explorer** | `event-log-explorer` | Browse, filter and export Windows event logs |
+| **Database Migrator** | `db-migrate` | Copy a SQL Server database to a newer or older server version, no backup file needed |
+| **Base64 & URL Encoder** | `encode-decode` | Encode and decode Base64, URLs, HTML entities and files |
+
+### Generators
+*Make files and codes*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **File Generator** | `file-generator` | Make test files of any size |
+| **Barcode Generator** | `barcode-generator` | Create barcodes |
+| **QR Code Generator** | `qr-generator` | Create QR codes |
+| **Mock Data Generator** | `mock-data` | Generate fake data for testing |
+| **ID & Lorem Generator** | `id-generator` | Make UUIDs (v4, v7), ULIDs, random hex and lorem ipsum text |
+
+### Utilities
+*Everyday helpers*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Notes** | `notes` | Write quick notes |
+| **Clipboard History** | `clipboard-history` | Everything you copied, searchable, with pins. Saved only if you turn it on |
+| **Environment Variables** | `environment-variables` | Edit user and system variables, and clean up the PATH folder by folder |
+| **Date & Time Toolkit** | `date-time` | Timestamps, time zones and date maths in one place |
+| **Unit & Currency Converter** | `unit-converter` | Convert length, weight, temperature, data size, money, and more |
+| **Screen OCR** | `screen-ocr` | Extract text from a screenshot or screen region |
+| **Translate** | `translate` | Translate text offline between English and Spanish |
+| **Timer & Stopwatch** | `timer-stopwatch` | Stopwatch with laps, countdown timer and a Pomodoro cycle |
+
+### Pixel & Sprites
+*Draw pixel art and pack sprite sheets*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Pixel Art Editor** | `pixel-art` | Draw on a small grid, animate frames and export sharp PNGs |
+| **Sprite Sheet Packer** | `sprite-packer` | Pack images into a sprite sheet with coordinates, or slice a sheet back into frames |
+| **Texture Pack Builder** | `texture-pack` | Turn your PNGs into a Minecraft Java resource pack (.zip) with pack.mcmeta |
+| **Image to Pixel Art** | `image-to-pixel` | Shrink a picture to a pixel grid with a limited palette and optional dithering |
+
+### Notes on some tools
+
 - **SVG Viewer & Optimizer** - Preview SVGs (WebView2, zoom, light/dark/checker background), make them smaller (strip editor data, unused definitions, rounded numbers, minify, optionally merge shapes into one path) with before/after size, view the code, and export a PNG at a chosen size
-- **Metadata Extractor** - Extract and export image metadata
-- **Barcode Generator** - Generate QR codes and barcodes
-- **QR Code Generator** - Create QR codes from text/URLs
-- **Spectrogram Viewer** - Visualize audio spectrograms
-- **Audio Replay** - Audio playback and analysis
 - **Video Stitcher** (`video-editor`) - Join video clips into one, with optional trims and fades (FFmpeg); copies the streams when the clips match, otherwise re-encodes them to one format. It is not a timeline editor
-- **Video Replay** - Video playback with advanced controls
-- **Video to Audio Extractor** - Pull the audio track out of videos in bulk (FFmpeg)
-- **GIF Maker** - Create optimized GIFs from video or images (FFmpeg)
 - **Video Compressor & Trimmer** (`video-compressor`) - Make videos smaller by quality or to a target size (two-pass), cap resolution and frame rate, change speed, remove or shrink the sound, or cut a part out with or without re-encoding (FFmpeg); pick the part to keep per video with a timeline and frame preview
-- **MIC Recorder** - Record audio from microphone
-- **Audio Recorder** - Record from the microphone (catalog id `audio-recorder`)
-- **Audio Trimmer & Joiner** - Cut, join, fade and normalize audio
-
-### Code & Text Tools
-- **Code Toolkit** - Code formatting and utilities
-- **Code Diff Engine** - Visual code comparison
-- **Regex Tester** - Regular expression testing and breakdown
-- **MD & HTML Editor** - Edit Markdown/HTML with a live WebView2 preview, toolbar edits and export to HTML/PDF
 - **Base64 & URL Encoder / Decoder** (`encode-decode`) - Base64 (standard and URL-safe, padding and 76-column wrapping options), URL / percent encoding (a component or a whole URL, space as + for form data), HTML entities, and files to and from Base64 with data: URIs. UTF-8, UTF-16 and Latin-1; live conversion, swap direction, hex view of the bytes, exact error positions, binary results offered as a file to save
 - **Pixel Art Editor** (`pixel-art`, sidebar category: *Pixel & Sprites*) - Draw on a 1-256 px canvas with pencil, eraser, fill, picker, line, rectangle and ellipse, brush sizes, mirror drawing, a colour mixer with opacity, palettes, the Color Picker's Favorites and "My colors", undo / redo, flip and turn, frames with onion skin and an animated preview, and sharp PNG export (one frame or a sprite sheet, enlarged 1x-16x, or copied to the clipboard)
 - **Sprite Sheet Packer** (`sprite-packer`, sidebar category: *Pixel & Sprites*) - Pack many pictures into one sprite sheet (padding, biggest sheet size, power of two, trim, several sheets when needed) with a live preview of the real sheet and a JSON, CSS or XML coordinates file; or slice a sheet into a grid of separate frames (by count or by cell size, margin and spacing, skip empty cells)
-- **Password Generator** - Secure password generation with word lists
 - **Speech to Text** (`speech-to-text`) - Transcribe audio or video offline with the bundled whisper.cpp; models are downloaded on demand; saves TXT, SRT, and VTT, can translate to English
-- **Text to Speech** - Convert text to speech with voice selection
-
-### System & Network Tools
-- **System Monitor** - Real-time system performance monitoring
-- **Disk Space Analyzer** - Visual disk usage analysis
-- **Drive Health Monitor** - HDD/SSD health status (WMI and Native APIs)
-- **Disk Speed Test** - Test disk read/write performance
-- **Internet Speed Test** - Measure internet bandwidth
-- **Network Tools** - Network scanning and utilities
-- **Ping** - Reachability and latency from a chosen adapter
-- **Port Scanner** - Find which TCP ports are open on a host
-- **TCP / UDP Client** - Send text or bytes to a device or server
-- **My IP & Adapters** - Addresses and every adapter; edit IP, enable or disable (needs administrator rights for changes)
-- **Device Scanner** - Discover connected devices
-- **Junk Cleaner** - Clean temporary and junk files
-- **Junk File Cleaner** - Clear temporary files and caches (catalog id `junk-cleaner`; same tool as above)
-- **Log Viewer** - View and tail log files
-- **Event Log Explorer** - Browse, filter and export Windows event logs (needs admin for Security)
 - **Hardware Sensors** - Temperatures, fans, voltages and clocks (LibreHardwareMonitor; most CPU/board sensors need administrator rights), plus a "This PC" overview part with at-a-glance tiles
-- **Process Killer** - List running processes, end one or a whole process tree safely, and find which process owns a port or locks a file
-
-### Data Processing Tools
-- **File Converter** - Convert files between formats
-- **PDF Toolkit** - PDF manipulation and extraction
 - **Batch Watermarker** (`watermark`, sidebar category: *Convert & PDF*) - Stamp text or a logo on many pictures, videos and PDFs at once: 3x3 position grid or tiled, size as a share of each file, opacity, rotation, margin, built-in and saved presets, a live preview of the first file, results written next to the originals or into a chosen folder without ever overwriting
-- **Encryption Manager** - Encrypt/decrypt files with crypto
-- **File Encryption** - Lock files with a password (catalog id `file-encryption`)
-- **API Tester** - Test HTTP/REST APIs
-- **Output Folder Manager** - Manage output directory settings
-
-### Audio & Music Tools
-- **Instrument Tuner** - Musical instrument tuning
-- **MIDI Instruments** - MIDI instrument control
 - **Voice Changer** - Real-time voice modification with DSP; quick voices: Chipmunk, Deep, Robot, Cave, Girl, Man, Grandma, Grandpa (the people voices are pitch-only, so they are approximations)
-- **Synthesizer** - MIDI synthesizer with an on-screen keyboard that shows which computer key plays which note
-- **Color Wheel** - Color theory, palettes and gradients (sidebar category: *Colors*)
-- **Color Picker** - Extract and convert colors (sidebar category: *Colors*)
 - **Screen Color Picker / Eyedropper** - Pick any colour from anywhere on screen (all monitors) with a magnifier, 1/3x3/5x5 averaging, one-click copy in HEX/RGB/HSL/CSS, WCAG contrast on white and black, a session list; Recent and Favorites are shared with the Color Picker (sidebar category: *Colors*)
-
-### Hardware Tests (sidebar category: *Hardware Tests*)
 - **Keyboard & Mouse Test** - On-screen 104-key map by scan code, which keys were tested, how many are held at once (6-key vs N-key rollover), key and mouse-button chatter, mouse polling rate (Raw Input, measured on its own thread), real DPI from a measured move, wheel reversals and a reaction-time test
 - **Monitor Test** - Full-screen test pictures on any screen (dead and stuck pixels, light bleed, gradients and banding, black/white levels, gamma, colour bars, sharpness, geometry, retention, motion), click to mark suspect pixels, and a measured refresh rate with missed frames
 - **Monitor HDR & Color Depth Checker** (`monitor-hdr`) - Per screen: resolution and refresh, bits per colour in use and the maximum the screen declares (EDID), colour format (RGB / YCbCr), HDR supported and on, peak / full-screen / black brightness, Windows SDR content brightness, and how much of sRGB / DCI-P3 / Rec. 2020 the screen covers. Plain-words verdicts with what to change, text export (copy or save), and full-screen pictures: gray, dark and RGB gradients, black and white level steps, a CIE gamut chart and a white-window (brightness limiter) test. Readings come from the display-config API and DXGI `IDXGIOutput6.GetDesc1`; the pictures are 8-bit SDR
 - **Game Controller Test** - Reads Xbox-style pads (XInput) and other game devices (joysticks, wheels, generic and PlayStation pads) over USB or Bluetooth: live sticks, triggers and buttons, dead zones (axial, radial, scaled), rest drift, range and roundness, trigger response, report rate and vibration
 - **Audio Output Test** - Per-channel beeps, phase and polarity tests, tone generator, sweep and noise for speakers, headphones and IEMs, through any active output device (WASAPI shared mode, at the device's own format)
-
-### Utilities
-- **Notes Manager** - Quick notes and reminders
-- **Messenger Page** - Contact developer
-- **Screen OCR** - Select a region of the screen and read its text
 - **Date & Time Toolkit** - Five modes: Unix timestamps and dates, time zones (clock cards that fill the page), date difference / add-subtract (business days skip your non-working event days), an ISO 8601 / RFC 3339 converter and validator, and calendar week / day-of-year lookup. Every mode ends with a "Good to know" card explaining how the thing works
 - **Mock Data Generator** - Generate fake data for testing (Generators category): grouped type list, checksum-valid IBAN / credit card (Luhn) / ISBN-13, and your own saved lists (Settings > Mock data)
 
-### Planned tools
-Catalog ids that start with `future-` are planned tools (some with a husk view, the rest a shared "coming soon" page); at the moment none are left in *Pixel & Sprites*. See `FUTURE_IDEAS.md`, where every idea (built or planned) is grouped under the sidebar category it belongs in.
-
-### Sidebar categories
-Tools are grouped by `ToolCatalogManager.Categories`: Files, Convert, Video, Audio, Music, Images, Colors, Storage, Performance, Hardware Tests, Security, Network, Developer, Generators, Utilities. Moving a tool to another section = change its `CategoryId`.
+Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` are placeholders for planned tools and show a shared "coming soon" page.
 
 ---
 
@@ -125,33 +265,28 @@ Tools are grouped by `ToolCatalogManager.Categories`: Files, Convert, Video, Aud
 ### Project Structure
 
 ```
-Smart Tools.WPF/
-├── Controllers/          # Business logic and managers
-│   ├── *Manager.cs      # Feature-specific logic
-│   └── *Manager.*.cs    # Partial classes for organization
-├── Models/              # Data models and view models
-│   └── *Model.cs        # Feature-specific models
-├── Views/               # XAML UI definitions
-│   ├── *View.xaml       # User interfaces
-│   └── *View.xaml.cs    # Code-behind logic
-├── Modules/             # Cross-cutting concerns
-│   ├── AppSettingsStore.cs
-│   ├── LanguageManager.cs
-│   ├── ThemeManager.cs
-│   └── ToastNotificationManager.cs
-├── Themes/              # UI styling
-│   ├── Controls.xaml
-│   ├── Dark.xaml
-│   ├── Light.xaml
-│   └── ui-style-guide.md
-├── Language/            # Localization
-│   ├── en.xaml          # English resources
-│   └── es.xaml          # Spanish resources
-├── Engines/             # Native dependencies
-│   ├── FFMPEG/          # FFmpeg binaries
-│   └── VLC/             # LibVLC libraries
-└── Images/              # Application assets
+Smart_Tools/
+├── Smart_Tools.slnx            # Solution (app + installer project)
+├── SmartToolsWPF.Setup/        # Installer
+└── Smart Tools.WPF/            # The app
+    ├── MainWindow.xaml(.cs)    # Shell: sidebar, search, tool host, Help button; Add<View>("tool-id") registers every tool
+    ├── Tools/<Category>/<Tool>/   # One folder per tool: *View.xaml(.cs), *Manager*.cs (logic), *Model.cs (data)
+    ├── Shared/
+    │   ├── Controllers/        # ToolCatalogManager, ShortcutManager, Tour, SafeFileOps, AtomicFile, FfmpegLocator,
+    │   │                       #   OutputFolderManager, ThumbnailService, OuiLookupManager, ...
+    │   ├── Models/             # Shared models (e.g. ShortcutModel)
+    │   └── Views/              # Settings, tour overlay; Extentions/: Home, ToolSidebar, InputFolderCard, OutputFolderCard, EmptyStateCard, ElevationBannerCard
+    ├── Controls/               # Reusable controls: TrendChart, ChannelChart, AudioWaveformControl, CountdownRing, ...
+    ├── Modules/                # App services: AppPaths, AppSettingsStore, LanguageManager, ThemeManager, Log, toasts
+    ├── Themes/                 # Controls.xaml (all shared styles), Light.xaml, Dark.xaml, ui-style-guide.md
+    ├── Language/               # en.xaml, es.xaml (every UI string, tool names and the guided tours)
+    ├── Engines/                # Bundled native tools: FFMPEG, VLC, TESSERACT, WHISPER
+    ├── Data/                   # Read-only data shipped with the app (oui.txt)
+    └── Images/                 # App assets
 ```
+
+A tool is split three ways: the **View** only shows things and reacts to clicks, the **Manager** holds the logic (partial classes such as
+`*Manager.Run.cs` when it grows), and the **Model** holds the data. Managers have no WPF dependency where possible so they can be tested on their own.
 
 ### Key Components
 
@@ -226,6 +361,9 @@ Smart Tools.WPF/
 - `FileSearchManager` - Search and find files
 - `DuplicateManager` - Find duplicate files
 - `SimilarManager` - Find similar files
+- `CopyQueueManager` - Verified copy/move with pause, undo and resume
+- `FolderTreeManager` - Export a folder's structure as text, Markdown, JSON or CSV
+- `SafeFileOps` - Shared never-overwrite / verify-before-delete rules
 - `LargeFileFinderManager` - Find large files
 - `FileGeneratorManager` - Generate files
 - `RenameManager` - Batch file renaming
@@ -237,10 +375,12 @@ Smart Tools.WPF/
 - `SystemMonitorManager` - Monitor system resources
 - `SpaceAnalyzerManager` - Analyze disk space
 - `DriveHealthManager` - Monitor drive health
+- `SmartHistoryManager` - Keep SMART readings over time and flag drives that get worse
 - `DiskSpeedTestManager` - Test disk performance
 - `InternetSpeedTestManager` - Test internet speed
 - `NetworkToolsManager` - Network utilities
 - `DeviceScannerManager` - Scan devices
+- `WifiManager` (+ `WlanNative`) - Nearby Wi-Fi networks, channel advice, saved profiles (Windows Native Wifi API; read-only)
 - `HardwareSensorsManager` - Sensor readings (LibreHardwareMonitor) and `IsAdministrator()`
 - `ProcessKillerManager` (+ `.Windows.cs`) - Process list, tree kill, port/file-lock owners
 
@@ -258,6 +398,7 @@ Smart Tools.WPF/
 - `BarcodeManager`, `QrCodeManager` - Generate codes
 - `TextToSpeechManager` - Text-to-speech
 - `VoiceChangerManager` - Voice modification
+- `LoudnessManager` - LUFS / true-peak measuring and normalized copies (ffmpeg loudnorm)
 - `InstrumentTunerManager` - Musical instrument tuning
 - `MidiInstrumentsManager` - MIDI control
 - `LogViewerManager` - View log files
@@ -268,6 +409,70 @@ Smart Tools.WPF/
 - `WatermarkManager` (+ `.Render.cs`, `.Engines.cs`, `.Files.cs`, `.Preview.cs`) - Watermark layout, drawing, the picture / PDF / video engines, presets
 - `PngWriter`, `SafeFile` - shared lossless PNG writer and temp-then-move file saving for tools that build their own pixels
 - `EncodeToolManager` (+ `.Files.cs`) - Base64 / URL / HTML-entity / file encoding and decoding
+
+---
+
+## Guided Tours (Help button)
+
+Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
+All 114 tools have one. The tour only covers the page that is open.
+
+To add or change a tour:
+1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
+2. Tag the controls worth explaining: `ctl:Tour.Key="Str_Tour_<Tool>_<Part>" ctl:Tour.Order="1"`. Good targets are the sidebar group cards, the Input and Output card instances, the primary action button and the main result area. Three to six steps is plenty.
+3. Add `Str_Tour_<Tool>_<Part>_Title` and `Str_Tour_<Tool>_<Part>_Text` to **both** `Language/en.xaml` and `Language/es.xaml`.
+
+A step with no text, or on a control that is hidden, is skipped. Don't put tour tags inside the shared cards' own XAML; tag the card instance in the view. See `Shared/Controllers/Tour.cs` and `Themes/ui-style-guide.md`.
+
+---
+
+## Keyboard Shortcuts
+
+Shortcuts are defined in one place, `ShortcutManager` (`Shared/Controllers/ShortcutManager.cs`), and listed in **Settings > Keyboard shortcuts**, where each one can be re-bound, disabled or cleared.
+A clash between two keys is warned about; a key is only active while its tool is open (or everywhere, for the few global ones).
+
+To give a tool a shortcut:
+1. Define the action in `ShortcutManager`'s static constructor: `Define(new ShortcutAction("tool.action", "Str_Shortcut_X", "Fallback title", ShortcutScope.InApp, "F5", "tool-id"))`.
+2. Add the `Str_Shortcut_X` title to `en.xaml` and `es.xaml`.
+3. In the view, attach the handler: `ShortcutManager.Attach("tool.action", () => ...)`. `ShortcutManager.ChordText("tool.action")` gives the current key for tooltips.
+
+Tools with shortcuts today: Notes, Password Generator, Password Vault, Regex Tester, Screenshot, Screen OCR, Loudness Meter, Duplicate Data and Find Similar Files (scan, fold/unfold groups, next/previous group, delete marked).
+
+---
+
+## Safe File Operations
+
+Tools that copy, move or write the user's files share the rules in `Shared/Controllers/SafeFileOps.cs`:
+- **Never overwrite**: a taken name becomes `name (2).ext` (`UniquePath`).
+- **Prove before removing**: a copy is written to a hidden temp file, compared with the original (size, then SHA-256 or a chunked compare), renamed into place, and only then is a move allowed to remove the original.
+- **Atomic writes**: settings and exports are written to a temp file and renamed (`AtomicFile`, `SafeFileOps`).
+- **Cancel and pause** are honoured between blocks, so nothing is left half-done; temp files are removed on any failure.
+- **Retry** short-lived locks (`RetryIo`) and check free space before starting (`OutputFolderManager.CheckSpace`).
+
+Used by Organize Files, Copy Queue, Folder Tree Exporter, Loudness Meter and others. Copy Queue adds pause/resume, an undo journal and a saved job that resumes after a restart.
+
+---
+
+## Shared Building Blocks
+
+| Piece | Where | Used for |
+|---|---|---|
+| `ToolSidebar` | `Shared/Views/Extentions` | The collapsible options column every tool has |
+| `InputFolderCard`, `OutputFolderCard` | `Shared/Views/Extentions` | Choosing files/folders in and where results go (with free-space and writability checks) |
+| `EmptyStateCard`, `ElevationBannerCard` | `Shared/Views/Extentions` | Dotted empty state; "needs administrator" banner |
+| `TrendChart`, `ChannelChart` | `Controls` | Line chart over time (SMART Trend History); Wi-Fi channel graph |
+| Theme styles | `Themes/Controls.xaml` | `ModeToggleButtonStyle`, `AccentPrimaryButtonStyle`, `CardStyle`, `SidebarGroupCardStyle`, DataGrid, collapsible group (`CollapsibleGroupItemStyle`), ... |
+| `FfmpegLocator` | `Shared/Controllers` | Finds the bundled FFmpeg/ffprobe |
+| `OuiLookupManager` | `Shared/Controllers` | MAC address -> manufacturer (`Data/oui.txt`) |
+
+Result lists use a real `DataGrid` with the app's global styles (no custom list drawing), a status banner with an icon, summary pills in the card header, and the dotted `EmptyStateCard` when there is nothing to show.
+
+---
+
+## Where Data Is Saved
+
+Everything the app remembers lives under `AppPaths.DataRoot`: `%AppData%\Smart Tools` for an installed copy, or a `UserData` folder beside the exe when a `portable.txt` file is next to it.
+Examples: `settings.json`, tool settings (`pixel_art.json`, `sprite_packer.json`, `encode_tool.json`, ...), `smart_history.json` (SMART Trend History readings), `copy_queue_job.json` / `copy_queue_undo.json` (Copy Queue resume and undo). Files are replaced atomically, and a damaged file is set aside as `.bad` instead of stopping the tool.
 
 ---
 
@@ -293,15 +498,21 @@ dotnet run --project "Smart Tools.WPF/Smart Tools.WPF.csproj"
 ```
 
 ### Running
-- **Visual Studio**: open `Smart Finder.slnx` (repo root) and run `Smart Tools.WPF`.
+- **Visual Studio**: open `Smart_Tools.slnx` (repo root) and run `Smart Tools.WPF`.
 - **CLI**: `dotnet run --project "Smart Tools.WPF/Smart Tools.WPF.csproj"`
 
 If the app is already running, stop it (`Get-Process -Name SmartTools | Stop-Process -Force`) before rebuilding, or the build fails because the `.exe` is locked.
 
 ### Repository Layout
 
-| Folder | Description |
+| Folder / file | Description |
 |---|---|
+| `Smart Tools.WPF/` | The app. |
+| `SmartToolsWPF.Setup/` | Installer for the app (part of `Smart_Tools.slnx`). |
+| `Smart_Tools.slnx` | Solution file. |
+| `README.md` | Short overview. This file has the details. |
+
+---|---|
 | `Smart Tools.WPF/` | This app (active). |
 | `Smart Tools/` | Legacy WinForms version. |
 | `Video Replay/` | Standalone WinForms video player. |
@@ -364,7 +575,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 50+ tools*
+*Currently exploring unified testing approach across all 114 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor
@@ -398,7 +609,7 @@ For issues, suggestions, or questions:
 
 ---
 
-**Last Updated**: 2026-10-19  
+**Last Updated**: 2026-11-03  
 **Framework**: .NET 10.0  
 **Language**: C#  
 **UI**: WPF + Material Design

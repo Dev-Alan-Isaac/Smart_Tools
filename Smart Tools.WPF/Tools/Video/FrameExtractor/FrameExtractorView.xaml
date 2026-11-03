@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.FrameExtractorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
@@ -99,7 +100,7 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel x:Name="SidebarStack">
-                    <controls:InputFolderCard
+                    <controls:InputFolderCard ctl:Tour.Key="Str_Tour_FrameExtractor_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
                         ClearRequested="InputCard_ClearRequested"
                         Header="Videos"
@@ -109,7 +110,7 @@
                         Mode="Files"
                         PathsAdded="InputCard_PathsAdded" />
 
-                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_FrameExtractor_Frames" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="WHICH FRAMES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
                             <StackPanel Margin="0,6,0,0">
@@ -148,7 +149,7 @@
                         </StackPanel>
                     </Border>
 
-                    <controls:OutputFolderCard
+                    <controls:OutputFolderCard ctl:Tour.Key="Str_Tour_FrameExtractor_Output" ctl:Tour.Order="3"
                         x:Name="OutputCard"
                         Header="Save frames to"
                         HeaderIcon="FolderOutline"
@@ -182,7 +183,7 @@
                                 <Button x:Name="BtnOpenFolder" Margin="0,0,8,0" Click="BtnOpenFolder_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Open the folder" Visibility="Collapsed">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                 </Button>
-                                <Button x:Name="BtnRun" MinHeight="38" Click="BtnRun_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <Button ctl:Tour.Key="Str_Tour_FrameExtractor_Run" ctl:Tour.Order="4" x:Name="BtnRun" MinHeight="38" Click="BtnRun_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon x:Name="IconRun" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ImageMultipleOutline" />
                                         <TextBlock x:Name="TxtRun" VerticalAlignment="Center" Text="Take frames" />
@@ -215,7 +216,7 @@
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
-                                <ListBox x:Name="VideoList" Padding="6" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource VideoTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="VideoList_SelectionChanged" VirtualizingPanel.IsVirtualizing="True" />
+                                <ListBox ctl:Tour.Key="Str_Tour_FrameExtractor_List" ctl:Tour.Order="5" x:Name="VideoList" Padding="6" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource VideoTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="VideoList_SelectionChanged" VirtualizingPanel.IsVirtualizing="True" />
                                 <TextBlock x:Name="VideosEmpty" Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Videos you add show here. Click one to see it and pick a moment." TextAlignment="Center" TextWrapping="Wrap" />
                             </Grid>
                         </Border>

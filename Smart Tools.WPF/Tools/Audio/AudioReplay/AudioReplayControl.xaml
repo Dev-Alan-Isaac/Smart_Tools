@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Controls.AudioReplayControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -107,7 +108,7 @@
                                 listing what was added (one row per folder, one for loose
                                 files), Add files / Add folder / Clear, Include subfolders.
                             -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_AudioReplay_Files" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Common_Files}"
@@ -315,7 +316,7 @@
 
                             <!--  ============ REPLAY MODE ============  -->
 
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_AudioReplay_Mode" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
 
                                     <ContentControl
@@ -586,7 +587,7 @@
                             </Grid.ColumnDefinitions>
 
                             <!--  "Album art" tile - pulses with the bass while playing (MeterTimer_Tick)  -->
-                            <Border
+                            <Border ctl:Tour.Key="Str_Tour_AudioReplay_NowPlaying" ctl:Tour.Order="3"
                                 x:Name="AlbumTile"
                                 Width="52"
                                 Height="52"
@@ -652,7 +653,7 @@
                                 Foreground="{DynamicResource TextSecondary}"
                                 Text="0:00" />
 
-                            <Slider
+                            <Slider ctl:Tour.Key="Str_Tour_AudioReplay_Seek" ctl:Tour.Order="4"
                                 x:Name="SliderPosition"
                                 Grid.Column="1"
                                 Margin="6,0"
@@ -708,7 +709,7 @@
                                             VerticalAlignment="Center"
                                             Kind="VolumeHigh" />
                                     </Button>
-                                    <Slider
+                                    <Slider ctl:Tour.Key="Str_Tour_AudioReplay_Volume" ctl:Tour.Order="6"
                                         x:Name="SliderVolume"
                                         Width="80"
                                         Margin="4,0,0,0"
@@ -758,7 +759,7 @@
                                             Kind="Rewind_10" />
                                     </Button>
 
-                                    <Button
+                                    <Button ctl:Tour.Key="Str_Tour_AudioReplay_Play" ctl:Tour.Order="5"
                                         x:Name="BtnPlayPause"
                                         Margin="8,0"
                                         Click="BtnPlayPause_Click"
@@ -996,7 +997,7 @@
 
                         <Grid Grid.Row="2">
 
-                            <DataGrid
+                            <DataGrid ctl:Tour.Key="Str_Tour_AudioReplay_Playlist" ctl:Tour.Order="7"
                                 x:Name="DataGridQueue"
                                 AutoGenerateColumns="False"
                                 CanUserAddRows="False"

@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.BatteryHealthView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -76,16 +77,16 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel>
-                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_BatteryHealth_Actions" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="ACTIONS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LightningBoltOutline}" />
-                            <Button x:Name="BtnRefresh" MinHeight="36" Margin="0,10,0,0" Click="BtnRefresh_Click" ToolTip="Read the battery again">
+                            <Button ctl:Tour.Key="Str_Tour_BatteryHealth_Refresh" ctl:Tour.Order="3" x:Name="BtnRefresh" MinHeight="36" Margin="0,10,0,0" Click="BtnRefresh_Click" ToolTip="Read the battery again">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="Refresh" />
                                     <TextBlock Text="Refresh" />
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="BtnReport" MinHeight="36" Margin="0,8,0,0" Click="BtnReport_Click" ToolTip="Make Windows' own detailed battery report and open it">
+                            <Button ctl:Tour.Key="Str_Tour_BatteryHealth_Report" ctl:Tour.Order="4" x:Name="BtnReport" MinHeight="36" Margin="0,8,0,0" Click="BtnReport_Click" ToolTip="Make Windows' own detailed battery report and open it">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FileChartOutline" />
                                     <TextBlock x:Name="TxtReport" Text="Windows battery report" />
@@ -94,7 +95,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_BatteryHealth_About" ctl:Tour.Order="5" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="ABOUT THE NUMBERS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
                             <TextBlock x:Name="TxtNote" Margin="2,8,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Health is the battery's full-charge capacity compared with the capacity it was designed for. Some laptops don't report every value. 80 % or more is normal wear; under 60 % is worth a replacement." />
@@ -116,7 +117,7 @@
 
                 <Grid Grid.Row="1">
                     <!--  One battery fills the height; several share it.  -->
-                    <ItemsControl x:Name="BatteryList" ItemTemplate="{StaticResource BatteryTemplate}">
+                    <ItemsControl ctl:Tour.Key="Str_Tour_BatteryHealth_Details" ctl:Tour.Order="1" x:Name="BatteryList" ItemTemplate="{StaticResource BatteryTemplate}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <UniformGrid Columns="1" />

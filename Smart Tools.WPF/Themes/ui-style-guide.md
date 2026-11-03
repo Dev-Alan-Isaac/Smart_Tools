@@ -68,7 +68,7 @@ Standing instruction from Alan: **every view gets this treatment** – friendly,
 
 ## Guided tour (Help button in the page header)
 - The header's Help button tours **only the page that is open**; it never moves on to another page. It is enabled when the page has at least one tagged control.
-- To add a tour to a view: add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`, then tag the controls worth explaining: `ctl:Tour.Key="Str_Tour_<Tool>_<Part>" ctl:Tour.Order="1"`. Tag the sidebar group cards, the Input and Output card instances, the primary action, and the main result area. Three to six steps is plenty.
+- Every tool in the catalog has a tour; a new tool is not finished until it does. To add a tour to a view: add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`, then tag the controls worth explaining: `ctl:Tour.Key="Str_Tour_<Tool>_<Part>" ctl:Tour.Order="1"`. Tag the sidebar group cards, the Input and Output card instances, the primary action, and the main result area. Three to six steps is plenty.
 - Add `Str_Tour_<Tool>_<Part>_Title` and `Str_Tour_<Tool>_<Part>_Text` to both `en.xaml` and `es.xaml`. A step with neither string is skipped; controls that are hidden or collapsed (for example, inside the collapsed options sidebar) are skipped too.
 - Don't put `Tour.*` on anything inside the Input/Output cards' own XAML (they have no `x:Name`); tag the card instance in the view instead.
 - Logic: `Shared/Controllers/Tour.cs`; layer: `Shared/Views/TourOverlay.xaml` (the dim layer uses the `TourScrim` token).
@@ -851,3 +851,27 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 - Speech to Text converts to 16 kHz mono WAV with FFmpeg, then runs `whisper-cli.exe` (`Engines\WHISPER`, the CPU build, which needs the Visual C++ runtime) with `-oj` and reads the JSON offsets; `-pp` progress goes to stderr. Models are downloaded on demand into `AppPaths.WhisperModels` with the same temp-file-then-move pattern as the Tesseract languages, and a file under 70% of the expected size is rejected. The `.txt`, `.srt`, and `.vtt` of one file share a name: if any is taken, all move to "name (2)".
 - Trimming is a large dialog (`VideoCompressorTrimWindow`, about 85% of the screen work area, clamped to 760 x 560 .. 1280 x 820, resizable), not an inline card: an inline card left the picture and timeline too small at laptop resolutions. The body is `VideoCompressorTrimEditor` (picture stage on top that grows with the window, then the timeline, then the times and the Reset / Save frame buttons). It applies every change to the item at once and the window restores the values it had on open when you press Cancel, Esc, or close it; Done keeps them. The Keep button is off while a run is going and for rows that are done. The picture stage stays black in both themes, the documented exception to "theme tokens only".
 - Speech to Text: any Whisper language can be chosen (about 100). English-only models cannot do another language or Translate, so choosing one switches to the installed multilingual model of the same size (or any installed one) and says so; a run applies the same rule, so old saved settings cannot produce an English-only run in Spanish. Translate only goes into English.
+
+
+## Queues that copy or move files (learned on Copy Queue)
+- Run bar card on top: the primary button (becomes **Stop** while running), icon buttons for pause and undo, then the progress bar with one line of text underneath and a big accent percent on the right. The card below holds the summary pills in its header, a status banner with an icon, and the list.
+- Use a `DataGrid` for results (global styles, `MinRowHeight` 44, no custom list drawing) and the dotted `controls:EmptyStateCard` for the empty state; hide the grid while there is nothing to show.
+- Mode choices are `ModeToggleButtonStyle` radio pairs in a `UniformGrid`, never plain radio buttons. When a mode changes what a card means (Copy to / Move to), swap the card instead of renaming it, so each keeps its own folder.
+- Rules for the files themselves live in `SafeFileOps` (never overwrite, verify before removing, temp file then rename, cancel leaves nothing behind).
+
+## Collapsible groups in result grids (learned on Duplicate Data and Find Similar Files)
+- Use `GroupStyle ContainerStyle="{StaticResource CollapsibleGroupItemStyle}"`. The open/closed state is the group's own `IsExpanded` property (bound through the group header), so "fold all / unfold all" just sets it and scrolling or row recycling cannot mix states up.
+- Give the toolbar a fold-all and an unfold-all button and register shortcuts for them (`ShortcutManager`).
+
+## Charts drawn by the app (learned on SMART Trend History and Wi-Fi Analyzer)
+- `TrendChart` (values over time) and `ChannelChart` (Wi-Fi hills) are small `FrameworkElement`s that draw in `OnRender` with brushes set through `SetResourceReference`, so a theme change repaints them. Reuse or extend them before writing a new chart; keep the chart in a `RowBg` card with a `CardBorder` outline and a bold title in its top-left corner.
+- Mark "worse" with the error colour (a rising error counter), never with colour alone: the table next to the chart repeats it in words.
+
+## Tools that only read the machine (learned on Wi-Fi Analyzer and SMART Trend History)
+- Say plainly in "Good to know" that nothing is changed. Anything sensitive (a saved Wi-Fi password) appears only when asked for, hides itself again, and explains when Windows needs administrator rights.
+- When Windows can return nothing (Location access off, no Wi-Fi adapter, no SMART data), show a banner that says why and what to do, with a button to the right Settings page where possible.
+- Keep what is remembered small and local (`AppPaths.DataRoot`), replace files atomically, and set a damaged file aside as `.bad`.
+
+## Measuring then writing copies (learned on Loudness Meter)
+- Two buttons in the run bar: the primary one only reads (Measure), the secondary writes copies (Normalize). Re-judge from stored measurements when a target changes instead of reading the files again.
+- A written copy is measured again before it is reported, so the row shows what the file really has, not what was asked for.

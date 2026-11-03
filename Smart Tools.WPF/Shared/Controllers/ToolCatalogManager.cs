@@ -112,6 +112,7 @@ namespace Smart_Tools.WPF.Controllers
 
             // Storage
             new ToolInfo { Id = "drive-health", Name = "Drive Health", Title = "Drive Health Monitor", Icon = "Harddisk", CategoryId = "storage", Description = "Check the health of your drives", Keywords = "smart ssd hdd health temperature" },
+            new ToolInfo { Id = "smart-history", Name = "SMART Trend History", Icon = "ChartLine", CategoryId = "storage", Description = "Track drive health over time and spot a drive that is getting worse", Keywords = "smart history trend drive health temperature reallocated sectors wear ssd hdd failing historial salud disco tendencia" },
             new ToolInfo { Id = "disk-space", Name = "Disk Space Analyzer", Icon = "ChartDonut", CategoryId = "storage", Description = "See what's using your disk", Keywords = "space usage folders size" },
             new ToolInfo { Id = "large-files", Name = "Large File Finder", Icon = "FileFindOutline", CategoryId = "storage", Description = "Find the biggest files", Keywords = "big large size free space" },
             new ToolInfo { Id = "junk-cleaner", Name = "Junk File Cleaner", Icon = "DeleteSweep", CategoryId = "storage", Description = "Clear temporary files and caches", Keywords = "junk temp cache clean free space" },
@@ -143,6 +144,7 @@ namespace Smart_Tools.WPF.Controllers
 
             // Network
             new ToolInfo { Id = "network-adapters", Name = "My IP & Adapters", Icon = "IpNetworkOutline", CategoryId = "network", Description = "Your addresses, every adapter, edit IP, enable or disable", Keywords = "ip address adapter ethernet wifi usb dhcp static dns disable enable public ip network tools" },
+            new ToolInfo { Id = "wifi-analyzer", Name = "Wi-Fi Analyzer", Icon = "Wifi", CategoryId = "network", Description = "See nearby networks, signal and channels, and which channel is least crowded", Keywords = "wifi wi-fi wireless signal channel router 2.4 5 ghz saved password interference analizador red inalambrica canal senal" },
             new ToolInfo { Id = "ping", Name = "Ping", Icon = "Pulse", CategoryId = "network", Description = "Is a host reachable, and how fast - from the adapter you choose", Keywords = "ping latency reachable jitter packet loss network tools" },
             new ToolInfo { Id = "port-scanner", Name = "Port Scanner", Icon = "LanConnect", CategoryId = "network", Description = "Find which TCP ports are open on a host", Keywords = "port scan open ports tcp services network tools" },
             new ToolInfo { Id = "network-connections", Name = "Network Connections", Icon = "AccessPoint", CategoryId = "network", Description = "See which apps are connected outside your PC, and to where", Keywords = "connections netstat internet outgoing outside apps processes remote address port tcp udp conexiones red exterior aplicaciones" },

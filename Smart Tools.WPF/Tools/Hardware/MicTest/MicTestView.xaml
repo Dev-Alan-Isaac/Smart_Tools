@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.MicTestView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
     Loaded="Root_Loaded"
@@ -87,7 +88,7 @@
                         <StackPanel Margin="16">
 
                             <!--  ============ MICROPHONE ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_MicTest_Device" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <Grid>
                                         <ContentControl
@@ -128,7 +129,7 @@
                             </Border>
 
                             <!--  ============ HEAR ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_MicTest_Listen" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_MicTest_Listen}"
@@ -185,7 +186,7 @@
                                 Foreground="{DynamicResource TextPrimary}"
                                 Text="-∞ dB" />
                         </StackPanel>
-                        <Button
+                        <Button ctl:Tour.Key="Str_Tour_MicTest_Start" ctl:Tour.Order="3"
                             x:Name="BtnStart"
                             Grid.Column="1"
                             MinWidth="140"
@@ -195,7 +196,7 @@
                     </Grid>
 
                     <!--  Level meter with a peak marker; green, then amber, red near clipping  -->
-                    <Border
+                    <Border ctl:Tour.Key="Str_Tour_MicTest_Meter" ctl:Tour.Order="4"
                         x:Name="MeterTrack"
                         Grid.Row="1"
                         Height="16"
@@ -258,7 +259,7 @@
                         <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
                             <StackPanel>
                                 <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Peak}" />
-                                <TextBlock x:Name="TxtPeak" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                                <TextBlock ctl:Tour.Key="Str_Tour_MicTest_Readings" ctl:Tour.Order="5" x:Name="TxtPeak" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
                             </StackPanel>
                         </Border>
                         <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
@@ -281,7 +282,7 @@
                         </Border>
                     </UniformGrid>
 
-                    <Button
+                    <Button ctl:Tour.Key="Str_Tour_MicTest_Reset" ctl:Tour.Order="6"
                         x:Name="BtnResetPeak"
                         Grid.Row="4"
                         Margin="0,16,0,0"

@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.ScreenshotView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root">
 
@@ -85,7 +86,7 @@
                         <StackPanel Margin="16">
 
                             <!--  ============ CAPTURE ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_Screenshot_Capture" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Screenshot_Capture}"
@@ -174,7 +175,7 @@
                             </Border>
 
                             <!--  ============ MARK UP ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_Screenshot_MarkUp" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Screenshot_MarkUp}"
@@ -270,7 +271,7 @@
                                 ToolTip="{DynamicResource Str_Screenshot_ClearMarks}">
                                 <materialDesign:PackIcon Width="18" Height="18" Kind="EraserVariant" />
                             </Button>
-                            <Button
+                            <Button ctl:Tour.Key="Str_Tour_Screenshot_Copy" ctl:Tour.Order="3"
                                 x:Name="BtnCopy"
                                 MinWidth="100"
                                 Margin="12,0,0,0"
@@ -278,7 +279,7 @@
                                 Content="{DynamicResource Str_Screenshot_Copy}"
                                 IsEnabled="False"
                                 Style="{StaticResource PrimaryButtonStyle}" />
-                            <Button
+                            <Button ctl:Tour.Key="Str_Tour_Screenshot_Save" ctl:Tour.Order="4"
                                 x:Name="BtnSave"
                                 MinWidth="100"
                                 Margin="8,0,0,0"

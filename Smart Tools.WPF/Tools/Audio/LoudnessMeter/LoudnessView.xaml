@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.LoudnessView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
@@ -123,7 +124,7 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel x:Name="SidebarStack">
-                    <controls:InputFolderCard
+                    <controls:InputFolderCard ctl:Tour.Key="Str_Tour_Loudness_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
                         ClearRequested="InputCard_ClearRequested"
                         Header="Audio files"
@@ -133,7 +134,7 @@
                         PathsAdded="InputCard_PathsAdded"
                         ShowSubfolders="False" />
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_Loudness_Target" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="TARGET" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.BullseyeArrow}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
@@ -172,7 +173,7 @@
                         </StackPanel>
                     </Border>
 
-                    <controls:OutputFolderCard
+                    <controls:OutputFolderCard ctl:Tour.Key="Str_Tour_Loudness_Output" ctl:Tour.Order="3"
                         x:Name="OutputCard"
                         AllowSameAsSource="True"
                         Header="Save copies to"
@@ -206,7 +207,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Button x:Name="BtnMeasure" MinWidth="160" VerticalAlignment="Center" Click="BtnMeasure_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Read every file and report its loudness (nothing is written)">
+                        <Button ctl:Tour.Key="Str_Tour_Loudness_Measure" ctl:Tour.Order="4" x:Name="BtnMeasure" MinWidth="160" VerticalAlignment="Center" Click="BtnMeasure_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Read every file and report its loudness (nothing is written)">
                             <Grid HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -217,7 +218,7 @@
                             </Grid>
                         </Button>
 
-                        <Button x:Name="BtnNormalize" Grid.Column="1" MinHeight="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnNormalize_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Write a normalized copy of every file (originals stay untouched)">
+                        <Button ctl:Tour.Key="Str_Tour_Loudness_Normalize" ctl:Tour.Order="5" x:Name="BtnNormalize" Grid.Column="1" MinHeight="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnNormalize_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Write a normalized copy of every file (originals stay untouched)">
                             <Grid Margin="8,0" HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -318,7 +319,7 @@
                             </Grid>
                         </Border>
 
-                        <DataGrid
+                        <DataGrid ctl:Tour.Key="Str_Tour_Loudness_Results" ctl:Tour.Order="6"
                             x:Name="ResultGrid"
                             Grid.Row="2"
                             AutoGenerateColumns="False"

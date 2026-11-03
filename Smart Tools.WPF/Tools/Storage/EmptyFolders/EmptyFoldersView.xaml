@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.EmptyFoldersView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:ctrl="clr-namespace:Smart_Tools.WPF.Controllers"
@@ -63,7 +64,7 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel x:Name="SidebarStack">
-                    <controls:InputFolderCard
+                    <controls:InputFolderCard ctl:Tour.Key="Str_Tour_EmptyFolders_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
                         ClearRequested="InputCard_ClearRequested"
                         Header="Folders to check"
@@ -73,7 +74,7 @@
                         PathsAdded="InputCard_PathsAdded"
                         ShowSubfolders="False" />
 
-                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_EmptyFolders_Info" ctl:Tour.Order="6" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="GOOD TO KNOW" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
                             <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="A folder counts as empty when it has no files in it at all (hidden and system files count as files) and every folder inside it is empty too. Shortcuts to other folders are left alone, and the folders you add are never listed themselves. Deleting sends folders to the Recycle Bin, so you can get them back." />
@@ -95,13 +96,13 @@
                     <StackPanel>
                         <DockPanel>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button x:Name="BtnFind" MinHeight="38" Margin="0,0,8,0" Click="BtnFind_Click" Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                <Button ctl:Tour.Key="Str_Tour_EmptyFolders_Find" ctl:Tour.Order="2" x:Name="BtnFind" MinHeight="38" Margin="0,0,8,0" Click="BtnFind_Click" Style="{StaticResource ListToolPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon x:Name="IconFind" Width="16" Height="16" Margin="0,0,6,0" Kind="Magnify" />
                                         <TextBlock x:Name="TxtFind" Text="Find empty folders" />
                                     </StackPanel>
                                 </Button>
-                                <Button x:Name="BtnDelete" MinHeight="38" Click="BtnDelete_Click" IsEnabled="False" Style="{StaticResource AccentRedButtonStyle}">
+                                <Button ctl:Tour.Key="Str_Tour_EmptyFolders_Delete" ctl:Tour.Order="5" x:Name="BtnDelete" MinHeight="38" Click="BtnDelete_Click" IsEnabled="False" Style="{StaticResource AccentRedButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="DeleteOutline" />
                                         <TextBlock x:Name="TxtDelete" VerticalAlignment="Center" Text="Move to Recycle Bin" />
@@ -135,14 +136,14 @@
                         </Grid.RowDefinitions>
                         <DockPanel Margin="0,0,0,10">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button x:Name="BtnSelectAll" MinHeight="32" Margin="0,0,6,0" Click="BtnSelectAll_Click" Content="Select all" />
+                                <Button ctl:Tour.Key="Str_Tour_EmptyFolders_Select" ctl:Tour.Order="4" x:Name="BtnSelectAll" MinHeight="32" Margin="0,0,6,0" Click="BtnSelectAll_Click" Content="Select all" />
                                 <Button x:Name="BtnSelectNone" MinHeight="32" Click="BtnSelectNone_Click" Content="Select none" />
                             </StackPanel>
                             <ContentControl Content="Found" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FolderRemoveOutline}" />
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
-                                <ListBox x:Name="FoundList" Padding="8" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource FoundTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" />
+                                <ListBox ctl:Tour.Key="Str_Tour_EmptyFolders_Found" ctl:Tour.Order="3" x:Name="FoundList" Padding="8" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource FoundTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" />
                                 <StackPanel x:Name="ListEmpty" MaxWidth="340" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FolderRemoveOutline}" />
                                     <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Add a folder to check" />
