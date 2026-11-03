@@ -887,3 +887,7 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 
 ## Related views live in one tool (learned on Drive Health)
 - When a second view only looks at the same thing from another angle (Drive Health's SMART history), make it a `Drives | History` toggle in the page's run-bar card (`ModeToggleButtonStyle` radios) and host it as a panel in the same row, instead of adding a separate tool. The page's Refresh feeds both views, so nothing is read twice.
+
+## Level pictures (learned on Battery Health, Mic Test and Audio Output Test)
+- Show a level as a picture of the thing measured, filled from the bottom (or along a bar): the battery-shaped `ProgressBar` of Battery Health (green / amber / red by health) and `LevelGlyph` for sound (stand mic, handheld, headset, earbuds, headphones with separate left and right fill). Let the user pick the look that matches their gear in a `ModeToggleButtonStyle` card; it only changes the drawing, never the measurement.
+- One item fills the page; several items get small cards that stack and scroll (Battery Health switches between a full and a compact template).

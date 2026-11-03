@@ -48,7 +48,18 @@ namespace Smart_Tools.WPF.Views
 
             PanelNone.Visibility = reading.Batteries.Count == 0 && reading.Problem == null ? Visibility.Visible : Visibility.Collapsed;
             TxtNote.Visibility = reading.Batteries.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            BatteryList.ItemsSource = reading.Batteries.Select((b, i) => ToCard(b, reading.Batteries.Count > 1 ? i + 1 : 0)).ToList();
+            // One battery fills the page; several get small cards that stack (and scroll if they do not fit).
+            bool several = reading.Batteries.Count > 1;
+            BatteryList.ItemTemplate = (DataTemplate)FindResource(several ? "BatteryCompactTemplate" : "BatteryTemplate");
+            BatteryList.ItemsPanel = (ItemsPanelTemplate)FindResource(several ? "BatteryStackPanel" : "BatteryFillPanel");
+            BatteryList.MinHeight = several ? 0 : BatteryScroll.ViewportHeight;
+            BatteryList.ItemsSource = reading.Batteries.Select((b, i) => ToCard(b, several ? i + 1 : 0)).ToList();
+        }
+
+        /// <summary>A single battery stretches to the visible height; when there are several the cards keep their own size.</summary>
+        private void BatteryScroll_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (BatteryList.ItemTemplate == FindResource("BatteryTemplate")) BatteryList.MinHeight = BatteryScroll.ViewportHeight;
         }
 
         private static BatteryCard ToCard(BatteryInfo b, int number)

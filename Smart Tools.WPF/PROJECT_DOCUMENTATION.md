@@ -477,6 +477,7 @@ Used by Organize Files, Copy Queue, Folder Tree Exporter, Loudness Meter and oth
 | `InputFolderCard`, `OutputFolderCard` | `Shared/Views/Extentions` | Choosing files/folders in and where results go (with free-space and writability checks) |
 | `EmptyStateCard`, `ElevationBannerCard` | `Shared/Views/Extentions` | Dotted empty state; "needs administrator" banner |
 | `TrendChart`, `ChannelChart` | `Controls` | Line chart over time (Drive Health History view); Wi-Fi channel graph |
+| `LevelGlyph` | `Controls` | A device picture (microphone, headset, headphones, earbuds) that fills from the bottom with a sound level, like the battery gauge fills with health; Left/Right sides for stereo (Mic Test, Audio Output Test) |
 | Theme styles | `Themes/Controls.xaml` | `ModeToggleButtonStyle`, `AccentPrimaryButtonStyle`, `CardStyle`, `SidebarGroupCardStyle`, DataGrid, collapsible group (`CollapsibleGroupItemStyle`), ... |
 | `FfmpegLocator` | `Shared/Controllers` | Finds the bundled FFmpeg/ffprobe |
 | `OuiLookupManager` | `Shared/Controllers` | MAC address -> manufacturer (`Data/oui.txt`) |

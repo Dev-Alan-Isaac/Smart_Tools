@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
     Loaded="Root_Loaded"
@@ -128,8 +129,25 @@
                                 </StackPanel>
                             </Border>
 
+                            <!--  ============ LOOK ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_MicTest_Look" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="MICROPHONE TYPE"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.MicrophoneVariant}" />
+                                    <UniformGrid Margin="0,8,0,0" Columns="2">
+                                        <RadioButton x:Name="LookStand" Margin="0,0,2,4" Checked="Look_Checked" Content="Stand" GroupName="MtLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="MicrophoneVariant" ToolTip="A desk or stand microphone" />
+                                        <RadioButton x:Name="LookHandheld" Margin="2,0,0,4" Checked="Look_Checked" Content="Handheld" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Microphone" ToolTip="A handheld or studio microphone" />
+                                        <RadioButton x:Name="LookHeadset" Margin="0,0,2,0" Checked="Look_Checked" Content="Headset" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="A headset with a boom microphone" />
+                                        <RadioButton x:Name="LookEarbuds" Margin="2,0,0,0" Checked="Look_Checked" Content="Earbuds" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="Earphones with an in-line or built-in microphone" />
+                                    </UniformGrid>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="Only changes the picture that fills with your voice. It does not change how the microphone is measured." />
+                                </StackPanel>
+                            </Border>
+
                             <!--  ============ HEAR ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_MicTest_Listen" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_MicTest_Listen" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_MicTest_Listen}"
@@ -186,7 +204,7 @@
                                 Foreground="{DynamicResource TextPrimary}"
                                 Text="-∞ dB" />
                         </StackPanel>
-                        <Button ctl:Tour.Key="Str_Tour_MicTest_Start" ctl:Tour.Order="3"
+                        <Button ctl:Tour.Key="Str_Tour_MicTest_Start" ctl:Tour.Order="4"
                             x:Name="BtnStart"
                             Grid.Column="1"
                             MinWidth="140"
@@ -196,7 +214,7 @@
                     </Grid>
 
                     <!--  Level meter with a peak marker; green, then amber, red near clipping  -->
-                    <Border ctl:Tour.Key="Str_Tour_MicTest_Meter" ctl:Tour.Order="4"
+                    <Border ctl:Tour.Key="Str_Tour_MicTest_Meter" ctl:Tour.Order="5"
                         x:Name="MeterTrack"
                         Grid.Row="1"
                         Height="16"
@@ -259,7 +277,7 @@
                         <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8">
                             <StackPanel>
                                 <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Peak}" />
-                                <TextBlock ctl:Tour.Key="Str_Tour_MicTest_Readings" ctl:Tour.Order="5" x:Name="TxtPeak" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                                <TextBlock ctl:Tour.Key="Str_Tour_MicTest_Readings" ctl:Tour.Order="6" x:Name="TxtPeak" FontFamily="Consolas" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
                             </StackPanel>
                         </Border>
                         <Border Margin="0,0,8,0" Padding="12,10" Background="{DynamicResource RowBg}" CornerRadius="8" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
@@ -282,16 +300,28 @@
                         </Border>
                     </UniformGrid>
 
-                    <Button ctl:Tour.Key="Str_Tour_MicTest_Reset" ctl:Tour.Order="6"
-                        x:Name="BtnResetPeak"
-                        Grid.Row="4"
-                        Margin="0,16,0,0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Click="BtnResetPeak_Click"
-                        Content="{DynamicResource Str_MicTest_ResetPeak}"
-                        IsEnabled="False"
-                        Style="{StaticResource NeutralIconButtonStyle}" />
+                    <!--  The microphone fills with your voice: green, amber near the top, red at clipping; the line marks the loudest point  -->
+                    <Grid Grid.Row="4" Margin="0,18,0,0">
+                        <controls:LevelGlyph
+                            x:Name="MicGlyph"
+                            ctl:Tour.Key="Str_Tour_MicTest_Picture"
+                            ctl:Tour.Order="5"
+                            MinHeight="120"
+                            Margin="0,0,0,4"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Kind="MicrophoneVariant" />
+                        <Button
+                            ctl:Tour.Key="Str_Tour_MicTest_Reset"
+                            ctl:Tour.Order="7"
+                            x:Name="BtnResetPeak"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Click="BtnResetPeak_Click"
+                            Content="{DynamicResource Str_MicTest_ResetPeak}"
+                            IsEnabled="False"
+                            Style="{StaticResource NeutralIconButtonStyle}" />
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

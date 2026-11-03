@@ -24,5 +24,7 @@ namespace Smart_Tools.WPF.Models
     {
         public string DeviceName { get; set; } = "";
         public bool HearYourself { get; set; }
+        /// <summary>Which picture fills with the voice: Stand, Handheld, Headset or Earbuds.</summary>
+        public string Look { get; set; } = "Stand";
     }
 }

@@ -115,6 +115,10 @@ namespace Smart_Tools.WPF.Views
             RadioTestTone.IsChecked = _settings.Kind == AudioTestKind.Tone;
             RadioTestSweep.IsChecked = _settings.Kind == AudioTestKind.Sweep;
             RadioTestNoise.IsChecked = _settings.Kind == AudioTestKind.Noise;
+            LookSpeakers.IsChecked = _settings.Look is not ("Headphones" or "Earbuds" or "Headset");
+            LookHeadphones.IsChecked = _settings.Look == "Headphones";
+            LookEarphones.IsChecked = _settings.Look == "Earbuds";
+            LookHeadset.IsChecked = _settings.Look == "Headset";
 
             SliderLevel.Value = _settings.LevelDb;
             SliderFreq.Value = AudioOutputTestManager.FrequencyToSlider(_settings.Frequency);
@@ -169,6 +173,7 @@ namespace Smart_Tools.WPF.Views
                 _settings.Phase = c.Phase;
                 _settings.Noise = c.Noise;
                 _settings.SidebarCollapsed = _optionsCollapsed;
+                _settings.Look = CurrentLook;
                 AudioOutputTestManager.SaveSettings(_settings);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -308,6 +313,36 @@ namespace Smart_Tools.WPF.Views
             BuildTiles(device.Channels, device.SpeakerMask);
         }
 
+        // =================================================================
+        //  What you listen with: the picture that fills with each side's sound
+        // =================================================================
+
+        private string CurrentLook => LookHeadphones.IsChecked == true ? "Headphones" : LookEarphones.IsChecked == true ? "Earbuds" : LookHeadset.IsChecked == true ? "Headset" : "Speakers";
+
+        private void Look_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!_viewConstructed || _settingControls) return;
+            ApplyLook();
+            SaveSettings();
+        }
+
+        /// <summary>
+        /// Shows the picture for headphones, earphones or a headset when the device has two channels; speakers (and
+        /// anything with more channels) keep the per-channel tiles, which become shorter to make room for the picture.
+        /// </summary>
+        private void ApplyLook()
+        {
+            string look = CurrentLook;
+            bool picture = look != "Speakers" && _device?.Channels == 2;
+            HeroStage.Visibility = picture ? Visibility.Visible : Visibility.Collapsed;
+            if (Enum.TryParse(look == "Speakers" ? "Headphones" : look, out PackIconKind kind))
+                HeroLeft.Kind = HeroRight.Kind = kind;
+            HeroLeft.SetFillResource("AccentColor");
+            HeroRight.SetFillResource("AccentColor");
+            foreach (var tile in _tiles) tile.Frame.MinHeight = picture ? 96 : 170;
+            if (!picture) { HeroLeft.Level = 0; HeroRight.Level = 0; }
+        }
+
         private void BuildTiles(int channels, uint speakerMask)
         {
             ChannelPanel.Children.Clear();
@@ -358,6 +393,7 @@ namespace Smart_Tools.WPF.Views
                 ChannelPanel.Children.Add(frame);
             }
             RefreshTileSelection();
+            ApplyLook();
         }
 
         private void Tile_Click(object sender, MouseButtonEventArgs e)
@@ -434,6 +470,8 @@ namespace Smart_Tools.WPF.Views
             _session?.Dispose();
             _session = null;
             foreach (var t in _tiles) t.Meter.Width = 0;
+            HeroLeft.Level = 0;
+            HeroRight.Level = 0;
         }
 
         private void UpdateMeters()
@@ -448,6 +486,9 @@ namespace Smart_Tools.WPF.Views
                 float peak = gen.TakePeak(t.Index);
                 double width = Math.Clamp(Math.Pow(peak, 0.5) * Math.Max(0, t.MeterTrack.ActualWidth), 0, t.MeterTrack.ActualWidth);
                 t.Meter.Width = width;
+                double level = Math.Clamp(Math.Pow(peak, 0.5), 0, 1);
+                if (t.Index == 0) HeroLeft.Level = level;
+                else if (t.Index == 1) HeroRight.Level = level;
 
                 bool highlight = channelsTest && t.Index == active;
                 if (highlight) t.Frame.SetResourceReference(Border.BackgroundProperty, "AccentFill");
