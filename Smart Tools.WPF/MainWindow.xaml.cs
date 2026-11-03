@@ -200,6 +200,7 @@ namespace Smart_Tools.WPF
             // Audio
             Add<AudioReplayControl>("audio-replay", v => v.ReleaseAudio());
             Add<MicRecorderView>("audio-recorder", v => v.CancelActiveRun());   // finishes and saves a recording in progress
+            Add<LoudnessView>("loudness-meter", v => v.CancelActiveRun());   // stops measuring/writing; a half-written copy is removed, originals are never touched
             Add<AudioTrimmerView>("audio-trimmer", v => v.CancelActiveRun());   // stops the preview and an export, keeps the setup
             Add<SpectogramView>("spectrogram", v => v.CancelActiveRun());
             Add<VoiceChangerView>("voice-changer", v => v.CancelActiveRun());   // stops render, live mic, playback

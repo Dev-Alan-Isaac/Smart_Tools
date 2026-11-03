@@ -66,6 +66,8 @@ namespace Smart_Tools.WPF.Controllers
             Define(new ShortcutAction("similar.prevGroup", "Str_Shortcut_GroupsPrevGroup", "Go to the previous group", ShortcutScope.InApp, "Ctrl+Up", "find-similar"));
             Define(new ShortcutAction("similar.deleteMarked", "Str_Shortcut_GroupsDeleteMarked", "Delete the marked files", ShortcutScope.InApp, "Ctrl+Delete", "find-similar"));
 
+            Define(new ShortcutAction("loudness.measure", "Str_Shortcut_LoudnessMeasure", "Measure or stop", ShortcutScope.InApp, "F5", "loudness-meter"));
+
             Revalidate();
         }
 

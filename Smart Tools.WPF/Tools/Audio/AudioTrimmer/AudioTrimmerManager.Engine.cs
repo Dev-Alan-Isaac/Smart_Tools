@@ -342,7 +342,7 @@ namespace Smart_Tools.WPF.Controllers
         /// output (volumedetect prints there). Reports the fraction done from out_time against
         /// <paramref name="totalSeconds"/>. Cancel kills the whole process tree.
         /// </summary>
-        private static async Task<string> RunFfmpegAsync(List<string> args, double totalSeconds, Action<double>? onFraction, CancellationToken token)
+        internal static async Task<string> RunFfmpegAsync(List<string> args, double totalSeconds, Action<double>? onFraction, CancellationToken token)
         {
             string exe = ConverterManager.FfmpegExe ?? throw new InvalidOperationException($"ffmpeg wasn't found in {FfmpegFolder}.");
             var psi = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };

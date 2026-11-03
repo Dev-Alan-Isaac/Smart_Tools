@@ -89,6 +89,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "voice-changer", Name = "Voice Changer", Icon = "Tune", CategoryId = "audio", Description = "Change how a voice sounds", Keywords = "pitch effects robot voice" },
             new ToolInfo { Id = "speech-to-text", Name = "Speech to Text", Icon = "Subtitles", CategoryId = "audio", Description = "Turn speech in audio or video into text and subtitles, offline", Keywords = "transcribe transcription subtitles captions srt vtt whisper dictation speech recognition voz transcribir subtitulos texto" },
             new ToolInfo { Id = "text-to-speech", Name = "Text to Speech", Icon = "Speaker", CategoryId = "audio", Description = "Read text aloud or save it as audio", Keywords = "tts speak read aloud narrator" },
+            new ToolInfo { Id = "loudness-meter", Name = "Loudness Meter & Normalizer", Icon = "Speedometer", CategoryId = "audio", Description = "Measure LUFS and peak, and make normalized copies for YouTube, Spotify or podcasts", Keywords = "loudness lufs normalize volume level peak ebu r128 replaygain podcast youtube spotify nivelar volumen sonoridad" },
             new ToolInfo { Id = "audio-trimmer", Name = "Audio Trimmer & Joiner", Icon = "ContentCut", CategoryId = "audio", Description = "Cut, join, fade and normalize audio", Keywords = "audio trim cut join merge fade normalize waveform mp3 wav flac split recortar unir" },
 
             // Music
