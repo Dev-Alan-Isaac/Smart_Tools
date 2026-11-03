@@ -334,7 +334,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!--  ================= LEFT: NOTES =================  -->
-                <Border ctl:Tour.Key="Str_Tour_Notes_List" ctl:Tour.Order="1" Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Border ctl:Tour.Key="Str_Tour_Notes_List" ctl:Tour.Order="3" Grid.Column="0" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -371,7 +371,7 @@
                             <Button
                                 x:Name="BtnNewNote"
                                 ctl:Tour.Key="Str_Tour_Notes_New"
-                                ctl:Tour.Order="2"
+                                ctl:Tour.Order="1"
                                 Grid.Column="1"
                                 VerticalAlignment="Center"
                                 Click="BtnNewNote_Click"
@@ -404,7 +404,7 @@
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource AccentColor}"
                                     Kind="Magnify" />
-                                <TextBox
+                                <TextBox ctl:Tour.Key="Str_Tour_Notes_Search" ctl:Tour.Order="2"
                                     x:Name="TxtSearch"
                                     Grid.Column="1"
                                     PreviewKeyDown="TxtSearch_PreviewKeyDown"
@@ -495,7 +495,7 @@
                 <Border
                     x:Name="EditorPanel"
                     ctl:Tour.Key="Str_Tour_Notes_Editor"
-                    ctl:Tour.Order="3"
+                    ctl:Tour.Order="4"
                     Grid.Column="2"
                     Style="{StaticResource CardStyle}">
                     <Grid>
@@ -541,7 +541,7 @@
                                     Style="{StaticResource BareTextBox}"
                                     Tag="Title"
                                     TextChanged="TxtTitle_TextChanged" />
-                                <ToggleButton
+                                <ToggleButton ctl:Tour.Key="Str_Tour_Notes_Pin" ctl:Tour.Order="5"
                                     x:Name="BtnPin"
                                     Grid.Column="2"
                                     Margin="8,0,0,0"
@@ -554,7 +554,7 @@
                                         Height="16"
                                         Kind="PinOutline" />
                                 </ToggleButton>
-                                <controls:ExportButton
+                                <controls:ExportButton ctl:Tour.Key="Str_Tour_Notes_Export" ctl:Tour.Order="6"
                                     x:Name="BtnExport"
                                     Grid.Column="3"
                                     Margin="6,0,0,0"
@@ -662,7 +662,7 @@
                                     VerticalAlignment="Center"
                                     Foreground="{DynamicResource StatusSuccessFg}"
                                     Kind="CheckCircleOutline" />
-                                <TextBlock
+                                <TextBlock ctl:Tour.Key="Str_Tour_Notes_Save" ctl:Tour.Order="7"
                                     x:Name="TxtSaveState"
                                     VerticalAlignment="Center"
                                     FontSize="11.5"

@@ -751,7 +751,7 @@
                     </Button>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <WrapPanel x:Name="SummaryPanel" Visibility="Collapsed">
+                        <WrapPanel ctl:Tour.Key="Str_Tour_DriveHealth_Summary" ctl:Tour.Order="2" x:Name="SummaryPanel" Visibility="Collapsed">
                             <Border
                                 Margin="0,0,6,4"
                                 Background="{DynamicResource StatusInfoBg}"
@@ -848,7 +848,7 @@
                     </StackPanel>
 
                     <!--  Elevation state  -->
-                    <Border
+                    <Border ctl:Tour.Key="Str_Tour_DriveHealth_Admin" ctl:Tour.Order="3"
                         x:Name="AdminPill"
                         Grid.Column="2"
                         Margin="16,0,0,0"
@@ -972,7 +972,7 @@
                 <ScrollViewer
                     x:Name="DriveScroller"
                     ctl:Tour.Key="Str_Tour_DriveHealth_Drives"
-                    ctl:Tour.Order="2"
+                    ctl:Tour.Order="4"
                     HorizontalScrollBarVisibility="Disabled"
                     SizeChanged="DriveScroller_SizeChanged"
                     VerticalScrollBarVisibility="Auto">

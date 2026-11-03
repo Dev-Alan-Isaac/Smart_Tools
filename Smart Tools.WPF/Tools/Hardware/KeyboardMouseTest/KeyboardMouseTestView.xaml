@@ -393,7 +393,7 @@
                     <Grid Grid.Row="2">
 
                         <!--  ================= KEYBOARD =================  -->
-                        <ScrollViewer
+                        <ScrollViewer ctl:Tour.Key="Str_Tour_KbMouse_Keyboard" ctl:Tour.Order="3"
                             x:Name="PanelKeyboard"
                             HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto">
@@ -545,7 +545,7 @@
                         </ScrollViewer>
 
                         <!--  ================= MOUSE =================  -->
-                        <ScrollViewer
+                        <ScrollViewer ctl:Tour.Key="Str_Tour_KbMouse_Mouse" ctl:Tour.Order="4"
                             x:Name="PanelMouse"
                             HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto"
@@ -831,7 +831,7 @@
                         </ScrollViewer>
 
                         <!--  ================= REACTION =================  -->
-                        <ScrollViewer
+                        <ScrollViewer ctl:Tour.Key="Str_Tour_KbMouse_Reaction" ctl:Tour.Order="5"
                             x:Name="PanelReaction"
                             HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto"
