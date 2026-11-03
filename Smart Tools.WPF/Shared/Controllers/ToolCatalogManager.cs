@@ -28,6 +28,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolCategoryInfo { Id = "data-quality", Keywords = "datos calidad verificar", Title = "Data Quality", Icon = "ShieldCheckOutline", AccentHex = "#3B82F6", Blurb = "Check, de-duplicate and compare" },
             new ToolCategoryInfo { Id = "files", Keywords = "archivos carpetas", Title = "Files", Icon = "FolderOutline", AccentHex = "#F59E0B", Blurb = "Rename, sort and search" },
             new ToolCategoryInfo { Id = "convert", Keywords = "convertir formato", Title = "Convert & PDF", Icon = "SwapHorizontal", AccentHex = "#0EA5E9", Blurb = "Change formats, work with PDFs" },
+            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
             new ToolCategoryInfo { Id = "video", Keywords = "videos pelicula", Title = "Video", Icon = "MovieOpenOutline", AccentHex = "#EF4444", Blurb = "Watch and edit" },
             new ToolCategoryInfo { Id = "audio", Keywords = "sonido sound", Title = "Audio", Icon = "VolumeHigh", AccentHex = "#8B5CF6", Blurb = "Play, record and transform sound" },
             new ToolCategoryInfo { Id = "music", Keywords = "musica instrumento", Title = "Music", Icon = "MusicNote", AccentHex = "#EC4899", Blurb = "Tune and play instruments" },
@@ -76,9 +77,10 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "pdf-extras", Name = "PDF Extras", Icon = "FileCogOutline", CategoryId = "convert", Description = "Rotate or remove pages, add page numbers, edit properties, and add or remove a password", Keywords = "pdf rotate pages remove delete extract page numbers password protect unlock encrypt metadata author title permissions girar paginas contraseña proteger numeros" },
             new ToolInfo { Id = "pdf-toolkit", Name = "PDF Toolkit", Icon = "FileSync", CategoryId = "convert", Description = "Merge, split and edit PDFs", Keywords = "pdf merge split rotate compress pages" },
 
+            // Media
+            new ToolInfo { Id = "media-viewer", Name = "Media Viewer", Icon = "PlayBoxMultipleOutline", CategoryId = "media", Description = "Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages", Keywords = "media viewer player movies tv photos pictures images video audio music slideshow gallery widget mini player floating visor reproductor multimedia peliculas fotos musica minirreproductor flotante video replay image viewer audio replay player watch mp4 mkv movie listen mp3 wav flac visualizer vlc zoom reproductor de video visor de imagenes reproductor de audio" },
+
             // Video
-            new ToolInfo { Id = "video-replay", Name = "Video Replay", Icon = "MovieOpen", CategoryId = "video", Description = "Play videos and playlists", Keywords = "player watch mp4 mkv movie" },
-            new ToolInfo { Id = "media-viewer", Name = "Media Viewer", Icon = "PlayBoxMultipleOutline", CategoryId = "video", Description = "View pictures and play videos and music in one place", Keywords = "media viewer player movies tv photos pictures images video audio music slideshow gallery widget mini player floating visor reproductor multimedia peliculas fotos musica minirreproductor flotante" },
             new ToolInfo { Id = "video-editor", Name = "Video Stitcher", Icon = "FilmstripBoxMultiple", CategoryId = "video", Description = "Join video clips into one, with optional trims and fades", Keywords = "stitch join merge combine concat clips edit cut trim fade unir juntar" },
             new ToolInfo { Id = "video-to-audio", Name = "Video to Audio", Title = "Video to Audio Extractor", Icon = "FileMusicOutline", CategoryId = "video", Description = "Pull the audio track out of videos, in bulk", Keywords = "extract audio video mp3 m4a wav flac sound track rip" },
             new ToolInfo { Id = "video-compressor", Name = "Video Compressor", Title = "Video Compressor & Trimmer", Icon = "VideoMinusOutline", CategoryId = "video", Description = "Make videos smaller, or cut out the part you want", Keywords = "compress compressor reduce shrink smaller size trim cut clip speed resize 720p 1080p mp4 comprimir reducir recortar cortar peso" },
@@ -86,7 +88,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "screen-recorder", Name = "Screen Recorder", Icon = "RecordCircleOutline", CategoryId = "video", Description = "Record a screen, a window, or an area to an MP4, with your microphone if you like", Keywords = "screen recorder record capture video desktop window area mp4 microphone grabar pantalla captura" },
 
             // Audio
-            new ToolInfo { Id = "audio-replay", Name = "Audio Replay", Icon = "PlayCircleOutline", CategoryId = "audio", Description = "Play audio files", Keywords = "player listen mp3 wav flac" },
             new ToolInfo { Id = "audio-recorder", Name = "Audio Recorder", Icon = "Microphone", CategoryId = "audio", Description = "Record from your microphone", Keywords = "mic record voice capture" },
             new ToolInfo { Id = "spectrogram", Name = "Spectrogram", Title = "Spectrogram Generator", Icon = "Waveform", CategoryId = "audio", Description = "See the frequencies in a sound", Keywords = "frequency analysis waveform fft" },
             new ToolInfo { Id = "voice-changer", Name = "Voice Changer", Icon = "Tune", CategoryId = "audio", Description = "Change how a voice sounds", Keywords = "pitch effects robot voice" },
@@ -101,7 +102,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "midi-instruments", Name = "MIDI Instruments", Icon = "Midi", CategoryId = "music", Description = "Play 128 instruments and drum kits, record to .mid", Keywords = "midi instruments drums drum kit record mid general gm keyboard orchestra violin trumpet sax instrumentos bateria teclado musica grabar" },
 
             // Images
-            new ToolInfo { Id = "image-viewer", Name = "Image Viewer", Icon = "ImageOutline", CategoryId = "images", Description = "View images", Keywords = "photos pictures gallery slideshow" },
             new ToolInfo { Id = "image-editor", Name = "Image Editor", Icon = "ImageEditOutline", CategoryId = "images", Description = "Crop, resize and adjust images", Keywords = "edit crop resize rotate photo" },
             new ToolInfo { Id = "bulk-image-resizer", Name = "Bulk Image Resizer", Icon = "ImageMultipleOutline", CategoryId = "images", Description = "Shrink and recompress many pictures at once, with a target file size", Keywords = "resize compress shrink batch bulk images photos jpg png webp quality size redimensionar comprimir imagenes" },
             new ToolInfo { Id = "background-remover", Name = "Background Remover", Icon = "ImageMinusOutline", CategoryId = "images", Description = "Cut the background out of a picture", Keywords = "remove background transparent png cutout" },

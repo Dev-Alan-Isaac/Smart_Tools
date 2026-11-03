@@ -13,56 +13,112 @@
     <!--  Backend: Controllers/BatteryHealthManager.cs (WMI reading, wear level, Windows battery report). UI only here.  -->
 
     <UserControl.Resources>
-        <!--  One battery: a big health card and a details card side by side  -->
+        <!--
+            A progress bar drawn as a battery: outline, terminal nub on the right, and a fill as long as the health.
+            It stretches to whatever space it is given. The fill takes the bar's Foreground, which the card sets from
+            the health level (green, amber, red).
+        -->
+        <Style x:Key="BatteryGaugeStyle" TargetType="ProgressBar">
+            <Setter Property="Minimum" Value="0" />
+            <Setter Property="Maximum" Value="100" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="18" />
+                            </Grid.ColumnDefinitions>
+                            <Border BorderBrush="{DynamicResource TextSecondary}" BorderThickness="4" CornerRadius="22" Background="{DynamicResource RowBg}" Padding="7">
+                                <Border x:Name="PART_Track" CornerRadius="15">
+                                    <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="15" />
+                                </Border>
+                            </Border>
+                            <Grid Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="2*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Border Grid.Row="1" Margin="3,0,0,0" Background="{DynamicResource TextSecondary}" CornerRadius="0,9,9,0" />
+                            </Grid>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  One battery fills its share of the page: the battery bar with its percentage, then the numbers as tiles that share the rest  -->
         <DataTemplate x:Key="BatteryTemplate">
-            <Grid MinHeight="220" Margin="0,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="280" />
-                    <ColumnDefinition Width="14" />
-                    <ColumnDefinition Width="1.4*" MinWidth="300" />
-                </Grid.ColumnDefinitions>
+            <Border MinHeight="330" Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="2*" MinHeight="120" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="1.5*" MinHeight="120" />
+                    </Grid.RowDefinitions>
 
-                <Border Style="{StaticResource CardStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
-                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                            <Viewbox MaxHeight="120" HorizontalAlignment="Left" Stretch="Uniform">
-                                <TextBlock FontSize="80" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{Binding HealthText}" />
-                            </Viewbox>
-                            <TextBlock FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="BATTERY HEALTH" />
-                        </StackPanel>
-                        <StackPanel Grid.Row="2">
-                            <ProgressBar Height="10" Maximum="100" Value="{Binding HealthValue, Mode=OneWay}" />
-                            <TextBlock Margin="0,10,0,0" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" Text="{Binding Verdict}" TextWrapping="Wrap" />
-                        </StackPanel>
+                    <TextBlock Margin="0,0,0,12" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="*" MinWidth="170" />
+                        </Grid.ColumnDefinitions>
+
+                        <ProgressBar x:Name="Gauge" Value="{Binding HealthValue, Mode=OneWay}" Style="{StaticResource BatteryGaugeStyle}" ToolTip="{Binding Verdict}" />
+
+                        <Viewbox Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
+                            <StackPanel>
+                                <TextBlock FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{Binding HealthText}" />
+                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="BATTERY HEALTH" />
+                            </StackPanel>
+                        </Viewbox>
                     </Grid>
-                </Border>
 
-                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                    <StackPanel>
-                        <ContentControl Margin="0,0,0,8" Content="Details" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
-                        <ItemsControl ItemsSource="{Binding Rows}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="200" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock FontSize="12.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" />
-                                        <TextBlock Grid.Column="1" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Value}" TextWrapping="Wrap" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-            </Grid>
+                    <Border x:Name="VerdictPill" Grid.Row="2" Margin="0,14,0,14" Padding="12,7" HorizontalAlignment="Left" Background="{DynamicResource RowBg}" CornerRadius="9">
+                        <TextBlock x:Name="VerdictText" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="{Binding Verdict}" TextWrapping="Wrap" />
+                    </Border>
+
+                    <ItemsControl Grid.Row="3" ItemsSource="{Binding Rows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border MinHeight="64" Margin="0,0,10,10" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" />
+                                        <TextBlock Margin="0,3,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Value}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Good">
+                    <Setter TargetName="Gauge" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                    <Setter TargetName="VerdictPill" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                    <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Fair">
+                    <Setter TargetName="Gauge" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                    <Setter TargetName="VerdictPill" Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                    <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Poor">
+                    <Setter TargetName="Gauge" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                    <Setter TargetName="VerdictPill" Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                    <Setter TargetName="VerdictText" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
     </UserControl.Resources>
 
@@ -116,14 +172,24 @@
                 </Border>
 
                 <Grid Grid.Row="1">
-                    <!--  One battery fills the height; several share it.  -->
-                    <ItemsControl ctl:Tour.Key="Str_Tour_BatteryHealth_Details" ctl:Tour.Order="1" x:Name="BatteryList" ItemTemplate="{StaticResource BatteryTemplate}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Columns="1" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                    </ItemsControl>
+                    <!--
+                        Each battery is its own card. One battery fills the whole page; several share it equally.
+                        If the window is too short for them, the page scrolls instead of squeezing them.
+                    -->
+                    <ScrollViewer x:Name="BatteryScroll" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl
+                            ctl:Tour.Key="Str_Tour_BatteryHealth_Details"
+                            ctl:Tour.Order="1"
+                            x:Name="BatteryList"
+                            MinHeight="{Binding ViewportHeight, ElementName=BatteryScroll}"
+                            ItemTemplate="{StaticResource BatteryTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="1" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
                     <Border x:Name="PanelNone" Style="{StaticResource CardStyle}" Visibility="Collapsed">
                         <StackPanel MaxWidth="360" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.BatteryOff}" />

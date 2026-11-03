@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 113 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 110 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **113 tools** in 19 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -55,13 +55,18 @@ Smart Tools has **113 tools** in 19 sidebar categories. Every tool opens inside 
 | **PDF Toolkit** | `pdf-toolkit` | Merge, split and edit PDFs |
 | **CSV / JSON Converter** | `csv-json` | Turn CSV into JSON and JSON back into CSV, with quotes and separators handled |
 
+### Media
+*View and play pictures, videos and music*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Media Viewer** | `media-viewer` | Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages |
+
 ### Video
 *Watch and edit*
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Video Replay** | `video-replay` | Play videos and playlists |
-| **Media Viewer** | `media-viewer` | View pictures and play videos and music in one place |
 | **Video Stitcher** | `video-editor` | Join video clips into one, with optional trims and fades |
 | **Video to Audio** | `video-to-audio` | Pull the audio track out of videos, in bulk |
 | **Video Compressor** | `video-compressor` | Make videos smaller, or cut out the part you want |
@@ -74,7 +79,6 @@ Smart Tools has **113 tools** in 19 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Audio Replay** | `audio-replay` | Play audio files |
 | **Audio Recorder** | `audio-recorder` | Record from your microphone |
 | **Spectrogram** | `spectrogram` | See the frequencies in a sound |
 | **Voice Changer** | `voice-changer` | Change how a voice sounds |
@@ -98,7 +102,6 @@ Smart Tools has **113 tools** in 19 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Image Viewer** | `image-viewer` | View images |
 | **Image Editor** | `image-editor` | Crop, resize and adjust images |
 | **Bulk Image Resizer** | `bulk-image-resizer` | Shrink and recompress many pictures at once, with a target file size |
 | **Background Remover** | `background-remover` | Cut the background out of a picture |
@@ -267,6 +270,8 @@ Smart Tools has **113 tools** in 19 sidebar categories. Every tool opens inside 
 - **Date & Time Toolkit** - Five modes: Unix timestamps and dates, time zones (clock cards that fill the page), date difference / add-subtract (business days skip your non-working event days), an ISO 8601 / RFC 3339 converter and validator, and calendar week / day-of-year lookup. Every mode ends with a "Good to know" card explaining how the thing works
 - **Mock Data Generator** - Generate fake data for testing (Generators category): grouped type list, checksum-valid IBAN / credit card (Luhn) / ISBN-13, and your own saved lists (Settings > Mock data)
 
+- **Media Viewer** (`media-viewer`, `Tools/Media/MediaHub`) - one tool with four pages: **Mixed** (`MediaViewerView`: pictures, videos and music in one queue, slideshow, mini-player widget), **Photos** (`ImageViewerControl`: zoom, rotate, thumbnails, slideshow, save as), **Videos** (`VideoReplayView`: LibVLC player for almost any format, playlists, resume position) and **Music** (`AudioReplayControl`: NAudio player with the level visualizer, audio tracks, speed). It replaced the separate Image Viewer, Video Replay and Audio Replay tools; each page is the complete original tool. Only the page shown is in the visual tree (the others release their playback when you switch), and files dropped on the wrong page jump to the page that fits their type (`MediaHubView`, `AddPaths` on each page).
+
 Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` are placeholders for planned tools and show a shared "coming soon" page.
 
 ---
@@ -426,7 +431,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 113 tools have one. The tour only covers the page that is open.
+All 110 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -522,15 +527,6 @@ If the app is already running, stop it (`Get-Process -Name SmartTools | Stop-Pro
 | `SmartToolsWPF.Setup/` | Installer for the app (part of `Smart_Tools.slnx`). |
 | `Smart_Tools.slnx` | Solution file. |
 | `README.md` | Short overview. This file has the details. |
-
----|---|
-| `Smart Tools.WPF/` | This app (active). |
-| `Smart Tools/` | Legacy WinForms version. |
-| `Video Replay/` | Standalone WinForms video player. |
-| `SmartToolsWPF.Setup/` | Installer for this app (in `Smart Finder.slnx`). |
-| `SmartTools.Setup/`, `VideoReplay.Setup/` | Installers for the legacy and Video Replay apps. |
-
-Guidance for AI-assisted development lives in the repo-root `CLAUDE.md` and `Smart Tools.WPF/CLAUDE.md`.
 
 ---
 
@@ -632,4 +628,6 @@ For issues, suggestions, or questions:
 - **Pixel Art Editor** (`pixel-art`): `Controllers/PixelArtManager.cs` (drawing, flood fill, line / rectangle / ellipse, symmetry, undo history of pixel diffs and snapshots, frames) + `.Export.cs` (colours, palettes, scaling and sheet export, settings in `pixel_art.json`) + `.Render.cs` (WPF pictures, image import), `Controllers/PngWriter.cs`, `Models/PixelArtModel.cs`, `Views/PixelArtView`, `Controls/PixelCanvasControl`. Colours are packed ARGB; fully transparent is always 0.
 - **Sprite Sheet Packer** (`sprite-packer`): `Controllers/SpritePackerManager.cs` (MaxRects packing into the smallest sheet or several sheets, trim, compose, JSON / CSS / XML coordinates, safe sets of files, slicing, settings in `sprite_packer.json`) + `.Files.cs` (finding images, Files card rows, ordering) + `.Render.cs` (WPF decoding, thumbnails, pictures), `Controllers/PngWriter.cs`, `Models/SpritePackerModel.cs`, `Views/SpritePackerView`, the shared `OutputFolderCard`.
 - **Batch Watermarker** (`watermark`): `Controllers/WatermarkManager.cs` (layout of one or tiled marks, output names, presets, settings, app-owned logo copies) + `.Render.cs` (the mark as a transparent picture) + `.Engines.cs` (ImageMagick, PDFsharp and ffmpeg engines and the batch) + `.Files.cs` (finding files, Files card rows) + `.Preview.cs` (picture, video frame, Windows PDF page), `Models/WatermarkModel.cs`, `Views/WatermarkView`, the shared `OutputFolderCard`. The mark is percentages of each file, so one setup suits any size.
+
+
 

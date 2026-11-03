@@ -1,0 +1,46 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.MediaHubView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    AllowDrop="True"
+    Focusable="True"
+    PreviewDragOver="Hub_PreviewDragOver"
+    PreviewDrop="Hub_PreviewDrop">
+
+    <!--
+        Media Viewer is one tool with four pages: Mixed (pictures, videos and music in one queue), Photos (Image Viewer),
+        Videos (the VLC video player) and Music (the audio player with its visualizer). Each page is the full tool it always
+        was - this bar only switches between them and sends dropped files to the right one. Only the page shown is in the
+        visual tree, which is how every tool behaves when you open another one (playback is released by the page itself).
+    -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Margin="16,8,16,0" Style="{StaticResource CardStyle}" ctl:Tour.Key="Str_Tour_MediaHub_Modes" ctl:Tour.Order="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <UniformGrid Width="470" Columns="4">
+                    <RadioButton x:Name="RadioMixed" Margin="0,0,2,0" Checked="Mode_Checked" Content="Mixed" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Mixed" ToolTip="Pictures, videos and music in one queue" />
+                    <RadioButton x:Name="RadioPhotos" Margin="2,0,2,0" Checked="Mode_Checked" Content="Photos" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Photos" ToolTip="Picture viewer: zoom, rotate, slideshow, thumbnails, save as" />
+                    <RadioButton x:Name="RadioVideos" Margin="2,0,2,0" Checked="Mode_Checked" Content="Videos" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Videos" ToolTip="Video player for almost any format, with playlists" />
+                    <RadioButton x:Name="RadioMusic" Margin="2,0,0,0" Checked="Mode_Checked" Content="Music" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Music" ToolTip="Audio player with the level visualizer" />
+                </UniformGrid>
+
+                <TextBlock x:Name="TxtHint" Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+            </Grid>
+        </Border>
+
+        <ContentPresenter x:Name="PageHost" Grid.Row="1" />
+    </Grid>
+</UserControl>

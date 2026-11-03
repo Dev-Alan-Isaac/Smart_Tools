@@ -6054,6 +6054,8 @@
     <system:String x:Key="Str_Cat_files_Blurb">Renombra, ordena y busca</system:String>
     <system:String x:Key="Str_Cat_convert_Title">Convertir y PDF</system:String>
     <system:String x:Key="Str_Cat_convert_Blurb">Cambia formatos y trabaja con PDF</system:String>
+    <system:String x:Key="Str_Cat_media_Title">Multimedia</system:String>
+    <system:String x:Key="Str_Cat_media_Blurb">Mira y reproduce imágenes, videos y música</system:String>
     <system:String x:Key="Str_Cat_video_Title">Video</system:String>
     <system:String x:Key="Str_Cat_video_Blurb">Mira y edita</system:String>
     <system:String x:Key="Str_Cat_audio_Title">Audio</system:String>
@@ -6117,10 +6119,8 @@
     <system:String x:Key="Str_Tool_watermark_Description">Estampa texto o un logotipo en muchas imágenes, videos y PDF</system:String>
     <system:String x:Key="Str_Tool_pdf-toolkit_Name">Herramientas PDF</system:String>
     <system:String x:Key="Str_Tool_pdf-toolkit_Description">Une, divide y edita PDF</system:String>
-    <system:String x:Key="Str_Tool_video-replay_Name">Reproductor de video</system:String>
-    <system:String x:Key="Str_Tool_video-replay_Description">Reproduce videos y listas</system:String>
     <system:String x:Key="Str_Tool_media-viewer_Name">Visor multimedia</system:String>
-    <system:String x:Key="Str_Tool_media-viewer_Description">Mira imágenes y reproduce videos y música en un solo lugar</system:String>
+    <system:String x:Key="Str_Tool_media-viewer_Description">Reproduce videos y música y mira imágenes: una cola mixta, o las páginas completas de Fotos, Videos y Música</system:String>
     <system:String x:Key="Str_MediaViewer_OpenFiles">Abrir archivos</system:String>
     <system:String x:Key="Str_MediaViewer_Clear">Vaciar lista</system:String>
     <system:String x:Key="Str_MediaViewer_Dismiss">Cerrar aviso</system:String>
@@ -6350,8 +6350,6 @@
     <system:String x:Key="Str_Tour_SpeechToText_Results_Text">Selecciona un archivo terminado para leer, corregir, copiar o guardar su transcripción.</system:String>
     <system:String x:Key="Str_Tool_gif-maker_Name">Creador de GIF</system:String>
     <system:String x:Key="Str_Tool_gif-maker_Description">Crea GIF optimizados a partir de video o imágenes</system:String>
-    <system:String x:Key="Str_Tool_audio-replay_Name">Reproductor de audio</system:String>
-    <system:String x:Key="Str_Tool_audio-replay_Description">Reproduce archivos de audio</system:String>
     <system:String x:Key="Str_Tool_audio-recorder_Name">Grabador de audio</system:String>
     <system:String x:Key="Str_Tool_audio-recorder_Description">Graba desde tu micrófono</system:String>
     <system:String x:Key="Str_Tool_spectrogram_Name">Espectrograma</system:String>
@@ -6369,8 +6367,6 @@
     <system:String x:Key="Str_Tool_synthesizer_Description">Toca notas y da forma a los sonidos</system:String>
     <system:String x:Key="Str_Tool_midi-instruments_Name">Instrumentos MIDI</system:String>
     <system:String x:Key="Str_Tool_midi-instruments_Description">Toca 128 instrumentos y baterías, y graba en .mid</system:String>
-    <system:String x:Key="Str_Tool_image-viewer_Name">Visor de imágenes</system:String>
-    <system:String x:Key="Str_Tool_image-viewer_Description">Mira imágenes</system:String>
     <system:String x:Key="Str_Tool_image-editor_Name">Editor de imágenes</system:String>
     <system:String x:Key="Str_Tool_image-editor_Description">Recorta, cambia el tamaño y ajusta imágenes</system:String>
     <system:String x:Key="Str_Tool_background-remover_Name">Quitar fondo</system:String>
@@ -8781,7 +8777,7 @@
     <system:String x:Key="Str_Tour_EmptyFolders_Delete_Title">Enviar a la Papelera</system:String>
     <system:String x:Key="Str_Tour_EmptyFolders_Delete_Text">Quita las carpetas marcadas. Van a la Papelera de reciclaje, así que aún puedes restaurarlas.</system:String>
     <system:String x:Key="Str_Tour_BatteryHealth_Details_Title">Tu batería</system:String>
-    <system:String x:Key="Str_Tour_BatteryHealth_Details_Text">La capacidad de diseño frente a la que tiene hoy, los ciclos de carga y el porcentaje de desgaste.</system:String>
+    <system:String x:Key="Str_Tour_BatteryHealth_Details_Text">La barra con forma de batería se llena según la salud de la batería y cambia a verde, ámbar o rojo. Debajo: la capacidad de diseño frente a la actual, los ciclos de carga y el resto.</system:String>
     <system:String x:Key="Str_Tour_BatteryHealth_Report_Title">Informe de batería de Windows</system:String>
     <system:String x:Key="Str_Tour_BatteryHealth_Report_Text">Genera el informe detallado de batería de Windows y lo abre.</system:String>
     <system:String x:Key="Str_Tour_AudioReplay_NowPlaying_Title">Reproduciendo</system:String>
@@ -8802,5 +8798,7 @@
     <system:String x:Key="Str_Tour_DriveHealth_HistoryChart_Text">Los puntos rojos marcan lecturas en que subió un valor que debería mantenerse bajo. Una línea estable es buena señal.</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Title">Cada lectura</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Text">Cada lectura con lo que empeoró desde la anterior. Si suben los contadores de errores, el disco puede estar fallando: haz una copia de seguridad.</system:String>
+    <system:String x:Key="Str_Tour_MediaHub_Modes_Title">Cuatro páginas en una</system:String>
+    <system:String x:Key="Str_Tour_MediaHub_Modes_Text">Mixto reúne imágenes, videos y música en una sola cola. Fotos, Videos y Música son el visor, el reproductor de video y el de audio completos, con todas sus opciones. Suelta archivos donde sea y pasan a la página que corresponde.</system:String>
 
 </ResourceDictionary>

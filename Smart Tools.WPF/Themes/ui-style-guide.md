@@ -176,7 +176,7 @@ Standing instruction from Alan: **every view gets this treatment** – friendly,
 - Rename rebuilds the plan from the settings on screen right before confirming, even when auto preview is off.
 - "Clean copy suffixes" strips copy leftovers one marker per round (`_1`, `-1`, ` - Copy`, a second `(2)`). Digit limits protect real names: `_` counters are 1-3 digits (`IMG_0001` stays), `-` counters need a non-digit before them (`2024-01-15` stays), and a lone `(1)` is kept. Spaces inside the name are never changed, and a name is never emptied. A cleaned name that's taken gets " (2)" like every other rule.
 
-## Viewing images (learned on Image Viewer)
+## Viewing images (learned on Image Viewer, now the Photos page of Media Viewer)
 - Photos stand the right way up: read the EXIF orientation (`System.Photo.Orientation`) and turn, then mirror (`OrientationTransform`, tested against the standard corrections for all 8 values). ImageMagick's `AutoOrient` covers HEIC/AVIF and the fallback path.
 - Open image files through a `FileStream`, never `new Uri(path)`: a `#` or `%` in a file name broke the Uri. Read the header first (size, orientation) and decode no bigger than needed: thumbnails at their display size, and anything over 12,000 px on the long side scaled down with a note ("shown smaller to save memory").
 - 100% means one image pixel per screen unit: set the Image's `Width`/`Height` to the bitmap's pixel size with `Stretch="Fill"`. `Stretch="None"` follows the file's DPI, so a 300-dpi scan showed at a third of its size.
@@ -329,7 +329,7 @@ Standing instruction from Alan: **every view gets this treatment** – friendly,
 - On Windows, turn off SIO_UDP_CONNRESET on UDP sockets; otherwise one "port unreachable" reply kills every later receive.
 - Ask third-party services only on first load or on request, never on every visit, and let the user switch it off (public IP lookup).
 
-## Players and playlists (learned on Video Replay)
+## Players and playlists (learned on Video Replay, now the Videos page of Media Viewer)
 - Track the current item by object, never by row number. A `PlayOrder<T>` holds the items: removing a row above the playing one must not move the highlight, change what Next plays, or delete the wrong file. Adding clips in shuffle inserts them ahead of the current clip without reshuffling what's already planned.
 - "Plays every clip once" means stop at the end. Repeating the playlist is a separate, visible option. Previous restarts the clip after 3 s, like every player. In Loop, Next and Previous still move.
 - Keep icons in buttons and switch `PackIcon.Kind`. Never replace Content with "▶" or emoji text. Mute uses `IsMuted` and keeps the volume level.
@@ -875,6 +875,15 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 ## Measuring then writing copies (learned on Loudness Meter)
 - Two buttons in the run bar: the primary one only reads (Measure), the secondary writes copies (Normalize). Re-judge from stored measurements when a target changes instead of reading the files again.
 - A written copy is measured again before it is reported, so the row shows what the file really has, not what was asked for.
+
+## Related views live in one tool (learned on Drive Health)
+- When a second view only looks at the same thing from another angle (Drive Health's SMART history), make it a `Drives | History` toggle in the page's run-bar card (`ModeToggleButtonStyle` radios) and host it as a panel in the same row, instead of adding a separate tool. The page's Refresh feeds both views, so nothing is read twice.
+
+## Related views live in one tool (learned on Drive Health)
+- When a second view only looks at the same thing from another angle (Drive Health's SMART history), make it a `Drives | History` toggle in the page's run-bar card (`ModeToggleButtonStyle` radios) and host it as a panel in the same row, instead of adding a separate tool. The page's Refresh feeds both views, so nothing is read twice.
+
+## Several tools in one (learned on Media Viewer)
+- When tools share one job (looking at pictures, videos and music), give them one sidebar entry and a mode bar (`ModeToggleButtonStyle` radios) that swaps whole pages, instead of rebuilding them. Show only the page in use so it unloads and releases its devices like any tool you leave, send drops to the page that fits their type, and add the old tools' search keywords to the merged tool.
 
 ## Related views live in one tool (learned on Drive Health)
 - When a second view only looks at the same thing from another angle (Drive Health's SMART history), make it a `Drives | History` toggle in the page's run-bar card (`ModeToggleButtonStyle` radios) and host it as a panel in the same row, instead of adding a separate tool. The page's Refresh feeds both views, so nothing is read twice.

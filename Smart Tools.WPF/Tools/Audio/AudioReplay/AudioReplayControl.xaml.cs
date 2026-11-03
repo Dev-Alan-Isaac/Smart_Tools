@@ -258,6 +258,9 @@ namespace Smart_Tools.WPF.Controls
         }
 
         /// <summary>Dropped folders follow "Include subfolders" (they always included subfolders before, whatever the box said).</summary>
+        /// <summary>Adds files or folders to the queue, as if they had been dropped here (the Media Viewer hub forwards drops this way).</summary>
+        public void AddPaths(IEnumerable<string> paths) => _ = AddDroppedAsync(paths.ToArray());
+
         private async Task AddDroppedAsync(string[] paths)
         {
             var looseFiles = paths.Where(p => File.Exists(p) && AudioReplayManager.IsAudioFile(p)).ToList();

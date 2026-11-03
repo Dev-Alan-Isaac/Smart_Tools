@@ -314,6 +314,9 @@ namespace Smart_Tools.WPF.Controls
         /// image shows straight away when nothing is on screen - before, you
         /// had to find it in the list and double-click it.
         /// </summary>
+        /// <summary>Adds files or folders to the queue, as if they had been dropped here (the Media Viewer hub forwards drops this way).</summary>
+        public void AddPaths(IEnumerable<string> paths) => _ = AddPathsAsync(paths.ToList());
+
         private async Task AddPathsAsync(IReadOnlyList<string> paths)
         {
             var token = _addCts.Token;

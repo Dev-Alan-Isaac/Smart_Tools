@@ -6052,6 +6052,8 @@
     <system:String x:Key="Str_Cat_files_Blurb">Rename, sort and search</system:String>
     <system:String x:Key="Str_Cat_convert_Title">Convert &amp; PDF</system:String>
     <system:String x:Key="Str_Cat_convert_Blurb">Change formats, work with PDFs</system:String>
+    <system:String x:Key="Str_Cat_media_Title">Media</system:String>
+    <system:String x:Key="Str_Cat_media_Blurb">View and play pictures, videos and music</system:String>
     <system:String x:Key="Str_Cat_video_Title">Video</system:String>
     <system:String x:Key="Str_Cat_video_Blurb">Watch and edit</system:String>
     <system:String x:Key="Str_Cat_audio_Title">Audio</system:String>
@@ -6115,10 +6117,8 @@
     <system:String x:Key="Str_Tool_watermark_Description">Stamp text or a logo on many pictures, videos and PDFs</system:String>
     <system:String x:Key="Str_Tool_pdf-toolkit_Name">PDF Toolkit</system:String>
     <system:String x:Key="Str_Tool_pdf-toolkit_Description">Merge, split and edit PDFs</system:String>
-    <system:String x:Key="Str_Tool_video-replay_Name">Video Replay</system:String>
-    <system:String x:Key="Str_Tool_video-replay_Description">Play videos and playlists</system:String>
     <system:String x:Key="Str_Tool_media-viewer_Name">Media Viewer</system:String>
-    <system:String x:Key="Str_Tool_media-viewer_Description">View pictures and play videos and music in one place</system:String>
+    <system:String x:Key="Str_Tool_media-viewer_Description">Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages</system:String>
     <system:String x:Key="Str_MediaViewer_OpenFiles">Open files</system:String>
     <system:String x:Key="Str_MediaViewer_Clear">Clear list</system:String>
     <system:String x:Key="Str_MediaViewer_Dismiss">Dismiss</system:String>
@@ -6348,8 +6348,6 @@
     <system:String x:Key="Str_Tour_SpeechToText_Results_Text">Select a finished file to read, fix, copy, or save its transcript.</system:String>
     <system:String x:Key="Str_Tool_gif-maker_Name">GIF Maker</system:String>
     <system:String x:Key="Str_Tool_gif-maker_Description">Create optimized GIFs from video or images</system:String>
-    <system:String x:Key="Str_Tool_audio-replay_Name">Audio Replay</system:String>
-    <system:String x:Key="Str_Tool_audio-replay_Description">Play audio files</system:String>
     <system:String x:Key="Str_Tool_audio-recorder_Name">Audio Recorder</system:String>
     <system:String x:Key="Str_Tool_audio-recorder_Description">Record from your microphone</system:String>
     <system:String x:Key="Str_Tool_spectrogram_Name">Spectrogram</system:String>
@@ -6367,8 +6365,6 @@
     <system:String x:Key="Str_Tool_synthesizer_Description">Play notes and shape sounds</system:String>
     <system:String x:Key="Str_Tool_midi-instruments_Name">MIDI Instruments</system:String>
     <system:String x:Key="Str_Tool_midi-instruments_Description">Play 128 instruments and drum kits, record to .mid</system:String>
-    <system:String x:Key="Str_Tool_image-viewer_Name">Image Viewer</system:String>
-    <system:String x:Key="Str_Tool_image-viewer_Description">View images</system:String>
     <system:String x:Key="Str_Tool_image-editor_Name">Image Editor</system:String>
     <system:String x:Key="Str_Tool_image-editor_Description">Crop, resize and adjust images</system:String>
     <system:String x:Key="Str_Tool_background-remover_Name">Background Remover</system:String>
@@ -8779,7 +8775,7 @@
     <system:String x:Key="Str_Tour_EmptyFolders_Delete_Title">Send to the Recycle Bin</system:String>
     <system:String x:Key="Str_Tour_EmptyFolders_Delete_Text">Removes the ticked folders. They go to the Recycle Bin, so you can still restore them.</system:String>
     <system:String x:Key="Str_Tour_BatteryHealth_Details_Title">Your battery</system:String>
-    <system:String x:Key="Str_Tour_BatteryHealth_Details_Text">Design capacity against the capacity it holds today, charge cycles and the wear percentage.</system:String>
+    <system:String x:Key="Str_Tour_BatteryHealth_Details_Text">The battery bar fills as far as the battery's health and turns green, amber or red. Below it: design capacity against what it holds today, charge cycles and the rest.</system:String>
     <system:String x:Key="Str_Tour_BatteryHealth_Report_Title">Windows battery report</system:String>
     <system:String x:Key="Str_Tour_BatteryHealth_Report_Text">Makes Windows' own detailed battery report and opens it.</system:String>
     <system:String x:Key="Str_Tour_AudioReplay_NowPlaying_Title">Now playing</system:String>
@@ -8800,5 +8796,7 @@
     <system:String x:Key="Str_Tour_DriveHealth_HistoryChart_Text">Red dots mark readings where a value that should stay low went up. A steady line is a healthy sign.</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Title">Every reading</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Text">Each reading with what got worse since the one before. Rising error counters mean the drive may be failing: back it up.</system:String>
+    <system:String x:Key="Str_Tour_MediaHub_Modes_Title">Four pages in one</system:String>
+    <system:String x:Key="Str_Tour_MediaHub_Modes_Text">Mixed holds pictures, videos and music in one queue. Photos, Videos and Music are the full viewer, video player and audio player with all their options. Drop files anywhere and they jump to the page that fits.</system:String>
 
 </ResourceDictionary>

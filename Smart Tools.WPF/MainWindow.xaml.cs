@@ -189,8 +189,7 @@ namespace Smart_Tools.WPF
             Add<WatermarkView>("watermark", v => v.CancelActiveRun());   // stops a running batch (finished files stay), saves the setup
 
             // Video
-            Add<VideoReplayView>("video-replay", v => v.CancelActiveRun());
-            Add<MediaViewerView>("media-viewer", v => v.CancelActiveRun());   // stops playback and the slideshow, lets go of the file
+            Add<MediaHubView>("media-viewer", v => v.CancelActiveRun());   // one tool, four pages (mixed, photos, videos, music); closing lets every opened page release its files
             Add<VideoEditingView>("video-editor", v => v.CancelActiveRun());
             Add<VideoToAudioExtractorView>("video-to-audio", v => v.CancelActiveRun());   // stops ffmpeg/ffprobe
             Add<VideoCompressorView>("video-compressor", v => v.CancelActiveRun());   // stops ffmpeg/ffprobe
@@ -198,7 +197,6 @@ namespace Smart_Tools.WPF
             Add<ScreenRecorderView>("screen-recorder", v => v.CancelActiveRun());   // finishes a recording in progress and closes the bar
 
             // Audio
-            Add<AudioReplayControl>("audio-replay", v => v.ReleaseAudio());
             Add<MicRecorderView>("audio-recorder", v => v.CancelActiveRun());   // finishes and saves a recording in progress
             Add<LoudnessView>("loudness-meter", v => v.CancelActiveRun());   // stops measuring/writing; a half-written copy is removed, originals are never touched
             Add<AudioTrimmerView>("audio-trimmer", v => v.CancelActiveRun());   // stops the preview and an export, keeps the setup
@@ -213,7 +211,6 @@ namespace Smart_Tools.WPF
             Add<MidiInstrumentsView>("midi-instruments", v => v.CancelActiveRun());   // silences notes, closes the synth and keyboard
 
             // Images & Color
-            Add<ImageViewerControl>("image-viewer", v => v.CancelActiveRun());
             Add<ImageEditingView>("image-editor", v => v.CancelActiveRun());
             Add<BulkImageResizerView>("bulk-image-resizer", v => v.CancelActiveRun());   // stops a run (finished pictures stay) and the thumbnail loader
             Add<BackgroundRemoverView>("background-remover", v => v.CancelActiveRun());

@@ -12,7 +12,8 @@ namespace Smart_Tools.WPF.Views
     {
         public sealed record BatteryRow(string Label, string Value);
 
-        public sealed record BatteryCard(string Title, string HealthText, double HealthValue, string Verdict, List<BatteryRow> Rows);
+        /// <summary>Level is Good, Fair, Poor or Unknown; the XAML turns it into green, amber, red or grey.</summary>
+        public sealed record BatteryCard(string Title, string HealthText, double HealthValue, string Level, string Verdict, List<BatteryRow> Rows);
 
         private bool _loadedOnce;
         private bool _busy;
@@ -71,6 +72,7 @@ namespace Smart_Tools.WPF.Views
                 number > 0 ? $"Battery {number} · {b.Name}" : b.Name,
                 health is { } h ? h.ToString("0.#", CultureInfo.InvariantCulture) + " %" : "n/a",
                 Math.Min(100, health ?? 0),
+                health switch { null => "Unknown", >= 80 => "Good", >= 60 => "Fair", _ => "Poor" },
                 BatteryHealthManager.Describe(health),
                 rows);
         }

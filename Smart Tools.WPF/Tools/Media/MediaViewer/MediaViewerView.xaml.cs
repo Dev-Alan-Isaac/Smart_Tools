@@ -187,6 +187,9 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>Lists the new files/folders off the UI thread, then appends them (nothing already listed is touched).</summary>
+        /// <summary>Adds files or folders to the queue, as if they had been dropped here (the Media Viewer hub forwards drops this way).</summary>
+        public void AddPaths(IEnumerable<string> paths) => _ = AddPathsAsync(paths);
+
         private async Task AddPathsAsync(IEnumerable<string> paths)
         {
             var fresh = new List<MediaSource>();
