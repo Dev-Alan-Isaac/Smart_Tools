@@ -1,6 +1,8 @@
 using Smart_Tools.WPF.Models;
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Smart_Tools.WPF.Controllers
 {
@@ -77,6 +79,77 @@ namespace Smart_Tools.WPF.Controllers
                 }
             }
             return result;
+        }
+
+        // =================================================================
+        //  Settings (media_viewer.json)
+        // =================================================================
+
+        private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
+        private static readonly object SettingsLock = new();
+
+        public static string SettingsPath => Path.Combine(AppPaths.DataRoot, "media_viewer.json");
+
+        /// <summary>Raised after the file was saved, so an open tool page can pick up what the Settings page changed.</summary>
+        public static event Action? SettingsChanged;
+
+        public static readonly IReadOnlyList<int> SlideshowChoices = new[] { 2, 4, 7, 10 };
+
+        /// <summary>The saved settings; defaults for anything missing, unreadable or out of range. Never throws.</summary>
+        public static MediaViewerSettings LoadSettings(string? path = null)
+        {
+            try
+            {
+                string file = path ?? SettingsPath;
+                if (!File.Exists(file)) return new MediaViewerSettings();
+                var s = JsonSerializer.Deserialize<MediaViewerSettings>(File.ReadAllText(file), JsonOptions) ?? new MediaViewerSettings();
+                s.Volume = double.IsFinite(s.Volume) ? Math.Clamp(s.Volume, 0, 1) : 0.8;
+                s.Speed = ClampSpeed(double.IsFinite(s.Speed) ? s.Speed : 1);
+                if (!Enum.IsDefined(s.Order)) s.Order = ViewerPlayOrder.Sequential;
+                if (!SlideshowChoices.Contains(s.SlideshowSeconds)) s.SlideshowSeconds = 4;
+                s.Sources = (s.Sources ?? new()).Where(x => !string.IsNullOrWhiteSpace(x?.Path)).ToList();
+                s.LastItem ??= "";
+                if (s.WidgetLeft is { } l && !double.IsFinite(l)) s.WidgetLeft = null;
+                if (s.WidgetTop is { } t && !double.IsFinite(t)) s.WidgetTop = null;
+                return s;
+            }
+            catch (Exception)
+            {
+                return new MediaViewerSettings();
+            }
+        }
+
+        public static void SaveSettings(MediaViewerSettings settings, string? path = null)
+        {
+            string file = path ?? SettingsPath;
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            string temp = file + ".tmp";
+            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
+            File.Move(temp, file, overwrite: true);
+        }
+
+        /// <summary>
+        /// Reads the file, lets <paramref name="change"/> alter only the caller's own fields, and
+        /// writes it back - so the tool page and the Settings page never overwrite each other.
+        /// Never throws (a failed save is logged).
+        /// </summary>
+        public static void UpdateSettings(Action<MediaViewerSettings> change, bool notify = true)
+        {
+            try
+            {
+                lock (SettingsLock)
+                {
+                    var s = LoadSettings();
+                    change(s);
+                    SaveSettings(s);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Info($"Media Viewer settings not saved: {ex.Message}");
+                return;
+            }
+            if (notify) SettingsChanged?.Invoke();
         }
 
         public static readonly IReadOnlyList<double> Speeds = new[] { 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0 };

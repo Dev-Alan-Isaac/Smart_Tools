@@ -26,6 +26,57 @@ namespace Smart_Tools.WPF.Models
         RepeatOne,
     }
 
+    /// <summary>A file or folder added to the list, as saved between sessions.</summary>
+    public sealed class MediaSavedSource
+    {
+        public string Path { get; set; } = "";
+        public bool IsFolder { get; set; }
+    }
+
+    /// <summary>
+    /// Everything the Media Viewer remembers (media_viewer.json). The tool's own
+    /// page and the Settings page both write it, each only its own fields - see
+    /// MediaViewerManager.UpdateSettings.
+    /// </summary>
+    public sealed class MediaViewerSettings
+    {
+        // The viewer's options (saved by the tool).
+        public ViewerPlayOrder Order { get; set; } = ViewerPlayOrder.Sequential;
+        public bool RepeatPlaylist { get; set; }
+        public bool IncludeSubfolders { get; set; } = true;
+        public double Volume { get; set; } = 0.8;
+        public bool Muted { get; set; }
+        public double Speed { get; set; } = 1;
+        public int SlideshowSeconds { get; set; } = 4;
+        public bool PlaylistCollapsed { get; set; }
+
+        // The list (saved by the tool; RememberPlaylist is set on the Settings page).
+        public bool RememberPlaylist { get; set; } = true;
+        public List<MediaSavedSource> Sources { get; set; } = new();
+        public string LastItem { get; set; } = "";
+
+        // The widget (position and compact mode saved by the tool; the toggles are on the Settings page).
+        public bool ShowWidgetAtStartup { get; set; }
+        public bool WidgetCompact { get; set; }
+        public double? WidgetLeft { get; set; }
+        public double? WidgetTop { get; set; }
+        public bool KeepPlayingWithWidget { get; set; } = true;
+    }
+
+    /// <summary>What the floating widget shows. The tool's view builds it; the widget only displays it.</summary>
+    public sealed record MediaWidgetState(
+        bool HasItem,
+        string Title,
+        string Subtitle,
+        ViewerMediaKind Kind,
+        bool IsRunning,
+        double PositionSeconds,
+        double DurationSeconds,
+        double Volume,
+        bool Muted,
+        string SpeedLabel,
+        ViewerPlayOrder Order);
+
     /// <summary>Something the user added: one file or a whole folder.</summary>
     public sealed class MediaSource
     {

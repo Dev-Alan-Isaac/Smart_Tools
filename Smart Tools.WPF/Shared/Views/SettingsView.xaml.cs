@@ -201,6 +201,81 @@ namespace Smart_Tools.WPF.Views
             ChangeVaultSettings(s => { s.LockOnSessionLock = on; return true; });
         }
 
+        // =================================================================
+        //  Media Viewer (logic: MediaViewerManager settings file)
+        // =================================================================
+
+        private void LoadMediaViewerSettings()
+        {
+            _applying = true;
+            try
+            {
+                var s = MediaViewerManager.LoadSettings();
+                ChkMvWidgetStartup.IsChecked = s.ShowWidgetAtStartup;
+                ChkMvKeepPlaying.IsChecked = s.KeepPlayingWithWidget;
+                ChkMvCompact.IsChecked = s.WidgetCompact;
+                ChkMvRemember.IsChecked = s.RememberPlaylist;
+            }
+            finally
+            {
+                _applying = false;
+            }
+        }
+
+        /// <summary>Changes only the Settings page's fields of the Media Viewer file. An open Media Viewer picks it up through SettingsChanged.</summary>
+        private void ChangeMediaViewerSettings(Action<Smart_Tools.WPF.Models.MediaViewerSettings> change)
+        {
+            MediaViewerManager.UpdateSettings(change);
+            SaveAndConfirm();
+        }
+
+        private void ChkMvWidgetStartup_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = ChkMvWidgetStartup.IsChecked == true;
+            ChangeMediaViewerSettings(s => s.ShowWidgetAtStartup = on);
+        }
+
+        private void ChkMvKeepPlaying_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = ChkMvKeepPlaying.IsChecked == true;
+            ChangeMediaViewerSettings(s => s.KeepPlayingWithWidget = on);
+        }
+
+        private void ChkMvCompact_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = ChkMvCompact.IsChecked == true;
+            ChangeMediaViewerSettings(s => s.WidgetCompact = on);
+        }
+
+        /// <summary>Turning "remember" off also drops what was saved, so nothing old comes back if it's turned on later.</summary>
+        private void ChkMvRemember_Click(object sender, RoutedEventArgs e)
+        {
+            bool on = ChkMvRemember.IsChecked == true;
+            ChangeMediaViewerSettings(s =>
+            {
+                s.RememberPlaylist = on;
+                if (!on)
+                {
+                    s.Sources = new();
+                    s.LastItem = "";
+                }
+            });
+        }
+
+        private void BtnMvForget_Click(object sender, RoutedEventArgs e) =>
+            ChangeMediaViewerSettings(s =>
+            {
+                s.Sources = new();
+                s.LastItem = "";
+            });
+
+        private void BtnMvResetWidget_Click(object sender, RoutedEventArgs e) =>
+            ChangeMediaViewerSettings(s =>
+            {
+                s.WidgetLeft = null;
+                s.WidgetTop = null;
+            });
+
         /// <summary>Set by another page before opening Settings, to land on one section ("TextRecognition"). Cleared once used.</summary>
         public static string? RequestedSection { get; set; }
 
@@ -250,6 +325,7 @@ namespace Smart_Tools.WPF.Views
             LblNavEventDays.Visibility = visibility;
             LblNavShortcuts.Visibility = visibility;
             LblNavVault.Visibility = visibility;
+            LblNavMediaViewer.Visibility = visibility;
             LblNavClipboard.Visibility = visibility;
             LblNavTextRecognition.Visibility = visibility;
             LblNavTranslate.Visibility = visibility;
@@ -257,7 +333,7 @@ namespace Smart_Tools.WPF.Views
 
             var padding = _optionsCollapsed ? new Thickness(0, 10, 0, 10) : new Thickness(14, 10, 14, 10);
             var alignment = _optionsCollapsed ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Left;
-            foreach (var nav in new[] { BtnNavGeneral, BtnNavCategories, BtnNavPatterns, BtnNavMockData, BtnNavEventDays, BtnNavShortcuts, BtnNavVault, BtnNavClipboard, BtnNavTextRecognition, BtnNavTranslate })
+            foreach (var nav in new[] { BtnNavGeneral, BtnNavCategories, BtnNavPatterns, BtnNavMockData, BtnNavEventDays, BtnNavShortcuts, BtnNavVault, BtnNavMediaViewer, BtnNavClipboard, BtnNavTextRecognition, BtnNavTranslate })
             {
                 nav.Padding = padding;
                 nav.HorizontalContentAlignment = alignment;
@@ -276,6 +352,8 @@ namespace Smart_Tools.WPF.Views
             ShowSection(PanelEventDays, section == "EventDays");
             ShowSection(PanelShortcuts, section == "Shortcuts");
             ShowSection(PanelVault, section == "Vault");
+            ShowSection(PanelMediaViewer, section == "MediaViewer");
+            if (section == "MediaViewer") LoadMediaViewerSettings();   // the Media Viewer may have saved since the page was built
             ShowSection(PanelClipboard, section == "Clipboard");
             ShowSection(PanelTextRecognition, section == "TextRecognition");
             if (section == "TextRecognition") PanelTextRecognition.Load();   // languages may have been added since the page was built

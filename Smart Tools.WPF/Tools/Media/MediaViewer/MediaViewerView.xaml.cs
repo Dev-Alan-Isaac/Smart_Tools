@@ -81,6 +81,7 @@ namespace Smart_Tools.WPF.Views
             UpdateOrderUi();
             RebuildGroups();
             UpdateUi();
+            InitializeSettings();
         }
 
         private static string S(string key, string fallback) =>
@@ -103,6 +104,7 @@ namespace Smart_Tools.WPF.Views
             _playlistCollapsed = !_playlistCollapsed;
             if (!_playlistCollapsed && _theater) _theater = false;
             ApplyPanels();
+            ScheduleSave();
         }
 
         private void BtnTheater_Click(object sender, RoutedEventArgs e) => ToggleTheater();
@@ -143,7 +145,11 @@ namespace Smart_Tools.WPF.Views
 
         private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e) => _ = AddPathsAsync(e.Paths);
 
-        private void InputCard_IncludeSubfoldersChanged(object? sender, EventArgs e) => RebuildGroups();
+        private void InputCard_IncludeSubfoldersChanged(object? sender, EventArgs e)
+        {
+            RebuildGroups();
+            ScheduleSave();
+        }
 
         private void BtnClear_Click(object sender, RoutedEventArgs e) => InputCard_ClearRequested(sender, EventArgs.Empty);
 
@@ -228,6 +234,7 @@ namespace Smart_Tools.WPF.Views
                 _groups.Add(g);
             }
             InputCard.SetEmpty(_groups.Count == 0);
+            ScheduleSave();   // the list changed
         }
 
         private void BtnRemoveQueueGroup_Click(object sender, RoutedEventArgs e)
@@ -284,6 +291,7 @@ namespace Smart_Tools.WPF.Views
 
         private void Show(int index)
         {
+            _restoredIdle = false;
             StopMedia();
             _slide.Stop();
             _loadVersion++;
@@ -322,6 +330,7 @@ namespace Smart_Tools.WPF.Views
             else ShowMedia(item);
             UpdateUi();
             Focus();
+            ScheduleSave();   // remembers which item was on the stage
         }
 
         private void ShowImage(MediaItem item)
@@ -589,12 +598,15 @@ namespace Smart_Tools.WPF.Views
             _speed = MediaViewerManager.ClampSpeed(speed);
             if (_mediaOpen) Player.SpeedRatio = _speed;
             BtnSpeed.Content = MediaViewerManager.SpeedLabel(_speed);
+            ScheduleSave();
+            PushWidget();
         }
 
         private void Slide_Click(object sender, RoutedEventArgs e)
         {
             int seconds = SlideRadios.FirstOrDefault(r => r.IsChecked == true)?.Tag is string tag && int.TryParse(tag, out int v) ? v : 4;
             _slide.Interval = TimeSpan.FromSeconds(seconds);
+            ScheduleSave();
         }
 
         private void TogglePlay()
@@ -602,7 +614,13 @@ namespace Smart_Tools.WPF.Views
             var item = Current;
             if (item == null)
             {
-                OpenFilesDialog();
+                if (_items.Count > 0) Show(0);   // a list is there but nothing chosen: start at the top
+                else OpenFilesDialog();
+                return;
+            }
+            if (_restoredIdle)
+            {
+                Show(_index);   // the item from last session: load it now
                 return;
             }
 
@@ -638,11 +656,15 @@ namespace Smart_Tools.WPF.Views
             _bag.Reset();
             _history.Clear();
             UpdateOrderUi();
+            UpdateUi();
+            ScheduleSave();
         }
 
         private void Repeat_Changed(object sender, RoutedEventArgs e)
         {
-            if (_ready) UpdateOrderUi();
+            if (!_ready) return;
+            UpdateOrderUi();
+            ScheduleSave();
         }
 
         /// <summary>The line under the order tiles says what the choice does, and "repeat the playlist" only applies when a list plays through.</summary>
@@ -779,6 +801,7 @@ namespace Smart_Tools.WPF.Views
             if (!_mediaOpen) return;
             var position = Player.Position;
             TxtPosition.Text = MediaViewerManager.FormatTime(position);
+            PushWidget();
             if (PosSlider.IsMouseCaptureWithin) return;   // the user is dragging it
             _updatingSlider = true;
             PosSlider.Value = Math.Min(position.TotalSeconds, PosSlider.Maximum);
@@ -798,12 +821,14 @@ namespace Smart_Tools.WPF.Views
             Player.Volume = e.NewValue;
             if (e.NewValue > 0 && Player.IsMuted) Player.IsMuted = false;
             UpdateUi();
+            ScheduleSave();
         }
 
         private void BtnMute_Click(object sender, RoutedEventArgs e)
         {
             Player.IsMuted = !Player.IsMuted;
             UpdateUi();
+            ScheduleSave();
         }
 
         // =================================================================
@@ -976,6 +1001,9 @@ namespace Smart_Tools.WPF.Views
                 case Key.Escape when _theater:
                     ToggleTheater();
                     break;
+                case Key.W:
+                    ToggleWidget();
+                    break;
                 case Key.S:
                     StepSpeed(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : +1);
                     break;
@@ -1023,28 +1051,37 @@ namespace Smart_Tools.WPF.Views
             TxtCount.Text = _items.Count.ToString(CultureInfo.CurrentCulture);
             PillPosition.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
             TxtPositionPill.Text = has ? $"{_index + 1} / {_items.Count}" : "";
+            BtnWidget.Opacity = _widget != null ? 1 : 0.75;
+            PushWidget();
         }
+
+        private void Root_Loaded(object sender, RoutedEventArgs e) => UpdateUi();   // back on the page: show what happened meanwhile
 
         private void Root_Unloaded(object sender, RoutedEventArgs e)
         {
-            // Leaving the page: stop the sound and the slideshow, keep the list.
+            // Leaving the page: the slideshow stops. Sound carries on only while the widget is open to control it;
+            // without the widget there'd be no way to stop it from another tool, so it pauses.
             _slide.Stop();
             _slideshow = false;
-            if (_playing)
+            if (_playing && !(_widget != null && _keepPlayingWithWidget))
             {
                 Player.Pause();
                 _playing = false;
             }
             UpdateUi();
+            ScheduleSave();
         }
 
-        /// <summary>Called when the tool is closed: releases the file and stops the timers.</summary>
+        /// <summary>Called when the tool is closed (or the app exits): releases the file, stops the timers, saves, closes the widget.</summary>
         public void CancelActiveRun()
         {
             _loadVersion++;
             _slide.Stop();
             _slideshow = false;
             StopMedia();
+            _saveTimer.Stop();
+            SaveSettingsNow();
+            CloseWidgetForExit();
         }
     }
 }

@@ -102,6 +102,31 @@ namespace Smart_Tools.WPF
             RefreshRecent();
             Open(ToolCatalogManager.HomeId);
             LanguageManager.Changed += OnLanguageChanged;
+            Loaded += (_, _) => RestoreStartupWidgets();
+        }
+
+        /// <summary>
+        /// Opens the floating widgets the user asked for at start-up. A widget is its own window, so it
+        /// works even when the app starts hidden in the tray.
+        /// </summary>
+        private void RestoreStartupWidgets()
+        {
+            try
+            {
+                if (MediaViewerManager.LoadSettings().ShowWidgetAtStartup && _registry.ContainsKey("media-viewer"))
+                    ((MediaViewerView)GetView("media-viewer")).RestoreWidget();
+            }
+            catch (Exception ex)
+            {
+                Log.Info($"Start-up widgets not opened: {ex.Message}");
+            }
+        }
+
+        /// <summary>Brings the window forward on a tool - used by a widget's "Open ..." menu entry.</summary>
+        public void ShowTool(string id)
+        {
+            BringToFront();
+            Open(id);
         }
 
         private static void ApplySavedAppearance()

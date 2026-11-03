@@ -11,6 +11,7 @@
     DragOver="Root_DragOver"
     Drop="Root_Drop"
     Focusable="True"
+    Loaded="Root_Loaded"
     PreviewKeyDown="Root_PreviewKeyDown"
     Unloaded="Root_Unloaded">
 
@@ -491,6 +492,11 @@
                                         <Run
                                             FontWeight="SemiBold"
                                             Foreground="{DynamicResource SidebarText}"
+                                            Text="W" />
+                                        <Run Text="{DynamicResource Str_MediaViewer_Kbd_Widget}" /><LineBreak />
+                                        <Run
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
                                             Text="S" />
                                         <Run Text="{DynamicResource Str_MediaViewer_Kbd_Speed}" /><LineBreak />
                                         <Run
@@ -857,6 +863,14 @@
                                                 Style="{StaticResource PlayerIconButtonStyle}"
                                                 ToolTip="{DynamicResource Str_MediaViewer_Fit}">
                                                 <materialDesign:PackIcon Kind="ArrowExpandAll" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnWidget"
+                                                Margin="0,0,6,0"
+                                                Click="BtnWidget_Click"
+                                                Style="{StaticResource PlayerIconButtonStyle}"
+                                                ToolTip="{DynamicResource Str_MediaViewer_Widget_Tooltip}">
+                                                <materialDesign:PackIcon Kind="PictureInPictureBottomRight" />
                                             </Button>
                                             <Button
                                                 x:Name="BtnTheater"

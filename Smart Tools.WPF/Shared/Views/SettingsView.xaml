@@ -1014,6 +1014,33 @@
                                 </Grid>
                             </RadioButton>
                             <RadioButton
+                                x:Name="BtnNavMediaViewer"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="MediaViewer"
+                                ToolTip="{DynamicResource Str_Settings_NavMediaViewer}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="PlayBoxMultipleOutline" />
+                                    <TextBlock
+                                        x:Name="LblNavMediaViewer"
+                                        Grid.Column="1"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavMediaViewer}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
                                 x:Name="BtnNavClipboard"
                                 Click="Nav_Click"
                                 GroupName="SettingsNav"
@@ -1676,6 +1703,78 @@
                                         Margin="0,4,0,0"
                                         HorizontalAlignment="Left"
                                         SelectionChanged="CmbVaultClipboard_SelectionChanged" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!--  ============ Media Viewer ============  -->
+                    <Border
+                        x:Name="PanelMediaViewer"
+                        Visibility="Collapsed">
+                        <StackPanel>
+                            <Border Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Settings_MediaWidgetHeader}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PictureInPictureBottomRight}" />
+                                    <TextBlock
+                                        Margin="0,4,0,14"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Settings_MediaWidgetIntro}"
+                                        TextWrapping="Wrap" />
+                                    <CheckBox
+                                        x:Name="ChkMvWidgetStartup"
+                                        Click="ChkMvWidgetStartup_Click"
+                                        Content="{DynamicResource Str_Settings_MediaWidgetStartup}" />
+                                    <CheckBox
+                                        x:Name="ChkMvKeepPlaying"
+                                        Margin="0,8,0,0"
+                                        Click="ChkMvKeepPlaying_Click"
+                                        Content="{DynamicResource Str_Settings_MediaKeepPlaying}"
+                                        ToolTip="{DynamicResource Str_Settings_MediaKeepPlayingTip}" />
+                                    <CheckBox
+                                        x:Name="ChkMvCompact"
+                                        Margin="0,8,0,0"
+                                        Click="ChkMvCompact_Click"
+                                        Content="{DynamicResource Str_Settings_MediaWidgetCompact}" />
+                                    <Button
+                                        x:Name="BtnMvResetWidget"
+                                        Margin="0,14,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnMvResetWidget_Click"
+                                        Content="{DynamicResource Str_Settings_MediaWidgetReset}"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Settings_MediaWidgetResetTip}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Settings_MediaRememberHeader}"
+                                        Style="{StaticResource CardHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.PlaylistMusicOutline}" />
+                                    <TextBlock
+                                        Margin="0,4,0,14"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Settings_MediaRememberIntro}"
+                                        TextWrapping="Wrap" />
+                                    <CheckBox
+                                        x:Name="ChkMvRemember"
+                                        Click="ChkMvRemember_Click"
+                                        Content="{DynamicResource Str_Settings_MediaRemember}" />
+                                    <Button
+                                        x:Name="BtnMvForget"
+                                        Margin="0,14,0,0"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnMvForget_Click"
+                                        Content="{DynamicResource Str_Settings_MediaForget}"
+                                        Style="{StaticResource ListToolDangerButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Settings_MediaForgetTip}" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
