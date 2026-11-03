@@ -548,11 +548,52 @@
 
                 <!--  Player card  -->
                 <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                    <Grid>
+                    <Grid x:Name="PlayerCardGrid">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+
+                        <!--  Shown instead of the stage while the player is out in the mini window  -->
+                        <Border
+                            x:Name="StagePlaceholder"
+                            Grid.Row="0"
+                            Background="{DynamicResource RowBg}"
+                            CornerRadius="12"
+                            Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <materialDesign:PackIcon
+                                    Width="44"
+                                    Height="44"
+                                    HorizontalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Kind="PictureInPictureBottomRight" />
+                                <TextBlock
+                                    MaxWidth="320"
+                                    Margin="0,12,0,14"
+                                    HorizontalAlignment="Center"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_MediaViewer_Widget_Placeholder}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                                <Button
+                                    HorizontalAlignment="Center"
+                                    Click="BtnBringBack_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    Width="Auto">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Kind="WindowRestore" />
+                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_MediaViewer_Widget_BringBack}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
 
                         <!--  Fixed-dark stage: picture / video / music + player chrome  -->
                         <Border
@@ -716,7 +757,24 @@
                                 </Grid>
 
                                 <!--  Player chrome  -->
-                                <StackPanel Grid.Row="1" Margin="14,6,14,12">
+                                <!--  In the mini window the controls float over the picture; this darkens the strip behind them  -->
+                                <Border
+                                    x:Name="ChromeScrim"
+                                    Grid.Row="1"
+                                    IsHitTestVisible="False"
+                                    Visibility="Collapsed">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Offset="0" Color="#000E0F12" />
+                                            <GradientStop Offset="0.45" Color="#CC0E0F12" />
+                                            <GradientStop Offset="1" Color="#E60E0F12" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <StackPanel
+                                    x:Name="StageChrome"
+                                    Grid.Row="1"
+                                    Margin="14,6,14,12">
                                     <Grid x:Name="SeekRow" Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="52" />
@@ -870,7 +928,7 @@
                                                 Click="BtnWidget_Click"
                                                 Style="{StaticResource PlayerIconButtonStyle}"
                                                 ToolTip="{DynamicResource Str_MediaViewer_Widget_Tooltip}">
-                                                <materialDesign:PackIcon Kind="PictureInPictureBottomRight" />
+                                                <materialDesign:PackIcon x:Name="WidgetIcon" Kind="PictureInPictureBottomRight" />
                                             </Button>
                                             <Button
                                                 x:Name="BtnTheater"

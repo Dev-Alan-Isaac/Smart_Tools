@@ -5,253 +5,117 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     Title="Media Viewer"
+    Width="420"
+    Height="300"
+    MinWidth="300"
+    MinHeight="220"
     AllowsTransparency="True"
     Background="Transparent"
-    ResizeMode="NoResize"
+    ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="False"
-    SizeToContent="WidthAndHeight"
     Topmost="True"
     UseLayoutRounding="True"
     WindowStartupLocation="Manual"
     WindowStyle="None">
 
     <!--
-        The floating mini player of the Media Viewer: borderless, always on top, not in the
-        taskbar. Drag to move, right-click for the menu. It is only a remote: the view
-        pushes a MediaWidgetState in (Update) and the buttons raise events back. Colours
-        are theme tokens, so a theme switch repaints it.
+        The floating mini player. It is only a frame: the Media Viewer moves its real player
+        (the Stage with the picture, video and controls) in here when you press W, and moves
+        it back when you close this window. There is no second set of controls to keep in
+        sync. Borderless, always on top, not in the taskbar, no Owner (like the Network Speed
+        widget). Colours are theme tokens, so a theme switch repaints it.
     -->
-
-    <Window.Resources>
-
-        <!--  Round accent play / pause button  -->
-        <Style x:Key="WidgetPlayButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="42" />
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="Bd"
-                            Background="{DynamicResource AccentFill}"
-                            CornerRadius="21">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.88" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.74" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="WidgetIconButtonStyle" BasedOn="{StaticResource NeutralIconButtonStyle}" TargetType="Button">
-            <Setter Property="Width" Value="30" />
-            <Setter Property="Height" Value="30" />
-        </Style>
-
-    </Window.Resources>
 
     <Border
         x:Name="Card"
-        Padding="12,10"
+        Padding="8,6,8,14"
         Background="{DynamicResource CardBg}"
         BorderBrush="{DynamicResource CardBorder}"
         BorderThickness="1"
         CornerRadius="12"
-        Cursor="SizeAll"
-        MouseLeftButtonDown="Card_MouseLeftButtonDown">
-        <Border.ContextMenu>
-            <ContextMenu>
-                <MenuItem x:Name="MenuCompact" Click="MenuCompact_Click" IsCheckable="True" />
-                <MenuItem x:Name="MenuCorner" Click="MenuCorner_Click" />
-                <MenuItem x:Name="MenuOpen" Click="MenuOpen_Click" />
-                <Separator />
-                <MenuItem x:Name="MenuClose" Click="MenuClose_Click" />
-            </ContextMenu>
-        </Border.ContextMenu>
+        MouseEnter="Card_MouseEnter"
+        MouseLeave="Card_MouseLeave">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-        <StackPanel x:Name="Body">
-
-            <!--  Title row  -->
-            <Grid>
+            <!--  Title strip: drag here to move the window  -->
+            <Grid
+                x:Name="TitleStrip"
+                Grid.Row="0"
+                Margin="2,0,0,6"
+                Background="Transparent"
+                Cursor="SizeAll"
+                MouseLeftButtonDown="TitleStrip_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border
-                    Width="30"
-                    Height="30"
-                    Margin="0,0,10,0"
+                <materialDesign:PackIcon
+                    Width="16"
+                    Height="16"
+                    Margin="0,0,8,0"
                     VerticalAlignment="Center"
-                    Background="{DynamicResource AccentColorSubtle}"
-                    CornerRadius="8">
-                    <materialDesign:PackIcon
-                        x:Name="KindIcon"
-                        Width="16"
-                        Height="16"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColor}"
-                        Kind="PlayBoxMultipleOutline" />
-                </Border>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock
-                        x:Name="TxtTitle"
-                        FontSize="13"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimary}"
-                        TextTrimming="CharacterEllipsis" />
-                    <TextBlock
-                        x:Name="TxtSubtitle"
-                        Margin="0,1,0,0"
-                        FontSize="11"
-                        Foreground="{DynamicResource TextSecondary}"
-                        TextTrimming="CharacterEllipsis" />
-                </StackPanel>
+                    Foreground="{DynamicResource TextSecondary}"
+                    Kind="DragHorizontalVariant" />
+                <TextBlock
+                    x:Name="TxtTitle"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    TextTrimming="CharacterEllipsis" />
                 <Button
-                    x:Name="BtnClose"
+                    x:Name="BtnMinimizeApp"
                     Grid.Column="2"
-                    Width="24"
-                    Height="24"
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Top"
-                    Click="BtnClose_Click"
+                    Width="26"
+                    Height="26"
+                    Margin="8,0,2,0"
+                    Click="BtnMinimizeApp_Click"
+                    Cursor="Arrow"
                     Style="{StaticResource NeutralIconButtonStyle}">
                     <materialDesign:PackIcon
-                        Width="13"
-                        Height="13"
+                        Width="14"
+                        Height="14"
+                        Kind="WindowMinimize" />
+                </Button>
+                <Button
+                    x:Name="BtnBack"
+                    Grid.Column="3"
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,2,0"
+                    Click="BtnBack_Click"
+                    Cursor="Arrow"
+                    Style="{StaticResource NeutralIconButtonStyle}">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        Kind="WindowRestore" />
+                </Button>
+                <Button
+                    x:Name="BtnClose"
+                    Grid.Column="4"
+                    Width="26"
+                    Height="26"
+                    Click="BtnClose_Click"
+                    Cursor="Arrow"
+                    Style="{StaticResource NeutralIconButtonStyle}">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
                         Kind="Close" />
                 </Button>
             </Grid>
 
-            <!--  Seek bar (video and music)  -->
-            <Grid x:Name="SeekRow" Margin="0,8,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="40" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="40" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    x:Name="TxtPosition"
-                    VerticalAlignment="Center"
-                    FontSize="11"
-                    Foreground="{DynamicResource TextSecondary}"
-                    Text="0:00" />
-                <Slider
-                    x:Name="SeekSlider"
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    IsMoveToPointEnabled="True"
-                    Maximum="1"
-                    Minimum="0"
-                    ValueChanged="SeekSlider_ValueChanged" />
-                <TextBlock
-                    x:Name="TxtDuration"
-                    Grid.Column="2"
-                    VerticalAlignment="Center"
-                    FontSize="11"
-                    Foreground="{DynamicResource TextSecondary}"
-                    Text="0:00"
-                    TextAlignment="Right" />
-            </Grid>
-
-            <!--  Transport  -->
-            <StackPanel
-                Margin="0,6,0,0"
-                HorizontalAlignment="Center"
-                Orientation="Horizontal">
-                <Button
-                    x:Name="BtnPrev"
-                    Click="BtnPrev_Click"
-                    Style="{StaticResource WidgetIconButtonStyle}">
-                    <materialDesign:PackIcon Width="20" Height="20" Kind="SkipPrevious" />
-                </Button>
-                <Button
-                    x:Name="BtnPlay"
-                    Margin="10,0"
-                    Click="BtnPlay_Click"
-                    Style="{StaticResource WidgetPlayButtonStyle}">
-                    <materialDesign:PackIcon
-                        x:Name="PlayIcon"
-                        Width="24"
-                        Height="24"
-                        Kind="Play" />
-                </Button>
-                <Button
-                    x:Name="BtnNext"
-                    Click="BtnNext_Click"
-                    Style="{StaticResource WidgetIconButtonStyle}">
-                    <materialDesign:PackIcon Width="20" Height="20" Kind="SkipNext" />
-                </Button>
-            </StackPanel>
-
-            <!--  Volume, speed, play order (hidden in compact mode and for pictures)  -->
-            <Grid x:Name="ExtrasRow" Margin="0,8,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Button
-                    x:Name="BtnMute"
-                    Width="28"
-                    Height="28"
-                    Click="BtnMute_Click"
-                    Style="{StaticResource NeutralIconButtonStyle}">
-                    <materialDesign:PackIcon
-                        x:Name="MuteIcon"
-                        Width="16"
-                        Height="16"
-                        Kind="VolumeHigh" />
-                </Button>
-                <Slider
-                    x:Name="VolumeSlider"
-                    Grid.Column="1"
-                    Margin="6,0,10,0"
-                    VerticalAlignment="Center"
-                    IsMoveToPointEnabled="True"
-                    Maximum="1"
-                    Minimum="0"
-                    ValueChanged="VolumeSlider_ValueChanged" />
-                <Button
-                    x:Name="BtnSpeed"
-                    Grid.Column="2"
-                    Width="Auto"
-                    MinWidth="44"
-                    Height="28"
-                    Margin="0,0,6,0"
-                    Padding="8,0"
-                    Click="BtnSpeed_Click"
-                    Content="1x"
-                    FontSize="12"
-                    FontWeight="SemiBold"
-                    MouseRightButtonUp="BtnSpeed_MouseRightButtonUp"
-                    Style="{StaticResource NeutralIconButtonStyle}" />
-                <Button
-                    x:Name="BtnOrder"
-                    Grid.Column="3"
-                    Width="28"
-                    Height="28"
-                    Click="BtnOrder_Click"
-                    Style="{StaticResource NeutralIconButtonStyle}">
-                    <materialDesign:PackIcon
-                        x:Name="OrderIcon"
-                        Width="16"
-                        Height="16"
-                        Kind="PlaylistPlay" />
-                </Button>
-            </Grid>
-        </StackPanel>
+            <!--  The player lands here  -->
+            <Border x:Name="StageHost" Grid.Row="1" />
+        </Grid>
     </Border>
 </Window>

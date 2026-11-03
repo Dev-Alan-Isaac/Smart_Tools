@@ -111,6 +111,8 @@ namespace Smart_Tools.WPF.Controllers
                 s.LastItem ??= "";
                 if (s.WidgetLeft is { } l && !double.IsFinite(l)) s.WidgetLeft = null;
                 if (s.WidgetTop is { } t && !double.IsFinite(t)) s.WidgetTop = null;
+                if (s.WidgetWidth is { } w && (!double.IsFinite(w) || w < 100)) s.WidgetWidth = null;
+                if (s.WidgetHeight is { } h && (!double.IsFinite(h) || h < 100)) s.WidgetHeight = null;
                 return s;
             }
             catch (Exception)

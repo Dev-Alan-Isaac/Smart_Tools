@@ -1729,17 +1729,6 @@
                                         x:Name="ChkMvWidgetStartup"
                                         Click="ChkMvWidgetStartup_Click"
                                         Content="{DynamicResource Str_Settings_MediaWidgetStartup}" />
-                                    <CheckBox
-                                        x:Name="ChkMvKeepPlaying"
-                                        Margin="0,8,0,0"
-                                        Click="ChkMvKeepPlaying_Click"
-                                        Content="{DynamicResource Str_Settings_MediaKeepPlaying}"
-                                        ToolTip="{DynamicResource Str_Settings_MediaKeepPlayingTip}" />
-                                    <CheckBox
-                                        x:Name="ChkMvCompact"
-                                        Margin="0,8,0,0"
-                                        Click="ChkMvCompact_Click"
-                                        Content="{DynamicResource Str_Settings_MediaWidgetCompact}" />
                                     <Button
                                         x:Name="BtnMvResetWidget"
                                         Margin="0,14,0,0"

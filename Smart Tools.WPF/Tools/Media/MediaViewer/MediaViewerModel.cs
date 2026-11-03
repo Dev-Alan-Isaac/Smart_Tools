@@ -55,27 +55,13 @@ namespace Smart_Tools.WPF.Models
         public List<MediaSavedSource> Sources { get; set; } = new();
         public string LastItem { get; set; } = "";
 
-        // The widget (position and compact mode saved by the tool; the toggles are on the Settings page).
+        // The floating mini player (position and size saved by the tool; the startup toggle is on the Settings page).
         public bool ShowWidgetAtStartup { get; set; }
-        public bool WidgetCompact { get; set; }
         public double? WidgetLeft { get; set; }
         public double? WidgetTop { get; set; }
-        public bool KeepPlayingWithWidget { get; set; } = true;
+        public double? WidgetWidth { get; set; }
+        public double? WidgetHeight { get; set; }
     }
-
-    /// <summary>What the floating widget shows. The tool's view builds it; the widget only displays it.</summary>
-    public sealed record MediaWidgetState(
-        bool HasItem,
-        string Title,
-        string Subtitle,
-        ViewerMediaKind Kind,
-        bool IsRunning,
-        double PositionSeconds,
-        double DurationSeconds,
-        double Volume,
-        bool Muted,
-        string SpeedLabel,
-        ViewerPlayOrder Order);
 
     /// <summary>Something the user added: one file or a whole folder.</summary>
     public sealed class MediaSource

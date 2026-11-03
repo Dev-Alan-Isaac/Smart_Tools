@@ -212,8 +212,6 @@ namespace Smart_Tools.WPF.Views
             {
                 var s = MediaViewerManager.LoadSettings();
                 ChkMvWidgetStartup.IsChecked = s.ShowWidgetAtStartup;
-                ChkMvKeepPlaying.IsChecked = s.KeepPlayingWithWidget;
-                ChkMvCompact.IsChecked = s.WidgetCompact;
                 ChkMvRemember.IsChecked = s.RememberPlaylist;
             }
             finally
@@ -233,18 +231,6 @@ namespace Smart_Tools.WPF.Views
         {
             bool on = ChkMvWidgetStartup.IsChecked == true;
             ChangeMediaViewerSettings(s => s.ShowWidgetAtStartup = on);
-        }
-
-        private void ChkMvKeepPlaying_Click(object sender, RoutedEventArgs e)
-        {
-            bool on = ChkMvKeepPlaying.IsChecked == true;
-            ChangeMediaViewerSettings(s => s.KeepPlayingWithWidget = on);
-        }
-
-        private void ChkMvCompact_Click(object sender, RoutedEventArgs e)
-        {
-            bool on = ChkMvCompact.IsChecked == true;
-            ChangeMediaViewerSettings(s => s.WidgetCompact = on);
         }
 
         /// <summary>Turning "remember" off also drops what was saved, so nothing old comes back if it's turned on later.</summary>
@@ -274,6 +260,8 @@ namespace Smart_Tools.WPF.Views
             {
                 s.WidgetLeft = null;
                 s.WidgetTop = null;
+                s.WidgetWidth = null;
+                s.WidgetHeight = null;
             });
 
         /// <summary>Set by another page before opening Settings, to land on one section ("TextRecognition"). Cleared once used.</summary>

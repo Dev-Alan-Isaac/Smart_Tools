@@ -122,7 +122,10 @@ namespace Smart_Tools.WPF
             }
         }
 
-        /// <summary>Brings the window forward on a tool - used by a widget's "Open ..." menu entry.</summary>
+        /// <summary>Minimizes the app and leaves the floating mini player on screen (the mini player's "minimize the app" button).</summary>
+        public void MinimizeForWidget() => WindowState = WindowState.Minimized;
+
+        /// <summary>Brings the window forward on a tool - used by a widget's "Back to the tool".</summary>
         public void ShowTool(string id)
         {
             BringToFront();

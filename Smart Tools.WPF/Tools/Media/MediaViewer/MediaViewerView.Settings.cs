@@ -10,15 +10,19 @@ namespace Smart_Tools.WPF.Views
 {
     // =====================================================================
     //  Media Viewer - what it remembers (media_viewer.json) and the floating
-    //  widget. UI only: the file's shape and load/save live in
-    //  MediaViewerManager, the widget window is MediaViewerWidgetWindow.
+    //  mini player. UI only: the file's shape and load/save live in
+    //  MediaViewerManager, the window is MediaViewerWidgetWindow.
+    //
+    //  The mini player is the real player: pressing W moves the Stage (the
+    //  picture, video and controls) out of the tool into a small window, and
+    //  closing the window moves it back. There is only ever one player, so
+    //  nothing has to be kept in sync.
     // =====================================================================
     public partial class MediaViewerView
     {
         private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
         private MediaViewerWidgetWindow? _widget;
         private bool _applyingSettings;
-        private bool _keepPlayingWithWidget = true;
 
         /// <summary>
         /// False until the remembered list has been read back. Until then nothing is saved - the list
@@ -28,6 +32,9 @@ namespace Smart_Tools.WPF.Views
 
         /// <summary>The list came back from the last session: the remembered item is chosen but nothing is loaded yet.</summary>
         private bool _restoredIdle;
+
+        /// <summary>True while the player is out in the mini window (the controls then show their small form).</summary>
+        private bool StageInWidget => _widget != null;
 
         private void InitializeSettings()
         {
@@ -88,7 +95,6 @@ namespace Smart_Tools.WPF.Views
                 _slide.Interval = TimeSpan.FromSeconds(s.SlideshowSeconds);
 
                 _playlistCollapsed = s.PlaylistCollapsed;
-                _keepPlayingWithWidget = s.KeepPlayingWithWidget;
                 ApplyPanels();
                 UpdateUi();
             }
@@ -139,16 +145,15 @@ namespace Smart_Tools.WPF.Views
             }, notify: false);
         }
 
-        /// <summary>The Settings page changed something (or another saver did): take in the fields that page owns.</summary>
+        /// <summary>The Settings page changed something: "Reset position and size" puts an open mini player back in its corner.</summary>
         private void OnSettingsChangedElsewhere()
         {
             Dispatcher.BeginInvoke(() =>
             {
+                if (_widget == null) return;
                 var s = MediaViewerManager.LoadSettings();
-                _keepPlayingWithWidget = s.KeepPlayingWithWidget;
-                _widget?.SetCompact(s.WidgetCompact);
-                // "Reset position" on the Settings page: an open widget goes back to its corner straight away.
-                if (_widget != null && s.WidgetLeft == null && s.WidgetTop == null) _widget.SnapToCorner();
+                if (s.WidgetLeft == null && s.WidgetTop == null && s.WidgetWidth == null && s.WidgetHeight == null)
+                    _widget.ResetPlacement();
             });
         }
 
@@ -192,66 +197,81 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  The floating widget
+        //  The mini player: the same player, in a small window
         // =================================================================
 
         private void BtnWidget_Click(object sender, RoutedEventArgs e) => ToggleWidget();
 
+        private void BtnBringBack_Click(object sender, RoutedEventArgs e) => HideWidget(openTool: false);
+
         private void ToggleWidget()
         {
             if (_widget == null) ShowWidget();
-            else HideWidget();
+            else HideWidget(openTool: false);
         }
 
-        /// <summary>Called by the main window at start-up when "show the widget when the app starts" is on.</summary>
+        /// <summary>Called by the main window at start-up when "show the mini player when the app starts" is on.</summary>
         public void RestoreWidget()
         {
             if (_widget == null) ShowWidget();
         }
 
+        /// <summary>Moves the player out of the tool into the small window; the tool shows a placeholder meanwhile.</summary>
         private void ShowWidget()
         {
             if (_widget != null) return;
-            var s = MediaViewerManager.LoadSettings();
-            var w = new MediaViewerWidgetWindow(s);
-            w.PlayPauseRequested += () =>
+            var w = new MediaViewerWidgetWindow(MediaViewerManager.LoadSettings());
+            w.MinimizeAppRequested += RequestMinimizeApp;
+            w.BackRequested += () => HideWidget(openTool: true);
+            w.CloseRequested += () => HideWidget(openTool: false);
+            w.KeyPressed += e => Root_PreviewKeyDown(this, e);   // the same keys as in the tool
+            w.PlacementChanged += (left, top, width, height) => MediaViewerManager.UpdateSettings(x =>
             {
-                if (_items.Count == 0) RequestOpenTool();   // nothing to play yet: bring the tool forward so files can be added
-                else TogglePlay();
-            };
-            w.PreviousRequested += GoPrevious;
-            w.NextRequested += GoNext;
-            w.SeekRequested += seconds =>
-            {
-                if (!_mediaOpen) return;
-                Player.Position = TimeSpan.FromSeconds(seconds);
-                TxtPosition.Text = MediaViewerManager.FormatTime(Player.Position);
-            };
-            w.VolumeChanged += v => VolumeSlider.Value = v;
-            w.MuteToggled += () => BtnMute_Click(this, new RoutedEventArgs());
-            w.SpeedStepRequested += StepSpeed;
-            w.OrderCycleRequested += CycleOrder;
-            w.OpenToolRequested += RequestOpenTool;
-            w.CloseRequested += HideWidget;
-            w.PositionChanged += (left, top) => MediaViewerManager.UpdateSettings(x => { x.WidgetLeft = left; x.WidgetTop = top; }, notify: false);
-            w.CompactToggled += compact => MediaViewerManager.UpdateSettings(x => x.WidgetCompact = compact);
+                x.WidgetLeft = left;
+                x.WidgetTop = top;
+                x.WidgetWidth = width;
+                x.WidgetHeight = height;
+            }, notify: false);
+            // Closed some other way (Alt+F4): the player must still go home.
             w.Closed += (_, _) =>
             {
-                if (ReferenceEquals(_widget, w)) _widget = null;
-                UpdateUi();
+                if (ReferenceEquals(_widget, w)) ReturnStage(closeWindow: false);
             };
+
+            var keep = CapturePlayback();
+            PlayerCardGrid.Children.Remove(Stage);
+            StagePlaceholder.Visibility = Visibility.Visible;
+            w.Host(Stage, StageChrome, ChromeScrim);
             _widget = w;
             w.RefreshText();
+            w.SetTitle(Current?.Name ?? "");
             w.Show();
-            PushWidget();
+            RestorePlayback(keep);
+            UpdateUi();
         }
 
-        private void HideWidget()
+        /// <summary>Puts the player back in the tool and closes the small window. <paramref name="openTool"/> also brings the main window forward on the tool.</summary>
+        private void HideWidget(bool openTool)
+        {
+            if (_widget == null) return;
+            ReturnStage(closeWindow: true);
+            if (openTool) RequestOpenTool();
+        }
+
+        private void ReturnStage(bool closeWindow)
         {
             var w = _widget;
+            if (w == null) return;
             _widget = null;
-            w?.Close();
-            // Without the widget there's no way to stop music from another tool, so the page pauses it if it isn't showing.
+
+            var keep = CapturePlayback();
+            w.Release();
+            if (!PlayerCardGrid.Children.Contains(Stage)) PlayerCardGrid.Children.Insert(0, Stage);
+            StagePlaceholder.Visibility = Visibility.Collapsed;
+            if (closeWindow) w.Close();
+            RestorePlayback(keep);
+
+            // Back in a tool page nobody is looking at, with no window to control it: it would play on unheard-of.
             if (!IsLoaded && _playing)
             {
                 Player.Pause();
@@ -260,61 +280,34 @@ namespace Smart_Tools.WPF.Views
             UpdateUi();
         }
 
-        /// <summary>Closes the widget when the app exits (the "open at start-up" choice stays as the user set it).</summary>
-        private void CloseWidgetForExit()
-        {
-            var w = _widget;
-            _widget = null;
-            w?.Close();
-        }
+        /// <summary>Closes the mini player when the app exits (the "open at start-up" choice stays as the user set it).</summary>
+        private void CloseWidgetForExit() => ReturnStage(closeWindow: true);
 
-        private void CycleOrder()
+        // Moving the MediaElement to another window makes it re-attach; remember where it was so a stall can't leave it frozen.
+        private (TimeSpan Position, bool Playing, bool Open) CapturePlayback() =>
+            (_mediaOpen ? Player.Position : TimeSpan.Zero, _playing, _mediaOpen);
+
+        private void RestorePlayback((TimeSpan Position, bool Playing, bool Open) keep)
         {
-            var next = Order switch
+            if (!keep.Open) return;
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
             {
-                ViewerPlayOrder.Sequential => RadioOrderShuffle,
-                ViewerPlayOrder.Shuffle => RadioOrderRepeatOne,
-                _ => RadioOrderSequential,
-            };
-            next.IsChecked = true;
-            Order_Click(next, new RoutedEventArgs());
+                if (!_mediaOpen) return;   // another item was chosen meanwhile
+                if (Math.Abs((Player.Position - keep.Position).TotalSeconds) > 1.5) Player.Position = keep.Position;
+                if (keep.Playing && _playing) Player.Play();
+            });
         }
 
-        /// <summary>Brings the main window forward on this tool (the widget's "Open Media Viewer").</summary>
+        /// <summary>Minimizes the main window so only the mini player is left on screen ("Back to the tool" brings the app back).</summary>
+        private void RequestMinimizeApp()
+        {
+            if (System.Windows.Application.Current?.MainWindow is MainWindow main) main.MinimizeForWidget();
+        }
+
+        /// <summary>Brings the main window forward on this tool (the widget's "Back to the tool").</summary>
         private void RequestOpenTool()
         {
             if (System.Windows.Application.Current?.MainWindow is MainWindow main) main.ShowTool("media-viewer");
         }
-
-        private MediaWidgetState BuildWidgetState()
-        {
-            var item = Current;
-            if (item == null)
-            {
-                string waiting = _items.Count > 0
-                    ? string.Format(CultureInfo.CurrentCulture, S("Str_MediaViewer_ItemsCount", "{0:N0} items"), _items.Count)
-                    : "";
-                return new MediaWidgetState(false, "", waiting, ViewerMediaKind.Audio, false, 0, 0, VolumeSlider.Value, Player.IsMuted,
-                    MediaViewerManager.SpeedLabel(_speed), Order);
-            }
-
-            bool image = item.Kind == ViewerMediaKind.Image;
-            double position = 0, duration = 0;
-            if (!image && _mediaOpen)
-            {
-                position = Player.Position.TotalSeconds;
-                if (Player.NaturalDuration.HasTimeSpan) duration = Player.NaturalDuration.TimeSpan.TotalSeconds;
-            }
-            string kind = item.Kind switch
-            {
-                ViewerMediaKind.Image => S("Str_MediaViewer_Picture", "Picture"),
-                ViewerMediaKind.Video => S("Str_MediaViewer_Video", "Video"),
-                _ => S("Str_MediaViewer_Audio", "Music"),
-            };
-            return new MediaWidgetState(true, item.Name, $"{kind} · {_index + 1} / {_items.Count}", item.Kind,
-                image ? _slideshow : _playing, position, duration, VolumeSlider.Value, Player.IsMuted, MediaViewerManager.SpeedLabel(_speed), Order);
-        }
-
-        private void PushWidget() => _widget?.Update(BuildWidgetState());
     }
 }

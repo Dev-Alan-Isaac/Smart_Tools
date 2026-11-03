@@ -599,7 +599,6 @@ namespace Smart_Tools.WPF.Views
             if (_mediaOpen) Player.SpeedRatio = _speed;
             BtnSpeed.Content = MediaViewerManager.SpeedLabel(_speed);
             ScheduleSave();
-            PushWidget();
         }
 
         private void Slide_Click(object sender, RoutedEventArgs e)
@@ -801,7 +800,6 @@ namespace Smart_Tools.WPF.Views
             if (!_mediaOpen) return;
             var position = Player.Position;
             TxtPosition.Text = MediaViewerManager.FormatTime(position);
-            PushWidget();
             if (PosSlider.IsMouseCaptureWithin) return;   // the user is dragging it
             _updatingSlider = true;
             PosSlider.Value = Math.Min(position.TotalSeconds, PosSlider.Maximum);
@@ -998,6 +996,9 @@ namespace Smart_Tools.WPF.Views
                 case Key.T:
                     ToggleTheater();
                     break;
+                case Key.Escape when _widget != null:
+                    HideWidget(openTool: false);
+                    break;
                 case Key.Escape when _theater:
                     ToggleTheater();
                     break;
@@ -1033,12 +1034,27 @@ namespace Smart_Tools.WPF.Views
             BtnPrev.IsEnabled = BtnNext.IsEnabled = _items.Count > 1;
             BtnPlay.IsEnabled = has;
 
+            // In the mini window only the essentials stay (seek, previous / play / next, mute, speed, back to the tool);
+            // the rest is too wide for a small window - their keys still work.
+            bool mini = StageInWidget;
             SeekRow.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
-            BtnMute.Visibility = VolumeSlider.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            BtnMute.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            VolumeSlider.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;
             BtnSpeed.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
-            BtnSkipBack.Visibility = BtnSkipForward.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
-            BtnRotateLeft.Visibility = BtnRotateRight.Visibility = image ? Visibility.Visible : Visibility.Collapsed;
-            BtnFit.Visibility = image && _zoom > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BtnSkipBack.Visibility = BtnSkipForward.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;
+            BtnRotateLeft.Visibility = BtnRotateRight.Visibility = image && !mini ? Visibility.Visible : Visibility.Collapsed;
+            BtnFit.Visibility = image && _zoom > 0 && !mini ? Visibility.Visible : Visibility.Collapsed;
+            BtnTheater.Visibility = mini ? Visibility.Collapsed : Visibility.Visible;
+
+            // In the mini window the picture or video fills the whole stage and the controls float over its bottom edge,
+            // so they can fade away without the picture jumping.
+            Grid.SetRowSpan(StageContent, mini ? 2 : 1);
+            ChromeScrim.Visibility = mini ? Visibility.Visible : Visibility.Collapsed;
+
+            // The same button sends the player out and brings it back.
+            WidgetIcon.Kind = mini ? PackIconKind.WindowRestore : PackIconKind.PictureInPictureBottomRight;
+            BtnWidget.ToolTip = S(mini ? "Str_MediaViewer_Widget_Back" : "Str_MediaViewer_Widget_Tooltip", "Floating mini player (W)");
+            _widget?.SetTitle(item?.Name ?? "");
 
             MuteIcon.Kind = Player.IsMuted || VolumeSlider.Value <= 0 ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
 
@@ -1051,19 +1067,18 @@ namespace Smart_Tools.WPF.Views
             TxtCount.Text = _items.Count.ToString(CultureInfo.CurrentCulture);
             PillPosition.Visibility = has ? Visibility.Visible : Visibility.Collapsed;
             TxtPositionPill.Text = has ? $"{_index + 1} / {_items.Count}" : "";
-            BtnWidget.Opacity = _widget != null ? 1 : 0.75;
-            PushWidget();
         }
 
         private void Root_Loaded(object sender, RoutedEventArgs e) => UpdateUi();   // back on the page: show what happened meanwhile
 
         private void Root_Unloaded(object sender, RoutedEventArgs e)
         {
-            // Leaving the page: the slideshow stops. Sound carries on only while the widget is open to control it;
-            // without the widget there'd be no way to stop it from another tool, so it pauses.
+            // Leaving the page: with the player out in the mini window it carries on there (it has its own
+            // controls). Otherwise there'd be no way to stop it from another tool, so it pauses.
+            if (_widget != null) return;
             _slide.Stop();
             _slideshow = false;
-            if (_playing && !(_widget != null && _keepPlayingWithWidget))
+            if (_playing)
             {
                 Player.Pause();
                 _playing = false;
