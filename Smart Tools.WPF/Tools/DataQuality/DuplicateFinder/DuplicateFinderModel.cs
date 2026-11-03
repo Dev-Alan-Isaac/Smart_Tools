@@ -168,6 +168,20 @@ namespace Smart_Tools.WPF.Models
 
         public string ShortHash => Hash.Length > 12 ? Hash[..12] : Hash;
 
+        private bool _isExpanded = true;
+
+        /// <summary>Whether the group's rows are showing. Lives on the group, not the grid row, so scrolling and recycling can't mix states up.</summary>
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (_isExpanded == value) return;
+                _isExpanded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>Call after files' selection or membership changes.</summary>

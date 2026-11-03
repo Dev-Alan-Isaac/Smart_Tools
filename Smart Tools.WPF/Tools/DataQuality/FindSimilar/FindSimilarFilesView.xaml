@@ -1133,6 +1133,32 @@
                                     </Grid>
                                 </Button>
                                 <Button
+                                    x:Name="BtnCollapseGroups"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,6,0"
+                                    Click="BtnCollapseGroups_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="Fold every group">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="UnfoldLessHorizontal" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnExpandGroups"
+                                    Width="32"
+                                    Height="32"
+                                    Margin="0,0,6,0"
+                                    Click="BtnExpandGroups_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="Unfold every group">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="UnfoldMoreHorizontal" />
+                                </Button>
+                                <Button
                                     x:Name="BtnDeselectAll"
                                     Width="32"
                                     Height="32"
@@ -1190,7 +1216,7 @@
                             VirtualizingPanel.ScrollUnit="Pixel"
                             VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.GroupStyle>
-                                <GroupStyle HeaderTemplate="{StaticResource GroupHeaderTemplate}" />
+                                <GroupStyle ContainerStyle="{StaticResource CollapsibleGroupItemStyle}" HeaderTemplate="{StaticResource GroupHeaderTemplate}" />
                             </DataGrid.GroupStyle>
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="36" CellStyle="{StaticResource CompactCellStyle}">

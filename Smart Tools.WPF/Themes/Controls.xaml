@@ -4246,4 +4246,67 @@
         </Setter>
     </Style>
 
+    <!--
+        Group row for the grouped result grids (Duplicate Data, Find Similar Files): a chevron that folds the
+        group's rows away, then the view's own header. The open/closed state is the group's IsExpanded
+        (Content is the CollectionViewGroup, Name is the group object), so "collapse all" is just setting it.
+    -->
+    <Style x:Key="CollapsibleGroupItemStyle" TargetType="GroupItem">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GroupItem">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ToggleButton
+                                x:Name="GroupToggle"
+                                Width="26"
+                                Height="26"
+                                Margin="0,9,6,0"
+                                VerticalAlignment="Top"
+                                Cursor="Hand"
+                                Focusable="False"
+                                IsChecked="{Binding Name.IsExpanded, Mode=TwoWay}"
+                                ToolTip="Fold or unfold this group">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd" Background="Transparent" CornerRadius="8">
+                                            <materialDesign:PackIcon
+                                                x:Name="Chevron"
+                                                Width="18"
+                                                Height="18"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Kind="ChevronDown" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter TargetName="Chevron" Property="Kind" Value="ChevronRight" />
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                                <Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Grid.Column="1" />
+                        </Grid>
+                        <ItemsPresenter x:Name="GroupRows" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger SourceName="GroupToggle" Property="IsChecked" Value="False">
+                            <Setter TargetName="GroupRows" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

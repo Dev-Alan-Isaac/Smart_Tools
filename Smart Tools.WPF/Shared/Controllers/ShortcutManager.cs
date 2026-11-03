@@ -53,6 +53,19 @@ namespace Smart_Tools.WPF.Controllers
             Define(new ShortcutAction("ocr.capture", "Str_Shortcut_OcrCapture", "Capture a screen area", ShortcutScope.InApp, "Ctrl+Shift+X", "screen-ocr"));
             Define(new ShortcutAction("ocr.open", "Str_Shortcut_OcrOpen", "Open an image", ShortcutScope.InApp, "Ctrl+O", "screen-ocr"));
 
+            Define(new ShortcutAction("dup.scan", "Str_Shortcut_GroupsScan", "Start or stop the scan", ShortcutScope.InApp, "F5", "duplicate-data"));
+            Define(new ShortcutAction("dup.collapseAll", "Str_Shortcut_GroupsCollapseAll", "Fold every group", ShortcutScope.InApp, "Ctrl+Shift+Left", "duplicate-data"));
+            Define(new ShortcutAction("dup.expandAll", "Str_Shortcut_GroupsExpandAll", "Unfold every group", ShortcutScope.InApp, "Ctrl+Shift+Right", "duplicate-data"));
+            Define(new ShortcutAction("dup.nextGroup", "Str_Shortcut_GroupsNextGroup", "Go to the next group", ShortcutScope.InApp, "Ctrl+Down", "duplicate-data"));
+            Define(new ShortcutAction("dup.prevGroup", "Str_Shortcut_GroupsPrevGroup", "Go to the previous group", ShortcutScope.InApp, "Ctrl+Up", "duplicate-data"));
+            Define(new ShortcutAction("dup.deleteMarked", "Str_Shortcut_GroupsDeleteMarked", "Delete the marked files", ShortcutScope.InApp, "Ctrl+Delete", "duplicate-data"));
+            Define(new ShortcutAction("similar.scan", "Str_Shortcut_GroupsScan", "Start or stop the scan", ShortcutScope.InApp, "F5", "find-similar"));
+            Define(new ShortcutAction("similar.collapseAll", "Str_Shortcut_GroupsCollapseAll", "Fold every group", ShortcutScope.InApp, "Ctrl+Shift+Left", "find-similar"));
+            Define(new ShortcutAction("similar.expandAll", "Str_Shortcut_GroupsExpandAll", "Unfold every group", ShortcutScope.InApp, "Ctrl+Shift+Right", "find-similar"));
+            Define(new ShortcutAction("similar.nextGroup", "Str_Shortcut_GroupsNextGroup", "Go to the next group", ShortcutScope.InApp, "Ctrl+Down", "find-similar"));
+            Define(new ShortcutAction("similar.prevGroup", "Str_Shortcut_GroupsPrevGroup", "Go to the previous group", ShortcutScope.InApp, "Ctrl+Up", "find-similar"));
+            Define(new ShortcutAction("similar.deleteMarked", "Str_Shortcut_GroupsDeleteMarked", "Delete the marked files", ShortcutScope.InApp, "Ctrl+Delete", "find-similar"));
+
             Revalidate();
         }
 

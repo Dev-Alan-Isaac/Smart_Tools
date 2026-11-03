@@ -84,6 +84,7 @@ namespace Smart_Tools.WPF.Views
 
             BuildResultsContextMenu();
             InitComparePlayers();
+            AttachShortcuts();
             _viewConstructed = true;
         }
 
@@ -628,6 +629,49 @@ namespace Smart_Tools.WPF.Views
                     e.Handled = true;
                     break;
             }
+        }
+
+        // =================================================================
+        //  Fold / unfold groups and the shortcuts (keys are set in Settings)
+        // =================================================================
+
+        private void AttachShortcuts()
+        {
+            ShortcutManager.Attach("similar.scan", () => BtnScanForSimilar_Click(this, new RoutedEventArgs()));
+            ShortcutManager.Attach("similar.collapseAll", () => SetAllGroupsExpanded(false));
+            ShortcutManager.Attach("similar.expandAll", () => SetAllGroupsExpanded(true));
+            ShortcutManager.Attach("similar.nextGroup", () => JumpToGroup(+1));
+            ShortcutManager.Attach("similar.prevGroup", () => JumpToGroup(-1));
+            ShortcutManager.Attach("similar.deleteMarked", () =>
+            {
+                if (BtnDeleteSelected.IsEnabled) BtnDeleteSelected_Click(this, new RoutedEventArgs());
+            });
+        }
+
+        private void BtnCollapseGroups_Click(object sender, RoutedEventArgs e) => SetAllGroupsExpanded(false);
+
+        private void BtnExpandGroups_Click(object sender, RoutedEventArgs e) => SetAllGroupsExpanded(true);
+
+        private void SetAllGroupsExpanded(bool expanded)
+        {
+            foreach (var g in _groups) g.IsExpanded = expanded;
+        }
+
+        /// <summary>Moves the highlight to the first row of the next (or previous) group, unfolding it if needed.</summary>
+        private void JumpToGroup(int direction)
+        {
+            if (_groups.Count == 0) return;
+            var current = DataGridDuplicates.SelectedItems.OfType<SimilarFileItem>().FirstOrDefault()?.GroupInfo;
+            int index = current == null ? (direction > 0 ? -1 : _groups.Count) : _groups.IndexOf(current);
+            index = Math.Clamp(index + direction, 0, _groups.Count - 1);
+            var group = _groups[index];
+            var first = group.Items.FirstOrDefault();
+            if (first == null) return;
+            group.IsExpanded = true;
+            DataGridDuplicates.SelectedItem = first;
+            DataGridDuplicates.UpdateLayout();
+            DataGridDuplicates.ScrollIntoView(first);
+            DataGridDuplicates.Focus();
         }
 
         private void BtnGroupReview_Click(object sender, RoutedEventArgs e)
