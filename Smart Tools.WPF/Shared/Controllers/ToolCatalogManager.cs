@@ -64,6 +64,8 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "search-files", Name = "Search Files", Icon = "FileSearch", CategoryId = "files", Description = "Find text and patterns inside files", Keywords = "grep find text regex content" },
             new ToolInfo { Id = "copy-queue", Name = "Copy Queue", Icon = "FolderMoveOutline", CategoryId = "files", Description = "Copy or move big sets of files safely, with pause and verify", Keywords = "copy move batch queue backup transfer verify pause resume checksum copiar mover cola respaldo" },
 
+            new ToolInfo { Id = "folder-tree", Name = "Folder Tree Exporter", Icon = "FileTreeOutline", CategoryId = "files", Description = "Export a folder's structure as a text tree, Markdown, JSON or CSV", Keywords = "folder tree structure export directory listing map tree command markdown json csv arbol carpetas estructura exportar" },
+
             // Convert & PDF
             new ToolInfo { Id = "convert-files", Name = "Convert Files", Icon = "SwapHorizontal", CategoryId = "convert", Description = "Convert files between formats", Keywords = "converter format mp3 mp4 docx png" },
             new ToolInfo { Id = "images-to-pdf", Name = "Images to PDF", Icon = "FileSwap", CategoryId = "convert", Description = "Turn images into a PDF", Keywords = "jpg png pdf combine scan" },

@@ -44,6 +44,40 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>
+        /// Same proof, read in chunks so a big file can report progress, pause and be cancelled (cancelling throws
+        /// <see cref="OperationCanceledException"/>). Stops at the first difference. Any other failure means "can't prove it".
+        /// </summary>
+        public static bool FilesAreIdentical(string a, string b, Action<long>? onBytes, Action? beforeChunk, CancellationToken token)
+        {
+            try
+            {
+                var fa = new FileInfo(a);
+                var fb = new FileInfo(b);
+                if (!fa.Exists || !fb.Exists || fa.Length != fb.Length) return false;
+                using var sa = new FileStream(a, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BufferSize, FileOptions.SequentialScan);
+                using var sb = new FileStream(b, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, BufferSize, FileOptions.SequentialScan);
+                var bufA = new byte[BufferSize];
+                var bufB = new byte[BufferSize];
+                int read;
+                while ((read = Read(sa, bufA, beforeChunk, token)) > 0)
+                {
+                    sb.ReadExactly(bufB, 0, read);
+                    if (!bufA.AsSpan(0, read).SequenceEqual(bufB.AsSpan(0, read))) return false;
+                    onBytes?.Invoke(read);
+                }
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return false;   // can't prove it - treat as different (the safe direction)
+            }
+        }
+
         /// <summary>SHA-256 of a file as hex, reporting bytes read so a progress bar can follow along.</summary>
         public static string HashFile(string path, Action<long>? onBytes = null, Action? beforeChunk = null, CancellationToken token = default)
         {
