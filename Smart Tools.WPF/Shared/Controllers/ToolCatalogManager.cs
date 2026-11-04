@@ -25,11 +25,11 @@ namespace Smart_Tools.WPF.Controllers
 
         public static readonly IReadOnlyList<ToolCategoryInfo> Categories = new[]
         {
+            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
             new ToolCategoryInfo { Id = "data-quality", Keywords = "datos calidad verificar", Title = "Data Quality", Icon = "ShieldCheckOutline", AccentHex = "#3B82F6", Blurb = "Check, de-duplicate and compare" },
             new ToolCategoryInfo { Id = "files", Keywords = "archivos carpetas", Title = "Files", Icon = "FolderOutline", AccentHex = "#F59E0B", Blurb = "Rename, sort and search" },
             new ToolCategoryInfo { Id = "convert", Keywords = "convertir formato", Title = "Convert", Icon = "SwapHorizontal", AccentHex = "#0EA5E9", Blurb = "Change file formats" },
             new ToolCategoryInfo { Id = "pdf", Keywords = "pdf documento documentos pdfs", Title = "PDF", Icon = "FilePdfBox", AccentHex = "#DC2626", Blurb = "Make, edit and protect PDFs" },
-            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
             new ToolCategoryInfo { Id = "video", Keywords = "videos pelicula", Title = "Video", Icon = "MovieOpenOutline", AccentHex = "#EF4444", Blurb = "Watch and edit" },
             new ToolCategoryInfo { Id = "audio", Keywords = "sonido sound", Title = "Audio", Icon = "VolumeHigh", AccentHex = "#8B5CF6", Blurb = "Play, record and transform sound" },
             new ToolCategoryInfo { Id = "images", Keywords = "imagen imagenes foto fotos colores", Title = "Images", Icon = "ImageOutline", AccentHex = "#14B8A6", Blurb = "View, edit and clean up pictures" },
