@@ -52,6 +52,7 @@ namespace Smart_Tools.WPF.Views
         private int _loadVersion;
         private MediaItem? _nowPlaying;
         private bool _updatingSlider;
+        private bool _isUserSeeking;
         private bool _slideshow;
         private bool _playing;
         private bool _mediaOpen;
@@ -838,7 +839,9 @@ namespace Smart_Tools.WPF.Views
             if (Player.NaturalDuration.HasTimeSpan)
             {
                 var length = Player.NaturalDuration.TimeSpan;
+                _updatingSlider = true;
                 PosSlider.Maximum = Math.Max(1, length.TotalSeconds);
+                _updatingSlider = false;
                 TxtDuration.Text = MediaViewerManager.FormatTime(length);
             }
             if (Player.NaturalVideoWidth > 0 && Current?.Kind == ViewerMediaKind.Video)
@@ -879,7 +882,7 @@ namespace Smart_Tools.WPF.Views
             if (!_mediaOpen) return;
             var position = Player.Position;
             TxtPosition.Text = MediaViewerManager.FormatTime(position);
-            if (PosSlider.IsMouseCaptureWithin) return;   // the user is dragging it
+            if (_isUserSeeking) return;   // the user is dragging it
             _updatingSlider = true;
             PosSlider.Value = Math.Min(position.TotalSeconds, PosSlider.Maximum);
             _updatingSlider = false;
@@ -888,8 +891,33 @@ namespace Smart_Tools.WPF.Views
         private void PosSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!_ready || _updatingSlider || !_mediaOpen) return;
+            if (_isUserSeeking)
+            {
+                // dragging: just follow the thumb, seek once on release
+                TxtPosition.Text = MediaViewerManager.FormatTime(TimeSpan.FromSeconds(e.NewValue));
+                return;
+            }
             Player.Position = TimeSpan.FromSeconds(e.NewValue);
-            TxtPosition.Text = MediaViewerManager.FormatTime(Player.Position);
+            TxtPosition.Text = MediaViewerManager.FormatTime(TimeSpan.FromSeconds(e.NewValue));
+        }
+
+        private void PosSlider_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _isUserSeeking = true;
+
+        private void PosSlider_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => EndUserSeek();
+
+        private void PosSlider_LostMouseCapture(object sender, MouseEventArgs e)
+        {
+            if (_isUserSeeking && Mouse.LeftButton != MouseButtonState.Pressed) EndUserSeek();
+        }
+
+        private void EndUserSeek()
+        {
+            if (!_isUserSeeking) return;
+            _isUserSeeking = false;
+            if (!_mediaOpen) return;
+            var target = TimeSpan.FromSeconds(PosSlider.Value);
+            Player.Position = target;
+            TxtPosition.Text = MediaViewerManager.FormatTime(target);
         }
 
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
