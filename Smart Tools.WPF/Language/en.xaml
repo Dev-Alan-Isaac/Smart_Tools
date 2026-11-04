@@ -9841,4 +9841,22 @@
     <system:String x:Key="Str_Tour_SystemSnapshot_Export_Text">Save everything as a web page, JSON or text, or the section you are looking at as CSV. Files are never overwritten.</system:String>
     <system:String x:Key="Str_Tour_SystemSnapshot_Grid_Title">The table</system:String>
     <system:String x:Key="Str_Tour_SystemSnapshot_Grid_Text">Click a header to sort, type in the filter to narrow the rows, and copy cells with Ctrl+C.</system:String>
+    <system:String x:Key="Str_SysSnap_C_Title">System Snapshot Collector</system:String>
+    <system:String x:Key="Str_SysSnap_C_Intro">Reads this PC and saves a report as a web page (HTML) next to this program. Nothing is changed and nothing is sent anywhere.</system:String>
+    <system:String x:Key="Str_SysSnap_C_Open">Open report</system:String>
+    <system:String x:Key="Str_SysSnap_C_Folder">Show in folder</system:String>
+    <system:String x:Key="Str_SysSnap_Item_Name">Name</system:String>
+    <system:String x:Key="Str_SysSnap_Item_Maker">Maker</system:String>
+    <system:String x:Key="Str_SysSnap_Item_Model">Model</system:String>
+    <system:String x:Key="Str_SysSnap_Item_Systemtype">System type</system:String>
+    <system:String x:Key="Str_SysSnap_Item_Motherboard">Motherboard</system:String>
+    <system:String x:Key="Str_SysSnap_Item_BIOS">BIOS</system:String>
+    <system:String x:Key="Str_SysSnap_Portable">Portable version</system:String>
+    <system:String x:Key="Str_SysSnap_PortableBtn">Create a portable version</system:String>
+    <system:String x:Key="Str_SysSnap_PortableHint">Copies the whole app to a USB drive or any folder. On another PC (Windows 10 or 11) run SmartTools.exe from there, open System Snapshot and scan it. Your settings and scans are not copied.</system:String>
+    <system:String x:Key="Str_SysSnap_PortableChoose">Choose the USB drive or folder for the portable version. A new folder is made inside it.</system:String>
+    <system:String x:Key="Str_SysSnap_PortableFolder">Smart Tools Portable</system:String>
+    <system:String x:Key="Str_SysSnap_PortableDone">Done. The portable version is in {0}. On the other PC run SmartTools.exe and open System Snapshot.</system:String>
+    <system:String x:Key="Str_SysSnap_PortableFailed">Could not make the portable version: {0}</system:String>
+    <system:String x:Key="Str_SysSnap_PortableDev">Not available in a build run from Visual Studio. Use the installed or published app.</system:String>
 </ResourceDictionary>

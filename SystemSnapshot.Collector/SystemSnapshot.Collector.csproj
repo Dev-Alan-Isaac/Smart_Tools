@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		System Snapshot Collector: a small stand-alone window that makes the same HTML report as the System Snapshot tool,
+		for a PC that does not have Smart Tools. The scan, the exporters and the translations are NOT copied: the files of
+		Smart Tools.WPF are linked below, so a fix there is a fix here.
+		  net45             - runs on anything with .NET Framework 4.5 or newer (Windows 7 SP1 .. 11). Windows 8+ already has it.
+		  net10.0-windows10.0.17763.0 - published self-contained, so it needs nothing installed (Windows 10 1607+ / 11).
+	-->
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFrameworks>net45;net10.0-windows10.0.17763.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<AssemblyName>SystemSnapshot</AssemblyName>
+		<RootNamespace>SystemSnapshotCollector</RootNamespace>
+		<Product>System Snapshot Collector</Product>
+		<Version>1.0.0</Version>
+		<Company>Sheep</Company>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Prefer32Bit>false</Prefer32Bit>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);CS8632;CS0618;CA1416</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' != 'net45'">
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+		<Reference Include="System.Management" />
+		<Reference Include="System.ServiceProcess" />
+		<Reference Include="System.Windows.Forms" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="Microsoft.CSharp" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net45'">
+		<PackageReference Include="System.Management" Version="10.0.14" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.14" />
+	</ItemGroup>
+
+	<!-- The scan, exporters and models of the System Snapshot tool (the View is the only part left out). -->
+	<ItemGroup>
+		<Compile Include="..\Smart Tools.WPF\Tools\System\SystemSnapshot\SystemSnapshotModel.cs" Link="Linked\SystemSnapshotModel.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\System\SystemSnapshot\SystemSnapshotManager*.cs" Link="Linked\%(Filename)%(Extension)" />
+		<!-- Helpers the collectors read from (services, startup items, env vars, hosts file, open ports). -->
+		<Compile Include="..\Smart Tools.WPF\Tools\Performance\Services\ServicesManager.cs" Link="Linked\ServicesManager.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Performance\Services\ServicesManager.Windows.cs" Link="Linked\ServicesManager.Windows.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Performance\Services\ServicesModel.cs" Link="Linked\ServicesModel.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Performance\StartupApps\StartupAppsManager.cs" Link="Linked\StartupAppsManager.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Performance\StartupApps\StartupAppsManager.Parse.cs" Link="Linked\StartupAppsManager.Parse.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Performance\StartupApps\StartupAppsModel.cs" Link="Linked\StartupAppsModel.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Utilities\EnvironmentVariables\EnvironmentVariables*.cs" Link="Linked\%(Filename)%(Extension)" Exclude="..\Smart Tools.WPF\Tools\Utilities\EnvironmentVariables\*View*.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Network\HostsEditor\HostsEditorManager.cs" Link="Linked\HostsEditorManager.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Network\HostsEditor\HostsEditorManager.Parse.cs" Link="Linked\HostsEditorManager.Parse.cs" />
+		<Compile Include="..\Smart Tools.WPF\Tools\Network\HostsEditor\HostsEditorModel.cs" Link="Linked\HostsEditorModel.cs" />
+		<Compile Include="..\Smart Tools.WPF\Shared\Models\EndpointUse.cs" Link="Linked\EndpointUse.cs" />
+		<Compile Include="..\Smart Tools.WPF\Shared\Controllers\TcpUdpTable.cs" Link="Linked\TcpUdpTable.cs" />
+	</ItemGroup>
+
+	<!-- Translations: the same en.xaml / es.xaml as the app; only the Str_SysSnap_* keys are read at run time. -->
+	<ItemGroup>
+		<EmbeddedResource Include="..\Smart Tools.WPF\Language\en.xaml" LogicalName="Language.en.xaml" Link="Linked\en.xaml" />
+		<EmbeddedResource Include="..\Smart Tools.WPF\Language\es.xaml" LogicalName="Language.es.xaml" Link="Linked\es.xaml" />
+	</ItemGroup>
+
+</Project>

@@ -76,7 +76,7 @@ namespace Smart_Tools.WPF.Controllers
             foreach (var (hive, label) in new[] { (Registry.CurrentUser, "Current user (RunOnce)"), (Registry.LocalMachine, "All users (RunOnce)") })
             {
                 using var key = hive.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\RunOnce");
-                foreach (string name in key?.GetValueNames() ?? Array.Empty<string>())
+                foreach (string name in key?.GetValueNames() ?? new string[0])
                     rows.Add(new[] { label, name, _redactor.Text(RegText(key, name)), "", "", "Yes", "Runs once, then is removed" });
             }
             using (var winlogon = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"))

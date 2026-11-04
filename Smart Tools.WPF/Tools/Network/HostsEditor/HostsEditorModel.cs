@@ -33,7 +33,7 @@ namespace Smart_Tools.WPF.Models
         public string Address { get => _address; set => Edit(ref _address, value.Trim()); }
 
         /// <summary>Host names separated by single spaces.</summary>
-        public string Names { get => _names; set => Edit(ref _names, string.Join(' ', value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))); }
+        public string Names { get => _names; set => Edit(ref _names, string.Join(" ", value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))); }
 
         public string Comment { get => _comment; set => Edit(ref _comment, value.Trim()); }
 

@@ -187,7 +187,7 @@ namespace Smart_Tools.WPF.Controllers
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
             };
-            foreach (string argument in new[] { "config", name, "start=", value }) info.ArgumentList.Add(argument);
+            info.Arguments = string.Join(" ", new[] { "config", name, "start=", value }.Select(a => a.IndexOf(' ') >= 0 ? "\"" + a + "\"" : a));
 
             try
             {

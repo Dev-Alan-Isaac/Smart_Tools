@@ -416,6 +416,44 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
+        //  Portable version: the whole app on a USB drive or in any folder
+        // =================================================================
+
+        /// <summary>
+        /// Copies the app (not the settings or any scan) into a new "Smart Tools Portable" folder inside the folder or drive that was
+        /// chosen, so a stick with other files on it works too. An existing folder is never touched: a taken name becomes "(2)".
+        /// </summary>
+        private void BtnPortable_Click(object sender, RoutedEventArgs e)
+        {
+            if (AppMode.Current == AppRunMode.Development)
+            {
+                ShowStatus(Str("Str_SysSnap_PortableDev"), StatusKind.Info);
+                return;
+            }
+
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = Str("Str_SysSnap_PortableChoose"),
+                UseDescriptionForTitle = true,
+                ShowNewFolderButton = true,
+            };
+            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+            string target = SafeFileOps.UniquePath(Path.Combine(dialog.SelectedPath, Str("Str_SysSnap_PortableFolder", "Smart Tools Portable")));
+            var result = CopyProgressWindow.Run(Window.GetWindow(this), Str("Str_Install_Copying", "Making a portable copy..."),
+                (progress, token) => AppInstaller.MakePortableCopyAsync(target, copyData: false, progress, token));
+            if (result.Cancelled) return;
+            if (!result.Ok)
+            {
+                ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_SysSnap_PortableFailed"), result.Message), StatusKind.Error);
+                return;
+            }
+
+            ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_SysSnap_PortableDone"), target), StatusKind.Success);
+            ShellExplorer.Show(result.ExePath!);
+        }
+
+        // =================================================================
         //  Status
         // =================================================================
 

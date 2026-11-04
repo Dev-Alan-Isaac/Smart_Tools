@@ -47,7 +47,7 @@ namespace Smart_Tools.WPF.Controllers
             var parts = main.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2 || !LooksLikeAddress(parts[0])) return false;
             address = parts[0];
-            names = string.Join(' ', parts.Skip(1));
+            names = string.Join(" ", parts.Skip(1));
             return true;
         }
 

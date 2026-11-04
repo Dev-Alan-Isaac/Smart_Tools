@@ -45,6 +45,13 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+#if NET45
+        [DllImport("kernel32.dll")] private static extern ulong GetTickCount64();
+        private static long UptimeMilliseconds() => (long)GetTickCount64();
+#else
+        private static long UptimeMilliseconds() => Environment.TickCount64;
+#endif
+
         private static string RegText(RegistryKey? key, string name) => key?.GetValue(name) is { } v ? Text(v) : "";
 
         private SnapshotTable ReadWindowsAndPc(CancellationToken token)
@@ -68,11 +75,15 @@ namespace Smart_Tools.WPF.Controllers
                 facts.Add(("Version", RegText(key, "DisplayVersion")));
                 facts.Add(("Build", ubr.Length > 0 ? $"{build}.{ubr}" : build));
                 if (key?.GetValue("InstallDate") is int seconds)
-                    facts.Add(("Installed on", DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+                    facts.Add(("Installed on", new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(seconds).ToLocalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
             }
 
+            #if NET45
+            facts.Add(("Architecture", Environment.Is64BitOperatingSystem ? "X64" : "X86"));
+#else
             facts.Add(("Architecture", RuntimeInformation.OSArchitecture.ToString()));
-            facts.Add(("Last started", (DateTime.Now - TimeSpan.FromMilliseconds(Environment.TickCount64)).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)));
+#endif
+            facts.Add(("Last started", (DateTime.Now - TimeSpan.FromMilliseconds(UptimeMilliseconds())).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)));
             facts.Add(("Time zone", TimeZoneInfo.Local.DisplayName));
             facts.Add(("Display language", CultureInfo.InstalledUICulture.Name));
             facts.Add(("Regional format", CultureInfo.CurrentCulture.Name));

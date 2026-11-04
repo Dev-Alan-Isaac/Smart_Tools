@@ -221,7 +221,7 @@ namespace Smart_Tools.WPF.Controllers
         private static RegistryKey ApprovedKey(StartupApp app, bool writable)
         {
             var (hive, _, approvedName) = RunLocation(app.Location);
-            return hive.CreateSubKey($@"{ApprovedPath}\{approvedName}", writable)
+            return hive.CreateSubKey($@"{ApprovedPath}\{approvedName}", writable ? Microsoft.Win32.RegistryKeyPermissionCheck.ReadWriteSubTree : Microsoft.Win32.RegistryKeyPermissionCheck.ReadSubTree)
                    ?? throw new IOException("The startup settings could not be opened.");
         }
     }

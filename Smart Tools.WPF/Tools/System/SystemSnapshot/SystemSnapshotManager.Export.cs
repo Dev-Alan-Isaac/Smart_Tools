@@ -1,10 +1,12 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text;
+#if !NET45
 using System.Text.Encodings.Web;
 using System.Text.Json;
+#endif
 
 namespace Smart_Tools.WPF.Controllers
 {
@@ -72,6 +74,7 @@ namespace Smart_Tools.WPF.Controllers
         //  Export: JSON (complete), text (like systeminfo), HTML (readable), CSV (one section)
         // =================================================================
 
+#if !NET45   // the stand-alone collector for .NET Framework 4.5 only makes the HTML report
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = true,
@@ -79,6 +82,7 @@ namespace Smart_Tools.WPF.Controllers
         };
 
         public static string ToJson(SystemSnapshot snapshot) => JsonSerializer.Serialize(snapshot, JsonOptions);
+#endif
 
         public static string ToText(SystemSnapshot s)
         {

@@ -94,7 +94,7 @@ namespace Smart_Tools.WPF.Controllers
 
             using (var network = Registry.CurrentUser.OpenSubKey("Network"))
             {
-                foreach (string letter in network?.GetSubKeyNames() ?? Array.Empty<string>())
+                foreach (string letter in network?.GetSubKeyNames() ?? new string[0])
                 {
                     using var drive = network!.OpenSubKey(letter);
                     facts.Add(("Mapped drive", $"{letter.ToUpperInvariant()}: -> {RegText(drive, "RemotePath")}"));

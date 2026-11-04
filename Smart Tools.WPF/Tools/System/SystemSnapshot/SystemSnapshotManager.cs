@@ -218,6 +218,15 @@ namespace Smart_Tools.WPF.Controllers
             return list;
         }
 
+        private static void KillTree(Process process)
+        {
+#if NET45
+            process.Kill();
+#else
+            process.Kill(true);
+#endif
+        }
+
         private static string Prop(ManagementBaseObject o, string name)
         {
             try { return Text(o[name]); }
@@ -227,7 +236,9 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Starts a program, waits for it (or kills it after the time) and returns what it printed.</summary>
         private static string Run(string exe, string args, int timeoutMs, Encoding? encoding = null)
         {
+#if !NET45
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);   // the console code page (850, 437...) needs this
+#endif
             var start = new ProcessStartInfo(exe, args)
             {
                 UseShellExecute = false,
@@ -241,7 +252,7 @@ namespace Smart_Tools.WPF.Controllers
             var output = process.StandardOutput.ReadToEndAsync();
             if (!process.WaitForExit(timeoutMs))
             {
-                try { process.Kill(true); } catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { }
+                try { KillTree(process); } catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { }
                 throw new TimeoutException($"{exe} took longer than {timeoutMs / 1000} s");
             }
             output.Wait(2000);

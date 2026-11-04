@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -32,7 +32,7 @@ namespace Smart_Tools.WPF.Controllers
         private static readonly Regex CustomRulesSentence = new(@"^(\d+) rules added by people or installers\. (\d+) rules that Windows ships were left out .*$", RegexOptions.Compiled);
 
         /// <summary>The key part of a text: letters and digits only ("Display name" -> "Displayname").</summary>
-        private static string Slug(string text) => new(text.Where(char.IsAsciiLetterOrDigit).ToArray());
+        private static string Slug(string text) => new(text.Where(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')).ToArray());
 
         /// <summary>The on-screen name of a section: the translated one when there is one, else the English one.</summary>
         public static string SectionTitle(SnapshotTable table) => Loc.T("Str_SysSnap_Sec_" + table.Id, table.Title);

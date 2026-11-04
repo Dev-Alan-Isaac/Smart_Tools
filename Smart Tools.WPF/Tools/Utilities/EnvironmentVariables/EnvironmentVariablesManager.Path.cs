@@ -30,7 +30,7 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Splits on ';'. Empty pieces are kept so a stray ';' shows up as an Empty entry instead of vanishing silently.</summary>
         public static List<string> SplitPath(string value) => value.Split(';').Select(p => p.Trim()).ToList();
 
-        public static string JoinPath(IEnumerable<string> entries) => string.Join(';', entries);
+        public static string JoinPath(IEnumerable<string> entries) => string.Join(";", entries);
 
         /// <summary>Marks each folder: empty, a repeat of an earlier one, not an absolute path, or not on disk. The first of several duplicates is fine.</summary>
         public static List<EnvPathEntry> Analyze(IEnumerable<string> entries, Func<string, bool> directoryExists)

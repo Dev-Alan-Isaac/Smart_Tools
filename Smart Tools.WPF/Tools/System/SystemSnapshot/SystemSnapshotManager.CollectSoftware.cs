@@ -32,7 +32,7 @@ namespace Smart_Tools.WPF.Controllers
         private static IEnumerable<InstalledProgram> ProgramsIn(RegistryKey? root, string scope)
         {
             using var uninstall = root?.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-            foreach (string id in uninstall?.GetSubKeyNames() ?? Array.Empty<string>())
+            foreach (string id in uninstall?.GetSubKeyNames() ?? new string[0])
             {
                 using var app = uninstall!.OpenSubKey(id);
                 string name = RegText(app, "DisplayName");
@@ -89,13 +89,13 @@ namespace Smart_Tools.WPF.Controllers
             {
                 using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
                 using var installed = baseKey.OpenSubKey(@"SOFTWARE\dotnet\Setup\InstalledVersions");
-                foreach (string arch in installed?.GetSubKeyNames() ?? Array.Empty<string>())
+                foreach (string arch in installed?.GetSubKeyNames() ?? new string[0])
                 {
                     using var shared = installed!.OpenSubKey(arch + @"\sharedfx");
-                    foreach (string framework in shared?.GetSubKeyNames() ?? Array.Empty<string>())
+                    foreach (string framework in shared?.GetSubKeyNames() ?? new string[0])
                     {
                         using var versions = shared!.OpenSubKey(framework);
-                        foreach (string version in versions?.GetValueNames() ?? Array.Empty<string>())
+                        foreach (string version in versions?.GetValueNames() ?? new string[0])
                             rows.Add(new[] { $"{framework} ({arch})", version, "Registry" });
                     }
                 }
@@ -150,7 +150,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 string path = Environment.GetEnvironmentVariable("Path", target) ?? "";
                 int order = 0;
-                foreach (string folder in path.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                foreach (string folder in path.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()).Where(f => f.Length > 0))
                 {
                     order++;
                     string real = Environment.ExpandEnvironmentVariables(folder);
@@ -171,7 +171,7 @@ namespace Smart_Tools.WPF.Controllers
             foreach (var (location, label) in new[] { (StoreLocation.CurrentUser, "Current user"), (StoreLocation.LocalMachine, "This PC") })
             {
                 token.ThrowIfCancellationRequested();
-                using var store = new X509Store(StoreName.My, location);
+                var store = new X509Store(StoreName.My, location);   // not IDisposable on .NET Framework 4.5, so closed in finally
                 try
                 {
                     store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
@@ -184,6 +184,10 @@ namespace Smart_Tools.WPF.Controllers
                 catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or UnauthorizedAccessException)
                 {
                     rows.Add(new[] { label, "(could not be opened: " + ex.Message + ")", "", "", "", "" });
+                }
+                finally
+                {
+                    store.Close();
                 }
             }
             return new List<SnapshotTable>
