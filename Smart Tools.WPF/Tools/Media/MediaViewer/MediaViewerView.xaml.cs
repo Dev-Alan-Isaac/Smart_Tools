@@ -260,18 +260,6 @@ namespace Smart_Tools.WPF.Views
         //  Showing one item
         // =================================================================
 
-        /// <summary>
-        /// A narrow player (the mini window) has no room for the whole controls row: volume, previous/play/next stay, and the
-        /// extras on the right (speed, repeat, shuffle...) step aside until the window is wide enough again. Their keys still work.
-        /// </summary>
-        private void Stage_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (!_ready) return;
-            bool mini = StageInWidget;   // in the tool itself the row always stays whole
-            ChromeExtras.Visibility = mini && e.NewSize.Width < 560 ? Visibility.Collapsed : Visibility.Visible;
-            VolumeSlider.Width = mini && e.NewSize.Width < 400 ? 64 : 90;
-        }
-
         private MediaSpectrumFeeder? _spectrum;
 
         /// <summary>Called by the music bars about 30 times a second: keeps the spectrum reader at the player's position and hands back the levels.</summary>
@@ -489,9 +477,6 @@ namespace Smart_Tools.WPF.Views
                 if (version != _loadVersion) return;   // another item was chosen meanwhile
                 if (alias != null) path = alias;
             }
-
-            StopSpectrum();
-            if (item.Kind == ViewerMediaKind.Audio) _spectrum = new MediaSpectrumFeeder(item.Path);   // reads the file itself, so the odd-name copy isn't needed
 
             try
             {
@@ -911,6 +896,12 @@ namespace Smart_Tools.WPF.Views
         {
             _mediaOpen = true;
             _failStreak = 0;
+            // The music bars read the file a second time, so they start only once the player has opened it (never competing with it).
+            if (Current is { Kind: ViewerMediaKind.Audio } playing && _spectrum == null)
+            {
+                try { _spectrum = new MediaSpectrumFeeder(playing.Path); }
+                catch (Exception ex) when (ex is IOException or InvalidOperationException or OutOfMemoryException) { _spectrum = null; }
+            }
             Player.SpeedRatio = CurrentSpeed;   // MediaElement forgets the speed when the source changes
             if (Player.NaturalDuration.HasTimeSpan)
             {
@@ -1237,7 +1228,7 @@ namespace Smart_Tools.WPF.Views
             // the rest is too wide for a small window - their keys still work.
             bool mini = StageInWidget;
             SeekRow.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
-            BtnMute.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            BtnMute.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;   // in the mini window the speaker + slider in its top bar take over
             VolumeSlider.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;
             BtnSpeed.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
             BtnSkipBack.Visibility = BtnSkipForward.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;

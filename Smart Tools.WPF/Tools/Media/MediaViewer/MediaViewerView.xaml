@@ -609,7 +609,6 @@
                         <!--  Fixed-dark stage: picture / video / music + player chrome  -->
                         <Border
                             x:Name="Stage"
-                            SizeChanged="Stage_SizeChanged"
                             Background="#0E0F12"
                             ClipToBounds="True"
                             CornerRadius="12">
@@ -697,8 +696,8 @@
                                         <controls:SpectrumBars
                                             x:Name="AudioBars"
                                             Grid.Row="2"
-                                            MaxWidth="520"
                                             MinHeight="24"
+                                            MaxWidth="520"
                                             Margin="0,16,0,56"
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Stretch" />
@@ -943,7 +942,6 @@
                                         </StackPanel>
 
                                         <StackPanel
-                                            x:Name="ChromeExtras"
                                             Grid.Column="2"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Center"

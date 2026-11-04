@@ -1,4 +1,4 @@
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System.IO;
 
 namespace Smart_Tools.WPF.Controllers
@@ -24,7 +24,7 @@ namespace Smart_Tools.WPF.Controllers
         public MediaSpectrumFeeder(string path)
         {
             _path = path;
-            _thread = new Thread(Run) { IsBackground = true, Name = "Media spectrum" };
+            _thread = new Thread(Run) { IsBackground = true, Name = "Media spectrum", Priority = ThreadPriority.BelowNormal };
             _thread.Start();
         }
 
