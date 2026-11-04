@@ -154,7 +154,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "tcp-udp-client", Name = "TCP / UDP Client", Icon = "SwapHorizontal", CategoryId = "network", Description = "Send text or bytes to a device or server", Keywords = "tcp udp socket client hercules terminal device network tools" },
             new ToolInfo { Id = "device-scanner", Name = "Device Scanner", Icon = "Radar", CategoryId = "network", Description = "Find devices on your network", Keywords = "lan scan ip devices" },
             new ToolInfo { Id = "internet-speed", Name = "Internet Speed Test", Icon = "Speedometer", CategoryId = "network", Description = "Measure download and upload speed", Keywords = "speed test bandwidth ping wifi" },
-            new ToolInfo { Id = "net-speed", Name = "Network Speed Widget", Icon = "SpeedometerMedium", CategoryId = "network", Description = "A floating live download and upload meter, with the adapter's manufacturer", Keywords = "network speed widget upload download bandwidth monitor mac manufacturer oui adapter overlay" },
+            new ToolInfo { Id = "net-speed-widget", Name = "Network Speed Widget", Icon = "SpeedometerMedium", CategoryId = "network", Description = "A floating live download and upload meter, with the adapter's manufacturer", Keywords = "network speed widget upload download bandwidth monitor mac manufacturer oui adapter overlay" },
 
             // Developer
             new ToolInfo { Id = "api-tester", Name = "API Tester", Icon = "Webhook", CategoryId = "developer", Description = "Send web requests and read the replies", Keywords = "http rest request json postman" },

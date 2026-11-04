@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 110 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 109 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **109 tools** in 20 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -270,6 +270,8 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 - **Mock Data Generator** - Generate fake data for testing (Generators category): grouped type list, checksum-valid IBAN / credit card (Luhn) / ISBN-13, and your own saved lists (Settings > Mock data)
 
 - **Media Viewer** (`media-viewer`, `Tools/Media/MediaHub`) - one tool with four pages: **Mixed** (`MediaViewerView`: pictures, videos and music in one queue, slideshow, mini-player widget), **Photos** (`ImageViewerControl`: zoom, rotate, thumbnails, slideshow, save as), **Videos** (`VideoReplayView`: LibVLC player for almost any format, playlists, resume position) and **Music** (`AudioReplayControl`: NAudio player with the level visualizer, audio tracks, speed). It replaced the separate Image Viewer, Video Replay and Audio Replay tools; each page is the complete original tool. Only the page shown is in the visual tree (the others release their playback when you switch), and files dropped on the wrong page jump to the page that fits their type (`MediaHubView`, `AddPaths` on each page).
+  - **Seek bar (Mixed page, `MediaViewerView.PosSlider`)**: pressing the bar pauses playback, dragging only scrubs a frame about every 100 ms (`ScrubbingEnabled`), and one seek plus resume happens on release (`_isUserSeeking`, `EndUserSeek`). The position timer never writes to the bar while the user is seeking, and changing `Maximum` on a new clip is guarded by `_updatingSlider`. Never seek on every `ValueChanged` while playing: it garbles the picture and crackles the audio.
+  - **Mini player** (`MediaViewerWidgetWindow`, borderless, always on top, no taskbar button): its Minimize button hides the mini player *and* minimizes the app. Restoring the app from the taskbar shows the mini player first (the app stays minimized); restoring again, with the mini player already visible, opens the tool. Hotkeys, the tray and "Back to the tool" open the tool at once and bring the mini player back too (`MainWindow.MinimizeForWidget`, `_restoreWidgetFirst`).
 
 Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` are placeholders for planned tools and show a shared "coming soon" page.
 
@@ -430,7 +432,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 110 tools have one. The tour only covers the page that is open.
+All 109 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -582,7 +584,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 114 tools*
+*Currently exploring unified testing approach across all 109 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor
