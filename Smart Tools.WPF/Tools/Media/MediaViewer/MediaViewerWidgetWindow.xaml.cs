@@ -88,7 +88,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Re-reads the texts (the language can change while the widget is open).</summary>
         public void RefreshText()
         {
-            BtnMinimizeApp.ToolTip = Text("Str_MediaViewer_Widget_MinimizeApp", "Minimize the app (the mini player stays)");
+            BtnMinimizeApp.ToolTip = Text("Str_MediaViewer_Widget_MinimizeApp", "Minimize the app and the mini player");
             BtnBack.ToolTip = Text("Str_MediaViewer_Widget_Back", "Back to the tool");
             BtnClose.ToolTip = Text("Str_MediaViewer_Widget_Close", "Close the mini player");
         }

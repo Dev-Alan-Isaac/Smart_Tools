@@ -53,6 +53,8 @@ namespace Smart_Tools.WPF.Views
         private MediaItem? _nowPlaying;
         private bool _updatingSlider;
         private bool _isUserSeeking;
+        private bool _resumeAfterSeek;
+        private long _lastScrubTick;
         private bool _slideshow;
         private bool _playing;
         private bool _mediaOpen;
@@ -893,15 +895,25 @@ namespace Smart_Tools.WPF.Views
             if (!_ready || _updatingSlider || !_mediaOpen) return;
             if (_isUserSeeking)
             {
-                // dragging: just follow the thumb, seek once on release
+                // dragging: the player is paused (no crackling audio); show a frame now and then, final seek on release
                 TxtPosition.Text = MediaViewerManager.FormatTime(TimeSpan.FromSeconds(e.NewValue));
+                if (Environment.TickCount64 - _lastScrubTick >= 100)
+                {
+                    _lastScrubTick = Environment.TickCount64;
+                    Player.Position = TimeSpan.FromSeconds(e.NewValue);
+                }
                 return;
             }
             Player.Position = TimeSpan.FromSeconds(e.NewValue);
             TxtPosition.Text = MediaViewerManager.FormatTime(TimeSpan.FromSeconds(e.NewValue));
         }
 
-        private void PosSlider_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _isUserSeeking = true;
+        private void PosSlider_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _isUserSeeking = true;
+            _resumeAfterSeek = _playing && _mediaOpen;
+            if (_resumeAfterSeek) Player.Pause();   // seeking while playing is what garbles the picture and crackles the audio
+        }
 
         private void PosSlider_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => EndUserSeek();
 
@@ -914,10 +926,13 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_isUserSeeking) return;
             _isUserSeeking = false;
+            bool resume = _resumeAfterSeek;
+            _resumeAfterSeek = false;
             if (!_mediaOpen) return;
             var target = TimeSpan.FromSeconds(PosSlider.Value);
             Player.Position = target;
             TxtPosition.Text = MediaViewerManager.FormatTime(target);
+            if (resume && _playing) Player.Play();
         }
 
         private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

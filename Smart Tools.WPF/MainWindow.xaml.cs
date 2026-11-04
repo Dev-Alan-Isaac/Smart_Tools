@@ -123,7 +123,16 @@ namespace Smart_Tools.WPF
         }
 
         /// <summary>Minimizes the app and leaves the floating mini player on screen (the mini player's "minimize the app" button).</summary>
-        public void MinimizeForWidget() => WindowState = WindowState.Minimized;
+        // Set while a widget's minimize also hid the widget: the next restore of this window shows the widget first
+        // (and keeps the app minimized); only a restore while the widget is already visible opens the tool.
+        private Func<bool>? _restoreWidgetFirst;
+
+        /// <param name="restoreWidgetFirst">Shows the hidden widget again; returns true when it did.</param>
+        public void MinimizeForWidget(Func<bool>? restoreWidgetFirst = null)
+        {
+            _restoreWidgetFirst = restoreWidgetFirst;
+            WindowState = WindowState.Minimized;
+        }
 
         /// <summary>Brings the window forward on a tool - used by a widget's "Back to the tool".</summary>
         public void ShowTool(string id)
@@ -580,6 +589,10 @@ namespace Smart_Tools.WPF
         /// <summary>Shows the window again (from the tray, minimized or behind others) and focuses it.</summary>
         private void BringToFront()
         {
+            // Explicit requests (hotkey, tray, "Back to the tool") open the tool, but the hidden widget comes back too.
+            var showWidget = _restoreWidgetFirst;
+            _restoreWidgetFirst = null;
+            showWidget?.Invoke();
             if (_tray != null) _tray.Visible = false;
             ShowInTaskbar = true;
             if (!IsVisible) Show();
@@ -793,6 +806,16 @@ namespace Smart_Tools.WPF
         /// </summary>
         private void Window_StateChanged(object? sender, EventArgs e)
         {
+            // Restored from the taskbar while the mini player was hidden with it: show the mini first, stay minimized.
+            if (WindowState != WindowState.Minimized && _restoreWidgetFirst is { } showWidget)
+            {
+                _restoreWidgetFirst = null;
+                if (showWidget())
+                {
+                    WindowState = WindowState.Minimized;
+                    return;
+                }
+            }
             bool maximized = WindowState == WindowState.Maximized;
             RootGrid.Margin = maximized ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
             BtnWinMaximize.Content = maximized ? "" : "";
