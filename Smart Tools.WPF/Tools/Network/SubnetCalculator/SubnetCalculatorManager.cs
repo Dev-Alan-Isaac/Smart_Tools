@@ -13,16 +13,16 @@ namespace Smart_Tools.WPF.Controllers
     {
         public IEnumerable<(string Label, string Value)> Rows()
         {
-            yield return ("Address", Address);
-            yield return ("Network", Network + "/" + Prefix.ToString(CultureInfo.InvariantCulture));
-            if (Mask != null) yield return ("Subnet mask", Mask);
-            if (Wildcard != null) yield return ("Wildcard mask", Wildcard);
-            if (Broadcast != null) yield return ("Broadcast", Broadcast);
-            yield return ("First usable", FirstHost);
-            yield return ("Last usable", LastHost);
-            yield return ("Total addresses", Total.ToString("N0", CultureInfo.InvariantCulture));
-            yield return ("Usable hosts", Usable.ToString("N0", CultureInfo.InvariantCulture));
-            if (IpType != null) yield return ("Type", IpType);
+            yield return (Loc.T("Str_SubnetCalc_RowAddress", "Address"), Address);
+            yield return (Loc.T("Str_SubnetCalc_RowNetwork", "Network"), Network + "/" + Prefix.ToString(CultureInfo.InvariantCulture));
+            if (Mask != null) yield return (Loc.T("Str_SubnetCalc_RowMask", "Subnet mask"), Mask);
+            if (Wildcard != null) yield return (Loc.T("Str_SubnetCalc_RowWildcard", "Wildcard mask"), Wildcard);
+            if (Broadcast != null) yield return (Loc.T("Str_SubnetCalc_RowBroadcast", "Broadcast"), Broadcast);
+            yield return (Loc.T("Str_SubnetCalc_RowFirst", "First usable"), FirstHost);
+            yield return (Loc.T("Str_SubnetCalc_RowLast", "Last usable"), LastHost);
+            yield return (Loc.T("Str_SubnetCalc_RowTotal", "Total addresses"), Total.ToString("N0", CultureInfo.CurrentCulture));
+            yield return (Loc.T("Str_SubnetCalc_RowUsable", "Usable hosts"), Usable.ToString("N0", CultureInfo.CurrentCulture));
+            if (IpType != null) yield return (Loc.T("Str_SubnetCalc_RowType", "Type"), IpType);
         }
     }
 
@@ -40,7 +40,7 @@ namespace Smart_Tools.WPF.Controllers
         public static SubnetInfo? Calculate(string? text, out string? error)
         {
             error = null;
-            if (string.IsNullOrWhiteSpace(text)) { error = "Type an address, for example 192.168.1.10/24."; return null; }
+            if (string.IsNullOrWhiteSpace(text)) { error = Loc.T("Str_SubnetCalc_ErrType", "Type an address, for example 192.168.1.10/24."); return null; }
 
             string s = text.Trim();
             string addressPart;
@@ -56,10 +56,10 @@ namespace Smart_Tools.WPF.Controllers
                 var parts = s.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 addressPart = parts[0];
                 if (parts.Length == 2) prefixPart = parts[1];
-                else if (parts.Length > 2) { error = "Use address/prefix, or address and mask."; return null; }
+                else if (parts.Length > 2) { error = Loc.T("Str_SubnetCalc_ErrUse", "Use address/prefix, or address and mask."); return null; }
             }
 
-            if (!TryParseAddress(addressPart, out var ip)) { error = "That isn't a valid IP address."; return null; }
+            if (!TryParseAddress(addressPart, out var ip)) { error = Loc.T("Str_SubnetCalc_ErrIp", "That isn't a valid IP address."); return null; }
             bool v6 = ip.AddressFamily == AddressFamily.InterNetworkV6;
             int bits = v6 ? 128 : 32;
 
@@ -90,18 +90,18 @@ namespace Smart_Tools.WPF.Controllers
             if (!v6 && text.Contains('.'))
             {
                 // A dotted mask: 255.255.255.0 (ones first, then zeros).
-                if (!TryParseAddress(text, out var mask)) { error = "That isn't a valid subnet mask."; return false; }
+                if (!TryParseAddress(text, out var mask)) { error = Loc.T("Str_SubnetCalc_ErrMask", "That isn't a valid subnet mask."); return false; }
                 uint value = BitConverter.ToUInt32(mask.GetAddressBytes().Reverse().ToArray(), 0);
                 int ones = BitOperations.PopCount(value);
                 uint expected = ones == 0 ? 0 : uint.MaxValue << (32 - ones);
-                if (value != expected) { error = "A subnet mask has all its 1s first, then all its 0s."; return false; }
+                if (value != expected) { error = Loc.T("Str_SubnetCalc_ErrMaskOnes", "A subnet mask has all its 1s first, then all its 0s."); return false; }
                 prefix = ones;
                 return true;
             }
             if (text.StartsWith('/')) text = text[1..];
             if (!int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out prefix) || prefix < 0 || prefix > max)
             {
-                error = $"The prefix must be a number from 0 to {max}.";
+                error = Loc.F("Str_SubnetCalc_ErrPrefix", "The prefix must be a number from 0 to {0}.", max);
                 return false;
             }
             return true;
@@ -137,16 +137,16 @@ namespace Smart_Tools.WPF.Controllers
 
         private static string? DescribeV4(byte[] a) => a switch
         {
-            [10, ..] => "Private (10.0.0.0/8)",
-            [172, >= 16 and <= 31, ..] => "Private (172.16.0.0/12)",
-            [192, 168, ..] => "Private (192.168.0.0/16)",
-            [127, ..] => "Loopback",
-            [169, 254, ..] => "Link-local (APIPA)",
-            [100, >= 64 and <= 127, ..] => "Shared (carrier-grade NAT)",
-            [>= 224 and <= 239, ..] => "Multicast",
-            [>= 240, ..] => "Reserved",
-            [0, ..] => "This network",
-            _ => "Public",
+            [10, ..] => Loc.T("Str_SubnetCalc_TypePrivate10", "Private (10.0.0.0/8)"),
+            [172, >= 16 and <= 31, ..] => Loc.T("Str_SubnetCalc_TypePrivate172", "Private (172.16.0.0/12)"),
+            [192, 168, ..] => Loc.T("Str_SubnetCalc_TypePrivate192", "Private (192.168.0.0/16)"),
+            [127, ..] => Loc.T("Str_SubnetCalc_TypeLoopback", "Loopback"),
+            [169, 254, ..] => Loc.T("Str_SubnetCalc_TypeLinkLocal", "Link-local (APIPA)"),
+            [100, >= 64 and <= 127, ..] => Loc.T("Str_SubnetCalc_TypeShared", "Shared (carrier-grade NAT)"),
+            [>= 224 and <= 239, ..] => Loc.T("Str_SubnetCalc_TypeMulticast", "Multicast"),
+            [>= 240, ..] => Loc.T("Str_SubnetCalc_TypeReserved", "Reserved"),
+            [0, ..] => Loc.T("Str_SubnetCalc_TypeThisNetwork", "This network"),
+            _ => Loc.T("Str_SubnetCalc_TypePublic", "Public"),
         };
 
         /// <summary>Splits a network into equal subnets of <paramref name="newPrefix"/> (at most <see cref="MaxSplitRows"/> are listed).</summary>
@@ -154,7 +154,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             int bits = info.IsIPv6 ? 128 : 32;
             if (newPrefix <= info.Prefix || newPrefix > bits)
-                return (new List<SubnetPiece>(), 0, $"Pick a prefix from /{info.Prefix + 1} to /{bits}.");
+                return (new List<SubnetPiece>(), 0, Loc.F("Str_SubnetCalc_ErrPick", "Pick a prefix from /{0} to /{1}.", info.Prefix + 1, bits));
 
             var ip = IPAddress.Parse(info.Network);
             byte[] bytes = ip.GetAddressBytes();

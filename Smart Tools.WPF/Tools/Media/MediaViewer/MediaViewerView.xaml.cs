@@ -1224,12 +1224,13 @@ namespace Smart_Tools.WPF.Views
             BtnPrev.IsEnabled = BtnNext.IsEnabled = _items.Count > 1;
             BtnPlay.IsEnabled = has;
 
-            // In the mini window only the essentials stay (seek, previous / play / next, mute, speed, back to the tool);
+            // In the mini window only the essentials stay (seek, previous / play / next, volume, speed, back to the tool);
             // the rest is too wide for a small window - their keys still work.
             bool mini = StageInWidget;
             SeekRow.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
-            BtnMute.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;   // in the mini window the speaker + slider in its top bar take over
-            VolumeSlider.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;
+            BtnMute.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            VolumeSlider.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
+            VolumeSlider.Width = mini ? 64 : 90;   // a shorter slider so the row still fits the small window
             BtnSpeed.Visibility = media ? Visibility.Visible : Visibility.Collapsed;
             BtnSkipBack.Visibility = BtnSkipForward.Visibility = media && !mini ? Visibility.Visible : Visibility.Collapsed;
             BtnRotateLeft.Visibility = BtnRotateRight.Visibility = image && !mini ? Visibility.Visible : Visibility.Collapsed;
@@ -1247,7 +1248,6 @@ namespace Smart_Tools.WPF.Views
             _widget?.SetTitle(item?.Name ?? "");
 
             MuteIcon.Kind = Player.IsMuted || VolumeSlider.Value <= 0 ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
-            _widget?.SetVolume(VolumeSlider.Value, Player.IsMuted);   // the mini player's own slider follows
 
             bool any = _items.Count > 0;
             EmptyStatePanel.Visibility = any ? Visibility.Collapsed : Visibility.Visible;

@@ -22,12 +22,19 @@ namespace Smart_Tools.WPF.Views
         private bool _loadedOnce;
         private bool _applying;
         private string _copyText = "";
+        private readonly DispatcherTimer _copyReset = new() { Interval = TimeSpan.FromSeconds(1.5) };
 
         public SubnetCalculatorView()
         {
             InitializeComponent();
             _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
             _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SaveSettings(); };
+            _copyReset.Tick += (_, _) =>
+            {
+                _copyReset.Stop();
+                IconCopy.Kind = MaterialDesignThemes.Wpf.PackIconKind.ContentCopy;
+                BtnCopy.SetResourceReference(ToolTipProperty, "Str_SubnetCalculator_CopyEverythingShown");
+            };
             _viewConstructed = true;
         }
 
@@ -96,11 +103,13 @@ namespace Smart_Tools.WPF.Views
                         pieces = list;
                         PieceList.ItemsSource = list;
                         TxtSplitTitle.Text = total > list.Count
-                            ? $"{total:N0} subnets of /{newPrefix} (showing the first {list.Count})"
-                            : $"{total:N0} subnet{(total == 1 ? "" : "s")} of /{newPrefix}";
+                            ? Loc.F("Str_SubnetCalc_SplitMore", "{0} subnets of /{1} (showing the first {2})", total.ToString("N0", CultureInfo.CurrentCulture), newPrefix, list.Count)
+                            : total == 1
+                                ? Loc.F("Str_SubnetCalc_SplitOne", "1 subnet of /{0}", newPrefix)
+                                : Loc.F("Str_SubnetCalc_SplitMany", "{0} subnets of /{1}", total.ToString("N0", CultureInfo.CurrentCulture), newPrefix);
                     }
                 }
-                else TxtSplitTitle.Text = "Type the prefix as a number, for example 26.";
+                else TxtSplitTitle.Text = Loc.T("Str_SubnetCalc_SplitNumber", "Type the prefix as a number, for example 26.");
             }
 
             TxtSplitEmpty.Visibility = pieces != null ? Visibility.Collapsed : Visibility.Visible;
@@ -115,17 +124,19 @@ namespace Smart_Tools.WPF.Views
 
         private void SplitChip_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as System.Windows.Controls.Button)?.Content is not string text) return;
-            TxtSplit.Text = text == "None" ? "" : text.TrimStart('/');
+            // The "none" chip says so in its Tag: its text is translated, so the text itself must not be compared.
+            if (sender is not System.Windows.Controls.Button button) return;
+            TxtSplit.Text = button.Tag as string == "none" || button.Content is not string text ? "" : text.TrimStart('/');
         }
 
         private void BtnCopy_Click(object sender, RoutedEventArgs e)
         {
             if (_copyText.Length == 0) return;
-            TxtCopy.Text = JsonSettings.TryCopy(_copyText) ? "Copied" : "Clipboard busy";
-            var t = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
-            t.Tick += (_, _) => { t.Stop(); TxtCopy.Text = "Copy"; };
-            t.Start();
+            bool ok = JsonSettings.TryCopy(_copyText);
+            IconCopy.Kind = ok ? MaterialDesignThemes.Wpf.PackIconKind.Check : MaterialDesignThemes.Wpf.PackIconKind.AlertCircleOutline;
+            BtnCopy.ToolTip = ok ? Loc.T("Str_SubnetCalc_Copied", "Copied") : Loc.T("Str_SubnetCalc_ClipboardBusy", "The clipboard is busy. Try again.");
+            _copyReset.Stop();
+            _copyReset.Start();
         }
 
         public void CancelActiveRun()

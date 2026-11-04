@@ -110,9 +110,9 @@
                                 <Button Click="SplitChip_Click" Content="/27" Style="{StaticResource ScChip}" />
                                 <Button Click="SplitChip_Click" Content="/28" Style="{StaticResource ScChip}" />
                                 <Button Click="SplitChip_Click" Content="/30" Style="{StaticResource ScChip}" />
-                                <Button Click="SplitChip_Click" Content="{DynamicResource Str_Api_AuthTypeNone}" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="{DynamicResource Str_Api_AuthTypeNone}" Style="{StaticResource ScChip}" Tag="none" />
                             </WrapPanel>
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_SubnetCalculator_SplittingAIntoGives}" />
+                            <TextBlock Margin="2,6,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_SubnetCalculator_SplittingAIntoGives}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -135,11 +135,8 @@
                 <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
-                            <Button ctl:Tour.Key="Str_Tour_SubnetCalc_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" MinHeight="36" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" ToolTip="{DynamicResource Str_SubnetCalculator_CopyEverythingShown}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
-                                    <TextBlock x:Name="TxtCopy" Text="{DynamicResource Str_Common_Copy}" />
-                                </StackPanel>
+                            <Button ctl:Tour.Key="Str_Tour_SubnetCalc_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_SubnetCalculator_CopyEverythingShown}">
+                                <materialDesign:PackIcon x:Name="IconCopy" Width="16" Height="16" Kind="ContentCopy" />
                             </Button>
                             <TextBlock Width="70" VerticalAlignment="Center" DockPanel.Dock="Left" Style="{StaticResource StatLabel}" Text="{DynamicResource Str_NetworkAdapters_Address}" />
                             <Border Style="{StaticResource InputBarStyle}">

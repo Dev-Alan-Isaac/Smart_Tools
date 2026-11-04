@@ -55,7 +55,6 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <materialDesign:PackIcon
                     Width="16"
@@ -72,39 +71,9 @@
                     FontWeight="SemiBold"
                     Foreground="{DynamicResource TextPrimary}"
                     TextTrimming="CharacterEllipsis" />
-                <!--  Volume: always in reach, also when the player controls below have faded out  -->
-                <StackPanel
-                    x:Name="VolumeBox"
-                    Grid.Column="2"
-                    VerticalAlignment="Center"
-                    Cursor="Arrow"
-                    Orientation="Horizontal">
-                    <Button
-                        x:Name="BtnMute"
-                        Width="26"
-                        Height="26"
-                        Click="BtnMute_Click"
-                        Style="{StaticResource NeutralIconButtonStyle}">
-                        <materialDesign:PackIcon
-                            x:Name="MuteIcon"
-                            Width="14"
-                            Height="14"
-                            Kind="VolumeHigh" />
-                    </Button>
-                    <Slider
-                        x:Name="VolumeSlider"
-                        Width="72"
-                        Margin="2,0,0,0"
-                        VerticalAlignment="Center"
-                        Maximum="1"
-                        Minimum="0"
-                        SmallChange="0.05"
-                        LargeChange="0.1"
-                        ValueChanged="VolumeSlider_ValueChanged" />
-                </StackPanel>
                 <Button
                     x:Name="BtnMinimizeApp"
-                    Grid.Column="3"
+                    Grid.Column="2"
                     Width="26"
                     Height="26"
                     Margin="8,0,2,0"
@@ -118,7 +87,7 @@
                 </Button>
                 <Button
                     x:Name="BtnBack"
-                    Grid.Column="4"
+                    Grid.Column="3"
                     Width="26"
                     Height="26"
                     Margin="0,0,2,0"
@@ -132,7 +101,7 @@
                 </Button>
                 <Button
                     x:Name="BtnClose"
-                    Grid.Column="5"
+                    Grid.Column="4"
                     Width="26"
                     Height="26"
                     Click="BtnClose_Click"

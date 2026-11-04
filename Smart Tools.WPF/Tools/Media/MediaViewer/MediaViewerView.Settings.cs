@@ -227,8 +227,6 @@ namespace Smart_Tools.WPF.Views
             w.BackRequested += () => HideWidget(openTool: true);
             w.CloseRequested += () => HideWidget(openTool: false);
             w.KeyPressed += e => Root_PreviewKeyDown(this, e);   // the same keys as in the tool
-            w.VolumeChanged += volume => VolumeSlider.Value = volume;
-            w.MuteRequested += () => BtnMute_Click(this, new RoutedEventArgs());
             w.PlacementChanged += (left, top, width, height) => MediaViewerManager.UpdateSettings(x =>
             {
                 x.WidgetLeft = left;
