@@ -14,7 +14,7 @@ namespace Smart_Tools.WPF
         /// <summary>Installed by the app itself (per user, in %LocalAppData%\Programs\Smart Tools).</summary>
         Installed,
 
-        /// <summary>Installed by the old MSI (under Program Files). Windows removes it, not this app.</summary>
+        /// <summary>Installed with the Windows installer (the .msi Setup, under Program Files). Windows removes it, not this app.</summary>
         LegacyMsi,
 
         /// <summary>Running from some folder, with settings in %AppData% (someone who used the app before this choice existed).</summary>

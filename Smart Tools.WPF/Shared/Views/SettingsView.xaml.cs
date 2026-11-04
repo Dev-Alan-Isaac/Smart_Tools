@@ -434,7 +434,7 @@ namespace Smart_Tools.WPF.Views
                     string.Format(InstallStr("Str_Install_DetailsPortable", "Runs from {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
                 AppRunMode.Installed => (InstallStr("Str_Install_ModeInstalled", "Installed"),
                     string.Format(InstallStr("Str_Install_DetailsInstalled", "Installed in {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
-                AppRunMode.LegacyMsi => (InstallStr("Str_Install_ModeMsi", "Installed with the old installer"),
+                AppRunMode.LegacyMsi => (InstallStr("Str_Install_ModeMsi", "Installed with Setup (Windows installer)"),
                     string.Format(InstallStr("Str_Install_DetailsMsi", "Installed in {0}. To remove it, use Windows Settings > Apps."), AppMode.ExeFolder)),
                 AppRunMode.Development => (InstallStr("Str_Install_ModeDev", "Development build"),
                     string.Format(InstallStr("Str_Install_DetailsLoose", "Runs from {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
