@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -24,6 +25,18 @@
 
     <UserControl.Resources>
         <views:ThumbnailConverter x:Key="Thumb" />
+
+        <!--  The PDF in the sidebar queue  -->
+        <DataTemplate x:Key="FileItemTemplate" DataType="{x:Type models:PdfReaderFile}">
+            <TextBlock
+                Margin="0,2"
+                VerticalAlignment="Center"
+                FontSize="12"
+                Foreground="{DynamicResource SidebarText}"
+                Text="{Binding Name}"
+                TextTrimming="CharacterEllipsis"
+                ToolTip="{Binding Path}" />
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
@@ -97,40 +110,25 @@
                         <StackPanel Margin="16,4,16,16">
 
                             <!--  ============ THE PDF ============  -->
-                            <Border
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
                                 ctl:Tour.Key="Str_Tour_PdfReader_Open"
                                 ctl:Tour.Order="1"
-                                Style="{StaticResource SidebarGroupCardStyle}">
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_PdfReader_FileHeader}"
+                                HeaderIcon="FilePdfBox"
+                                ItemTemplate="{StaticResource FileItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded"
+                                ShowSubfolders="False" />
+                            <TextBlock
+                                x:Name="TxtPageInfo"
+                                Margin="4,0,4,8"
+                                Style="{StaticResource SidebarHint}" />
+
+                            <!--  ============ PASSWORD (only when the PDF needs one) ============  -->
+                            <Border x:Name="PanelPasswordCard" Style="{StaticResource SidebarGroupCardStyle}" Visibility="Collapsed">
                                 <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_PdfReader_FileHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.FilePdfBox}" />
-                                    <Button
-                                        x:Name="BtnOpen"
-                                        Click="BtnOpen_Click"
-                                        Style="{StaticResource PrimaryButtonStyle}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon
-                                                Width="18"
-                                                Height="18"
-                                                Margin="0,0,8,0"
-                                                VerticalAlignment="Center"
-                                                Kind="FolderOpenOutline" />
-                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_PdfReader_Open}" />
-                                        </StackPanel>
-                                    </Button>
-                                    <TextBlock
-                                        x:Name="TxtFileName"
-                                        Margin="0,8,0,0"
-                                        FontSize="12"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        TextTrimming="CharacterEllipsis" />
-                                    <TextBlock
-                                        x:Name="TxtPageInfo"
-                                        Style="{StaticResource SidebarHint}" />
-                                    <StackPanel x:Name="PanelPassword" Visibility="Collapsed">
+                                    <StackPanel x:Name="PanelPassword">
                                         <TextBlock
                                             Margin="0,8,0,6"
                                             Style="{StaticResource FieldLabel}"

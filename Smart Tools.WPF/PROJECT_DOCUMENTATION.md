@@ -111,7 +111,6 @@ Smart Tools has **111 tools** in 21 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **Image Editor** | `image-editor` | Crop, resize and adjust images |
 | **Bulk Image Resizer** | `bulk-image-resizer` | Shrink and recompress many pictures at once, with a target file size |
-| **Image Metadata Cleaner** | `image-metadata-cleaner` | Remove location, camera and date details from many photos before you share them (`Tools/Images/MetadataCleaner`) |
 | **Background Remover** | `background-remover` | Cut the background out of a picture |
 | **SVG Viewer & Optimizer** | `svg-tool` | Preview SVG files, make them smaller and export PNGs |
 | **Screenshot** | `screenshot` | Capture an area, a window, or the whole screen, mark it up, then copy or save |
@@ -183,6 +182,7 @@ Smart Tools has **111 tools** in 21 sidebar categories. Every tool opens inside 
 | **Password Generator** | `password-generator` | Make strong passwords and passphrases |
 | **Password Vault** | `password-vault` | Encrypted password manager with 2FA codes, a health check and a quick-access widget |
 | **2FA Code Generator** | `totp-code` | Make the 6-digit two-factor codes from a secret key or otpauth link, without saving it |
+| **Image Metadata Cleaner** | `image-metadata-cleaner` | Remove location, camera and date details from many photos before you share them (`Tools/Images/MetadataCleaner`) |
 
 ### Network
 *Diagnose your connection*

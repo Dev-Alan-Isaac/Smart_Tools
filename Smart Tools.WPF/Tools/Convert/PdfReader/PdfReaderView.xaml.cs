@@ -1,5 +1,6 @@
 using ImageMagick;
 using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -50,6 +51,7 @@ namespace Smart_Tools.WPF.Views
         private const string DialogTitle = "PDF Reader & Signer";
 
         private readonly ObservableCollection<PdfReaderPage> _pages = new();
+        private readonly ObservableCollection<PdfReaderFile> _files = new();
         private readonly Dictionary<PdfReaderPage, Canvas> _canvases = new();
         private readonly Dictionary<PdfMark, Border> _elements = new();
         private readonly SemaphoreSlim _renderGate = new(2);
@@ -72,6 +74,8 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             PageList.ItemsSource = _pages;
+            InputCard.ItemsSource = _files;
+            InputCard.FileFilterProvider = () => "PDF (*.pdf)|*.pdf|" + T("Str_PdfReader_FilterAll", "All files") + "|*.*";
             Scroller.PreviewMouseWheel += Scroller_PreviewMouseWheel;
             PreviewKeyDown += View_PreviewKeyDown;
             _viewConstructed = true;
@@ -111,10 +115,63 @@ namespace Smart_Tools.WPF.Views
         //  Opening
         // =================================================================
 
-        private void BtnOpen_Click(object sender, RoutedEventArgs e)
+        /// <summary>The Input card shows the open PDF (one at a time).</summary>
+        private void SetFile(string path)
         {
-            var dialog = new OpenFileDialog { Filter = "PDF (*.pdf)|*.pdf", Title = DialogTitle };
-            if (dialog.ShowDialog() == true) _ = OpenAsync(dialog.FileName, null);
+            _files.Clear();
+            _files.Add(new PdfReaderFile { Path = path, Name = Path.GetFileName(path) });
+            InputCard.SetEmpty(false);
+        }
+
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
+        {
+            // A file or a folder was chosen or dropped: the first PDF in it is opened.
+            string? pdf = null;
+            foreach (string p in e.Paths)
+            {
+                if (File.Exists(p) && string.Equals(Path.GetExtension(p), ".pdf", StringComparison.OrdinalIgnoreCase)) { pdf = p; break; }
+                if (Directory.Exists(p))
+                {
+                    try { pdf = Directory.EnumerateFiles(p, "*.pdf", SearchOption.TopDirectoryOnly).FirstOrDefault(); }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* unreadable folder */ }
+                    if (pdf != null) break;
+                }
+            }
+            if (pdf == null)
+            {
+                TxtProgress.Text = T("Str_PdfReader_NoPdf", "That is not a PDF.");
+                TxtProgressDetail.Text = "";
+                return;
+            }
+            _ = OpenAsync(pdf, null);
+        }
+
+        /// <summary>Clear on the Input card closes the PDF.</summary>
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            if (_busy) return;
+            if (_pages.Any(p => p.Marks.Count > 0))
+            {
+                var answer = MessageBox.Show(T("Str_PdfReader_DiscardMarks", "You have marks on the open PDF that are not saved. Open another PDF anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (answer != MessageBoxResult.Yes) return;
+            }
+            _renderCts.Cancel();
+            _renderer?.Dispose();
+            _renderer = null;
+            _renderCts = new CancellationTokenSource();
+            _path = "";
+            _password = "";
+            _selected = null;
+            _canvases.Clear();
+            _elements.Clear();
+            _pages.Clear();
+            _files.Clear();
+            PanelPasswordCard.Visibility = Visibility.Collapsed;
+            TxtPageInfo.Text = "";
+            InputCard.SetEmpty(true);
+            UpdateSelectedPanel();
+            UpdateAll();
+            ShowIdle();
         }
 
         private void Root_DragOver(object sender, DragEventArgs e)
@@ -174,10 +231,9 @@ namespace Smart_Tools.WPF.Views
                 _pages.Clear();
                 foreach (var p in pages) _pages.Add(p);
 
-                PanelPassword.Visibility = Visibility.Collapsed;
+                PanelPasswordCard.Visibility = Visibility.Collapsed;
                 PwdBox.Clear();
-                TxtFileName.Text = Path.GetFileName(path);
-                TxtFileName.ToolTip = path;
+                SetFile(path);
                 TxtPageInfo.Text = string.Format(T("Str_PdfReader_Pages", "{0} pages"), _pages.Count);
                 _zoom = FitWidthZoom();
                 ApplyZoom(redraw: false);
@@ -188,8 +244,8 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
             {
                 _path = path;   // so Unlock can try again with a password
-                TxtFileName.Text = Path.GetFileName(path);
-                PanelPassword.Visibility = Visibility.Visible;
+                SetFile(path);
+                PanelPasswordCard.Visibility = Visibility.Visible;
                 TxtProgress.Text = T("Str_PdfReader_CantOpen", "This PDF could not be opened.");
                 TxtProgressDetail.Text = T("Str_PdfReader_CantOpenDetail", "If it has a password, type it in the sidebar and press Unlock. Otherwise the file may be damaged.");
             }
@@ -560,6 +616,7 @@ namespace Smart_Tools.WPF.Views
             bool open = _pages.Count > 0;
             PanelEmpty.Visibility = open ? Visibility.Collapsed : Visibility.Visible;
             BtnSave.IsEnabled = open && marks > 0 && !_busy;
+            InputCard.SetEmpty(!open);
             BtnAddSignature.IsEnabled = BtnAddText.IsEnabled = BtnAddDate.IsEnabled = BtnAddCheck.IsEnabled = open;
             if (open && marks > 0)
             {

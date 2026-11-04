@@ -11,7 +11,7 @@ and fits the rules: offline where possible, never overwrites files, same page la
 | 3 | **Text Tools** (case, sort, dedupe, trim, count words/chars, find-replace, line numbers) | Utilities | Daily use, tiny effort | Text Diff, Notes |
 | 4 | **Scheduled Tasks viewer** (list, run, enable/disable) | System | Pairs with Startup Apps and Services | Services page layout |
 | 5 | **Installed Apps / Uninstaller** (size, date, publisher, uninstall, leftovers) | System | Common cleanup job, links to Junk Cleaner | Startup Apps, Large Files |
-| 6 (built) | **Image Metadata Cleaner** (strip EXIF/GPS in bulk) | Images / Security | Privacy before sharing photos; Metadata Extractor already reads it | Metadata Extractor, Magick.NET |
+| 6 (built) | **Image Metadata Cleaner** (strip EXIF/GPS in bulk) | Security | Privacy before sharing photos; Metadata Extractor already reads it | Metadata Extractor, Magick.NET |
 | 7 (built) | **PDF Reader & Signer** (view, fill, sign, annotate) | PDF | PDF Tools edits structure but can't show or sign | PDFsharp, WebView2 |
 | 8 | **Subtitle Editor** (edit/sync SRT/VTT, shift timing, burn into video) | Video | Speech to Text makes subtitles but they can't be fixed | Whisper output, FFmpeg |
 | 9 | **Window & Screen Utilities** (ruler, always-on-top, magnifier, pixel measure) | Utilities | Sits next to Screen Color Picker and Screenshot | Screen Color Picker overlay |

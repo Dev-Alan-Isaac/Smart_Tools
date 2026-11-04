@@ -3,6 +3,13 @@ using System.ComponentModel;
 
 namespace Smart_Tools.WPF.Models
 {
+    /// <summary>The open PDF as the Input card lists it.</summary>
+    public sealed class PdfReaderFile
+    {
+        public string Path { get; init; } = "";
+        public string Name { get; init; } = "";
+    }
+
     /// <summary>What a mark on a page is.</summary>
     public enum PdfMarkKind { Text, Signature, Check }
 

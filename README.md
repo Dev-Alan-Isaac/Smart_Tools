@@ -20,13 +20,13 @@ A Windows desktop app with **111 everyday tools** in one place: manage and clean
 - **Video** (6): Video Stitcher, Video to Audio, Video Compressor, GIF Maker, Screen Recorder, Video Frame Extractor
 - **Audio** (7): Audio Recorder, Spectrogram, Voice Changer, Speech to Text, Text to Speech, Loudness Meter & Normalizer, Audio Trimmer & Joiner
 - **Music** (4): Instrument Tuner, Synthesizer, MIDI Instruments, Metronome
-- **Images** (7): Image Editor, Bulk Image Resizer, Background Remover, SVG Viewer & Optimizer, Screenshot, Icon Maker, Image Metadata Cleaner
+- **Images** (6): Image Editor, Bulk Image Resizer, Background Remover, SVG Viewer & Optimizer, Screenshot, Icon Maker
 - **Colors** (5): Color Picker, Screen Color Picker, Color Wheel, Palette Extractor, Contrast Checker
 - **Storage** (6): Drive Health, Disk Space Analyzer, Large File Finder, Junk File Cleaner, Disk Speed Test, Empty Folder Cleaner
 - **Performance** (3): System Monitor, Hardware Sensors, Process Killer
 - **System** (4): Startup Apps, Services, Environment Variables, Event Log Explorer
 - **Hardware Tests** (8): Audio Output Test, Game Controller Test, Monitor Test, Monitor HDR & Color Depth, Keyboard & Mouse Test, Microphone Test, Webcam Test, Battery Health
-- **Security** (5): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator
+- **Security** (6): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator, Image Metadata Cleaner
 - **Network** (11): My IP & Adapters, Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed
 - **Developer** (9): API Tester, Regex Tester, JWT Decoder, JSON / YAML / XML Formatter, Log Viewer, Code Toolkit, MD & HTML Editor, Database Migrator, Base64 & URL Encoder
 - **Calculators** (3): Subnet Calculator, Unit & Currency Converter, Date & Time Toolkit
