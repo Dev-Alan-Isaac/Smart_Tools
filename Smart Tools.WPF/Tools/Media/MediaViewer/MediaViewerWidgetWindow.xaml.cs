@@ -36,6 +36,12 @@ namespace Smart_Tools.WPF.Views
         /// <summary>"Back to the tool": the player goes back and the main window comes forward.</summary>
         public event Action? BackRequested;
 
+        /// <summary>The volume slider was moved (0..1).</summary>
+        public event Action<double>? VolumeChanged;
+
+        /// <summary>The speaker button was pressed.</summary>
+        public event Action? MuteRequested;
+
         /// <summary>The close button: the player goes back quietly.</summary>
         public event Action? CloseRequested;
 
@@ -91,7 +97,27 @@ namespace Smart_Tools.WPF.Views
             BtnMinimizeApp.ToolTip = Text("Str_MediaViewer_Widget_MinimizeApp", "Minimize the app and the mini player");
             BtnBack.ToolTip = Text("Str_MediaViewer_Widget_Back", "Back to the tool");
             BtnClose.ToolTip = Text("Str_MediaViewer_Widget_Close", "Close the mini player");
+            BtnMute.ToolTip = Text("Str_MediaViewer_Mute", "Mute (M)");
+            VolumeSlider.ToolTip = Text("Str_MediaViewer_Volume", "Volume");
         }
+
+        private bool _syncingVolume;
+
+        /// <summary>Shows the player's volume and mute state in the strip, without raising <see cref="VolumeChanged"/>.</summary>
+        public void SetVolume(double volume, bool muted)
+        {
+            _syncingVolume = true;
+            VolumeSlider.Value = volume;
+            _syncingVolume = false;
+            MuteIcon.Kind = muted || volume <= 0 ? MaterialDesignThemes.Wpf.PackIconKind.VolumeOff : MaterialDesignThemes.Wpf.PackIconKind.VolumeHigh;
+        }
+
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!_syncingVolume) VolumeChanged?.Invoke(e.NewValue);
+        }
+
+        private void BtnMute_Click(object sender, RoutedEventArgs e) => MuteRequested?.Invoke();
 
         /// <summary>The title in the strip: what is playing.</summary>
         public void SetTitle(string title)

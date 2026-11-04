@@ -590,10 +590,9 @@
                                     TextAlignment="Center"
                                     TextWrapping="Wrap" />
                                 <Button
-                                    Width="Auto"
                                     HorizontalAlignment="Center"
                                     Click="BtnBringBack_Click"
-                                    Style="{StaticResource ListToolButtonStyle}">
+                                    Style="{StaticResource ListToolPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon
                                             Width="16"
@@ -610,6 +609,7 @@
                         <!--  Fixed-dark stage: picture / video / music + player chrome  -->
                         <Border
                             x:Name="Stage"
+                            SizeChanged="Stage_SizeChanged"
                             Background="#0E0F12"
                             ClipToBounds="True"
                             CornerRadius="12">
@@ -657,12 +657,18 @@
                                         Visibility="Collapsed" />
 
                                     <!--  Music: no picture, so show the cover placeholder  -->
-                                    <StackPanel
+                                    <Grid
                                         x:Name="AudioPanel"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
+                                        Margin="24,16,24,16"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
                                         IsHitTestVisible="False"
                                         Visibility="Collapsed">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
                                         <Border
                                             Width="96"
                                             Height="96"
@@ -679,6 +685,7 @@
                                         </Border>
                                         <TextBlock
                                             x:Name="TxtAudioName"
+                                            Grid.Row="1"
                                             MaxWidth="420"
                                             Margin="0,16,0,0"
                                             HorizontalAlignment="Center"
@@ -686,7 +693,16 @@
                                             Foreground="#E9EBEF"
                                             TextAlignment="Center"
                                             TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
+                                        <!--  Live spectrum of the music (the Music page's coloured bars); sits above the player controls  -->
+                                        <controls:SpectrumBars
+                                            x:Name="AudioBars"
+                                            Grid.Row="2"
+                                            MaxWidth="520"
+                                            MinHeight="24"
+                                            Margin="0,16,0,56"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch" />
+                                    </Grid>
 
                                     <!--  Nothing on screen  -->
                                     <StackPanel
@@ -927,6 +943,7 @@
                                         </StackPanel>
 
                                         <StackPanel
+                                            x:Name="ChromeExtras"
                                             Grid.Column="2"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Center"

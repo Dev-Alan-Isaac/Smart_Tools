@@ -127,6 +127,28 @@ namespace Smart_Tools.WPF
         // (and keeps the app minimized); only a restore while the widget is already visible opens the tool.
         private Func<bool>? _restoreWidgetFirst;
 
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            if (System.Windows.Interop.HwndSource.FromHwnd(new System.Windows.Interop.WindowInteropHelper(this).Handle) is { } source)
+                source.AddHook(RestoreCommandHook);
+        }
+
+        private const int WmSysCommand = 0x0112, ScRestore = 0xF120, ScMask = 0xFFF0;
+
+        /// <summary>
+        /// Clicking the minimized app in the taskbar sends "restore". While the mini player is hidden with the app, that click
+        /// should only bring the mini back, so it is answered here and the window is never restored: handling it later, in
+        /// StateChanged, let the whole tool flash open for a moment before it minimized again.
+        /// </summary>
+        private IntPtr RestoreCommandHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg != WmSysCommand || (wParam.ToInt64() & ScMask) != ScRestore || _restoreWidgetFirst is not { } showWidget) return IntPtr.Zero;
+            _restoreWidgetFirst = null;
+            if (showWidget()) handled = true;   // the mini player is back; the app stays minimized
+            return IntPtr.Zero;
+        }
+
         /// <param name="restoreWidgetFirst">Shows the hidden widget again; returns true when it did.</param>
         public void MinimizeForWidget(Func<bool>? restoreWidgetFirst = null)
         {

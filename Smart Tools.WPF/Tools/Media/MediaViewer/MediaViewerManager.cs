@@ -260,6 +260,63 @@ namespace Smart_Tools.WPF.Controllers
                 : $"{time.Minutes}:{time.Seconds:00}";
         }
 
+        // =================================================================
+        //  Files Windows' media engine can't open by name
+        // =================================================================
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+        private static extern bool CreateHardLink(string newFile, string existingFile, IntPtr reserved);
+
+        /// <summary>Where the safely named links/copies live. Emptied on close and swept on the first use of a session.</summary>
+        public static string PreviewFolder => Path.Combine(Path.GetTempPath(), "Smart Tools", "media-viewer previews");
+
+        private static bool _previewsSwept;
+
+        /// <summary>True for names with '#' or '%': valid Uris, yet MediaElement fails to open them.</summary>
+        public static bool NeedsSafeName(string path) => Path.GetFileName(path).IndexOfAny(new[] { '#', '%' }) >= 0;
+
+        /// <summary>
+        /// A path with a plain name that opens the same bytes: a hard link when the temp folder is on the same drive (instant, no
+        /// extra space), else a copy. Null when neither could be made, and the caller plays the original. Call off the UI thread.
+        /// </summary>
+        public static string? MakeSafeAlias(string path)
+        {
+            try
+            {
+                if (!_previewsSwept) { _previewsSwept = true; ClearPreviews(); }
+                Directory.CreateDirectory(PreviewFolder);
+                var info = new FileInfo(path);
+                string key = $"{path.ToUpperInvariant()}|{info.Length}|{info.LastWriteTimeUtc.Ticks}";
+                string name = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(key)))[..16] + info.Extension;
+                string alias = Path.Combine(PreviewFolder, name);
+                if (File.Exists(alias)) return alias;
+                if (!CreateHardLink(alias, path, IntPtr.Zero)) File.Copy(path, alias, overwrite: false);
+                return alias;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>Deletes the links/copies (best effort: one still held by the player stays until the next start).</summary>
+        public static void ClearPreviews()
+        {
+            try
+            {
+                if (!Directory.Exists(PreviewFolder)) return;
+                foreach (string file in Directory.EnumerateFiles(PreviewFolder))
+                {
+                    try { File.Delete(file); }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* still open: the next start sweeps it */ }
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // the folder went away
+            }
+        }
+
         public static string FormatSize(long bytes)
         {
             string[] units = { "B", "KB", "MB", "GB" };

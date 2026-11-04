@@ -55,10 +55,7 @@ namespace Smart_Tools.WPF.Controllers
         // Spectrum auto-gain (see GetSpectrumLevels)
         private volatile float[]? _latestMagnitudes;
         private int _spectrumSampleRate = 44100;
-        private float _meterCeiling = MinCeiling;
-        private const float MinCeiling = 1e-6f;
-        private const double SpectrumMinFrequency = 30.0;
-        private const double SpectrumMaxFrequency = 16000.0;
+        private readonly SpectrumLevelMapper _levelMapper = new();
 
         public AudioReplayManager()
         {
@@ -803,43 +800,14 @@ namespace Smart_Tools.WPF.Controllers
                 return false;
             }
 
-            int barCount = levels.Length;
-            double maxFreq = Math.Min(_spectrumSampleRate / 2.0, SpectrumMaxFrequency);
-            double logMin = Math.Log10(SpectrumMinFrequency);
-            double logMax = Math.Log10(maxFreq);
-            float frameMax = 0f;
-
-            for (int b = 0; b < barCount; b++)
-            {
-                double loFreq = Math.Pow(10, logMin + (logMax - logMin) * b / barCount);
-                double hiFreq = Math.Pow(10, logMin + (logMax - logMin) * (b + 1) / barCount);
-
-                int loBin = Math.Max(1, (int)(loFreq * SpectrumSampleProvider.FftLength / _spectrumSampleRate));
-                int hiBin = Math.Min(magnitudes.Length - 1, (int)(hiFreq * SpectrumSampleProvider.FftLength / _spectrumSampleRate));
-                if (hiBin < loBin) hiBin = loBin;
-
-                float maxMag = 0f;
-                for (int i = loBin; i <= hiBin; i++)
-                    if (magnitudes[i] > maxMag) maxMag = magnitudes[i];
-
-                levels[b] = maxMag;
-                if (maxMag > frameMax) frameMax = maxMag;
-            }
-
-            // Auto-gain: snap up to a louder peak instantly, decay slowly
-            // (~halves every ~4s at a 30ms tick) through quiet passages.
-            _meterCeiling = frameMax > _meterCeiling ? frameMax : Math.Max(_meterCeiling * 0.995f, MinCeiling);
-
-            for (int b = 0; b < barCount; b++)
-                levels[b] = (float)Math.Sqrt(Math.Clamp(levels[b] / _meterCeiling, 0f, 1f));
-
+            _levelMapper.Fill(magnitudes, SpectrumSampleProvider.FftLength, _spectrumSampleRate, levels);
             return true;
         }
 
         private void ResetSpectrum()
         {
             _latestMagnitudes = null;
-            _meterCeiling = MinCeiling;
+            _levelMapper.Reset();
         }
 
         // =================================================================

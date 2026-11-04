@@ -96,7 +96,7 @@ namespace Smart_Tools.WPF.Models
 
         public string ToolTip => IsFolder
             ? FolderPath
-            : string.Join(Environment.NewLine, FilePaths.Take(15)) + (FilePaths.Count > 15 ? $"{Environment.NewLine}+{FilePaths.Count - 15} more" : "");
+            : string.Join(Environment.NewLine, FilePaths.Take(15)) + (FilePaths.Count > 15 ? Environment.NewLine + Loc.F("Str_MediaViewer_MoreFiles", "+{0} more", FilePaths.Count - 15) : "");
     }
 
     /// <summary>One entry in the Media Viewer list.</summary>

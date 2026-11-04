@@ -36,7 +36,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const double PlaylistExpandedWidth = 380;
 
-        private readonly ObservableCollection<MediaItem> _items = new();
+        private readonly BulkObservableCollection<MediaItem> _items = new();   // a 10,000-file folder is one change notification, not 10,000
         private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };
         private readonly DispatcherTimer _slide = new() { Interval = TimeSpan.FromSeconds(4) };
         private const int SkipWaitSeconds = 5;
@@ -85,6 +85,7 @@ namespace Smart_Tools.WPF.Views
             SkipRing.Completed += SkipRing_Completed;
             _ready = true;
             Player.Volume = VolumeSlider.Value;
+            AudioBars.Source = FeedSpectrum;
             ApplyPanels();
             UpdateOrderUi();
             RebuildGroups();
@@ -209,14 +210,15 @@ namespace Smart_Tools.WPF.Views
             var found = await Task.Run(() => MediaViewerManager.Expand(fresh.Select(f => f.FullPath).ToList(), subfolders));
             var known = new HashSet<string>(_items.Select(i => i.Path), StringComparer.OrdinalIgnoreCase);
             int firstNew = _items.Count;
-            foreach (var item in found)
-                if (known.Add(item.Path)) _items.Add(item);
+            _items.AddRange(found.Where(item => known.Add(item.Path)).ToList());
 
             if (_items.Count == firstNew)
             {
                 ShowError(S("Str_MediaViewer_NothingFound", "No pictures, videos or music found there."));
                 return;
             }
+            // Two drops of the same folder can overlap: the check above ran before the await, so it is repeated here.
+            fresh.RemoveAll(f => _sources.Any(s => string.Equals(s.FullPath, f.FullPath, StringComparison.OrdinalIgnoreCase)));
             _sources.AddRange(fresh);
             RebuildGroups();
             InputCard.PopDropArea();
@@ -258,8 +260,43 @@ namespace Smart_Tools.WPF.Views
         //  Showing one item
         // =================================================================
 
+        /// <summary>
+        /// A narrow player (the mini window) has no room for the whole controls row: volume, previous/play/next stay, and the
+        /// extras on the right (speed, repeat, shuffle...) step aside until the window is wide enough again. Their keys still work.
+        /// </summary>
+        private void Stage_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (!_ready) return;
+            bool mini = StageInWidget;   // in the tool itself the row always stays whole
+            ChromeExtras.Visibility = mini && e.NewSize.Width < 560 ? Visibility.Collapsed : Visibility.Visible;
+            VolumeSlider.Width = mini && e.NewSize.Width < 400 ? 64 : 90;
+        }
+
+        private MediaSpectrumFeeder? _spectrum;
+
+        /// <summary>Called by the music bars about 30 times a second: keeps the spectrum reader at the player's position and hands back the levels.</summary>
+        private bool FeedSpectrum(float[] levels)
+        {
+            var spectrum = _spectrum;
+            if (spectrum == null)
+            {
+                Array.Clear(levels);
+                return false;
+            }
+            spectrum.Sync(Player.Position, _playing && _mediaOpen);
+            return spectrum.GetLevels(levels);
+        }
+
+        private void StopSpectrum()
+        {
+            var spectrum = _spectrum;
+            _spectrum = null;
+            spectrum?.Dispose();
+        }
+
         private void StopMedia()
         {
+            StopSpectrum();
             _tick.Stop();
             _playing = false;
             _mediaOpen = false;
@@ -436,9 +473,29 @@ namespace Smart_Tools.WPF.Views
                 AudioPanel.Visibility = Visibility.Visible;
             }
             TxtInfo.Text = item.Kind == ViewerMediaKind.Video ? S("Str_MediaViewer_Video", "Video") : S("Str_MediaViewer_Audio", "Music");
+            _ = StartPlayerAsync(item, _loadVersion);
+        }
+
+        /// <summary>
+        /// Opens the file in the player. A name with '#' or '%' (like "100% #1.mp4") is a valid Uri, but Windows' media
+        /// engine still refuses to open it, so it is played through a safely named link/copy in %TEMP% instead.
+        /// </summary>
+        private async Task StartPlayerAsync(MediaItem item, int version)
+        {
+            string path = item.Path;
+            if (MediaViewerManager.NeedsSafeName(path))
+            {
+                string? alias = await Task.Run(() => MediaViewerManager.MakeSafeAlias(path));
+                if (version != _loadVersion) return;   // another item was chosen meanwhile
+                if (alias != null) path = alias;
+            }
+
+            StopSpectrum();
+            if (item.Kind == ViewerMediaKind.Audio) _spectrum = new MediaSpectrumFeeder(item.Path);   // reads the file itself, so the odd-name copy isn't needed
+
             try
             {
-                Player.Source = new Uri(item.Path);
+                Player.Source = new Uri(path);
                 Player.SpeedRatio = CurrentSpeed;
                 Player.Play();
                 _playing = true;
@@ -545,14 +602,16 @@ namespace Smart_Tools.WPF.Views
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
-        private void MenuDeleteFile_Click(object sender, RoutedEventArgs e) => DeleteFiles(Targets());
+        private async void MenuDeleteFile_Click(object sender, RoutedEventArgs e) => await DeleteFilesAsync(Targets());
 
-        private void BtnDeleteFiles_Click(object sender, RoutedEventArgs e) => DeleteFiles(Targets());
+        private async void BtnDeleteFiles_Click(object sender, RoutedEventArgs e) => await DeleteFilesAsync(Targets());
 
-        /// <summary>Deletes the files from the computer (Recycle Bin where there is one) after asking, then takes them off the list.</summary>
-        private void DeleteFiles(List<MediaItem> targets)
+        private bool _deleting;
+
+        /// <summary>Deletes the files from the computer (Recycle Bin where there is one) after asking, then takes them off the list. The deleting itself runs off the UI thread, so a big selection doesn't freeze the window.</summary>
+        private async Task DeleteFilesAsync(List<MediaItem> targets)
         {
-            if (targets.Count == 0) return;
+            if (targets.Count == 0 || _deleting) return;
             bool bin = targets.All(t => ImageViewerManager.HasRecycleBin(t.Path));
             string text = targets.Count == 1
                 ? string.Format(S(bin ? "Str_MediaViewer_DeleteBinOne" : "Str_MediaViewer_DeletePermOne",
@@ -571,20 +630,35 @@ namespace Smart_Tools.WPF.Views
             if (stoppedCurrent) StopMedia();
 
             var deleted = new List<MediaItem>();
-            string? failure = null;
-            foreach (var item in targets)
+            MediaItem? failedItem = null;
+            string failedMessage = "";
+            _deleting = true;
+            try
             {
-                try
+                await Task.Run(() =>
                 {
-                    ImageViewerManager.DeleteImage(item.Path);   // works for any file: Recycle Bin, else permanent
-                    deleted.Add(item);
-                }
-                catch (Exception ex)
-                {
-                    failure = string.Format(S("Str_MediaViewer_DeleteFailed", "Couldn't delete \"{0}\": {1}"), item.Name, ex.Message);
-                    break;
-                }
+                    foreach (var item in targets)
+                    {
+                        try
+                        {
+                            ImageViewerManager.DeleteImage(item.Path);   // works for any file: Recycle Bin, else permanent
+                            deleted.Add(item);
+                        }
+                        catch (Exception ex)
+                        {
+                            failedItem = item;
+                            failedMessage = ex.Message;
+                            break;
+                        }
+                    }
+                });
             }
+            finally
+            {
+                _deleting = false;
+            }
+            string? failure = failedItem == null ? null
+                : string.Format(S("Str_MediaViewer_DeleteFailed", "Couldn't delete \"{0}\": {1}"), failedItem.Name, failedMessage);
 
             if (deleted.Count > 0) RemoveItems(deleted);
             else if (stoppedCurrent && current != null && _items.Contains(current)) Show(_items.IndexOf(current));   // nothing deleted - carry on playing
@@ -1070,6 +1144,9 @@ namespace Smart_Tools.WPF.Views
         private void Root_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase) return;
+            // A focused button, tick box, slider or drop-down keeps its own Space and arrow keys (Space on "Repeat" must tick it, not pause the video).
+            if (e.OriginalSource is System.Windows.Controls.Primitives.ButtonBase && e.Key == Key.Space) return;
+            if (e.OriginalSource is Slider or System.Windows.Controls.ComboBox or ComboBoxItem && e.Key is Key.Left or Key.Right or Key.Up or Key.Down) return;
             bool inGrid = IsInsideGrid(e.OriginalSource);
             if (inGrid && e.Key is Key.Up or Key.Down or Key.Enter) return;   // the list keeps its own arrows and Enter
 
@@ -1103,7 +1180,7 @@ namespace Smart_Tools.WPF.Views
                     BtnMute_Click(this, new RoutedEventArgs());
                     break;
                 case Key.Delete when Keyboard.Modifiers.HasFlag(ModifierKeys.Shift):
-                    DeleteFiles(inGrid ? Targets() : Current != null ? new List<MediaItem> { Current } : new List<MediaItem>());
+                    _ = DeleteFilesAsync(inGrid ? Targets() : Current != null ? new List<MediaItem> { Current } : new List<MediaItem>());
                     break;
                 case Key.Delete:
                     if (inGrid && DataGridQueue.SelectedItems.Count > 0) RemoveItems(DataGridQueue.SelectedItems.OfType<MediaItem>().ToList());
@@ -1179,6 +1256,7 @@ namespace Smart_Tools.WPF.Views
             _widget?.SetTitle(item?.Name ?? "");
 
             MuteIcon.Kind = Player.IsMuted || VolumeSlider.Value <= 0 ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
+            _widget?.SetVolume(VolumeSlider.Value, Player.IsMuted);   // the mini player's own slider follows
 
             bool any = _items.Count > 0;
             EmptyStatePanel.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
@@ -1217,6 +1295,7 @@ namespace Smart_Tools.WPF.Views
             CancelSkip();
             _slideshow = false;
             StopMedia();
+            MediaViewerManager.ClearPreviews();
             _saveTimer.Stop();
             SaveSettingsNow();
             CloseWidgetForExit();
