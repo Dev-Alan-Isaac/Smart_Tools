@@ -237,12 +237,16 @@ namespace Smart_Tools.WPF.Views
             if (!ok)
             {
                 TxtResult.Clear();
+                TxtBigResult.Text = "-";
+                TxtBigUnit.Text = "";
                 TxtFormula.Text = "";
                 foreach (var row in _rows) row.Value = "";
                 return;
             }
 
             TxtResult.Text = UnitConverterManager.Format(UnitConverterManager.Convert(value, from, to));
+            TxtBigResult.Text = TxtResult.Text + " " + to.Symbol;
+            TxtBigUnit.Text = to.Name;
             TxtFormula.Text = UnitConverterManager.Formula(from, to);
             foreach (var row in _rows) row.Value = UnitConverterManager.Format(UnitConverterManager.Convert(value, from, row.Unit));
         }

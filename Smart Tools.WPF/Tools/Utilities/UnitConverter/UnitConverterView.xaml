@@ -70,7 +70,7 @@
                             HorizontalContentAlignment="Left"
                             Click="BtnCollapseOptions_Click"
                             Cursor="Hand"
-                            FocusVisualStyle="{x:Null}"
+                            FocusVisualStyle="{StaticResource FocusRingVisual}"
                             Foreground="{DynamicResource SidebarText}"
                             ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
                             <Button.Style>
@@ -366,6 +366,30 @@
                                         Kind="ContentCopy" />
                                 </Button>
                             </Grid>
+
+                            <!--  The answer, big (the same look as the Subnet Calculator's key numbers)  -->
+                            <StackPanel Margin="0,18,0,0">
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Conv_ResultLabel}" />
+                                <TextBlock
+                                    x:Name="TxtBigResult"
+                                    Margin="0,2,0,0"
+                                    FontFamily="Cascadia Mono, Consolas"
+                                    FontSize="32"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="-"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Name="TxtBigUnit"
+                                    Margin="0,2,0,0"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
 
                             <TextBlock
                                 x:Name="TxtFormula"
