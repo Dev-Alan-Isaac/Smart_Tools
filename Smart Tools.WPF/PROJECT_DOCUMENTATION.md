@@ -149,6 +149,7 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 | **Services** | `services` | See every Windows service and start, stop, restart, or change how each one starts |
 | **Environment Variables** | `environment-variables` | Edit user and system variables, and clean up the PATH folder by folder |
 | **Event Log Explorer** | `event-log-explorer` | Browse, filter and export Windows event logs |
+| **System Snapshot** | `system-snapshot` | Scan everything about this PC (system, network, listening ports, firewall rules, services and their dependencies, startup items, scheduled tasks, installed programs and runtimes, hosts, environment variables) and export it as HTML, JSON, text or CSV to rebuild the same setup on another PC. Read-only; secrets are never read |
 
 ### Hardware Tests
 *Test keyboards, mice, screens, controllers and sound*

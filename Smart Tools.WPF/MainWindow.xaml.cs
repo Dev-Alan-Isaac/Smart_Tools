@@ -267,6 +267,7 @@ namespace Smart_Tools.WPF
             Add<LogViewerView>("log-viewer", v => v.CancelActiveRun());   // stops following every file, saves rule edits
             Add<CodeToolkitView>("code-toolkit", v => v.CancelActiveRun());
             Add<EventLogExplorerView>("event-log-explorer", v => v.CancelActiveRun());   // stops reading and live refresh, saves settings
+            Add<SystemSnapshotView>("system-snapshot", v => v.CancelActiveRun());   // stops a scan (finished sections stay), saves the setup
             Add<DbMigrateView>("db-migrate", v => v.CancelActiveRun());                  // stops a plan or copy in progress, saves the setup
             Add<EncodeToolView>("encode-decode", v => v.CancelActiveRun());              // stops a pending conversion, saves the setup
 

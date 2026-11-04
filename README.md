@@ -23,7 +23,7 @@ A Windows desktop app with **110 everyday tools** in one place: manage and clean
 - **Colors** (5): Color Picker, Screen Color Picker, Color Wheel, Palette Extractor, Contrast Checker
 - **Storage** (6): Drive Health, Disk Space Analyzer, Large File Finder, Junk File Cleaner, Disk Speed Test, Empty Folder Cleaner
 - **Performance** (3): System Monitor, Hardware Sensors, Process Killer
-- **System** (4): Startup Apps, Services, Environment Variables, Event Log Explorer
+- **System** (5): Startup Apps, Services, Environment Variables, Event Log Explorer, System Snapshot
 - **Hardware Tests** (8): Audio Output Test, Game Controller Test, Monitor Test, Monitor HDR & Color Depth, Keyboard & Mouse Test, Microphone Test, Webcam Test, Battery Health
 - **Security** (5): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator
 - **Network** (11): My IP & Adapters, Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed Widget
