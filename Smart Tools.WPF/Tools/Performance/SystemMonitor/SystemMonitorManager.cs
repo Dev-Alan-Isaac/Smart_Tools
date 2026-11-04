@@ -76,6 +76,9 @@ namespace Smart_Tools.WPF.Controllers
             using var temperatures = new TemperatureReader();
             temperatures.Open();
             var state = new ReadState { GpuAdapters = ReadGpuAdapters() };
+            var clock = Stopwatch.StartNew();
+            long lastTempMs = -10_000;
+            var lastTemps = SystemMonitorTemps.Empty;
             try
             {
                 while (!token.IsCancellationRequested)
@@ -84,7 +87,13 @@ namespace Smart_Tools.WPF.Controllers
                     SystemMonitorSnapshot? snapshot = null;
                     try
                     {
-                        snapshot = Read(pdh, state, temperatures.Read());
+                        // Temperatures come from the sensor library, whose update touches all the hardware: at most every 2 s, not every 0.5 s tick.
+                        if (clock.ElapsedMilliseconds - lastTempMs >= 2_000)
+                        {
+                            lastTemps = temperatures.Read();
+                            lastTempMs = clock.ElapsedMilliseconds;
+                        }
+                        snapshot = Read(pdh, state, lastTemps);
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
@@ -503,7 +512,7 @@ namespace Smart_Tools.WPF.Controllers
                     for (int i = 0; i < count; i++)
                     {
                         var item = Marshal.PtrToStructure<PDH_FMT_COUNTERVALUE_ITEM>(buffer + i * itemSize);
-                        if (item.Value.CStatus is not (PDH_CSTATUS_VALID_DATA or PDH_CSTATUS_NEW_DATA)) continue;
+                        if (item.Value.CStatus is not (PDH_CSTATUS_VALID_DATA or PDH_CSTATUS_NEW_DATA) || !double.IsFinite(item.Value.DoubleValue)) continue;
                         list.Add((Marshal.PtrToStringUni(item.Name) ?? "", item.Value.DoubleValue));
                     }
                 }

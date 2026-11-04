@@ -269,6 +269,10 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         private static ProcessKillerEndResult EndOne(int pid, long creationTicks, string name)
         {
+            // A row whose start time could not be read has no identity to check: the number may belong to a different program by now.
+            // Such a process could not be opened for ending anyway (that is why its time is missing), so it is refused rather than guessed at.
+            if (creationTicks == 0) return new(pid, name, ProcessKillerEndOutcome.AccessDenied, null);
+
             IntPtr h = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, false, pid);
             if (h == IntPtr.Zero)
             {

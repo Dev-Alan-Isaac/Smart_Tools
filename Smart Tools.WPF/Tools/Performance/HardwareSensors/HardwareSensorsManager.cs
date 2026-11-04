@@ -93,6 +93,7 @@ namespace Smart_Tools.WPF.Controllers
                 while (!token.IsCancellationRequested)
                 {
                     var started = Stopwatch.StartNew();
+                    if (_computer == null && DateTime.UtcNow - _closedAt > TimeSpan.FromSeconds(10)) Open();
                     var snapshot = new HardwareSnapshot(DateTime.UtcNow, Read(), _computer == null ? _openError : null);
                     if (!token.IsCancellationRequested) Post(() => SnapshotReady?.Invoke(snapshot));
                     int wait = Math.Max(50, _intervalMs - (int)started.ElapsedMilliseconds);
@@ -218,15 +219,18 @@ namespace Smart_Tools.WPF.Controllers
                 Log.Info($"Hardware Sensors: read failed: {ex.Message}");
                 if (++_readFailures >= 5)
                 {
-                    _openError = "The sensors stopped answering: " + ex.Message;
+                    _openError = Loc.F("Str_HardwareSensors_StoppedAnswering", "The sensors stopped answering: {0}", ex.Message);
                     Close();
                 }
             }
             return list;
         }
 
+        private DateTime _closedAt = DateTime.MinValue;
+
         private void Close()
         {
+            _closedAt = DateTime.UtcNow;
             if (_computer == null) return;
             _computer = null;
             SharedSensorHost.Release();

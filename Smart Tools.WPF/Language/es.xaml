@@ -2665,6 +2665,12 @@
     <system:String x:Key="Str_HardwareSensors_WhichSensorsAppearDepends">Los sensores que aparecen dependen del hardware y sus controladores; algunos componentes informan de pocos o ninguno.</system:String>
     <system:String x:Key="Str_HardwareSensors_ReadingTheSensors">Leyendo los sensores…</system:String>
     <system:String x:Key="Str_HardwareSensors_TheFirstReadingCan">La primera lectura puede tardar unos segundos.</system:String>
+    <system:String x:Key="Str_HardwareSensors_StoppedAnswering">Los sensores dejaron de responder: {0}</system:String>
+    <system:String x:Key="Str_HardwareSensors_CantReadTitle">No se pudieron leer los sensores</system:String>
+    <system:String x:Key="Str_HardwareSensors_NoSensorsTitle">No se encontraron sensores</system:String>
+    <system:String x:Key="Str_HardwareSensors_NoSensorsHint">El hardware de este equipo no informó de ningún sensor. El Monitor del sistema sigue mostrando el uso de cada parte.</system:String>
+    <system:String x:Key="Str_HardwareSensors_SaveReportTitle">Guardar el informe de sensores de hardware</system:String>
+    <system:String x:Key="Str_HardwareSensors_KeptExisting">{0} ya existe, así que se conservó y este informe recibió otro nombre.</system:String>
     <system:String x:Key="Str_ImageConvertPDF_Pages">Páginas</system:String>
     <system:String x:Key="Str_ImageConvertPDF_PaperSizeOfEvery">Tamaño de papel de cada página. &quot;Igual que la imagen&quot; hace que cada página tenga exactamente el tamaño de su imagen.</system:String>
     <system:String x:Key="Str_ImageConvertPDF_Letter8511">Carta (8,5 × 11 pulg.)</system:String>
@@ -4828,6 +4834,8 @@
     <system:String x:Key="Str_ProcessKiller_AdminWarning">Ejecutando como usuario estándar, solo puedes finalizar tus propios programas. No se pueden finalizar procesos de otros usuarios ni servicios, y puede faltar información (ruta, usuario, puertos). Reinicia como administrador para gestionarlos.</system:String>
     <system:String x:Key="Str_SystemMonitor_AdminTitle">Algunas lecturas requieren permisos de administrador</system:String>
     <system:String x:Key="Str_SystemMonitor_AdminWarning">Ejecutando como usuario estándar, no se pueden leer las temperaturas de la CPU, la tarjeta gráfica y las unidades, por lo que no aparecen en las secciones. Reinicia como administrador para leerlas.</system:String>
+    <system:String x:Key="Str_SystemMonitor_Paused">En pausa</system:String>
+    <system:String x:Key="Str_SystemMonitor_Copied">Informe copiado</system:String>
     <system:String x:Key="Str_ProcessKiller_SearchTooltip">Busca en el nombre del proceso, PID, el puerto que usa un proceso, ruta, usuario o título de ventana</system:String>
     <system:String x:Key="Str_ProcessKiller_FilterAll">Todos</system:String>
     <system:String x:Key="Str_ProcessKiller_FilterAllTooltip">Todos los procesos en ejecución</system:String>

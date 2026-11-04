@@ -41,7 +41,7 @@ namespace Smart_Tools.WPF.Views
         private const int MaxNamesInConfirm = 8;
 
         private readonly ProcessKillerManager _manager = new();
-        private readonly ObservableCollection<ProcessKillerRow> _rows = new();
+        private readonly BulkObservableCollection<ProcessKillerRow> _rows = new();
         private readonly ListCollectionView _view;
         private readonly ProcessKillerSettings _settings;
         private readonly DispatcherTimer _searchTimer;
@@ -174,7 +174,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     portPids = (await ProcessKillerManager.FindPortUsesAsync(port.Value)).Select(u => u.Pid).ToHashSet();
                 }
-                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+                catch (Exception ex) when (ex is not OutOfMemoryException)
                 {
                     portPids = null;
                 }
@@ -246,7 +246,7 @@ namespace Smart_Tools.WPF.Views
             {
                 uses = await ProcessKillerManager.FindPortUsesAsync(port.Value);
             }
-            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 ShowStatus(ex.Message, StatusKind.Error);
                 return;

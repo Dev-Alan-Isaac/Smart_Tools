@@ -2618,6 +2618,12 @@
     <system:String x:Key="Str_HardwareSensors_WhichSensorsAppearDepends">Which sensors appear depends on the hardware and its drivers - some parts report only a few, or none.</system:String>
     <system:String x:Key="Str_HardwareSensors_ReadingTheSensors">Reading the sensors…</system:String>
     <system:String x:Key="Str_HardwareSensors_TheFirstReadingCan">The first reading can take a few seconds.</system:String>
+    <system:String x:Key="Str_HardwareSensors_StoppedAnswering">The sensors stopped answering: {0}</system:String>
+    <system:String x:Key="Str_HardwareSensors_CantReadTitle">Couldn't read the sensors</system:String>
+    <system:String x:Key="Str_HardwareSensors_NoSensorsTitle">No sensors found</system:String>
+    <system:String x:Key="Str_HardwareSensors_NoSensorsHint">This PC's hardware didn't report any sensors. System Monitor still shows usage for every part.</system:String>
+    <system:String x:Key="Str_HardwareSensors_SaveReportTitle">Save hardware sensors report</system:String>
+    <system:String x:Key="Str_HardwareSensors_KeptExisting">{0} already exists, so it was kept and this report got its own name.</system:String>
     <system:String x:Key="Str_ImageConvertPDF_Pages">Pages</system:String>
     <system:String x:Key="Str_ImageConvertPDF_PaperSizeOfEvery">Paper size of every page. &quot;Same as image&quot; makes each page exactly the size of its picture.</system:String>
     <system:String x:Key="Str_ImageConvertPDF_Letter8511">Letter (8.5 × 11 in)</system:String>
@@ -4826,6 +4832,8 @@
     <system:String x:Key="Str_ProcessKiller_AdminWarning">Running as a standard user, you can end your own programs. Processes from other users and services can't be ended, and some details (path, owner, ports) may be missing. Restart as administrator to manage them.</system:String>
     <system:String x:Key="Str_SystemMonitor_AdminTitle">Some readings need administrator rights</system:String>
     <system:String x:Key="Str_SystemMonitor_AdminWarning">Running as a standard user, CPU, graphics card and drive temperatures can't be read, so they're missing from the sections below. Restart as administrator to read them.</system:String>
+    <system:String x:Key="Str_SystemMonitor_Paused">Paused</system:String>
+    <system:String x:Key="Str_SystemMonitor_Copied">Report copied</system:String>
     <system:String x:Key="Str_ProcessKiller_SearchTooltip">Matches the process name, PID, the port a process is using, file path, user or window title</system:String>
     <system:String x:Key="Str_ProcessKiller_FilterAll">All</system:String>
     <system:String x:Key="Str_ProcessKiller_FilterAllTooltip">Every running process</system:String>

@@ -120,10 +120,13 @@ namespace Smart_Tools.WPF.Controllers
             var incoming = new Dictionary<(int, long), ProcessKillerSample>(samples.Count);
             foreach (var s in samples) incoming[(s.Pid, s.CreationTicks)] = s;
 
-            for (int i = rows.Count - 1; i >= 0; i--)
+            var gone = rows.Where(r => !incoming.ContainsKey((r.Pid, r.CreationTicks))).ToHashSet();
+            if (gone.Count > 0)
             {
-                if (!incoming.ContainsKey((rows[i].Pid, rows[i].CreationTicks))) rows.RemoveAt(i);
+                if (rows is BulkObservableCollection<ProcessKillerRow> bulk) bulk.RemoveWhere(gone.Contains);
+                else foreach (var r in gone) rows.Remove(r);
             }
+            var fresh = new List<ProcessKillerRow>();
 
             var existing = new Dictionary<(int, long), ProcessKillerRow>(rows.Count);
             foreach (var r in rows) existing[(r.Pid, r.CreationTicks)] = r;
@@ -134,10 +137,17 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     row = new ProcessKillerRow(s.Pid, s.CreationTicks, s.Name) { IsSelf = s.Pid == SelfPid };
                     Update(row, s);
-                    rows.Add(row);
+                    fresh.Add(row);
                     existing[(s.Pid, s.CreationTicks)] = row;
                 }
                 else Update(row, s);
+            }
+
+            // New processes go in as one change (a small number keep the grid's selection and scroll position).
+            if (fresh.Count > 0)
+            {
+                if (rows is BulkObservableCollection<ProcessKillerRow> bulkRows) bulkRows.AddRange(fresh);
+                else foreach (var r in fresh) rows.Add(r);
             }
 
             var byPid = new Dictionary<int, ProcessKillerRow>(rows.Count);
@@ -282,9 +292,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string file = path ?? SettingsPath;
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }

@@ -94,13 +94,41 @@ namespace Smart_Tools.WPF.Views
                 ApplySettings(SystemMonitorManager.LoadSettings());
                 _ = LoadSpecsAsync();
             }
-            if (!_paused) _manager.Start();
+            _window = Window.GetWindow(this);
+            if (_window != null)
+            {
+                _window.StateChanged += Window_VisibilityChanged;
+                _window.IsVisibleChanged += Window_VisibilityChanged;
+            }
+            if (!_paused && WindowIsShown()) _manager.Start();
             UpdateLiveUi();
+        }
+
+        private Window? _window;
+
+        private bool WindowIsShown() => _window == null || (_window.IsVisible && _window.WindowState != WindowState.Minimized);
+
+        /// <summary>Minimised or hidden to the tray: stop reading; shown again: carry on (unless the person paused it).</summary>
+        private void Window_VisibilityChanged(object? sender, DependencyPropertyChangedEventArgs e) => ApplyWindowVisibility();
+
+        private void Window_VisibilityChanged(object? sender, EventArgs e) => ApplyWindowVisibility();
+
+        private void ApplyWindowVisibility()
+        {
+            if (_closed) return;
+            if (!WindowIsShown()) _manager.Stop();
+            else if (!_paused && IsLoaded) _manager.Start();
         }
 
         /// <summary>Nothing is read while the page isn't shown.</summary>
         private void Root_Unloaded(object sender, RoutedEventArgs e)
         {
+            if (_window != null)
+            {
+                _window.StateChanged -= Window_VisibilityChanged;
+                _window.IsVisibleChanged -= Window_VisibilityChanged;
+                _window = null;
+            }
             if (!_closed) _manager.Stop();
         }
 
@@ -169,9 +197,9 @@ namespace Smart_Tools.WPF.Views
         private void UpdateLiveUi()
         {
             IconPause.Kind = _paused ? PackIconKind.Play : PackIconKind.Pause;
-            TxtPause.Text = _paused ? "Resume" : "Pause";
+            TxtPause.Text = _paused ? Loc.T("Str_MicRecorder_Resume", "Resume") : Loc.T("Str_MicRecorder_Pause", "Pause");
             LiveDot.SetResourceReference(Border.BackgroundProperty, _paused ? "SidebarTextMuted" : "StatusSuccessFg");
-            LiveDot.ToolTip = _paused ? "Paused" : "Live";
+            LiveDot.ToolTip = _paused ? Loc.T("Str_SystemMonitor_Paused", "Paused") : Loc.T("Str_HardwareSensors_Live", "Live");
         }
 
         // =================================================================
@@ -402,11 +430,13 @@ namespace Smart_Tools.WPF.Views
                 Clipboard.SetText(Report());
                 UiMotion.Pop(BtnCopyReport, 0.85);
                 IconCopy.Kind = PackIconKind.Check;
+                BtnCopyReport.ToolTip = Loc.T("Str_SystemMonitor_Copied", "Report copied");
                 var reset = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
                 reset.Tick += (_, _) =>
                 {
                     reset.Stop();
                     IconCopy.Kind = PackIconKind.ContentCopy;
+                    BtnCopyReport.SetResourceReference(ToolTipProperty, "Str_HardwareSensors_CopyTheReportTo");
                 };
                 reset.Start();
             }

@@ -86,13 +86,41 @@ namespace Smart_Tools.WPF.Views
                 ApplySettings(HardwareSensorsManager.LoadSettings());
                 SetUpBanner();
             }
-            if (!_paused) _manager.Start();
+            _window = Window.GetWindow(this);
+            if (_window != null)
+            {
+                _window.StateChanged += Window_StateChanged;
+                _window.IsVisibleChanged += Window_IsVisibleChanged;
+            }
+            if (!_paused && WindowIsShown()) _manager.Start();
             UpdateLiveUi();
+        }
+
+        private Window? _window;
+
+        private bool WindowIsShown() => _window == null || (_window.IsVisible && _window.WindowState != WindowState.Minimized);
+
+        private void Window_StateChanged(object? sender, EventArgs e) => ApplyWindowVisibility();
+
+        private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => ApplyWindowVisibility();
+
+        /// <summary>Minimised or hidden to the tray: stop reading (and close the sensor library); shown again: carry on unless paused.</summary>
+        private void ApplyWindowVisibility()
+        {
+            if (_closed) return;
+            if (!WindowIsShown()) _manager.Stop();
+            else if (!_paused && IsLoaded) _manager.Start();
         }
 
         /// <summary>Nothing is read while the page isn't shown (the library is closed too).</summary>
         private void Root_Unloaded(object sender, RoutedEventArgs e)
         {
+            if (_window != null)
+            {
+                _window.StateChanged -= Window_StateChanged;
+                _window.IsVisibleChanged -= Window_IsVisibleChanged;
+                _window = null;
+            }
             if (!_closed) _manager.Stop();
         }
 
@@ -158,9 +186,9 @@ namespace Smart_Tools.WPF.Views
         private void UpdateLiveUi()
         {
             IconPause.Kind = _paused ? PackIconKind.Play : PackIconKind.Pause;
-            TxtPause.Text = _paused ? "Resume" : "Pause";
+            TxtPause.Text = _paused ? Loc.T("Str_MicRecorder_Resume", "Resume") : Loc.T("Str_MicRecorder_Pause", "Pause");
             LiveDot.SetResourceReference(Border.BackgroundProperty, _paused ? "SidebarTextMuted" : "StatusSuccessFg");
-            LiveDot.ToolTip = _paused ? "Paused" : "Live";
+            LiveDot.ToolTip = _paused ? Loc.T("Str_SystemMonitor_Paused", "Paused") : Loc.T("Str_HardwareSensors_Live", "Live");
         }
 
         private void Units_Click(object sender, RoutedEventArgs e)
@@ -223,8 +251,8 @@ namespace Smart_Tools.WPF.Views
             if (!any)
             {
                 EmptyProgress.Visibility = Visibility.Collapsed;
-                TxtEmptyTitle.Text = s.Error != null ? "Couldn't read the sensors" : "No sensors found";
-                TxtEmptyHint.Text = s.Error ?? "This PC's hardware didn't report any sensors. System Monitor still shows usage for every part.";
+                TxtEmptyTitle.Text = s.Error != null ? Loc.T("Str_HardwareSensors_CantReadTitle", "Couldn't read the sensors") : Loc.T("Str_HardwareSensors_NoSensorsTitle", "No sensors found");
+                TxtEmptyHint.Text = s.Error ?? Loc.T("Str_HardwareSensors_NoSensorsHint", "This PC's hardware didn't report any sensors. System Monitor still shows usage for every part.");
             }
             ShowDetail(animate: false);
             _driverInstalled ??= HardwareSensorsManager.IsSensorDriverInstalled();
@@ -454,8 +482,8 @@ namespace Smart_Tools.WPF.Views
             string text = Report();
             var dialog = new SaveFileDialog
             {
-                Title = "Save hardware sensors report",
-                Filter = "Text file (*.txt)|*.txt",
+                Title = Loc.T("Str_HardwareSensors_SaveReportTitle", "Save hardware sensors report"),
+                Filter = Loc.T("Str_Ocr_FilterTxt", "Text file (*.txt)") + "|*.txt",
                 FileName = HardwareSensorsManager.ReportFileName(DateTime.Now),
                 AddExtension = true,
                 OverwritePrompt = false,
@@ -464,10 +492,8 @@ namespace Smart_Tools.WPF.Views
             string path = OutputFolderManager.UniquePath(dialog.FileName);
             try
             {
-                using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write))
-                using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
-                    writer.Write(text);
-                string note = path != dialog.FileName ? $"\n\n{Path.GetFileName(dialog.FileName)} already exists, so it was kept and this report got its own name." : "";
+                AtomicFile.WriteAllText(path, text, new System.Text.UTF8Encoding(false));
+                string note = path != dialog.FileName ? "\n\n" + Loc.F("Str_HardwareSensors_KeptExisting", "{0} already exists, so it was kept and this report got its own name.", Path.GetFileName(dialog.FileName)) : "";
                 if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, note), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }
