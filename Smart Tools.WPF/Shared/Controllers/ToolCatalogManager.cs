@@ -16,7 +16,7 @@ namespace Smart_Tools.WPF.Controllers
     {
         public const string HomeId = "home";
         public const string SettingsId = "settings";
-        public const int MaxRecent = 6;
+        public const int MaxRecent = 5;
 
 
         // =================================================================
