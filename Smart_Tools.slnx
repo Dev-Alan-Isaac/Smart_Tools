@@ -1,10 +1,5 @@
 <Solution>
   <Project Path="Smart Tools.WPF/Smart Tools.WPF.csproj" Id="2a1f1acb-9a3e-463d-b8c7-3809fb111e17" />
-  <!-- The Setup wizard (.msi). It packages the publish folder that Tools\Publish.ps1 makes, so it is listed here to be
-       seen and edited but is NOT built with the solution (Build Solution would fail without that folder). -->
-  <Project Path="SmartToolsWPF.Installer/SmartToolsWPF.Installer.wixproj">
-    <Build Project="false" />
-  </Project>
   <Project Path="SmartToolsWPF.Setup/SmartToolsWPF.Setup.vdproj" Type="Installer">
     <Build />
   </Project>

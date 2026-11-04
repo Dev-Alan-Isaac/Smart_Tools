@@ -6,7 +6,7 @@ Details live in `Smart Tools.WPF/PROJECT_DOCUMENTATION.md` (every tool, architec
 Read those before changing a view; do not repeat their content here.
 
 ## Build and run
-- `dotnet build "Smart Tools.WPF/Smart Tools.WPF.csproj"` (use the csproj; the `.slnx` also holds the old `SmartToolsWPF.Setup` installer project the CLI can't build). `Smart Tools.WPF/Tools/Publish.ps1` makes the release zip and the .msi (`SmartToolsWPF.Installer`, WiX).
+- `dotnet build "Smart Tools.WPF/Smart Tools.WPF.csproj"` (use the csproj; the `.slnx` also holds the old `SmartToolsWPF.Setup` installer project the CLI can't build). A release folder is made with the `win-x64` publish profile (Visual Studio Publish, or `dotnet publish "Smart Tools.WPF/Smart Tools.WPF.csproj" -p:PublishProfile=win-x64`).
 - If the app is running the exe is locked: `Get-Process -Name SmartTools | Stop-Process -Force` first.
 - There is no automated UI test; verify by building, and say when something was not run in the app.
 
