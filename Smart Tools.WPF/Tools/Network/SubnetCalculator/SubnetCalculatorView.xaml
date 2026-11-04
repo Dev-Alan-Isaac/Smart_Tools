@@ -14,33 +14,9 @@
     <!--  Backend: Controllers/SubnetCalculatorManager.cs (parsing, subnet maths, splitting). UI only here.  -->
 
     <UserControl.Resources>
-        <Style x:Key="ScChip" TargetType="Button">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="0,0,4,4" />
-            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
-            <Setter Property="FontSize" Value="11" />
+        <!--  The pill chip, in a monospaced face (addresses and prefixes): used by the examples and the split prefixes alike  -->
+        <Style x:Key="ScChip" BasedOn="{StaticResource PillChipStyle}" TargetType="Button">
             <Setter Property="FontFamily" Value="Consolas" />
-            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="Bd"
-                            Padding="8,4"
-                            Background="{DynamicResource SidebarInputBg}"
-                            BorderBrush="{DynamicResource SidebarInputBorder}"
-                            BorderThickness="1"
-                            CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <Style x:Key="ScLabel" TargetType="TextBlock">

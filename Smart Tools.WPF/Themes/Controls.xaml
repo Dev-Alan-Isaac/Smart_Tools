@@ -4213,6 +4213,55 @@
     </Style>
 
     <!--
+        Rounded "pill" quick-pick chip for the options sidebar: Subnet Calculator examples and prefixes, Unit Converter
+        favorites and recents. Sidebar-dark fill with an accent outline (readable in both themes); on hover it fills with the accent colour.
+    -->
+    <Style x:Key="PillChipStyle" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,6,6" />
+        <Setter Property="MinHeight" Value="28" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border
+                        x:Name="Bd"
+                        Padding="12,4"
+                        Background="{DynamicResource SidebarInputBg}"
+                        BorderBrush="{DynamicResource AccentColor}"
+                        BorderThickness="1"
+                        CornerRadius="14">
+                        <ContentPresenter
+                            x:Name="Cp"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            TextElement.FontFamily="{TemplateBinding FontFamily}"
+                            TextElement.FontSize="{TemplateBinding FontSize}"
+                            TextElement.FontWeight="{TemplateBinding FontWeight}"
+                            TextElement.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Cp" Property="TextElement.Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.8" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
         Round icon button for the fixed-dark media players (video / image viewer).
         Hex colours are deliberate: the stage is dark in both themes.
     -->

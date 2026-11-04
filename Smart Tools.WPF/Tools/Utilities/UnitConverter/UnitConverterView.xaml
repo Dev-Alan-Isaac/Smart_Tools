@@ -24,7 +24,7 @@
             <Button
                 Click="Pair_Click"
                 Content="{Binding Label}"
-                Style="{StaticResource PresetChipStyle}"
+                Style="{StaticResource PillChipStyle}"
                 Tag="{Binding Pair}"
                 ToolTip="{Binding Tip}" />
         </DataTemplate>
