@@ -1513,6 +1513,60 @@
                                     ToolTip="{DynamicResource Str_Shortcuts_StartWithWindowsTip}" />
                             </StackPanel>
                         </Border>
+
+                        <!--  Installation: portable or installed, and how to switch (logic: Modules/AppMode.cs, AppInstaller.cs)  -->
+                        <Border x:Name="CardInstallation" Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Margin="0,0,0,12"
+                                    Content="{DynamicResource Str_Install_Header}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
+                                <TextBlock
+                                    x:Name="TxtInstallMode"
+                                    FontSize="12.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Name="TxtInstallDetails"
+                                    Margin="0,3,0,0"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap" />
+                                <WrapPanel x:Name="PanelInstallButtons" Margin="0,12,0,0">
+                                    <Button x:Name="BtnInstallHere" Margin="0,0,8,8" Click="BtnInstallHere_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Install_InstallTip}">
+                                        <StackPanel Margin="8,0" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="TrayArrowDown" />
+                                            <TextBlock VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_Install_InstallHere}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="BtnPortableCopy" Margin="0,0,8,8" Click="BtnPortableCopy_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Install_PortableTip}">
+                                        <StackPanel Margin="8,0" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="UsbFlashDriveOutline" />
+                                            <TextBlock VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_Install_PortableCopy}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="BtnOpenAppFolder" Margin="0,0,8,8" Click="BtnOpenAppFolder_Click" Style="{StaticResource NeutralIconButtonStyle}">
+                                        <StackPanel Margin="8,0" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="FolderOpenOutline" />
+                                            <TextBlock VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_Install_OpenAppFolder}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="BtnUninstall" Margin="0,0,8,8" Click="BtnUninstall_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Install_UninstallTip}">
+                                        <StackPanel Margin="8,0" Orientation="Horizontal">
+                                            <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="DeleteOutline" />
+                                            <TextBlock VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_Install_Uninstall}" />
+                                        </StackPanel>
+                                    </Button>
+                                </WrapPanel>
+                                <TextBlock
+                                    x:Name="TxtInstallHint"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <!--  ============ Categories ============  -->

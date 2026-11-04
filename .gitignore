@@ -185,6 +185,8 @@ publish/
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
+# the shared self-contained publish profile is part of the repo (Tools/Publish.ps1 uses it)
+!**/PublishProfiles/win-x64.pubxml
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to

@@ -65,6 +65,28 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         /// <summary>
+        /// Starts another copy of the app (the installed one, after an install) the same way: it waits for this process to
+        /// exit before it reads any settings. The caller closes this instance next.
+        /// </summary>
+        public static void StartCopy(string exePath)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(exePath)
+                {
+                    UseShellExecute = true,
+                    Arguments = $"{RestartFromArgument} {Environment.ProcessId}",
+                    WorkingDirectory = System.IO.Path.GetDirectoryName(exePath)!,
+                });
+                IsRestarting = true;
+            }
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+            {
+                Log.Info($"Could not start {exePath}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Called first thing at startup: when this copy was started by a restart, waits (up to
         /// 15 s) for the previous one to finish closing. Does nothing for a normal launch.
         /// </summary>

@@ -500,6 +500,8 @@ Result lists use a real `DataGrid` with the app's global styles (no custom list 
 ## Where Data Is Saved
 
 Everything the app remembers lives under `AppPaths.DataRoot`: `%AppData%\Smart Tools` for an installed copy, or a `UserData` folder beside the exe when a `portable.txt` file is next to it.
+
+**Install or Run.** `Modules/AppMode.cs` decides how a copy is used, before anything is written: a `portable.txt` means Portable; the exe in `%LocalAppData%\Programs\Smart Tools` means Installed; under `Program Files` means the old MSI; a Visual Studio build (debugger, or `bin\Debug` of a project) or `--no-prompt` means Development; an existing `%AppData%\Smart Tools\settings.json` means the app is used as before and is never asked; anything else is a brand-new profile and `Shared/Views/StartupChoiceWindow.cs` asks **Install** or **Run**. It is shown from `App.OnStartup` before `Log.Init()` (the log creates the data folder and `AppPaths.IsPortable` is read once), so it is built in code in the Windows colours and language. `Modules/AppInstaller.cs` does the work: copy the app folder to `%LocalAppData%\Programs\Smart Tools` (per user, no administrator), Start menu and desktop shortcuts, an `HKCU\...\Uninstall\SmartTools` entry whose uninstall command is `SmartTools.exe --uninstall`, a portable copy, and uninstall (the install folder is deleted by a hidden command after the app exits; settings are kept unless asked). Settings > Installation switches between the modes; data is always copied, never moved. The old MSI project (`SmartToolsWPF.Setup`) is no longer built or used.
 Examples: `settings.json`, tool settings (`pixel_art.json`, `sprite_packer.json`, `encode_tool.json`, ...), `smart_history.json` (the Drive Health History readings), `copy_queue_job.json` / `copy_queue_undo.json` (Copy Queue resume and undo). Files are replaced atomically, and a damaged file is set aside as `.bad` instead of stopping the tool.
 
 ---
@@ -536,7 +538,7 @@ If the app is already running, stop it (`Get-Process -Name SmartTools | Stop-Pro
 | Folder / file | Description |
 |---|---|
 | `Smart Tools.WPF/` | The app. |
-| `SmartToolsWPF.Setup/` | Installer for the app (part of `Smart_Tools.slnx`). |
+| `SmartToolsWPF.Setup/` | Legacy MSI project (Visual Studio only, no longer used: the app installs itself, see Where Data Is Saved). |
 | `Smart_Tools.slnx` | Solution file. |
 | `README.md` | Short overview. This file has the details. |
 

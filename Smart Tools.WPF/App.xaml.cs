@@ -31,9 +31,19 @@ namespace Smart_Tools.WPF
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // How this copy is used decides where its data lives, so it is settled first - before Log.Init
+            // (which creates the data folder) and before anything reads AppPaths.
+            var mode = AppMode.Detect(e.Args);
+            if (e.Args.Contains(AppMode.UninstallArgument, StringComparer.OrdinalIgnoreCase))
+            {
+                RunUninstall(mode);
+                return;
+            }
+            if (mode == AppRunMode.Ask && !AskInstallOrRun()) return;
+
             Log.Init();
             HookGlobalErrorLogging();
-            Log.Info($"Starting Smart Tools {typeof(App).Assembly.GetName().Version}, pid {Environment.ProcessId}, {Environment.OSVersion.VersionString}, {Environment.ProcessorCount} cores, args [{string.Join(' ', e.Args)}]");
+            Log.Info($"Starting Smart Tools {AppMode.VersionText()} ({AppMode.Current}), pid {Environment.ProcessId}, {Environment.OSVersion.VersionString}, {Environment.ProcessorCount} cores, args [{string.Join(' ', e.Args)}]");
 
             StartInTray = e.Args.Contains(ShortcutManager.StartInTrayArgument, StringComparer.OrdinalIgnoreCase);
 
@@ -69,7 +79,58 @@ namespace Smart_Tools.WPF
 
             base.OnStartup(e);
             ResourceMonitor.Start(Dispatcher);
+
+            // "Start with Windows" stores this exe's path: write it again from where the app really is now, so moving the
+            // app (or switching between portable and installed) never leaves an entry that points at a folder that is gone.
+            // A Visual Studio build must not rewrite it every time it runs.
+            if (AppMode.Current != AppRunMode.Development && Modules.AppSettingsStore.StartWithWindows)
+                ShortcutManager.ApplyStartWithWindows(true);
             // The saved theme is applied (guarded) by MainWindow's constructor before it shows.
+        }
+
+        /// <summary>The Install / Run question for a brand-new profile. False when the app should not go on (installed elsewhere, or closed).</summary>
+        private bool AskInstallOrRun()
+        {
+            // The question window is the only window for a moment: closing it must not end the app before the main window exists.
+            var shutdownMode = ShutdownMode;
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            var window = new Smart_Tools.WPF.Views.StartupChoiceWindow();
+            window.ShowDialog();
+            ShutdownMode = shutdownMode;
+
+            if (window.Result == Smart_Tools.WPF.Views.StartupChoiceWindow.Outcome.Run) return true;
+            Shutdown();   // Installed: the installed copy was started and takes over. Cancelled: nothing was written.
+            return false;
+        }
+
+        /// <summary>Started as "SmartTools.exe --uninstall" (from Apps &amp; features or Settings): asks, removes, and exits.</summary>
+        private void RunUninstall(AppRunMode mode)
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            string T(string en, string es) => Smart_Tools.WPF.Views.WindowsPalette.T(en, es);
+
+            if (mode != AppRunMode.Installed)
+            {
+                System.Windows.MessageBox.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
+                                                 "Esta copia de Smart Tools no fue instalada por la aplicación, así que no hay nada que desinstalar aquí."),
+                    AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else if (AppInstaller.IsAnotherCopyRunning())
+            {
+                System.Windows.MessageBox.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
+                                                 "Cierra Smart Tools primero (revisa el ícono de la bandeja) y vuelve a desinstalar."),
+                    AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else if (System.Windows.MessageBox.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
+                         AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                bool deleteData = System.Windows.MessageBox.Show(
+                    T("Also delete your settings and downloaded models?\n\n" + AppMode.InstalledDataFolder + "\n\nChoose No to keep them in case you install again.",
+                      "¿Borrar también tus ajustes y modelos descargados?\n\n" + AppMode.InstalledDataFolder + "\n\nElige No para conservarlos por si vuelves a instalar."),
+                    AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+                AppInstaller.Uninstall(deleteData);
+            }
+            Shutdown();
         }
 
         // A marker file exists while the app runs and is deleted on a clean exit. Finding it at startup

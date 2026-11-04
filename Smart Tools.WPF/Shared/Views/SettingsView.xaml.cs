@@ -1,3 +1,4 @@
+using System.IO;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Modules;
@@ -287,6 +288,7 @@ namespace Smart_Tools.WPF.Views
             ValidateAllPatterns();
             UpdateEmptyStates();
             LoadShortcutSettings();
+            LoadInstallation();
 
             if (RequestedSection == "TextRecognition")
             {
@@ -413,6 +415,121 @@ namespace Smart_Tools.WPF.Views
         {
             AppSettingsStore.CloseToTray = ChkCloseToTray.IsChecked == true;
             SaveAndConfirm();
+        }
+
+        // =================================================================
+        //  Installation: portable or installed (logic: AppMode, AppInstaller)
+        // =================================================================
+
+        private string InstallStr(string key, string fallback) => TryFindResource(key) as string ?? fallback;
+
+        private void LoadInstallation()
+        {
+            var mode = AppMode.Current;
+            string version = AppMode.VersionText();
+
+            (string title, string details) = mode switch
+            {
+                AppRunMode.Portable => (InstallStr("Str_Install_ModePortable", "Portable"),
+                    string.Format(InstallStr("Str_Install_DetailsPortable", "Runs from {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
+                AppRunMode.Installed => (InstallStr("Str_Install_ModeInstalled", "Installed"),
+                    string.Format(InstallStr("Str_Install_DetailsInstalled", "Installed in {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
+                AppRunMode.LegacyMsi => (InstallStr("Str_Install_ModeMsi", "Installed with the old installer"),
+                    string.Format(InstallStr("Str_Install_DetailsMsi", "Installed in {0}. To remove it, use Windows Settings > Apps."), AppMode.ExeFolder)),
+                AppRunMode.Development => (InstallStr("Str_Install_ModeDev", "Development build"),
+                    string.Format(InstallStr("Str_Install_DetailsLoose", "Runs from {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
+                _ => (InstallStr("Str_Install_ModeLoose", "Not installed"),
+                    string.Format(InstallStr("Str_Install_DetailsLoose", "Runs from {0}. Settings are in {1}."), AppMode.ExeFolder, AppPaths.DataRoot)),
+            };
+            TxtInstallMode.Text = version.Length > 0 ? $"{title} - {InstallStr("Str_Install_Version", "version")} {version}" : title;
+            TxtInstallDetails.Text = details;
+
+            bool dev = mode == AppRunMode.Development;
+            BtnInstallHere.Visibility = !dev && (mode is AppRunMode.Portable or AppRunMode.Loose) ? Visibility.Visible : Visibility.Collapsed;
+            BtnPortableCopy.Visibility = !dev && (mode is AppRunMode.Installed or AppRunMode.Loose or AppRunMode.LegacyMsi) ? Visibility.Visible : Visibility.Collapsed;
+            BtnUninstall.Visibility = mode == AppRunMode.Installed ? Visibility.Visible : Visibility.Collapsed;
+
+            TxtInstallHint.Text = mode switch
+            {
+                AppRunMode.Portable => InstallStr("Str_Install_HintPortable", "Installing copies this app to your user folder and keeps a copy of your settings there. The portable folder stays as it is."),
+                AppRunMode.Installed => InstallStr("Str_Install_HintInstalled", "A portable copy is a folder you can put on a USB drive. It starts with a copy of your current settings."),
+                AppRunMode.Development => InstallStr("Str_Install_HintDev", "This is a build from Visual Studio, so installing is turned off."),
+                _ => "",
+            };
+            TxtInstallHint.Visibility = TxtInstallHint.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            TxtInstallHint.Margin = new Thickness(0, 2, 0, 0);
+        }
+
+        private void BtnOpenAppFolder_Click(object sender, RoutedEventArgs e) => ShellExplorer.Show(Path.Combine(AppMode.ExeFolder, AppMode.ExeName));
+
+        /// <summary>Portable (or running loose) to installed: copy the app, register it, copy the settings, then restart into it.</summary>
+        private void BtnInstallHere_Click(object sender, RoutedEventArgs e)
+        {
+            bool fromPortable = AppMode.Current == AppRunMode.Portable;
+            if (MessageBox.Show(InstallStr("Str_Install_ConfirmInstall", "Install Smart Tools on this PC? It is copied to your user folder and a Start menu shortcut is added. No administrator rights are needed."),
+                    DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+
+            // The settings are saved first so the copy of them is the current one.
+            AppSettingsStore.Save();
+            var result = CopyProgressWindow.Run(Window.GetWindow(this), InstallStr("Str_Install_Installing", "Installing Smart Tools..."),
+                (progress, token) => AppInstaller.InstallAsync(AppMode.ExeFolder, desktopShortcut: true, copyPortableData: fromPortable, checkRunning: false, progress, token));
+            if (result.Cancelled) return;
+            if (!result.Ok || result.ExePath == null)
+            {
+                MessageBox.Show(InstallStr("Str_Install_Failed", "Could not install: ") + result.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (MessageBox.Show(InstallStr("Str_Install_DoneRestart", "Smart Tools is installed. Start the installed copy now? This window will close."),
+                    DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            RestartInto(result.ExePath);
+        }
+
+        /// <summary>Installed to a portable copy: choose an empty folder; the installed copy and its settings stay untouched.</summary>
+        private void BtnPortableCopy_Click(object sender, RoutedEventArgs e)
+        {
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = InstallStr("Str_Install_ChooseFolder", "Choose an empty folder (or a USB drive) for the portable copy."),
+                UseDescriptionForTitle = true,
+                ShowNewFolderButton = true,
+            };
+            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+            AppSettingsStore.Save();
+            string target = dialog.SelectedPath;
+            var result = CopyProgressWindow.Run(Window.GetWindow(this), InstallStr("Str_Install_Copying", "Making a portable copy..."),
+                (progress, token) => AppInstaller.MakePortableCopyAsync(target, copyData: true, progress, token));
+            if (result.Cancelled) return;
+            if (!result.Ok)
+            {
+                MessageBox.Show(InstallStr("Str_Install_PortableFailed", "Could not make the portable copy: ") + result.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBox.Show(string.Format(InstallStr("Str_Install_PortableDone", "Done. The portable copy is in {0}. Run SmartTools.exe there; it starts with a copy of your settings."), target),
+                DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            ShellExplorer.Show(result.ExePath!);
+        }
+
+        private void BtnUninstall_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(InstallStr("Str_Install_ConfirmUninstall", "Uninstall Smart Tools from this PC?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            bool deleteData = MessageBox.Show(string.Format(InstallStr("Str_Install_DeleteData", "Also delete your settings and downloaded models?\n\n{0}\n\nChoose No to keep them in case you install again."), AppMode.InstalledDataFolder),
+                DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+
+            if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
+            AppInstaller.Uninstall(deleteData);
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        /// <summary>Starts another copy that waits for this one to close (so the settings it reads are the ones just saved), then closes this one.</summary>
+        private void RestartInto(string exe)
+        {
+            if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
+            AppSettingsStore.Save();
+            AppRestartManager.StartCopy(exe);
+            System.Windows.Application.Current.Shutdown();
         }
 
         private void ChkStartWithWindows_Click(object sender, RoutedEventArgs e)
