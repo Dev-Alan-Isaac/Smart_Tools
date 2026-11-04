@@ -161,7 +161,7 @@ namespace Smart_Tools.WPF.Views
             string message = $"Move {chosen.Count:N0} empty folder{(chosen.Count == 1 ? "" : "s")}" +
                              (nested > 0 ? $" (and the {nested:N0} empty folder{(nested == 1 ? "" : "s")} inside)" : "") +
                              " to the Recycle Bin?\n\nYou can restore them from the Recycle Bin.";
-            if (System.Windows.MessageBox.Show(message, "Empty Folder Cleaner", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (System.Windows.MessageBox.Show(message, Loc.T("Str_Tool_empty-folders_Name", "Empty Folder Cleaner"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             var paths = chosen.Select(f => f.Folder.Path).ToList();
             _cts = new CancellationTokenSource();

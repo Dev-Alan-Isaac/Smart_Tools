@@ -42,7 +42,7 @@ namespace Smart_Tools.WPF.Views
     public partial class PasswordVaultView : UserControl
     {
         private const double SidebarExpandedWidth = 280;
-        private const string DialogTitle = "Password Vault";
+        private static string DialogTitle => Loc.T("Str_Tool_password-vault_Name", "Password Vault");
 
         private readonly PasswordVaultManager _vault = new();
         private readonly ObservableCollection<object> _shown = new();      // VaultGroupRow headers and VaultEntry rows

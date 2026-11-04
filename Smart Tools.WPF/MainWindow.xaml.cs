@@ -123,7 +123,16 @@ namespace Smart_Tools.WPF
         }
 
         /// <summary>Minimizes the app and leaves the floating mini player on screen (the mini player's "minimize the app" button).</summary>
-        public void MinimizeForWidget() => WindowState = WindowState.Minimized;
+        // Set while a widget's minimize also hid the widget: the next restore of this window shows the widget first
+        // (and keeps the app minimized); only a restore while the widget is already visible opens the tool.
+        private Func<bool>? _restoreWidgetFirst;
+
+        /// <param name="restoreWidgetFirst">Shows the hidden widget again; returns true when it did.</param>
+        public void MinimizeForWidget(Func<bool>? restoreWidgetFirst = null)
+        {
+            _restoreWidgetFirst = restoreWidgetFirst;
+            WindowState = WindowState.Minimized;
+        }
 
         /// <summary>Brings the window forward on a tool - used by a widget's "Back to the tool".</summary>
         public void ShowTool(string id)
@@ -181,11 +190,15 @@ namespace Smart_Tools.WPF
             Add<FolderTreeView>("folder-tree", v => v.CancelActiveRun());   // stops a scan; the folder is only read, never changed
             Add<CopyQueueView>("copy-queue", v => v.CancelActiveRun());   // stops the queue; originals are never touched mid-file, the job is kept to continue
 
-            // Convert & PDF
+            // Convert
             Add<FileConverterView>("convert-files", v => v.CancelActiveRun());
-            Add<ImageConvertView>("images-to-pdf", v => v.CancelActiveRun());
-            Add<PdfHubView>("pdf-toolkit", v => v.CancelActiveRun());   // one tool, two pages (merge and split, pages and protect); closing lets each opened page stop its run and save its setup
             Add<WatermarkView>("watermark", v => v.CancelActiveRun());   // stops a running batch (finished files stay), saves the setup
+
+            // PDF
+            Add<ImageConvertView>("images-to-pdf", v => v.CancelActiveRun());
+            Add<PdfToolkitView>("pdf-toolkit", v => v.CancelActiveRun());   // merge, split, compress
+            Add<PdfExtrasView>("pdf-pages", v => v.CancelActiveRun());   // pages, details, password
+            Add<PdfReaderView>("pdf-reader", v => v.CancelActiveRun());   // stops drawing pages and lets go of the file
 
             // Video
             Add<MediaHubView>("media-viewer", v => v.CancelActiveRun());   // one tool, four pages (mixed, photos, videos, music); closing lets every opened page release its files
@@ -211,6 +224,7 @@ namespace Smart_Tools.WPF
 
             // Images & Color
             Add<ImageEditingView>("image-editor", v => v.CancelActiveRun());
+            Add<MetadataCleanerView>("image-metadata-cleaner", v => v.CancelActiveRun());
             Add<BulkImageResizerView>("bulk-image-resizer", v => v.CancelActiveRun());   // stops a run (finished pictures stay) and the thumbnail loader
             Add<BackgroundRemoverView>("background-remover", v => v.CancelActiveRun());
             Add<SvgToolView>("svg-tool", v => v.CancelActiveRun());   // saves settings, closes the preview engine
@@ -254,7 +268,7 @@ namespace Smart_Tools.WPF
             Add<NetworkAdaptersView>("network-adapters", v => v.CancelActiveRun());   // stops listening for adapter changes
             Add<DeviceScannerView>("device-scanner", v => v.CancelActiveRun());
             Add<InternetSpeedTestView>("internet-speed", v => v.CancelActiveRun());
-            Add<NetworkSpeedWidgetView>("net-speed-widget", v => v.CancelActiveRun());   // stops reading, closes the floating widget
+            Add<NetworkSpeedWidgetView>("net-speed", v => v.CancelActiveRun());   // stops reading, closes the floating meter
             Add<ConnectionsView>("network-connections", v => v.CancelActiveRun());   // stops reading and any name lookups
 
             // Developer
@@ -581,6 +595,10 @@ namespace Smart_Tools.WPF
         /// <summary>Shows the window again (from the tray, minimized or behind others) and focuses it.</summary>
         private void BringToFront()
         {
+            // Explicit requests (hotkey, tray, "Back to the tool") open the tool, but the hidden widget comes back too.
+            var showWidget = _restoreWidgetFirst;
+            _restoreWidgetFirst = null;
+            showWidget?.Invoke();
             if (_tray != null) _tray.Visible = false;
             ShowInTaskbar = true;
             if (!IsVisible) Show();
@@ -794,6 +812,16 @@ namespace Smart_Tools.WPF
         /// </summary>
         private void Window_StateChanged(object? sender, EventArgs e)
         {
+            // Restored from the taskbar while the mini player was hidden with it: show the mini first, stay minimized.
+            if (WindowState != WindowState.Minimized && _restoreWidgetFirst is { } showWidget)
+            {
+                _restoreWidgetFirst = null;
+                if (showWidget())
+                {
+                    WindowState = WindowState.Minimized;
+                    return;
+                }
+            }
             bool maximized = WindowState == WindowState.Maximized;
             RootGrid.Margin = maximized ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
             BtnWinMaximize.Content = maximized ? "" : "";

@@ -14,7 +14,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class SmartHistoryPanel : UserControl
     {
-        private const string DialogTitle = "SMART history";
+        private static string DialogTitle => Loc.T("Str_Dlg_SmartHistory", "SMART history");
 
         private SmartHistoryFile _file = new();
         private bool _updating;
@@ -200,8 +200,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearDrive_Click(object sender, RoutedEventArgs e)
         {
             if (CmbDrive.SelectedItem is not SmartDriveHistory d) return;
-            var answer = System.Windows.MessageBox.Show(
-                $"Forget all {d.Readings.Count:N0} readings of {d.Name}?\n\nThe drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.",
+            var answer = System.Windows.MessageBox.Show(Loc.F("Str_MB_ForgetAllReadingsOf", "Forget all {0:N0} readings of {1}?\n\nThe drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.", d.Readings.Count, d.Name),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (answer != MessageBoxResult.Yes) return;
             _file.Drives.Remove(d);

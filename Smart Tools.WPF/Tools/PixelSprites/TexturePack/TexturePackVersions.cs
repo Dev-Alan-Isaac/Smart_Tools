@@ -129,7 +129,7 @@ namespace Smart_Tools.WPF.Controllers
                     if (v.TryGetProperty("type", out var t) && t.GetString() == "release" && v.TryGetProperty("id", out var id) && id.GetString() is { Length: > 0 } s)
                         ids.Add(s);
             }
-            catch (JsonException) { }
+            catch (JsonException ex) { Smart_Tools.WPF.Log.Debug("Minecraft version list could not be read: " + ex.Message); }
             return ids;
         }
 

@@ -34,7 +34,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 300;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "File Generator";
+        private static string DialogTitle => Loc.T("Str_Tool_file-generator_Name", "File Generator");
 
         private readonly BulkObservableCollection<FileGenItem> _items = new();
         private readonly DispatcherTimer _checkTimer;
@@ -381,7 +381,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {
-                MessageBox.Show("Couldn't prepare the files: " + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_CouldnTPrepareThe", "Couldn't prepare the files: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -505,7 +505,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show("Couldn't export: " + FileGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.T("Str_MB_CouldnTExport2", "Couldn't export: ") + FileGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -541,7 +541,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
             {
-                MessageBox.Show("Couldn't open it: " + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_CouldnTOpenIt", "Couldn't open it: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

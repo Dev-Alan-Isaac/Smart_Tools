@@ -71,7 +71,7 @@
                 <TextBlock VerticalAlignment="Center" FontSize="13" Foreground="{DynamicResource TextPrimary}" Text="{Binding Label}" />
                 <TextBlock Grid.Column="1" Margin="12,0,16,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding Needs}" />
                 <Border x:Name="Pill" Grid.Column="2" HorizontalAlignment="Right" Padding="12,3" Background="{DynamicResource StatusErrorBg}" CornerRadius="10">
-                    <TextBlock x:Name="PillText" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" Text="Fail" />
+                    <TextBlock x:Name="PillText" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" Text="{DynamicResource Str_Palette_Fail}" />
                 </Border>
             </Grid>
             <DataTemplate.Triggers>
@@ -97,25 +97,25 @@
                 <StackPanel>
                     <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Pairs" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="QUICK PAIRS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteSwatchOutline}" />
+                            <ContentControl Content="{DynamicResource Str_ContrastChecker_QuickPairs}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteSwatchOutline}" />
                             <WrapPanel Margin="0,8,0,0">
-                                <Button Click="Pair_Click" Background="#FFFFFF" Foreground="#111827" Style="{StaticResource PairChip}" Tag="#111827|#FFFFFF" ToolTip="Near-black on white" />
-                                <Button Click="Pair_Click" Background="#111827" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#111827" ToolTip="White on near-black" />
-                                <Button Click="Pair_Click" Background="#F3F4F6" Foreground="#4B5563" Style="{StaticResource PairChip}" Tag="#4B5563|#F3F4F6" ToolTip="Grey on light grey" />
-                                <Button Click="Pair_Click" Background="#2563EB" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#2563EB" ToolTip="White on blue" />
-                                <Button Click="Pair_Click" Background="#FACC15" Foreground="#111827" Style="{StaticResource PairChip}" Tag="#111827|#FACC15" ToolTip="Dark on yellow" />
-                                <Button Click="Pair_Click" Background="#DC2626" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#DC2626" ToolTip="White on red" />
-                                <Button Click="Pair_Click" Background="#16A34A" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#16A34A" ToolTip="White on green" />
-                                <Button Click="Pair_Click" Background="#FDE68A" Foreground="#78350F" Style="{StaticResource PairChip}" Tag="#78350F|#FDE68A" ToolTip="Brown on cream" />
+                                <Button Click="Pair_Click" Background="#FFFFFF" Foreground="#111827" Style="{StaticResource PairChip}" Tag="#111827|#FFFFFF" ToolTip="{DynamicResource Str_ContrastChecker_NearBlackOnWhite}" />
+                                <Button Click="Pair_Click" Background="#111827" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#111827" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnNearBlack}" />
+                                <Button Click="Pair_Click" Background="#F3F4F6" Foreground="#4B5563" Style="{StaticResource PairChip}" Tag="#4B5563|#F3F4F6" ToolTip="{DynamicResource Str_ContrastChecker_GreyOnLightGrey}" />
+                                <Button Click="Pair_Click" Background="#2563EB" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#2563EB" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnBlue}" />
+                                <Button Click="Pair_Click" Background="#FACC15" Foreground="#111827" Style="{StaticResource PairChip}" Tag="#111827|#FACC15" ToolTip="{DynamicResource Str_ContrastChecker_DarkOnYellow}" />
+                                <Button Click="Pair_Click" Background="#DC2626" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#DC2626" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnRed}" />
+                                <Button Click="Pair_Click" Background="#16A34A" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#16A34A" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnGreen}" />
+                                <Button Click="Pair_Click" Background="#FDE68A" Foreground="#78350F" Style="{StaticResource PairChip}" Tag="#78350F|#FDE68A" ToolTip="{DynamicResource Str_ContrastChecker_BrownOnCream}" />
                             </WrapPanel>
-                            <TextBlock Margin="2,4,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Click a pair to try it." />
+                            <TextBlock Margin="2,4,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_ClickAPairTo}" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Rules" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="WHAT PASSES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
-                            <TextBlock Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="Normal text needs 4.5 : 1 (AA) or 7 : 1 (AAA). Large text (18 pt, or 14 pt bold) needs 3 : 1 or 4.5 : 1. Icons, borders and form fields need 3 : 1." />
+                            <ContentControl Content="{DynamicResource Str_ContrastChecker_WhatPasses}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <TextBlock Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_NormalTextNeedsAa}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -151,7 +151,7 @@
                             <Border x:Name="HeroTile" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="18">
                                 <Grid>
                                     <TextBlock x:Name="HeroSample" Margin="14,10,0,0" FontSize="36" FontWeight="Bold" Text="Aa" />
-                                    <TextBlock x:Name="HeroSmall" Margin="14,0,0,12" VerticalAlignment="Bottom" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold" Text="text on background" />
+                                    <TextBlock x:Name="HeroSmall" Margin="14,0,0,12" VerticalAlignment="Bottom" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold" Text="{DynamicResource Str_ContrastChecker_TextOnBackground}" />
                                 </Grid>
                             </Border>
                         </Grid>
@@ -171,19 +171,19 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Style="{StaticResource CcLabel}" Text="TEXT" />
-                                <Border x:Name="SwatchFg" Grid.Column="1" MouseLeftButtonUp="SwatchFg_Click" Style="{StaticResource SwatchBox}" ToolTip="Click to open the color window" />
+                                <TextBlock Style="{StaticResource CcLabel}" Text="{DynamicResource Str_FileDiff_ColHeaderText}" />
+                                <Border x:Name="SwatchFg" Grid.Column="1" MouseLeftButtonUp="SwatchFg_Click" Style="{StaticResource SwatchBox}" ToolTip="{DynamicResource Str_ContrastChecker_ClickToOpenThe}" />
                                 <Border Grid.Column="2" Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtFg" VerticalContentAlignment="Center" FontFamily="Consolas" Style="{StaticResource BareTextBox}" TextChanged="Color_TextChanged" ToolTip="#RRGGBB, rgb(), hsl() or a name like tomato" />
                                 </Border>
 
-                                <TextBlock Grid.Row="2" Style="{StaticResource CcLabel}" Text="BACK" />
-                                <Border x:Name="SwatchBg" Grid.Row="2" Grid.Column="1" MouseLeftButtonUp="SwatchBg_Click" Style="{StaticResource SwatchBox}" ToolTip="Click to open the color window" />
+                                <TextBlock Grid.Row="2" Style="{StaticResource CcLabel}" Text="{DynamicResource Str_Common_Back}" />
+                                <Border x:Name="SwatchBg" Grid.Row="2" Grid.Column="1" MouseLeftButtonUp="SwatchBg_Click" Style="{StaticResource SwatchBox}" ToolTip="{DynamicResource Str_ContrastChecker_ClickToOpenThe}" />
                                 <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtBg" VerticalContentAlignment="Center" FontFamily="Consolas" Style="{StaticResource BareTextBox}" TextChanged="Color_TextChanged" ToolTip="#RRGGBB, rgb(), hsl() or a name like white" />
                                 </Border>
 
-                                <Button x:Name="BtnSwap" Grid.RowSpan="3" Grid.Column="3" Width="34" Height="34" Margin="8,0,0,0" Click="BtnSwap_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Swap the two colors">
+                                <Button x:Name="BtnSwap" Grid.RowSpan="3" Grid.Column="3" Width="34" Height="34" Margin="8,0,0,0" Click="BtnSwap_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_ContrastChecker_SwapTheTwoColors}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="SwapVertical" />
                                 </Button>
                             </Grid>
@@ -192,7 +192,7 @@
 
                         <!--  The ratio  -->
                         <StackPanel Grid.Column="4" MinWidth="190" VerticalAlignment="Center">
-                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="CONTRAST RATIO" />
+                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ContrastChecker_ContrastRatio}" />
                             <TextBlock x:Name="TxtRatio" Margin="0,2,0,0" FontSize="40" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
                             <TextBlock x:Name="TxtVerdict" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
                         </StackPanel>
@@ -206,15 +206,15 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,10" Content="Live preview" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatText}" />
+                        <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_ContrastChecker_LivePreview}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatText}" />
                         <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Preview" ctl:Tour.Order="3" x:Name="Preview" Grid.Row="1" Padding="28" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock x:Name="PreviewLarge" FontSize="34" FontWeight="Bold" Text="Large text sample" TextWrapping="Wrap" />
-                                    <TextBlock x:Name="PreviewNormal" Margin="0,14,0,0" FontSize="16" Text="Normal text sample: the quick brown fox jumps over the lazy dog." TextWrapping="Wrap" />
-                                    <TextBlock x:Name="PreviewSmall" Margin="0,12,0,0" FontSize="12" Text="Small print sample 0123456789 - the smallest text is the hardest to read." TextWrapping="Wrap" />
+                                    <TextBlock x:Name="PreviewLarge" FontSize="34" FontWeight="Bold" Text="{DynamicResource Str_ContrastChecker_LargeTextSample}" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="PreviewNormal" Margin="0,14,0,0" FontSize="16" Text="{DynamicResource Str_ContrastChecker_NormalTextSampleThe}" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="PreviewSmall" Margin="0,12,0,0" FontSize="12" Text="{DynamicResource Str_ContrastChecker_SmallPrintSampleThe}" TextWrapping="Wrap" />
                                     <Border x:Name="PreviewButton" Margin="0,22,0,0" Padding="18,9" HorizontalAlignment="Left" BorderThickness="2" CornerRadius="8">
-                                        <TextBlock x:Name="PreviewButtonText" FontSize="14" FontWeight="SemiBold" Text="A button or field outline" />
+                                        <TextBlock x:Name="PreviewButtonText" FontSize="14" FontWeight="SemiBold" Text="{DynamicResource Str_ContrastChecker_AButtonOrField}" />
                                     </Border>
                                 </StackPanel>
                             </ScrollViewer>
@@ -226,10 +226,10 @@
                 <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <ContentControl Margin="0,0,0,6" Content="WCAG checks" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
+                            <ContentControl Margin="0,0,0,6" Content="{DynamicResource Str_ContrastChecker_WcagChecks}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
                             <ItemsControl ctl:Tour.Key="Str_Tour_ContrastChecker_Checks" ctl:Tour.Order="4" x:Name="CheckList" ItemTemplate="{StaticResource CheckTemplate}" />
 
-                            <TextBlock Margin="0,20,0,6" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="CLOSEST TEXT COLOR THAT PASSES" />
+                            <TextBlock Margin="0,20,0,6" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ContrastChecker_ClosestTextColorThat}" />
                             <Border Margin="0,0,0,8" Padding="10,8" Background="{DynamicResource RowBg}" CornerRadius="10">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -239,7 +239,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Border x:Name="SwatchAa" Width="28" Height="28" Margin="0,0,10,0" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="7" />
                                     <TextBlock x:Name="TxtAa" Grid.Column="1" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" />
-                                    <Button x:Name="BtnUseAa" Grid.Column="2" Click="BtnUseAa_Click" MinHeight="32" Content="Use it" />
+                                    <Button x:Name="BtnUseAa" Grid.Column="2" Click="BtnUseAa_Click" MinHeight="32" Content="{DynamicResource Str_ContrastChecker_UseIt}" />
                                 </Grid>
                             </Border>
                             <Border Padding="10,8" Background="{DynamicResource RowBg}" CornerRadius="10">
@@ -251,10 +251,10 @@
                                     </Grid.ColumnDefinitions>
                                     <Border x:Name="SwatchAaa" Width="28" Height="28" Margin="0,0,10,0" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="7" />
                                     <TextBlock x:Name="TxtAaa" Grid.Column="1" VerticalAlignment="Center" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" />
-                                    <Button x:Name="BtnUseAaa" Grid.Column="2" Click="BtnUseAaa_Click" MinHeight="32" Content="Use it" />
+                                    <Button x:Name="BtnUseAaa" Grid.Column="2" Click="BtnUseAaa_Click" MinHeight="32" Content="{DynamicResource Str_ContrastChecker_UseIt}" />
                                 </Grid>
                             </Border>
-                            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="Only the lightness of the text color changes, so the hue stays the same." />
+                            <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_OnlyTheLightnessOf}" />
                         </StackPanel>
                     </ScrollViewer>
                 </Border>

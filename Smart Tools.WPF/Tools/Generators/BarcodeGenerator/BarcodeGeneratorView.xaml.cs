@@ -41,7 +41,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const string DefaultForeground = "#000000";
         private const string DefaultBackground = "#FFFFFF";
-        private const string DialogTitle = "Barcode Generator";
+        private static string DialogTitle => Loc.T("Str_Tool_barcode-generator_Name", "Barcode Generator");
 
         private static readonly Regex HexPattern = new("^#?[0-9A-Fa-f]{6}$", RegexOptions.Compiled);
 
@@ -471,7 +471,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't copy: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_CouldntCopy", "Couldn't copy: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -497,7 +497,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't save: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -565,13 +565,13 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't read the clipboard: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ClipboardRead", "Couldn't read the clipboard: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (text.Length == 0)
             {
-                MessageBox.Show("The clipboard has no text. Copy a column from Excel or a list of lines first.",
+                MessageBox.Show(Loc.T("Str_MB_TheClipboardHasNo2", "The clipboard has no text. Copy a column from Excel or a list of lines first."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
@@ -592,7 +592,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't read that folder: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_FolderRead", "Couldn't read that folder: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -615,7 +615,7 @@ namespace Smart_Tools.WPF.Views
             if (_batchEntries.Count == 0) return;
 
             if (_batchEntries.Count > 20 &&
-                MessageBox.Show($"Remove all {_batchEntries.Count:N0} entries?", DialogTitle,
+                MessageBox.Show(Loc.F("Str_MB_RemoveAllEntries", "Remove all {0:N0} entries?", _batchEntries.Count), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
@@ -636,7 +636,7 @@ namespace Smart_Tools.WPF.Views
 
             if (_batchEntries.Count == 0)
             {
-                MessageBox.Show("Add or load at least one value first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_AddOrLoadAt", "Add or load at least one value first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -669,7 +669,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 TxtBatchProgress.Text = "Batch failed";
-                MessageBox.Show($"Batch generation failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_BatchGenerationFailed", "Batch generation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -734,7 +734,7 @@ namespace Smart_Tools.WPF.Views
             if (!TryGetExportFormat(sender, out BarcodeExportFormat format)) return;
             if (_batchRows is null || !HasExportableRows())
             {
-                MessageBox.Show("Nothing to export yet - click Generate All first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_NothingToExportYet2", "Nothing to export yet - click Generate All first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -765,7 +765,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 TxtBatchProgress.Text = "Export failed";
-                MessageBox.Show($"Export failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

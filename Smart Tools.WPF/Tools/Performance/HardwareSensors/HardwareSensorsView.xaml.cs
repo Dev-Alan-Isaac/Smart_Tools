@@ -29,7 +29,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Hardware Sensors";
+        private static string DialogTitle => Loc.T("Str_Tool_hardware-sensors_Name", "Hardware Sensors");
 
         private readonly HardwareSensorsManager _manager = new();
         private readonly ObservableCollection<HardwarePartItem> _parts = new();
@@ -385,7 +385,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
                 {
-                    MessageBox.Show("Couldn't open the browser. The driver is at https://pawnio.eu", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 return;
             }
@@ -408,7 +408,7 @@ namespace Smart_Tools.WPF.Views
                     System.Windows.Application.Current.Shutdown();
                     break;
                 case AppRestartResult.Failed:
-                    MessageBox.Show($"Couldn't restart as administrator: {error}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(Loc.F("Str_MB_CouldnTRestartAs", "Couldn't restart as administrator: {0}", error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     break;
                 // Declined: UAC said no - stay as we are.
             }
@@ -468,12 +468,12 @@ namespace Smart_Tools.WPF.Views
                 using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
                     writer.Write(text);
                 string note = path != dialog.FileName ? $"\n\n{Path.GetFileName(dialog.FileName)} already exists, so it was kept and this report got its own name." : "";
-                if (MessageBox.Show($"Saved to:\n{path}{note}\n\nOpen it now?", DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, note), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                MessageBox.Show("Couldn't save the report: " + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

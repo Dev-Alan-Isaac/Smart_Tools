@@ -17,7 +17,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class FolderTreeView : UserControl
     {
-        private const string DialogTitle = "Folder Tree Exporter";
+        private static string DialogTitle => Loc.T("Str_Tool_folder-tree_Name", "Folder Tree Exporter");
 
         private CancellationTokenSource? _cts;
         private FolderTreeResult? _result;

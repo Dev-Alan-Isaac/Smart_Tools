@@ -39,7 +39,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowColumnThreshold = 1000;
         private const int ThumbnailSide = 64;
-        private const string DialogTitle = "Images to PDF";
+        private static string DialogTitle => Loc.T("Str_Tool_images-to-pdf_Name", "Images to PDF");
 
         private readonly BulkObservableCollection<ImagePdfItem> _items = new();
         private readonly ObservableCollection<ImagePdfGroup> _groups = new();
@@ -635,8 +635,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressConversion.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgress.Text = "The PDF couldn't be saved: " + ImageToPdfManager.PlainError(ex);
-                MessageBox.Show(
-                    $"The PDF couldn't be saved.\n\n{ex.Message}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.",
+                MessageBox.Show(Loc.F("Str_MB_ThePdfCouldnT", "The PDF couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally

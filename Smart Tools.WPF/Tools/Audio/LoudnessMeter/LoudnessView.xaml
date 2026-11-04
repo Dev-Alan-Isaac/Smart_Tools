@@ -28,7 +28,7 @@
                     <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
                     <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveFile_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="Take this off the list">
+                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveFile_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
                     <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
                 </Button>
             </Grid>
@@ -127,7 +127,7 @@
                     <controls:InputFolderCard ctl:Tour.Key="Str_Tour_Loudness_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
                         ClearRequested="InputCard_ClearRequested"
-                        Header="Audio files"
+                        Header="{DynamicResource Str_Validate_AudioFiles}"
                         HeaderIcon="MusicBoxMultipleOutline"
                         ItemTemplate="{StaticResource SourceTemplate}"
                         Mode="Files"
@@ -136,19 +136,19 @@
 
                     <Border ctl:Tour.Key="Str_Tour_Loudness_Target" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="TARGET" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.BullseyeArrow}" />
+                            <ContentControl Content="{DynamicResource Str_DiskSpeed_TargetHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.BullseyeArrow}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="RadioLoudness" Margin="0,0,2,0" Checked="Option_Changed" Content="Loudness" GroupName="LmMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Bring the whole file to a loudness (LUFS) - what streaming services measure" />
-                                <RadioButton x:Name="RadioPeak" Margin="2,0,0,0" Checked="Option_Changed" Content="Peak" GroupName="LmMode" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Only raise or lower the loudest point to the ceiling below" />
+                                <RadioButton x:Name="RadioLoudness" Margin="0,0,2,0" Checked="Option_Changed" Content="{DynamicResource Str_AudioTrimmer_NormLoud}" GroupName="LmMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_BringTheWholeFile}" />
+                                <RadioButton x:Name="RadioPeak" Margin="2,0,0,0" Checked="Option_Changed" Content="{DynamicResource Str_AudioTrimmer_NormPeak}" GroupName="LmMode" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_OnlyRaiseOrLower}" />
                             </UniformGrid>
 
                             <StackPanel x:Name="LoudnessTargetPanel">
-                                <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="Aim for" />
+                                <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_LoudnessMeter_AimFor}" />
                                 <ComboBox x:Name="CmbTarget" Margin="0,6,0,0" SelectionChanged="Option_Changed" />
-                                <TextBox x:Name="TxtCustomLufs" Margin="0,6,0,0" Text="-14" TextChanged="Option_Changed" ToolTip="LUFS, between -40 and -5" Visibility="Collapsed" />
+                                <TextBox x:Name="TxtCustomLufs" Margin="0,6,0,0" Text="-14" TextChanged="Option_Changed" ToolTip="{DynamicResource Str_Rest_LufsRange}" Visibility="Collapsed" />
                             </StackPanel>
 
-                            <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="Highest peak allowed (dBTP)" />
+                            <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_LoudnessMeter_HighestPeakAllowedDbtp}" />
                             <ComboBox x:Name="CmbCeiling" Margin="0,6,0,0" SelectedIndex="0" SelectionChanged="Option_Changed">
                                 <ComboBoxItem Content="-1.0" Tag="-1" />
                                 <ComboBoxItem Content="-1.5" Tag="-1.5" />
@@ -156,14 +156,14 @@
                                 <ComboBoxItem Content="-3.0" Tag="-3" />
                                 <ComboBoxItem Content="0.0" Tag="0" />
                             </ComboBox>
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Changing the target only re-judges what was measured - nothing is read again." />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_LoudnessMeter_ChangingTheTargetOnly}" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="COPIES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ContentCopy}" />
-                            <TextBlock Margin="2,8,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="Quality of MP3 / M4A / OGG copies (kbps)" />
+                            <ContentControl Content="{DynamicResource Str_LoudnessMeter_Copies}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ContentCopy}" />
+                            <TextBlock Margin="2,8,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_LoudnessMeter_QualityOfMpM}" />
                             <ComboBox x:Name="CmbBitrate" Margin="0,6,0,0" SelectedIndex="1" SelectionChanged="Option_Changed">
                                 <ComboBoxItem Content="128" Tag="128" />
                                 <ComboBoxItem Content="192" Tag="192" />
@@ -176,15 +176,15 @@
                     <controls:OutputFolderCard ctl:Tour.Key="Str_Tour_Loudness_Output" ctl:Tour.Order="3"
                         x:Name="OutputCard"
                         AllowSameAsSource="True"
-                        Header="Save copies to"
+                        Header="{DynamicResource Str_LoudnessMeter_SaveCopiesTo}"
                         HeaderIcon="ContentSaveOutline"
                         SameAsSource="True"
                         ToolName="Loudness Meter" />
 
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="GOOD TO KNOW" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Measuring only reads your files. Normalizing writes a new file named 'name (normalized)' and never changes or replaces the original; the copy is measured again so you see what you really got. Tags are kept, cover art is not." />
+                            <ContentControl Content="{DynamicResource Str_SecureFileShredder_GoodToKnow}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_LoudnessMeter_MeasuringOnlyReadsYour}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -207,31 +207,31 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Button ctl:Tour.Key="Str_Tour_Loudness_Measure" ctl:Tour.Order="4" x:Name="BtnMeasure" MinWidth="160" VerticalAlignment="Center" Click="BtnMeasure_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Read every file and report its loudness (nothing is written)">
+                        <Button ctl:Tour.Key="Str_Tour_Loudness_Measure" ctl:Tour.Order="4" x:Name="BtnMeasure" MinWidth="160" VerticalAlignment="Center" Click="BtnMeasure_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_ReadEveryFileAnd}">
                             <Grid HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon x:Name="IconMeasure" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="Speedometer" />
-                                <TextBlock x:Name="TxtMeasure" Grid.Column="1" VerticalAlignment="Center" Text="Measure" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtMeasure" Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_LoudnessMeter_Measure}" TextWrapping="Wrap" />
                             </Grid>
                         </Button>
 
-                        <Button ctl:Tour.Key="Str_Tour_Loudness_Normalize" ctl:Tour.Order="5" x:Name="BtnNormalize" Grid.Column="1" MinHeight="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnNormalize_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Write a normalized copy of every file (originals stay untouched)">
+                        <Button ctl:Tour.Key="Str_Tour_Loudness_Normalize" ctl:Tour.Order="5" x:Name="BtnNormalize" Grid.Column="1" MinHeight="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnNormalize_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_WriteANormalizedCopy}">
                             <Grid Margin="8,0" HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="VolumeHigh" />
-                                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Text="Normalize copies" TextWrapping="Wrap" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_LoudnessMeter_NormalizeCopies}" TextWrapping="Wrap" />
                             </Grid>
                         </Button>
 
                         <StackPanel Grid.Column="2" Margin="16,0,0,0" VerticalAlignment="Center">
                             <ProgressBar x:Name="Bar" Height="8" Maximum="100" />
-                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="Add audio files to start." TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_AudioTrimmer_AddToStart}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
                         <TextBlock x:Name="TxtProgressPercent" Grid.Column="3" MinWidth="54" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentColor}" TextAlignment="Right" />
@@ -254,40 +254,40 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentControl VerticalAlignment="Center" Content="Loudness" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Speedometer}" />
+                            <ContentControl VerticalAlignment="Center" Content="{DynamicResource Str_AudioTrimmer_NormLoud}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Speedometer}" />
 
                             <WrapPanel x:Name="SummaryPanel" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Border x:Name="PillFiles" Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Files in the list">
+                                <Border x:Name="PillFiles" Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_FilesInTheList}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusInfoFg}" Kind="MusicNote" />
                                         <TextBlock x:Name="TxtSummaryFiles" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillOnTarget" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Within 1 LU of the target" Visibility="Collapsed">
+                                <Border x:Name="PillOnTarget" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_WithinLuOfThe}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="CheckCircleOutline" />
                                         <TextBlock x:Name="TxtSummaryOnTarget" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillOff" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Louder or quieter than the target" Visibility="Collapsed">
+                                <Border x:Name="PillOff" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_LouderOrQuieterThan}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusWarningFg}" Kind="VolumeVibrate" />
                                         <TextBlock x:Name="TxtSummaryOff" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillClip" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="True peak above the ceiling - may distort" Visibility="Collapsed">
+                                <Border x:Name="PillClip" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_TruePeakAboveThe}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusErrorFg}" Kind="AlertCircleOutline" />
                                         <TextBlock x:Name="TxtSummaryClip" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillCopies" Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Normalized copies written" Visibility="Collapsed">
+                                <Border x:Name="PillCopies" Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_NormalizedCopiesWritten}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="ContentSaveOutline" />
                                         <TextBlock x:Name="TxtSummaryCopies" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillFailed" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Hover a failed row for the reason" Visibility="Collapsed">
+                                <Border x:Name="PillFailed" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_HoverAFailedRow}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusErrorFg}" Kind="CloseCircleOutline" />
                                         <TextBlock x:Name="TxtSummaryFailed" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" />
@@ -296,13 +296,13 @@
                             </WrapPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
-                                <Button x:Name="BtnCopyReport" Margin="0,0,6,0" Click="BtnCopyReport_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the report (CSV) to the clipboard">
+                                <Button x:Name="BtnCopyReport" Margin="0,0,6,0" Click="BtnCopyReport_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_CopyTheReportCsv}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
-                                <Button x:Name="BtnSaveReport" Margin="0,0,6,0" Click="BtnSaveReport_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save the report as a CSV file">
+                                <Button x:Name="BtnSaveReport" Margin="0,0,6,0" Click="BtnSaveReport_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_SaveTheReportAs}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FileDelimitedOutline" />
                                 </Button>
-                                <Button x:Name="BtnClearList" Click="BtnClearList_Click" Style="{StaticResource ListToolDangerButtonStyle}" ToolTip="Empty the list (no files are touched)">
+                                <Button x:Name="BtnClearList" Click="BtnClearList_Click" Style="{StaticResource ListToolDangerButtonStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_EmptyTheListNo}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteSweepOutline" />
                                 </Button>
                             </StackPanel>
@@ -331,20 +331,20 @@
                             PreviewKeyDown="ResultGrid_PreviewKeyDown"
                             PreviewMouseRightButtonDown="ResultGrid_PreviewMouseRightButtonDown"
                             SelectionMode="Extended"
-                            ToolTip="Delete takes the selected files off the list (the files themselves are never touched). Right-click for more."
+                            ToolTip="{DynamicResource Str_LoudnessMeter_DeleteTakesTheSelected}"
                             VirtualizingPanel.IsVirtualizing="True"
                             VirtualizingPanel.ScrollUnit="Pixel"
                             VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Width="2*" MinWidth="120" CellTemplate="{StaticResource FileCellTemplate}" Header="File" />
-                                <DataGridTextColumn Width="62" Binding="{Binding DurationText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Length" />
-                                <DataGridTextColumn Width="96" Binding="{Binding LufsText}" ElementStyle="{StaticResource StrongCellTextStyle}" Header="Loudness" />
-                                <DataGridTextColumn Width="96" Binding="{Binding PeakText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="True peak" />
-                                <DataGridTextColumn Width="72" Binding="{Binding RangeText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Range" />
-                                <DataGridTextColumn Width="78" Binding="{Binding DeltaText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Vs target" />
-                                <DataGridTemplateColumn Width="104" CellTemplate="{StaticResource VerdictCellTemplate}" Header="Verdict" />
-                                <DataGridTextColumn Width="96" Binding="{Binding AchievedText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Copy" />
-                                <DataGridTemplateColumn Width="100" CellTemplate="{StaticResource StatusCellTemplate}" Header="Status" />
+                                <DataGridTemplateColumn Width="2*" MinWidth="120" CellTemplate="{StaticResource FileCellTemplate}" Header="{DynamicResource Str_Common_ColHeaderFile}" />
+                                <DataGridTextColumn Width="62" Binding="{Binding DurationText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_Password_LengthHeader}" />
+                                <DataGridTextColumn Width="96" Binding="{Binding LufsText}" ElementStyle="{StaticResource StrongCellTextStyle}" Header="{DynamicResource Str_AudioTrimmer_NormLoud}" />
+                                <DataGridTextColumn Width="96" Binding="{Binding PeakText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_LoudnessMeter_TruePeak}" />
+                                <DataGridTextColumn Width="72" Binding="{Binding RangeText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_LoudnessMeter_Range}" />
+                                <DataGridTextColumn Width="78" Binding="{Binding DeltaText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_LoudnessMeter_VsTarget}" />
+                                <DataGridTemplateColumn Width="104" CellTemplate="{StaticResource VerdictCellTemplate}" Header="{DynamicResource Str_LoudnessMeter_Verdict}" />
+                                <DataGridTextColumn Width="96" Binding="{Binding AchievedText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_Common_Copy}" />
+                                <DataGridTemplateColumn Width="100" CellTemplate="{StaticResource StatusCellTemplate}" Header="{DynamicResource Str_Common_ColHeaderStatus}" />
                             </DataGrid.Columns>
                         </DataGrid>
 

@@ -53,7 +53,7 @@
                     <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
                     <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="Take this off the list">
+                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
                     <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
                 </Button>
             </Grid>
@@ -74,7 +74,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="26" />
                 </Grid.ColumnDefinitions>
-                <CheckBox Margin="2,0,8,0" VerticalAlignment="Center" Click="TextureCheck_Click" IsChecked="{Binding IsChecked, Mode=TwoWay}" ToolTip="Put this in the pack" />
+                <CheckBox Margin="2,0,8,0" VerticalAlignment="Center" Click="TextureCheck_Click" IsChecked="{Binding IsChecked, Mode=TwoWay}" ToolTip="{DynamicResource Str_TexturePack_PutThisInThe}" />
                 <Border Grid.Column="1" Width="40" Height="40" Margin="0,0,10,0" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
                     <Image Margin="2" RenderOptions.BitmapScalingMode="NearestNeighbor" Source="{Binding Thumbnail}" Stretch="Uniform" />
                 </Border>
@@ -82,7 +82,7 @@
                     <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
                     <TextBlock Margin="0,1,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding SizeText}" />
                 </StackPanel>
-                <Border Grid.Column="3" Width="220" Height="30" Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource InputBarStyle}" ToolTip="Where it goes in the pack, for example block/stone">
+                <Border Grid.Column="3" Width="220" Height="30" Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource InputBarStyle}" ToolTip="{DynamicResource Str_TexturePack_WhereItGoesIn}">
                     <TextBox VerticalContentAlignment="Center" LostFocus="SlotBox_LostFocus" Style="{StaticResource BareTextBox}" Text="{Binding Slot, UpdateSourceTrigger=LostFocus}" />
                 </Border>
                 <materialDesign:PackIcon x:Name="StateIcon" Grid.Column="4" Width="18" Height="18" Margin="6,0,0,0" VerticalAlignment="Center" Kind="AlertOutline" Foreground="{DynamicResource StatusWarningFg}" ToolTip="{Binding Message}" Visibility="Collapsed" />
@@ -117,7 +117,7 @@
                         <controls:InputFolderCard ctl:Tour.Key="Str_Tour_TexturePack_Input" ctl:Tour.Order="1"
                             x:Name="InputCard"
                             ClearRequested="InputCard_ClearRequested"
-                            Header="Pictures"
+                            Header="{DynamicResource Str_PixelArt_FilterImages}"
                             HeaderIcon="FileMultipleOutline"
                             IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
                             ItemTemplate="{StaticResource SourceTemplate}"
@@ -126,52 +126,52 @@
                         <!--  ============ PACK ============  -->
                         <Border ctl:Tour.Key="Str_Tour_TexturePack_Pack" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                             <StackPanel>
-                                <ContentControl Content="PACK" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
+                                <ContentControl Content="{DynamicResource Str_SpritePacker_ModePack}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="Name" />
+                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_Common_ColHeaderName}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtPackName" MaxLength="100" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_Changed" />
                                 </Border>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="Description (shown in the pack list)" />
+                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_DescriptionShownInThe}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtDescription" MaxLength="300" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_Changed" />
                                 </Border>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="Minecraft version" />
+                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_MinecraftVersion}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <ComboBox x:Name="CmbVersion" VerticalContentAlignment="Center" SelectionChanged="Setting_SelectionChanged" Style="{StaticResource BareComboBox}" />
                                 </Border>
                                 <TextBlock x:Name="TxtVersionHint" Style="{StaticResource TpSideHint}" />
                                 <WrapPanel Margin="0,8,0,0">
-                                    <Button x:Name="BtnAddVersion" MinHeight="30" Margin="0,0,4,4" Click="BtnAddVersion_Click" Content="Add version" ToolTip="Type in a Minecraft version and its pack format number" />
-                                    <Button x:Name="BtnCheckVersions" MinHeight="30" Margin="0,0,4,4" Click="BtnCheckVersions_Click" Content="Check for new" ToolTip="Look in your Minecraft launcher's version list for releases that aren't in this list" />
-                                    <Button x:Name="BtnWikiUpdate" MinHeight="30" Margin="0,0,4,4" Click="BtnWikiUpdate_Click" Content="Update from wiki" ToolTip="Read the Minecraft Wiki's pack format table and add the numbers that are missing" />
+                                    <Button x:Name="BtnAddVersion" MinHeight="30" Margin="0,0,4,4" Click="BtnAddVersion_Click" Content="{DynamicResource Str_TexturePack_AddVersion}" ToolTip="{DynamicResource Str_TexturePack_TypeInAMinecraft}" />
+                                    <Button x:Name="BtnCheckVersions" MinHeight="30" Margin="0,0,4,4" Click="BtnCheckVersions_Click" Content="{DynamicResource Str_TexturePack_CheckForNew}" ToolTip="{DynamicResource Str_TexturePack_LookInYourMinecraft}" />
+                                    <Button x:Name="BtnWikiUpdate" MinHeight="30" Margin="0,0,4,4" Click="BtnWikiUpdate_Click" Content="{DynamicResource Str_TexturePack_UpdateFromWiki}" ToolTip="{DynamicResource Str_TexturePack_ReadTheMinecraftWiki}" />
                                 </WrapPanel>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="Pack icon (optional)" />
+                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_PackIconOptional}" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Button x:Name="BtnChooseIcon" MinHeight="34" Click="BtnChooseIcon_Click" HorizontalContentAlignment="Left" ToolTip="Choose a PNG to use as pack.png">
+                                    <Button x:Name="BtnChooseIcon" MinHeight="34" Click="BtnChooseIcon_Click" HorizontalContentAlignment="Left" ToolTip="{DynamicResource Str_Rest_ChoosePackPng}">
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ImageOutline" />
-                                            <TextBlock x:Name="TxtIconName" MaxWidth="150" Text="Choose a PNG" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock x:Name="TxtIconName" MaxWidth="150" Text="{DynamicResource Str_TexturePack_ChooseAPng}" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                     </Button>
-                                    <Button x:Name="BtnClearIcon" Grid.Column="1" Width="30" Height="30" Margin="6,0,0,0" Click="BtnClearIcon_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="No icon" Visibility="Collapsed">
+                                    <Button x:Name="BtnClearIcon" Grid.Column="1" Width="30" Height="30" Margin="6,0,0,0" Click="BtnClearIcon_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_TexturePack_NoIcon}" Visibility="Collapsed">
                                         <materialDesign:PackIcon Width="14" Height="14" Kind="Close" />
                                     </Button>
                                 </Grid>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="Save as" />
+                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_Screenshot_Save}" />
                                 <UniformGrid Columns="2">
-                                    <RadioButton x:Name="RadioZip" Margin="0,0,2,0" Click="Setting_Click" Content=".zip file" GroupName="TpFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
-                                    <RadioButton x:Name="RadioFolder" Margin="2,0,0,0" Click="Setting_Click" Content="Folder" GroupName="TpFormat" Style="{StaticResource ModeToggleButtonStyle}" />
+                                    <RadioButton x:Name="RadioZip" Margin="0,0,2,0" Click="Setting_Click" Content="{DynamicResource Str_TexturePack_ZipFile}" GroupName="TpFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
+                                    <RadioButton x:Name="RadioFolder" Margin="2,0,0,0" Click="Setting_Click" Content="{DynamicResource Str_Common_ColHeaderFolder}" GroupName="TpFormat" Style="{StaticResource ModeToggleButtonStyle}" />
                                 </UniformGrid>
-                                <TextBlock Style="{StaticResource TpSideHint}" Text="Copy the .zip (or folder) into .minecraft/resourcepacks, then turn it on in Options > Resource Packs." />
+                                <TextBlock Style="{StaticResource TpSideHint}" Text="{DynamicResource Str_TexturePack_CopyTheZipOr}" />
                             </StackPanel>
                         </Border>
 
@@ -182,7 +182,7 @@
                             AllowAskEachTime="True"
                             DefaultFileName="My Texture Pack"
                             FileExtension=".zip"
-                            Header="Save to"
+                            Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
                             HeaderIcon="ContentSaveOutline"
                             ShowFileName="True"
                             ToolName="Texture Pack" />
@@ -208,18 +208,18 @@
                                         <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Button x:Name="BtnOpenResult" Margin="0,0,8,0" Click="BtnOpenResult_Click" ToolTip="Show the saved pack" Visibility="Collapsed" Style="{StaticResource ListToolButtonStyle}">
+                                <Button x:Name="BtnOpenResult" Margin="0,0,8,0" Click="BtnOpenResult_Click" ToolTip="{DynamicResource Str_TexturePack_ShowTheSavedPack}" Visibility="Collapsed" Style="{StaticResource ListToolButtonStyle}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                 </Button>
                                 <Button ctl:Tour.Key="Str_Tour_TexturePack_Run" ctl:Tour.Order="4" x:Name="BtnRun" MinHeight="38" Click="BtnRun_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="PackageVariantClosed" />
-                                        <TextBlock VerticalAlignment="Center" Text="Create texture pack" />
+                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TexturePack_CreateTexturePack}" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="MINECRAFT TEXTURE PACK" />
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_TexturePack_MinecraftTexturePack}" />
                                 <WrapPanel Margin="0,4,0,0">
                                     <Border Margin="0,0,6,0" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}">
                                         <TextBlock x:Name="TxtPillCount" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
@@ -249,7 +249,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,10" Content="Textures" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
+                        <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_TexturePack_Textures}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
 
                     <!--  The list  -->
                     <Border x:Name="ListArea" Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
@@ -266,8 +266,8 @@
                                 VirtualizingPanel.IsVirtualizing="True" />
                             <StackPanel x:Name="ListEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                 <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
-                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Add your textures" />
-                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Drop PNG files or a folder on the Pictures card. Names like stone.png or block_stone.png (or a folder called block) are matched to Minecraft textures; anything else you can type in yourself." TextAlignment="Center" TextWrapping="Wrap" />
+                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_TexturePack_AddYourTextures}" />
+                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_TexturePack_DropPngFilesOr}" TextAlignment="Center" TextWrapping="Wrap" />
                             </StackPanel>
                         </Grid>
                     </Border>

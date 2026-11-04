@@ -16,7 +16,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class StartupAppsView : UserControl
     {
-        private const string DialogTitle = "Startup Apps";
+        private static string DialogTitle => Loc.T("Str_Tool_startup-apps_Name", "Startup Apps");
 
         private readonly StartupAppsManager _startup = new();
         private readonly ObservableCollection<StartupApp> _shown = new();

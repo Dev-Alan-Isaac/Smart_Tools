@@ -26,7 +26,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class ServicesView : UserControl
     {
-        private const string DialogTitle = "Services";
+        private static string DialogTitle => Loc.T("Str_Tool_services_Name", "Services");
 
         private enum ServiceFilter { All, Running, Stopped }
 

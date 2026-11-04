@@ -37,23 +37,23 @@
                 <StackPanel x:Name="SidebarStack">
                     <Border ctl:Tour.Key="Str_Tour_IconMaker_Picture" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="PICTURE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+                            <ContentControl Content="{DynamicResource Str_BulkResize_ColName}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
                             <Button Margin="0,8,0,0" MinHeight="36" HorizontalContentAlignment="Left" Click="BtnOpen_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
-                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="Choose a picture" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="{DynamicResource Str_IconMaker_ChooseAPicture}" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                             </Button>
-                            <TextBlock x:Name="TxtSourceInfo" Style="{StaticResource ImHint}" Text="Or drop a picture anywhere on this page. PNG, JPG, BMP, GIF, TIFF or ICO." />
+                            <TextBlock x:Name="TxtSourceInfo" Style="{StaticResource ImHint}" Text="{DynamicResource Str_IconMaker_OrDropAPicture}" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_IconMaker_Shape" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="SHAPE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CropSquare}" />
+                            <ContentControl Content="{DynamicResource Str_ImageEditor_Shape}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CropSquare}" />
                             <UniformGrid Margin="0,6,0,0" Columns="2">
-                                <RadioButton x:Name="RadioFit" Margin="0,0,2,0" Click="Option_Click" Content="Fit" GroupName="ImFit" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
-                                <RadioButton x:Name="RadioFill" Margin="2,0,0,0" Click="Option_Click" Content="Fill" GroupName="ImFit" Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton x:Name="RadioFit" Margin="0,0,2,0" Click="Option_Click" Content="{DynamicResource Str_SvgTool_ZoomFitLabel}" GroupName="ImFit" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton x:Name="RadioFill" Margin="2,0,0,0" Click="Option_Click" Content="{DynamicResource Str_IconMaker_Fill}" GroupName="ImFit" Style="{StaticResource ModeToggleButtonStyle}" />
                             </UniformGrid>
                             <TextBlock x:Name="TxtFitHint" Style="{StaticResource ImHint}" />
                         </StackPanel>
@@ -61,7 +61,7 @@
 
                     <Border ctl:Tour.Key="Str_Tour_IconMaker_Sizes" ctl:Tour.Order="3" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="SIZES IN THE .ICO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ResizeBottomRight}" />
+                            <ContentControl Content="{DynamicResource Str_Rest_IcoSizes}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ResizeBottomRight}" />
                             <WrapPanel Margin="0,8,0,0">
                                 <CheckBox x:Name="Size16" Margin="0,0,14,6" Click="Option_Click" Content="16" Tag="16" />
                                 <CheckBox x:Name="Size24" Margin="0,0,14,6" Click="Option_Click" Content="24" Tag="24" />
@@ -71,14 +71,14 @@
                                 <CheckBox x:Name="Size128" Margin="0,0,14,6" Click="Option_Click" Content="128" Tag="128" />
                                 <CheckBox x:Name="Size256" Margin="0,0,14,6" Click="Option_Click" Content="256" Tag="256" />
                             </WrapPanel>
-                            <TextBlock Style="{StaticResource ImHint}" Text="Windows picks the best size for each place it shows the icon. 16, 32, 48 and 256 cover most needs." />
+                            <TextBlock Style="{StaticResource ImHint}" Text="{DynamicResource Str_IconMaker_WindowsPicksTheBest}" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_IconMaker_Zoom" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="ZOOM" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MagnifyPlusOutline}" />
-                            <TextBlock Style="{StaticResource ImHint}" Text="Turn the mouse wheel over the icons to zoom in and out. Double-click an icon, or press Reset, to go back to real size." />
+                            <ContentControl Content="{DynamicResource Str_IconMaker_Zoom}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MagnifyPlusOutline}" />
+                            <TextBlock Style="{StaticResource ImHint}" Text="{DynamicResource Str_IconMaker_TurnTheMouseWheel}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -100,16 +100,16 @@
                                 <Border x:Name="DonePill" Margin="0,0,10,0" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
                                     <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                 </Border>
-                                <Button x:Name="BtnSet" MinHeight="38" Margin="0,0,8,0" Click="BtnSet_Click" IsEnabled="False" ToolTip="Save favicon.ico, the PNG sizes websites ask for, a manifest and the HTML lines">
+                                <Button x:Name="BtnSet" MinHeight="38" Margin="0,0,8,0" Click="BtnSet_Click" IsEnabled="False" ToolTip="{DynamicResource Str_IconMaker_SaveFaviconIcoThe}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="Web" />
-                                        <TextBlock Text="Save favicon set" />
+                                        <TextBlock Text="{DynamicResource Str_IconMaker_SaveFaviconSet}" />
                                     </StackPanel>
                                 </Button>
                                 <Button ctl:Tour.Key="Str_Tour_IconMaker_Save" ctl:Tour.Order="5" x:Name="BtnIco" MinHeight="38" Click="BtnIco_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentSaveOutline" />
-                                        <TextBlock VerticalAlignment="Center" Text="Save .ico" />
+                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Rest_SaveIco}" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -121,9 +121,9 @@
                                 </Grid>
                             </Border>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="SOURCE PICTURE" />
-                                <TextBlock x:Name="HeroName" Margin="0,2,0,0" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="No picture yet" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Name="HeroInfo" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Choose or drop a picture to see it at every icon size." />
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_IconMaker_SourcePicture}" />
+                                <TextBlock x:Name="HeroName" Margin="0,2,0,0" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_IconMaker_NoPictureYet}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="HeroInfo" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_IconMaker_ChooseOrDropA}" />
                             </StackPanel>
                         </DockPanel>
                         <Border x:Name="StatusBanner" Margin="0,12,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
@@ -146,7 +146,7 @@
                                     <Border Margin="0,0,14,14" MouseLeftButtonDown="Card_MouseLeftButtonDown" Style="{StaticResource CardStyle}">
                                         <StackPanel>
                                             <DockPanel Margin="0,0,0,10">
-                                                <Button Width="30" Height="30" Margin="14,0,0,0" Click="BtnSavePng_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding Size}" ToolTip="Save this size as a PNG">
+                                                <Button Width="30" Height="30" Margin="14,0,0,0" Click="BtnSavePng_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding Size}" ToolTip="{DynamicResource Str_IconMaker_SaveThisSizeAs}">
                                                     <materialDesign:PackIcon Width="15" Height="15" Kind="ContentSaveOutline" />
                                                 </Button>
                                                 <StackPanel VerticalAlignment="Center">
@@ -178,7 +178,7 @@
                     <Border x:Name="ZoomBadge" Margin="0,0,24,10" Padding="4" HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="{DynamicResource CardBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="10" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="TxtZoom" Margin="8,0,8,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="×1" />
-                            <Button Width="28" Height="28" Click="BtnZoomReset_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Back to real size">
+                            <Button Width="28" Height="28" Click="BtnZoomReset_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_BackToRealSize}">
                                 <materialDesign:PackIcon Width="14" Height="14" Kind="MagnifyRemoveOutline" />
                             </Button>
                         </StackPanel>
@@ -187,8 +187,8 @@
                     <Border x:Name="PreviewEmpty" Style="{StaticResource CardStyle}">
                         <StackPanel MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                             <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ImageSizeSelectActual}" />
-                            <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Choose a picture" />
-                            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="You will see it at every icon size here, each in its own card, exactly as it will be saved." TextAlignment="Center" TextWrapping="Wrap" />
+                            <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_IconMaker_ChooseAPicture}" />
+                            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_IconMaker_YouWillSeeIt}" TextAlignment="Center" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </Grid>

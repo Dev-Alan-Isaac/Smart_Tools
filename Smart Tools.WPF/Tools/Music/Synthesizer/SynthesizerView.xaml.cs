@@ -403,7 +403,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't start recording: {ex.Message}", "Synthesizer",
+                MessageBox.Show(Loc.F("Str_MB_CouldnTStartRecording", "Couldn't start recording: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -450,7 +450,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Couldn't save: {ex.Message}", "Synthesizer",
+                    MessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

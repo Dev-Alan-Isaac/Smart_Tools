@@ -36,7 +36,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowWidth = 1150;
-        private const string DialogTitle = "Disk Speed Test";
+        private static string DialogTitle => Loc.T("Str_Tool_disk-speed_Name", "Disk Speed Test");
 
         private readonly DiskSpeedTestManager _manager = new();
         private readonly ObservableCollection<DiskSpeedTestResult> _history = new();
@@ -547,7 +547,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
         {
             if (_history.Count == 0) return;
-            var answer = MessageBox.Show($"Clear all {_history.Count} saved results?", DialogTitle,
+            var answer = MessageBox.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 

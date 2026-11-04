@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.NetworkToolsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
@@ -337,7 +338,10 @@
                         <StackPanel Margin="16,4,16,16">
 
                             <!--  ============ TOOL ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border
+                                ctl:Tour.Key="Str_Tour_NetTools_Pick"
+                                ctl:Tour.Order="1"
+                                Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_CodeToolkit_Tool}"
@@ -785,6 +789,8 @@
                             </Grid.ColumnDefinitions>
                             <Button
                                 x:Name="BtnAction"
+                                ctl:Tour.Key="Str_Tour_NetTools_Run"
+                                ctl:Tour.Order="2"
                                 MinWidth="160"
                                 Margin="0,0,16,0"
                                 VerticalAlignment="Center"
@@ -826,6 +832,8 @@
                             </StackPanel>
                             <Border
                                 x:Name="StatePill"
+                                ctl:Tour.Key="Str_Tour_NetTools_State"
+                                ctl:Tour.Order="3"
                                 Grid.Column="2"
                                 Margin="12,0,0,0"
                                 VerticalAlignment="Center"
@@ -1455,7 +1463,7 @@
                 </Border>
 
                 <!--  Console  -->
-                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                <Border Grid.Row="1" ctl:Tour.Key="Str_Tour_NetTools_Console" ctl:Tour.Order="4" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />

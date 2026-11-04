@@ -34,7 +34,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class MidiInstrumentsView : UserControl
     {
-        private const string DialogTitle = "MIDI Instruments";
+        private static string DialogTitle => Loc.T("Str_Tool_midi-instruments_Name", "MIDI Instruments");
         private static readonly MidiDeviceInfo NoInputItem = new(-1, "None");
 
         private readonly MidiInstrumentsManager _manager = new();

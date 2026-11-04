@@ -23,7 +23,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class TextToSpeechView : UserControl
     {
-        private const string DialogTitle = "Text to Speech";
+        private static string DialogTitle => Loc.T("Str_Tool_text-to-speech_Name", "Text to Speech");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;
 
@@ -46,6 +46,7 @@ namespace Smart_Tools.WPF.Views
         public TextToSpeechView()
         {
             InitializeComponent();
+            FileDrop.Attach(this, LoadTextFile);
             OutputCard.DefaultFolder = TextToSpeechManager.DefaultFolder;
             BuildOutputOptions();
             _viewConstructed = true;
@@ -441,11 +442,18 @@ namespace Smart_Tools.WPF.Views
         {
             var dialog = new OpenFileDialog { Title = "Open a text file", Filter = "Text files|*.txt;*.md;*.csv;*.log|All files|*.*" };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+            LoadTextFile(dialog.FileName);
+        }
+
+        /// <summary>Reads a text file into the box (from the Open button or a drop).</summary>
+        private void LoadTextFile(string path)
+        {
+            if (TxtSpeech.IsReadOnly) return;   // not while speaking
             try
             {
-                TxtSpeech.Text = TextToSpeechManager.ReadTextFile(dialog.FileName);
+                TxtSpeech.Text = TextToSpeechManager.ReadTextFile(path);
                 TxtSpeech.CaretIndex = 0;
-                ShowStatus($"Opened {Path.GetFileName(dialog.FileName)}.");
+                ShowStatus($"Opened {Path.GetFileName(path)}.");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
             {

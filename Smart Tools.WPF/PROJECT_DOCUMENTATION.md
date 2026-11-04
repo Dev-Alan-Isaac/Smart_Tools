@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 110 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 112 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -43,16 +43,24 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 | **Folder Tree Exporter** | `folder-tree` | Export a folder's structure as a text tree, Markdown, JSON or CSV |
 | **Metadata Extractor** | `metadata-extract` | Read the hidden details in files |
 
-### Convert & PDF
-*Change formats, work with PDFs*
+### Convert
+*Change file formats*
 
 | Tool | Id | What it does |
 |---|---|---|
 | **Convert Files** | `convert-files` | Convert files between formats |
-| **Images to PDF** | `images-to-pdf` | Turn images into a PDF |
 | **Watermarker** | `watermark` | Stamp text or a logo on many pictures, videos and PDFs |
-| **PDF Tools** | `pdf-toolkit` | Merge, split and compress PDFs; rotate, remove or number pages; edit details; add or remove a password. One tool, two pages (`Tools/Convert/PdfHub`): Merge and split is the PDF Toolkit, Pages and protect is the former PDF Extras |
 | **CSV / JSON Converter** | `csv-json` | Turn CSV into JSON and JSON back into CSV, with quotes and separators handled |
+
+### PDF
+*Make, edit and protect PDFs*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Images to PDF** | `images-to-pdf` | Turn images into a PDF |
+| **PDF Reader & Signer** | `pdf-reader` | Read a PDF, then add your signature, text, a date or a check mark and save a signed copy (`Tools/Convert/PdfReader`) |
+| **PDF Merge & Split** | `pdf-toolkit` | Join PDFs, cut one into parts, or make it smaller (`Tools/Convert/PdfToolkit`) |
+| **PDF Pages & Protect** | `pdf-pages` | Rotate, remove or number pages; edit details; add or remove a password (`Tools/Convert/PdfExtras`) |
 
 ### Media
 *View and play pictures, videos and music*
@@ -175,6 +183,7 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 | **Password Generator** | `password-generator` | Make strong passwords and passphrases |
 | **Password Vault** | `password-vault` | Encrypted password manager with 2FA codes, a health check and a quick-access widget |
 | **2FA Code Generator** | `totp-code` | Make the 6-digit two-factor codes from a secret key or otpauth link, without saving it |
+| **Image Metadata Cleaner** | `image-metadata-cleaner` | Remove location, camera and date details from many photos before you share them (`Tools/Images/MetadataCleaner`) |
 
 ### Network
 *Diagnose your connection*
@@ -191,7 +200,7 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 | **TCP / UDP Client** | `tcp-udp-client` | Send text or bytes to a device or server |
 | **Device Scanner** | `device-scanner` | Find devices on your network |
 | **Internet Speed Test** | `internet-speed` | Measure download and upload speed |
-| **Network Speed Widget** | `net-speed-widget` | A floating live download and upload meter, with the adapter's manufacturer |
+| **Network Speed** | `net-speed` | A live download and upload meter that can float on your screen, with the adapter's manufacturer |
 
 ### Developer
 *Test, inspect and format*
@@ -259,7 +268,7 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 - **Sprite Sheet Packer** (`sprite-packer`, sidebar category: *Pixel & Sprites*) - Pack many pictures into one sprite sheet (padding, biggest sheet size, power of two, trim, several sheets when needed) with a live preview of the real sheet and a JSON, CSS or XML coordinates file; or slice a sheet into a grid of separate frames (by count or by cell size, margin and spacing, skip empty cells)
 - **Speech to Text** (`speech-to-text`) - Transcribe audio or video offline with the bundled whisper.cpp; models are downloaded on demand; saves TXT, SRT, and VTT, can translate to English
 - **Hardware Sensors** - Temperatures, fans, voltages and clocks (LibreHardwareMonitor; most CPU/board sensors need administrator rights), plus a "This PC" overview part with at-a-glance tiles
-- **Batch Watermarker** (`watermark`, sidebar category: *Convert & PDF*) - Stamp text or a logo on many pictures, videos and PDFs at once: 3x3 position grid or tiled, size as a share of each file, opacity, rotation, margin, built-in and saved presets, a live preview of the first file, results written next to the originals or into a chosen folder without ever overwriting
+- **Batch Watermarker** (`watermark`, sidebar category: *Convert*) - Stamp text or a logo on many pictures, videos and PDFs at once: 3x3 position grid or tiled, size as a share of each file, opacity, rotation, margin, built-in and saved presets, a live preview of the first file, results written next to the originals or into a chosen folder without ever overwriting
 - **Voice Changer** - Real-time voice modification with DSP; quick voices: Chipmunk, Deep, Robot, Cave, Girl, Man, Grandma, Grandpa (the people voices are pitch-only, so they are approximations)
 - **Screen Color Picker / Eyedropper** - Pick any colour from anywhere on screen (all monitors) with a magnifier, 1/3x3/5x5 averaging, one-click copy in HEX/RGB/HSL/CSS, WCAG contrast on white and black, a session list; Recent and Favorites are shared with the Color Picker (sidebar category: *Colors*)
 - **Keyboard & Mouse Test** - On-screen 104-key map by scan code, which keys were tested, how many are held at once (6-key vs N-key rollover), key and mouse-button chatter, mouse polling rate (Raw Input, measured on its own thread), real DPI from a measured move, wheel reversals and a reaction-time test
@@ -271,8 +280,10 @@ Smart Tools has **110 tools** in 20 sidebar categories. Every tool opens inside 
 - **Mock Data Generator** - Generate fake data for testing (Generators category): grouped type list, checksum-valid IBAN / credit card (Luhn) / ISBN-13, and your own saved lists (Settings > Mock data)
 
 - **Media Viewer** (`media-viewer`, `Tools/Media/MediaHub`) - one tool with four pages: **Mixed** (`MediaViewerView`: pictures, videos and music in one queue, slideshow, mini-player widget), **Photos** (`ImageViewerControl`: zoom, rotate, thumbnails, slideshow, save as), **Videos** (`VideoReplayView`: LibVLC player for almost any format, playlists, resume position) and **Music** (`AudioReplayControl`: NAudio player with the level visualizer, audio tracks, speed). It replaced the separate Image Viewer, Video Replay and Audio Replay tools; each page is the complete original tool. Only the page shown is in the visual tree (the others release their playback when you switch), and files dropped on the wrong page jump to the page that fits their type (`MediaHubView`, `AddPaths` on each page).
+  - **Seek bar (Mixed page, `MediaViewerView.PosSlider`)**: pressing the bar pauses playback, dragging only scrubs a frame about every 100 ms (`ScrubbingEnabled`), and one seek plus resume happens on release (`_isUserSeeking`, `EndUserSeek`). The position timer never writes to the bar while the user is seeking, and changing `Maximum` on a new clip is guarded by `_updatingSlider`. Never seek on every `ValueChanged` while playing: it garbles the picture and crackles the audio.
+  - **Mini player** (`MediaViewerWidgetWindow`, borderless, always on top, no taskbar button): its Minimize button hides the mini player *and* minimizes the app. Restoring the app from the taskbar shows the mini player first (the app stays minimized); restoring again, with the mini player already visible, opens the tool. Hotkeys, the tray and "Back to the tool" open the tool at once and bring the mini player back too (`MainWindow.MinimizeForWidget`, `_restoreWidgetFirst`).
 
-Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` are placeholders for planned tools and show a shared "coming soon" page.
+Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` would show a shared "coming soon" page (`FutureIdeaView`); none are in the catalog right now.
 
 ---
 
@@ -431,7 +442,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 110 tools have one. The tour only covers the page that is open.
+All 112 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -583,7 +594,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 114 tools*
+*Currently exploring unified testing approach across all 112 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor
@@ -632,3 +643,6 @@ For issues, suggestions, or questions:
 
 
 
+
+- **Image Metadata Cleaner** (`image-metadata-cleaner`): `Controllers/MetadataCleanerManager.cs` (reads GPS / camera / date with Magick.NET, cleans, settings in `metadata-cleaner.json`) + `JpegStripper` (removes Exif, XMP, IPTC and comment segments from a JPG byte for byte, so there is no quality loss; the ICC profile and Adobe marker stay), `Models/MetadataCleanerModel.cs`, `Views/MetadataCleanerView`, the shared `InputFolderCard` / `OutputFolderCard`. Two modes: *Everything* and *Location only* (the latter re-saves the picture). A JPG with a rotation tag takes the Magick path so it is not left sideways. Formats: JPG, PNG, WebP, TIFF; others are skipped with a reason. Originals are never changed.
+- **PDF Reader & Signer** (`pdf-reader`): `Controllers/PdfReaderManager.cs` (writes marks onto a copy with PDFsharp, handles turned pages, remembers the signature in `pdf-signature.png`, settings in `pdf-reader.json`), `Models/PdfReaderModel.cs` (`PdfMark`, `PdfReaderPage`), `Views/PdfReaderView` (pages drawn by `PdfExtrasManager.PageRenderer`, a virtualized list; marks are draggable elements on a canvas over each page). Marks are Text, Date (text), Signature (drawn with an `InkCanvas`, typed in Segoe Script, or a picture with the white paper made transparent) and Check. This is a **visual** signature, not a certificate-based digital one. Positions are kept in the renderer's units and scaled to real points at save time using each page's width.

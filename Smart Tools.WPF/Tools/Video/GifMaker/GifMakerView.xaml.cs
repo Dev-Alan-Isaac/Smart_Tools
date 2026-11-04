@@ -36,7 +36,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "GIF Maker";
+        private static string DialogTitle => Loc.T("Str_Tool_gif-maker_Name", "GIF Maker");
 
         /// <summary>A new video starts with this much selected.</summary>
         private const double DefaultSelectionSeconds = 5;
@@ -1324,7 +1324,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't open {Path.GetFileName(path)}: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

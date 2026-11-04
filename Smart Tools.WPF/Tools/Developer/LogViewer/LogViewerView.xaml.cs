@@ -618,7 +618,7 @@ namespace Smart_Tools.WPF.Views
             if (sender is not MenuItem { Tag: string ext }) return;
             if (!tab.Lines.Any(l => !l.IsSystem))
             {
-                MessageBox.Show("There are no lines to save yet.", "Log Viewer", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThereAreNoLines", "There are no lines to save yet."), Loc.T("Str_Tool_log-viewer_Name", "Log Viewer"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             var dlg = new SaveFileDialog
@@ -633,7 +633,7 @@ namespace Smart_Tools.WPF.Views
             if (dlg.ShowDialog() != true) return;
             if (string.Equals(Path.GetFullPath(dlg.FileName), tab.FilePath, StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show("That's the log file being followed - choose another name.", "Log Viewer", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_ThatSTheLog", "That's the log file being followed - choose another name."), Loc.T("Str_Tool_log-viewer_Name", "Log Viewer"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             _lastExportFolder = Path.GetDirectoryName(dlg.FileName);
@@ -644,7 +644,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show($"Couldn't save the file: {ex.Message}", "Log Viewer", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.F("Str_Err_SaveFile", "Couldn't save the file: {0}", ex.Message), Loc.T("Str_Tool_log-viewer_Name", "Log Viewer"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

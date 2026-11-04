@@ -120,16 +120,16 @@
                             <Border ctl:Tour.Key="Str_Tour_AudioOut_Look" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
-                                        Content="LISTENING WITH"
+                                        Content="{DynamicResource Str_AudioOutputTest_ListeningWith}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.HeadphonesBox}" />
                                     <UniformGrid Margin="0,8,0,0" Columns="2">
-                                        <RadioButton x:Name="LookSpeakers" Margin="0,0,2,4" Checked="Look_Checked" Content="Speakers" GroupName="AoLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Speakers" ToolTip="Speakers: one tile per channel, as before" />
-                                        <RadioButton x:Name="LookHeadphones" Margin="2,0,0,4" Checked="Look_Checked" Content="Headphones" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headphones" ToolTip="Wired headphones (jack or USB): the picture fills left and right" />
-                                        <RadioButton x:Name="LookEarphones" Margin="0,0,2,0" Checked="Look_Checked" Content="Earphones" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="Earphones or earbuds" />
-                                        <RadioButton x:Name="LookHeadset" Margin="2,0,0,0" Checked="Look_Checked" Content="Headset" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="A headset with a microphone" />
+                                        <RadioButton x:Name="LookSpeakers" Margin="0,0,2,4" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Speakers}" GroupName="AoLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Speakers" ToolTip="{DynamicResource Str_AudioOutputTest_SpeakersOneTilePer}" />
+                                        <RadioButton x:Name="LookHeadphones" Margin="2,0,0,4" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Headphones}" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headphones" ToolTip="{DynamicResource Str_AudioOutputTest_WiredHeadphonesJackOr}" />
+                                        <RadioButton x:Name="LookEarphones" Margin="0,0,2,0" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Earphones}" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="{DynamicResource Str_AudioOutputTest_EarphonesOrEarbuds}" />
+                                        <RadioButton x:Name="LookHeadset" Margin="2,0,0,0" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Headset}" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="{DynamicResource Str_AudioOutputTest_AHeadsetWithA}" />
                                     </UniformGrid>
-                                    <TextBlock Style="{StaticResource SidebarHint}" Text="With two channels, headphones, earphones and headsets get a picture whose left and right sides fill with the sound each side plays." />
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_AudioOutputTest_WithTwoChannelsHeadphones}" />
                                 </StackPanel>
                             </Border>
 
@@ -575,7 +575,7 @@
                         <Viewbox Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
                             <StackPanel>
                                 <TextBlock x:Name="TxtHeroLevel" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-30 dB" />
-                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="OUTPUT LEVEL" />
+                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_AudioOutputTest_OutputLevel}" />
                             </StackPanel>
                         </Viewbox>
                         <Grid>
@@ -591,8 +591,8 @@
                         <Grid x:Name="HeroStage" ctl:Tour.Key="Str_Tour_AudioOut_Picture" ctl:Tour.Order="6" Grid.Row="1" Height="220" Margin="0,0,0,12" Visibility="Collapsed">
                             <controls:LevelGlyph x:Name="HeroLeft" Side="Left" Kind="Headphones" />
                             <controls:LevelGlyph x:Name="HeroRight" Side="Right" ShowTrack="False" Kind="Headphones" />
-                            <TextBlock Margin="6,0,0,4" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="LEFT" />
-                            <TextBlock Margin="0,0,6,4" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="RIGHT" />
+                            <TextBlock Margin="6,0,0,4" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ImageEditor_Left}" />
+                            <TextBlock Margin="0,0,6,4" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ImageEditor_Right}" />
                         </Grid>
 
                         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">

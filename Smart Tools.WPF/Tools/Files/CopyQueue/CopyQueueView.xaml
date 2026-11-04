@@ -28,7 +28,7 @@
                     <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
                     <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Parent}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="Take this off the queue">
+                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_CopyQueue_TakeThisOffThe}">
                     <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
                 </Button>
             </Grid>
@@ -85,7 +85,7 @@
                     <controls:InputFolderCard ctl:Tour.Key="Str_Tour_CopyQueue_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
                         ClearRequested="InputCard_ClearRequested"
-                        Header="Files and folders to copy"
+                        Header="{DynamicResource Str_CopyQueue_FilesAndFoldersTo}"
                         HeaderIcon="FolderMultipleOutline"
                         ItemTemplate="{StaticResource SourceTemplate}"
                         Mode="Files"
@@ -95,7 +95,7 @@
                     <controls:InputFolderCard ctl:Tour.Key="Str_Tour_CopyQueue_Destination" ctl:Tour.Order="2"
                         x:Name="DestinationCard"
                         FolderChanged="DestinationCard_FolderChanged"
-                        Header="Copy to"
+                        Header="{DynamicResource Str_CopyQueue_CopyTo}"
                         HeaderIcon="FolderArrowDownOutline"
                         Mode="SingleFolder"
                         ShowSubfolders="False" />
@@ -103,7 +103,7 @@
                     <controls:InputFolderCard
                         x:Name="MoveDestinationCard"
                         FolderChanged="DestinationCard_FolderChanged"
-                        Header="Move to"
+                        Header="{DynamicResource Str_CopyQueue_MoveTo}"
                         HeaderIcon="FolderMoveOutline"
                         Mode="SingleFolder"
                         ShowSubfolders="False"
@@ -111,26 +111,26 @@
 
                     <Border ctl:Tour.Key="Str_Tour_CopyQueue_Options" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="WHAT TO DO" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+                            <ContentControl Content="{DynamicResource Str_Vc_ModeHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="RadioCopy" Margin="0,0,2,0" Checked="Option_Changed" Content="Copy" GroupName="CqMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Copy - keep the originals" />
-                                <RadioButton x:Name="RadioMove" Margin="2,0,0,0" Checked="Option_Changed" Content="Move" GroupName="CqMode" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Move - remove each original after its copy is checked" />
+                                <RadioButton x:Name="RadioCopy" Margin="0,0,2,0" Checked="Option_Changed" Content="{DynamicResource Str_Common_Copy}" GroupName="CqMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_CopyKeepTheOriginals}" />
+                                <RadioButton x:Name="RadioMove" Margin="2,0,0,0" Checked="Option_Changed" Content="{DynamicResource Str_OrganizeFiles_Move}" GroupName="CqMode" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_MoveRemoveEachOriginal}" />
                             </UniformGrid>
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Copy keeps the originals. Move removes each original only after its copy is checked." />
-                            <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="If a different file has the same name" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_CopyQueue_CopyKeepsTheOriginals}" />
+                            <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_CopyQueue_IfADifferentFile}" />
                             <UniformGrid Margin="0,6,0,0" Columns="2">
-                                <RadioButton x:Name="RadioKeepBoth" Margin="0,0,2,0" Checked="Option_Changed" Content="Keep both" GroupName="CqConflict" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Keep both (adds ' (2)')" />
-                                <RadioButton x:Name="RadioSkip" Margin="2,0,0,0" Checked="Option_Changed" Content="Skip it" GroupName="CqConflict" Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton x:Name="RadioKeepBoth" Margin="0,0,2,0" Checked="Option_Changed" Content="{DynamicResource Str_CopyQueue_KeepBoth}" GroupName="CqConflict" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_KeepBothAdds}" />
+                                <RadioButton x:Name="RadioSkip" Margin="2,0,0,0" Checked="Option_Changed" Content="{DynamicResource Str_CopyQueue_SkipIt}" GroupName="CqConflict" Style="{StaticResource ModeToggleButtonStyle}" />
                             </UniformGrid>
-                            <CheckBox x:Name="ChkVerify" Margin="2,12,0,0" Checked="Option_Changed" Content="Verify every copy" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Compares each copy to its original (SHA-256) before it counts. Moves are always verified." />
+                            <CheckBox x:Name="ChkVerify" Margin="2,12,0,0" Checked="Option_Changed" Content="{DynamicResource Str_CopyQueue_VerifyEveryCopy}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_CopyQueue_ComparesEachCopyTo}" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="GOOD TO KNOW" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Nothing is ever overwritten, and an original is only removed after its copy has been proven identical. Stop or a crash leaves the originals where they are. If the app closes mid-run, the queue comes back next time and files already done are recognised and skipped. Folders are copied with their empty subfolders; a move leaves the emptied source folders in place." />
+                            <ContentControl Content="{DynamicResource Str_SecureFileShredder_GoodToKnow}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_CopyQueue_NothingIsEverOverwritten}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -154,28 +154,28 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Button ctl:Tour.Key="Str_Tour_CopyQueue_Start" ctl:Tour.Order="4" x:Name="BtnStart" MinWidth="180" VerticalAlignment="Center" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Copy or move everything in the queue">
+                        <Button ctl:Tour.Key="Str_Tour_CopyQueue_Start" ctl:Tour.Order="4" x:Name="BtnStart" MinWidth="180" VerticalAlignment="Center" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_CopyOrMoveEverything}">
                             <Grid HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon x:Name="IconStart" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="Play" />
-                                <TextBlock x:Name="TxtStart" Grid.Column="1" VerticalAlignment="Center" Text="Start" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtStart" Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_RenameFiles_Start}" TextWrapping="Wrap" />
                             </Grid>
                         </Button>
 
-                        <Button ctl:Tour.Key="Str_Tour_CopyQueue_Pause" ctl:Tour.Order="5" x:Name="BtnPause" Grid.Column="1" Width="36" Height="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnPause_Click" IsEnabled="False" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Pause">
+                        <Button ctl:Tour.Key="Str_Tour_CopyQueue_Pause" ctl:Tour.Order="5" x:Name="BtnPause" Grid.Column="1" Width="36" Height="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnPause_Click" IsEnabled="False" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_MicRecorder_Pause}">
                             <materialDesign:PackIcon x:Name="IconPause" Width="17" Height="17" Kind="Pause" />
                         </Button>
 
-                        <Button x:Name="BtnUndo" Grid.Column="2" Width="36" Height="36" Margin="6,0,16,0" VerticalAlignment="Center" Click="BtnUndo_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Undo the last move" Visibility="Collapsed">
+                        <Button x:Name="BtnUndo" Grid.Column="2" Width="36" Height="36" Margin="6,0,16,0" VerticalAlignment="Center" Click="BtnUndo_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_UndoTheLastMove}" Visibility="Collapsed">
                             <materialDesign:PackIcon Width="17" Height="17" Kind="Undo" />
                         </Button>
 
                         <StackPanel Grid.Column="3" Margin="16,0,0,0" VerticalAlignment="Center">
-                            <ProgressBar x:Name="Bar" Height="8" Maximum="100" ToolTip="Share of the data copied and verified so far" />
-                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="Add files or folders to start." TextTrimming="CharacterEllipsis" />
+                            <ProgressBar x:Name="Bar" Height="8" Maximum="100" ToolTip="{DynamicResource Str_CopyQueue_ShareOfTheData}" />
+                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_CopyQueue_AddFilesOrFolders}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
                         <TextBlock x:Name="TxtProgressPercent" Grid.Column="4" MinWidth="54" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentColor}" TextAlignment="Right" />
@@ -198,40 +198,40 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentControl VerticalAlignment="Center" Content="Files" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FileMultipleOutline}" />
+                            <ContentControl VerticalAlignment="Center" Content="{DynamicResource Str_Common_Files}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FileMultipleOutline}" />
 
                             <WrapPanel x:Name="SummaryPanel" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Border x:Name="PillFiles" Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Files in the queue">
+                                <Border x:Name="PillFiles" Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_CopyQueue_FilesInTheQueue}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusInfoFg}" Kind="FileMultipleOutline" />
                                         <TextBlock x:Name="TxtSummaryFiles" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillDone" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Copied or moved" Visibility="Collapsed">
+                                <Border x:Name="PillDone" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_CopyQueue_CopiedOrMoved}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="CheckCircleOutline" />
                                         <TextBlock x:Name="TxtSummaryDone" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillVerified" Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Compared to the original, byte for byte" Visibility="Collapsed">
+                                <Border x:Name="PillVerified" Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_CopyQueue_ComparedToTheOriginal}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="ShieldCheckOutline" />
                                         <TextBlock x:Name="TxtSummaryVerified" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillAlready" Margin="0,2,6,2" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="An identical file was already at the destination" Visibility="Collapsed">
+                                <Border x:Name="PillAlready" Margin="0,2,6,2" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_CopyQueue_AnIdenticalFileWas}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Kind="CheckAll" />
                                         <TextBlock x:Name="TxtSummaryAlready" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillSkipped" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Skipped because a different file had the same name" Visibility="Collapsed">
+                                <Border x:Name="PillSkipped" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_CopyQueue_SkippedBecauseADifferent}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusWarningFg}" Kind="SkipNextOutline" />
                                         <TextBlock x:Name="TxtSummarySkipped" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillFailed" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Hover a failed row for the reason" Visibility="Collapsed">
+                                <Border x:Name="PillFailed" Margin="0,2,6,2" Background="{DynamicResource StatusErrorBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_LoudnessMeter_HoverAFailedRow}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusErrorFg}" Kind="AlertCircleOutline" />
                                         <TextBlock x:Name="TxtSummaryFailed" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" />
@@ -240,10 +240,10 @@
                             </WrapPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
-                                <Button x:Name="BtnOpenDestination" Margin="0,0,6,0" Click="BtnOpenDestination_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Open the destination folder">
+                                <Button x:Name="BtnOpenDestination" Margin="0,0,6,0" Click="BtnOpenDestination_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_OrganizeFiles_OpenTheDestinationFolder}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                 </Button>
-                                <Button x:Name="BtnClearQueue" Click="BtnClearQueue_Click" Style="{StaticResource ListToolDangerButtonStyle}" ToolTip="Empty the queue (no files are touched)">
+                                <Button x:Name="BtnClearQueue" Click="BtnClearQueue_Click" Style="{StaticResource ListToolDangerButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_EmptyTheQueueNo}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteSweepOutline" />
                                 </Button>
                             </StackPanel>
@@ -265,8 +265,8 @@
                                 <ListBox ctl:Tour.Key="Str_Tour_CopyQueue_Results" ctl:Tour.Order="6" x:Name="ItemList" Padding="8" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource ItemTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" />
                                 <StackPanel x:Name="ListEmpty" MaxWidth="340" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FolderMoveOutline}" />
-                                    <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Add files or folders" />
-                                    <TextBlock x:Name="TxtEmptyHint" Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Drop them on the left, pick where they go, then press Start." TextAlignment="Center" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="TxtEmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_CopyQueue_AddFilesOrFolders2}" />
+                                    <TextBlock x:Name="TxtEmptyHint" Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_CopyQueue_DropThemOnThe}" TextAlignment="Center" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </Border>

@@ -1,4 +1,4 @@
-<ResourceDictionary
+﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:system="clr-namespace:System;assembly=mscorlib">
@@ -5658,32 +5658,6 @@
     <system:String x:Key="Str_Tray_Show">Show Smart Tools</system:String>
     <system:String x:Key="Str_Tray_Exit">Exit</system:String>
     <!--  Network Speed Widget  -->
-    <system:String x:Key="Str_NetWidget_Options">Widget</system:String>
-    <system:String x:Key="Str_NetWidget_Live">Live speed</system:String>
-    <system:String x:Key="Str_NetWidget_Download">Download</system:String>
-    <system:String x:Key="Str_NetWidget_Upload">Upload</system:String>
-    <system:String x:Key="Str_NetWidget_Session">This session</system:String>
-    <system:String x:Key="Str_NetWidget_Adapter">Adapter</system:String>
-    <system:String x:Key="Str_NetWidget_AllActive">All active adapters</system:String>
-    <system:String x:Key="Str_NetWidget_Manufacturer">Manufacturer</system:String>
-    <system:String x:Key="Str_NetWidget_Mac">MAC address</system:String>
-    <system:String x:Key="Str_NetWidget_Unknown">Unknown manufacturer</system:String>
-    <system:String x:Key="Str_NetWidget_Show">Show widget</system:String>
-    <system:String x:Key="Str_NetWidget_Hide">Hide widget</system:String>
-    <system:String x:Key="Str_NetWidget_Units">Units</system:String>
-    <system:String x:Key="Str_NetWidget_Bytes">Bytes (MB/s)</system:String>
-    <system:String x:Key="Str_NetWidget_Bits">Bits (Mbps)</system:String>
-    <system:String x:Key="Str_NetWidget_Refresh">Refresh every</system:String>
-    <system:String x:Key="Str_NetWidget_Opacity">Opacity</system:String>
-    <system:String x:Key="Str_NetWidget_ClickThrough">Click-through (mouse passes over the widget)</system:String>
-    <system:String x:Key="Str_NetWidget_Mini">Mini mode (only the two numbers)</system:String>
-    <system:String x:Key="Str_NetWidget_ShowMaker">Show the manufacturer in the widget</system:String>
-    <system:String x:Key="Str_NetWidget_Hint">Drag the widget to move it. Right-click it for the menu. With click-through on, use this page to turn it off.</system:String>
-    <system:String x:Key="Str_NetWidget_Disconnected">Not connected</system:String>
-    <system:String x:Key="Str_NetWidget_Active">{0} active adapter(s)</system:String>
-    <system:String x:Key="Str_NetWidget_Seconds">{0} s</system:String>
-    <system:String x:Key="Str_NetWidget_Close">Close widget</system:String>
-    <system:String x:Key="Str_NetWidget_Corner">Snap to bottom-right corner</system:String>
     <!--  Hash and Checksum Verifier  -->
     <system:String x:Key="Str_Hash_AddFiles">Add files</system:String>
     <system:String x:Key="Str_Hash_AddFilesTooltip">Choose files to hash</system:String>
@@ -6050,8 +6024,10 @@
     <system:String x:Key="Str_Cat_data-quality_Blurb">Check, de-duplicate and compare</system:String>
     <system:String x:Key="Str_Cat_files_Title">Files</system:String>
     <system:String x:Key="Str_Cat_files_Blurb">Rename, sort and search</system:String>
-    <system:String x:Key="Str_Cat_convert_Title">Convert &amp; PDF</system:String>
-    <system:String x:Key="Str_Cat_convert_Blurb">Change formats, work with PDFs</system:String>
+    <system:String x:Key="Str_Cat_convert_Title">Convert</system:String>
+    <system:String x:Key="Str_Cat_convert_Blurb">Change file formats</system:String>
+    <system:String x:Key="Str_Cat_pdf_Title">PDF</system:String>
+    <system:String x:Key="Str_Cat_pdf_Blurb">Make, edit and protect PDFs</system:String>
     <system:String x:Key="Str_Cat_media_Title">Media</system:String>
     <system:String x:Key="Str_Cat_media_Blurb">View and play pictures, videos and music</system:String>
     <system:String x:Key="Str_Cat_video_Title">Video</system:String>
@@ -6115,17 +6091,17 @@
     <system:String x:Key="Str_Tool_watermark_Name">Watermarker</system:String>
     <system:String x:Key="Str_Tool_watermark_Title">Batch Watermarker</system:String>
     <system:String x:Key="Str_Tool_watermark_Description">Stamp text or a logo on many pictures, videos and PDFs</system:String>
-    <system:String x:Key="Str_Tool_pdf-toolkit_Name">PDF Tools</system:String>
-    <system:String x:Key="Str_Tool_pdf-toolkit_Description">Merge, split and compress PDFs; rotate, remove or number pages; edit details; add or remove a password</system:String>
-    <system:String x:Key="Str_Tool_system-snapshot_Name">System Snapshot</system:String>
-    <system:String x:Key="Str_Tool_system-snapshot_Description">Scan everything about this PC (system, network, ports, firewall, services, software) and export it to rebuild the same setup on another PC</system:String>
+    <system:String x:Key="Str_Tool_pdf-toolkit_Name">PDF Merge &amp; Split</system:String>
+    <system:String x:Key="Str_Tool_pdf-toolkit_Description">Join PDFs, cut one into parts, or make it smaller</system:String>
+    <system:String x:Key="Str_Tool_pdf-pages_Name">PDF Pages &amp; Protect</system:String>
+    <system:String x:Key="Str_Tool_pdf-pages_Description">Rotate, remove or number pages; edit details; add or remove a password</system:String>
     <system:String x:Key="Str_Tool_media-viewer_Name">Media Viewer</system:String>
     <system:String x:Key="Str_Tool_media-viewer_Description">Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages</system:String>
     <system:String x:Key="Str_MediaViewer_OpenFiles">Open files</system:String>
     <system:String x:Key="Str_MediaViewer_Clear">Clear list</system:String>
     <system:String x:Key="Str_MediaViewer_Dismiss">Dismiss</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_Back">Back to the tool (W)</system:String>
-    <system:String x:Key="Str_MediaViewer_Widget_MinimizeApp">Minimize the app (the mini player stays)</system:String>
+    <system:String x:Key="Str_MediaViewer_Widget_MinimizeApp">Minimize the app and the mini player</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_Placeholder">The player is in the floating mini window.</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_BringBack">Bring it back here</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_Tooltip">Move the player to a floating mini window (W)</system:String>
@@ -6448,8 +6424,6 @@
     <system:String x:Key="Str_Tool_device-scanner_Description">Find devices on your network</system:String>
     <system:String x:Key="Str_Tool_internet-speed_Name">Internet Speed Test</system:String>
     <system:String x:Key="Str_Tool_internet-speed_Description">Measure download and upload speed</system:String>
-    <system:String x:Key="Str_Tool_net-speed-widget_Name">Network Speed Widget</system:String>
-    <system:String x:Key="Str_Tool_net-speed-widget_Description">A floating live download and upload meter, with the adapter's manufacturer</system:String>
     <system:String x:Key="Str_Tool_api-tester_Name">API Tester</system:String>
     <system:String x:Key="Str_Tool_api-tester_Description">Send web requests and read the replies</system:String>
     <system:String x:Key="Str_Tool_regex-tester_Name">Regex Tester</system:String>
@@ -7898,12 +7872,6 @@
     <system:String x:Key="Str_Tour_InternetSpeed_History_Title">History</system:String>
     <system:String x:Key="Str_Tour_InternetSpeed_History_Text">Earlier tests are saved here so you can compare them.</system:String>
     <!-- Tour: Network speed widget -->
-    <system:String x:Key="Str_Tour_NetWidget_Live_Title">Live speed</system:String>
-    <system:String x:Key="Str_Tour_NetWidget_Live_Text">Current download and upload speed, a short graph, and the adapter being measured.</system:String>
-    <system:String x:Key="Str_Tour_NetWidget_Adapter_Title">Adapter</system:String>
-    <system:String x:Key="Str_Tour_NetWidget_Adapter_Text">Choose which network adapter to measure.</system:String>
-    <system:String x:Key="Str_Tour_NetWidget_Show_Title">Floating widget</system:String>
-    <system:String x:Key="Str_Tour_NetWidget_Show_Text">Show or hide a small always-on-top widget with the same live numbers.</system:String>
     <system:String x:Key="Str_Tour_Connections_Summary_Title">Outside summary</system:String>
     <system:String x:Key="Str_Tour_Connections_Summary_Text">How many apps are connected outside your PC, and how many connections they have open right now.</system:String>
     <system:String x:Key="Str_Tour_Connections_Search_Title">Search</system:String>
@@ -8798,81 +8766,6 @@
     <system:String x:Key="Str_Tour_DriveHealth_HistoryReadings_Text">Each reading with what got worse since the one before. Rising error counters mean the drive may be failing: back it up.</system:String>
     <system:String x:Key="Str_Tour_MediaHub_Modes_Title">Four pages in one</system:String>
     <system:String x:Key="Str_Tour_MediaHub_Modes_Text">Mixed holds pictures, videos and music in one queue. Photos, Videos and Music are the full viewer, video player and audio player with all their options. Drop files anywhere and they jump to the page that fits.</system:String>
-    <system:String x:Key="Str_Tour_PdfHub_Modes_Title">Two pages in one</system:String>
-    <system:String x:Key="Str_Tour_PdfHub_Modes_Text">Merge and split joins, cuts and shrinks PDFs. Pages and protect rotates, removes or numbers pages, edits the details and adds or removes a password.</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Groups_Title">What to scan</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Groups_Text">Tick the groups to read from this PC: system, network and ports, firewall, services, software and more. Nothing is changed.</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Scan_Title">Scan this PC</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Scan_Text">Reads everything you ticked. Finished sections appear on the left while the scan goes on, and you can cancel at any time.</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Sections_Title">Sections</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Sections_Text">Pick a section to see its table. The Overview shows the main figures at a glance.</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Grid_Title">The data</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Grid_Text">Filter the rows, sort by a column, or select rows and press Ctrl+C to copy them.</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Export_Title">Export</system:String>
-    <system:String x:Key="Str_Tour_SystemSnapshot_Export_Text">Save the whole scan as an HTML report, JSON or a text file, or the section on screen as CSV. Use it as the checklist for the other PC.</system:String>
-    <system:String x:Key="Str_SysSnap_ScanGroups">WHAT TO SCAN</system:String>
-    <system:String x:Key="Str_SysSnap_SelectAll">All</system:String>
-    <system:String x:Key="Str_SysSnap_SelectNone">None</system:String>
-    <system:String x:Key="Str_SysSnap_Options">OPTIONS</system:String>
-    <system:String x:Key="Str_SysSnap_MsTasks">Include Windows' own scheduled tasks</system:String>
-    <system:String x:Key="Str_SysSnap_BuiltInRules">Include Windows' own firewall rules</system:String>
-    <system:String x:Key="Str_SysSnap_OptionsHint">Off by default: they are hundreds of entries that every Windows PC already has. What a person or an installer added is always listed.</system:String>
-    <system:String x:Key="Str_SysSnap_Export">EXPORT</system:String>
-    <system:String x:Key="Str_SysSnap_ExportHtml">HTML report</system:String>
-    <system:String x:Key="Str_SysSnap_ExportJson">JSON (complete)</system:String>
-    <system:String x:Key="Str_SysSnap_ExportText">Text file</system:String>
-    <system:String x:Key="Str_SysSnap_ExportCsv">This section as CSV</system:String>
-    <system:String x:Key="Str_SysSnap_About">ABOUT</system:String>
-    <system:String x:Key="Str_SysSnap_AboutText">Reads this PC and changes nothing. Passwords, Wi-Fi keys, product keys and saved logins are never read, and values that look like secrets (for example a variable called API_TOKEN) are shown as (hidden). The file does include names, addresses and serial numbers, so check it before sharing.</system:String>
-    <system:String x:Key="Str_SysSnap_Scan">Scan this PC</system:String>
-    <system:String x:Key="Str_SysSnap_Scanning">Scanning: {0} ({1} of {2} groups done)</system:String>
-    <system:String x:Key="Str_SysSnap_Done">Done: {0} sections, {1} rows</system:String>
-    <system:String x:Key="Str_SysSnap_Cancelled">Cancelled: {0} finished sections kept</system:String>
-    <system:String x:Key="Str_SysSnap_Partial">partial scan</system:String>
-    <system:String x:Key="Str_SysSnap_ScanFailed">The scan stopped: {0}</system:String>
-    <system:String x:Key="Str_SysSnap_NothingChosen">Tick at least one group to scan.</system:String>
-    <system:String x:Key="Str_SysSnap_Overview">Overview</system:String>
-    <system:String x:Key="Str_SysSnap_FilterPlaceholder">Filter this section...</system:String>
-    <system:String x:Key="Str_SysSnap_Rows">{0} rows</system:String>
-    <system:String x:Key="Str_SysSnap_RowsOf">{0} of {1} rows</system:String>
-    <system:String x:Key="Str_SysSnap_EmptyTitle">Nothing scanned yet</system:String>
-    <system:String x:Key="Str_SysSnap_EmptyHint">Choose what to scan and press Scan this PC. The result is a checklist of how this PC is set up, to rebuild it on another one.</system:String>
-    <system:String x:Key="Str_SysSnap_Admin">Administrator</system:String>
-    <system:String x:Key="Str_SysSnap_Limited">Not administrator</system:String>
-    <system:String x:Key="Str_SysSnap_AdminTip">Running as administrator: every section can show its full detail.</system:String>
-    <system:String x:Key="Str_SysSnap_LimitedTip">Some sections (Windows features, program paths of other users, parts of the certificate stores) show less unless the app runs as administrator.</system:String>
-    <system:String x:Key="Str_SysSnap_Saved">Saved: {0}</system:String>
-    <system:String x:Key="Str_SysSnap_SaveFailed">Could not save: {0}</system:String>
-    <system:String x:Key="Str_SysSnap_Group_system">System and hardware</system:String>
-    <system:String x:Key="Str_SysSnap_Group_network">Network and ports</system:String>
-    <system:String x:Key="Str_SysSnap_Group_firewall">Firewall</system:String>
-    <system:String x:Key="Str_SysSnap_Group_services">Services, startup and tasks</system:String>
-    <system:String x:Key="Str_SysSnap_Group_software">Software and runtimes</system:String>
-    <system:String x:Key="Str_SysSnap_Group_certs">Certificates</system:String>
-    <system:String x:Key="Str_SysSnap_Group_drivers">Third-party drivers (slow)</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_os">Windows and PC</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_systeminfo">systeminfo (raw)</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_drives">Drives and volumes</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_disks">Physical disks</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_users">Local users</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_security">Security software</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_adapters">Network adapters</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_routes">Routes</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_network-config">Network settings</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_ports">Listening ports</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_hosts">Hosts file</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_firewall-profiles">Firewall profiles</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_firewall-rules">Firewall rules</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_services">Services</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_startup">Startup items</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_tasks">Scheduled tasks</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_programs">Installed programs</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_runtimes">Runtimes and dependencies</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_features">Windows features</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_env">Environment variables</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_path">PATH folders</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_certs">Certificates (personal)</system:String>
-    <system:String x:Key="Str_SysSnap_Sec_drivers">Third-party drivers</system:String>
     <system:String x:Key="Str_Tour_MicTest_Look_Title">Microphone type</system:String>
     <system:String x:Key="Str_Tour_MicTest_Look_Text">Pick the picture that matches your microphone: a stand, a handheld, a headset or earbuds. It only changes the drawing that fills with your voice.</system:String>
     <system:String x:Key="Str_Tour_MicTest_Picture_Title">Your voice, as a picture</system:String>
@@ -8882,4 +8775,738 @@
     <system:String x:Key="Str_Tour_AudioOut_Picture_Title">Left and right, as a picture</system:String>
     <system:String x:Key="Str_Tour_AudioOut_Picture_Text">Each side of the picture fills while that side plays. If one side stays empty during the channel test, that earcup or earbud is silent.</system:String>
 
+    <system:String x:Key="Str_NetWidget_Options">Widget</system:String>
+    <system:String x:Key="Str_NetWidget_Live">Live speed</system:String>
+    <system:String x:Key="Str_NetWidget_Download">Download</system:String>
+    <system:String x:Key="Str_NetWidget_Upload">Upload</system:String>
+    <system:String x:Key="Str_NetWidget_Session">This session</system:String>
+    <system:String x:Key="Str_NetWidget_Adapter">Adapter</system:String>
+    <system:String x:Key="Str_NetWidget_AllActive">All active adapters</system:String>
+    <system:String x:Key="Str_NetWidget_Manufacturer">Manufacturer</system:String>
+    <system:String x:Key="Str_NetWidget_Mac">MAC address</system:String>
+    <system:String x:Key="Str_NetWidget_Unknown">Unknown manufacturer</system:String>
+    <system:String x:Key="Str_NetWidget_Show">Show widget</system:String>
+    <system:String x:Key="Str_NetWidget_Hide">Hide widget</system:String>
+    <system:String x:Key="Str_NetWidget_Units">Units</system:String>
+    <system:String x:Key="Str_NetWidget_Bytes">Bytes (MB/s)</system:String>
+    <system:String x:Key="Str_NetWidget_Bits">Bits (Mbps)</system:String>
+    <system:String x:Key="Str_NetWidget_Refresh">Refresh every</system:String>
+    <system:String x:Key="Str_NetWidget_Opacity">Opacity</system:String>
+    <system:String x:Key="Str_NetWidget_ClickThrough">Click-through (mouse passes over the widget)</system:String>
+    <system:String x:Key="Str_NetWidget_Mini">Mini mode (only the two numbers)</system:String>
+    <system:String x:Key="Str_NetWidget_ShowMaker">Show the manufacturer in the widget</system:String>
+    <system:String x:Key="Str_NetWidget_Hint">Drag the widget to move it. Right-click it for the menu. With click-through on, use this page to turn it off.</system:String>
+    <system:String x:Key="Str_NetWidget_Disconnected">Not connected</system:String>
+    <system:String x:Key="Str_NetWidget_Active">{0} active adapter(s)</system:String>
+    <system:String x:Key="Str_NetWidget_Seconds">{0} s</system:String>
+    <system:String x:Key="Str_NetWidget_Close">Close widget</system:String>
+    <system:String x:Key="Str_NetWidget_Corner">Snap to bottom-right corner</system:String>
+    <system:String x:Key="Str_Tour_NetWidget_Live_Title">Live speed</system:String>
+    <system:String x:Key="Str_Tour_NetWidget_Live_Text">Current download and upload speed, a short graph, and the adapter being measured.</system:String>
+    <system:String x:Key="Str_Tour_NetWidget_Adapter_Title">Adapter</system:String>
+    <system:String x:Key="Str_Tour_NetWidget_Adapter_Text">Choose which network adapter to measure.</system:String>
+    <system:String x:Key="Str_Tour_NetWidget_Show_Title">Floating widget</system:String>
+    <system:String x:Key="Str_Tour_NetWidget_Show_Text">Show or hide a small always-on-top widget with the same live numbers.</system:String>
+    <system:String x:Key="Str_Tool_net-speed_Name">Network Speed</system:String>
+    <system:String x:Key="Str_Tool_net-speed_Description">A live download and upload meter that can float on your screen, with the adapter's manufacturer</system:String>
+    <system:String x:Key="Str_Tool_image-metadata-cleaner_Name">Image Metadata Cleaner</system:String>
+    <system:String x:Key="Str_Tool_image-metadata-cleaner_Description">Remove location, camera and date details from many photos before you share them</system:String>
+    <system:String x:Key="Str_MetaClean_Pictures">PICTURES</system:String>
+    <system:String x:Key="Str_MetaClean_ModeHeader">WHAT TO REMOVE</system:String>
+    <system:String x:Key="Str_MetaClean_ModeEverything">Everything</system:String>
+    <system:String x:Key="Str_MetaClean_ModeLocation">Location only</system:String>
+    <system:String x:Key="Str_MetaClean_HintEverything">Removes location, camera, date, software and comments. The color profile stays. JPG files are cleaned without any quality loss.</system:String>
+    <system:String x:Key="Str_MetaClean_HintLocation">Removes only where the picture was taken. Camera and date stay. The picture is saved again, so JPG files change a tiny bit.</system:String>
+    <system:String x:Key="Str_MetaClean_Suffix">Added to the file name</system:String>
+    <system:String x:Key="Str_MetaClean_SuffixHint">photo.jpg becomes photo-clean.jpg. A number is added if the name is taken.</system:String>
+    <system:String x:Key="Str_MetaClean_SaveTo">SAVE TO</system:String>
+    <system:String x:Key="Str_MetaClean_Run">Clean</system:String>
+    <system:String x:Key="Str_MetaClean_Cancel">Cancel</system:String>
+    <system:String x:Key="Str_MetaClean_ColName">Picture</system:String>
+    <system:String x:Key="Str_MetaClean_ColFound">Found inside</system:String>
+    <system:String x:Key="Str_MetaClean_ColAfter">After</system:String>
+    <system:String x:Key="Str_MetaClean_ColStatus">Status</system:String>
+    <system:String x:Key="Str_MetaClean_ShowResult">Show the clean copy in its folder</system:String>
+    <system:String x:Key="Str_MetaClean_RemoveItem">Remove from the list</system:String>
+    <system:String x:Key="Str_MetaClean_EmptyTitle">No pictures yet</system:String>
+    <system:String x:Key="Str_MetaClean_EmptyHint">Drop photos or folders here, or use the Pictures card. You will see what each one is hiding before you clean it.</system:String>
+    <system:String x:Key="Str_MetaClean_StatusPending">Waiting</system:String>
+    <system:String x:Key="Str_MetaClean_StatusWorking">Cleaning</system:String>
+    <system:String x:Key="Str_MetaClean_StatusDone">Cleaned</system:String>
+    <system:String x:Key="Str_MetaClean_StatusSkipped">Skipped</system:String>
+    <system:String x:Key="Str_MetaClean_StatusFailed">Failed</system:String>
+    <system:String x:Key="Str_MetaClean_FilterPictures">Pictures</system:String>
+    <system:String x:Key="Str_MetaClean_FilterAll">All files</system:String>
+    <system:String x:Key="Str_MetaClean_Reading">Looking inside the pictures…</system:String>
+    <system:String x:Key="Str_MetaClean_NoneAdded">No new pictures were added.</system:String>
+    <system:String x:Key="Str_MetaClean_Added">Added {0} pictures.</system:String>
+    <system:String x:Key="Str_MetaClean_Duplicates">{0} were already in the list.</system:String>
+    <system:String x:Key="Str_MetaClean_Count">{0} pictures</system:String>
+    <system:String x:Key="Str_MetaClean_WithLocation">{0} with location</system:String>
+    <system:String x:Key="Str_MetaClean_Idle">Add pictures, choose what to remove, and press Clean.</system:String>
+    <system:String x:Key="Str_MetaClean_IdleDetail">Your originals are never changed. Clean copies are saved as new files.</system:String>
+    <system:String x:Key="Str_MetaClean_CantSave">Can't save there: </system:String>
+    <system:String x:Key="Str_MetaClean_Working">Cleaning…</system:String>
+    <system:String x:Key="Str_MetaClean_Progress">{0} of {1} done</system:String>
+    <system:String x:Key="Str_MetaClean_Canceled">Canceled. What was finished is kept.</system:String>
+    <system:String x:Key="Str_MetaClean_Finished">Finished.</system:String>
+    <system:String x:Key="Str_MetaClean_Summary">{0} cleaned, {1} skipped, {2} failed.</system:String>
+    <system:String x:Key="Str_MetaClean_SeeRows">Point at a status to see why.</system:String>
+    <system:String x:Key="Str_MetaClean_LocationsRemoved">{0} locations removed</system:String>
+    <system:String x:Key="Str_MetaClean_CleanCopies">{0} clean copies</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Input_Title">Your pictures</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Input_Text">Add photos or whole folders. Each one shows what is hidden inside: a GPS location, the camera and the date it was taken.</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Mode_Title">What to remove</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Mode_Text">Remove everything, or only the location and keep the rest. Clean copies get a short ending added to their name.</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Output_Title">Where copies go</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Output_Text">Next to the originals or in a folder you choose. Originals are never changed or replaced.</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Run_Title">Clean</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Run_Text">Starts the batch. The pills show how many photos carry a location and how many were cleaned.</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Results_Title">Results</system:String>
+    <system:String x:Key="Str_Tour_MetaClean_Results_Text">What each picture was hiding and what happened to it. Point at a status to see why one was skipped.</system:String>
+    <system:String x:Key="Str_Tool_pdf-reader_Name">PDF Reader &amp; Signer</system:String>
+    <system:String x:Key="Str_Tool_pdf-reader_Description">Read a PDF, then add your signature, text, a date or a check mark and save a signed copy</system:String>
+    <system:String x:Key="Str_PdfReader_FileHeader">THE PDF</system:String>
+    <system:String x:Key="Str_PdfReader_Open">Open a PDF…</system:String>
+    <system:String x:Key="Str_PdfReader_Password">Password</system:String>
+    <system:String x:Key="Str_PdfReader_Unlock">Unlock</system:String>
+    <system:String x:Key="Str_PdfReader_SignatureHeader">YOUR SIGNATURE</system:String>
+    <system:String x:Key="Str_PdfReader_NoSignature">No signature yet</system:String>
+    <system:String x:Key="Str_PdfReader_Draw">Draw</system:String>
+    <system:String x:Key="Str_PdfReader_Type">Type</system:String>
+    <system:String x:Key="Str_PdfReader_Picture">Picture</system:String>
+    <system:String x:Key="Str_PdfReader_Forget">Forget my signature</system:String>
+    <system:String x:Key="Str_PdfReader_SignatureHint">Draw it with the mouse, type your name, or use a photo of your signature on white paper. It is kept on this PC so you only make it once. This is a picture of a signature, not a certified digital signature.</system:String>
+    <system:String x:Key="Str_PdfReader_AddHeader">ADD TO THE PAGE</system:String>
+    <system:String x:Key="Str_PdfReader_AddSignature">Signature</system:String>
+    <system:String x:Key="Str_PdfReader_AddText">Text</system:String>
+    <system:String x:Key="Str_PdfReader_AddDate">Date</system:String>
+    <system:String x:Key="Str_PdfReader_AddCheck">Check mark</system:String>
+    <system:String x:Key="Str_PdfReader_AddHint">It lands in the middle of the page you are looking at. Drag it where you want it.</system:String>
+    <system:String x:Key="Str_PdfReader_SelectedHeader">SELECTED</system:String>
+    <system:String x:Key="Str_PdfReader_NothingSelected">Click something on the page to change its size or text. Press Delete to remove it.</system:String>
+    <system:String x:Key="Str_PdfReader_Text">Text</system:String>
+    <system:String x:Key="Str_PdfReader_Size">Size</system:String>
+    <system:String x:Key="Str_PdfReader_SizeShape">Size</system:String>
+    <system:String x:Key="Str_PdfReader_DeleteMark">Remove this from the page</system:String>
+    <system:String x:Key="Str_PdfReader_Save">Save a copy</system:String>
+    <system:String x:Key="Str_PdfReader_ZoomIn">Zoom in</system:String>
+    <system:String x:Key="Str_PdfReader_ZoomOut">Zoom out</system:String>
+    <system:String x:Key="Str_PdfReader_ZoomFit">Fit to width</system:String>
+    <system:String x:Key="Str_PdfReader_EmptyTitle">No PDF open</system:String>
+    <system:String x:Key="Str_PdfReader_EmptyHint">Open a PDF or drop one here. Then add your signature, text, a date or check marks and save a new copy.</system:String>
+    <system:String x:Key="Str_PdfReader_Opening">Opening…</system:String>
+    <system:String x:Key="Str_PdfReader_Pages">{0} pages</system:String>
+    <system:String x:Key="Str_PdfReader_CantOpen">This PDF could not be opened.</system:String>
+    <system:String x:Key="Str_PdfReader_CantOpenDetail">If it has a password, type it in the sidebar and press Unlock. Otherwise the file may be damaged.</system:String>
+    <system:String x:Key="Str_PdfReader_Idle">Open a PDF to read it, sign it or fill it in.</system:String>
+    <system:String x:Key="Str_PdfReader_IdleOpen">Add your signature, text, a date or a check mark, then save a copy.</system:String>
+    <system:String x:Key="Str_PdfReader_IdleDetail">Your original is never changed. The signed PDF is saved as a new file.</system:String>
+    <system:String x:Key="Str_PdfReader_DiscardMarks">You have marks on the open PDF that are not saved. Open another PDF anyway?</system:String>
+    <system:String x:Key="Str_PdfReader_NeedSignature">Draw, type or choose a signature first.</system:String>
+    <system:String x:Key="Str_PdfReader_DefaultText">Text</system:String>
+    <system:String x:Key="Str_PdfReader_MarksInfo">{0} marks on {1} pages, not saved yet.</system:String>
+    <system:String x:Key="Str_PdfReader_DrawTitle">Draw your signature</system:String>
+    <system:String x:Key="Str_PdfReader_TypeTitle">Type your signature</system:String>
+    <system:String x:Key="Str_PdfReader_TypeLabel">Type your name</system:String>
+    <system:String x:Key="Str_PdfReader_PictureTitle">Choose a picture of your signature</system:String>
+    <system:String x:Key="Str_PdfReader_PictureFilter">Pictures</system:String>
+    <system:String x:Key="Str_PdfReader_PictureFailed">That picture could not be used: </system:String>
+    <system:String x:Key="Str_PdfReader_Clear">Clear</system:String>
+    <system:String x:Key="Str_PdfReader_Cancel">Cancel</system:String>
+    <system:String x:Key="Str_PdfReader_Use">Use</system:String>
+    <system:String x:Key="Str_PdfReader_NotOriginal">Choose a different name: the original PDF is never replaced.</system:String>
+    <system:String x:Key="Str_PdfReader_Saving">Saving…</system:String>
+    <system:String x:Key="Str_PdfReader_Saved">Saved a signed copy.</system:String>
+    <system:String x:Key="Str_PdfReader_SaveFailed">The copy could not be saved.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Open_Title">Open a PDF</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Open_Text">Open a PDF or drop one on the page. If it has a password, type it here and press Unlock.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Signature_Title">Your signature</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Signature_Text">Draw it, type your name, or use a photo of your signature. It is kept on this PC so you only make it once.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Add_Title">Add to the page</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Add_Text">Place your signature, text, today's date or a check mark. Then drag it to the right spot.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Selected_Title">Change what you added</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Selected_Text">Click something on the page to edit its text or size, or press Delete to remove it.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Save_Title">Save a copy</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Save_Text">Writes your additions onto a new PDF. The original is never changed.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Zoom_Title">Zoom</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Zoom_Text">Zoom in and out, or fit the page to the width. Ctrl and the mouse wheel zoom too.</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Pages_Title">The pages</system:String>
+    <system:String x:Key="Str_Tour_PdfReader_Pages_Text">Scroll through the PDF. Click your additions to select them, and drag to move them.</system:String>
+    <system:String x:Key="Str_PdfReader_NoPdf">That is not a PDF.</system:String>
+    <system:String x:Key="Str_PdfReader_FilterAll">All files</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Pick_Title">Choose a tool</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Pick_Text">Ping a host, scan ports, open a TCP or UDP socket, or look at your network adapters. The options below change with your choice.</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Run_Title">Start and stop</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Run_Text">Runs the chosen tool with the options on the left. The same button stops it.</system:String>
+    <system:String x:Key="Str_Tour_NetTools_State_Title">Status</system:String>
+    <system:String x:Key="Str_Tour_NetTools_State_Text">Shows whether the tool is idle, running or finished.</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Console_Title">Console</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Console_Text">Every message from every tool, with time and source. Copy or save the lines you need.</system:String>
+    <system:String x:Key="Str_Err_ExportFailed">Export failed: {0}</system:String>
+    <system:String x:Key="Str_Err_CouldntSave">Couldn't save: {0}</system:String>
+    <system:String x:Key="Str_Err_ScanFailed">Scan failed: {0}</system:String>
+    <system:String x:Key="Str_Err_ClipboardRead">Couldn't read the clipboard: {0}</system:String>
+    <system:String x:Key="Str_Err_UndoFailed">Undo failed: {0}</system:String>
+    <system:String x:Key="Str_Err_DidntWork">That didn't work: {0}</system:String>
+    <system:String x:Key="Str_Err_CouldntCopy">Couldn't copy: {0}</system:String>
+    <system:String x:Key="Str_Err_FolderRead">Couldn't read that folder: {0}</system:String>
+    <system:String x:Key="Str_Err_ImageLoad">Couldn't load that image: {0}</system:String>
+    <system:String x:Key="Str_Err_SaveFile">Couldn't save the file: {0}</system:String>
+    <system:String x:Key="Str_Err_OpenFile">Couldn't open {0}: {1}</system:String>
+    <system:String x:Key="Str_MB_AddAFolderWith" xml:space="preserve">Add a folder with files in it first.</system:String>
+    <system:String x:Key="Str_MB_AddAtLeastOne" xml:space="preserve">Add at least one folder to search first.</system:String>
+    <system:String x:Key="Str_MB_AddAtLeastOne2" xml:space="preserve">Add at least one folder to scan first.</system:String>
+    <system:String x:Key="Str_MB_AddOrLoadAt" xml:space="preserve">Add or load at least one value first.</system:String>
+    <system:String x:Key="Str_MB_BatchGenerationFailed" xml:space="preserve">Batch generation failed: {0}</system:String>
+    <system:String x:Key="Str_MB_CanTSaveThere" xml:space="preserve">Can't save there: </system:String>
+    <system:String x:Key="Str_MB_CanTSaveTo" xml:space="preserve">Can't save to {0}: {1}.&#10;&#10;Choose another folder in Save to.</system:String>
+    <system:String x:Key="Str_MB_CanTSaveTo2" xml:space="preserve">Can't save to {0}: {1}</system:String>
+    <system:String x:Key="Str_MB_ChangeNN" xml:space="preserve">Change {0}?&#10;&#10;{1}{2}</system:String>
+    <system:String x:Key="Str_MB_ChooseADriveTo" xml:space="preserve">Choose a drive to analyze first.</system:String>
+    <system:String x:Key="Str_MB_ChooseAFolderFirst" xml:space="preserve">Choose a folder first.</system:String>
+    <system:String x:Key="Str_MB_ChooseAFolderTo" xml:space="preserve">Choose a folder to analyze first.</system:String>
+    <system:String x:Key="Str_MB_ClearAllSavedResults" xml:space="preserve">Clear all {0} saved results?</system:String>
+    <system:String x:Key="Str_MB_ConversionFailed" xml:space="preserve">Conversion failed: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldNotSaveThe" xml:space="preserve">Could not save the file: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldNotSaveThe2" xml:space="preserve">Could not save the report: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTCreate" xml:space="preserve">Couldn't create {0}: {1}</system:String>
+    <system:String x:Key="Str_MB_CouldnTDelete" xml:space="preserve">Couldn't delete "{0}": {1}</system:String>
+    <system:String x:Key="Str_MB_CouldnTExport" xml:space="preserve">Couldn't export: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTExport2" xml:space="preserve">Couldn't export: </system:String>
+    <system:String x:Key="Str_MB_CouldnTFindThis" xml:space="preserve">Couldn't find this app's executable to restart it.</system:String>
+    <system:String x:Key="Str_MB_CouldnTFinish" xml:space="preserve">Couldn't finish: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenExplorer" xml:space="preserve">Couldn't open Explorer: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenIt" xml:space="preserve">Couldn't open it: </system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe" xml:space="preserve">Couldn't open the folder.</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe2" xml:space="preserve">Couldn't open the file.</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe3" xml:space="preserve">Couldn't open the browser: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe4" xml:space="preserve">Couldn't open the browser. The driver is at https://pawnio.eu</system:String>
+    <system:String x:Key="Str_MB_CouldnTPrepareThe" xml:space="preserve">Couldn't prepare the files: </system:String>
+    <system:String x:Key="Str_MB_CouldnTReadThat" xml:space="preserve">Couldn't read that file: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTReadThe" xml:space="preserve">Couldn't read the checksum file: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTRestartAs" xml:space="preserve">Couldn't restart as administrator: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTSaveThe" xml:space="preserve">Couldn't save the CSV: </system:String>
+    <system:String x:Key="Str_MB_CouldnTSaveThe2" xml:space="preserve">Couldn't save the report: </system:String>
+    <system:String x:Key="Str_MB_CouldnTStartRecording" xml:space="preserve">Couldn't start recording: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTUseThe" xml:space="preserve">Couldn't use the quarantine folder: {0}</system:String>
+    <system:String x:Key="Str_MB_DeleteFailed" xml:space="preserve">Delete failed: {0}</system:String>
+    <system:String x:Key="Str_MB_Disable" xml:space="preserve">Disable {0}?{1}</system:String>
+    <system:String x:Key="Str_MB_ExportedToNN" xml:space="preserve">Exported {0} to:&#10;{1}{2}&#10;&#10;Open the file now?</system:String>
+    <system:String x:Key="Str_MB_ForgetAllReadingsOf" xml:space="preserve">Forget all {0:N0} readings of {1}?&#10;&#10;The drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.</system:String>
+    <system:String x:Key="Str_MB_HashingFailed" xml:space="preserve">Hashing failed: {0}</system:String>
+    <system:String x:Key="Str_MB_InGroupSGroup" xml:space="preserve">In {0} group(s) (group {1}) every copy is selected, so {2} would leave no copy behind.&#10;&#10;Continue anyway?</system:String>
+    <system:String x:Key="Str_MB_InGroupSGroup2" xml:space="preserve">In {0} group(s) (group {1}) every file is selected, so {2} would leave none of them.&#10;&#10;Continue anyway?</system:String>
+    <system:String x:Key="Str_MB_IsADriveOr" xml:space="preserve">"{0}" is a drive or a system folder. Shredding it would damage Windows or take everything on it, so it can't be added.&#10;&#10;Add the specific folders or files you want to shred instead.</system:String>
+    <system:String x:Key="Str_MB_IsNoLongerThere" xml:space="preserve">"{0}" is no longer there.</system:String>
+    <system:String x:Key="Str_MB_NoChecksumsWereFound" xml:space="preserve">No checksums were found in that file.</system:String>
+    <system:String x:Key="Str_MB_NoDamagedFilesTo" xml:space="preserve">No damaged files to move. Tick corrupted or warning files first ("Tick corrupted" ticks every damaged one).</system:String>
+    <system:String x:Key="Str_MB_NoLongerExistsRescan" xml:space="preserve">"{0}" no longer exists. Rescan to refresh.</system:String>
+    <system:String x:Key="Str_MB_NoneOfTheseNames" xml:space="preserve">None of these names change with the current settings.</system:String>
+    <system:String x:Key="Str_MB_NothingHasBeenSaved" xml:space="preserve">Nothing has been saved to {0} yet.</system:String>
+    <system:String x:Key="Str_MB_NothingToExportYet" xml:space="preserve">Nothing to export yet - click Convert All first.</system:String>
+    <system:String x:Key="Str_MB_NothingToExportYet2" xml:space="preserve">Nothing to export yet - click Generate All first.</system:String>
+    <system:String x:Key="Str_MB_NothingToExportYet3" xml:space="preserve">Nothing to export yet - run a scan first.</system:String>
+    <system:String x:Key="Str_MB_NothingWasAdded" xml:space="preserve">Nothing was added: </system:String>
+    <system:String x:Key="Str_MB_OrganizeFailed" xml:space="preserve">Organize failed: {0}</system:String>
+    <system:String x:Key="Str_MB_PasteAtLeastOne" xml:space="preserve">Paste at least one color first - one per line.</system:String>
+    <system:String x:Key="Str_MB_RemoveAllEntries" xml:space="preserve">Remove all {0:N0} entries?</system:String>
+    <system:String x:Key="Str_MB_RemoveEveryClipFrom" xml:space="preserve">Remove every clip from the playlist?</system:String>
+    <system:String x:Key="Str_MB_RenameFailed" xml:space="preserve">Rename failed: {0}</system:String>
+    <system:String x:Key="Str_MB_RunAScanFirst" xml:space="preserve">Run a scan first - there are no results to export yet.</system:String>
+    <system:String x:Key="Str_MB_SavedToNN" xml:space="preserve">Saved to:&#10;{0}{1}&#10;&#10;Open it now?</system:String>
+    <system:String x:Key="Str_MB_SmartToolsWillClose" xml:space="preserve">Smart Tools will close and reopen as administrator so it can read SMART details.&#10;&#10;Anything unsaved in other tools will be lost. Continue?</system:String>
+    <system:String x:Key="Str_MB_SomeFilesCouldnT" xml:space="preserve">Some files couldn't be undone:&#10;&#10;</system:String>
+    <system:String x:Key="Str_MB_SwitchingModesStopsWhat" xml:space="preserve">Switching modes stops what is running. Switch?</system:String>
+    <system:String x:Key="Str_MB_ThatFileIsNo" xml:space="preserve">That file is no longer there.</system:String>
+    <system:String x:Key="Str_MB_ThatFileIsToo" xml:space="preserve">That file is too large to be a checksum list.</system:String>
+    <system:String x:Key="Str_MB_ThatFileNoLonger" xml:space="preserve">That file no longer exists.</system:String>
+    <system:String x:Key="Str_MB_ThatFileNoLonger2" xml:space="preserve">That file no longer exists. Rescan to refresh the results.</system:String>
+    <system:String x:Key="Str_MB_ThatFileOrFolder" xml:space="preserve">That file or folder no longer exists. Rescan to refresh the results.</system:String>
+    <system:String x:Key="Str_MB_ThatFileOrFolder2" xml:space="preserve">That file or folder is no longer there.</system:String>
+    <system:String x:Key="Str_MB_ThatFileOrFolder3" xml:space="preserve">That file or folder no longer exists.</system:String>
+    <system:String x:Key="Str_MB_ThatFolderIsInside" xml:space="preserve">That folder is inside one of the folders being scanned, so the moved files would show up as duplicates again next scan.&#10;&#10;Move there anyway?</system:String>
+    <system:String x:Key="Str_MB_ThatFolderIsInside2" xml:space="preserve">That folder is inside one of the scanned folders, so the moved files would be found again next scan.&#10;&#10;Move there anyway?</system:String>
+    <system:String x:Key="Str_MB_ThatSTheLog" xml:space="preserve">That's the log file being followed - choose another name.</system:String>
+    <system:String x:Key="Str_MB_TheClipboardHasNo" xml:space="preserve">The clipboard has no image. Copy a screenshot or an image first.</system:String>
+    <system:String x:Key="Str_MB_TheClipboardHasNo2" xml:space="preserve">The clipboard has no text. Copy a column from Excel or a list of lines first.</system:String>
+    <system:String x:Key="Str_MB_TheExportCouldnT" xml:space="preserve">The export couldn't be saved.&#10;&#10;</system:String>
+    <system:String x:Key="Str_MB_ThePasswordDidnT" xml:space="preserve">The password didn't open any of the files. Check it (and Caps Lock) and try again.</system:String>
+    <system:String x:Key="Str_MB_ThePdfCouldnT" xml:space="preserve">The PDF couldn't be saved.&#10;&#10;{0}&#10;&#10;Check that the folder exists, you can write to it, and the file isn't open in another program.</system:String>
+    <system:String x:Key="Str_MB_ThePictureCouldnT" xml:space="preserve">The picture couldn't be saved.&#10;&#10;</system:String>
+    <system:String x:Key="Str_MB_ThereAreNoLines" xml:space="preserve">There are no lines to save yet.</system:String>
+    <system:String x:Key="Str_MB_TheReportCouldnT" xml:space="preserve">The report couldn't be saved: {0}</system:String>
+    <system:String x:Key="Str_MB_TheResultCouldnT" xml:space="preserve">The result couldn't be saved.&#10;&#10;{0}&#10;&#10;Check that the folder exists, you can write to it, and the file isn't open in another program.</system:String>
+    <system:String x:Key="Str_MB_TheScanStoppedUnexpectedly" xml:space="preserve">The scan stopped unexpectedly: {0}</system:String>
+    <system:String x:Key="Str_MB_TheseResultsWereMatched" xml:space="preserve">These results were matched by name only, so the files may have different contents.&#10;&#10;Select all copies but one anyway?</system:String>
+    <system:String x:Key="Str_MB_TheVideoCouldnT" xml:space="preserve">The video couldn't be saved.&#10;&#10;{0}&#10;&#10;Check that the folder exists, you can write to it, and there's enough free space.</system:String>
+    <system:String x:Key="Str_MB_ThisPasswordIsWeak" xml:space="preserve">This password is weak and could be guessed.&#10;&#10;Encrypt with it anyway?</system:String>
+    <system:String x:Key="Str_MB_TickAtLeastOne" xml:space="preserve">Tick at least one image to save.</system:String>
+    <system:String x:Key="Str_MB_ValidationFailed" xml:space="preserve">Validation failed: {0}</system:String>
+    <system:String x:Key="Str_Tool_screen-recorder_Name">Screen Recorder</system:String>
+    <system:String x:Key="Str_Tool_screen-recorder_Description">Record a screen, a window, or an area to an MP4, with your microphone if you like</system:String>
+    <system:String x:Key="Str_Tool_bulk-image-resizer_Name">Bulk Image Resizer</system:String>
+    <system:String x:Key="Str_Tool_bulk-image-resizer_Description">Shrink and recompress many pictures at once, with a target file size</system:String>
+    <system:String x:Key="Str_Tool_startup-apps_Name">Startup Apps</system:String>
+    <system:String x:Key="Str_Tool_startup-apps_Description">See what starts with Windows and switch each app on or off</system:String>
+    <system:String x:Key="Str_Tool_services_Name">Services</system:String>
+    <system:String x:Key="Str_Tool_services_Description">See every Windows service and start, stop, restart, or change how each one starts</system:String>
+    <system:String x:Key="Str_Tool_environment-variables_Name">Environment Variables</system:String>
+    <system:String x:Key="Str_Tool_environment-variables_Description">Edit user and system variables, and clean up the PATH folder by folder</system:String>
+    <system:String x:Key="Str_Tool_network-connections_Name">Network Connections</system:String>
+    <system:String x:Key="Str_Tool_network-connections_Description">See which apps are connected outside your PC, and to where</system:String>
+    <system:String x:Key="Str_Tool_hosts-editor_Name">Hosts File Editor</system:String>
+    <system:String x:Key="Str_Tool_hosts-editor_Description">Edit the hosts file safely: switch lines on and off, with a backup on every save</system:String>
+    <system:String x:Key="Str_Tool_jwt-decoder_Name">JWT Decoder</system:String>
+    <system:String x:Key="Str_Tool_jwt-decoder_Description">Read a token's header, payload, and expiry. Offline, and the signature is not checked</system:String>
+    <system:String x:Key="Str_Tool_data-formatter_Name">JSON / YAML / XML Formatter</system:String>
+    <system:String x:Key="Str_Tool_data-formatter_Description">Format, minify, validate, and convert between JSON, YAML, and XML</system:String>
+    <system:String x:Key="Str_Tool_clipboard-history_Name">Clipboard History</system:String>
+    <system:String x:Key="Str_Tool_clipboard-history_Description">Everything you copied, searchable, with pins. Saved only if you turn it on</system:String>
+    <system:String x:Key="Str_Tool_translate_Name">Translate</system:String>
+    <system:String x:Key="Str_Tool_translate_Description">Translate text offline between English and Spanish</system:String>
+    <system:String x:Key="Str_Dlg_VideoReplay">Video Replay</system:String>
+    <system:String x:Key="Str_Dlg_ImageViewer">Image Viewer</system:String>
+    <system:String x:Key="Str_Dlg_SmartHistory">SMART history</system:String>
+    <system:String x:Key="Str_Dlg_NetworkTools">Network Tools</system:String>
+    <system:String x:Key="Str_Dlg_Delete">Delete</system:String>
+    <system:String x:Key="Str_Dlg_DeletePermanently">Delete permanently</system:String>
+    <system:String x:Key="Str_Dlg_ExportFailed">Export failed</system:String>
+    <system:String x:Key="Str_Dlg_RemoveAllFiles">Remove all files</system:String>
+    <system:String x:Key="Str_Dlg_ExportComplete">Export complete</system:String>
+    <system:String x:Key="Str_MB_FfmpegNeededVideo">Converting videos needs ffmpeg.exe in {0}. It wasn't found there.</system:String>
+    <system:String x:Key="Str_MB_FfmpegNeededAudio">Converting audio needs ffmpeg.exe in {0}. It wasn't found there.</system:String>
+    <system:String x:Key="Str_MB_QuarantineMoveOne" xml:space="preserve">Move {0:N0} file to&#10;{1}?&#10;&#10;Nothing is deleted. A log in that folder lists where each file came from, so you can put it back.</system:String>
+    <system:String x:Key="Str_MB_QuarantineMoveMany" xml:space="preserve">Move {0:N0} files to&#10;{1}?&#10;&#10;Nothing is deleted. A log in that folder lists where each file came from, so you can put it back.</system:String>
+    <system:String x:Key="Str_MB_MovedToQuarantineOne">Moved {0:N0} file to quarantine</system:String>
+    <system:String x:Key="Str_MB_MovedToQuarantineMany">Moved {0:N0} files to quarantine</system:String>
+    <system:String x:Key="Str_MB_QuarantineFailedSuffix" xml:space="preserve"> · {0:N0} couldn't be moved</system:String>
+    <system:String x:Key="Str_MB_FilesCouldntBeMoved" xml:space="preserve">{0:N0} file(s) couldn't be moved:&#10;</system:String>
+    <system:String x:Key="Str_MB_CqMoveOne" xml:space="preserve">Move {0:N0} file ({1}) to&#10;{2}?&#10;&#10;Each original is removed only after its copy has been checked against it. You can undo the move afterwards.</system:String>
+    <system:String x:Key="Str_MB_CqMoveMany" xml:space="preserve">Move {0:N0} files ({1}) to&#10;{2}?&#10;&#10;Each original is removed only after its copy has been checked against it. You can undo the move afterwards.</system:String>
+    <system:String x:Key="Str_MB_CqPutBackOne" xml:space="preserve">Put {0:N0} file back where it came from?&#10;&#10;It is verified on the way, like the original move.</system:String>
+    <system:String x:Key="Str_MB_CqPutBackMany" xml:space="preserve">Put {0:N0} files back where they came from?&#10;&#10;They are verified on the way, like the original move.</system:String>
+    <system:String x:Key="Str_MB_AndMoreSeeFailed" xml:space="preserve">&#10;&#10;…and {0} more (see the Failed rows in the preview).</system:String>
+    <system:String x:Key="Str_MB_OrgFailedOne" xml:space="preserve">{0} file couldn't be moved and stayed where it was:&#10;&#10;{1}</system:String>
+    <system:String x:Key="Str_MB_OrgFailedMany" xml:space="preserve">{0} files couldn't be moved and stayed where they were:&#10;&#10;{1}</system:String>
+    <system:String x:Key="Str_MB_OrgUndoMoveOne">Move the {0:N0} file from the run on {1:g} back?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoMoveMany">Move the {0:N0} files from the run on {1:g} back?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoCopyOne">Remove the copy of the {0:N0} file from the run on {1:g}?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoCopyMany">Remove the copies of the {0:N0} files from the run on {1:g}?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoMovedNote">Files go back to where they were, and the folders that run created are removed if empty.</system:String>
+    <system:String x:Key="Str_MB_OrgUndoCopiedNote">Only copies that haven't been changed since are removed.</system:String>
+    <system:String x:Key="Str_MB_UndoOrganizeTitle">Undo Organize</system:String>
+    <system:String x:Key="Str_MB_UndoRenameTitle">Undo Rename</system:String>
+    <system:String x:Key="Str_MB_RenUndoOne">Give the {0:N0} file renamed on {1:g} its old name back?</system:String>
+    <system:String x:Key="Str_MB_RenUndoMany">Give the {0:N0} files renamed on {1:g} their old names back?</system:String>
+    <system:String x:Key="Str_MB_AndNMore" xml:space="preserve">&#10;...and {0} more</system:String>
+    <system:String x:Key="Str_MB_AndNMoreDot" xml:space="preserve">&#10;...and {0} more.</system:String>
+    <system:String x:Key="Str_MB_NothingDeleted">Nothing was deleted.</system:String>
+    <system:String x:Key="Str_MB_MovedToBin">Moved {0:N0} item(s) to the Recycle Bin · {1}</system:String>
+    <system:String x:Key="Str_MB_DeletedFreed">Deleted {0:N0} item(s) · {1} freed</system:String>
+    <system:String x:Key="Str_MB_CouldntDeleteItems" xml:space="preserve">Couldn't delete {0} item(s):&#10;&#10;{1}{2}</system:String>
+    <system:String x:Key="Str_AudioTrimmer_MAAac">M4A (AAC)</system:String>
+    <system:String x:Key="Str_AudioTrimmer_OggVorbis">OGG Vorbis</system:String>
+    <system:String x:Key="Str_AudioTrimmer_Opus">Opus</system:String>
+    <system:String x:Key="Str_LoudnessMeter_TakeThisOffThe">Take this off the list</system:String>
+    <system:String x:Key="Str_LoudnessMeter_BringTheWholeFile">Bring the whole file to a loudness (LUFS) - what streaming services measure</system:String>
+    <system:String x:Key="Str_LoudnessMeter_OnlyRaiseOrLower">Only raise or lower the loudest point to the ceiling below</system:String>
+    <system:String x:Key="Str_LoudnessMeter_AimFor">Aim for</system:String>
+    <system:String x:Key="Str_LoudnessMeter_HighestPeakAllowedDbtp">Highest peak allowed (dBTP)</system:String>
+    <system:String x:Key="Str_LoudnessMeter_ChangingTheTargetOnly">Changing the target only re-judges what was measured - nothing is read again.</system:String>
+    <system:String x:Key="Str_LoudnessMeter_Copies">COPIES</system:String>
+    <system:String x:Key="Str_LoudnessMeter_QualityOfMpM">Quality of MP3 / M4A / OGG copies (kbps)</system:String>
+    <system:String x:Key="Str_LoudnessMeter_SaveCopiesTo">Save copies to</system:String>
+    <system:String x:Key="Str_LoudnessMeter_MeasuringOnlyReadsYour">Measuring only reads your files. Normalizing writes a new file named 'name (normalized)' and never changes or replaces the original; the copy is measured again so you see what you really got. Tags are kept, cover art is not.</system:String>
+    <system:String x:Key="Str_LoudnessMeter_ReadEveryFileAnd">Read every file and report its loudness (nothing is written)</system:String>
+    <system:String x:Key="Str_LoudnessMeter_Measure">Measure</system:String>
+    <system:String x:Key="Str_LoudnessMeter_WriteANormalizedCopy">Write a normalized copy of every file (originals stay untouched)</system:String>
+    <system:String x:Key="Str_LoudnessMeter_NormalizeCopies">Normalize copies</system:String>
+    <system:String x:Key="Str_LoudnessMeter_FilesInTheList">Files in the list</system:String>
+    <system:String x:Key="Str_LoudnessMeter_WithinLuOfThe">Within 1 LU of the target</system:String>
+    <system:String x:Key="Str_LoudnessMeter_LouderOrQuieterThan">Louder or quieter than the target</system:String>
+    <system:String x:Key="Str_LoudnessMeter_TruePeakAboveThe">True peak above the ceiling - may distort</system:String>
+    <system:String x:Key="Str_LoudnessMeter_NormalizedCopiesWritten">Normalized copies written</system:String>
+    <system:String x:Key="Str_LoudnessMeter_HoverAFailedRow">Hover a failed row for the reason</system:String>
+    <system:String x:Key="Str_LoudnessMeter_CopyTheReportCsv">Copy the report (CSV) to the clipboard</system:String>
+    <system:String x:Key="Str_LoudnessMeter_SaveTheReportAs">Save the report as a CSV file</system:String>
+    <system:String x:Key="Str_LoudnessMeter_EmptyTheListNo">Empty the list (no files are touched)</system:String>
+    <system:String x:Key="Str_LoudnessMeter_DeleteTakesTheSelected">Delete takes the selected files off the list (the files themselves are never touched). Right-click for more.</system:String>
+    <system:String x:Key="Str_LoudnessMeter_TruePeak">True peak</system:String>
+    <system:String x:Key="Str_LoudnessMeter_Range">Range</system:String>
+    <system:String x:Key="Str_LoudnessMeter_VsTarget">Vs target</system:String>
+    <system:String x:Key="Str_LoudnessMeter_Verdict">Verdict</system:String>
+    <system:String x:Key="Str_ContrastChecker_QuickPairs">QUICK PAIRS</system:String>
+    <system:String x:Key="Str_ContrastChecker_NearBlackOnWhite">Near-black on white</system:String>
+    <system:String x:Key="Str_ContrastChecker_WhiteOnNearBlack">White on near-black</system:String>
+    <system:String x:Key="Str_ContrastChecker_GreyOnLightGrey">Grey on light grey</system:String>
+    <system:String x:Key="Str_ContrastChecker_WhiteOnBlue">White on blue</system:String>
+    <system:String x:Key="Str_ContrastChecker_DarkOnYellow">Dark on yellow</system:String>
+    <system:String x:Key="Str_ContrastChecker_WhiteOnRed">White on red</system:String>
+    <system:String x:Key="Str_ContrastChecker_WhiteOnGreen">White on green</system:String>
+    <system:String x:Key="Str_ContrastChecker_BrownOnCream">Brown on cream</system:String>
+    <system:String x:Key="Str_ContrastChecker_ClickAPairTo">Click a pair to try it.</system:String>
+    <system:String x:Key="Str_ContrastChecker_WhatPasses">WHAT PASSES</system:String>
+    <system:String x:Key="Str_ContrastChecker_NormalTextNeedsAa">Normal text needs 4.5 : 1 (AA) or 7 : 1 (AAA). Large text (18 pt, or 14 pt bold) needs 3 : 1 or 4.5 : 1. Icons, borders and form fields need 3 : 1.</system:String>
+    <system:String x:Key="Str_ContrastChecker_TextOnBackground">text on background</system:String>
+    <system:String x:Key="Str_ContrastChecker_ClickToOpenThe">Click to open the color window</system:String>
+    <system:String x:Key="Str_ContrastChecker_SwapTheTwoColors">Swap the two colors</system:String>
+    <system:String x:Key="Str_ContrastChecker_ContrastRatio">CONTRAST RATIO</system:String>
+    <system:String x:Key="Str_ContrastChecker_LivePreview">Live preview</system:String>
+    <system:String x:Key="Str_ContrastChecker_LargeTextSample">Large text sample</system:String>
+    <system:String x:Key="Str_ContrastChecker_NormalTextSampleThe">Normal text sample: the quick brown fox jumps over the lazy dog.</system:String>
+    <system:String x:Key="Str_ContrastChecker_SmallPrintSampleThe">Small print sample 0123456789 - the smallest text is the hardest to read.</system:String>
+    <system:String x:Key="Str_ContrastChecker_AButtonOrField">A button or field outline</system:String>
+    <system:String x:Key="Str_ContrastChecker_WcagChecks">WCAG checks</system:String>
+    <system:String x:Key="Str_ContrastChecker_ClosestTextColorThat">CLOSEST TEXT COLOR THAT PASSES</system:String>
+    <system:String x:Key="Str_ContrastChecker_UseIt">Use it</system:String>
+    <system:String x:Key="Str_ContrastChecker_OnlyTheLightnessOf">Only the lightness of the text color changes, so the hue stays the same.</system:String>
+    <system:String x:Key="Str_CsvJson_CsvJson">CSV → JSON</system:String>
+    <system:String x:Key="Str_CsvJson_JsonCsv">JSON → CSV</system:String>
+    <system:String x:Key="Str_CsvJson_DetectAutomatically">Detect automatically</system:String>
+    <system:String x:Key="Str_CsvJson_Comma">Comma ( , )</system:String>
+    <system:String x:Key="Str_CsvJson_Semicolon">Semicolon ( ; )</system:String>
+    <system:String x:Key="Str_CsvJson_Pipe">Pipe ( | )</system:String>
+    <system:String x:Key="Str_CsvJson_FirstRowIsThe">First row is the header</system:String>
+    <system:String x:Key="Str_CsvJson_KeepNumbersAndTrue">Keep numbers and true/false</system:String>
+    <system:String x:Key="Str_CsvJson_NumbersLikeStayText">Numbers like 007 stay text so IDs and zip codes keep their zeros.</system:String>
+    <system:String x:Key="Str_CsvJson_PrettyJsonIndented">Pretty JSON (indented)</system:String>
+    <system:String x:Key="Str_CsvJson_PasteOrOpenSomething">Paste or open something to convert</system:String>
+    <system:String x:Key="Str_HashVerifier_Crc">CRC32</system:String>
+    <system:String x:Key="Str_EncodeDecode_Utf">UTF-16</system:String>
+    <system:String x:Key="Str_EncodeDecode_LatinIso">Latin-1 (ISO-8859-1)</system:String>
+    <system:String x:Key="Str_LogViewer_LogFileLog">Log file (.log)</system:String>
+    <system:String x:Key="Str_MarkdownHtmlEditor_Markdown">Markdown</system:String>
+    <system:String x:Key="Str_CopyQueue_TakeThisOffThe">Take this off the queue</system:String>
+    <system:String x:Key="Str_CopyQueue_FilesAndFoldersTo">Files and folders to copy</system:String>
+    <system:String x:Key="Str_CopyQueue_CopyTo">Copy to</system:String>
+    <system:String x:Key="Str_CopyQueue_MoveTo">Move to</system:String>
+    <system:String x:Key="Str_CopyQueue_CopyKeepTheOriginals">Copy - keep the originals</system:String>
+    <system:String x:Key="Str_CopyQueue_MoveRemoveEachOriginal">Move - remove each original after its copy is checked</system:String>
+    <system:String x:Key="Str_CopyQueue_CopyKeepsTheOriginals">Copy keeps the originals. Move removes each original only after its copy is checked.</system:String>
+    <system:String x:Key="Str_CopyQueue_IfADifferentFile">If a different file has the same name</system:String>
+    <system:String x:Key="Str_CopyQueue_KeepBoth">Keep both</system:String>
+    <system:String x:Key="Str_CopyQueue_KeepBothAdds">Keep both (adds ' (2)')</system:String>
+    <system:String x:Key="Str_CopyQueue_SkipIt">Skip it</system:String>
+    <system:String x:Key="Str_CopyQueue_VerifyEveryCopy">Verify every copy</system:String>
+    <system:String x:Key="Str_CopyQueue_ComparesEachCopyTo">Compares each copy to its original (SHA-256) before it counts. Moves are always verified.</system:String>
+    <system:String x:Key="Str_CopyQueue_NothingIsEverOverwritten">Nothing is ever overwritten, and an original is only removed after its copy has been proven identical. Stop or a crash leaves the originals where they are. If the app closes mid-run, the queue comes back next time and files already done are recognised and skipped. Folders are copied with their empty subfolders; a move leaves the emptied source folders in place.</system:String>
+    <system:String x:Key="Str_CopyQueue_CopyOrMoveEverything">Copy or move everything in the queue</system:String>
+    <system:String x:Key="Str_CopyQueue_UndoTheLastMove">Undo the last move</system:String>
+    <system:String x:Key="Str_CopyQueue_ShareOfTheData">Share of the data copied and verified so far</system:String>
+    <system:String x:Key="Str_CopyQueue_AddFilesOrFolders">Add files or folders to start.</system:String>
+    <system:String x:Key="Str_CopyQueue_FilesInTheQueue">Files in the queue</system:String>
+    <system:String x:Key="Str_CopyQueue_CopiedOrMoved">Copied or moved</system:String>
+    <system:String x:Key="Str_CopyQueue_ComparedToTheOriginal">Compared to the original, byte for byte</system:String>
+    <system:String x:Key="Str_CopyQueue_AnIdenticalFileWas">An identical file was already at the destination</system:String>
+    <system:String x:Key="Str_CopyQueue_SkippedBecauseADifferent">Skipped because a different file had the same name</system:String>
+    <system:String x:Key="Str_CopyQueue_EmptyTheQueueNo">Empty the queue (no files are touched)</system:String>
+    <system:String x:Key="Str_CopyQueue_AddFilesOrFolders2">Add files or folders</system:String>
+    <system:String x:Key="Str_CopyQueue_DropThemOnThe">Drop them on the left, pick where they go, then press Start.</system:String>
+    <system:String x:Key="Str_FolderTree_FolderToExport">Folder to export</system:String>
+    <system:String x:Key="Str_FolderTree_TextTree">Text tree</system:String>
+    <system:String x:Key="Str_FolderTree_LikeTheTreeCommand">├── like the tree command</system:String>
+    <system:String x:Key="Str_FolderTree_ANestedListFor">A nested list for READMEs and wikis</system:String>
+    <system:String x:Key="Str_FolderTree_NestedObjectsForScripts">Nested objects for scripts</system:String>
+    <system:String x:Key="Str_FolderTree_OneRowPerItem">One row per item, opens in Excel</system:String>
+    <system:String x:Key="Str_FolderTree_WhatToList">WHAT TO LIST</system:String>
+    <system:String x:Key="Str_FolderTree_HowDeep">How deep</system:String>
+    <system:String x:Key="Str_FolderTree_AllLevels">All levels</system:String>
+    <system:String x:Key="Str_FolderTree_Level">1 level</system:String>
+    <system:String x:Key="Str_FolderTree_Levels">2 levels</system:String>
+    <system:String x:Key="Str_FolderTree_Levels2">3 levels</system:String>
+    <system:String x:Key="Str_FolderTree_Levels3">4 levels</system:String>
+    <system:String x:Key="Str_FolderTree_Levels4">5 levels</system:String>
+    <system:String x:Key="Str_FolderTree_IncludeFiles">Include files</system:String>
+    <system:String x:Key="Str_FolderTree_ShowSizes">Show sizes</system:String>
+    <system:String x:Key="Str_FolderTree_ShowModifiedDates">Show modified dates</system:String>
+    <system:String x:Key="Str_FolderTree_IncludeHiddenAndSystem">Include hidden and system items</system:String>
+    <system:String x:Key="Str_FolderTree_SkipGitNodeModules">Skip .git, node_modules, bin, obj</system:String>
+    <system:String x:Key="Str_FolderTree_ThisOnlyReadsYour">This only reads your folder - nothing in it is changed. Links are shown but not followed, folders that can't be opened are marked, and saving never replaces an earlier export (a taken name gets ' (2)').</system:String>
+    <system:String x:Key="Str_FolderTree_ReadTheFolderAnd">Read the folder and build the tree</system:String>
+    <system:String x:Key="Str_FolderTree_BuildTree">Build tree</system:String>
+    <system:String x:Key="Str_FolderTree_ChooseAFolderTo">Choose a folder to start.</system:String>
+    <system:String x:Key="Str_FolderTree_Tree">Tree</system:String>
+    <system:String x:Key="Str_FolderTree_FoldersListed">Folders listed</system:String>
+    <system:String x:Key="Str_FolderTree_FilesListed">Files listed</system:String>
+    <system:String x:Key="Str_FolderTree_TotalSizeOfThe">Total size of the files</system:String>
+    <system:String x:Key="Str_FolderTree_FoldersThatCouldNot">Folders that could not be opened (marked 'no access')</system:String>
+    <system:String x:Key="Str_FolderTree_CopyTheTreeTo">Copy the tree to the clipboard</system:String>
+    <system:String x:Key="Str_FolderTree_SaveTheTreeTo">Save the tree to a file</system:String>
+    <system:String x:Key="Str_FolderTree_PickAFolder">Pick a folder</system:String>
+    <system:String x:Key="Str_FolderTree_DropAFolderOn">Drop a folder on the left, choose a format, then press Build tree.</system:String>
+    <system:String x:Key="Str_BarcodeGenerator_JpgSmallerButCan">JPG - smaller, but can soften bar edges</system:String>
+    <system:String x:Key="Str_BarcodeGenerator_SvgTrueVectorBars">SVG - true vector bars, ideal for print</system:String>
+    <system:String x:Key="Str_BarcodeGenerator_PdfLosslessPrintReady">PDF - lossless, print-ready</system:String>
+    <system:String x:Key="Str_IdGenerator_UuidVRandom">UUID v4 (random)</system:String>
+    <system:String x:Key="Str_IdGenerator_UuidVSortedBy">UUID v7 (sorted by time)</system:String>
+    <system:String x:Key="Str_IdGenerator_UlidSortedByTime">ULID (sorted by time)</system:String>
+    <system:String x:Key="Str_IdGenerator_RandomHex">Random hex</system:String>
+    <system:String x:Key="Str_IdGenerator_LoremIpsum">Lorem ipsum</system:String>
+    <system:String x:Key="Str_IdGenerator_HowMany">How many (1-1000)</system:String>
+    <system:String x:Key="Str_IdGenerator_BytesPerValue">Bytes per value (1-128)</system:String>
+    <system:String x:Key="Str_IdGenerator_Paragraphs">Paragraphs (1-50)</system:String>
+    <system:String x:Key="Str_IdGenerator_UpperCase">Upper case</system:String>
+    <system:String x:Key="Str_IdGenerator_RemoveHyphens">Remove hyphens</system:String>
+    <system:String x:Key="Str_IdGenerator_SaveToAText">Save to a text file</system:String>
+    <system:String x:Key="Str_IdGenerator_CopyEverything">Copy everything</system:String>
+    <system:String x:Key="Str_IdGenerator_GenerateAgain">Generate again</system:String>
+    <system:String x:Key="Str_IdGenerator_Values">Values</system:String>
+    <system:String x:Key="Str_MockData_Sql">SQL</system:String>
+    <system:String x:Key="Str_QrGenerator_JpgSmallerButCan">JPG - smaller, but can soften edges</system:String>
+    <system:String x:Key="Str_QrGenerator_SvgTrueVectorSquares">SVG - true vector squares, sharp at any print size</system:String>
+    <system:String x:Key="Str_AudioOutputTest_ListeningWith">LISTENING WITH</system:String>
+    <system:String x:Key="Str_AudioOutputTest_Speakers">Speakers</system:String>
+    <system:String x:Key="Str_AudioOutputTest_SpeakersOneTilePer">Speakers: one tile per channel, as before</system:String>
+    <system:String x:Key="Str_AudioOutputTest_Headphones">Headphones</system:String>
+    <system:String x:Key="Str_AudioOutputTest_WiredHeadphonesJackOr">Wired headphones (jack or USB): the picture fills left and right</system:String>
+    <system:String x:Key="Str_AudioOutputTest_Earphones">Earphones</system:String>
+    <system:String x:Key="Str_AudioOutputTest_EarphonesOrEarbuds">Earphones or earbuds</system:String>
+    <system:String x:Key="Str_AudioOutputTest_Headset">Headset</system:String>
+    <system:String x:Key="Str_AudioOutputTest_AHeadsetWithA">A headset with a microphone</system:String>
+    <system:String x:Key="Str_AudioOutputTest_WithTwoChannelsHeadphones">With two channels, headphones, earphones and headsets get a picture whose left and right sides fill with the sound each side plays.</system:String>
+    <system:String x:Key="Str_AudioOutputTest_OutputLevel">OUTPUT LEVEL</system:String>
+    <system:String x:Key="Str_BatteryHealth_BatteryHealth">BATTERY HEALTH</system:String>
+    <system:String x:Key="Str_BatteryHealth_Health">HEALTH</system:String>
+    <system:String x:Key="Str_BatteryHealth_Actions">ACTIONS</system:String>
+    <system:String x:Key="Str_BatteryHealth_ReadTheBatteryAgain">Read the battery again</system:String>
+    <system:String x:Key="Str_BatteryHealth_MakeWindowsOwnDetailed">Make Windows' own detailed battery report and open it</system:String>
+    <system:String x:Key="Str_BatteryHealth_WindowsBatteryReport">Windows battery report</system:String>
+    <system:String x:Key="Str_BatteryHealth_AboutTheNumbers">ABOUT THE NUMBERS</system:String>
+    <system:String x:Key="Str_BatteryHealth_HealthIsTheBattery">Health is the battery's full-charge capacity compared with the capacity it was designed for. Some laptops don't report every value. 80 % or more is normal wear; under 60 % is worth a replacement.</system:String>
+    <system:String x:Key="Str_BatteryHealth_NoBatteryFound">No battery found</system:String>
+    <system:String x:Key="Str_BatteryHealth_ThisPcDoesnT">This PC doesn't report a battery - that is normal for a desktop.</system:String>
+    <system:String x:Key="Str_GameController_ControllerType">CONTROLLER TYPE</system:String>
+    <system:String x:Key="Str_GameController_XboxXboxAndOther">Xbox, Xbox 360 and other Xbox-style pads</system:String>
+    <system:String x:Key="Str_GameController_Xbox">Xbox</system:String>
+    <system:String x:Key="Str_GameController_DualshockDualsenseAndOther">DualShock, DualSense and other PlayStation pads</system:String>
+    <system:String x:Key="Str_GameController_Playstation">PlayStation</system:String>
+    <system:String x:Key="Str_GameController_XboxEliteStylePads">Xbox Elite-style pads and any pad with paddles, back buttons or other extra buttons</system:String>
+    <system:String x:Key="Str_GameController_ExtraButtons">Extra buttons</system:String>
+    <system:String x:Key="Str_GameController_AnyOtherGamepadOr">Any other gamepad or joystick</system:String>
+    <system:String x:Key="Str_GameController_Generic">Generic</system:String>
+    <system:String x:Key="Str_MicTest_MicrophoneType">MICROPHONE TYPE</system:String>
+    <system:String x:Key="Str_MicTest_Stand">Stand</system:String>
+    <system:String x:Key="Str_MicTest_ADeskOrStand">A desk or stand microphone</system:String>
+    <system:String x:Key="Str_MicTest_Handheld">Handheld</system:String>
+    <system:String x:Key="Str_MicTest_AHandheldOrStudio">A handheld or studio microphone</system:String>
+    <system:String x:Key="Str_MicTest_AHeadsetWithA">A headset with a boom microphone</system:String>
+    <system:String x:Key="Str_MicTest_Earbuds">Earbuds</system:String>
+    <system:String x:Key="Str_MicTest_EarphonesWithAnIn">Earphones with an in-line or built-in microphone</system:String>
+    <system:String x:Key="Str_MicTest_OnlyChangesThePicture">Only changes the picture that fills with your voice. It does not change how the microphone is measured.</system:String>
+    <system:String x:Key="Str_MicTest_MicrophoneLevel">MICROPHONE LEVEL</system:String>
+    <system:String x:Key="Str_IconMaker_ChooseAPicture">Choose a picture</system:String>
+    <system:String x:Key="Str_IconMaker_OrDropAPicture">Or drop a picture anywhere on this page. PNG, JPG, BMP, GIF, TIFF or ICO.</system:String>
+    <system:String x:Key="Str_IconMaker_Fill">Fill</system:String>
+    <system:String x:Key="Str_IconMaker_WindowsPicksTheBest">Windows picks the best size for each place it shows the icon. 16, 32, 48 and 256 cover most needs.</system:String>
+    <system:String x:Key="Str_IconMaker_Zoom">ZOOM</system:String>
+    <system:String x:Key="Str_IconMaker_TurnTheMouseWheel">Turn the mouse wheel over the icons to zoom in and out. Double-click an icon, or press Reset, to go back to real size.</system:String>
+    <system:String x:Key="Str_IconMaker_SaveFaviconIcoThe">Save favicon.ico, the PNG sizes websites ask for, a manifest and the HTML lines</system:String>
+    <system:String x:Key="Str_IconMaker_SaveFaviconSet">Save favicon set</system:String>
+    <system:String x:Key="Str_IconMaker_SourcePicture">SOURCE PICTURE</system:String>
+    <system:String x:Key="Str_IconMaker_NoPictureYet">No picture yet</system:String>
+    <system:String x:Key="Str_IconMaker_ChooseOrDropA">Choose or drop a picture to see it at every icon size.</system:String>
+    <system:String x:Key="Str_IconMaker_SaveThisSizeAs">Save this size as a PNG</system:String>
+    <system:String x:Key="Str_IconMaker_BackToRealSize">Back to real size</system:String>
+    <system:String x:Key="Str_IconMaker_YouWillSeeIt">You will see it at every icon size here, each in its own card, exactly as it will be saved.</system:String>
+    <system:String x:Key="Str_MediaHub_Mixed">Mixed</system:String>
+    <system:String x:Key="Str_MediaHub_PicturesVideosAndMusic">Pictures, videos and music in one queue</system:String>
+    <system:String x:Key="Str_MediaHub_Photos">Photos</system:String>
+    <system:String x:Key="Str_MediaHub_PictureViewerZoomRotate">Picture viewer: zoom, rotate, slideshow, thumbnails, save as</system:String>
+    <system:String x:Key="Str_MediaHub_VideoPlayerForAlmost">Video player for almost any format, with playlists</system:String>
+    <system:String x:Key="Str_MediaHub_AudioPlayerWithThe">Audio player with the level visualizer</system:String>
+    <system:String x:Key="Str_MediaViewer_NPPgupPgdn" xml:space="preserve">N P  PgUp PgDn</system:String>
+    <system:String x:Key="Str_Metronome_Beat">BEAT</system:String>
+    <system:String x:Key="Str_Metronome_BeatsPerBar">Beats per bar</system:String>
+    <system:String x:Key="Str_Metronome_AccentTheFirstBeat">Accent the first beat</system:String>
+    <system:String x:Key="Str_Metronome_SpaceStartsAndStops">Space starts and stops. Up and Down change the tempo by 1; hold Ctrl for 10.</system:String>
+    <system:String x:Key="Str_Metronome_SlowerDownArrow">Slower (Down arrow)</system:String>
+    <system:String x:Key="Str_Metronome_BeatsPerMinute">BEATS PER MINUTE</system:String>
+    <system:String x:Key="Str_Metronome_FasterUpArrow">Faster (Up arrow)</system:String>
+    <system:String x:Key="Str_Metronome_TapAlongToThe">Tap along to the beat to set the tempo</system:String>
+    <system:String x:Key="Str_Metronome_TapTempo">Tap tempo</system:String>
+    <system:String x:Key="Str_Metronome_Tempo">Tempo</system:String>
+    <system:String x:Key="Str_Metronome_CommonTempos">COMMON TEMPOS</system:String>
+    <system:String x:Key="Str_Metronome_Largo">Largo 50</system:String>
+    <system:String x:Key="Str_Metronome_Adagio">Adagio 70</system:String>
+    <system:String x:Key="Str_Metronome_Andante">Andante 90</system:String>
+    <system:String x:Key="Str_Metronome_Moderato">Moderato 110</system:String>
+    <system:String x:Key="Str_Metronome_Allegro">Allegro 130</system:String>
+    <system:String x:Key="Str_Metronome_Vivace">Vivace 168</system:String>
+    <system:String x:Key="Str_Metronome_Presto">Presto 190</system:String>
+    <system:String x:Key="Str_SubnetCalculator_SplitIntoPrefixFor">Split into prefix (for example 26)</system:String>
+    <system:String x:Key="Str_SubnetCalculator_SplittingAIntoGives">Splitting a /24 into /26 gives 4 equal subnets.</system:String>
+    <system:String x:Key="Str_SubnetCalculator_CopyEverythingShown">Copy everything shown</system:String>
+    <system:String x:Key="Str_SubnetCalculator_Network">NETWORK</system:String>
+    <system:String x:Key="Str_SubnetCalculator_UsableHosts">USABLE HOSTS</system:String>
+    <system:String x:Key="Str_SubnetCalculator_FirstLastUsable">FIRST - LAST USABLE</system:String>
+    <system:String x:Key="Str_SubnetCalculator_Subnets">Subnets</system:String>
+    <system:String x:Key="Str_SubnetCalculator_TypeAPrefixOr">Type a prefix (or click one) in the sidebar to split the network.</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Connected">Connected</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_LookingForAWi">Looking for a Wi-Fi adapter...</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Nearby">Nearby</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_NetworksYourPcCan">Networks your PC can hear right now</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_NetworksWindowsRemembers">Networks Windows remembers</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_ChannelGraphFor">Channel graph for</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_ScanAgainEverySeconds">Scan again every 5 seconds</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_ThisOnlyListensIt">This only listens: it never connects, changes or sends anything. The tall hills on the graph are the strongest networks; hills that overlap share the air and slow each other down - pick the green channel. Windows must allow Location access for desktop apps, or it hides nearby networks. Saved passwords are shown only when you ask, and Windows may need an administrator for some.</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_LookForNetworksNow">Look for networks now</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_PressScanToListen">Press Scan to listen for networks.</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Networks">Networks</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_AccessPointsHeardOne">Access points heard (one network can have several)</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_TheLeastCrowdedChannel">The least crowded channel on the band shown in the graph</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_TheChannelYourConnection">The channel your connection uses</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_CopyTheListCsv">Copy the list (CSV) to the clipboard</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_OpenLocationSettings">Open Location settings</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Channel">Channel</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Band">Band</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Security">Security</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_AccessPoint">Access point</system:String>
+    <system:String x:Key="Str_WifiAnalyzer_Connects">Connects</system:String>
+    <system:String x:Key="Str_ProcessKiller_Pid">PID</system:String>
+    <system:String x:Key="Str_ImageToPixel_PixelsAcross">Pixels across (4 - 256)</system:String>
+    <system:String x:Key="Str_ImageToPixel_NumberOfColorsAll">Number of colors (2 - 64, 0 = all)</system:String>
+    <system:String x:Key="Str_ImageToPixel_DitherSmootherGradients">Dither (smoother gradients)</system:String>
+    <system:String x:Key="Str_ImageToPixel_MixesNeighbouringPixelsSo">Mixes neighbouring pixels so a few colors can fake the colors in between.</system:String>
+    <system:String x:Key="Str_ImageToPixel_MakeEachPixelThis">Make each pixel this many pixels wide</system:String>
+    <system:String x:Key="Str_ImageToPixel_AddToEachFile">Add to each file name</system:String>
+    <system:String x:Key="Str_ImageToPixel_SavePicturesTo">Save pictures to</system:String>
+    <system:String x:Key="Str_ImageToPixel_OpenTheFolderWith">Open the folder with the saved pictures</system:String>
+    <system:String x:Key="Str_ImageToPixel_SaveThePictureYou">Save the picture you are looking at, wherever you like</system:String>
+    <system:String x:Key="Str_ImageToPixel_SaveThisOne">Save this one</system:String>
+    <system:String x:Key="Str_ImageToPixel_MakePixelArtFrom">Make pixel art from every picture in the list and save them in the folder chosen on the left</system:String>
+    <system:String x:Key="Str_ImageToPixel_PixelArt">PIXEL ART</system:String>
+    <system:String x:Key="Str_ImageToPixel_AddPicturesOrFolders">Add pictures or folders on the left to start.</system:String>
+    <system:String x:Key="Str_ImageToPixel_PicturesYouAddShow">Pictures you add show here. Click one to see it.</system:String>
+    <system:String x:Key="Str_ImageToPixel_ThePictureYouClick">The picture you click shows here.</system:String>
+    <system:String x:Key="Str_ImageToPixel_TurnPicturesIntoPixel">Turn pictures into pixel art</system:String>
+    <system:String x:Key="Str_ImageToPixel_AddPicturesOrWhole">Add pictures or whole folders, click one to preview it, then Convert all. Fewer pixels and colors give a more retro look.</system:String>
+    <system:String x:Key="Str_TexturePack_PutThisInThe">Put this in the pack</system:String>
+    <system:String x:Key="Str_TexturePack_WhereItGoesIn">Where it goes in the pack, for example block/stone</system:String>
+    <system:String x:Key="Str_TexturePack_DescriptionShownInThe">Description (shown in the pack list)</system:String>
+    <system:String x:Key="Str_TexturePack_MinecraftVersion">Minecraft version</system:String>
+    <system:String x:Key="Str_TexturePack_AddVersion">Add version</system:String>
+    <system:String x:Key="Str_TexturePack_TypeInAMinecraft">Type in a Minecraft version and its pack format number</system:String>
+    <system:String x:Key="Str_TexturePack_CheckForNew">Check for new</system:String>
+    <system:String x:Key="Str_TexturePack_LookInYourMinecraft">Look in your Minecraft launcher's version list for releases that aren't in this list</system:String>
+    <system:String x:Key="Str_TexturePack_UpdateFromWiki">Update from wiki</system:String>
+    <system:String x:Key="Str_TexturePack_ReadTheMinecraftWiki">Read the Minecraft Wiki's pack format table and add the numbers that are missing</system:String>
+    <system:String x:Key="Str_TexturePack_PackIconOptional">Pack icon (optional)</system:String>
+    <system:String x:Key="Str_TexturePack_ChooseAPng">Choose a PNG</system:String>
+    <system:String x:Key="Str_TexturePack_NoIcon">No icon</system:String>
+    <system:String x:Key="Str_TexturePack_ZipFile">.zip file</system:String>
+    <system:String x:Key="Str_TexturePack_CopyTheZipOr">Copy the .zip (or folder) into .minecraft/resourcepacks, then turn it on in Options > Resource Packs.</system:String>
+    <system:String x:Key="Str_TexturePack_ShowTheSavedPack">Show the saved pack</system:String>
+    <system:String x:Key="Str_TexturePack_CreateTexturePack">Create texture pack</system:String>
+    <system:String x:Key="Str_TexturePack_MinecraftTexturePack">MINECRAFT TEXTURE PACK</system:String>
+    <system:String x:Key="Str_TexturePack_Textures">Textures</system:String>
+    <system:String x:Key="Str_TexturePack_AddYourTextures">Add your textures</system:String>
+    <system:String x:Key="Str_TexturePack_DropPngFilesOr">Drop PNG files or a folder on the Pictures card. Names like stone.png or block_stone.png (or a folder called block) are matched to Minecraft textures; anything else you can type in yourself.</system:String>
+    <system:String x:Key="Str_TotpCode_NewCodeEvery">NEW CODE EVERY</system:String>
+    <system:String x:Key="Str_TotpCode_Algorithm">ALGORITHM</system:String>
+    <system:String x:Key="Str_TotpCode_MostSitesUseDigits">Most sites use 6 digits, 30 s and SHA-1. A pasted otpauth:// link sets these for you.</system:String>
+    <system:String x:Key="Str_TotpCode_Secret">SECRET</system:String>
+    <system:String x:Key="Str_TotpCode_YourSecretStaysIn">Your secret stays in this box only: it is not saved, and it is gone when you close the tool.</system:String>
+    <system:String x:Key="Str_TotpCode_YourCode">Your code</system:String>
+    <system:String x:Key="Str_TotpCode_PasteASecretKey">Paste a secret key above to see your code.</system:String>
+    <system:String x:Key="Str_TotpCode_NextCode">Next code</system:String>
+    <system:String x:Key="Str_TotpCode_ThisIsTheCode">This is the code you will need after the time bar runs out.</system:String>
+    <system:String x:Key="Str_TotpCode_HowItWorks">HOW IT WORKS</system:String>
+    <system:String x:Key="Str_TotpCode_AOneTimeCode">A one-time code is made from your secret key and the current time, so the site and this tool agree without talking to each other. Nothing is sent anywhere.</system:String>
+    <system:String x:Key="Str_TotpCode_CodeNotAccepted">CODE NOT ACCEPTED?</system:String>
+    <system:String x:Key="Str_TotpCode_CheckThatThisPc">Check that this PC's clock is right (Settings, Time &amp; language), and that digits, period and algorithm match what the site shows.</system:String>
+    <system:String x:Key="Str_DriveHealth_Drives">Drives</system:String>
+    <system:String x:Key="Str_DriveHealth_EveryDriveAndIts">Every drive and its health right now</system:String>
+    <system:String x:Key="Str_DriveHealth_HowEachDriveS">How each drive's SMART numbers changed over time</system:String>
+    <system:String x:Key="Str_EmptyFolders_MoveThisFolderTo">Move this folder to the Recycle Bin</system:String>
+    <system:String x:Key="Str_EmptyFolders_FoldersToCheck">Folders to check</system:String>
+    <system:String x:Key="Str_EmptyFolders_AFolderCountsAs">A folder counts as empty when it has no files in it at all (hidden and system files count as files) and every folder inside it is empty too. Shortcuts to other folders are left alone, and the folders you add are never listed themselves. Deleting sends folders to the Recycle Bin, so you can get them back.</system:String>
+    <system:String x:Key="Str_EmptyFolders_FindEmptyFolders">Find empty folders</system:String>
+    <system:String x:Key="Str_EmptyFolders_MoveToRecycleBin">Move to Recycle Bin</system:String>
+    <system:String x:Key="Str_EmptyFolders_EmptyFolders">EMPTY FOLDERS</system:String>
+    <system:String x:Key="Str_EmptyFolders_SelectNone">Select none</system:String>
+    <system:String x:Key="Str_EmptyFolders_AddAFolderTo">Add a folder to check</system:String>
+    <system:String x:Key="Str_EmptyFolders_DropFoldersOnThe">Drop folders on the left, then press Find empty folders.</system:String>
+    <system:String x:Key="Str_SmartHistory_Drive">Drive</system:String>
+    <system:String x:Key="Str_SmartHistory_Period">Period</system:String>
+    <system:String x:Key="Str_SmartHistory_EverythingRecorded">Everything recorded</system:String>
+    <system:String x:Key="Str_SmartHistory_LastYear">Last year</system:String>
+    <system:String x:Key="Str_SmartHistory_LastDays">Last 90 days</system:String>
+    <system:String x:Key="Str_SmartHistory_ReadEveryDriveNow">Read every drive now and add a reading to the history</system:String>
+    <system:String x:Key="Str_SmartHistory_RecordNow">Record now</system:String>
+    <system:String x:Key="Str_SmartHistory_EachTimeDriveHealth">Each time Drive Health reads your drives it adds a reading here (at most one every 6 hours), so the history grows as you use the app. Press Record now to add one at once.</system:String>
+    <system:String x:Key="Str_SmartHistory_Trend">Trend</system:String>
+    <system:String x:Key="Str_SmartHistory_ReadingsKeptForThis">Readings kept for this drive</system:String>
+    <system:String x:Key="Str_SmartHistory_NothingHasGotWorse">Nothing has got worse</system:String>
+    <system:String x:Key="Str_SmartHistory_Stable">Stable</system:String>
+    <system:String x:Key="Str_SmartHistory_ThingsToKeepAn">Things to keep an eye on</system:String>
+    <system:String x:Key="Str_SmartHistory_BackUpThisDrive">Back up this drive</system:String>
+    <system:String x:Key="Str_SmartHistory_CopyThisDriveS">Copy this drive's history (CSV)</system:String>
+    <system:String x:Key="Str_SmartHistory_SaveThisDriveS">Save this drive's history as a CSV file</system:String>
+    <system:String x:Key="Str_SmartHistory_ForgetTheHistoryOf">Forget the history of this drive</system:String>
+    <system:String x:Key="Str_SmartHistory_When">When</system:String>
+    <system:String x:Key="Str_SmartHistory_Temp">Temp</system:String>
+    <system:String x:Key="Str_SmartHistory_PowerOn">Power-on</system:String>
+    <system:String x:Key="Str_SmartHistory_Written">Written</system:String>
+    <system:String x:Key="Str_SmartHistory_LifeLeft">Life left</system:String>
+    <system:String x:Key="Str_SmartHistory_ChangedSinceTheOne">Changed since the one before</system:String>
+    <system:String x:Key="Str_DateTime_Utc">UTC</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Stopwatch">Stopwatch</system:String>
+    <system:String x:Key="Str_TimerStopwatch_TimerCountdown">Timer (countdown)</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Pomodoro">Pomodoro</system:String>
+    <system:String x:Key="Str_TimerStopwatch_TimeSHM">Time (5:00, 90s, 1h30m, 25)</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Min">1 min</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Min2">5 min</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Min3">10 min</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Min4">25 min</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Hour">1 hour</system:String>
+    <system:String x:Key="Str_TimerStopwatch_WorkMinutes">Work (minutes)</system:String>
+    <system:String x:Key="Str_TimerStopwatch_ShortBreakMinutes">Short break (minutes)</system:String>
+    <system:String x:Key="Str_TimerStopwatch_LongBreakMinutes">Long break (minutes)</system:String>
+    <system:String x:Key="Str_TimerStopwatch_LongBreakAfterHow">Long break after how many work sessions</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Alert">ALERT</system:String>
+    <system:String x:Key="Str_TimerStopwatch_PlayASoundWhen">Play a sound when time is up</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Lap">Lap</system:String>
+    <system:String x:Key="Str_TimerStopwatch_Laps">Laps</system:String>
+    <system:String x:Key="Str_TimerStopwatch_PressLapWhileThe">Press Lap while the stopwatch runs to mark a split time.</system:String>
+    <system:String x:Key="Str_FrameExtractor_GoToThisMoment">Go to this moment</system:String>
+    <system:String x:Key="Str_FrameExtractor_RemoveThisMoment">Remove this moment</system:String>
+    <system:String x:Key="Str_FrameExtractor_WhichFrames">WHICH FRAMES</system:String>
+    <system:String x:Key="Str_FrameExtractor_OneFrameAtA">One frame at a time</system:String>
+    <system:String x:Key="Str_FrameExtractor_TheTimeInThe">The time in the box below (or the one you set on the slider)</system:String>
+    <system:String x:Key="Str_FrameExtractor_PickMoments">Pick moments</system:String>
+    <system:String x:Key="Str_FrameExtractor_ChooseExactMomentsOn">Choose exact moments on the slider and add them one by one</system:String>
+    <system:String x:Key="Str_FrameExtractor_OneEveryFewSeconds">One every few seconds</system:String>
+    <system:String x:Key="Str_FrameExtractor_ASetNumberEvenly">A set number, evenly spread</system:String>
+    <system:String x:Key="Str_FrameExtractor_EveryHowManySeconds">Every how many seconds</system:String>
+    <system:String x:Key="Str_FrameExtractor_HowManyFrames">How many frames (1 - 500)</system:String>
+    <system:String x:Key="Str_FrameExtractor_MoveTheSliderOr">Move the slider (or type a time), press Add this moment, and repeat. Only the video selected in the list is used.</system:String>
+    <system:String x:Key="Str_FrameExtractor_PictureType">Picture type</system:String>
+    <system:String x:Key="Str_FrameExtractor_PngIsLosslessAnd">PNG is lossless and bigger. JPG is smaller.</system:String>
+    <system:String x:Key="Str_FrameExtractor_SaveFramesTo">Save frames to</system:String>
+    <system:String x:Key="Str_FrameExtractor_TakeFrames">Take frames</system:String>
+    <system:String x:Key="Str_FrameExtractor_VideoFrames">VIDEO FRAMES</system:String>
+    <system:String x:Key="Str_FrameExtractor_AddVideosOrFolders">Add videos or folders on the left to start.</system:String>
+    <system:String x:Key="Str_FrameExtractor_VideosYouAddShow">Videos you add show here. Click one to see it and pick a moment.</system:String>
+    <system:String x:Key="Str_FrameExtractor_ChooseAMoment">Choose a moment</system:String>
+    <system:String x:Key="Str_FrameExtractor_ClickAVideoIn">Click a video in the list to see it here.</system:String>
+    <system:String x:Key="Str_FrameExtractor_OneSecondBack">One second back</system:String>
+    <system:String x:Key="Str_FrameExtractor_ATenthOfA">A tenth of a second back</system:String>
+    <system:String x:Key="Str_FrameExtractor_ATenthOfA2">A tenth of a second forward</system:String>
+    <system:String x:Key="Str_FrameExtractor_OneSecondForward">One second forward</system:String>
+    <system:String x:Key="Str_FrameExtractor_AddThisMomentTo">Add this moment to the list of frames to take</system:String>
+    <system:String x:Key="Str_FrameExtractor_AddThisMoment">Add this moment</system:String>
+    <system:String x:Key="Str_FrameExtractor_MomentsYouPicked">MOMENTS YOU PICKED</system:String>
+    <system:String x:Key="Str_FrameExtractor_NoneYetMoveThe">None yet. Move the slider to a moment you like and press Add this moment.</system:String>
+    <system:String x:Key="Str_FrameExtractor_FramesSaved">Frames saved</system:String>
+    <system:String x:Key="Str_FrameExtractor_NothingSavedYet">Nothing saved yet</system:String>
+    <system:String x:Key="Str_FrameExtractor_TheFramesYouTake">The frames you take show up here.</system:String>
+    <system:String x:Key="Str_Views_Github">GITHUB</system:String>
+    <system:String x:Key="Str_Rest_Options">OPTIONS</system:String>
+    <system:String x:Key="Str_Rest_IcoSizes">SIZES IN THE .ICO</system:String>
+    <system:String x:Key="Str_Rest_SaveIco">Save .ico</system:String>
+    <system:String x:Key="Str_Rest_CtrlWheelZoom">Ctrl + mouse wheel to zoom</system:String>
+    <system:String x:Key="Str_Rest_ChoosePackPng">Choose a PNG to use as pack.png</system:String>
+    <system:String x:Key="Str_Rest_TypeTimeEnter">Type a time such as 1:23.5 and press Enter</system:String>
+    <system:String x:Key="Str_Rest_LufsRange">LUFS, between -40 and -5</system:String>
 </ResourceDictionary>

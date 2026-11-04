@@ -32,7 +32,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Speech to Text";
+        private static string DialogTitle => Loc.T("Str_Tool_speech-to-text_Name", "Speech to Text");
 
         private readonly ObservableCollection<SttFileItem> _rows = new();
         private readonly ObservableCollection<SttModelItem> _models = new();
@@ -431,7 +431,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't open {Path.GetFileName(path)}: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

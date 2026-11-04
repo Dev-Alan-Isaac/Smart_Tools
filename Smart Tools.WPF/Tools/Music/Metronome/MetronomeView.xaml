@@ -35,26 +35,26 @@
                 <StackPanel>
                     <Border ctl:Tour.Key="Str_Tour_Metronome_Beat" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="BEAT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MusicNoteQuarter}" />
-                            <TextBlock Style="{StaticResource MtLabel}" Text="Beats per bar" />
+                            <ContentControl Content="{DynamicResource Str_Metronome_Beat}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MusicNoteQuarter}" />
+                            <TextBlock Style="{StaticResource MtLabel}" Text="{DynamicResource Str_Metronome_BeatsPerBar}" />
                             <Border Style="{StaticResource InputBarStyle}">
                                 <ComboBox x:Name="CmbBeats" VerticalContentAlignment="Center" SelectionChanged="Beats_SelectionChanged" Style="{StaticResource BareComboBox}" />
                             </Border>
-                            <CheckBox x:Name="ChkAccent" Margin="0,12,0,0" Click="Accent_Click" Content="Accent the first beat" IsChecked="True" />
+                            <CheckBox x:Name="ChkAccent" Margin="0,12,0,0" Click="Accent_Click" Content="{DynamicResource Str_Metronome_AccentTheFirstBeat}" IsChecked="True" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_Metronome_Volume" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="VOLUME" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.VolumeHigh}" />
+                            <ContentControl Content="{DynamicResource Str_TTS_Volume}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.VolumeHigh}" />
                             <Slider x:Name="SliderVolume" Margin="0,10,0,0" Maximum="100" Minimum="0" SmallChange="5" LargeChange="10" Value="70" ValueChanged="Volume_ValueChanged" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_Metronome_Keys" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="KEYS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.KeyboardOutline}" />
-                            <TextBlock Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="Space starts and stops. Up and Down change the tempo by 1; hold Ctrl for 10." />
+                            <ContentControl Content="{DynamicResource Str_MidiInstruments_Keys}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.KeyboardOutline}" />
+                            <TextBlock Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_Metronome_SpaceStartsAndStops}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -81,7 +81,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="BtnMinus" Width="56" Height="56" Margin="10,0" VerticalAlignment="Center" Click="BtnMinus_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Slower (Down arrow)">
+                        <Button x:Name="BtnMinus" Width="56" Height="56" Margin="10,0" VerticalAlignment="Center" Click="BtnMinus_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Metronome_SlowerDownArrow}">
                             <materialDesign:PackIcon Width="26" Height="26" Kind="Minus" />
                         </Button>
                         <Grid Grid.Column="1">
@@ -93,10 +93,10 @@
                             <Viewbox MaxHeight="190" Stretch="Uniform">
                                 <TextBlock x:Name="TxtBpm" FontSize="120" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="100" />
                             </Viewbox>
-                            <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="BEATS PER MINUTE" />
+                            <TextBlock Grid.Row="1" HorizontalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Metronome_BeatsPerMinute}" />
                             <TextBlock x:Name="TxtTempoName" Grid.Row="2" Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="16" FontStyle="Italic" Foreground="{DynamicResource AccentColor}" />
                         </Grid>
-                        <Button x:Name="BtnPlus" Grid.Column="2" Width="56" Height="56" Margin="10,0" VerticalAlignment="Center" Click="BtnPlus_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="Faster (Up arrow)">
+                        <Button x:Name="BtnPlus" Grid.Column="2" Width="56" Height="56" Margin="10,0" VerticalAlignment="Center" Click="BtnPlus_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Metronome_FasterUpArrow}">
                             <materialDesign:PackIcon Width="26" Height="26" Kind="Plus" />
                         </Button>
                     </Grid>
@@ -110,7 +110,7 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,6" Content="Beat" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Metronome}" />
+                        <ContentControl Margin="0,0,0,6" Content="{DynamicResource Str_Metronome_Beat}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Metronome}" />
                         <Viewbox Grid.Row="1" Margin="8" MaxHeight="120" Stretch="Uniform">
                             <ItemsControl x:Name="BeatDots">
                                 <ItemsControl.ItemsPanel>
@@ -129,13 +129,13 @@
                             <Button ctl:Tour.Key="Str_Tour_Metronome_Start" ctl:Tour.Order="4" x:Name="BtnStart" MinWidth="150" MinHeight="44" Margin="0,0,10,0" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon x:Name="IconStart" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Play" />
-                                    <TextBlock x:Name="TxtStart" VerticalAlignment="Center" Text="Start" />
+                                    <TextBlock x:Name="TxtStart" VerticalAlignment="Center" Text="{DynamicResource Str_RenameFiles_Start}" />
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="BtnTap" MinWidth="120" MinHeight="44" Click="BtnTap_Click" ToolTip="Tap along to the beat to set the tempo">
+                            <Button x:Name="BtnTap" MinWidth="120" MinHeight="44" Click="BtnTap_Click" ToolTip="{DynamicResource Str_Metronome_TapAlongToThe}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center" Kind="GestureTap" />
-                                    <TextBlock VerticalAlignment="Center" Text="Tap tempo" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Metronome_TapTempo}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -146,22 +146,22 @@
                 <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <ContentControl Margin="0,0,0,12" Content="Tempo" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.SpeedometerMedium}" />
+                        <ContentControl Margin="0,0,0,12" Content="{DynamicResource Str_Metronome_Tempo}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.SpeedometerMedium}" />
                         <Slider ctl:Tour.Key="Str_Tour_Metronome_Tempo" ctl:Tour.Order="5" x:Name="SliderBpm" IsMoveToPointEnabled="True" LargeChange="10" Maximum="300" Minimum="20" SmallChange="1" TickFrequency="10" Value="100" ValueChanged="Bpm_ValueChanged" />
                         <DockPanel Margin="0,2,0,0">
                             <TextBlock DockPanel.Dock="Right" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="300" />
                             <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="20" />
                         </DockPanel>
 
-                        <TextBlock Margin="0,18,0,8" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="COMMON TEMPOS" />
+                        <TextBlock Margin="0,18,0,8" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Metronome_CommonTempos}" />
                         <WrapPanel>
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Largo 50" Tag="50" />
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Adagio 70" Tag="70" />
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Andante 90" Tag="90" />
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Moderato 110" Tag="110" />
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Allegro 130" Tag="130" />
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Vivace 168" Tag="168" />
-                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="Presto 190" Tag="190" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Largo}" Tag="50" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Adagio}" Tag="70" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Andante}" Tag="90" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Moderato}" Tag="110" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Allegro}" Tag="130" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Vivace}" Tag="168" />
+                            <Button MinHeight="34" Margin="0,0,6,6" Click="Preset_Click" Content="{DynamicResource Str_Metronome_Presto}" Tag="190" />
                         </WrapPanel>
                         <TextBlock x:Name="TxtMessage" Margin="0,10,0,0" FontSize="12" Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" />
                     </StackPanel>

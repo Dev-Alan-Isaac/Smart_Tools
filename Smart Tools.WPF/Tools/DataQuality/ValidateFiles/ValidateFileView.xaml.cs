@@ -38,7 +38,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Validate Files";
+        private static string DialogTitle => Loc.T("Str_Tool_validate-data_Name", "Validate Files");
         private const int SkipSizeMax = 999_999;
 
         private readonly ValidateManager _manager = new();
@@ -706,7 +706,7 @@ namespace Smart_Tools.WPF.Views
             var rows = QuarantineTargets();
             if (rows.Count == 0)
             {
-                MessageBox.Show("No damaged files to move. Tick corrupted or warning files first (\"Tick corrupted\" ticks every damaged one).", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_NoDamagedFilesTo", "No damaged files to move. Tick corrupted or warning files first (\"Tick corrupted\" ticks every damaged one)."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             await QuarantineAsync(rows, ask: true);
@@ -716,7 +716,10 @@ namespace Smart_Tools.WPF.Views
         {
             string folder = EffectiveQuarantineFolder;
             if (ask && MessageBox.Show(
-                    $"Move {rows.Count:N0} file{(rows.Count == 1 ? "" : "s")} to\n{folder}?\n\nNothing is deleted. A log in that folder lists where each file came from, so you can put it back.",
+                    Loc.N(rows.Count,
+                        "Str_MB_QuarantineMoveOne", "Move {0:N0} file to\n{1}?\n\nNothing is deleted. A log in that folder lists where each file came from, so you can put it back.",
+                        "Str_MB_QuarantineMoveMany", "Move {0:N0} files to\n{1}?\n\nNothing is deleted. A log in that folder lists where each file came from, so you can put it back.",
+                        rows.Count, folder),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
@@ -724,15 +727,16 @@ namespace Smart_Tools.WPF.Views
             {
                 var result = await ValidateManager.QuarantineAsync(rows, folder);
                 foreach (var r in rows.Where(r => r.QuarantinedTo != null)) _removed.Add(r.FullPath);   // not listed again on the next scan
-                TxtProgress.Text = $"Moved {result.Moved:N0} file{(result.Moved == 1 ? "" : "s")} to quarantine" + (result.Failed.Count > 0 ? $" · {result.Failed.Count:N0} couldn't be moved" : "");
+                TxtProgress.Text = Loc.N(result.Moved, "Str_MB_MovedToQuarantineOne", "Moved {0:N0} file to quarantine", "Str_MB_MovedToQuarantineMany", "Moved {0:N0} files to quarantine", result.Moved)
+                    + (result.Failed.Count > 0 ? Loc.F("Str_MB_QuarantineFailedSuffix", " · {0:N0} couldn't be moved", result.Failed.Count) : "");
                 if (result.Failed.Count > 0)
-                    MessageBox.Show($"{result.Failed.Count:N0} file(s) couldn't be moved:\n" + string.Join("\n", result.Failed.Take(10)),
+                    MessageBox.Show(Loc.F("Str_MB_FilesCouldntBeMoved", "{0:N0} file(s) couldn't be moved:\n", result.Failed.Count) + string.Join("\n", result.Failed.Take(10)),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 UpdateTickButton();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't use the quarantine folder: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTUseThe", "Couldn't use the quarantine folder: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -742,7 +746,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_rows.Any(r => r.Status is ValidationStatus.Valid or ValidationStatus.Warning or ValidationStatus.Corrupted or ValidationStatus.Unknown))
             {
-                MessageBox.Show("Run a scan first - there are no results to export yet.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_RunAScanFirst", "Run a scan first - there are no results to export yet."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -761,7 +765,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not save the report: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldNotSaveThe2", "Could not save the report: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -819,7 +823,7 @@ namespace Smart_Tools.WPF.Views
         {
             string path = File.Exists(row.CurrentPath) ? row.CurrentPath : row.Folder;
             if (ShellExplorer.Show(path) != ShellExplorer.ShowResult.Shown)
-                MessageBox.Show("That file or folder is no longer there.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder2", "That file or folder is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -896,7 +900,7 @@ namespace Smart_Tools.WPF.Views
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"The report couldn't be saved: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(Loc.F("Str_MB_TheReportCouldnT", "The report couldn't be saved: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
 
@@ -910,7 +914,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetRunning(false);
                 TxtProgress.Text = "Validation stopped - something went wrong.";
-                MessageBox.Show($"Validation failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_ValidationFailed", "Validation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

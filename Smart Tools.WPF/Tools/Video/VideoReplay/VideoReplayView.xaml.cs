@@ -43,7 +43,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double PlaylistExpandedWidth = 400;
-        private const string DialogTitle = "Video Replay";
+        private static string DialogTitle => Loc.T("Str_Dlg_VideoReplay", "Video Replay");
 
         private readonly ObservableCollection<PlaylistItem> _queue = new();
         private readonly ObservableCollection<ReplayQueueGroup> _queueGroups = new();
@@ -1312,7 +1312,7 @@ namespace Smart_Tools.WPF.Views
                     case Key.A when shift: BtnSelectAll_Click(this, none); break;
                     case Key.D when shift: BtnDeselectAll_Click(this, none); break;
                     case Key.Delete when shift:
-                        if (_queue.Count > 0 && MessageBox.Show("Remove every clip from the playlist?", DialogTitle,
+                        if (_queue.Count > 0 && MessageBox.Show(Loc.T("Str_MB_RemoveEveryClipFrom", "Remove every clip from the playlist?"), DialogTitle,
                                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
                             InputCard_ClearRequested(this, EventArgs.Empty);
                         break;

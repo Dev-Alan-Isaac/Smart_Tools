@@ -1,0 +1,539 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.MetadataCleanerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    xmlns:views="clr-namespace:Smart_Tools.WPF.Views"
+    x:Name="Root"
+    d:DesignHeight="760"
+    d:DesignWidth="1200"
+    mc:Ignorable="d"
+    Loaded="View_Loaded">
+
+    <!--
+        Image Metadata Cleaner - remove location, camera, date and other hidden details from many pictures. Originals are never changed.
+        Backend: Controllers/MetadataCleanerManager.cs; Models/MetadataCleanerModel.cs. UI only here.
+    -->
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <views:BytesConverter x:Key="Bytes" />
+        <views:ThumbnailConverter x:Key="Thumb" />
+        <views:CleanStatusTextConverter x:Key="StatusText" />
+
+        <!--  One picture in the sidebar queue  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:MetaItem}">
+            <Grid Margin="0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource SidebarText}"
+                    Text="{Binding Name}"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="{Binding Path}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    Foreground="{DynamicResource SidebarTextMuted}"
+                    Text="{Binding OriginalBytes, Converter={StaticResource Bytes}}" />
+            </Grid>
+        </DataTemplate>
+
+        <!--  Status chip colors from the theme  -->
+        <Style x:Key="StatusChipBorder" TargetType="Border">
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource RowBg}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter Property="Background" Value="{DynamicResource StatusInfoBg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                    <Setter Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="StatusChipText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Working">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusInfoFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Skipped">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ PICTURES ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ctl:Tour.Key="Str_Tour_MetaClean_Input"
+                                ctl:Tour.Order="1"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_MetaClean_Pictures}"
+                                HeaderIcon="ImageMultipleOutline"
+                                IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                PathsAdded="InputCard_PathsAdded" />
+
+                            <!--  ============ WHAT TO REMOVE ============  -->
+                            <Border
+                                ctl:Tour.Key="Str_Tour_MetaClean_Mode"
+                                ctl:Tour.Order="2"
+                                Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MetaClean_ModeHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.EyeOffOutline}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="ModeEverything"
+                                            Margin="0,0,2,4"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_MetaClean_ModeEverything}"
+                                            GroupName="CleanMode"
+                                            IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Everything" />
+                                        <RadioButton
+                                            x:Name="ModeLocation"
+                                            Margin="2,0,0,4"
+                                            Click="Mode_Click"
+                                            Content="{DynamicResource Str_MetaClean_ModeLocation}"
+                                            GroupName="CleanMode"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="LocationOnly" />
+                                    </UniformGrid>
+                                    <TextBlock
+                                        x:Name="TxtModeHint"
+                                        Style="{StaticResource SidebarHint}" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_MetaClean_Suffix}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtSuffix"
+                                            LostFocus="Field_LostFocus"
+                                            Style="{StaticResource BareTextBox}"
+                                            Tag="-clean" />
+                                    </Border>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MetaClean_SuffixHint}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SAVE TO ============  -->
+                            <controls:OutputFolderCard
+                                x:Name="OutputCard"
+                                Margin="0,10,0,0"
+                                ctl:Tour.Key="Str_Tour_MetaClean_Output"
+                                ctl:Tour.Order="3"
+                                AllowSameAsSource="True"
+                                ExampleFileName="photo-clean.jpg"
+                                Header="{DynamicResource Str_MetaClean_SaveTo}"
+                                HeaderIcon="ContentSaveOutline"
+                                SameAsSourceText="Save next to the originals"
+                                ToolName="Image Metadata Cleaner" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Run, progress, totals  -->
+                <Border Margin="0,0,0,12" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                x:Name="BtnRun"
+                                MinWidth="150"
+                                Margin="0,0,16,0"
+                                VerticalAlignment="Center"
+                                ctl:Tour.Key="Str_Tour_MetaClean_Run"
+                                ctl:Tour.Order="4"
+                                Click="BtnRun_Click"
+                                Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        x:Name="IconRun"
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="EyeOffOutline" />
+                                    <TextBlock
+                                        x:Name="TxtRunLabel"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_MetaClean_Run}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock
+                                    x:Name="TxtProgress"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    x:Name="TxtProgressDetail"
+                                    Margin="0,2,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="2"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Border
+                                    Margin="0,0,8,0"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{Binding Foreground, ElementName=TxtCount}"
+                                            Kind="ImageMultipleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtCount"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillLocation"
+                                    Margin="0,0,8,0"
+                                    Background="{DynamicResource StatusWarningBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusWarningFg}"
+                                            Kind="MapMarkerOutline" />
+                                        <TextBlock
+                                            x:Name="TxtLocation"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusWarningFg}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    x:Name="PillClean"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="ShieldCheckOutline" />
+                                        <TextBlock
+                                            x:Name="TxtClean"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                        <ProgressBar
+                            x:Name="ProgressRun"
+                            Height="8"
+                            Margin="0,14,0,0"
+                            Maximum="100" />
+                    </StackPanel>
+                </Border>
+
+                <!--  Results  -->
+                <Border
+                    Grid.Row="1"
+                    ctl:Tour.Key="Str_Tour_MetaClean_Results"
+                    ctl:Tour.Order="5"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <DataGrid
+                            x:Name="GridItems"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            EnableRowVirtualization="True"
+                            FontSize="12"
+                            IsReadOnly="True"
+                            MinRowHeight="46"
+                            SelectionMode="Extended"
+                            VerticalScrollBarVisibility="Auto"
+                            VirtualizingPanel.IsVirtualizing="True">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="56" Header="">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:MetaItem}">
+                                            <Border
+                                                Width="40"
+                                                Height="40"
+                                                Background="{DynamicResource RowBg}"
+                                                ClipToBounds="True"
+                                                CornerRadius="6">
+                                                <Image Source="{Binding Thumbnail, Converter={StaticResource Thumb}}" Stretch="UniformToFill" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn
+                                    Width="2*"
+                                    MinWidth="120"
+                                    Header="{DynamicResource Str_MetaClean_ColName}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:MetaItem}">
+                                            <StackPanel VerticalAlignment="Center" ToolTip="{Binding Path}">
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    Text="{Binding Name}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding OriginalBytes, Converter={StaticResource Bytes}}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn
+                                    Width="2*"
+                                    MinWidth="120"
+                                    Header="{DynamicResource Str_MetaClean_ColFound}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:MetaItem}">
+                                            <StackPanel
+                                                VerticalAlignment="Center"
+                                                Orientation="Horizontal"
+                                                ToolTip="{Binding FoundText}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource StatusWarningFg}"
+                                                    Kind="MapMarkerOutline"
+                                                    Visibility="{Binding HasLocation, Converter={StaticResource BoolToVis}}" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding FoundText}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn
+                                    Width="84"
+                                    Binding="{Binding NewBytes, Converter={StaticResource Bytes}}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_MetaClean_ColAfter}" />
+
+                                <DataGridTemplateColumn Width="1.2*" MinWidth="110" Header="{DynamicResource Str_MetaClean_ColStatus}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:MetaItem}">
+                                            <Border Style="{StaticResource StatusChipBorder}" ToolTip="{Binding Message}">
+                                                <TextBlock Style="{StaticResource StatusChipText}" Text="{Binding Status, Converter={StaticResource StatusText}}" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Width="84" Header="">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:MetaItem}">
+                                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                                <Button
+                                                    Click="BtnShowResult_Click"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_MetaClean_ShowResult}"
+                                                    Visibility="{Binding HasResult, Converter={StaticResource BoolToVis}}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="FolderSearchOutline" />
+                                                </Button>
+                                                <Button
+                                                    Click="BtnRemoveItem_Click"
+                                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_MetaClean_RemoveItem}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="Close" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel
+                            x:Name="PanelEmpty"
+                            MaxWidth="440"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            d:Visibility="Collapsed"
+                            IsHitTestVisible="False">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.EyeOffOutline}" />
+                            <TextBlock
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_MetaClean_EmptyTitle}" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                Text="{DynamicResource Str_MetaClean_EmptyHint}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -31,7 +31,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Network Device Scanner";
+        private static string DialogTitle => Loc.T("Str_Tool_device-scanner_Name", "Network Device Scanner");
 
         private readonly DeviceScannerManager _scanner = new();
         private readonly ObservableCollection<DeviceScanResult> _results = new();
@@ -314,7 +314,7 @@ namespace Smart_Tools.WPF.Views
             {
                 // The manager handles per-address failures itself; anything here is unexpected.
                 TxtScanProgress.Text = "Scan failed";
-                MessageBox.Show($"The scan stopped unexpectedly: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_TheScanStoppedUnexpectedly", "The scan stopped unexpectedly: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -482,7 +482,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't open the browser: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTOpenThe3", "Couldn't open the browser: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -494,7 +494,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_results.Count == 0)
             {
-                MessageBox.Show("Nothing to export yet - run a scan first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_NothingToExportYet3", "Nothing to export yet - run a scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -516,7 +516,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Export failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

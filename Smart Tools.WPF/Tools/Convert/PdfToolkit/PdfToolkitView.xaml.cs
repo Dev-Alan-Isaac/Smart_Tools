@@ -36,7 +36,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowColumnThreshold = 1000;
-        private const string DialogTitle = "PDF Toolkit";
+        private static string DialogTitle => Loc.T("Str_Tool_pdf-toolkit_Name", "PDF Toolkit");
 
         private readonly ObservableCollection<PdfToolItem> _items = new();
         private readonly ObservableCollection<PdfToolkitGroup> _groups = new();
@@ -744,8 +744,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressBarRun.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgressStatus.Text = "Couldn't save the result: " + PdfToolkitManager.PlainError(ex);
-                MessageBox.Show(
-                    $"The result couldn't be saved.\n\n{ex.Message}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.",
+                MessageBox.Show(Loc.F("Str_MB_TheResultCouldnT", "The result couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally

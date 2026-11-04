@@ -39,7 +39,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Event Log Explorer";
+        private static string DialogTitle => Loc.T("Str_Tool_event-log-explorer_Name", "Event Log Explorer");
 
         private enum EmptyKind { Pick, NoMatch, NoLevels, Denied, Failed, BadIds }
 

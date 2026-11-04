@@ -527,7 +527,7 @@
                                                 <TextBlock
                                                     Margin="0,3,0,0"
                                                     HorizontalAlignment="Center"
-                                                    Text="SQL" />
+                                                    Text="{DynamicResource Str_MockData_Sql}" />
                                             </StackPanel>
                                         </RadioButton>
                                     </UniformGrid>
@@ -618,7 +618,7 @@
                                             x:Name="RadioLocaleEnglish"
                                             Margin="0,0,2,0"
                                             Click="Locale_Click"
-                                            Content="English"
+                                            Content="{DynamicResource Str_Settings_English}"
                                             GroupName="MockLocale"
                                             IsChecked="True"
                                             Style="{StaticResource ModeToggleButtonStyle}"
@@ -627,7 +627,7 @@
                                             x:Name="RadioLocaleSpanish"
                                             Margin="2,0,0,0"
                                             Click="Locale_Click"
-                                            Content="Español"
+                                            Content="{DynamicResource Str_Settings_EspaOl}"
                                             GroupName="MockLocale"
                                             Style="{StaticResource ModeToggleButtonStyle}"
                                             Tag="Spanish" />

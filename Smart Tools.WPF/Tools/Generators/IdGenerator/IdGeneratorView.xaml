@@ -40,14 +40,14 @@
                 <StackPanel>
                     <Border ctl:Tour.Key="Str_Tour_IdGenerator_Kind" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="WHAT TO MAKE" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Creation}" />
+                            <ContentControl Content="{DynamicResource Str_Spectogram_WhatToMake}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Creation}" />
                             <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}">
                                 <ComboBox x:Name="CmbKind" VerticalContentAlignment="Center" SelectionChanged="Kind_SelectionChanged" Style="{StaticResource BareComboBox}">
-                                    <ComboBoxItem Content="UUID v4 (random)" Tag="Uuid4" />
-                                    <ComboBoxItem Content="UUID v7 (sorted by time)" Tag="Uuid7" />
-                                    <ComboBoxItem Content="ULID (sorted by time)" Tag="Ulid" />
-                                    <ComboBoxItem Content="Random hex" Tag="Hex" />
-                                    <ComboBoxItem Content="Lorem ipsum" Tag="Lorem" />
+                                    <ComboBoxItem Content="{DynamicResource Str_IdGenerator_UuidVRandom}" Tag="Uuid4" />
+                                    <ComboBoxItem Content="{DynamicResource Str_IdGenerator_UuidVSortedBy}" Tag="Uuid7" />
+                                    <ComboBoxItem Content="{DynamicResource Str_IdGenerator_UlidSortedByTime}" Tag="Ulid" />
+                                    <ComboBoxItem Content="{DynamicResource Str_IdGenerator_RandomHex}" Tag="Hex" />
+                                    <ComboBoxItem Content="{DynamicResource Str_IdGenerator_LoremIpsum}" Tag="Lorem" />
                                 </ComboBox>
                             </Border>
                             <TextBlock x:Name="TxtKindHint" Style="{StaticResource IgHint}" />
@@ -56,32 +56,32 @@
 
                     <Border ctl:Tour.Key="Str_Tour_IdGenerator_Options" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="OPTIONS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+                            <ContentControl Content="{DynamicResource Str_Rest_Options}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
 
                             <StackPanel x:Name="PanelCount">
-                                <TextBlock Style="{StaticResource IgLabel}" Text="How many (1-1000)" />
+                                <TextBlock Style="{StaticResource IgLabel}" Text="{DynamicResource Str_IdGenerator_HowMany}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtCount" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
                                 </Border>
                             </StackPanel>
 
                             <StackPanel x:Name="PanelHex" Visibility="Collapsed">
-                                <TextBlock Style="{StaticResource IgLabel}" Text="Bytes per value (1-128)" />
+                                <TextBlock Style="{StaticResource IgLabel}" Text="{DynamicResource Str_IdGenerator_BytesPerValue}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtHexBytes" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
                                 </Border>
                             </StackPanel>
 
                             <StackPanel x:Name="PanelLorem" Visibility="Collapsed">
-                                <TextBlock Style="{StaticResource IgLabel}" Text="Paragraphs (1-50)" />
+                                <TextBlock Style="{StaticResource IgLabel}" Text="{DynamicResource Str_IdGenerator_Paragraphs}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtParagraphs" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Option_TextChanged" />
                                 </Border>
                             </StackPanel>
 
                             <StackPanel x:Name="PanelCase" Margin="0,10,0,0">
-                                <CheckBox x:Name="ChkUpper" Click="Option_Click" Content="Upper case" />
-                                <CheckBox x:Name="ChkNoHyphens" Margin="0,6,0,0" Click="Option_Click" Content="Remove hyphens" />
+                                <CheckBox x:Name="ChkUpper" Click="Option_Click" Content="{DynamicResource Str_IdGenerator_UpperCase}" />
+                                <CheckBox x:Name="ChkNoHyphens" Margin="0,6,0,0" Click="Option_Click" Content="{DynamicResource Str_IdGenerator_RemoveHyphens}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -100,27 +100,27 @@
                 <Border Style="{StaticResource CardStyle}">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button x:Name="BtnSave" MinHeight="36" Margin="0,0,8,0" Click="BtnSave_Click" ToolTip="Save to a text file">
+                            <Button x:Name="BtnSave" MinHeight="36" Margin="0,0,8,0" Click="BtnSave_Click" ToolTip="{DynamicResource Str_IdGenerator_SaveToAText}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentSaveOutline" />
-                                    <TextBlock Text="Save" />
+                                    <TextBlock Text="{DynamicResource Str_Code_Save}" />
                                 </StackPanel>
                             </Button>
-                            <Button ctl:Tour.Key="Str_Tour_IdGenerator_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" MinHeight="36" Margin="0,0,8,0" Click="BtnCopy_Click" ToolTip="Copy everything">
+                            <Button ctl:Tour.Key="Str_Tour_IdGenerator_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" MinHeight="36" Margin="0,0,8,0" Click="BtnCopy_Click" ToolTip="{DynamicResource Str_IdGenerator_CopyEverything}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
-                                    <TextBlock Text="Copy" />
+                                    <TextBlock Text="{DynamicResource Str_Common_Copy}" />
                                 </StackPanel>
                             </Button>
                             <Button ctl:Tour.Key="Str_Tour_IdGenerator_Generate" ctl:Tour.Order="3" x:Name="BtnGenerate" MinHeight="36" Click="BtnGenerate_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Refresh" />
-                                    <TextBlock VerticalAlignment="Center" Text="Generate again" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_IdGenerator_GenerateAgain}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="RESULT" />
+                            <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_FileConverter_Result}" />
                             <TextBlock x:Name="TxtInfo" Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" />
                         </StackPanel>
                     </DockPanel>
@@ -133,7 +133,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,10" Content="Values" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
+                        <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_IdGenerator_Values}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <TextBox x:Name="TxtOutput" Height="Auto" Padding="14" VerticalContentAlignment="Top" TextWrapping="NoWrap" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="14" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" VerticalScrollBarVisibility="Auto" />
                         </Border>

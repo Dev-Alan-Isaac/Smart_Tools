@@ -35,7 +35,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double StackDetailsBelowWidth = 1250;
-        private const string DialogTitle = "Metadata Extractor";
+        private static string DialogTitle => Loc.T("Str_Tool_metadata-extract_Name", "Metadata Extractor");
 
         private readonly BulkObservableCollection<MetadataFileItem> _files = new();
         private readonly ObservableCollection<MetadataQueueGroup> _groups = new();   // the sidebar queue
@@ -678,7 +678,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show("The export couldn't be saved.\n\n" + MetadataExtractManager.PlainExportError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_TheExportCouldnT", "The export couldn't be saved.\n\n") + MetadataExtractManager.PlainExportError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 TxtProgress.Text = "Export failed: " + MetadataExtractManager.PlainExportError(ex);
             }
             finally

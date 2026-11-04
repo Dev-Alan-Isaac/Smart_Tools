@@ -861,19 +861,19 @@
                             x:Name="RadioDrives"
                             Margin="0,0,2,0"
                             Checked="View_Changed"
-                            Content="Drives"
+                            Content="{DynamicResource Str_DriveHealth_Drives}"
                             GroupName="DhView"
                             IsChecked="True"
                             Style="{StaticResource ModeToggleButtonStyle}"
-                            ToolTip="Every drive and its health right now" />
+                            ToolTip="{DynamicResource Str_DriveHealth_EveryDriveAndIts}" />
                         <RadioButton
                             x:Name="RadioHistory"
                             Margin="2,0,0,0"
                             Checked="View_Changed"
-                            Content="History"
+                            Content="{DynamicResource Str_NetSpeed_HistoryHeader}"
                             GroupName="DhView"
                             Style="{StaticResource ModeToggleButtonStyle}"
-                            ToolTip="How each drive's SMART numbers changed over time" />
+                            ToolTip="{DynamicResource Str_DriveHealth_HowEachDriveS}" />
                     </UniformGrid>
 
                     <!--  Elevation state  -->

@@ -305,7 +305,7 @@
                                                 <TextBlock
                                                     Margin="0,3,0,0"
                                                     HorizontalAlignment="Center"
-                                                    Text="Markdown" />
+                                                    Text="{DynamicResource Str_MarkdownHtmlEditor_Markdown}" />
                                             </StackPanel>
                                         </RadioButton>
                                         <RadioButton
@@ -834,7 +834,7 @@
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource AccentColor}"
                             Style="{StaticResource StatusText}"
-                            Text="Markdown" />
+                            Text="{DynamicResource Str_MarkdownHtmlEditor_Markdown}" />
                     </Grid>
                 </Grid>
             </Border>

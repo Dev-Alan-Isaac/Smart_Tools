@@ -43,7 +43,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Color Picker";
+        private static string DialogTitle => Loc.T("Str_Tool_color-picker_Name", "Color Picker");
         private static readonly string[] ImageExtensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".webp", ".ico" };
 
         private readonly ColorHistoryStore _history = new();
@@ -598,7 +598,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't load that image: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ImageLoad", "Couldn't load that image: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -622,12 +622,12 @@ namespace Smart_Tools.WPF.Views
                     }
                 }
 
-                MessageBox.Show("The clipboard has no image. Copy a screenshot or an image first.", DialogTitle,
+                MessageBox.Show(Loc.T("Str_MB_TheClipboardHasNo", "The clipboard has no image. Copy a screenshot or an image first."), DialogTitle,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't read the clipboard: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ClipboardRead", "Couldn't read the clipboard: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -783,7 +783,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't read that file: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTReadThat", "Couldn't read that file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -811,7 +811,7 @@ namespace Smart_Tools.WPF.Views
             var rows = ColorManager.ConvertBatch(ColorManager.SplitLines(TxtBatchInput.Text));
             if (rows.Count == 0)
             {
-                MessageBox.Show("Paste at least one color first - one per line.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_PasteAtLeastOne", "Paste at least one color first - one per line."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 TxtBatchInput.Focus();
                 return;
             }
@@ -839,7 +839,7 @@ namespace Smart_Tools.WPF.Views
             if (sender is not MenuItem { Tag: string tag } || !Enum.TryParse(tag, out ColorExportFormat format)) return;
             if (_batchRows is not { Count: > 0 } rows)
             {
-                MessageBox.Show("Nothing to export yet - click Convert All first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_NothingToExportYet", "Nothing to export yet - click Convert All first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -861,7 +861,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't export: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTExport", "Couldn't export: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

@@ -357,9 +357,9 @@
                                             <ComboBoxItem Content="MP3" Tag="Mp3" />
                                             <ComboBoxItem Content="WAV" Tag="Wav" />
                                             <ComboBoxItem Content="FLAC" Tag="Flac" />
-                                            <ComboBoxItem Content="M4A (AAC)" Tag="M4a" />
-                                            <ComboBoxItem Content="OGG Vorbis" Tag="Ogg" />
-                                            <ComboBoxItem Content="Opus" Tag="Opus" />
+                                            <ComboBoxItem Content="{DynamicResource Str_AudioTrimmer_MAAac}" Tag="M4a" />
+                                            <ComboBoxItem Content="{DynamicResource Str_AudioTrimmer_OggVorbis}" Tag="Ogg" />
+                                            <ComboBoxItem Content="{DynamicResource Str_AudioTrimmer_Opus}" Tag="Opus" />
                                         </ComboBox>
                                     </Border>
                                     <TextBlock

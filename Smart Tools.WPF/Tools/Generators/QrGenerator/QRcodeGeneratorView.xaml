@@ -1268,7 +1268,7 @@
                                             Click="MenuSave_Click"
                                             Header="{DynamicResource Str_BarcodeGenerator_Png}"
                                             Tag="Png"
-                                            ToolTip="PNG - lossless, crisp edges (recommended)">
+                                            ToolTip="{DynamicResource Str_QRcodeGenerator_PngLosslessCrispEdges}">
                                             <MenuItem.Icon>
                                                 <materialDesign:PackIcon Kind="FileImageOutline" />
                                             </MenuItem.Icon>
@@ -1277,7 +1277,7 @@
                                             Click="MenuSave_Click"
                                             Header="{DynamicResource Str_BackgroundRemover_Jpg}"
                                             Tag="Jpg"
-                                            ToolTip="JPG - smaller, but can soften edges">
+                                            ToolTip="{DynamicResource Str_QrGenerator_JpgSmallerButCan}">
                                             <MenuItem.Icon>
                                                 <materialDesign:PackIcon Kind="FileImageOutline" />
                                             </MenuItem.Icon>
@@ -1286,7 +1286,7 @@
                                             Click="MenuSave_Click"
                                             Header="{DynamicResource Str_BarcodeGenerator_Svg}"
                                             Tag="Svg"
-                                            ToolTip="SVG - true vector squares, sharp at any print size">
+                                            ToolTip="{DynamicResource Str_QrGenerator_SvgTrueVectorSquares}">
                                             <MenuItem.Icon>
                                                 <materialDesign:PackIcon Kind="VectorSquare" />
                                             </MenuItem.Icon>
@@ -1295,7 +1295,7 @@
                                             Click="MenuSave_Click"
                                             Header="{DynamicResource Str_BarcodeGenerator_Pdf}"
                                             Tag="Pdf"
-                                            ToolTip="PDF - lossless, print-ready">
+                                            ToolTip="{DynamicResource Str_BarcodeGenerator_PdfLosslessPrintReady}">
                                             <MenuItem.Icon>
                                                 <materialDesign:PackIcon Kind="FilePdfBox" />
                                             </MenuItem.Icon>
@@ -1650,7 +1650,7 @@
                                                 Click="MenuBatchExport_Click"
                                                 Header="{DynamicResource Str_BarcodeGenerator_Png}"
                                                 Tag="Png"
-                                                ToolTip="PNG - lossless, crisp edges (recommended)">
+                                                ToolTip="{DynamicResource Str_QRcodeGenerator_PngLosslessCrispEdges}">
                                                 <MenuItem.Icon>
                                                     <materialDesign:PackIcon Kind="FileImageOutline" />
                                                 </MenuItem.Icon>
@@ -1659,7 +1659,7 @@
                                                 Click="MenuBatchExport_Click"
                                                 Header="{DynamicResource Str_BackgroundRemover_Jpg}"
                                                 Tag="Jpg"
-                                                ToolTip="JPG - smaller, but can soften edges">
+                                                ToolTip="{DynamicResource Str_QrGenerator_JpgSmallerButCan}">
                                                 <MenuItem.Icon>
                                                     <materialDesign:PackIcon Kind="FileImageOutline" />
                                                 </MenuItem.Icon>
@@ -1668,7 +1668,7 @@
                                                 Click="MenuBatchExport_Click"
                                                 Header="{DynamicResource Str_BarcodeGenerator_Svg}"
                                                 Tag="Svg"
-                                                ToolTip="SVG - true vector squares, sharp at any print size">
+                                                ToolTip="{DynamicResource Str_QrGenerator_SvgTrueVectorSquares}">
                                                 <MenuItem.Icon>
                                                     <materialDesign:PackIcon Kind="VectorSquare" />
                                                 </MenuItem.Icon>
@@ -1677,7 +1677,7 @@
                                                 Click="MenuBatchExport_Click"
                                                 Header="{DynamicResource Str_BarcodeGenerator_Pdf}"
                                                 Tag="Pdf"
-                                                ToolTip="PDF - lossless, print-ready">
+                                                ToolTip="{DynamicResource Str_BarcodeGenerator_PdfLosslessPrintReady}">
                                                 <MenuItem.Icon>
                                                     <materialDesign:PackIcon Kind="FilePdfBox" />
                                                 </MenuItem.Icon>

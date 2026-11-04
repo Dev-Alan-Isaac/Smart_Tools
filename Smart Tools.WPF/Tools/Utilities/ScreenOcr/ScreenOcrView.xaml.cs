@@ -37,7 +37,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "OCR Text Extractor";
+        private static string DialogTitle => Loc.T("Str_Tool_screen-ocr_Name", "OCR Text Extractor");
         private const int MaxDecodePixels = 6000;   // bigger photos are decoded smaller - OCR shrinks them anyway
 
         private static readonly string[] ImageExtensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".webp", ".heic", ".jfif", ".ico" };

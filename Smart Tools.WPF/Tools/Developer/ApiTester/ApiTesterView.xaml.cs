@@ -614,7 +614,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
             {
                 MessageBox.Show(Window.GetWindow(this)!, $"Couldn't save the file:\n{ex.Message}",
-                    "Export failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Loc.T("Str_Dlg_ExportFailed", "Export failed"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

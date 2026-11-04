@@ -30,7 +30,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowWidth = 1150;      // history moves under the results
         private const double OneColumnWidth = 760;    // tiles stack in one column
-        private const string DialogTitle = "Internet Speed Test";
+        private static string DialogTitle => Loc.T("Str_Tool_internet-speed_Name", "Internet Speed Test");
 
         // The chart's x axis: ping takes the first 10% of the progress bar.
         private const double ChartXStart = 10, ChartXSpan = 90;
@@ -598,7 +598,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
         {
             if (_history.Count == 0) return;
-            var answer = MessageBox.Show($"Clear all {_history.Count} saved results?", DialogTitle,
+            var answer = MessageBox.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 

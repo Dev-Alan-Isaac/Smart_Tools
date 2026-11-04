@@ -29,7 +29,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Secure File Shredder";
+        private static string DialogTitle => Loc.T("Str_Tool_file-shredder_Name", "Secure File Shredder");
 
         private readonly BulkObservableCollection<ShredItem> _queue = new();
         private readonly ObservableCollection<ShredQueueGroup> _groups = new();
@@ -216,7 +216,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     if (IsDangerousFolder(folder))
                     {
-                        MessageBox.Show($"\"{folder}\" is a drive or a system folder. Shredding it would damage Windows or take everything on it, so it can't be added.\n\nAdd the specific folders or files you want to shred instead.",
+                        MessageBox.Show(Loc.F("Str_MB_IsADriveOr", "\"{0}\" is a drive or a system folder. Shredding it would damage Windows or take everything on it, so it can't be added.\n\nAdd the specific folders or files you want to shred instead.", folder),
                             DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                         continue;
                     }

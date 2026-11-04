@@ -185,7 +185,7 @@
                                             x:Name="RadioFormatCss"
                                             Grid.Column="6"
                                             Checked="Format_Checked"
-                                            Content="CSS"
+                                            Content="{DynamicResource Str_CodeToolkit_Css}"
                                             GroupName="ScreenColorFormat"
                                             Style="{StaticResource ModeToggleButtonStyle}"
                                             Tag="CssRgb"

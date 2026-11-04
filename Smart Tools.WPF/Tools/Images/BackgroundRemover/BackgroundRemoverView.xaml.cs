@@ -392,7 +392,7 @@ namespace Smart_Tools.WPF.Views
 
             if (ImgBefore.Source is not BitmapSource)
             {
-                ShowMessage((string)FindResource("Str_BgRemove_PickNoImage"), "Background Remover", MessageBoxImage.Information);
+                ShowMessage((string)FindResource("Str_BgRemove_PickNoImage"), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxImage.Information);
                 return;
             }
             SetPickingColor(true);
@@ -604,7 +604,7 @@ namespace Smart_Tools.WPF.Views
             if (selected == _files.Count &&
                 MessageBox.Show(Window.GetWindow(this)!,
                     $"All {selected:N0} files are checked. Remove them all from the queue?",
-                    "Remove all files", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+                    Loc.T("Str_Dlg_RemoveAllFiles", "Remove all files"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             BackgroundRemoverManager.RemoveFromList(_files, _groups, _files.Where(f => f.IsSelected).ToList());
@@ -681,7 +681,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (HighlightedItem is not { } item) return;
             if (ShellExplorer.Show(item.FullPath) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show($"\"{item.DisplayName}\" is no longer there.", "Background Remover", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.DisplayName), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void MenuDeleteFile_Click(object sender, RoutedEventArgs e)
@@ -691,7 +691,7 @@ namespace Smart_Tools.WPF.Views
             string text = bin
                 ? $"Move \"{item.DisplayName}\" to the Recycle Bin?\n\nThis deletes the file from your computer, not just from the queue."
                 : $"Delete \"{item.DisplayName}\" PERMANENTLY?\n\nIt's on a drive without a Recycle Bin, so it can't be undone.";
-            if (MessageBox.Show(text, "Background Remover", MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (MessageBox.Show(text, Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
             try
             {
@@ -699,7 +699,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't delete \"{item.DisplayName}\": {ex.Message}", "Background Remover", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.DisplayName, ex.Message), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             BackgroundRemoverManager.RemoveFromList(_files, _groups, new[] { item });

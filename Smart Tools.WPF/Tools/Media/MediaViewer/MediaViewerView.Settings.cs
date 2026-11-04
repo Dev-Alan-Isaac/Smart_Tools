@@ -303,7 +303,23 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Minimizes the main window so only the mini player is left on screen ("Back to the tool" brings the app back).</summary>
         private void RequestMinimizeApp()
         {
-            if (System.Windows.Application.Current?.MainWindow is MainWindow main) main.MinimizeForWidget();
+            if (System.Windows.Application.Current?.MainWindow is not MainWindow main) return;
+            var w = _widget;
+            if (w == null) { main.MinimizeForWidget(); return; }
+
+            // Minimize both: the mini player hides too. Restoring the app from the taskbar shows the mini first;
+            // restoring again (mini already visible) opens the tool.
+            var keep = CapturePlayback();
+            w.Hide();
+            RestorePlayback(keep);
+            main.MinimizeForWidget(() =>
+            {
+                if (_widget == null || _widget.IsVisible) return false;
+                var back = CapturePlayback();
+                _widget.Show();
+                RestorePlayback(back);
+                return true;
+            });
         }
 
         /// <summary>Brings the main window forward on this tool (the widget's "Back to the tool").</summary>

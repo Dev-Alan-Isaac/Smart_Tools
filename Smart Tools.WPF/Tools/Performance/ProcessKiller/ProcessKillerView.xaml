@@ -723,7 +723,7 @@
                                 Width="70"
                                 Binding="{Binding Pid}"
                                 ElementStyle="{StaticResource MutedCell}"
-                                Header="PID"
+                                Header="{DynamicResource Str_ProcessKiller_Pid}"
                                 SortMemberPath="Pid" />
                             <DataGridTemplateColumn
                                 Width="100"

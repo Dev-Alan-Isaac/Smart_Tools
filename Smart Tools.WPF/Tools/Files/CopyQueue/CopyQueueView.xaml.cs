@@ -18,7 +18,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class CopyQueueView : UserControl
     {
-        private const string DialogTitle = "Copy Queue";
+        private static string DialogTitle => Loc.T("Str_Tool_copy-queue_Name", "Copy Queue");
 
         private readonly CopyQueueManager _manager = new();
         private readonly ObservableCollection<CopyQueueSource> _sources = new();
@@ -147,7 +147,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnOpenDestination_Click(object sender, RoutedEventArgs e)
         {
             if (ShellExplorer.Show(ActiveDestination.FolderPath) != ShellExplorer.ShowResult.Shown)
-                System.Windows.MessageBox.Show("Choose a folder first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show(Loc.T("Str_MB_ChooseAFolderFirst", "Choose a folder first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnClearQueue_Click(object sender, RoutedEventArgs e)
@@ -236,8 +236,10 @@ namespace Smart_Tools.WPF.Views
             if (o.Mode == CopyQueueMode.Move)
             {
                 var answer = System.Windows.MessageBox.Show(
-                    $"Move {plan.Items.Count:N0} file{(plan.Items.Count == 1 ? "" : "s")} ({CopyQueueManager.FormatSize(plan.Items.Sum(i => i.Size))}) to\n{o.DestinationFolder}?\n\n" +
-                    "Each original is removed only after its copy has been checked against it. You can undo the move afterwards.",
+                    Loc.N(plan.Items.Count,
+                        "Str_MB_CqMoveOne", "Move {0:N0} file ({1}) to\n{2}?\n\nEach original is removed only after its copy has been checked against it. You can undo the move afterwards.",
+                        "Str_MB_CqMoveMany", "Move {0:N0} files ({1}) to\n{2}?\n\nEach original is removed only after its copy has been checked against it. You can undo the move afterwards.",
+                        plan.Items.Count, CopyQueueManager.FormatSize(plan.Items.Sum(i => i.Size)), o.DestinationFolder),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (answer != MessageBoxResult.Yes)
                 {
@@ -338,7 +340,10 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
             if (System.Windows.MessageBox.Show(
-                    $"Put {plan.Items.Count:N0} file{(plan.Items.Count == 1 ? "" : "s")} back where they came from?\n\nThey are verified on the way, like the original move.",
+                    Loc.N(plan.Items.Count,
+                        "Str_MB_CqPutBackOne", "Put {0:N0} file back where it came from?\n\nIt is verified on the way, like the original move.",
+                        "Str_MB_CqPutBackMany", "Put {0:N0} files back where they came from?\n\nThey are verified on the way, like the original move.",
+                        plan.Items.Count),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             _cts = new CancellationTokenSource();
