@@ -36,7 +36,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private static string DialogTitle => Loc.T("Str_Tool_convert-files_Name", "File Converter");
-        private const string ReadyHint = "Add files, choose what to convert them to, then press Convert.";
+        private static string ReadyHint => Loc.T("Str_Convert_ReadyHint", "Add files, choose what to convert them to, then press Convert.");
 
         private readonly ConverterManager _manager = new();
 
@@ -278,7 +278,7 @@ namespace Smart_Tools.WPF.Views
             if (_sources.Any(s => s.IsFolder))
             {
                 ProgressConversion.IsIndeterminate = true;
-                TxtProgress.Text = "Reading folders...";
+                TxtProgress.Text = Loc.T("Str_Convert_ReadingFolders", "Reading folders...");
             }
             _listingError = null;
             try
@@ -761,6 +761,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Double-click: the converted file if there is one, else the original, in Explorer.</summary>
         private void DataGridFiles_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            if (e.OriginalSource is not DependencyObject source || ItemsControl.ContainerFromElement(DataGridFiles, source) is not DataGridRow) return;
             if (DataGridFiles.SelectedItem is not ConvertFileItem item) return;
             string path = item.Status == ConvertStatus.Converted && File.Exists(item.OutputPath) ? item.OutputPath! : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
@@ -793,7 +794,7 @@ namespace Smart_Tools.WPF.Views
             if (_isConverting)
             {
                 _convertCts?.Cancel();
-                TxtProgress.Text = "Cancelling...";
+                TxtProgress.Text = Loc.T("Str_Convert_Cancelling", "Cancelling...");
                 return;
             }
             // A second click while the folders are still being read used to
@@ -803,6 +804,13 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 await StartConvertAsync();
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                Log.Info($"File Converter: {ex.Message}");
+                if (_isConverting) SetConverting(false);
+                MessageBox.Show(Loc.F("Str_Convert_StartFailed", "Couldn't start the conversion: {0}", ex.Message),
+                    DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
             {
@@ -814,7 +822,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_expandTask is { IsCompleted: false })
             {
-                TxtProgress.Text = "Reading folders...";
+                TxtProgress.Text = Loc.T("Str_Convert_ReadingFolders", "Reading folders...");
                 await _expandTask;
             }
 
@@ -823,8 +831,8 @@ namespace Smart_Tools.WPF.Views
             {
                 InputCard.PopDropArea();
                 MessageBox.Show(_rows.Count == 0
-                        ? "Add some files or a folder first (left side, or drop them there)."
-                        : "Nothing left to convert - every file is already converted or doesn't need it.",
+                        ? Loc.T("Str_Convert_AddFirst", "Add some files or a folder first (left side, or drop them there).")
+                        : Loc.T("Str_Convert_NothingLeft", "Nothing left to convert - every file is already converted or doesn't need it."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }

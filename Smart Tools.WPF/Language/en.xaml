@@ -1657,6 +1657,24 @@
     <system:String x:Key="Str_Convert_PageSizeLabel">Page Size</system:String>
     <system:String x:Key="Str_Convert_PreviewButton">Refresh</system:String>
     <system:String x:Key="Str_Convert_PreviewButtonTooltip">Recalculate target format and status for the queued files, e.g. after changing settings</system:String>
+    <system:String x:Key="Str_Convert_St_Ready">Ready</system:String>
+    <system:String x:Key="Str_Convert_St_Skipped">Already {0}</system:String>
+    <system:String x:Key="Str_Convert_St_Unsupported">Not supported</system:String>
+    <system:String x:Key="Str_Convert_St_Converted">Converted</system:String>
+    <system:String x:Key="Str_Convert_St_Failed">Failed</system:String>
+    <system:String x:Key="Str_Convert_St_Cancelled">Cancelled</system:String>
+    <system:String x:Key="Str_Convert_ReadyHint">Add files, choose what to convert them to, then press Convert.</system:String>
+    <system:String x:Key="Str_Convert_ReadingFolders">Reading folders...</system:String>
+    <system:String x:Key="Str_Convert_Cancelling">Cancelling...</system:String>
+    <system:String x:Key="Str_Convert_AddFirst">Add some files or a folder first (left side, or drop them there).</system:String>
+    <system:String x:Key="Str_Convert_NothingLeft">Nothing left to convert - every file is already converted or doesn't need it.</system:String>
+    <system:String x:Key="Str_Convert_StartFailed">Couldn't start the conversion: {0}</system:String>
+    <system:String x:Key="Str_Convert_EmptyFile">The converter produced an empty file.</system:String>
+    <system:String x:Key="Str_Convert_SavedAs">Saved as {0}</system:String>
+    <system:String x:Key="Str_Convert_SavedAsBin">Saved as {0} - original moved to the Recycle Bin.</system:String>
+    <system:String x:Key="Str_Convert_SavedAsDeleted">Saved as {0} - original deleted.</system:String>
+    <system:String x:Key="Str_Convert_SavedAsKeepFail">Saved as {0}, but the original couldn't be deleted: {1}</system:String>
+    <system:String x:Key="Str_Convert_MsgCancelled">Cancelled.</system:String>
 
     <!--  ============ API TESTER ============  -->
     <system:String x:Key="Str_Api_Title">API Tester</system:String>
@@ -9173,6 +9191,18 @@
     <system:String x:Key="Str_CsvJson_NumbersLikeStayText">Numbers like 007 stay text so IDs and zip codes keep their zeros.</system:String>
     <system:String x:Key="Str_CsvJson_PrettyJsonIndented">Pretty JSON (indented)</system:String>
     <system:String x:Key="Str_CsvJson_PasteOrOpenSomething">Paste or open something to convert</system:String>
+    <system:String x:Key="Str_CsvJson_InTitleCsv">CSV (paste, drop a file, or open one)</system:String>
+    <system:String x:Key="Str_CsvJson_InTitleJson">JSON (paste, drop a file, or open one)</system:String>
+    <system:String x:Key="Str_CsvJson_HintToJson">Numbers like 007 stay text so IDs and zip codes keep their zeros.</system:String>
+    <system:String x:Key="Str_CsvJson_HintToCsv">A JSON list of objects becomes one row each; the columns are every key found. Nested values are written as JSON text.</system:String>
+    <system:String x:Key="Str_CsvJson_FilterCsv">CSV and text</system:String>
+    <system:String x:Key="Str_CsvJson_AllFiles">All files</system:String>
+    <system:String x:Key="Str_CsvJson_TooBig">That file is too big for this tool (over 20 MB).</system:String>
+    <system:String x:Key="Str_CsvJson_ReadFailed">Couldn't read the file: {0}</system:String>
+    <system:String x:Key="Str_CsvJson_Copied">Copied</system:String>
+    <system:String x:Key="Str_CsvJson_ClipboardBusy">The clipboard is busy - try again</system:String>
+    <system:String x:Key="Str_CsvJson_Saved">Saved {0}</system:String>
+    <system:String x:Key="Str_CsvJson_SaveFailed">Couldn't save: {0}</system:String>
     <system:String x:Key="Str_HashVerifier_Crc">CRC32</system:String>
     <system:String x:Key="Str_EncodeDecode_Utf">UTF-16</system:String>
     <system:String x:Key="Str_EncodeDecode_LatinIso">Latin-1 (ISO-8859-1)</system:String>

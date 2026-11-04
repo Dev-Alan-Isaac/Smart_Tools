@@ -188,13 +188,13 @@ namespace Smart_Tools.WPF.Models
 
         public string StatusText => _status switch
         {
-            ConvertStatus.Ready => "Ready",
-            ConvertStatus.Skipped => "Already " + TargetFormat,
-            ConvertStatus.Unsupported => "Not supported",
+            ConvertStatus.Ready => Loc.T("Str_Convert_St_Ready", "Ready"),
+            ConvertStatus.Skipped => Loc.F("Str_Convert_St_Skipped", "Already {0}", TargetFormat),
+            ConvertStatus.Unsupported => Loc.T("Str_Convert_St_Unsupported", "Not supported"),
             ConvertStatus.Converting => $"{_progress:0}%",
-            ConvertStatus.Converted => "Converted",
-            ConvertStatus.Failed => "Failed",
-            ConvertStatus.Cancelled => "Cancelled",
+            ConvertStatus.Converted => Loc.T("Str_Convert_St_Converted", "Converted"),
+            ConvertStatus.Failed => Loc.T("Str_Convert_St_Failed", "Failed"),
+            ConvertStatus.Cancelled => Loc.T("Str_Convert_St_Cancelled", "Cancelled"),
             _ => "",
         };
 

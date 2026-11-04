@@ -1703,6 +1703,24 @@
     <system:String x:Key="Str_Convert_PageSizeLabel">Tamaño de Página</system:String>
     <system:String x:Key="Str_Convert_PreviewButton">Vista Previa</system:String>
     <system:String x:Key="Str_Convert_PreviewButtonTooltip">Previsualiza el efecto de la configuración de conversión antes de ejecutarla en toda la lista</system:String>
+    <system:String x:Key="Str_Convert_St_Ready">Listo</system:String>
+    <system:String x:Key="Str_Convert_St_Skipped">Ya es {0}</system:String>
+    <system:String x:Key="Str_Convert_St_Unsupported">No compatible</system:String>
+    <system:String x:Key="Str_Convert_St_Converted">Convertido</system:String>
+    <system:String x:Key="Str_Convert_St_Failed">Falló</system:String>
+    <system:String x:Key="Str_Convert_St_Cancelled">Cancelado</system:String>
+    <system:String x:Key="Str_Convert_ReadyHint">Añade archivos, elige a qué convertirlos y pulsa Convertir.</system:String>
+    <system:String x:Key="Str_Convert_ReadingFolders">Leyendo carpetas...</system:String>
+    <system:String x:Key="Str_Convert_Cancelling">Cancelando...</system:String>
+    <system:String x:Key="Str_Convert_AddFirst">Añade primero archivos o una carpeta (a la izquierda, o suéltalos allí).</system:String>
+    <system:String x:Key="Str_Convert_NothingLeft">No queda nada por convertir: todos los archivos ya están convertidos o no lo necesitan.</system:String>
+    <system:String x:Key="Str_Convert_StartFailed">No se pudo iniciar la conversión: {0}</system:String>
+    <system:String x:Key="Str_Convert_EmptyFile">El conversor produjo un archivo vacío.</system:String>
+    <system:String x:Key="Str_Convert_SavedAs">Guardado como {0}</system:String>
+    <system:String x:Key="Str_Convert_SavedAsBin">Guardado como {0}: el original se movió a la Papelera de reciclaje.</system:String>
+    <system:String x:Key="Str_Convert_SavedAsDeleted">Guardado como {0}: el original se eliminó.</system:String>
+    <system:String x:Key="Str_Convert_SavedAsKeepFail">Guardado como {0}, pero no se pudo eliminar el original: {1}</system:String>
+    <system:String x:Key="Str_Convert_MsgCancelled">Cancelado.</system:String>
 
     <!--  ============ API TESTER ============  -->
     <system:String x:Key="Str_Api_Title">Probador de API</system:String>
@@ -9175,6 +9193,18 @@
     <system:String x:Key="Str_CsvJson_NumbersLikeStayText">Los números como 007 siguen siendo texto para que los ID y códigos postales conserven sus ceros.</system:String>
     <system:String x:Key="Str_CsvJson_PrettyJsonIndented">JSON con formato (sangrado)</system:String>
     <system:String x:Key="Str_CsvJson_PasteOrOpenSomething">Pega o abre algo para convertir</system:String>
+    <system:String x:Key="Str_CsvJson_InTitleCsv">CSV (pega, suelta un archivo o abre uno)</system:String>
+    <system:String x:Key="Str_CsvJson_InTitleJson">JSON (pega, suelta un archivo o abre uno)</system:String>
+    <system:String x:Key="Str_CsvJson_HintToJson">Los números como 007 se quedan como texto, para que los identificadores y códigos postales conserven sus ceros.</system:String>
+    <system:String x:Key="Str_CsvJson_HintToCsv">Una lista JSON de objetos se convierte en una fila por objeto; las columnas son todas las claves encontradas. Los valores anidados se escriben como texto JSON.</system:String>
+    <system:String x:Key="Str_CsvJson_FilterCsv">CSV y texto</system:String>
+    <system:String x:Key="Str_CsvJson_AllFiles">Todos los archivos</system:String>
+    <system:String x:Key="Str_CsvJson_TooBig">Ese archivo es demasiado grande para esta herramienta (más de 20 MB).</system:String>
+    <system:String x:Key="Str_CsvJson_ReadFailed">No se pudo leer el archivo: {0}</system:String>
+    <system:String x:Key="Str_CsvJson_Copied">Copiado</system:String>
+    <system:String x:Key="Str_CsvJson_ClipboardBusy">El portapapeles está ocupado: inténtalo de nuevo</system:String>
+    <system:String x:Key="Str_CsvJson_Saved">Guardado {0}</system:String>
+    <system:String x:Key="Str_CsvJson_SaveFailed">No se pudo guardar: {0}</system:String>
     <system:String x:Key="Str_HashVerifier_Crc">CRC32</system:String>
     <system:String x:Key="Str_EncodeDecode_Utf">UTF-16</system:String>
     <system:String x:Key="Str_EncodeDecode_LatinIso">Latin-1 (ISO-8859-1)</system:String>

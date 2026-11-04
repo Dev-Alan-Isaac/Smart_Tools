@@ -523,6 +523,19 @@ namespace Smart_Tools.WPF.Views
 
         private async void AddSources(IEnumerable<string> paths)
         {
+            try
+            {
+                await AddSourcesAsync(paths);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                Log.Info($"Watermark add: {ex.Message}");
+                ShowStatus(ex.Message, StatusKind.Error);
+            }
+        }
+
+        private async Task AddSourcesAsync(IEnumerable<string> paths)
+        {
             var all = paths.Where(p => File.Exists(p) || Directory.Exists(p)).ToList();
             bool include = InputCard.IncludeSubfolders;
             var added = new List<WatermarkItem>();
@@ -587,7 +600,19 @@ namespace Smart_Tools.WPF.Views
             if (!_busy) AddSources(e.Paths);
         }
 
-        private void InputCard_IncludeSubfoldersChanged(object? sender, EventArgs e) => SaveSettings();
+        private async void InputCard_IncludeSubfoldersChanged(object? sender, EventArgs e)
+        {
+            SaveSettings();
+            try
+            {
+                await RescanFoldersAsync();
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                Log.Info($"Watermark rescan: {ex.Message}");
+                ShowStatus(ex.Message, StatusKind.Error);
+            }
+        }
 
         private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
@@ -622,7 +647,8 @@ namespace Smart_Tools.WPF.Views
             e.Handled = true;
         }
 
-        private async void ChkIncludeSubfolders_Changed(object sender, RoutedEventArgs e)
+        /// <summary>After "Include subfolders" changes: brings every folder row in line with a fresh scan.</summary>
+        private async Task RescanFoldersAsync()
         {
             if (!_viewConstructed || _applyingSettings || _busy) return;
             bool include = InputCard.IncludeSubfolders;
@@ -826,7 +852,7 @@ namespace Smart_Tools.WPF.Views
             {
                 result = await WatermarkManager.RunAsync(items, mark, folder, same, progress, _runCts.Token, saveByFileType: byFileType);
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 RunProgress.Value = 0;
                 TxtProgressPercent.Text = "";

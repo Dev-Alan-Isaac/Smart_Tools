@@ -48,10 +48,13 @@ namespace Smart_Tools.WPF.Controllers
                     psi.ArgumentList.Add("-hide_banner");
                     psi.ArgumentList.Add("-encoders");
                     using var p = Process.Start(psi)!;
-                    var errTask = p.StandardError.ReadToEndAsync();
-                    string text = p.StandardOutput.ReadToEnd();
-                    p.WaitForExit(10_000);
-                    _ = errTask.Result;
+                    var outTask = p.StandardOutput.ReadToEndAsync();
+                    _ = p.StandardError.ReadToEndAsync();   // drained so ffmpeg never blocks on a full pipe
+                    if (!p.WaitForExit(10_000))
+                    {
+                        try { p.Kill(true); } catch (Exception) { /* already gone */ }
+                    }
+                    string text = outTask.Wait(2_000) ? outTask.Result : "";
                     found = text.Contains("libsvtav1", StringComparison.Ordinal);
                 }
                 catch (Exception)
@@ -227,7 +230,7 @@ namespace Smart_Tools.WPF.Controllers
             if (options.FileType is ConvertFileType.Video or ConvertFileType.Audio && ConvertOverride == null && FfmpegExe == null)
                 throw new InvalidOperationException($"Converting {(options.FileType == ConvertFileType.Video ? "videos" : "audio")} needs ffmpeg.exe in {FfmpegFolder}. It wasn't found there.");
 
-            bool svt = options.FileType == ConvertFileType.Video && ConvertOverride == null && HasSvtAv1();
+            bool svt = options.FileType == ConvertFileType.Video && ConvertOverride == null && await Task.Run(HasSvtAv1);
             int parallel = options.MaxDegreeOfParallelism > 0 ? options.MaxDegreeOfParallelism : DefaultParallelism(options.FileType);
 
             foreach (var item in work)
@@ -360,18 +363,15 @@ namespace Smart_Tools.WPF.Controllers
 
                 token.ThrowIfCancellationRequested();
                 if (!File.Exists(temp) || new FileInfo(temp).Length == 0)
-                    throw new InvalidOperationException("The converter produced an empty file.");
+                    throw new InvalidOperationException(Loc.T("Str_Convert_EmptyFile", "The converter produced an empty file."));
 
                 string final;
                 lock (FinalPathLock)
                 {
                     final = planned;
-                    if (File.Exists(final))
-                    {
-                        if (o.OverwriteExisting) File.Delete(final);
-                        else final = UniquePath(final);
-                    }
-                    File.Move(temp, final);
+                    if (File.Exists(final) && !o.OverwriteExisting) final = UniquePath(final);
+                    // Replacing is a single step: if it fails, the file that was there is still there.
+                    File.Move(temp, final, overwrite: o.OverwriteExisting);
                 }
                 temp = null;
 
@@ -379,18 +379,21 @@ namespace Smart_Tools.WPF.Controllers
                 item.Progress = 100;
                 item.OutputBytes = new FileInfo(final).Length;
                 item.Status = ConvertStatus.Converted;
-                item.Message = "Saved as " + final;
+                item.Message = Loc.F("Str_Convert_SavedAs", "Saved as {0}", final);
 
                 if (o.DeleteOriginalAfterConversion && !string.Equals(Path.GetFullPath(final), Path.GetFullPath(item.FullPath), StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
+                        bool toBin = o.DeleteToRecycleBin && HasRecycleBin(item.FullPath);
                         DeleteOriginal(item.FullPath, o.DeleteToRecycleBin);
-                        item.Message = "Saved as " + final + (o.DeleteToRecycleBin && HasRecycleBin(item.FullPath) ? " - original moved to the Recycle Bin." : " - original deleted.");
+                        item.Message = toBin
+                            ? Loc.F("Str_Convert_SavedAsBin", "Saved as {0} - original moved to the Recycle Bin.", final)
+                            : Loc.F("Str_Convert_SavedAsDeleted", "Saved as {0} - original deleted.", final);
                     }
                     catch (Exception ex)
                     {
-                        item.Message = $"Saved as {final}, but the original couldn't be deleted: {ex.Message}";
+                        item.Message = Loc.F("Str_Convert_SavedAsKeepFail", "Saved as {0}, but the original couldn't be deleted: {1}", final, ex.Message);
                     }
                 }
             }
@@ -398,7 +401,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 item.Status = ConvertStatus.Cancelled;
                 item.Progress = 0;
-                item.Message = "Cancelled.";
+                item.Message = Loc.T("Str_Convert_MsgCancelled", "Cancelled.");
             }
             catch (Exception ex)
             {

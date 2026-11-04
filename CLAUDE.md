@@ -1,5 +1,10 @@
 # Smart Tools - context for Claude
 
+## First thing, every session (standing rule from Alan)
+1. **Read this file first**, including "Where we left off" at the bottom, before doing anything else.
+2. **If this file does not exist**, read the project (README, `PROJECT_DOCUMENTATION.md`, `Themes/ui-style-guide.md`, the catalog, `git log`), create it, then continue.
+3. **At the end of every piece of work**, update "Where we left off" so the next session can continue without asking (what was done, what is next, what is uncommitted).
+
 WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 112 tools in 21 sidebar categories, one window, English + Spanish, light + dark theme.
 Details live in `Smart Tools.WPF/PROJECT_DOCUMENTATION.md` (every tool, architecture, shortcuts, safe file ops, data locations) and
 `Smart Tools.WPF/Themes/ui-style-guide.md` (layout, shared styles, motion). Ideas for new tools: `Smart Tools.WPF/FUTURE_IDEAS.md`.
@@ -32,7 +37,27 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Media seeking (`MediaViewerView`): never seek on every slider `ValueChanged` while playing. Pause on press, scrub throttled, one seek on release.
 - Mini player: Minimize hides mini + app; first taskbar restore shows the mini, the next opens the tool (`MainWindow._restoreWidgetFirst`).
 - Catalog ids starting with `future-` would show the shared "coming soon" page (`FutureIdeaView`); none exist now.
+- `MediaElement` cannot open a file whose name has `#` or `%` even with a correct Uri (`new Uri(path)` is already right; do not escape it again). Media Viewer plays such files through a hard link/copy in `%TEMP%\Smart Tools\media-viewer previews` (`MediaViewerManager.MakeSafeAlias`). Video Replay still opens files the plain way.
+- The options sidebar is dark in both themes: use `SidebarInputBg`/`SidebarText`, not `AccentColorSubtle` (nearly white in Light). Shared chip look: `PillChipStyle`.
+- `media-viewer` is `MediaHubView` (pages: mixed, photos, videos, music). The mixed page is `MediaViewerView`; the Music page is `AudioReplayControl`. Spectrum bars: `SpectrumLevelMapper` (shared maths), `MediaSpectrumFeeder` (reads the file beside MediaElement), and the `SpectrumBars` control (namespace `Smart_Tools.WPF.Controls`, file `Tools/Media/MediaViewer/SpectrumBars.cs`).
+- Language files are UTF-8 with BOM; check for mojibake (`Ã¡`) after bulk edits. Keep `en.xaml` and `es.xaml` key sets identical (script check).
 
 ## Working preferences (Alan)
-- Subagents that only search/read (Explore) run on `model: haiku`.
+- Subagents that only search/read (Explore) run on `model: haiku`. Treat their reports as claims: verify in the code before fixing.
 - Keep answers short and say plainly what was and wasn't verified. Commits end with the Co-Authored-By line; commit only when asked.
+- Alan wants both: bring tools to the style guide automatically, and *propose* extra UX improvements for approval before applying them.
+- Shell tool gotchas on this machine: apostrophes and `\\` inside inline `python - <<EOF` scripts break; write the script to a file in the scratchpad and run it. Edit files with CRLF-aware code (read, normalise `\r\n`, write back).
+
+## Where we left off (updated 2026-11-04)
+**Cleanup pass** (plan: `~/.claude/plans/the-system-snapshot-some-prancy-hamming.md`): one catalog category at a time, fewest tools first. Rubric: bugs, CLAUDE.md rules, performance, style guide (auto-fix), UX ideas (propose only), maintainability notes (report only). Depth = safe fixes only; build + key-parity check after each category; hand back a try-list; wait for Alan.
+- **Done:** media (Media Viewer), calculators (Subnet, Unit Converter, Date & Time), convert (File Converter, Watermark, CSV/JSON).
+- **Next:** performance (System Monitor, Hardware Sensors, Process Killer), then pdf, music, pixel-sprites, colors, system, generators, utilities, the 6-tool categories (data-quality, files, video, images, storage, security), audio, hardware, developer, network, then Shell/Settings.
+- **Uncommitted** (as of this note): the convert work - `Tools/Convert/{FileConverter,Watermark,CsvJson}` and both language files. Everything earlier is committed.
+
+**Also built this session:** System Snapshot localized (en/es) + "Create a portable version" button; `SystemSnapshot.Collector/` standalone window (net45 + self-contained net10, `/auto` switch, zip in `dist/`); Media Viewer fixes (odd file names, async delete, mini player restore hook, volume in the player chrome, coloured spectrum bars for music); new shared `PillChipStyle`; Unit Converter big result block.
+
+**Open items / proposals waiting for Alan's yes:**
+- UX proposals - File Converter ("will be saved as" shows ` (2)`, explicit overwrite warning, note when MP3 96 kHz / ICO 256 limits apply); Watermark ("Stopping..." state, ETA); CSV/JSON (empty state + drop zone).
+- Leftovers: more English literals in Watermark and File Converter (engine messages, preset names, dropdown labels); File Converter rebuilds the list and saves settings on every keystroke; Watermark preview renders on the UI thread and adds files one by one; Video Replay `#`/`%` file names; `Tools/Network/NetworkTools/NetworkToolsView` looks unregistered (dead code, ask before deleting); 7 possibly missing language keys (`Str_Settings_Ocr`, `Str_Settings_Translate`, `Str_Tour_X_Options`, `Str_BulkResize_Status`, `Str_MetaClean_Status`, `Str_Network_DisconnectButton`, `Str_KbMouse_Btn`) - check whether built dynamically; Media Viewer only pauses (does not release) the file on leaving the page, and has no VLC fallback for WebM/MKV.
+- Files over 1000 lines are reported, not split (safe-fixes-only): `SettingsView.xaml`, `DateTimeToolkitView.xaml`, `FindSimilarFilesView.xaml`, `BackgroundRemoverView.xaml`, `QRcodeGeneratorView.xaml`, `VideoEditorView.xaml.cs`.
+- Not yet updated: `PROJECT_DOCUMENTATION.md` (System Snapshot portable button, the collector project) and `Smart_Tools.slnx` (does not list `SystemSnapshot.Collector`).

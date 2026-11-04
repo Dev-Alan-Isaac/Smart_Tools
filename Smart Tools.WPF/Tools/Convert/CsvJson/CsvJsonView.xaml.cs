@@ -95,13 +95,15 @@ namespace Smart_Tools.WPF.Views
         private void UpdateLabels()
         {
             bool toJson = _direction == CsvJsonDirection.CsvToJson;
-            TxtInputTitle.Content = toJson ? "CSV (paste, drop a file, or open one)" : "JSON (paste, drop a file, or open one)";
+            TxtInputTitle.Content = toJson
+                ? Loc.T("Str_CsvJson_InTitleCsv", "CSV (paste, drop a file, or open one)")
+                : Loc.T("Str_CsvJson_InTitleJson", "JSON (paste, drop a file, or open one)");
             TxtOutputTitle.Content = toJson ? "JSON" : "CSV";
             PanelCsvOptions.Visibility = Visibility.Visible;
             ChkHeader.Visibility = ChkTypes.Visibility = ChkIndented.Visibility = toJson ? Visibility.Visible : Visibility.Collapsed;
             TxtHint.Text = toJson
-                ? "Numbers like 007 stay text so IDs and zip codes keep their zeros."
-                : "A JSON list of objects becomes one row each; the columns are every key found. Nested values are written as JSON text.";
+                ? Loc.T("Str_CsvJson_HintToJson", "Numbers like 007 stay text so IDs and zip codes keep their zeros.")
+                : Loc.T("Str_CsvJson_HintToCsv", "A JSON list of objects becomes one row each; the columns are every key found. Nested values are written as JSON text.");
             _ = ConvertAsync();
         }
 
@@ -150,8 +152,9 @@ namespace Smart_Tools.WPF.Views
             bool toJson = _direction == CsvJsonDirection.CsvToJson;
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Title = "Open",
-                Filter = toJson ? "CSV and text|*.csv;*.tsv;*.txt|All files|*.*" : "JSON|*.json;*.txt|All files|*.*",
+                Title = Loc.T("Str_Tool_csv-json_Name", "CSV / JSON Converter"),
+                Filter = (toJson ? Loc.T("Str_CsvJson_FilterCsv", "CSV and text") + "|*.csv;*.tsv;*.txt" : "JSON|*.json;*.txt")
+                    + "|" + Loc.T("Str_CsvJson_AllFiles", "All files") + "|*.*",
             };
             if (dialog.ShowDialog(Window.GetWindow(this)) == true) LoadFile(dialog.FileName);
         }
@@ -161,14 +164,34 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 var info = new FileInfo(path);
-                if (info.Length > CsvJsonManager.MaxChars) { Fail("That file is too big for this tool (over 20 MB)."); return; }
-                TxtInput.Text = File.ReadAllText(path, Encoding.UTF8);
+                if (info.Length > CsvJsonManager.MaxChars) { Fail(Loc.T("Str_CsvJson_TooBig", "That file is too big for this tool (over 20 MB).")); return; }
+                TxtInput.Text = ReadText(path);
                 if (_direction == CsvJsonDirection.CsvToJson && string.Equals(Path.GetExtension(path), ".tsv", StringComparison.OrdinalIgnoreCase))
                     CmbDelimiter.SelectedIndex = 3;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                Fail("Couldn't read the file: " + ex.Message);
+                Fail(Loc.F("Str_CsvJson_ReadFailed", "Couldn't read the file: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>
+        /// UTF-8 (with or without a BOM) or UTF-16 as before; a file that is not valid UTF-8 (an Excel "CSV" saved in
+        /// Windows-1252) is read as Windows-1252 instead of turning every accent into a replacement character.
+        /// </summary>
+        private static string ReadText(string path)
+        {
+            byte[] bytes = File.ReadAllBytes(path);
+            if (bytes.Length >= 2 && (bytes[0] == 0xFF && bytes[1] == 0xFE || bytes[0] == 0xFE && bytes[1] == 0xFF)) return File.ReadAllText(path);
+            int skip = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
+            try
+            {
+                return new UTF8Encoding(false, true).GetString(bytes, skip, bytes.Length - skip);
+            }
+            catch (DecoderFallbackException)
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                return Encoding.GetEncoding(1252).GetString(bytes);
             }
         }
 
@@ -203,7 +226,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnCopy_Click(object sender, RoutedEventArgs e)
         {
             if (TxtOutput.Text.Length == 0) return;
-            TxtInfo.Text = JsonSettings.TryCopy(TxtOutput.Text) ? "Copied" : "The clipboard is busy - try again";
+            TxtInfo.Text = JsonSettings.TryCopy(TxtOutput.Text) ? Loc.T("Str_CsvJson_Copied", "Copied") : Loc.T("Str_CsvJson_ClipboardBusy", "The clipboard is busy - try again");
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -212,20 +235,21 @@ namespace Smart_Tools.WPF.Views
             bool toJson = _direction == CsvJsonDirection.CsvToJson;
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                Title = "Save",
+                Title = Loc.T("Str_Tool_csv-json_Name", "CSV / JSON Converter"),
                 Filter = toJson ? "JSON|*.json" : "CSV|*.csv",
                 FileName = toJson ? "converted.json" : "converted.csv",
-                OverwritePrompt = true,
+                OverwritePrompt = false,   // the app never overwrites: a taken name becomes "name (2)"
             };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try
             {
-                File.WriteAllText(dialog.FileName, TxtOutput.Text, new UTF8Encoding(!toJson));   // CSV with a BOM so Excel reads accents
-                TxtInfo.Text = "Saved " + Path.GetFileName(dialog.FileName);
+                string target = SafeFileOps.UniquePath(dialog.FileName);
+                AtomicFile.WriteAllText(target, TxtOutput.Text, new UTF8Encoding(!toJson));   // CSV with a BOM so Excel reads accents
+                TxtInfo.Text = Loc.F("Str_CsvJson_Saved", "Saved {0}", Path.GetFileName(target));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                Fail("Couldn't save: " + ex.Message);
+                Fail(Loc.F("Str_CsvJson_SaveFailed", "Couldn't save: {0}", ex.Message));
             }
         }
 
