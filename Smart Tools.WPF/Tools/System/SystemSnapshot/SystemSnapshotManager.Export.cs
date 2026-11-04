@@ -27,44 +27,44 @@ namespace Smart_Tools.WPF.Controllers
         public static List<OverviewTile> BuildOverview(SystemSnapshot snapshot)
         {
             var tiles = new List<OverviewTile>();
-            void Add(string label, string value, string icon) { if (value.Length > 0) tiles.Add(new OverviewTile(label, value, icon)); }
+            void Add(string key, string english, string value, string icon) { if (value.Length > 0) tiles.Add(new OverviewTile(Loc.T("Str_SysSnap_Tile_" + key, english), value, icon)); }
 
             if (Find(snapshot, "os") != null)
             {
                 string windows = Fact(snapshot, "os", "Windows"), version = Fact(snapshot, "os", "Version"), build = Fact(snapshot, "os", "Build");
-                Add("Windows", $"{windows} {version}".Trim() + (build.Length > 0 ? $" (build {build})" : ""), "MicrosoftWindows");
-                Add("Processor", Fact(snapshot, "os", "Processor"), "Chip");
-                Add("Memory", Fact(snapshot, "os", "Memory"), "Memory");
-                Add("Computer", Fact(snapshot, "os", "Computer name"), "Laptop");
+                Add("Windows", "Windows", $"{windows} {version}".Trim() + (build.Length > 0 ? " " + Loc.F("Str_SysSnap_Tile_Build", "(build {0})", build) : ""), "MicrosoftWindows");
+                Add("Processor", "Processor", Fact(snapshot, "os", "Processor"), "Chip");
+                Add("Memory", "Memory", Fact(snapshot, "os", "Memory"), "Memory");
+                Add("Computer", "Computer", Fact(snapshot, "os", "Computer name"), "Laptop");
             }
 
             var adapters = Find(snapshot, "adapters");
             if (adapters != null)
             {
                 var main = adapters.Rows.FirstOrDefault(r => r[3] == "Connected" && r[5].Length > 0 && r[7].Length > 0) ?? adapters.Rows.FirstOrDefault(r => r[3] == "Connected" && r[5].Length > 0);
-                Add("Main address", main == null ? "" : $"{main[5]} ({main[2]})", "IpNetworkOutline");
+                Add("MainAddress", "Main address", main == null ? "" : $"{main[5]} ({main[2]})", "IpNetworkOutline");
             }
 
             var profiles = Find(snapshot, "firewall-profiles");
             if (profiles != null)
-                Add("Firewall", string.Join(", ", profiles.Rows.Select(r => $"{r[0]} {(r[2] == "Yes" ? "on" : "OFF")}")), "ShieldHalfFull");
+                Add("Firewall", "Firewall", string.Join(", ", profiles.Rows.Select(r => $"{Loc.T("Str_SysSnap_Val_" + Slug(r[0]), r[0])} {(r[2] == "Yes" ? Loc.T("Str_SysSnap_Tile_FwOn", "on") : Loc.T("Str_SysSnap_Tile_FwOff", "OFF"))}")), "ShieldHalfFull");
 
             var rules = Find(snapshot, "firewall-rules");
-            if (rules != null) Add("Custom firewall rules", rules.Rows.Count(r => r[2] != "Windows").ToString(CultureInfo.InvariantCulture), "ShieldLockOutline");
+            if (rules != null) Add("CustomRules", "Custom firewall rules", rules.Rows.Count(r => r[2] != "Windows").ToString(CultureInfo.InvariantCulture), "ShieldLockOutline");
 
-            if (Find(snapshot, "ports") != null) Add("Listening ports", Count(snapshot, "ports").ToString(CultureInfo.InvariantCulture), "LanPending");
+            if (Find(snapshot, "ports") != null) Add("ListeningPorts", "Listening ports", Count(snapshot, "ports").ToString(CultureInfo.InvariantCulture), "LanPending");
 
             var services = Find(snapshot, "services");
             if (services != null)
             {
                 int running = services.Rows.Count(r => r[2] == "Running");
-                Add("Services", $"{running} running of {services.Rows.Count}", "CogSyncOutline");
+                Add("Services", "Services", Loc.F("Str_SysSnap_Tile_ServicesValue", "{0} running of {1}", running, services.Rows.Count), "CogSyncOutline");
             }
 
-            if (Find(snapshot, "startup") != null) Add("Startup items", Count(snapshot, "startup").ToString(CultureInfo.InvariantCulture), "RocketLaunchOutline");
-            if (Find(snapshot, "tasks") != null) Add("Scheduled tasks", Count(snapshot, "tasks").ToString(CultureInfo.InvariantCulture), "CalendarClock");
-            if (Find(snapshot, "programs") != null) Add("Installed programs", Count(snapshot, "programs").ToString(CultureInfo.InvariantCulture), "ApplicationOutline");
-            if (Find(snapshot, "env") != null) Add("Environment variables", Count(snapshot, "env").ToString(CultureInfo.InvariantCulture), "VariableBox");
+            if (Find(snapshot, "startup") != null) Add("StartupItems", "Startup items", Count(snapshot, "startup").ToString(CultureInfo.InvariantCulture), "RocketLaunchOutline");
+            if (Find(snapshot, "tasks") != null) Add("ScheduledTasks", "Scheduled tasks", Count(snapshot, "tasks").ToString(CultureInfo.InvariantCulture), "CalendarClock");
+            if (Find(snapshot, "programs") != null) Add("Programs", "Installed programs", Count(snapshot, "programs").ToString(CultureInfo.InvariantCulture), "ApplicationOutline");
+            if (Find(snapshot, "env") != null) Add("EnvVars", "Environment variables", Count(snapshot, "env").ToString(CultureInfo.InvariantCulture), "VariableBox");
             return tiles;
         }
 
@@ -83,23 +83,26 @@ namespace Smart_Tools.WPF.Controllers
         public static string ToText(SystemSnapshot s)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("SYSTEM SNAPSHOT");
-            sb.AppendLine($"Computer : {s.MachineName}");
-            sb.AppendLine($"User     : {s.UserName}{(s.IsAdministrator ? " (administrator)" : "")}");
-            sb.AppendLine($"Taken    : {s.CapturedAt:yyyy-MM-dd HH:mm}");
-            if (!s.Complete) sb.AppendLine("The scan was cancelled: only the finished sections are here.");
+            string computer = Loc.T("Str_SysSnap_X_Computer", "Computer"), user = Loc.T("Str_SysSnap_X_User", "User"), taken = Loc.T("Str_SysSnap_X_Taken", "Taken");
+            int pad = Math.Max(computer.Length, Math.Max(user.Length, taken.Length));
+            sb.AppendLine(Loc.T("Str_SysSnap_X_Title", "System Snapshot").ToUpperInvariant());
+            sb.AppendLine($"{computer.PadRight(pad)} : {s.MachineName}");
+            sb.AppendLine($"{user.PadRight(pad)} : {s.UserName}{(s.IsAdministrator ? " (" + Loc.T("Str_SysSnap_X_Admin", "administrator") + ")" : "")}");
+            sb.AppendLine($"{taken.PadRight(pad)} : {s.CapturedAt:yyyy-MM-dd HH:mm}");
+            if (!s.Complete) sb.AppendLine(Loc.T("Str_SysSnap_X_Cancelled", "The scan was cancelled: only the finished sections are here."));
 
-            foreach (var table in s.Tables)
+            foreach (var raw in s.Tables)
             {
+                var table = Localize(raw);
                 sb.AppendLine().AppendLine(new string('=', 78)).AppendLine(table.Title.ToUpperInvariant()).AppendLine(new string('=', 78));
                 if (!string.IsNullOrEmpty(table.Note)) sb.AppendLine(table.Note).AppendLine();
-                if (table.Rows.Count == 0) { sb.AppendLine("(nothing found)"); continue; }
+                if (table.Rows.Count == 0) { sb.AppendLine("(" + Loc.T("Str_SysSnap_X_NothingFound", "Nothing found.").TrimEnd('.').ToLowerInvariant() + ")"); continue; }
 
                 if (table.Headers.Length == 1)
                 {
                     foreach (var row in table.Rows) sb.AppendLine(row[0]);
                 }
-                else if (table.Headers is ["Item", "Value"])
+                else if (raw.Headers is ["Item", "Value"])
                 {
                     int width = Math.Min(40, table.Rows.Max(r => r[0].Length));
                     foreach (var row in table.Rows) sb.AppendLine($"{row[0].PadRight(width)} : {row[1]}");
@@ -135,9 +138,11 @@ namespace Smart_Tools.WPF.Controllers
             var sb = new StringBuilder();
             sb.Append("""
                 <!doctype html>
-                <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-                <title>System Snapshot
-                """).Append(" - ").Append(H(s.MachineName)).Append("""
+                <html lang="
+                """.TrimEnd()).Append(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName).Append("""
+                "><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+                <title>
+                """.TrimEnd()).Append(H(Loc.T("Str_SysSnap_X_Title", "System Snapshot"))).Append(" - ").Append(H(s.MachineName)).Append("""
                 </title>
                 <style>
                 :root{--bg:#f6f7f9;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#0ea5e9;--row:#f3f4f6}
@@ -162,19 +167,20 @@ namespace Smart_Tools.WPF.Controllers
                 </style></head><body><main>
                 """);
 
-            sb.Append("<h1>System Snapshot</h1><div class=\"meta\">")
-              .Append(H(s.MachineName)).Append(" · ").Append(H(s.UserName)).Append(s.IsAdministrator ? " (administrator)" : "")
+            var shown = s.Tables.Select(t => (Raw: t, Shown: Localize(t))).ToList();
+            sb.Append("<h1>").Append(H(Loc.T("Str_SysSnap_X_Title", "System Snapshot"))).Append("</h1><div class=\"meta\">")
+              .Append(H(s.MachineName)).Append(" · ").Append(H(s.UserName)).Append(s.IsAdministrator ? " (" + H(Loc.T("Str_SysSnap_X_Admin", "administrator")) + ")" : "")
               .Append(" · ").Append(s.CapturedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture));
-            if (!s.Complete) sb.Append(" · <strong>cancelled: only the finished sections are here</strong>");
-            sb.Append("</div><input id=\"q\" placeholder=\"Filter every table...\" autofocus><nav>");
-            foreach (var t in s.Tables) sb.Append("<a href=\"#").Append(H(t.Id)).Append("\">").Append(H(t.Title)).Append(" (").Append(t.Rows.Count).Append(")</a>");
+            if (!s.Complete) sb.Append(" · <strong>").Append(H(Loc.T("Str_SysSnap_X_Cancelled", "The scan was cancelled: only the finished sections are here."))).Append("</strong>");
+            sb.Append("</div><input id=\"q\" placeholder=\"").Append(H(Loc.T("Str_SysSnap_X_Filter", "Filter every table..."))).Append("\" autofocus><nav>");
+            foreach (var (raw, t) in shown) sb.Append("<a href=\"#").Append(H(raw.Id)).Append("\">").Append(H(t.Title)).Append(" (").Append(t.Rows.Count).Append(")</a>");
             sb.Append("</nav>");
 
-            foreach (var t in s.Tables)
+            foreach (var (raw, t) in shown)
             {
-                sb.Append("<section id=\"").Append(H(t.Id)).Append("\"><h2>").Append(H(t.Title)).Append("</h2>");
+                sb.Append("<section id=\"").Append(H(raw.Id)).Append("\"><h2>").Append(H(t.Title)).Append("</h2>");
                 if (!string.IsNullOrEmpty(t.Note)) sb.Append("<p class=\"note\">").Append(H(t.Note)).Append("</p>");
-                if (t.Rows.Count == 0) { sb.Append("<p class=\"note\">Nothing found.</p></section>"); continue; }
+                if (t.Rows.Count == 0) { sb.Append("<p class=\"note\">").Append(H(Loc.T("Str_SysSnap_X_NothingFound", "Nothing found."))).Append("</p></section>"); continue; }
 
                 sb.Append("<div class=\"wrap\"><table><thead><tr>");
                 foreach (string header in t.Headers) sb.Append("<th>").Append(H(header)).Append("</th>");

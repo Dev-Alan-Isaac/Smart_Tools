@@ -309,14 +309,15 @@ namespace Smart_Tools.WPF.Views
 
         private void ShowTable(SnapshotTable table)
         {
-            TxtTableTitle.Text = Title("Str_SysSnap_Sec_" + table.Id, table.Title);
-            TxtTableNote.Text = table.Note ?? "";
-            TxtTableNote.Visibility = string.IsNullOrEmpty(table.Note) ? Visibility.Collapsed : Visibility.Visible;
+            var shown = SystemSnapshotManager.Localize(table);
+            TxtTableTitle.Text = shown.Title;
+            TxtTableNote.Text = shown.Note ?? "";
+            TxtTableNote.Visibility = string.IsNullOrEmpty(shown.Note) ? Visibility.Collapsed : Visibility.Visible;
 
             // Columns are named c0, c1... so headers with spaces or symbols cannot break a binding path.
             var data = new DataTable();
             for (int c = 0; c < table.Headers.Length; c++) data.Columns.Add("c" + c, typeof(string));
-            foreach (var row in table.Rows) data.Rows.Add(row.Cast<object>().ToArray());
+            foreach (var row in shown.Rows) data.Rows.Add(row.Cast<object>().ToArray());
             _view = data.DefaultView;
 
             GridData.Columns.Clear();
@@ -326,7 +327,7 @@ namespace Smart_Tools.WPF.Views
                 bool single = table.Headers.Length == 1;
                 var column = new DataGridTextColumn
                 {
-                    Header = table.Headers[c],
+                    Header = shown.Headers[c],
                     Binding = new Binding($"[c{c}]"),
                     SortMemberPath = "c" + c,
                     MaxWidth = single ? double.PositiveInfinity : 460,
