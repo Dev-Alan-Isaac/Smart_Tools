@@ -11,6 +11,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -67,6 +68,10 @@ namespace Smart_Tools.WPF.Views
             _view.Filter = o => o is ProcessKillerRow r && ProcessKillerManager.Matches(r, TxtSearch.Text, _settings.Filter, _focusPids, _searchPortPids);
             _view.IsLiveSorting = true;
             GridProcesses.ItemsSource = _view;
+            // Sorted by a changing value (CPU), rows would jump away from under the pointer: the order is held while the mouse is over the list.
+            GridProcesses.MouseEnter += (_, _) => _view.IsLiveSorting = false;
+            GridProcesses.MouseLeave += (_, _) => _view.IsLiveSorting = true;
+            ProcessIconConverter.IconsLoaded += OnIconsLoaded;
 
             _searchTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
             _searchTimer.Tick += async (_, _) =>
@@ -93,6 +98,8 @@ namespace Smart_Tools.WPF.Views
             RadioRefresh1.IsChecked = _settings.RefreshSeconds == 1;
             RadioRefresh2.IsChecked = _settings.RefreshSeconds == 2;
             RadioRefresh5.IsChecked = _settings.RefreshSeconds == 5;
+            ChkAskSingle.IsChecked = _settings.ConfirmSingleEnd;
+            _settingsApplied = true;
             if (_settings.SidebarCollapsed) SetSidebarCollapsed(true);
 
             ApplySort(_settings.SortColumn, _settings.SortDescending);
@@ -531,13 +538,19 @@ namespace Smart_Tools.WPF.Views
 
         private bool Confirm(List<ProcessKillerRow> selected, List<ProcessKillerRow> endable, int blocked, bool tree)
         {
+            // One ordinary program (not a Windows process, not a tree): the person may have chosen not to be asked.
+            bool single = !tree && selected.Count == 1 && endable.Count == 1 && endable[0].Kind != ProcessKillerKind.Windows;
+            if (single && !_settings.ConfirmSingleEnd) return true;
+
             var sb = new StringBuilder();
+            string heading;
             if (tree && selected.Count == 1)
-                sb.AppendLine(string.Format(Str("Str_ProcessKiller_ConfirmTree"), selected[0].Name, endable.Count - 1));
+                heading = string.Format(Str("Str_ProcessKiller_ConfirmTree"), selected[0].Name, endable.Count - 1);
             else if (endable.Count == 1)
-                sb.AppendLine(string.Format(Str("Str_ProcessKiller_ConfirmOne"), endable[0].Name, endable[0].Pid));
+                heading = string.Format(Str("Str_ProcessKiller_ConfirmOne"), endable[0].Name, endable[0].Pid);
             else
-                sb.AppendLine(string.Format(Str("Str_ProcessKiller_ConfirmMany"), endable.Count));
+                heading = string.Format(Str("Str_ProcessKiller_ConfirmMany"), endable.Count);
+            sb.AppendLine(heading);
 
             if (endable.Count > 1)
             {
@@ -551,13 +564,38 @@ namespace Smart_Tools.WPF.Views
             if (endable.Any(r => r.Kind == ProcessKillerKind.Windows)) sb.AppendLine(Str("Str_ProcessKiller_ConfirmWindows"));
             if (blocked > 0) sb.AppendLine(string.Format(Str("Str_ProcessKiller_ConfirmSkipped"), blocked));
 
-            return MessageBox.Show(
-                Window.GetWindow(this)!,
-                sb.ToString().TrimEnd(),
-                Str("Str_ProcessKiller_ConfirmTitle"),
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning,
-                MessageBoxResult.No) == MessageBoxResult.Yes;
+            if (!single)
+            {
+                return MessageBox.Show(
+                    Window.GetWindow(this)!,
+                    sb.ToString().TrimEnd(),
+                    Str("Str_ProcessKiller_ConfirmTitle"),
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning,
+                    MessageBoxResult.No) == MessageBoxResult.Yes;
+            }
+
+            // The native task dialog has a tick box a MessageBox cannot have.
+            var page = new System.Windows.Forms.TaskDialogPage
+            {
+                Caption = Str("Str_ProcessKiller_ConfirmTitle"),
+                Heading = heading,
+                Text = sb.ToString().TrimEnd()[heading.Length..].Trim(),
+                Icon = System.Windows.Forms.TaskDialogIcon.Warning,
+                AllowCancel = true,
+                Verification = new System.Windows.Forms.TaskDialogVerificationCheckBox(Str("Str_ProcessKiller_DontAskAgain")),
+            };
+            page.Buttons.Add(System.Windows.Forms.TaskDialogButton.Yes);
+            page.Buttons.Add(System.Windows.Forms.TaskDialogButton.No);
+            page.DefaultButton = System.Windows.Forms.TaskDialogButton.No;
+
+            var owner = Window.GetWindow(this);
+            var answer = owner != null
+                ? System.Windows.Forms.TaskDialog.ShowDialog(new WindowInteropHelper(owner).Handle, page)
+                : System.Windows.Forms.TaskDialog.ShowDialog(page);
+            if (answer != System.Windows.Forms.TaskDialogButton.Yes) return false;
+            if (page.Verification!.Checked) ChkAskSingle.IsChecked = false;      // the check box handler saves it
+            return true;
         }
 
         private void ReportResults(List<ProcessKillerEndResult> results, int blocked)
@@ -717,35 +755,104 @@ namespace Smart_Tools.WPF.Views
         }
 
         private string Str(string key) => TryFindResource(key) as string ?? key;
+
+        private bool _settingsApplied;
+
+        private void ChkAskSingle_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_settingsApplied) return;
+            _settings.ConfirmSingleEnd = ChkAskSingle.IsChecked == true;
+            SaveSettings();
+        }
+
+        /// <summary>Icons are extracted in the background; when some arrive, the rows with those programs read them again.</summary>
+        private void OnIconsLoaded(IReadOnlyCollection<string> paths)
+        {
+            var loaded = new HashSet<string>(paths, StringComparer.OrdinalIgnoreCase);
+            foreach (var row in _rows)
+                if (row.Path != null && loaded.Contains(row.Path)) row.RefreshIcon();
+        }
     }
 
-    /// <summary>Executable path → its 16 px icon (cached; extracted only for rows on screen).</summary>
+    /// <summary>
+    /// Executable path → its 16 px icon. Icons are read from the disk in the background, a few at a time; the grid shows the cog until
+    /// one arrives, then <see cref="IconsLoaded"/> tells the rows to read it again. Nothing here touches the disk on the UI thread.
+    /// </summary>
     public sealed class ProcessIconConverter : IValueConverter
     {
-        private static readonly Dictionary<string, ImageSource?> Cache = new(StringComparer.OrdinalIgnoreCase);
+        private const int MaxCached = 3000;
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, ImageSource?> Cache = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> Requested = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly System.Collections.Concurrent.ConcurrentQueue<string> Pending = new();
+        private static int _working;
+
+        /// <summary>Raised on the UI thread with the paths whose icons just arrived.</summary>
+        public static event Action<IReadOnlyCollection<string>>? IconsLoaded;
 
         public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is not string path || path.Length == 0) return null;
             if (Cache.TryGetValue(path, out var cached)) return cached;
+            if (Requested.TryAdd(path, 0))
+            {
+                Pending.Enqueue(path);
+                StartWorker();
+            }
+            return null;
+        }
 
-            ImageSource? image = null;
+        private static void StartWorker()
+        {
+            if (Interlocked.CompareExchange(ref _working, 1, 0) != 0) return;
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            _ = Task.Run(() =>
+            {
+                var batch = new List<string>();
+                void Flush()
+                {
+                    if (batch.Count == 0) return;
+                    var done = batch.ToArray();
+                    batch.Clear();
+                    dispatcher?.BeginInvoke(() => IconsLoaded?.Invoke(done));
+                }
+
+                try
+                {
+                    if (Cache.Count > MaxCached)
+                    {
+                        Cache.Clear();      // a long session: start again, the rows on screen ask for theirs
+                        Requested.Clear();
+                    }
+                    while (Pending.TryDequeue(out string? path))
+                    {
+                        Cache[path] = Extract(path);
+                        batch.Add(path);
+                        if (batch.Count >= 25) Flush();
+                    }
+                    Flush();
+                }
+                finally
+                {
+                    Volatile.Write(ref _working, 0);
+                    if (!Pending.IsEmpty) StartWorker();
+                }
+            });
+        }
+
+        private static ImageSource? Extract(string path)
+        {
             try
             {
                 using var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
-                if (icon != null)
-                {
-                    var source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(16, 16));
-                    source.Freeze();
-                    image = source;
-                }
+                if (icon == null) return null;
+                var source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(16, 16));
+                source.Freeze();
+                return source;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or System.Runtime.InteropServices.ExternalException)
             {
+                return null;
             }
-
-            Cache[path] = image;
-            return image;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();

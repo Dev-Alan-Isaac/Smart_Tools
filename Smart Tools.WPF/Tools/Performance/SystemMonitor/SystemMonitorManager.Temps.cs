@@ -67,10 +67,10 @@ namespace Smart_Tools.WPF.Controllers
                                 break;
                             case HardwareType.GpuNvidia or HardwareType.GpuAmd or HardwareType.GpuIntel:
                                 var core = readings.FirstOrDefault(r => r.Name.Contains("Core", StringComparison.OrdinalIgnoreCase)) ?? readings[0];
-                                gpus[hw.Name] = core.Value!.Value;
+                                gpus[UniqueKey(gpus, hw.Name)] = core.Value!.Value;
                                 break;
                             case HardwareType.Storage:
-                                disks[hw.Name] = readings[0].Value!.Value;
+                                disks[UniqueKey(disks, hw.Name)] = readings[0].Value!.Value;
                                 break;
                         }
                     }
@@ -84,6 +84,17 @@ namespace Smart_Tools.WPF.Controllers
                     Log.Info($"System Monitor: temperature read failed: {ex.Message}");
                     if (++_failures >= 5) Close();
                     return SystemMonitorTemps.Empty;
+                }
+            }
+
+            /// <summary>Two identical cards or drives have the same name: the second becomes "name #2", so neither temperature is lost.</summary>
+            private static string UniqueKey(Dictionary<string, double> taken, string name)
+            {
+                if (!taken.ContainsKey(name)) return name;
+                for (int n = 2; ; n++)
+                {
+                    string key = $"{name} #{n}";
+                    if (!taken.ContainsKey(key)) return key;
                 }
             }
 

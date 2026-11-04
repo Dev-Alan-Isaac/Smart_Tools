@@ -64,6 +64,7 @@ namespace Smart_Tools.WPF.Views
             SensorGroups.ItemsSource = _groups;
             OverviewTiles.ItemsSource = new ListCollectionView(_parts) { Filter = o => o is HardwarePartItem { Part: not HardwarePartKind.Pc } };
             _manager.SnapshotReady += ShowSnapshot;
+            _pausedTimer.Tick += (_, _) => UpdatePausedNote();
         }
 
         /// <summary>Called from MainWindow.Window_Closing: stops reading and closes the sensor library.</summary>
@@ -183,12 +184,38 @@ namespace Smart_Tools.WPF.Views
             UpdateLiveUi();
         }
 
+        private readonly DispatcherTimer _pausedTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+        private DateTime? _lastTakenUtc;
+
+        /// <summary>While paused: "last reading 12 s ago - the graphs show the last 60 readings (about 30 s)". The age keeps counting.</summary>
+        private void UpdatePausedNote()
+        {
+            if (!_paused) return;
+            var age = _lastTakenUtc is DateTime taken ? DateTime.UtcNow - taken : TimeSpan.Zero;
+            var window = TimeSpan.FromMilliseconds(HardwareSensorsManager.HistoryLength * Math.Max(250, _settings.RefreshMs));
+            string Span(TimeSpan t) => t.TotalMinutes >= 1 ? $"{(int)t.TotalMinutes}:{t.Seconds:00} min" : $"{Math.Max(0, (int)t.TotalSeconds)} s";
+            TxtPausedNote.Text = string.Format(System.Globalization.CultureInfo.CurrentCulture,
+                Loc.T("Str_HardwareSensors_PausedNote", "Paused · last reading {0} ago · the graphs show the last {1} readings (about {2})"),
+                Span(age), HardwareSensorsManager.HistoryLength, Span(window));
+            TxtPausedNote.Visibility = Visibility.Visible;
+        }
+
         private void UpdateLiveUi()
         {
             IconPause.Kind = _paused ? PackIconKind.Play : PackIconKind.Pause;
             TxtPause.Text = _paused ? Loc.T("Str_MicRecorder_Resume", "Resume") : Loc.T("Str_MicRecorder_Pause", "Pause");
             LiveDot.SetResourceReference(Border.BackgroundProperty, _paused ? "SidebarTextMuted" : "StatusSuccessFg");
             LiveDot.ToolTip = _paused ? Loc.T("Str_SystemMonitor_Paused", "Paused") : Loc.T("Str_HardwareSensors_Live", "Live");
+            _pausedTimer.Stop();
+            if (_paused)
+            {
+                UpdatePausedNote();
+                _pausedTimer.Start();
+            }
+            else
+            {
+                TxtPausedNote.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void Units_Click(object sender, RoutedEventArgs e)
@@ -207,6 +234,7 @@ namespace Smart_Tools.WPF.Views
 
         private void ShowSnapshot(HardwareSnapshot s, bool countHistory)
         {
+            _lastTakenUtc = s.TakenUtc;
             if (_closed) return;
             _last = s;
             var parts = HardwareSensorsManager.BuildParts(s.Readings, _settings.Fahrenheit);
@@ -259,7 +287,7 @@ namespace Smart_Tools.WPF.Views
             string? note = HardwareSensorsManager.CoverageNote(parts, _isAdmin, _driverInstalled.Value);
             TxtCoverage.Text = note ?? "";
             // The banner already says it; the sidebar card is the fallback once the banner is hidden.
-            CoverageCard.Visibility = note == null || ElevationBanner.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            CoverageCard.Visibility = note == null || ElevationBanner.Visibility == Visibility.Visible || AdminBanner.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
             BtnCopyReport.IsEnabled = BtnSaveReport.IsEnabled = any;
             if (countHistory) UiMotion.Pop(LiveDot, 0.6);
         }
@@ -389,56 +417,29 @@ namespace Smart_Tools.WPF.Views
 
             if (!_isAdmin)
             {
-                TxtBannerTitle.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_AdminTitle");
-                TxtBannerText.SetResourceReference(TextBlock.TextProperty, driver ? "Str_HardwareSensors_AdminWarning" : "Str_HardwareSensors_AdminAndDriverWarning");
+                AdminBanner.MessageKey = driver ? "Str_HardwareSensors_AdminWarning" : "Str_HardwareSensors_AdminAndDriverWarning";
+                AdminBanner.ShowIfNotElevated();
+                return;
             }
-            else
-            {
-                TxtBannerTitle.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_DriverTitle");
-                TxtBannerText.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_DriverWarning");
-                TxtBannerAction.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_GetDriver");
-                BtnBannerAction.SetResourceReference(ToolTipProperty, "Str_HardwareSensors_GetDriverTooltip");
-                IconBannerAction.Kind = PackIconKind.Download;
-            }
+
+            // Elevated but the PawnIO driver is missing: say so, with the download.
+            TxtBannerTitle.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_DriverTitle");
+            TxtBannerText.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_DriverWarning");
+            TxtBannerAction.SetResourceReference(TextBlock.TextProperty, "Str_HardwareSensors_GetDriver");
+            BtnBannerAction.SetResourceReference(ToolTipProperty, "Str_HardwareSensors_GetDriverTooltip");
+            IconBannerAction.Kind = PackIconKind.Download;
             UiMotion.FadeVisibility(ElevationBanner, true);
         }
 
         private void BtnBannerAction_Click(object sender, RoutedEventArgs e)
         {
-            if (_isAdmin)
+            try
             {
-                try
-                {
-                    Process.Start(new ProcessStartInfo("https://pawnio.eu") { UseShellExecute = true });
-                }
-                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
-                {
-                    MessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                return;
+                Process.Start(new ProcessStartInfo("https://pawnio.eu") { UseShellExecute = true });
             }
-            RestartAsAdmin();
-        }
-
-        /// <summary>Relaunches Smart Tools elevated (UAC prompt) and closes this instance - asks first.</summary>
-        private void RestartAsAdmin()
-        {
-            string question = TryFindResource("Str_HardwareSensors_RestartConfirm") as string ?? "Restart Smart Tools as administrator?";
-            if (MessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
-
-            // Unsaved work first (while cancelling is still possible), then switch: the elevated
-            // copy waits for this one to close, which happens without asking again.
-            if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
-
-            switch (AppRestartManager.StartElevatedCopy(out string? error))
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
             {
-                case AppRestartResult.Started:
-                    System.Windows.Application.Current.Shutdown();
-                    break;
-                case AppRestartResult.Failed:
-                    MessageBox.Show(Loc.F("Str_MB_CouldnTRestartAs", "Couldn't restart as administrator: {0}", error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                // Declined: UAC said no - stay as we are.
+                MessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

@@ -152,14 +152,26 @@ namespace Smart_Tools.WPF.Controllers
         /// GPU name, WMI's disk model): names from different sources rarely
         /// match exactly, so either containing the other is close enough.
         /// </summary>
-        public static double? MatchTemp(IReadOnlyDictionary<string, double> byName, string? target)
+        public static double? MatchTemp(IReadOnlyDictionary<string, double> byName, string? target, int occurrence = 0)
         {
             if (string.IsNullOrWhiteSpace(target)) return null;
+            // Identical devices (two of the same card or drive) match the same name: the first one takes the first temperature,
+            // the second the second... and a device with no temperature of its own shows none instead of its twin's.
+            int seen = 0;
             foreach (var (name, value) in byName)
-                if (name.Contains(target, StringComparison.OrdinalIgnoreCase) || target.Contains(name, StringComparison.OrdinalIgnoreCase))
-                    return value;
+            {
+                if (!name.Contains(target, StringComparison.OrdinalIgnoreCase) && !target.Contains(name, StringComparison.OrdinalIgnoreCase)) continue;
+                if (seen++ == occurrence) return value;
+            }
             return null;
         }
+
+        private static readonly bool RunningAsAdministrator = new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent())
+            .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+
+        /// <summary>What a temperature line says when there is no reading: the reason, not a bare dash.</summary>
+        private static string TempOrReason(double? temp) =>
+            temp is double ? FormatTemp(temp) : RunningAsAdministrator ? FormatTemp(temp) : Loc.T("Str_SystemMonitor_TempNeedsAdmin", "Needs administrator");
 
         // =================================================================
         //  Windows' GPU counters
@@ -479,7 +491,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     new("Utilization", FormatPercent(s.CpuPercent)),
                     new("Speed", FormatClock(speed)),
-                    new("Temperature", FormatTemp(cpuTemp)),
+                    new("Temperature", TempOrReason(cpuTemp)),
                     new("Processes", Count(s.ProcessCount)),
                     new("Threads", Count(s.ThreadCount)),
                     new("Handles", Count(s.HandleCount)),
@@ -527,7 +539,8 @@ namespace Smart_Tools.WPF.Controllers
             {
                 var di = specs.Disks.GetValueOrDefault(d.Number);
                 string type = DriveTypeText(di);
-                double? diskTemp = MatchTemp(s.Temps.DiskByName, di?.Model);
+                int sameDrives = s.Disks.TakeWhile(x => x.Number != d.Number).Count(x => specs.Disks.GetValueOrDefault(x.Number)?.Model == di?.Model);
+                double? diskTemp = MatchTemp(s.Temps.DiskByName, di?.Model, sameDrives);
                 var letters = d.Letters.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 long formatted = letters.Sum(l => specs.VolumeSizes.GetValueOrDefault(l.ToUpperInvariant()));
                 Info("Capacity", di?.SizeBytes > 0 ? FormatBytes(di.SizeBytes) : null);
@@ -541,7 +554,7 @@ namespace Smart_Tools.WPF.Controllers
                     new("Read speed", FormatByteRate(d.ReadBytesPerSec)),
                     new("Write speed", FormatByteRate(d.WriteBytesPerSec)),
                 };
-                if (diskTemp is double) diskLive.Add(new SystemMonitorStat("Temperature", FormatTemp(diskTemp)));
+                if (diskTemp is double || !RunningAsAdministrator) diskLive.Add(new SystemMonitorStat("Temperature", TempOrReason(diskTemp)));
                 list.Add(new SystemMonitorSectionData
                 {
                     Id = $"disk{d.Number}",
@@ -596,7 +609,8 @@ namespace Smart_Tools.WPF.Controllers
             {
                 var g = s.Gpus[i];
                 var gi = specs.Gpus.GetValueOrDefault(g.Name);
-                double? gpuTemp = MatchTemp(s.Temps.GpuByName, g.Name);
+                int sameCards = s.Gpus.Take(i).Count(x => x.Name == g.Name);
+                double? gpuTemp = MatchTemp(s.Temps.GpuByName, g.Name, sameCards);
                 Info("Driver version", gi?.DriverVersion);
                 Info("Driver date", gi?.DriverDate?.ToString("d", Culture));
                 Info("Dedicated memory", g.DedicatedTotalBytes is long dt ? FormatBytes(dt) : null);
@@ -609,7 +623,7 @@ namespace Smart_Tools.WPF.Controllers
                     new("Dedicated memory", Memory(g.DedicatedUsedBytes, g.DedicatedTotalBytes)),
                     new("Shared memory", Memory(g.SharedUsedBytes, g.SharedTotalBytes)),
                 };
-                if (gpuTemp is double) gpuLive.Add(new SystemMonitorStat("Temperature", FormatTemp(gpuTemp)));
+                if (gpuTemp is double || !RunningAsAdministrator) gpuLive.Add(new SystemMonitorStat("Temperature", TempOrReason(gpuTemp)));
                 list.Add(new SystemMonitorSectionData
                 {
                     Id = "gpu:" + g.Luid,

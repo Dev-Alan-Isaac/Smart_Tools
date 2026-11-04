@@ -54,6 +54,9 @@ namespace Smart_Tools.WPF.Controllers
 
         public static readonly IReadOnlyList<ToolInfo> Tools = new[]
         {
+             // Media
+            new ToolInfo { Id = "media-viewer", Name = "Media Viewer", Icon = "PlayBoxMultipleOutline", CategoryId = "media", Description = "Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages", Keywords = "media viewer player movies tv photos pictures images video audio music slideshow gallery widget mini player floating visor reproductor multimedia peliculas fotos musica minirreproductor flotante video replay image viewer audio replay player watch mp4 mkv movie listen mp3 wav flac visualizer vlc zoom reproductor de video visor de imagenes reproductor de audio" },
+
             // Data Quality
             new ToolInfo { Id = "validate-data", Name = "Validate Data", Icon = "ShieldCheck", CategoryId = "data-quality", Description = "Check files for broken or invalid data", Keywords = "verify check corrupt integrity csv json xml" },
             new ToolInfo { Id = "duplicate-data", Name = "Duplicate Data", Icon = "Broom", CategoryId = "data-quality", Description = "Find and remove duplicate files", Keywords = "duplicates clean same copies hash" },
@@ -77,10 +80,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "watermark", Name = "Watermarker", Title = "Batch Watermarker", Icon = "Stamper", CategoryId = "convert", Description = "Stamp text or a logo on many pictures, videos and PDFs", Keywords = "watermark stamp logo copyright text draft confidential brand marca de agua sello pictures photos videos pdf batch" },
             new ToolInfo { Id = "pdf-toolkit", Name = "PDF Merge & Split", Icon = "FileSync", CategoryId = "pdf", Description = "Join PDFs, cut one into parts, or make it smaller", Keywords = "pdf merge join combine split cut extract pages compress smaller reduce size unir dividir comprimir" },
             new ToolInfo { Id = "pdf-pages", Name = "PDF Pages & Protect", Icon = "FileCogOutline", CategoryId = "pdf", Description = "Rotate, remove or number pages; edit details; add or remove a password", Keywords = "pdf rotate pages remove delete extract crop page numbers password protect unlock encrypt metadata author title permissions girar paginas contraseña proteger numeros" },
-
-            // Media
-            new ToolInfo { Id = "media-viewer", Name = "Media Viewer", Icon = "PlayBoxMultipleOutline", CategoryId = "media", Description = "Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages", Keywords = "media viewer player movies tv photos pictures images video audio music slideshow gallery widget mini player floating visor reproductor multimedia peliculas fotos musica minirreproductor flotante video replay image viewer audio replay player watch mp4 mkv movie listen mp3 wav flac visualizer vlc zoom reproductor de video visor de imagenes reproductor de audio" },
-
+           
             // Video
             new ToolInfo { Id = "video-editor", Name = "Video Stitcher", Icon = "FilmstripBoxMultiple", CategoryId = "video", Description = "Join video clips into one, with optional trims and fades", Keywords = "stitch join merge combine concat clips edit cut trim fade unir juntar" },
             new ToolInfo { Id = "video-to-audio", Name = "Video to Audio", Title = "Video to Audio Extractor", Icon = "FileMusicOutline", CategoryId = "video", Description = "Pull the audio track out of videos, in bulk", Keywords = "extract audio video mp3 m4a wav flac sound track rip" },

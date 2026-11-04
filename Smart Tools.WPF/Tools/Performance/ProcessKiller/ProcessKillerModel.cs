@@ -49,6 +49,9 @@ namespace Smart_Tools.WPF.Models
         public string SortColumn { get; set; } = nameof(ProcessKillerRow.Name);
         public bool SortDescending { get; set; }
         public bool SidebarCollapsed { get; set; }
+
+        /// <summary>Ask before ending ONE ordinary (non-Windows) process. Turned off by "don't ask again" in that question; back on in the sidebar.</summary>
+        public bool ConfirmSingleEnd { get; set; } = true;
     }
 
     /// <summary>A row in the list. Identity is (Pid, CreationTicks), so a reused PID is a new row.</summary>
@@ -82,6 +85,9 @@ namespace Smart_Tools.WPF.Models
 
         public int ParentPid { get => _parentPid; set => Set(ref _parentPid, value); }
         public string? Path { get => _path; set => Set(ref _path, value); }
+
+        /// <summary>Tells the grid to read the icon again (it is extracted in the background and arrives after the row).</summary>
+        public void RefreshIcon() => Raise(nameof(Path));
         public string? Owner { get => _owner; set { if (Set(ref _owner, value)) Raise(nameof(OwnerText)); } }
         public string? WindowTitle { get => _windowTitle; set { if (Set(ref _windowTitle, value)) Raise(nameof(HasWindow)); } }
         public int Threads { get => _threads; set => Set(ref _threads, value); }

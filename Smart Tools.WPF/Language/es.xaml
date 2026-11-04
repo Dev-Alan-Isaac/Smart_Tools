@@ -2671,6 +2671,7 @@
     <system:String x:Key="Str_HardwareSensors_NoSensorsHint">El hardware de este equipo no informó de ningún sensor. El Monitor del sistema sigue mostrando el uso de cada parte.</system:String>
     <system:String x:Key="Str_HardwareSensors_SaveReportTitle">Guardar el informe de sensores de hardware</system:String>
     <system:String x:Key="Str_HardwareSensors_KeptExisting">{0} ya existe, así que se conservó y este informe recibió otro nombre.</system:String>
+    <system:String x:Key="Str_HardwareSensors_PausedNote">En pausa · última lectura hace {0} · las gráficas muestran las últimas {1} lecturas (unos {2})</system:String>
     <system:String x:Key="Str_ImageConvertPDF_Pages">Páginas</system:String>
     <system:String x:Key="Str_ImageConvertPDF_PaperSizeOfEvery">Tamaño de papel de cada página. &quot;Igual que la imagen&quot; hace que cada página tenga exactamente el tamaño de su imagen.</system:String>
     <system:String x:Key="Str_ImageConvertPDF_Letter8511">Carta (8,5 × 11 pulg.)</system:String>
@@ -4836,6 +4837,7 @@
     <system:String x:Key="Str_SystemMonitor_AdminWarning">Ejecutando como usuario estándar, no se pueden leer las temperaturas de la CPU, la tarjeta gráfica y las unidades, por lo que no aparecen en las secciones. Reinicia como administrador para leerlas.</system:String>
     <system:String x:Key="Str_SystemMonitor_Paused">En pausa</system:String>
     <system:String x:Key="Str_SystemMonitor_Copied">Informe copiado</system:String>
+    <system:String x:Key="Str_SystemMonitor_TempNeedsAdmin">Requiere administrador</system:String>
     <system:String x:Key="Str_ProcessKiller_SearchTooltip">Busca en el nombre del proceso, PID, el puerto que usa un proceso, ruta, usuario o título de ventana</system:String>
     <system:String x:Key="Str_ProcessKiller_FilterAll">Todos</system:String>
     <system:String x:Key="Str_ProcessKiller_FilterAllTooltip">Todos los procesos en ejecución</system:String>
@@ -9479,6 +9481,9 @@
     <system:String x:Key="Str_WifiAnalyzer_AccessPoint">Punto de acceso</system:String>
     <system:String x:Key="Str_WifiAnalyzer_Connects">Conexiones</system:String>
     <system:String x:Key="Str_ProcessKiller_Pid">PID</system:String>
+    <system:String x:Key="Str_ProcessKiller_SafetyHeader">Seguridad</system:String>
+    <system:String x:Key="Str_ProcessKiller_AskSingle">Preguntar antes de terminar un programa normal</system:String>
+    <system:String x:Key="Str_ProcessKiller_DontAskAgain">No volver a preguntar para un solo programa normal (se reactiva en la barra lateral)</system:String>
     <system:String x:Key="Str_ImageToPixel_PixelsAcross">Píxeles de ancho (4 - 256)</system:String>
     <system:String x:Key="Str_ImageToPixel_NumberOfColorsAll">Número de colores (2 - 64, 0 = todos)</system:String>
     <system:String x:Key="Str_ImageToPixel_DitherSmootherGradients">Tramado (degradados más suaves)</system:String>

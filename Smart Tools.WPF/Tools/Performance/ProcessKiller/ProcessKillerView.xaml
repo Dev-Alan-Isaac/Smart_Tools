@@ -394,6 +394,22 @@
                                 </StackPanel>
                             </Border>
 
+                            <!--  ============ SAFETY ============  -->
+                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_ProcessKiller_SafetyHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
+                                    <CheckBox
+                                        x:Name="ChkAskSingle"
+                                        Margin="0,4,0,0"
+                                        Checked="ChkAskSingle_Changed"
+                                        Content="{DynamicResource Str_ProcessKiller_AskSingle}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Unchecked="ChkAskSingle_Changed" />
+                                </StackPanel>
+                            </Border>
 
                         </StackPanel>
                     </ScrollViewer>

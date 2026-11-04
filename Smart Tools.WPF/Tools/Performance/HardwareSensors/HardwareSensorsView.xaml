@@ -773,7 +773,12 @@
                 </Grid.RowDefinitions>
 
                 <!--  ================= ELEVATION BANNER =================  -->
-                <!--  Same look as Drive Health's. Shown when admin rights (or the PawnIO driver) would add sensors that otherwise read 0 or are missing.  -->
+                <!--  The shared "needs administrator" card (restart through UAC); the border below is only the PawnIO driver note for an elevated session.  -->
+                <controls:ElevationBannerCard
+                    x:Name="AdminBanner"
+                    Margin="0,0,0,12"
+                    MessageKey="Str_HardwareSensors_AdminWarning"
+                    TitleKey="Str_HardwareSensors_AdminTitle" />
                 <Border
                     x:Name="ElevationBanner"
                     Margin="0,0,0,12"
@@ -899,6 +904,13 @@
                                 VerticalScrollBarVisibility="Auto"
                                 Visibility="Collapsed">
                                 <StackPanel x:Name="DetailPanel">
+                                    <TextBlock
+                                        x:Name="TxtPausedNote"
+                                        Margin="0,0,0,8"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource StatusWarningFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
                                     <Grid Margin="0,0,0,14">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
