@@ -11,8 +11,8 @@ and fits the rules: offline where possible, never overwrites files, same page la
 | 3 | **Text Tools** (case, sort, dedupe, trim, count words/chars, find-replace, line numbers) | Utilities | Daily use, tiny effort | Text Diff, Notes |
 | 4 | **Scheduled Tasks viewer** (list, run, enable/disable) | System | Pairs with Startup Apps and Services | Services page layout |
 | 5 | **Installed Apps / Uninstaller** (size, date, publisher, uninstall, leftovers) | System | Common cleanup job, links to Junk Cleaner | Startup Apps, Large Files |
-| 6 | **Image Metadata Cleaner** (strip EXIF/GPS in bulk) | Images / Security | Privacy before sharing photos; Metadata Extractor already reads it | Metadata Extractor, Magick.NET |
-| 7 | **PDF Reader & Signer** (view, fill, sign, annotate) | Convert & PDF | PDF Tools edits structure but can't show or sign | PDFsharp, WebView2 |
+| 6 (built) | **Image Metadata Cleaner** (strip EXIF/GPS in bulk) | Images / Security | Privacy before sharing photos; Metadata Extractor already reads it | Metadata Extractor, Magick.NET |
+| 7 (built) | **PDF Reader & Signer** (view, fill, sign, annotate) | PDF | PDF Tools edits structure but can't show or sign | PDFsharp, WebView2 |
 | 8 | **Subtitle Editor** (edit/sync SRT/VTT, shift timing, burn into video) | Video | Speech to Text makes subtitles but they can't be fixed | Whisper output, FFmpeg |
 | 9 | **Window & Screen Utilities** (ruler, always-on-top, magnifier, pixel measure) | Utilities | Sits next to Screen Color Picker and Screenshot | Screen Color Picker overlay |
 | 10 | **Wake-on-LAN & Network Sweep** (wake saved devices, ping sweep) | Network | Device Scanner already finds MACs | Device Scanner, OUI lookup |
@@ -26,7 +26,7 @@ and fits the rules: offline where possible, never overwrites files, same page la
 - **Security**: Password Breach Check (k-anonymity range lookup, opt-in online); File Signature/Hash of folder (manifest create + verify, extends Hash Verifier); Secure Notes (encrypted, reuses Vault crypto); Certificate Viewer (inspect .cer/.pfx, expiry); Firewall Rules viewer.
 - **System / Performance**: Drivers viewer (version, date, export); Context Menu Editor (shell extensions on/off); Default Apps & File Associations; Power Plans and Sleep blockers (`powercfg /requests`); Windows Update history; Disk partitions and BitLocker status; Boot time analyzer.
 - **Network**: Bandwidth per app (history, not just live); Public-IP & latency monitor over time with alerts; Port forward test / open port checker; SSL certificate checker for a host; Wi-Fi password QR share (Wi-Fi Analyzer already reads saved profiles); MAC address changer (admin).
-- **Utilities**: To-do / Checklist with due dates; Snippets & Text Expander; Quick Launcher (global hotkey, open tools and files); Sticky notes widget (like the Net Speed widget); World Clock widget; Unit/Currency widget; Clipboard transformations (paste as plain text, clean links).
+- **Utilities**: To-do / Checklist with due dates; Snippets & Text Expander; Quick Launcher (global hotkey, open tools and files); Sticky notes widget; World Clock widget; Unit/Currency widget; Clipboard transformations (paste as plain text, clean links).
 - **Generators**: Fake image/placeholder generator (sizes, colors); Fake invoice/PDF test documents; Password pattern/wordlist builder; Regex builder from examples; Color scheme from a word/mood.
 - **Pixel & Sprites**: Tilemap/Tileset editor; Animated sprite previewer from a sheet; Palette manager (import/export .gpl/.ase); 9-slice and font-atlas (bitmap font) builder.
 
@@ -40,4 +40,4 @@ and fits the rules: offline where possible, never overwrites files, same page la
 
 ## How to pick
 Start with 1-3 (they fix real gaps and are mostly pure logic, easy to test). Then 4-5 to finish the System section, and 6-8 to round out
-Images, Convert & PDF and Video. Anything marked as admin-only should reuse `ElevationBannerCard`.
+Images, PDF and Video. Anything marked as admin-only should reuse `ElevationBannerCard`.

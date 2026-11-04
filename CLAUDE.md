@@ -1,6 +1,6 @@
 # Smart Tools - context for Claude
 
-WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 109 tools in 20 sidebar categories, one window, English + Spanish, light + dark theme.
+WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 111 tools in 21 sidebar categories, one window, English + Spanish, light + dark theme.
 Details live in `Smart Tools.WPF/PROJECT_DOCUMENTATION.md` (every tool, architecture, shortcuts, safe file ops, data locations) and
 `Smart Tools.WPF/Themes/ui-style-guide.md` (layout, shared styles, motion). Ideas for new tools: `Smart Tools.WPF/FUTURE_IDEAS.md`.
 Read those before changing a view; do not repeat their content here.

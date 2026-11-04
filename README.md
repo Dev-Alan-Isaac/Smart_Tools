@@ -1,6 +1,6 @@
 # Smart Tools
 
-A Windows desktop app with **109 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
+A Windows desktop app with **111 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
 
 ## Highlights
 
@@ -14,19 +14,20 @@ A Windows desktop app with **109 everyday tools** in one place: manage and clean
 
 - **Data Quality** (6): Validate Data, Duplicate Data, Find Similar Files, File Differences, Text Diff, Hash & Checksum Verifier
 - **Files** (6): Rename Files, Organize Files, Search Files, Copy Queue, Folder Tree Exporter, Metadata Extractor
-- **Convert & PDF** (5): Convert Files, Images to PDF, Watermarker, PDF Tools, CSV / JSON Converter
+- **Convert** (3): Convert Files, Watermarker, CSV / JSON Converter
+- **PDF** (4): Images to PDF, PDF Merge & Split, PDF Pages & Protect, PDF Reader & Signer
 - **Media** (1): Media Viewer
 - **Video** (6): Video Stitcher, Video to Audio, Video Compressor, GIF Maker, Screen Recorder, Video Frame Extractor
 - **Audio** (7): Audio Recorder, Spectrogram, Voice Changer, Speech to Text, Text to Speech, Loudness Meter & Normalizer, Audio Trimmer & Joiner
 - **Music** (4): Instrument Tuner, Synthesizer, MIDI Instruments, Metronome
-- **Images** (6): Image Editor, Bulk Image Resizer, Background Remover, SVG Viewer & Optimizer, Screenshot, Icon Maker
+- **Images** (7): Image Editor, Bulk Image Resizer, Background Remover, SVG Viewer & Optimizer, Screenshot, Icon Maker, Image Metadata Cleaner
 - **Colors** (5): Color Picker, Screen Color Picker, Color Wheel, Palette Extractor, Contrast Checker
 - **Storage** (6): Drive Health, Disk Space Analyzer, Large File Finder, Junk File Cleaner, Disk Speed Test, Empty Folder Cleaner
 - **Performance** (3): System Monitor, Hardware Sensors, Process Killer
 - **System** (4): Startup Apps, Services, Environment Variables, Event Log Explorer
 - **Hardware Tests** (8): Audio Output Test, Game Controller Test, Monitor Test, Monitor HDR & Color Depth, Keyboard & Mouse Test, Microphone Test, Webcam Test, Battery Health
 - **Security** (5): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator
-- **Network** (11): My IP & Adapters, Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed Widget
+- **Network** (11): My IP & Adapters, Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed
 - **Developer** (9): API Tester, Regex Tester, JWT Decoder, JSON / YAML / XML Formatter, Log Viewer, Code Toolkit, MD & HTML Editor, Database Migrator, Base64 & URL Encoder
 - **Calculators** (3): Subnet Calculator, Unit & Currency Converter, Date & Time Toolkit
 - **Generators** (5): File Generator, Barcode Generator, QR Code Generator, Mock Data Generator, ID & Lorem Generator
