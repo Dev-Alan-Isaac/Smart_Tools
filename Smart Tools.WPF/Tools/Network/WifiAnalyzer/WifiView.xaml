@@ -25,7 +25,7 @@
             <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                 <TextBlock x:Name="Name" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Bssid}" />
                 <Border x:Name="Tag" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource TagPillStyle}" Visibility="Collapsed">
-                    <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Text="Connected" />
+                    <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Text="{DynamicResource Str_WifiAnalyzer_Connected}" />
                 </Border>
             </StackPanel>
             <DataTemplate.Triggers>
@@ -75,36 +75,36 @@
                 <StackPanel x:Name="SidebarStack">
                     <Border ctl:Tour.Key="Str_Tour_Wifi_ThisPc" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="THIS PC" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Wifi}" />
-                            <TextBlock x:Name="TxtAdapter" Margin="2,8,0,0" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="Looking for a Wi-Fi adapter..." TextWrapping="Wrap" />
+                            <ContentControl Content="{DynamicResource Str_HardwareSensors_ThisPc}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Wifi}" />
+                            <TextBlock x:Name="TxtAdapter" Margin="2,8,0,0" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{DynamicResource Str_WifiAnalyzer_LookingForAWi}" TextWrapping="Wrap" />
                             <TextBlock x:Name="TxtLink" Margin="2,4,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_Wifi_View" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="VIEW" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.EyeOutline}" />
+                            <ContentControl Content="{DynamicResource Str_FileDiff_ViewHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.EyeOutline}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="RadioNearby" Margin="0,0,2,0" Checked="View_Changed" Content="Nearby" GroupName="WfView" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Networks your PC can hear right now" />
-                                <RadioButton x:Name="RadioSaved" Margin="2,0,0,0" Checked="View_Changed" Content="Saved" GroupName="WfView" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Networks Windows remembers" />
+                                <RadioButton x:Name="RadioNearby" Margin="0,0,2,0" Checked="View_Changed" Content="{DynamicResource Str_WifiAnalyzer_Nearby}" GroupName="WfView" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_NetworksYourPcCan}" />
+                                <RadioButton x:Name="RadioSaved" Margin="2,0,0,0" Checked="View_Changed" Content="{DynamicResource Str_Settings_Saved}" GroupName="WfView" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_NetworksWindowsRemembers}" />
                             </UniformGrid>
 
                             <StackPanel x:Name="BandPanel">
-                                <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="Channel graph for" />
+                                <TextBlock Margin="2,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_WifiAnalyzer_ChannelGraphFor}" />
                                 <UniformGrid Margin="0,6,0,0" Columns="3">
                                     <RadioButton x:Name="RadioBand24" Margin="0,0,2,0" Checked="Band_Changed" Content="2.4 GHz" GroupName="WfBand" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
                                     <RadioButton x:Name="RadioBand5" Margin="2,0,2,0" Checked="Band_Changed" Content="5 GHz" GroupName="WfBand" Style="{StaticResource ModeToggleButtonStyle}" />
                                     <RadioButton x:Name="RadioBand6" Margin="2,0,0,0" Checked="Band_Changed" Content="6 GHz" GroupName="WfBand" Style="{StaticResource ModeToggleButtonStyle}" />
                                 </UniformGrid>
-                                <CheckBox x:Name="ChkAuto" Margin="2,12,0,0" Checked="ChkAuto_Changed" Content="Scan again every 5 seconds" Foreground="{DynamicResource SidebarText}" Unchecked="ChkAuto_Changed" />
+                                <CheckBox x:Name="ChkAuto" Margin="2,12,0,0" Checked="ChkAuto_Changed" Content="{DynamicResource Str_WifiAnalyzer_ScanAgainEverySeconds}" Foreground="{DynamicResource SidebarText}" Unchecked="ChkAuto_Changed" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="GOOD TO KNOW" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="This only listens: it never connects, changes or sends anything. The tall hills on the graph are the strongest networks; hills that overlap share the air and slow each other down - pick the green channel. Windows must allow Location access for desktop apps, or it hides nearby networks. Saved passwords are shown only when you ask, and Windows may need an administrator for some." />
+                            <ContentControl Content="{DynamicResource Str_SecureFileShredder_GoodToKnow}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_WifiAnalyzer_ThisOnlyListensIt}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -125,20 +125,20 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Button ctl:Tour.Key="Str_Tour_Wifi_Scan" ctl:Tour.Order="3" x:Name="BtnScan" MinWidth="160" VerticalAlignment="Center" Click="BtnScan_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Look for networks now">
+                        <Button ctl:Tour.Key="Str_Tour_Wifi_Scan" ctl:Tour.Order="3" x:Name="BtnScan" MinWidth="160" VerticalAlignment="Center" Click="BtnScan_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_LookForNetworksNow}">
                             <Grid HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon x:Name="IconScan" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="Radar" />
-                                <TextBlock x:Name="TxtScan" Grid.Column="1" VerticalAlignment="Center" Text="Scan" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtScan" Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Network_ScanButton}" TextWrapping="Wrap" />
                             </Grid>
                         </Button>
 
                         <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                             <ProgressBar x:Name="Bar" Height="8" Maximum="100" />
-                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="Press Scan to listen for networks." TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_WifiAnalyzer_PressScanToListen}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -159,22 +159,22 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentControl x:Name="CardTitle" VerticalAlignment="Center" Content="Networks" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Wifi}" />
+                            <ContentControl x:Name="CardTitle" VerticalAlignment="Center" Content="{DynamicResource Str_WifiAnalyzer_Networks}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Wifi}" />
 
                             <WrapPanel x:Name="SummaryPanel" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Border Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Access points heard (one network can have several)">
+                                <Border Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_AccessPointsHeardOne}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusInfoFg}" Kind="Wifi" />
                                         <TextBlock x:Name="TxtSummaryCount" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillBest" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="The least crowded channel on the band shown in the graph" Visibility="Collapsed">
+                                <Border x:Name="PillBest" Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_TheLeastCrowdedChannel}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="StarOutline" />
                                         <TextBlock x:Name="TxtSummaryBest" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillYours" Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="The channel your connection uses" Visibility="Collapsed">
+                                <Border x:Name="PillYours" Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_TheChannelYourConnection}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="AccessPoint" />
                                         <TextBlock x:Name="TxtSummaryYours" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
@@ -183,10 +183,10 @@
                             </WrapPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
-                                <Button x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the list (CSV) to the clipboard">
+                                <Button x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_CopyTheListCsv}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
-                                <Button x:Name="BtnSave" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save the list as a CSV file">
+                                <Button x:Name="BtnSave" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_LargeFileFinder_SaveTheListAs}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FileDelimitedOutline" />
                                 </Button>
                             </StackPanel>
@@ -201,7 +201,7 @@
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon x:Name="StatusIcon" Width="14" Height="14" Margin="0,1,8,0" VerticalAlignment="Top" Kind="AlertOutline" />
                                 <TextBlock x:Name="TxtStatus" Grid.Column="1" FontSize="11.5" TextWrapping="Wrap" />
-                                <Button x:Name="BtnOpenLocation" Grid.Column="2" Margin="10,0,0,0" Padding="10,2" VerticalAlignment="Center" Click="BtnOpenLocation_Click" Style="{StaticResource NeutralIconButtonStyle}" Visibility="Collapsed" Content="Open Location settings" />
+                                <Button x:Name="BtnOpenLocation" Grid.Column="2" Margin="10,0,0,0" Padding="10,2" VerticalAlignment="Center" Click="BtnOpenLocation_Click" Style="{StaticResource NeutralIconButtonStyle}" Visibility="Collapsed" Content="{DynamicResource Str_WifiAnalyzer_OpenLocationSettings}" />
                             </Grid>
                         </Border>
 
@@ -235,13 +235,13 @@
                                 VirtualizingPanel.ScrollUnit="Pixel"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Width="2*" MinWidth="130" CellTemplate="{StaticResource NetworkCellTemplate}" Header="Network" />
-                                    <DataGridTemplateColumn Width="130" CellTemplate="{StaticResource SignalCellTemplate}" Header="Signal" />
-                                    <DataGridTextColumn Width="70" Binding="{Binding ChannelText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Channel" />
-                                    <DataGridTextColumn Width="70" Binding="{Binding BandText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Band" />
-                                    <DataGridTextColumn Width="1.2*" MinWidth="90" Binding="{Binding Standard}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Standard" />
-                                    <DataGridTextColumn Width="1.2*" MinWidth="100" Binding="{Binding Security}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Security" />
-                                    <DataGridTextColumn Width="2*" MinWidth="130" Binding="{Binding AccessPoint}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Access point" />
+                                    <DataGridTemplateColumn Width="2*" MinWidth="130" CellTemplate="{StaticResource NetworkCellTemplate}" Header="{DynamicResource Str_SubnetCalculator_Network}" />
+                                    <DataGridTemplateColumn Width="130" CellTemplate="{StaticResource SignalCellTemplate}" Header="{DynamicResource Str_AudioOut_SignalHeader}" />
+                                    <DataGridTextColumn Width="70" Binding="{Binding ChannelText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WifiAnalyzer_Channel}" />
+                                    <DataGridTextColumn Width="70" Binding="{Binding BandText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WifiAnalyzer_Band}" />
+                                    <DataGridTextColumn Width="1.2*" MinWidth="90" Binding="{Binding Standard}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_SecureFileShredder_Standard}" />
+                                    <DataGridTextColumn Width="1.2*" MinWidth="100" Binding="{Binding Security}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WifiAnalyzer_Security}" />
+                                    <DataGridTextColumn Width="2*" MinWidth="130" Binding="{Binding AccessPoint}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WifiAnalyzer_AccessPoint}" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
@@ -259,10 +259,10 @@
                             SelectionMode="Single"
                             Visibility="Collapsed">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Width="2*" MinWidth="130" Binding="{Binding Name}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Network" />
-                                <DataGridTextColumn Width="1.4*" MinWidth="120" Binding="{Binding SecurityText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Security" />
-                                <DataGridTextColumn Width="1*" MinWidth="90" Binding="{Binding ConnectText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Connects" />
-                                <DataGridTextColumn Width="1*" MinWidth="90" Binding="{Binding PasswordText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="Password" />
+                                <DataGridTextColumn Width="2*" MinWidth="130" Binding="{Binding Name}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_SubnetCalculator_Network}" />
+                                <DataGridTextColumn Width="1.4*" MinWidth="120" Binding="{Binding SecurityText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WifiAnalyzer_Security}" />
+                                <DataGridTextColumn Width="1*" MinWidth="90" Binding="{Binding ConnectText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WifiAnalyzer_Connects}" />
+                                <DataGridTextColumn Width="1*" MinWidth="90" Binding="{Binding PasswordText}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_Encrypt_PasswordHeader}" />
                             </DataGrid.Columns>
                         </DataGrid>
 

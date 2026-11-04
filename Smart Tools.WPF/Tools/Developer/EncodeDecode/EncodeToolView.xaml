@@ -382,8 +382,8 @@
                                             SelectionChanged="Option_SelectionChanged"
                                             Style="{StaticResource BareComboBox}">
                                             <ComboBoxItem Content="UTF-8" Tag="Utf8" />
-                                            <ComboBoxItem Content="UTF-16" Tag="Utf16" />
-                                            <ComboBoxItem Content="Latin-1 (ISO-8859-1)" Tag="Latin1" />
+                                            <ComboBoxItem Content="{DynamicResource Str_EncodeDecode_Utf}" Tag="Utf16" />
+                                            <ComboBoxItem Content="{DynamicResource Str_EncodeDecode_LatinIso}" Tag="Latin1" />
                                         </ComboBox>
                                     </Border>
                                     <TextBlock Style="{StaticResource EncSideHint}" Text="{DynamicResource Str_EncTool_TextEncHint}" />

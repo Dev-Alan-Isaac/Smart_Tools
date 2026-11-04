@@ -75,6 +75,7 @@ namespace Smart_Tools.WPF.Views
         public PixelArtView()
         {
             InitializeComponent();
+            FileDrop.Attach(this, async path => await OpenImageAsync(path));
             FramesList.ItemsSource = _frames;
             PixelCanvas.Manager = _manager;
 
@@ -771,9 +772,14 @@ namespace Smart_Tools.WPF.Views
                 Title = Str("Str_PixelArt_OpenImage"),
                 Filter = Str("Str_PixelArt_FilterImages", "Pictures") + "|*.png;*.gif;*.bmp;*.jpg;*.jpeg;*.webp;*.ico|" + Str("Str_PixelArt_FilterAll", "All files") + "|*.*",
             };
-            if (dialog.ShowDialog() != true || !ConfirmDiscard()) return;
+            if (dialog.ShowDialog() != true) return;
+            await OpenImageAsync(dialog.FileName);
+        }
 
-            string path = dialog.FileName;
+        /// <summary>Opens a picture for editing (from the Open button or a drop), after asking about unsaved work.</summary>
+        private async Task OpenImageAsync(string path)
+        {
+            if (!ConfirmDiscard()) return;
             int w = 0, h = 0;
             string problem = "";
             byte[]? rgba = await Task.Run(() => PixelArtManager.LoadImage(path, out w, out h, out problem));

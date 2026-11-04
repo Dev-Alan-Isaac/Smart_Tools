@@ -31,10 +31,10 @@
                 </Grid.ColumnDefinitions>
 
                 <UniformGrid Width="470" Columns="4">
-                    <RadioButton x:Name="RadioMixed" Margin="0,0,2,0" Checked="Mode_Checked" Content="Mixed" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Mixed" ToolTip="Pictures, videos and music in one queue" />
-                    <RadioButton x:Name="RadioPhotos" Margin="2,0,2,0" Checked="Mode_Checked" Content="Photos" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Photos" ToolTip="Picture viewer: zoom, rotate, slideshow, thumbnails, save as" />
-                    <RadioButton x:Name="RadioVideos" Margin="2,0,2,0" Checked="Mode_Checked" Content="Videos" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Videos" ToolTip="Video player for almost any format, with playlists" />
-                    <RadioButton x:Name="RadioMusic" Margin="2,0,0,0" Checked="Mode_Checked" Content="Music" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Music" ToolTip="Audio player with the level visualizer" />
+                    <RadioButton x:Name="RadioMixed" Margin="0,0,2,0" Checked="Mode_Checked" Content="{DynamicResource Str_MediaHub_Mixed}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Mixed" ToolTip="{DynamicResource Str_MediaHub_PicturesVideosAndMusic}" />
+                    <RadioButton x:Name="RadioPhotos" Margin="2,0,2,0" Checked="Mode_Checked" Content="{DynamicResource Str_MediaHub_Photos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Photos" ToolTip="{DynamicResource Str_MediaHub_PictureViewerZoomRotate}" />
+                    <RadioButton x:Name="RadioVideos" Margin="2,0,2,0" Checked="Mode_Checked" Content="{DynamicResource Str_DuplicateFinder_Videos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Videos" ToolTip="{DynamicResource Str_MediaHub_VideoPlayerForAlmost}" />
+                    <RadioButton x:Name="RadioMusic" Margin="2,0,0,0" Checked="Mode_Checked" Content="{DynamicResource Str_MediaViewer_Audio}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Music" ToolTip="{DynamicResource Str_MediaHub_AudioPlayerWithThe}" />
                 </UniformGrid>
 
                 <TextBlock x:Name="TxtHint" Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />

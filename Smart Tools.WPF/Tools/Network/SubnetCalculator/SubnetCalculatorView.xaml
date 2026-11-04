@@ -84,7 +84,7 @@
                 <StackPanel>
                     <Border ctl:Tour.Key="Str_Tour_SubnetCalc_Examples" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="EXAMPLES" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LightbulbOutline}" />
+                            <ContentControl Content="{DynamicResource Str_Regex_ExamplesHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LightbulbOutline}" />
                             <WrapPanel Margin="0,8,0,0">
                                 <Button Click="Example_Click" Content="192.168.1.10/24" Style="{StaticResource ScChip}" />
                                 <Button Click="Example_Click" Content="10.0.0.0/8" Style="{StaticResource ScChip}" />
@@ -99,8 +99,8 @@
 
                     <Border ctl:Tour.Key="Str_Tour_SubnetCalc_Split" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="SPLIT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
-                            <TextBlock Style="{StaticResource ScLabel}" Text="Split into prefix (for example 26)" />
+                            <ContentControl Content="{DynamicResource Str_Pdf_OpSplit}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
+                            <TextBlock Style="{StaticResource ScLabel}" Text="{DynamicResource Str_SubnetCalculator_SplitIntoPrefixFor}" />
                             <Border Style="{StaticResource InputBarStyle}">
                                 <TextBox x:Name="TxtSplit" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Input_TextChanged" />
                             </Border>
@@ -110,9 +110,9 @@
                                 <Button Click="SplitChip_Click" Content="/27" Style="{StaticResource ScChip}" />
                                 <Button Click="SplitChip_Click" Content="/28" Style="{StaticResource ScChip}" />
                                 <Button Click="SplitChip_Click" Content="/30" Style="{StaticResource ScChip}" />
-                                <Button Click="SplitChip_Click" Content="None" Style="{StaticResource ScChip}" />
+                                <Button Click="SplitChip_Click" Content="{DynamicResource Str_Api_AuthTypeNone}" Style="{StaticResource ScChip}" />
                             </WrapPanel>
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Splitting a /24 into /26 gives 4 equal subnets." />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_SubnetCalculator_SplittingAIntoGives}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -135,13 +135,13 @@
                 <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
-                            <Button ctl:Tour.Key="Str_Tour_SubnetCalc_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" MinHeight="36" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" ToolTip="Copy everything shown">
+                            <Button ctl:Tour.Key="Str_Tour_SubnetCalc_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" MinHeight="36" Margin="8,0,0,0" Click="BtnCopy_Click" DockPanel.Dock="Right" ToolTip="{DynamicResource Str_SubnetCalculator_CopyEverythingShown}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentCopy" />
-                                    <TextBlock x:Name="TxtCopy" Text="Copy" />
+                                    <TextBlock x:Name="TxtCopy" Text="{DynamicResource Str_Common_Copy}" />
                                 </StackPanel>
                             </Button>
-                            <TextBlock Width="70" VerticalAlignment="Center" DockPanel.Dock="Left" Style="{StaticResource StatLabel}" Text="ADDRESS" />
+                            <TextBlock Width="70" VerticalAlignment="Center" DockPanel.Dock="Left" Style="{StaticResource StatLabel}" Text="{DynamicResource Str_NetworkAdapters_Address}" />
                             <Border Style="{StaticResource InputBarStyle}">
                                 <TextBox x:Name="TxtAddress" VerticalContentAlignment="Center" FontFamily="Consolas" FontSize="15" Style="{StaticResource BareTextBox}" TextChanged="Input_TextChanged" ToolTip="192.168.1.10/24, 192.168.1.10 255.255.255.0 or 2001:db8::/32" />
                             </Border>
@@ -150,19 +150,19 @@
 
                         <WrapPanel Margin="0,16,0,0">
                             <StackPanel MinWidth="190" Margin="0,0,28,8">
-                                <TextBlock Style="{StaticResource StatLabel}" Text="NETWORK" />
+                                <TextBlock Style="{StaticResource StatLabel}" Text="{DynamicResource Str_SubnetCalculator_Network}" />
                                 <TextBlock x:Name="StatNetwork" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
                             <StackPanel MinWidth="190" Margin="0,0,28,8">
-                                <TextBlock Style="{StaticResource StatLabel}" Text="SUBNET MASK" />
+                                <TextBlock Style="{StaticResource StatLabel}" Text="{DynamicResource Str_NetworkAdapters_SubnetMask}" />
                                 <TextBlock x:Name="StatMask" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
                             <StackPanel MinWidth="150" Margin="0,0,28,8">
-                                <TextBlock Style="{StaticResource StatLabel}" Text="USABLE HOSTS" />
+                                <TextBlock Style="{StaticResource StatLabel}" Text="{DynamicResource Str_SubnetCalculator_UsableHosts}" />
                                 <TextBlock x:Name="StatHosts" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
                             <StackPanel Margin="0,0,0,8">
-                                <TextBlock Style="{StaticResource StatLabel}" Text="FIRST - LAST USABLE" />
+                                <TextBlock Style="{StaticResource StatLabel}" Text="{DynamicResource Str_SubnetCalculator_FirstLastUsable}" />
                                 <TextBlock x:Name="StatRange" Style="{StaticResource StatValue}" Text="-" />
                             </StackPanel>
                         </WrapPanel>
@@ -176,7 +176,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,8" Content="Details" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
+                        <ContentControl Margin="0,0,0,8" Content="{DynamicResource Str_Validate_ColHeaderDetails}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListBulleted}" />
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ctl:Tour.Key="Str_Tour_SubnetCalc_Details" ctl:Tour.Order="3" x:Name="RowList">
                                 <ItemsControl.ItemTemplate>
@@ -204,10 +204,10 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,6" Content="Subnets" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
+                        <ContentControl Margin="0,0,0,6" Content="{DynamicResource Str_SubnetCalculator_Subnets}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
                         <TextBlock x:Name="TxtSplitTitle" Grid.Row="1" Margin="0,0,0,8" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
                         <ListBox x:Name="PieceList" Grid.Row="2" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource PieceTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
-                        <TextBlock x:Name="TxtSplitEmpty" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="Type a prefix (or click one) in the sidebar to split the network." TextAlignment="Center" TextWrapping="Wrap" />
+                        <TextBlock x:Name="TxtSplitEmpty" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="{DynamicResource Str_SubnetCalculator_TypeAPrefixOr}" TextAlignment="Center" TextWrapping="Wrap" />
                     </Grid>
                 </Border>
             </Grid>

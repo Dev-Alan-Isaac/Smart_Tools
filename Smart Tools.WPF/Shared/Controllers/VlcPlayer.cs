@@ -79,7 +79,7 @@ namespace Smart_Tools.WPF.Controllers
                             break;
                         }
                 }
-                catch (Exception) { }
+                catch (Exception ex) { Smart_Tools.WPF.Log.Debug("VLC folder check failed: " + ex.Message); }
             }
             return problems;
         }
@@ -113,7 +113,7 @@ namespace Smart_Tools.WPF.Controllers
                     if (File.Exists(Path.Combine(candidate, "libvlc.dll"))) return candidate;
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex) { Smart_Tools.WPF.Log.Debug("VLC folder search failed: " + ex.Message); }
             return null;
         }
 

@@ -76,16 +76,16 @@
                     <Border ctl:Tour.Key="Str_Tour_MicTest_Look" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl
-                                Content="MICROPHONE TYPE"
+                                Content="{DynamicResource Str_MicTest_MicrophoneType}"
                                 Style="{StaticResource SidebarGroupHeader}"
                                 Tag="{x:Static materialDesign:PackIconKind.MicrophoneVariant}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="LookStand" Margin="0,0,2,4" Checked="Look_Checked" Content="Stand" GroupName="MtLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="MicrophoneVariant" ToolTip="A desk or stand microphone" />
-                                <RadioButton x:Name="LookHandheld" Margin="2,0,0,4" Checked="Look_Checked" Content="Handheld" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Microphone" ToolTip="A handheld or studio microphone" />
-                                <RadioButton x:Name="LookHeadset" Margin="0,0,2,0" Checked="Look_Checked" Content="Headset" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="A headset with a boom microphone" />
-                                <RadioButton x:Name="LookEarbuds" Margin="2,0,0,0" Checked="Look_Checked" Content="Earbuds" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="Earphones with an in-line or built-in microphone" />
+                                <RadioButton x:Name="LookStand" Margin="0,0,2,4" Checked="Look_Checked" Content="{DynamicResource Str_MicTest_Stand}" GroupName="MtLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="MicrophoneVariant" ToolTip="{DynamicResource Str_MicTest_ADeskOrStand}" />
+                                <RadioButton x:Name="LookHandheld" Margin="2,0,0,4" Checked="Look_Checked" Content="{DynamicResource Str_MicTest_Handheld}" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Microphone" ToolTip="{DynamicResource Str_MicTest_AHandheldOrStudio}" />
+                                <RadioButton x:Name="LookHeadset" Margin="0,0,2,0" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Headset}" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="{DynamicResource Str_MicTest_AHeadsetWithA}" />
+                                <RadioButton x:Name="LookEarbuds" Margin="2,0,0,0" Checked="Look_Checked" Content="{DynamicResource Str_MicTest_Earbuds}" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="{DynamicResource Str_MicTest_EarphonesWithAnIn}" />
                             </UniformGrid>
-                            <TextBlock Style="{StaticResource SidebarHint}" Text="Only changes the picture that fills with your voice. It does not change how the microphone is measured." />
+                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MicTest_OnlyChangesThePicture}" />
                         </StackPanel>
                     </Border>
 
@@ -164,7 +164,7 @@
                                 FontSize="12"
                                 FontWeight="SemiBold"
                                 Foreground="{DynamicResource TextSecondary}"
-                                Text="LIVE" />
+                                Text="{DynamicResource Str_HardwareSensors_Live}" />
                         </StackPanel>
                     </Grid>
 
@@ -234,7 +234,7 @@
                         <Viewbox Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
                             <StackPanel>
                                 <TextBlock x:Name="TxtDb" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-∞ dB" />
-                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="MICROPHONE LEVEL" />
+                                <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_MicrophoneLevel}" />
                             </StackPanel>
                         </Viewbox>
                     </Grid>

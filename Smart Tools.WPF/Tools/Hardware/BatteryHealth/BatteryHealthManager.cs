@@ -108,7 +108,7 @@ namespace Smart_Tools.WPF.Controllers
                 using var s = new ManagementObjectSearcher(@"root\WMI", $"SELECT {property} FROM {cls}");
                 foreach (ManagementBaseObject o in s.Get()) list.Add(Int(o[property]));
             }
-            catch (ManagementException) { }
+            catch (ManagementException ex) { Smart_Tools.WPF.Log.Debug($"Battery WMI query {cls}.{property} failed: {ex.Message}"); }
             return list;
         }
 
@@ -120,7 +120,7 @@ namespace Smart_Tools.WPF.Controllers
                 using var s = new ManagementObjectSearcher(@"root\WMI", $"SELECT {property} FROM {cls}");
                 foreach (ManagementBaseObject o in s.Get()) list.Add((o[property] as string)?.Trim());
             }
-            catch (ManagementException) { }
+            catch (ManagementException ex) { Smart_Tools.WPF.Log.Debug($"Battery WMI query {cls}.{property} failed: {ex.Message}"); }
             return list;
         }
 

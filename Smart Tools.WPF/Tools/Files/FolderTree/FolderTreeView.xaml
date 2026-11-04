@@ -25,47 +25,47 @@
                     <controls:InputFolderCard ctl:Tour.Key="Str_Tour_FolderTree_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
                         FolderChanged="InputCard_FolderChanged"
-                        Header="Folder to export"
+                        Header="{DynamicResource Str_FolderTree_FolderToExport}"
                         HeaderIcon="FolderOutline"
                         Mode="SingleFolder"
                         ShowSubfolders="False" />
 
                     <Border ctl:Tour.Key="Str_Tour_FolderTree_Format" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="FORMAT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
+                            <ContentControl Content="{DynamicResource Str_VideoEditor_Format}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="RadioText" Margin="0,0,2,4" Checked="Option_Changed" Content="Text tree" GroupName="FtFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="├── like the tree command" />
-                                <RadioButton x:Name="RadioMarkdown" Margin="2,0,0,4" Checked="Option_Changed" Content="Markdown" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="A nested list for READMEs and wikis" />
-                                <RadioButton x:Name="RadioJson" Margin="0,0,2,0" Checked="Option_Changed" Content="JSON" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="Nested objects for scripts" />
-                                <RadioButton x:Name="RadioCsv" Margin="2,0,0,0" Checked="Option_Changed" Content="CSV" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="One row per item, opens in Excel" />
+                                <RadioButton x:Name="RadioText" Margin="0,0,2,4" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_TextTree}" GroupName="FtFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_LikeTheTreeCommand}" />
+                                <RadioButton x:Name="RadioMarkdown" Margin="2,0,0,4" Checked="Option_Changed" Content="{DynamicResource Str_MarkdownHtmlEditor_Markdown}" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_ANestedListFor}" />
+                                <RadioButton x:Name="RadioJson" Margin="0,0,2,0" Checked="Option_Changed" Content="JSON" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_NestedObjectsForScripts}" />
+                                <RadioButton x:Name="RadioCsv" Margin="2,0,0,0" Checked="Option_Changed" Content="CSV" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_OneRowPerItem}" />
                             </UniformGrid>
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_FolderTree_Options" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="WHAT TO LIST" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
-                            <TextBlock Margin="2,8,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="How deep" />
+                            <ContentControl Content="{DynamicResource Str_FolderTree_WhatToList}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+                            <TextBlock Margin="2,8,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_FolderTree_HowDeep}" />
                             <ComboBox x:Name="CmbDepth" Margin="0,6,0,0" SelectedIndex="0" SelectionChanged="Option_Changed">
-                                <ComboBoxItem Content="All levels" />
-                                <ComboBoxItem Content="1 level" />
-                                <ComboBoxItem Content="2 levels" />
-                                <ComboBoxItem Content="3 levels" />
-                                <ComboBoxItem Content="4 levels" />
-                                <ComboBoxItem Content="5 levels" />
+                                <ComboBoxItem Content="{DynamicResource Str_FolderTree_AllLevels}" />
+                                <ComboBoxItem Content="{DynamicResource Str_FolderTree_Level}" />
+                                <ComboBoxItem Content="{DynamicResource Str_FolderTree_Levels}" />
+                                <ComboBoxItem Content="{DynamicResource Str_FolderTree_Levels2}" />
+                                <ComboBoxItem Content="{DynamicResource Str_FolderTree_Levels3}" />
+                                <ComboBoxItem Content="{DynamicResource Str_FolderTree_Levels4}" />
                             </ComboBox>
-                            <CheckBox x:Name="ChkFiles" Margin="2,12,0,0" Checked="Option_Changed" Content="Include files" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkSize" Margin="2,8,0,0" Checked="Option_Changed" Content="Show sizes" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkDate" Margin="2,8,0,0" Checked="Option_Changed" Content="Show modified dates" Foreground="{DynamicResource SidebarText}" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkHidden" Margin="2,8,0,0" Checked="Option_Changed" Content="Include hidden and system items" Foreground="{DynamicResource SidebarText}" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkNoise" Margin="2,8,0,0" Checked="Option_Changed" Content="Skip .git, node_modules, bin, obj" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
+                            <CheckBox x:Name="ChkFiles" Margin="2,12,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_IncludeFiles}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
+                            <CheckBox x:Name="ChkSize" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_ShowSizes}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
+                            <CheckBox x:Name="ChkDate" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_ShowModifiedDates}" Foreground="{DynamicResource SidebarText}" Unchecked="Option_Changed" />
+                            <CheckBox x:Name="ChkHidden" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_IncludeHiddenAndSystem}" Foreground="{DynamicResource SidebarText}" Unchecked="Option_Changed" />
+                            <CheckBox x:Name="ChkNoise" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_SkipGitNodeModules}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="GOOD TO KNOW" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
-                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="This only reads your folder - nothing in it is changed. Links are shown but not followed, folders that can't be opened are marked, and saving never replaces an earlier export (a taken name gets ' (2)')." />
+                            <ContentControl Content="{DynamicResource Str_SecureFileShredder_GoodToKnow}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_FolderTree_ThisOnlyReadsYour}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -87,20 +87,20 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Button ctl:Tour.Key="Str_Tour_FolderTree_Build" ctl:Tour.Order="4" x:Name="BtnStart" MinWidth="180" VerticalAlignment="Center" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="Read the folder and build the tree">
+                        <Button ctl:Tour.Key="Str_Tour_FolderTree_Build" ctl:Tour.Order="4" x:Name="BtnStart" MinWidth="180" VerticalAlignment="Center" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_ReadTheFolderAnd}">
                             <Grid HorizontalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon x:Name="IconStart" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileTreeOutline" />
-                                <TextBlock x:Name="TxtStart" Grid.Column="1" VerticalAlignment="Center" Text="Build tree" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtStart" Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FolderTree_BuildTree}" TextWrapping="Wrap" />
                             </Grid>
                         </Button>
 
                         <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                             <ProgressBar x:Name="Bar" Height="8" Maximum="100" />
-                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="Choose a folder to start." TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_FolderTree_ChooseAFolderTo}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
                         <TextBlock x:Name="TxtProgressPercent" Grid.Column="2" MinWidth="54" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentColor}" TextAlignment="Right" />
@@ -123,28 +123,28 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <ContentControl VerticalAlignment="Center" Content="Tree" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
+                            <ContentControl VerticalAlignment="Center" Content="{DynamicResource Str_FolderTree_Tree}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
 
                             <WrapPanel x:Name="SummaryPanel" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Border Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Folders listed">
+                                <Border Margin="0,2,6,2" Background="{DynamicResource StatusInfoBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_FolderTree_FoldersListed}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusInfoFg}" Kind="FolderOutline" />
                                         <TextBlock x:Name="TxtSummaryFolders" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Files listed">
+                                <Border Margin="0,2,6,2" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_FolderTree_FilesListed}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="FileOutline" />
                                         <TextBlock x:Name="TxtSummaryFiles" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Border Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Total size of the files">
+                                <Border Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_FolderTree_TotalSizeOfThe}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="Database" />
                                         <TextBlock x:Name="TxtSummarySize" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
                                     </StackPanel>
                                 </Border>
-                                <Border x:Name="PillUnreadable" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="Folders that could not be opened (marked 'no access')" Visibility="Collapsed">
+                                <Border x:Name="PillUnreadable" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}" ToolTip="{DynamicResource Str_FolderTree_FoldersThatCouldNot}" Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusWarningFg}" Kind="LockOutline" />
                                         <TextBlock x:Name="TxtSummaryUnreadable" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" />
@@ -153,10 +153,10 @@
                             </WrapPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
-                                <Button x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" IsEnabled="False" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the tree to the clipboard">
+                                <Button x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" IsEnabled="False" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_CopyTheTreeTo}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
-                                <Button x:Name="BtnSave" Click="BtnSave_Click" IsEnabled="False" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save the tree to a file">
+                                <Button x:Name="BtnSave" Click="BtnSave_Click" IsEnabled="False" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_SaveTheTreeTo}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
                                 </Button>
                             </StackPanel>
@@ -175,11 +175,11 @@
 
                         <Border Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
-                                <TextBox ctl:Tour.Key="Str_Tour_FolderTree_Preview" ctl:Tour.Order="5" x:Name="TxtPreview" Padding="12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" BorderThickness="0" FontSize="13" Foreground="{DynamicResource TextPrimary}" IsReadOnly="True" PreviewMouseWheel="TxtPreview_PreviewMouseWheel" Style="{StaticResource CodeTextBoxNoWrap}" ToolTip="Ctrl + mouse wheel to zoom" />
+                                <TextBox ctl:Tour.Key="Str_Tour_FolderTree_Preview" ctl:Tour.Order="5" x:Name="TxtPreview" Padding="12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent" BorderThickness="0" FontSize="13" Foreground="{DynamicResource TextPrimary}" IsReadOnly="True" PreviewMouseWheel="TxtPreview_PreviewMouseWheel" Style="{StaticResource CodeTextBoxNoWrap}" ToolTip="{DynamicResource Str_Rest_CtrlWheelZoom}" />
                                 <StackPanel x:Name="PreviewEmpty" MaxWidth="340" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                                     <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
-                                    <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="Pick a folder" />
-                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Drop a folder on the left, choose a format, then press Build tree." TextAlignment="Center" TextWrapping="Wrap" />
+                                    <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_FolderTree_PickAFolder}" />
+                                    <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_FolderTree_DropAFolderOn}" TextAlignment="Center" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </Border>

@@ -39,7 +39,7 @@
                 <StackPanel>
                     <Border ctl:Tour.Key="Str_Tour_Totp_Digits" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="DIGITS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Numeric}" />
+                            <ContentControl Content="{DynamicResource Str_RenameFiles_Digits}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Numeric}" />
                             <UniformGrid Margin="0,6,0,0" Columns="3">
                                 <RadioButton x:Name="Digits6" Margin="0,0,2,0" Click="Option_Click" Content="6" GroupName="TcDigits" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
                                 <RadioButton x:Name="Digits7" Margin="2,0" Click="Option_Click" Content="7" GroupName="TcDigits" Style="{StaticResource ModeToggleButtonStyle}" />
@@ -50,7 +50,7 @@
 
                     <Border ctl:Tour.Key="Str_Tour_Totp_Period" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="NEW CODE EVERY" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TimerOutline}" />
+                            <ContentControl Content="{DynamicResource Str_TotpCode_NewCodeEvery}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TimerOutline}" />
                             <UniformGrid Margin="0,6,0,0" Columns="3">
                                 <RadioButton x:Name="Period15" Margin="0,0,2,0" Click="Option_Click" Content="15 s" GroupName="TcPeriod" Style="{StaticResource ModeToggleButtonStyle}" />
                                 <RadioButton x:Name="Period30" Margin="2,0" Click="Option_Click" Content="30 s" GroupName="TcPeriod" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
@@ -61,13 +61,13 @@
 
                     <Border ctl:Tour.Key="Str_Tour_Totp_Algorithm" ctl:Tour.Order="3" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="ALGORITHM" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Fingerprint}" />
+                            <ContentControl Content="{DynamicResource Str_TotpCode_Algorithm}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Fingerprint}" />
                             <UniformGrid Margin="0,6,0,0" Columns="3">
                                 <RadioButton x:Name="AlgSha1" Margin="0,0,2,0" Click="Option_Click" Content="SHA-1" GroupName="TcAlg" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
                                 <RadioButton x:Name="AlgSha256" Margin="2,0" Click="Option_Click" Content="SHA-256" GroupName="TcAlg" Style="{StaticResource ModeToggleButtonStyle}" />
                                 <RadioButton x:Name="AlgSha512" Margin="2,0,0,0" Click="Option_Click" Content="SHA-512" GroupName="TcAlg" Style="{StaticResource ModeToggleButtonStyle}" />
                             </UniformGrid>
-                            <TextBlock Margin="2,8,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="Most sites use 6 digits, 30 s and SHA-1. A pasted otpauth:// link sets these for you." />
+                            <TextBlock Margin="2,8,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_TotpCode_MostSitesUseDigits}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -90,13 +90,13 @@
                 <Border Grid.ColumnSpan="3" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
-                            <TextBlock Width="70" VerticalAlignment="Center" DockPanel.Dock="Left" Style="{StaticResource TcCaption}" Text="SECRET" />
+                            <TextBlock Width="70" VerticalAlignment="Center" DockPanel.Dock="Left" Style="{StaticResource TcCaption}" Text="{DynamicResource Str_TotpCode_Secret}" />
                             <Border Style="{StaticResource InputBarStyle}">
                                 <TextBox x:Name="TxtSecret" VerticalContentAlignment="Center" FontFamily="Consolas" Style="{StaticResource BareTextBox}" TextChanged="Input_Changed" Tag="Secret key (letters A-Z and digits 2-7) or an otpauth:// link" ToolTip="The base32 key shown when you set up 2FA, or the otpauth:// text from its QR code" />
                             </Border>
                         </DockPanel>
                         <TextBlock x:Name="TxtError" Margin="70,8,0,0" FontSize="11.5" Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" />
-                        <TextBlock Margin="70,8,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="Your secret stays in this box only: it is not saved, and it is gone when you close the tool." />
+                        <TextBlock Margin="70,8,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="{DynamicResource Str_TotpCode_YourSecretStaysIn}" />
                     </StackPanel>
                 </Border>
 
@@ -110,7 +110,7 @@
                         </Grid.RowDefinitions>
                         <DockPanel Margin="0,0,0,6">
                             <TextBlock x:Name="TxtAccount" VerticalAlignment="Center" DockPanel.Dock="Right" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" />
-                            <ContentControl Content="Your code" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ShieldKeyOutline}" />
+                            <ContentControl Content="{DynamicResource Str_TotpCode_YourCode}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ShieldKeyOutline}" />
                         </DockPanel>
 
                         <Viewbox Grid.Row="1" Margin="10,0" MaxHeight="320" Stretch="Uniform">
@@ -123,12 +123,12 @@
                                 <Button ctl:Tour.Key="Str_Tour_Totp_Copy" ctl:Tour.Order="4" x:Name="BtnCopy" MinHeight="36" Click="BtnCopy_Click" DockPanel.Dock="Right" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentCopy" />
-                                        <TextBlock x:Name="TxtCopy" VerticalAlignment="Center" Text="Copy code" />
+                                        <TextBlock x:Name="TxtCopy" VerticalAlignment="Center" Text="{DynamicResource Str_SvgTool_CopyCode}" />
                                     </StackPanel>
                                 </Button>
                                 <TextBlock x:Name="TxtLeft" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
                             </DockPanel>
-                            <TextBlock x:Name="TxtEmpty" Margin="0,10,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="Paste a secret key above to see your code." />
+                            <TextBlock x:Name="TxtEmpty" Margin="0,10,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_TotpCode_PasteASecretKey}" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -137,15 +137,15 @@
                 <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource CardStyle}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <ContentControl Margin="0,0,0,8" Content="Next code" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ArrowRightCircleOutline}" />
+                            <ContentControl Margin="0,0,0,8" Content="{DynamicResource Str_TotpCode_NextCode}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ArrowRightCircleOutline}" />
                             <TextBlock ctl:Tour.Key="Str_Tour_Totp_Next" ctl:Tour.Order="5" x:Name="TxtNext" FontFamily="Cascadia Mono, Consolas" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" Text="------" />
-                            <TextBlock Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="This is the code you will need after the time bar runs out." />
+                            <TextBlock Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Text="{DynamicResource Str_TotpCode_ThisIsTheCode}" />
 
-                            <TextBlock Margin="0,22,0,6" Style="{StaticResource TcCaption}" Text="HOW IT WORKS" />
-                            <TextBlock FontSize="12" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" Text="A one-time code is made from your secret key and the current time, so the site and this tool agree without talking to each other. Nothing is sent anywhere." />
+                            <TextBlock Margin="0,22,0,6" Style="{StaticResource TcCaption}" Text="{DynamicResource Str_TotpCode_HowItWorks}" />
+                            <TextBlock FontSize="12" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" Text="{DynamicResource Str_TotpCode_AOneTimeCode}" />
 
-                            <TextBlock Margin="0,18,0,6" Style="{StaticResource TcCaption}" Text="CODE NOT ACCEPTED?" />
-                            <TextBlock FontSize="12" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" Text="Check that this PC's clock is right (Settings, Time &amp; language), and that digits, period and algorithm match what the site shows." />
+                            <TextBlock Margin="0,18,0,6" Style="{StaticResource TcCaption}" Text="{DynamicResource Str_TotpCode_CodeNotAccepted}" />
+                            <TextBlock FontSize="12" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" Text="{DynamicResource Str_TotpCode_CheckThatThisPc}" />
                         </StackPanel>
                     </ScrollViewer>
                 </Border>

@@ -267,7 +267,7 @@
                                         <ContentControl Content="{DynamicResource Str_SpritePacker_CoordsHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CodeJson}" />
                                         <UniformGrid Columns="2">
                                             <RadioButton x:Name="RadioFormatJson" Margin="0,0,2,4" Click="PackSetting_Click" Content="JSON" GroupName="SpFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Json" />
-                                            <RadioButton x:Name="RadioFormatCss" Margin="2,0,0,4" Click="PackSetting_Click" Content="CSS" GroupName="SpFormat" Style="{StaticResource ModeToggleButtonStyle}" Tag="Css" />
+                                            <RadioButton x:Name="RadioFormatCss" Margin="2,0,0,4" Click="PackSetting_Click" Content="{DynamicResource Str_CodeToolkit_Css}" GroupName="SpFormat" Style="{StaticResource ModeToggleButtonStyle}" Tag="Css" />
                                             <RadioButton x:Name="RadioFormatXml" Margin="0,0,2,0" Click="PackSetting_Click" Content="XML" GroupName="SpFormat" Style="{StaticResource ModeToggleButtonStyle}" Tag="Xml" />
                                             <RadioButton x:Name="RadioFormatNone" Margin="2,0,0,0" Click="PackSetting_Click" Content="{DynamicResource Str_SpritePacker_FormatNone}" GroupName="SpFormat" Style="{StaticResource ModeToggleButtonStyle}" Tag="None" />
                                         </UniformGrid>

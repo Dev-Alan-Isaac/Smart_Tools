@@ -1101,7 +1101,7 @@
                                     Margin="0,0,6,0"
                                     Click="BtnCollapseGroups_Click"
                                     Style="{StaticResource NeutralIconButtonStyle}"
-                                    ToolTip="Fold every group">
+                                    ToolTip="{DynamicResource Str_Shortcut_GroupsCollapseAll}">
                                     <materialDesign:PackIcon
                                         Width="16"
                                         Height="16"
@@ -1114,7 +1114,7 @@
                                     Margin="0,0,6,0"
                                     Click="BtnExpandGroups_Click"
                                     Style="{StaticResource NeutralIconButtonStyle}"
-                                    ToolTip="Unfold every group">
+                                    ToolTip="{DynamicResource Str_Shortcut_GroupsExpandAll}">
                                     <materialDesign:PackIcon
                                         Width="16"
                                         Height="16"

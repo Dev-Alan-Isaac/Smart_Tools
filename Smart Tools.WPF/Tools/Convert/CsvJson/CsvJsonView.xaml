@@ -40,31 +40,31 @@
                 <StackPanel>
                     <Border ctl:Tour.Key="Str_Tour_CsvJson_Direction" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="CONVERT" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SwapHorizontal}" />
+                            <ContentControl Content="{DynamicResource Str_DateTimeTool_Convert}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SwapHorizontal}" />
                             <UniformGrid Margin="0,6,0,0" Columns="2">
-                                <RadioButton x:Name="RadioCsvToJson" Margin="0,0,2,0" Click="Direction_Click" Content="CSV → JSON" GroupName="CjDir" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="CsvToJson" />
-                                <RadioButton x:Name="RadioJsonToCsv" Margin="2,0,0,0" Click="Direction_Click" Content="JSON → CSV" GroupName="CjDir" Style="{StaticResource ModeToggleButtonStyle}" Tag="JsonToCsv" />
+                                <RadioButton x:Name="RadioCsvToJson" Margin="0,0,2,0" Click="Direction_Click" Content="{DynamicResource Str_CsvJson_CsvJson}" GroupName="CjDir" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="CsvToJson" />
+                                <RadioButton x:Name="RadioJsonToCsv" Margin="2,0,0,0" Click="Direction_Click" Content="{DynamicResource Str_CsvJson_JsonCsv}" GroupName="CjDir" Style="{StaticResource ModeToggleButtonStyle}" Tag="JsonToCsv" />
                             </UniformGrid>
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_CsvJson_Options" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="OPTIONS" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
-                            <TextBlock Style="{StaticResource CjLabel}" Text="Separator" />
+                            <ContentControl Content="{DynamicResource Str_Rest_Options}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.TuneVariant}" />
+                            <TextBlock Style="{StaticResource CjLabel}" Text="{DynamicResource Str_Password_SeparatorHeader}" />
                             <Border Style="{StaticResource InputBarStyle}">
                                 <ComboBox x:Name="CmbDelimiter" VerticalContentAlignment="Center" SelectionChanged="Option_SelectionChanged" Style="{StaticResource BareComboBox}">
-                                    <ComboBoxItem Content="Detect automatically" Tag="Auto" />
-                                    <ComboBoxItem Content="Comma ( , )" Tag="Comma" />
-                                    <ComboBoxItem Content="Semicolon ( ; )" Tag="Semicolon" />
-                                    <ComboBoxItem Content="Tab" Tag="Tab" />
-                                    <ComboBoxItem Content="Pipe ( | )" Tag="Pipe" />
+                                    <ComboBoxItem Content="{DynamicResource Str_CsvJson_DetectAutomatically}" Tag="Auto" />
+                                    <ComboBoxItem Content="{DynamicResource Str_CsvJson_Comma}" Tag="Comma" />
+                                    <ComboBoxItem Content="{DynamicResource Str_CsvJson_Semicolon}" Tag="Semicolon" />
+                                    <ComboBoxItem Content="{DynamicResource Str_CodeToolkit_Tab}" Tag="Tab" />
+                                    <ComboBoxItem Content="{DynamicResource Str_CsvJson_Pipe}" Tag="Pipe" />
                                 </ComboBox>
                             </Border>
                             <StackPanel x:Name="PanelCsvOptions" Margin="0,10,0,0">
-                                <CheckBox x:Name="ChkHeader" Click="Option_Click" Content="First row is the header" IsChecked="True" />
-                                <CheckBox x:Name="ChkTypes" Margin="0,6,0,0" Click="Option_Click" Content="Keep numbers and true/false" IsChecked="True" ToolTip="Numbers like 007 stay text so IDs and zip codes keep their zeros." />
-                                <CheckBox x:Name="ChkIndented" Margin="0,6,0,0" Click="Option_Click" Content="Pretty JSON (indented)" IsChecked="True" />
+                                <CheckBox x:Name="ChkHeader" Click="Option_Click" Content="{DynamicResource Str_CsvJson_FirstRowIsThe}" IsChecked="True" />
+                                <CheckBox x:Name="ChkTypes" Margin="0,6,0,0" Click="Option_Click" Content="{DynamicResource Str_CsvJson_KeepNumbersAndTrue}" IsChecked="True" ToolTip="{DynamicResource Str_CsvJson_NumbersLikeStayText}" />
+                                <CheckBox x:Name="ChkIndented" Margin="0,6,0,0" Click="Option_Click" Content="{DynamicResource Str_CsvJson_PrettyJsonIndented}" IsChecked="True" />
                             </StackPanel>
                             <TextBlock x:Name="TxtHint" Style="{StaticResource CjHint}" />
                         </StackPanel>
@@ -90,8 +90,8 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <StackPanel>
-                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="RESULT" />
-                                <TextBlock x:Name="TxtInfo" Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="Paste or open something to convert" />
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_FileConverter_Result}" />
+                                <TextBlock x:Name="TxtInfo" Margin="0,2,0,0" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_CsvJson_PasteOrOpenSomething}" />
                             </StackPanel>
                         </StackPanel>
                         <Border x:Name="ErrorBanner" Margin="0,10,0,0" Padding="12,9" HorizontalAlignment="Left" Background="{DynamicResource StatusErrorBg}" CornerRadius="10" Visibility="Collapsed">
@@ -109,10 +109,10 @@
                         </Grid.RowDefinitions>
                         <DockPanel Margin="0,0,0,10">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button Margin="0,0,6,0" Click="BtnOpen_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Open a file">
+                                <Button Margin="0,0,6,0" Click="BtnOpen_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Formatter_Open}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                 </Button>
-                                <Button Click="BtnClear_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Clear">
+                                <Button Click="BtnClear_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Validate_Clear}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="Close" />
                                 </Button>
                             </StackPanel>
@@ -133,10 +133,10 @@
                         </Grid.RowDefinitions>
                         <DockPanel Margin="0,0,0,10">
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button ctl:Tour.Key="Str_Tour_CsvJson_Copy" ctl:Tour.Order="5" x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Copy the result">
+                                <Button ctl:Tour.Key="Str_Tour_CsvJson_Copy" ctl:Tour.Order="5" x:Name="BtnCopy" Margin="0,0,6,0" Click="BtnCopy_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Conv_CopyResult}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
-                                <Button x:Name="BtnSave" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="Save the result to a file">
+                                <Button x:Name="BtnSave" Click="BtnSave_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_EncTool_SaveTooltip}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
                                 </Button>
                             </StackPanel>

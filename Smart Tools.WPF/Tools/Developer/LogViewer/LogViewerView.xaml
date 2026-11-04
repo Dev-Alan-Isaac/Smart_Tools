@@ -846,7 +846,7 @@
                                             </MenuItem>
                                             <MenuItem
                                                 Click="MenuExport_Click"
-                                                Header="Log file (.log)"
+                                                Header="{DynamicResource Str_LogViewer_LogFileLog}"
                                                 Tag="log">
                                                 <MenuItem.Icon>
                                                     <materialDesign:PackIcon Kind="TextBoxOutline" />

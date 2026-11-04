@@ -15,7 +15,9 @@ Read those before changing a view; do not repeat their content here.
 - `MainWindow.xaml.cs` - `Add<View>("tool-id", shutdownAction)` registers each view. **The id in the catalog, in `Add<>`, and in the
   `Str_Tool_<id>_Name/_Description` language keys must be identical**, or the tool silently won't open or will show an English fallback.
 - `Tools/<Category>/<Tool>/` - `*View.xaml(.cs)` (UI only), `*Manager*.cs` (logic, no WPF types where possible; partials like `.Run.cs`), `*Model.cs` (data).
-- `Language/en.xaml` + `es.xaml` - every UI string, tool names, guided tours. Always add to **both**.
+- `Language/en.xaml` + `es.xaml` - every UI string, tool names, guided tours. Always add to **both**. No English literals in views: XAML uses
+  `{DynamicResource Str_...}`, C# uses `Loc.T(key, fallback)` / `Loc.F` / `Loc.N` (singular/plural) from `Modules/Loc.cs`, dialog titles use `Str_Tool_<id>_Name`.
+  `FileDrop.Attach(view, onFile)` (`Modules/FileDrop.cs`) adds drag-and-drop of one file to a view.
 - `Engines/` - bundled FFmpeg, VLC, Tesseract, Whisper. `Modules/` - app services (paths, settings, theme, language, log, toasts).
 
 ## Adding a tool (checklist)

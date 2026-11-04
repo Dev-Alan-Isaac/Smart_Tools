@@ -41,6 +41,7 @@ namespace Smart_Tools.WPF.Views
         public DataFormatterView()
         {
             InitializeComponent();
+            FileDrop.Attach(this, LoadFile);
             _debounce.Tick += (_, _) =>
             {
                 _debounce.Stop();
@@ -136,14 +137,20 @@ namespace Smart_Tools.WPF.Views
                 Filter = "JSON, YAML, XML|*.json;*.yaml;*.yml;*.xml|All files (*.*)|*.*",
             };
             if (open.ShowDialog() != true) return;
+            LoadFile(open.FileName);
+        }
+
+        /// <summary>Reads a file into the input box (from the Open button or a drop).</summary>
+        private void LoadFile(string path)
+        {
             try
             {
-                if (new FileInfo(open.FileName).Length > MaxFileBytes)
+                if (new FileInfo(path).Length > MaxFileBytes)
                 {
                     MessageBox.Show(T("Str_Formatter_TooBig", "That file is larger than 20 MB, which is too big to format here."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
-                TxtInput.Text = File.ReadAllText(open.FileName);
+                TxtInput.Text = File.ReadAllText(path);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

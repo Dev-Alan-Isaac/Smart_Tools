@@ -79,8 +79,8 @@ namespace Smart_Tools.WPF.Controllers
                         }
                     }
                 }
-                catch (IOException) { }
-                catch (UnauthorizedAccessException) { }
+                catch (IOException ex) { Smart_Tools.WPF.Log.Debug("OUI table could not be read: " + ex.Message); }
+                catch (UnauthorizedAccessException ex) { Smart_Tools.WPF.Log.Debug("OUI table access denied: " + ex.Message); }
                 _table = table;
             }
         }
