@@ -405,7 +405,12 @@ namespace Smart_Tools.WPF.Views
             bool fresh = _rates != null && DateTimeOffset.Now - _rates.FetchedAt < RatesMaxAge;
 
             if (_rates != null) ShowRates(_rates, offline: false);
-            if (fresh && !force) return;
+            if (fresh && !force)
+            {
+                _ratesCts = null;
+                cts.Dispose();
+                return;
+            }
 
             BtnRefreshRates.IsEnabled = false;
             SetRatesPill("Info", PackIconKind.Web, T("Str_Conv_Updating", "Updating..."));
@@ -420,8 +425,9 @@ namespace Smart_Tools.WPF.Views
             {
                 // Left the currency page; the next visit tries again.
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or InvalidOperationException)
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
+                // Any failure (no network, a bad answer, a locked cache file...) ends the "Updating..." pill; none may leave it stuck.
                 if (cts.IsCancellationRequested) return;
                 if (_rates != null) ShowRates(_rates, offline: true);
                 else
@@ -434,7 +440,12 @@ namespace Smart_Tools.WPF.Views
             }
             finally
             {
-                if (ReferenceEquals(_ratesCts, cts)) BtnRefreshRates.IsEnabled = true;
+                if (ReferenceEquals(_ratesCts, cts))
+                {
+                    _ratesCts = null;
+                    BtnRefreshRates.IsEnabled = true;
+                }
+                cts.Dispose();   // each run disposes its own source; a newer run only cancels it
             }
         }
 

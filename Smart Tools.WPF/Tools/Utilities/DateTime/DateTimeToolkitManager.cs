@@ -280,12 +280,13 @@ namespace Smart_Tools.WPF.Controllers
         {
             sign = sign < 0 ? -1 : 1;
             const long Limit = 4_000_000;       // more working days than the calendar holds
-            if (Math.Abs(a.BusinessDays) > Limit || Math.Abs(a.Years) > 20_000 || Math.Abs(a.Months) > 240_000)
+            // Compared without Math.Abs: Abs(long.MinValue) throws, and the view lets that number through.
+            if (a.BusinessDays is > Limit or < -Limit || a.Years is > 20_000 or < -20_000 || a.Months is > 240_000 or < -240_000)
                 return new DateToolAddResult(false, "OutOfRange", default);
             try
             {
                 var d = start.AddMonths(checked((int)(sign * (a.Years * 12 + a.Months))));
-                d = d.AddDays(sign * (double)(a.Weeks * 7 + a.Days));
+                d = d.AddDays(sign * ((double)a.Weeks * 7 + a.Days));   // in double: weeks * 7 in long could wrap around silently
 
                 long steps = sign * a.BusinessDays;
                 int dir = steps < 0 ? -1 : 1;
