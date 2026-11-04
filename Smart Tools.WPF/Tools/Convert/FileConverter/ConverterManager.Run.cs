@@ -253,7 +253,8 @@ namespace Smart_Tools.WPF.Controllers
                 lock (gate)
                 {
                     long now = started.ElapsedMilliseconds;
-                    if (!force && now - lastReport < 100) return;
+                    // At most ten reports a second, however many small files finish; only the very last state is always sent.
+                    if (now - lastReport < 100 && !(force && completed >= total)) return;
                     lastReport = now;
                     double partial = inFlight.Values.Sum() / 100.0;
                     double currentPercent = inFlight.Count > 0 ? inFlight.Values.Max() : 0;

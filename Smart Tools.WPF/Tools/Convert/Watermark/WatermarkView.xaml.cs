@@ -43,7 +43,7 @@ namespace Smart_Tools.WPF.Views
         private const int PreviewSide = 1100;
         private const string CustomPresetTag = "*custom*";
 
-        private readonly ObservableCollection<WatermarkItem> _items = new();
+        private readonly BulkObservableCollection<WatermarkItem> _items = new();   // 100,000 files = one change, not 100,000
         private readonly ObservableCollection<WatermarkGroup> _groups = new();
         private readonly DispatcherTimer _previewTimer;
         private readonly DispatcherTimer _saveTimer;
@@ -62,11 +62,16 @@ namespace Smart_Tools.WPF.Views
         private BitmapSource? _logo;
         private string? _lastOutput;
         private CancellationTokenSource? _runCts;
+        private CancellationTokenSource? _scanCts;      // reading folders: cancelled by Clear and by closing the page
+        private CancellationTokenSource? _infoCts;      // reading each file's size / pages / length
+        private CancellationTokenSource? _previewCts;   // the preview in progress (ffmpeg frame, PDF page)
+        private bool _stopping;
 
         // The last file shown, so changing a setting redraws the mark without reading the file again.
         private string? _baseKey;
         private BitmapSource? _baseBitmap;
         private string? _baseProblem;
+        private string? _previewProblem;
 
         private enum StatusKind { Error, Success, Warning }
 
@@ -79,7 +84,7 @@ namespace Smart_Tools.WPF.Views
             _items.CollectionChanged += (_, _) => UpdateCounts();
             _groups.CollectionChanged += (_, _) => InputCard.SetEmpty(_groups.Count == 0);
 
-            _previewTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(160) };
+            _previewTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
             _previewTimer.Tick += (_, _) => { _previewTimer.Stop(); RunPreview(); };
             _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
             _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SaveSettings(); };
@@ -541,18 +546,34 @@ namespace Smart_Tools.WPF.Views
             var added = new List<WatermarkItem>();
             int inaccessible = 0, unsupported = 0;
 
-            var loose = all.Where(File.Exists).ToList();
-            if (loose.Count > 0)
+            // One token for everything being read; Clear and closing the page cancel it. A second drop does not cancel the first.
+            var token = (_scanCts ??= new CancellationTokenSource()).Token;
+            void Scanning(int found) => Dispatcher.BeginInvoke(() =>
             {
-                var scan = await WatermarkManager.ScanAsync(loose, includeSubfolders: false);
-                unsupported += scan.Unsupported;
-                added.AddRange(WatermarkManager.AddToList(_items, _groups, scan.Files, null, isFolder: false, includeSubfolders: false));
+                if (!token.IsCancellationRequested)
+                    TxtProgress.Text = string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_Scanning", "Reading folders... {0} files found"), found.ToString("N0", CultureInfo.CurrentCulture));
+            });
+
+            try
+            {
+                var loose = all.Where(File.Exists).ToList();
+                if (loose.Count > 0)
+                {
+                    var scan = await WatermarkManager.ScanAsync(loose, includeSubfolders: false, token, Scanning);
+                    unsupported += scan.Unsupported;
+                    added.AddRange(WatermarkManager.AddToList(_items, _groups, scan.Files, null, isFolder: false, includeSubfolders: false, scan.Sizes));
+                }
+                foreach (string folder in all.Where(Directory.Exists))
+                {
+                    var scan = await WatermarkManager.ScanAsync(new[] { folder }, include, token, Scanning);
+                    inaccessible += scan.InaccessibleFolders;
+                    added.AddRange(WatermarkManager.AddToList(_items, _groups, scan.Files, folder, isFolder: true, includeSubfolders: include, scan.Sizes));
+                }
             }
-            foreach (string folder in all.Where(Directory.Exists))
+            catch (OperationCanceledException)
             {
-                var scan = await WatermarkManager.ScanAsync(new[] { folder }, include);
-                inaccessible += scan.InaccessibleFolders;
-                added.AddRange(WatermarkManager.AddToList(_items, _groups, scan.Files, folder, isFolder: true, includeSubfolders: include));
+                UpdateCounts();
+                return;
             }
 
             if (inaccessible > 0)
@@ -560,38 +581,66 @@ namespace Smart_Tools.WPF.Views
             else if (added.Count == 0 && all.Count > 0)
                 ShowStatus(Str(unsupported > 0 ? "Str_Watermark_Unsupported" : "Str_Watermark_NothingAdded", "No new pictures, videos or PDFs were found there."), StatusKind.Warning);
             else if (_items.Count >= WatermarkManager.MaxFiles)
-                ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_LimitReached", "The list is full ({0} files)."), WatermarkManager.MaxFiles), StatusKind.Warning);
+                ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_LimitReached", "The list is full ({0} files)."), WatermarkManager.MaxFiles.ToString("N0", CultureInfo.CurrentCulture)), StatusKind.Warning);
             else if (added.Any(i => i.Kind == WatermarkFileKind.Video) && WatermarkManager.MissingVideoEngine() is { } missing)
                 ShowStatus(missing, StatusKind.Warning);
             else HideStatus();
 
+            UpdateCounts();                      // clears the "reading folders" line even when nothing was added
             LoadInfo(added);
             if (FileList.SelectedItem == null && _items.Count > 0) SchedulePreview();
+        }
+
+        /// <summary>Stops reading folders and file details (Clear, closing the page).</summary>
+        private void CancelBackgroundReads()
+        {
+            _scanCts?.Cancel();
+            _scanCts = null;
+            _infoCts?.Cancel();
+            _infoCts = null;
         }
 
         /// <summary>Size, pages or length of each new file, a few at a time, so adding a big folder never freezes the page.</summary>
         private async void LoadInfo(IReadOnlyList<WatermarkItem> items)
         {
-            foreach (var item in items)
+            if (items.Count == 0) return;
+            var token = (_infoCts ??= new CancellationTokenSource()).Token;
+            try
             {
-                await _infoGate.WaitAsync();
-                _ = Task.Run(async () =>
+                foreach (var item in items)
                 {
-                    try
-                    {
-                        var (info, problem) = await WatermarkManager.ReadInfoAsync(item, CancellationToken.None);
-                        Dispatcher.BeginInvoke(() =>
-                        {
-                            if (!_items.Contains(item) || item.Status == WatermarkStatus.Processing) return;
-                            item.Info = info;
-                            if (problem != null) { item.Status = WatermarkStatus.Failed; item.StatusText = problem; }
-                        });
-                    }
-                    finally
+                    await _infoGate.WaitAsync(token);
+                    if (!item.Listed)                         // removed or cleared while waiting its turn
                     {
                         _infoGate.Release();
+                        continue;
                     }
-                });
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var (info, problem) = await WatermarkManager.ReadInfoAsync(item, token);
+                            Dispatcher.BeginInvoke(() =>
+                            {
+                                if (!item.Listed || item.Status == WatermarkStatus.Processing) return;
+                                item.Info = info;
+                                if (problem != null) { item.Status = WatermarkStatus.Failed; item.StatusText = problem; }
+                            });
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // cleared or closed
+                        }
+                        finally
+                        {
+                            _infoGate.Release();
+                        }
+                    }, CancellationToken.None);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // cleared or closed while waiting
             }
         }
 
@@ -617,6 +666,8 @@ namespace Smart_Tools.WPF.Views
         private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
             if (_busy) return;
+            CancelBackgroundReads();
+            foreach (var item in _items) item.Listed = false;
             _items.Clear();
             _groups.Clear();
             SchedulePreview();
@@ -655,8 +706,8 @@ namespace Smart_Tools.WPF.Views
             var added = new List<WatermarkItem>();
             foreach (var group in _groups.Where(g => g.IsFolder && g.FolderPath != null).ToList())
             {
-                var scan = await WatermarkManager.ScanAsync(new[] { group.FolderPath! }, include);
-                added.AddRange(WatermarkManager.ApplyRescan(_items, _groups, group, scan.Files, include).Added);
+                var scan = await WatermarkManager.ScanAsync(new[] { group.FolderPath! }, include, (_scanCts ??= new CancellationTokenSource()).Token);
+                added.AddRange(WatermarkManager.ApplyRescan(_items, _groups, group, scan.Files, include, scan.Sizes).Added);
             }
             LoadInfo(added);
             SchedulePreview();
@@ -744,45 +795,41 @@ namespace Smart_Tools.WPF.Views
             }
 
             string key = item.FullPath + "|" + item.SizeBytes;
-            if (key != _baseKey)
-            {
-                PreviewBusy.Visibility = Visibility.Visible;
-                var source = await WatermarkManager.LoadPreviewAsync(item, PreviewSide, CancellationToken.None);
-                if (run != _previewRun) return;
-                _baseKey = key;
-                _baseBitmap = source.Bitmap;
-                _baseProblem = source.Problem;
-            }
-            PreviewBusy.Visibility = Visibility.Collapsed;
-            PreviewEmpty.Visibility = Visibility.Collapsed;
-
-            // A file that can't be drawn still gets a mark preview, on a blank sheet of a believable shape.
-            var bitmap = _baseBitmap;
-            int w = bitmap?.PixelWidth ?? (item.Kind == WatermarkFileKind.Pdf ? 794 : 1000), h = bitmap?.PixelHeight ?? (item.Kind == WatermarkFileKind.Pdf ? 1123 : 640);
-            var mark = ReadMark();
-            WatermarkManager.Stamp? stamp = null;
-            string? markProblem = null;
+            _previewCts?.Cancel();
+            var cts = _previewCts = new CancellationTokenSource();
             try
             {
-                if (WatermarkManager.HasMark(mark)) stamp = WatermarkManager.RenderStamp(w, h, mark, _logo);
-                else markProblem = Str(mark.Kind == WatermarkKind.Text ? "Str_Watermark_NeedText" : "Str_Watermark_NeedLogo");
-            }
-            catch (InvalidOperationException ex)
-            {
-                markProblem = ex.Message;
-            }
+                if (key != _baseKey)
+                {
+                    PreviewBusy.Visibility = Visibility.Visible;
+                    var source = await WatermarkManager.LoadPreviewAsync(item, PreviewSide, cts.Token);
+                    if (run != _previewRun) return;
+                    _baseKey = key;
+                    _baseBitmap = source.Bitmap;
+                    _baseProblem = source.Problem;
+                }
 
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
-            {
-                if (bitmap != null) dc.DrawImage(bitmap, new Rect(0, 0, w, h));
-                else dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, w, h));
-                if (stamp != null) dc.DrawImage(stamp.Bitmap, new Rect(stamp.X, stamp.Y, stamp.Bitmap.PixelWidth, stamp.Bitmap.PixelHeight));
+                // A file that can't be drawn still gets a mark preview, on a blank sheet of a believable shape.
+                var bitmap = _baseBitmap;
+                int w = bitmap?.PixelWidth ?? (item.Kind == WatermarkFileKind.Pdf ? 794 : 1000), h = bitmap?.PixelHeight ?? (item.Kind == WatermarkFileKind.Pdf ? 1123 : 640);
+                var mark = ReadMark();
+                bool hasMark = WatermarkManager.HasMark(mark);
+                string? markProblem = hasMark ? null : Str(mark.Kind == WatermarkKind.Text ? "Str_Watermark_NeedText" : "Str_Watermark_NeedLogo");
+
+                var composed = await WatermarkManager.ComposePreviewAsync(bitmap, w, h, mark, _logo, hasMark);
+                if (run != _previewRun) return;                  // a newer preview was asked for meanwhile
+                markProblem ??= composed.Problem;
+
+                PreviewBusy.Visibility = Visibility.Collapsed;
+                PreviewEmpty.Visibility = Visibility.Collapsed;
+                PreviewImage.Source = composed.Image;
+
+                _previewProblem = _baseProblem ?? markProblem;
             }
-            var composed = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
-            composed.Render(visual);
-            composed.Freeze();
-            PreviewImage.Source = composed;
+            catch (OperationCanceledException)
+            {
+                return;                                          // superseded: the newer preview shows
+            }
 
             string note = item.Kind switch
             {
@@ -790,8 +837,8 @@ namespace Smart_Tools.WPF.Views
                 WatermarkFileKind.Pdf => string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_NotePdf", "{0} · page 1"), item.Name),
                 _ => item.Name,
             };
-            TxtPreviewNote.Text = _baseProblem ?? markProblem ?? note;
-            TxtPreviewNote.SetResourceReference(TextBlock.ForegroundProperty, _baseProblem != null || markProblem != null ? "StatusWarningFg" : "TextSecondary");
+            TxtPreviewNote.Text = _previewProblem ?? note;
+            TxtPreviewNote.SetResourceReference(TextBlock.ForegroundProperty, _previewProblem != null ? "StatusWarningFg" : "TextSecondary");
         }
 
         // =================================================================
@@ -802,7 +849,12 @@ namespace Smart_Tools.WPF.Views
         {
             if (_busy)
             {
-                _runCts?.Cancel();                              // Stop: finished files are kept
+                if (_stopping) return;
+                _stopping = true;                                // Stop: finished files are kept; the file in progress is cancelled
+                _runCts?.Cancel();
+                BtnRun.IsEnabled = false;
+                TxtRun.SetResourceReference(TextBlock.TextProperty, "Str_Watermark_Stopping");
+                TxtProgress.Text = Str("Str_Watermark_StoppingInfo", "Stopping... the files already marked are kept.");
                 return;
             }
             if (_items.Count == 0) return;
@@ -844,7 +896,10 @@ namespace Smart_Tools.WPF.Views
             {
                 RunProgress.Value = p.Percent;
                 TxtProgressPercent.Text = $"{p.Percent:0}%";
-                TxtProgress.Text = string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_Progress", "{0} of {1} done · {2}"), p.Done + p.Failed + p.Skipped, p.Total, p.Current);
+                if (_stopping) return;                           // keeps saying "Stopping..."
+                string text = string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_Progress", "{0} of {1} done · {2}"), p.Done + p.Failed + p.Skipped, p.Total, p.Current);
+                if (p.Eta is { } eta) text += " · " + string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_Eta", "about {0} left"), FormatEta(eta));
+                TxtProgress.Text = text;
             });
 
             WatermarkRunResult result;
@@ -887,9 +942,13 @@ namespace Smart_Tools.WPF.Views
             TxtProgress.Text = string.Format(CultureInfo.CurrentCulture, Str("Str_Watermark_SummaryInfo", "{0} files were written. The originals were not changed."), r.Done);
         }
 
+        private static string FormatEta(TimeSpan t) =>
+            t.TotalHours >= 1 ? $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}" : $"{t.Minutes}:{t.Seconds:00}";
+
         private void SetBusy(bool busy)
         {
             _busy = busy;
+            if (busy) _stopping = false;
             OutputCard.IsLocked = busy;
             SidebarStack.IsEnabled = !busy;
             BtnRemoveSelected.IsEnabled = !busy && _items.Count > 0;
@@ -965,6 +1024,8 @@ namespace Smart_Tools.WPF.Views
         public void CancelActiveRun()
         {
             _previewRun++;
+            _previewCts?.Cancel();
+            CancelBackgroundReads();
             _previewTimer.Stop();
             _doneTimer.Stop();
             _runCts?.Cancel();

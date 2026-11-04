@@ -78,6 +78,15 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public static Stamp? RenderStamp(int targetWidth, int targetHeight, WatermarkSettings settings, BitmapSource? logo)
         {
+            // Several picture workers run at once; WPF's drawing is not safe from many threads at the same moment, and a stamp takes
+            // milliseconds, so the drawing takes turns while the heavy work (decoding, compositing, saving) stays parallel.
+            lock (WpfDrawLock) return RenderStampCore(targetWidth, targetHeight, settings, logo);
+        }
+
+        private static readonly object WpfDrawLock = new();
+
+        private static Stamp? RenderStampCore(int targetWidth, int targetHeight, WatermarkSettings settings, BitmapSource? logo)
+        {
             var s = Normalize(settings);
             if (targetWidth <= 0 || targetHeight <= 0) return null;
             if ((long)targetWidth * targetHeight > MaxStampPixels) throw new InvalidOperationException("This file is too large to mark.");
@@ -165,11 +174,14 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Straight-alpha PNG bytes of a stamp (what ffmpeg, ImageMagick and PDFsharp read).</summary>
         public static byte[] ToPng(BitmapSource bitmap)
         {
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmap));
-            using var ms = new MemoryStream();
-            encoder.Save(ms);
-            return ms.ToArray();
+            lock (WpfDrawLock)
+            {
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                using var ms = new MemoryStream();
+                encoder.Save(ms);
+                return ms.ToArray();
+            }
         }
 
         /// <summary>Runs drawing work on its own STA thread (WPF drawing must not run on a thread-pool thread).</summary>

@@ -1721,6 +1721,32 @@
     <system:String x:Key="Str_Convert_SavedAsDeleted">Guardado como {0}: el original se eliminó.</system:String>
     <system:String x:Key="Str_Convert_SavedAsKeepFail">Guardado como {0}, pero no se pudo eliminar el original: {1}</system:String>
     <system:String x:Key="Str_Convert_MsgCancelled">Cancelado.</system:String>
+    <system:String x:Key="Str_Convert_NotImage">No es un archivo de imagen que esta herramienta pueda leer.</system:String>
+    <system:String x:Key="Str_Convert_NotAudio">No es un archivo de audio que esta herramienta pueda leer.</system:String>
+    <system:String x:Key="Str_Convert_NotVideo">No es un archivo de vídeo que esta herramienta pueda leer.</system:String>
+    <system:String x:Key="Str_Convert_WrongType">Esto es {0}: no puede convertirse en {1}. Cambia el tipo de archivo para convertirlo.</system:String>
+    <system:String x:Key="Str_Convert_KindImage">una imagen</system:String>
+    <system:String x:Key="Str_Convert_KindVideo">un vídeo</system:String>
+    <system:String x:Key="Str_Convert_KindAudio">un archivo de audio</system:String>
+    <system:String x:Key="Str_Convert_NoOp">Ya es {0} y no se eligió cambiar el tamaño: no hay nada que cambiar.</system:String>
+    <system:String x:Key="Str_Convert_SameFormat">Mismo formato: se volverá a codificar con estos ajustes.</system:String>
+    <system:String x:Key="Str_Convert_WillSaveAs">Se guardará como {0}.</system:String>
+    <system:String x:Key="Str_Convert_WillReplace">REEMPLAZARÁ {0}.</system:String>
+    <system:String x:Key="Str_Convert_ReadyOne">1 archivo listo para convertir</system:String>
+    <system:String x:Key="Str_Convert_ReadyMany">{0} archivos listos para convertir</system:String>
+    <system:String x:Key="Str_Convert_OtherTypeLeftOut">{0} de otro tipo omitidos</system:String>
+    <system:String x:Key="Str_Convert_ReplaceCount">Se REEMPLAZARÁN {0} archivos existentes</system:String>
+    <system:String x:Key="Str_Convert_FoldersUnreadable">No se pudieron leer {0} carpetas</system:String>
+    <system:String x:Key="Str_Convert_LinksSkipped">{0} carpetas enlazadas sin seguir</system:String>
+    <system:String x:Key="Str_Convert_NoLongerExist">{0} ya no existen</system:String>
+    <system:String x:Key="Str_Convert_ListingFailed">no se pudieron leer las carpetas: {0}</system:String>
+    <system:String x:Key="Str_Convert_SummaryOne">1 archivo</system:String>
+    <system:String x:Key="Str_Convert_SummaryMany">{0} archivos</system:String>
+    <system:String x:Key="Str_Convert_UpdatingList">Actualizando la lista...</system:String>
+    <system:String x:Key="Str_Convert_ConfirmReplaceOne">"{0}" ya existe y será REEMPLAZADO por el archivo convertido.&#10;&#10;¿Continuar?</system:String>
+    <system:String x:Key="Str_Convert_ConfirmReplaceMany">Se REEMPLAZARÁN {0} archivos existentes, por ejemplo "{1}".&#10;&#10;No se puede deshacer. ¿Continuar?</system:String>
+    <system:String x:Key="Str_Convert_LimitIco">Los iconos no pueden superar 256 px: el tamaño elegido se guardará como {0} x {1}.</system:String>
+    <system:String x:Key="Str_Convert_LimitMp3">MP3 no admite 96 kHz: se guardará a 48 kHz.</system:String>
 
     <!--  ============ API TESTER ============  -->
     <system:String x:Key="Str_Api_Title">Probador de API</system:String>
@@ -5592,6 +5618,16 @@
     <system:String x:Key="Str_Watermark_SummarySkipped">{0} omitidos</system:String>
     <system:String x:Key="Str_Watermark_SummaryStopped">Detenido. Los archivos ya marcados se conservaron.</system:String>
     <system:String x:Key="Str_Watermark_SummaryInfo">Se escribieron {0} archivos. Los originales no se modificaron.</system:String>
+    <system:String x:Key="Str_Watermark_Scanning">Leyendo carpetas... {0} archivos encontrados</system:String>
+    <system:String x:Key="Str_Watermark_Stopping">Deteniendo...</system:String>
+    <system:String x:Key="Str_Watermark_StoppingInfo">Deteniendo... los archivos ya marcados se conservan.</system:String>
+    <system:String x:Key="Str_Watermark_Eta">faltan unos {0}</system:String>
+    <system:String x:Key="Str_Watermark_NoRoom">No hay espacio libre suficiente en {0} para la copia marcada.</system:String>
+    <system:String x:Key="Str_Watermark_GroupSeveral">Varias carpetas</system:String>
+    <system:String x:Key="Str_Watermark_GroupOneFile">1 archivo</system:String>
+    <system:String x:Key="Str_Watermark_GroupFiles">{0} archivos</system:String>
+    <system:String x:Key="Str_Watermark_GroupFolderSub">Carpeta y subcarpetas · {0}</system:String>
+    <system:String x:Key="Str_Watermark_GroupFolder">Carpeta · {0}</system:String>
 
     <!--  ================= Atajos de teclado =================  -->
     <system:String x:Key="Str_Settings_NavShortcuts">Atajos de teclado</system:String>
@@ -9205,6 +9241,9 @@
     <system:String x:Key="Str_CsvJson_ClipboardBusy">El portapapeles está ocupado: inténtalo de nuevo</system:String>
     <system:String x:Key="Str_CsvJson_Saved">Guardado {0}</system:String>
     <system:String x:Key="Str_CsvJson_SaveFailed">No se pudo guardar: {0}</system:String>
+    <system:String x:Key="Str_CsvJson_EmptyTitle">Aún no hay nada que convertir</system:String>
+    <system:String x:Key="Str_CsvJson_EmptyHint">Pega aquí tus datos, suelta un archivo en este cuadro o pulsa Abrir.</system:String>
+    <system:String x:Key="Str_CsvJson_DropTitle">Suelta el archivo para cargarlo</system:String>
     <system:String x:Key="Str_HashVerifier_Crc">CRC32</system:String>
     <system:String x:Key="Str_EncodeDecode_Utf">UTF-16</system:String>
     <system:String x:Key="Str_EncodeDecode_LatinIso">Latin-1 (ISO-8859-1)</system:String>

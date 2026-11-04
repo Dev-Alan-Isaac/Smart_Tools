@@ -1675,6 +1675,32 @@
     <system:String x:Key="Str_Convert_SavedAsDeleted">Saved as {0} - original deleted.</system:String>
     <system:String x:Key="Str_Convert_SavedAsKeepFail">Saved as {0}, but the original couldn't be deleted: {1}</system:String>
     <system:String x:Key="Str_Convert_MsgCancelled">Cancelled.</system:String>
+    <system:String x:Key="Str_Convert_NotImage">Not an image file this tool can read.</system:String>
+    <system:String x:Key="Str_Convert_NotAudio">Not an audio file this tool can read.</system:String>
+    <system:String x:Key="Str_Convert_NotVideo">Not a video file this tool can read.</system:String>
+    <system:String x:Key="Str_Convert_WrongType">This is {0} - it can't become {1}. Switch the file type to convert it.</system:String>
+    <system:String x:Key="Str_Convert_KindImage">an image</system:String>
+    <system:String x:Key="Str_Convert_KindVideo">a video</system:String>
+    <system:String x:Key="Str_Convert_KindAudio">an audio file</system:String>
+    <system:String x:Key="Str_Convert_NoOp">Already {0} and no resize chosen - nothing to change.</system:String>
+    <system:String x:Key="Str_Convert_SameFormat">Same format - it will be re-encoded with these settings.</system:String>
+    <system:String x:Key="Str_Convert_WillSaveAs">Will be saved as {0}.</system:String>
+    <system:String x:Key="Str_Convert_WillReplace">Will REPLACE {0}.</system:String>
+    <system:String x:Key="Str_Convert_ReadyOne">1 file ready to convert</system:String>
+    <system:String x:Key="Str_Convert_ReadyMany">{0} files ready to convert</system:String>
+    <system:String x:Key="Str_Convert_OtherTypeLeftOut">{0} of another type left out</system:String>
+    <system:String x:Key="Str_Convert_ReplaceCount">{0} existing files will be REPLACED</system:String>
+    <system:String x:Key="Str_Convert_FoldersUnreadable">{0} folders couldn't be read</system:String>
+    <system:String x:Key="Str_Convert_LinksSkipped">{0} linked folders not followed</system:String>
+    <system:String x:Key="Str_Convert_NoLongerExist">{0} no longer exist</system:String>
+    <system:String x:Key="Str_Convert_ListingFailed">couldn't read the folders: {0}</system:String>
+    <system:String x:Key="Str_Convert_SummaryOne">1 file</system:String>
+    <system:String x:Key="Str_Convert_SummaryMany">{0} files</system:String>
+    <system:String x:Key="Str_Convert_UpdatingList">Updating the list...</system:String>
+    <system:String x:Key="Str_Convert_ConfirmReplaceOne">"{0}" already exists and will be REPLACED by the converted file.&#10;&#10;Continue?</system:String>
+    <system:String x:Key="Str_Convert_ConfirmReplaceMany">{0} existing files will be REPLACED, for example "{1}".&#10;&#10;This can't be undone. Continue?</system:String>
+    <system:String x:Key="Str_Convert_LimitIco">Icons can't be bigger than 256 px: the size you chose will be saved as {0} x {1}.</system:String>
+    <system:String x:Key="Str_Convert_LimitMp3">MP3 can't hold 96 kHz: it will be saved at 48 kHz.</system:String>
 
     <!--  ============ API TESTER ============  -->
     <system:String x:Key="Str_Api_Title">API Tester</system:String>
@@ -5590,6 +5616,16 @@
     <system:String x:Key="Str_Watermark_SummarySkipped">{0} skipped</system:String>
     <system:String x:Key="Str_Watermark_SummaryStopped">Stopped. The files already marked were kept.</system:String>
     <system:String x:Key="Str_Watermark_SummaryInfo">{0} files were written. The originals were not changed.</system:String>
+    <system:String x:Key="Str_Watermark_Scanning">Reading folders... {0} files found</system:String>
+    <system:String x:Key="Str_Watermark_Stopping">Stopping...</system:String>
+    <system:String x:Key="Str_Watermark_StoppingInfo">Stopping... the files already marked are kept.</system:String>
+    <system:String x:Key="Str_Watermark_Eta">about {0} left</system:String>
+    <system:String x:Key="Str_Watermark_NoRoom">Not enough free space on {0} for the marked copy.</system:String>
+    <system:String x:Key="Str_Watermark_GroupSeveral">Several folders</system:String>
+    <system:String x:Key="Str_Watermark_GroupOneFile">1 file</system:String>
+    <system:String x:Key="Str_Watermark_GroupFiles">{0} files</system:String>
+    <system:String x:Key="Str_Watermark_GroupFolderSub">Folder and subfolders · {0}</system:String>
+    <system:String x:Key="Str_Watermark_GroupFolder">Folder · {0}</system:String>
 
     <!--  ================= Keyboard shortcuts =================  -->
     <system:String x:Key="Str_Settings_NavShortcuts">Keyboard shortcuts</system:String>
@@ -9203,6 +9239,9 @@
     <system:String x:Key="Str_CsvJson_ClipboardBusy">The clipboard is busy - try again</system:String>
     <system:String x:Key="Str_CsvJson_Saved">Saved {0}</system:String>
     <system:String x:Key="Str_CsvJson_SaveFailed">Couldn't save: {0}</system:String>
+    <system:String x:Key="Str_CsvJson_EmptyTitle">Nothing to convert yet</system:String>
+    <system:String x:Key="Str_CsvJson_EmptyHint">Paste your data here, drop a file onto this box, or press Open.</system:String>
+    <system:String x:Key="Str_CsvJson_DropTitle">Drop the file to load it</system:String>
     <system:String x:Key="Str_HashVerifier_Crc">CRC32</system:String>
     <system:String x:Key="Str_EncodeDecode_Utf">UTF-16</system:String>
     <system:String x:Key="Str_EncodeDecode_LatinIso">Latin-1 (ISO-8859-1)</system:String>

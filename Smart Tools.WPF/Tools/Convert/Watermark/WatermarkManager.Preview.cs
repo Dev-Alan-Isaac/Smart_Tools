@@ -33,6 +33,36 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>The preview picture with the mark laid over it, drawn on its own STA thread so a big tiled mark never stalls the page. Frozen.</summary>
+        public sealed record ComposedPreview(BitmapSource Image, string? Problem);
+
+        public static Task<ComposedPreview> ComposePreviewAsync(BitmapSource? baseBitmap, int width, int height, WatermarkSettings mark, BitmapSource? logo, bool drawMark) =>
+            RunOnSta(() =>
+            {
+                string? problem = null;
+                Stamp? stamp = null;
+                try
+                {
+                    if (drawMark) stamp = RenderStamp(width, height, mark, logo);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    problem = ex.Message;
+                }
+
+                var visual = new System.Windows.Media.DrawingVisual();
+                using (var dc = visual.RenderOpen())
+                {
+                    if (baseBitmap != null) dc.DrawImage(baseBitmap, new System.Windows.Rect(0, 0, width, height));
+                    else dc.DrawRectangle(System.Windows.Media.Brushes.White, null, new System.Windows.Rect(0, 0, width, height));
+                    if (stamp != null) dc.DrawImage(stamp.Bitmap, new System.Windows.Rect(stamp.X, stamp.Y, stamp.Bitmap.PixelWidth, stamp.Bitmap.PixelHeight));
+                }
+                var composed = new RenderTargetBitmap(width, height, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                composed.Render(visual);
+                composed.Freeze();
+                return new ComposedPreview(composed, problem);
+            });
+
         private static BitmapSource ImagePreview(string path, int maxSide)
         {
             using var image = new MagickImage(path);

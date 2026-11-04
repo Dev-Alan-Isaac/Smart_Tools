@@ -457,6 +457,21 @@ namespace Smart_Tools.WPF.Controllers
             public int SkippedOtherType { get; set; }
             public int SkippedSameFormat { get; set; }
             public int Removed { get; set; }
+
+            /// <summary>With "overwrite existing" on: how many files of the list will replace a file that is already there, and the first of them.</summary>
+            public int WillReplace { get; set; }
+            public string? FirstReplaced { get; set; }
+        }
+
+        /// <summary>The first "name (2).ext", "name (3).ext"... that is not taken (what the run itself will pick).</summary>
+        private static string FirstFreeName(HashSet<string> taken, string name)
+        {
+            string stem = Path.GetFileNameWithoutExtension(name), ext = Path.GetExtension(name);
+            for (int i = 2; ; i++)
+            {
+                string candidate = $"{stem} ({i}){ext}";
+                if (!taken.Contains(candidate)) return candidate;
+            }
         }
 
         /// <summary>
@@ -471,6 +486,26 @@ namespace Smart_Tools.WPF.Controllers
             var result = new ListResult();
             string target = TargetLabel(o);
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // The names already in each output folder, read once per folder (not one disk call per file), so the list can say
+            // "Will be saved as name (2)" before the run, and warn when a file will be replaced.
+            var namesIn = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> NamesIn(string dir)
+            {
+                if (namesIn.TryGetValue(dir, out var set)) return set;
+                set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    if (Directory.Exists(dir))
+                        foreach (string existing in Directory.EnumerateFiles(dir)) set.Add(Path.GetFileName(existing));
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // unreadable folder: the run will report it; the list just can't predict a clash there
+                }
+                namesIn[dir] = set;
+                return set;
+            }
 
             foreach (var f in files)
             {
@@ -503,24 +538,53 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     item.Status = ConvertStatus.Unsupported;
                     item.Message = item.Kind == MediaKind.Unsupported
-                        ? $"Not a{(o.FileType == ConvertFileType.Image ? "n" : "")} {o.FileType.ToString().ToLowerInvariant()} file this tool can read."
-                        : $"This is {(item.Kind == MediaKind.Image ? "an image" : item.Kind == MediaKind.Video ? "a video" : "an audio file")} - it can't become {target}. Switch the file type to convert it.";
+                        ? o.FileType switch
+                        {
+                            ConvertFileType.Image => Loc.T("Str_Convert_NotImage", "Not an image file this tool can read."),
+                            ConvertFileType.Audio => Loc.T("Str_Convert_NotAudio", "Not an audio file this tool can read."),
+                            _ => Loc.T("Str_Convert_NotVideo", "Not a video file this tool can read."),
+                        }
+                        : Loc.F("Str_Convert_WrongType", "This is {0} - it can't become {1}. Switch the file type to convert it.",
+                            item.Kind == MediaKind.Image ? Loc.T("Str_Convert_KindImage", "an image") : item.Kind == MediaKind.Video ? Loc.T("Str_Convert_KindVideo", "a video") : Loc.T("Str_Convert_KindAudio", "an audio file"), target);
                 }
                 else if (IsNoOp(f.Path, o))
                 {
                     item.Status = ConvertStatus.Skipped;
-                    item.Message = $"Already {target} and no resize chosen - nothing to change.";
+                    item.Message = Loc.F("Str_Convert_NoOp", "Already {0} and no resize chosen - nothing to change.", target);
                     result.SkippedSameFormat++;
                 }
                 else if (SameExtension(f.Path, TargetExtension(o)))
                 {
-                    item.Message = "Same format - it will be re-encoded with these settings.";
+                    item.Message = Loc.T("Str_Convert_SameFormat", "Same format - it will be re-encoded with these settings.");
                 }
 
                 item.OutputPath = PlannedOutputPath(item, o);
                 if (item.Status == ConvertStatus.Ready)
                 {
-                    string saveAs = $"Will be saved as {Path.GetFileName(item.OutputPath)}.";
+                    string dir = Path.GetDirectoryName(item.OutputPath) ?? "", name = Path.GetFileName(item.OutputPath);
+                    var taken = NamesIn(dir);
+                    bool replaces = false;
+                    if (taken.Contains(name))
+                    {
+                        if (o.OverwriteExisting) replaces = true;
+                        else
+                        {
+                            name = FirstFreeName(taken, name);                       // what the run will pick: the name is already taken
+                            item.OutputPath = Path.Combine(dir, name);
+                        }
+                    }
+                    if (replaces)
+                    {
+                        result.WillReplace++;
+                        result.FirstReplaced ??= name;
+                    }
+                    else
+                    {
+                        taken.Add(name);                                              // later files in this list see the name as used
+                    }
+                    string saveAs = replaces
+                        ? Loc.F("Str_Convert_WillReplace", "Will REPLACE {0}.", name)
+                        : Loc.F("Str_Convert_WillSaveAs", "Will be saved as {0}.", name);
                     item.Message = item.Message.Length == 0 ? saveAs : $"{saveAs} {item.Message}";
                 }
                 result.Items.Add(item);

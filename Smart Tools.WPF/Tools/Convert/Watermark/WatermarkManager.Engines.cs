@@ -134,30 +134,63 @@ namespace Smart_Tools.WPF.Controllers
 
             int done = 0, failed = 0, skipped = 0;
             var fractions = new double[items.Count];
+            double sum = 0;                          // running total of all fractions: a progress tick never walks the whole list
+            long lastReportMs = -1000;
             var gates = new Dictionary<WatermarkFileKind, SemaphoreSlim>
             {
-                [WatermarkFileKind.Image] = new SemaphoreSlim(2),
+                [WatermarkFileKind.Image] = new SemaphoreSlim(Math.Max(2, Environment.ProcessorCount / 2)),
                 [WatermarkFileKind.Pdf] = new SemaphoreSlim(2),
                 [WatermarkFileKind.Video] = new SemaphoreSlim(1),
             };
 
-            void Report(string current)
+            // A picture or PDF this big is decoded whole in memory (several times its file size), so only one such file runs at a time.
+            const long HeavyBytes = 64L * 1024 * 1024;
+            var heavyGate = new SemaphoreSlim(1);
+
+            void SetFraction(int index, double value)
             {
+                lock (fractions)
+                {
+                    sum += value - fractions[index];
+                    fractions[index] = value;
+                }
+            }
+
+            // At most ten reports a second however many files run and however chatty ffmpeg is (force: a file just finished).
+            void Report(string current, bool force = false)
+            {
+                if (progress == null) return;
+                long now = started.ElapsedMilliseconds;
+                if (!force)
+                {
+                    long last = Interlocked.Read(ref lastReportMs);
+                    if (now - last < 100 || Interlocked.CompareExchange(ref lastReportMs, now, last) != last) return;
+                }
+                else Interlocked.Exchange(ref lastReportMs, now);
+
                 double total;
-                lock (fractions) total = fractions.Sum();
-                progress?.Report(new WatermarkProgress(Volatile.Read(ref done), items.Count, Volatile.Read(ref failed), Volatile.Read(ref skipped), current,
-                    items.Count == 0 ? 100 : Math.Min(100, total * 100 / items.Count)));
+                lock (fractions) total = sum;
+                double percent = items.Count == 0 ? 100 : Math.Min(100, Math.Max(0, total * 100 / items.Count));
+                TimeSpan? eta = percent >= 1 && now > 5_000 ? TimeSpan.FromMilliseconds(now * (100 - percent) / percent) : null;
+                progress.Report(new WatermarkProgress(Volatile.Read(ref done), items.Count, Volatile.Read(ref failed), Volatile.Read(ref skipped), current, percent, eta));
             }
 
             var tasks = items.Select(async (item, index) =>
             {
                 var gate = gates[item.Kind];
+                bool heavyHeld = false;
                 try
                 {
+                    if (item.Kind != WatermarkFileKind.Video && item.SizeBytes >= HeavyBytes)
+                    {
+                        await heavyGate.WaitAsync(token).ConfigureAwait(false);
+                        heavyHeld = true;
+                    }
                     await gate.WaitAsync(token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
+                    if (heavyHeld) heavyGate.Release();
                     return;                                         // never started: stays as it was
                 }
                 try
@@ -167,14 +200,16 @@ namespace Smart_Tools.WPF.Controllers
                     Report(item.Name);
 
                     // No folder chosen: each file goes to its own kind's folder (pictures, videos, PDFs).
+                    long itemPosted = -1000;
                     var outcome = await ProcessItemAsync(item, s, logo, saveByFileType && !sameAsSource ? DefaultFolderFor(item.Kind) : outputFolder, sameAsSource, p =>
                     {
-                        lock (fractions) fractions[index] = Math.Clamp(p / 100, 0, 1);
-                        Post(() => item.Progress = p);
+                        SetFraction(index, Math.Clamp(p / 100, 0, 1));
+                        long t = started.ElapsedMilliseconds;
+                        if (t - itemPosted >= 150) { itemPosted = t; Post(() => item.Progress = p); }   // the row's bar, not 20 times a second
                         Report(item.Name);
                     }, token).ConfigureAwait(false);
 
-                    lock (fractions) fractions[index] = 1;
+                    SetFraction(index, 1);
                     if (outcome.Status == WatermarkStatus.Done) { Interlocked.Increment(ref done); lock (result) result.OutputFiles.Add(outcome.Output!); }
                     else if (outcome.Status == WatermarkStatus.Skipped) Interlocked.Increment(ref skipped);
                     else Interlocked.Increment(ref failed);
@@ -194,10 +229,12 @@ namespace Smart_Tools.WPF.Controllers
                 finally
                 {
                     gate.Release();
+                    if (heavyHeld) heavyGate.Release();
                 }
             }).ToList();
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
+            Report("", force: true);                                 // the last state is always reported, whatever the rate limit skipped
             result.Done = done;
             result.Failed = failed;
             result.Skipped = skipped;
@@ -219,6 +256,8 @@ namespace Smart_Tools.WPF.Controllers
             try
             {
                 Directory.CreateDirectory(destination);
+                if (!HasRoomFor(destination, source, item.Kind, out string fullDrive))
+                    return new Outcome(WatermarkStatus.Failed, Loc.F("Str_Watermark_NoRoom", "Not enough free space on {0} for the marked copy.", fullDrive), null);
                 string? skipReason = item.Kind switch
                 {
                     WatermarkFileKind.Image => await RunOnSta(() => MarkImage(source, s, logo, temp)).ConfigureAwait(false),
@@ -250,6 +289,28 @@ namespace Smart_Tools.WPF.Controllers
             {
                 DeleteQuietly(temp);
                 return new Outcome(WatermarkStatus.Failed, FriendlyProblem(ex), null);
+            }
+        }
+
+        /// <summary>
+        /// Whether the drive that will hold the result has room for it: a picture or PDF is written again (about twice its size to be safe),
+        /// a video is re-encoded at high quality (up to one and a half times). A network path or an unreadable drive says yes (unknown).
+        /// </summary>
+        private static bool HasRoomFor(string destination, string source, WatermarkFileKind kind, out string drive)
+        {
+            drive = destination;
+            try
+            {
+                long size = new FileInfo(source).Length;
+                long need = (kind == WatermarkFileKind.Video ? size + size / 2 : size * 2) + 64L * 1024 * 1024;
+                string? root = Path.GetPathRoot(Path.GetFullPath(destination));
+                if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return true;
+                drive = root;
+                return new DriveInfo(root).AvailableFreeSpace >= need;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return true;
             }
         }
 
@@ -392,7 +453,7 @@ namespace Smart_Tools.WPF.Controllers
                 using var p = Process.Start(psi)!;
                 var errTask = p.StandardError.ReadToEndAsync();
                 var outTask = p.StandardOutput.ReadToEndAsync();
-                if (!p.WaitForExit(30_000))
+                if (!p.WaitForExit((int)ProbeTimeout.For(path).TotalMilliseconds))
                 {
                     try { p.Kill(true); } catch (Exception) { /* already gone */ }
                     problem = "ffprobe took too long. The video may be damaged.";

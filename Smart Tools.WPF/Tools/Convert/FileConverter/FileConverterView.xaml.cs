@@ -9,6 +9,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Border = System.Windows.Controls.Border;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -57,6 +58,13 @@ namespace Smart_Tools.WPF.Views
         private ConvertRunResult? _lastRun;
         private string? _listingError;
 
+        // Typing in the size boxes or clicking options must not rebuild a 10,000-row list (and rewrite the settings file) on every key.
+        private readonly DispatcherTimer _rebuildTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
+        private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(700) };
+        private int _listVersion;
+        private Task? _listTask;
+        private const int BigList = 1500;       // above this many files the list is built off the UI thread and changes are debounced
+
         private CancellationTokenSource? _convertCts;
         private CancellationTokenSource? _expandCts;
         private Task? _expandTask;
@@ -82,7 +90,16 @@ namespace Smart_Tools.WPF.Views
             InputCard.ItemsSource = _queueDisplay;
             InputCard.FileFilterProvider = BuildFileFilter;
             DataGridFiles.ItemsSource = _rows;
+            _rebuildTimer.Tick += (_, _) => { _rebuildTimer.Stop(); RebuildList(); };
+            _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SaveSettings(); };
             _viewConstructed = true;
+        }
+
+        /// <summary>Applies a change that was waiting for the typing to pause (called before a run starts and when the page closes).</summary>
+        private void FlushPendingWork()
+        {
+            if (_saveTimer.IsEnabled) { _saveTimer.Stop(); SaveSettings(); }
+            if (_rebuildTimer.IsEnabled) { _rebuildTimer.Stop(); RebuildList(); }
         }
 
         /// <summary>Called from MainWindow.Window_Closing: stops ffmpeg and any folder listing.</summary>
@@ -90,6 +107,7 @@ namespace Smart_Tools.WPF.Views
         {
             _convertCts?.Cancel();
             _expandCts?.Cancel();
+            if (_loadedOnce) FlushPendingWork();
         }
 
         private void Root_Loaded(object sender, RoutedEventArgs e)
@@ -142,11 +160,12 @@ namespace Smart_Tools.WPF.Views
         private void AddSources(IEnumerable<string> paths)
         {
             bool added = false;
+            var known = new HashSet<string>(_sources.Select(s => s.FullPath), StringComparer.OrdinalIgnoreCase);   // O(1) checks even for 10,000 dropped files
             foreach (string path in paths)
             {
                 bool isFolder = Directory.Exists(path);
                 if (!isFolder && !File.Exists(path)) continue;
-                if (_sources.Any(s => string.Equals(s.FullPath, path, StringComparison.OrdinalIgnoreCase))) continue;
+                if (!known.Add(path)) continue;
                 _sources.Add(new ConvertSource { FullPath = path, IsFolder = isFolder });
                 _removed.Remove(path);
                 added = true;
@@ -426,10 +445,49 @@ namespace Smart_Tools.WPF.Views
             AfterSettingChanged();
         }
 
+        private string _baseTypeHint = "";
+
+        /// <summary>
+        /// Adds a sentence under the type hint when a chosen setting cannot be honoured: icons stop at 256 px and MP3 stops at 48 kHz,
+        /// so a bigger size or a 96 kHz rate is quietly lowered. The person is told instead of finding out in the result.
+        /// </summary>
+        private void UpdateLimitNotes()
+        {
+            if (!_viewConstructed) return;
+            var o = BuildOptions();
+            string? note = null;
+            if (o.FileType == ConvertFileType.Image && o.ImageFormat == ConvertImageFormat.Ico)
+            {
+                var plan = ConverterManager.PlanImage(o);
+                bool bigger = o.ImageResize switch
+                {
+                    ConvertImageResize.Original => false,
+                    ConvertImageResize.Custom => (o.ImageCustomWidth ?? 0) > 256 || (o.ImageCustomHeight ?? 0) > 256,
+                    _ => true,
+                };
+                if (bigger) note = Loc.F("Str_Convert_LimitIco", "Icons can't be bigger than 256 px: the size you chose will be saved as {0} x {1}.", plan.MaxWidth, plan.MaxHeight);
+            }
+            else if (o.FileType == ConvertFileType.Audio && o.AudioFormat == ConvertAudioFormat.Mp3 && o.AudioSampleRate == ConvertAudioSampleRate.Hz96000)
+            {
+                note = Loc.T("Str_Convert_LimitMp3", "MP3 can't hold 96 kHz: it will be saved at 48 kHz.");
+            }
+            TxtTypeHint.Text = note == null ? _baseTypeHint : _baseTypeHint + "\n" + note;
+        }
+
         private void AfterSettingChanged()
         {
-            SaveSettings();
-            RebuildList();
+            _saveTimer.Stop();
+            _saveTimer.Start();
+            if (_queued.Count > BigList)
+            {
+                _rebuildTimer.Stop();
+                _rebuildTimer.Start();
+            }
+            else
+            {
+                RebuildList();                        // a small list reacts at once
+            }
+            UpdateLimitNotes();
         }
 
         /// <summary>
@@ -479,7 +537,7 @@ namespace Smart_Tools.WPF.Views
             CmbAudioBitrate.IsEnabled = !lossless;
             TxtBitrateNote.Visibility = lossless ? Visibility.Visible : Visibility.Collapsed;
 
-            TxtTypeHint.Text = type switch
+            _baseTypeHint = type switch
             {
                 ConvertFileType.Image => o.ImageFormat == ConvertImageFormat.Ico
                     ? "Icons are made at up to 256 x 256. Photos are turned upright using their camera rotation."
@@ -487,6 +545,8 @@ namespace Smart_Tools.WPF.Views
                 ConvertFileType.Audio => "Videos can be added too - their soundtrack is saved as audio.",
                 _ => "H.264 MP4 plays everywhere. H.265 and AV1 make much smaller files but take longer to convert.",
             };
+
+            UpdateLimitNotes();
 
             bool needsFfmpeg = type != ConvertFileType.Image && ConverterManager.FfmpegExe == null;
             TxtFfmpegWarning.Text = $"Needs ffmpeg.exe in {ConverterManager.FfmpegFolder} - it wasn't found.";
@@ -658,11 +718,44 @@ namespace Smart_Tools.WPF.Views
         private void RebuildList()
         {
             if (_isConverting || !_viewConstructed) return;
+            _rebuildTimer.Stop();
+            int version = ++_listVersion;
 
             var hidden = new HashSet<string>(_removed, StringComparer.OrdinalIgnoreCase);
             hidden.UnionWith(_produced);
-            _lastList = ConverterManager.BuildList(_queued, BuildOptions(), hidden);
-            _rows = new ObservableCollection<ConvertFileItem>(_lastList.Items);
+            var options = BuildOptions();
+            var queued = _queued;
+            if (queued.Count <= BigList)
+            {
+                ApplyList(ConverterManager.BuildList(queued, options, hidden));
+                return;
+            }
+
+            // A big list: the work (names, clash checks) runs in the background and only the finished rows reach the screen.
+            ProgressConversion.IsIndeterminate = true;
+            TxtProgress.Text = Loc.T("Str_Convert_UpdatingList", "Updating the list...");
+            _listTask = BuildListAsync(queued, options, hidden, version);
+        }
+
+        private async Task BuildListAsync(List<ConverterManager.QueuedFile> queued, ConvertOptions options, HashSet<string> hidden, int version)
+        {
+            try
+            {
+                var list = await Task.Run(() => ConverterManager.BuildList(queued, options, hidden));
+                if (version != _listVersion || _isConverting) return;       // a newer change replaced this one
+                ApplyList(list);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                Log.Info($"Converter: list failed: {ex.Message}");
+                if (version == _listVersion) { ProgressConversion.IsIndeterminate = false; TxtProgress.Text = ex.Message; }
+            }
+        }
+
+        private void ApplyList(ConverterManager.ListResult list)
+        {
+            _lastList = list;
+            _rows = new ObservableCollection<ConvertFileItem>(list.Items);
             DataGridFiles.ItemsSource = _rows;
             _lastRun = null;
 
@@ -685,19 +778,23 @@ namespace Smart_Tools.WPF.Views
             }
 
             int pending = _rows.Count(ConverterManager.IsPending);
-            var notes = new List<string> { $"{pending:N0} file{(pending == 1 ? "" : "s")} ready to convert" };
-            if (_lastList?.SkippedOtherType > 0) notes.Add($"{_lastList.SkippedOtherType:N0} of another type left out");
-            if (_lastQueue?.Inaccessible > 0) notes.Add($"{_lastQueue.Inaccessible:N0} folders couldn't be read");
-            if (_lastQueue?.Links > 0) notes.Add($"{_lastQueue.Links:N0} linked folders not followed");
-            if (_lastQueue?.Missing > 0) notes.Add($"{_lastQueue.Missing:N0} no longer exist");
-            if (_listingError != null) notes.Add("couldn't read the folders: " + _listingError);
+            var notes = new List<string>
+            {
+                pending == 1 ? Loc.T("Str_Convert_ReadyOne", "1 file ready to convert") : Loc.F("Str_Convert_ReadyMany", "{0} files ready to convert", pending.ToString("N0")),
+            };
+            if (_lastList?.SkippedOtherType > 0) notes.Add(Loc.F("Str_Convert_OtherTypeLeftOut", "{0} of another type left out", _lastList.SkippedOtherType.ToString("N0")));
+            if (_lastList?.WillReplace > 0) notes.Add(Loc.F("Str_Convert_ReplaceCount", "{0} existing files will be REPLACED", _lastList.WillReplace.ToString("N0")));
+            if (_lastQueue?.Inaccessible > 0) notes.Add(Loc.F("Str_Convert_FoldersUnreadable", "{0} folders couldn't be read", _lastQueue.Inaccessible.ToString("N0")));
+            if (_lastQueue?.Links > 0) notes.Add(Loc.F("Str_Convert_LinksSkipped", "{0} linked folders not followed", _lastQueue.Links.ToString("N0")));
+            if (_lastQueue?.Missing > 0) notes.Add(Loc.F("Str_Convert_NoLongerExist", "{0} no longer exist", _lastQueue.Missing.ToString("N0")));
+            if (_listingError != null) notes.Add(Loc.F("Str_Convert_ListingFailed", "couldn't read the folders: {0}", _listingError));
             TxtProgress.Text = string.Join(" · ", notes);
         }
 
         private void UpdateSummary()
         {
             var pending = _rows.Where(ConverterManager.IsPending).ToList();
-            TxtSummaryFiles.Text = $"{pending.Count:N0} file{(pending.Count == 1 ? "" : "s")} · {ConvertText.FormatBytes(pending.Sum(i => i.SizeBytes))}";
+            TxtSummaryFiles.Text = (pending.Count == 1 ? Loc.T("Str_Convert_SummaryOne", "1 file") : Loc.F("Str_Convert_SummaryMany", "{0} files", pending.Count.ToString("N0"))) + " · " + ConvertText.FormatBytes(pending.Sum(i => i.SizeBytes));
             TxtSummaryTarget.Text = ConverterManager.DescribeTarget(BuildOptions());
 
             int skipped = _rows.Count(i => i.Status is ConvertStatus.Skipped or ConvertStatus.Unsupported);
@@ -826,6 +923,9 @@ namespace Smart_Tools.WPF.Views
                 await _expandTask;
             }
 
+            FlushPendingWork();
+            if (_listTask is { IsCompleted: false }) await _listTask;          // a big list still being built
+
             var pending = _rows.Where(ConverterManager.IsPending).ToList();
             if (pending.Count == 0)
             {
@@ -866,6 +966,15 @@ namespace Smart_Tools.WPF.Views
                     MessageBox.Show(Loc.F("Str_MB_CouldnTCreate", "Couldn't create {0}: {1}", options.OutputFolder, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+            }
+
+            // "Overwrite existing" is a deliberate choice, but it destroys files: say which one(s) before it happens.
+            if (options.OverwriteExisting && _lastList is { WillReplace: > 0 } plan)
+            {
+                string question = plan.WillReplace == 1
+                    ? Loc.F("Str_Convert_ConfirmReplaceOne", "\"{0}\" already exists and will be REPLACED by the converted file.\n\nContinue?", plan.FirstReplaced ?? "")
+                    : Loc.F("Str_Convert_ConfirmReplaceMany", "{0} existing files will be REPLACED, for example \"{1}\".\n\nThis can't be undone. Continue?", plan.WillReplace.ToString("N0"), plan.FirstReplaced ?? "");
+                if (MessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             }
 
             if (options.DeleteOriginalAfterConversion && !ConfirmDeleteOriginals(pending)) return;

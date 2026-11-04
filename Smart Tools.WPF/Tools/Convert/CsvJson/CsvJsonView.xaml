@@ -119,7 +119,27 @@
                             <ContentControl ctl:Tour.Key="Str_Tour_CsvJson_Input" ctl:Tour.Order="3" x:Name="TxtInputTitle" Content="CSV" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
                         </DockPanel>
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                          <Grid x:Name="InputHost" PreviewDragLeave="InputHost_PreviewDragLeave">
                             <TextBox x:Name="TxtInput" Height="Auto" Padding="12" VerticalContentAlignment="Top" TextWrapping="NoWrap" AcceptsReturn="True" AcceptsTab="True" AllowDrop="True" Background="Transparent" BorderThickness="0" FontFamily="Cascadia Mono, Consolas" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalScrollBarVisibility="Auto" PreviewDragOver="Input_PreviewDragOver" PreviewDrop="Input_PreviewDrop" TextChanged="Input_TextChanged" VerticalScrollBarVisibility="Auto" />
+
+                            <!--  Nothing typed yet: say what to do (disappears as soon as there is text)  -->
+                            <StackPanel x:Name="InputEmpty" MaxWidth="360" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TextBoxPlusOutline}" />
+                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_CsvJson_EmptyTitle}" />
+                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_CsvJson_EmptyHint}" TextAlignment="Center" TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <!--  A file is being dragged over: drop it to load it  -->
+                            <Border x:Name="DropOverlay" Panel.ZIndex="10" Style="{StaticResource DropZoneStyle}">
+                                <Grid>
+                                    <Rectangle RadiusX="12" RadiusY="12" Stroke="{DynamicResource AccentColor}" StrokeDashArray="5 4" StrokeThickness="2" />
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TrayArrowDown}" />
+                                        <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_CsvJson_DropTitle}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                          </Grid>
                         </Border>
                     </Grid>
                 </Border>

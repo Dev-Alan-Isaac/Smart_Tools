@@ -80,6 +80,9 @@ namespace Smart_Tools.WPF.Models
         public long SizeBytes { get; init; }
         public WatermarkGroup? Group { get; set; }
 
+        /// <summary>True while the item is in the file list. Background work (reading its details) checks this instead of searching the list.</summary>
+        public bool Listed { get; set; }
+
         private WatermarkStatus _status;
         private string _statusText = "";
         private string _info = "";
@@ -130,16 +133,18 @@ namespace Smart_Tools.WPF.Models
         public List<WatermarkItem> Items { get; } = new();
 
         public string Name => FolderPath == null
-            ? "Several folders"
+            ? Loc.T("Str_Watermark_GroupSeveral", "Several folders")
             : Path.GetFileName(FolderPath.TrimEnd('\\', '/')) is { Length: > 0 } n ? n : FolderPath;
 
         public string Subtitle
         {
             get
             {
-                string count = Items.Count == 1 ? "1 file" : $"{Items.Count:N0} files";
+                string count = Items.Count == 1 ? Loc.T("Str_Watermark_GroupOneFile", "1 file") : Loc.F("Str_Watermark_GroupFiles", "{0} files", Items.Count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture));
                 if (!IsFolder) return count;
-                return IncludeSubfolders ? $"Folder and subfolders · {count}" : $"Folder · {count}";
+                return IncludeSubfolders
+                    ? Loc.F("Str_Watermark_GroupFolderSub", "Folder and subfolders · {0}", count)
+                    : Loc.F("Str_Watermark_GroupFolder", "Folder · {0}", count);
             }
         }
 
@@ -151,7 +156,7 @@ namespace Smart_Tools.WPF.Models
     }
 
     /// <summary>Live numbers of a running batch.</summary>
-    public sealed record WatermarkProgress(int Done, int Total, int Failed, int Skipped, string Current, double Percent);
+    public sealed record WatermarkProgress(int Done, int Total, int Failed, int Skipped, string Current, double Percent, TimeSpan? Eta = null);
 
     public sealed class WatermarkRunResult
     {

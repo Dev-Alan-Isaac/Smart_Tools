@@ -109,7 +109,11 @@ namespace Smart_Tools.WPF.Views
 
         private void Option_Click(object sender, RoutedEventArgs e) => Changed();
         private void Option_SelectionChanged(object sender, SelectionChangedEventArgs e) => Changed();
-        private void Input_TextChanged(object sender, TextChangedEventArgs e) => Changed();
+        private void Input_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            InputEmpty.Visibility = TxtInput.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            Changed();
+        }
 
         private async Task ConvertAsync()
         {
@@ -203,12 +207,22 @@ namespace Smart_Tools.WPF.Views
 
         private void Input_PreviewDragOver(object sender, DragEventArgs e)
         {
-            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
-            e.Handled = e.Data.GetDataPresent(DataFormats.FileDrop);
+            bool file = e.Data.GetDataPresent(DataFormats.FileDrop);
+            e.Effects = file ? DragDropEffects.Copy : DragDropEffects.None;
+            e.Handled = file;
+            if (file) DropOverlay.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>DragLeave also fires when moving between child elements: hide the overlay only once the pointer is really outside.</summary>
+        private void InputHost_PreviewDragLeave(object sender, DragEventArgs e)
+        {
+            var p = e.GetPosition(InputHost);
+            if (p.X < 0 || p.Y < 0 || p.X >= InputHost.ActualWidth || p.Y >= InputHost.ActualHeight) DropOverlay.Visibility = Visibility.Collapsed;
         }
 
         private void Input_PreviewDrop(object sender, DragEventArgs e)
         {
+            DropOverlay.Visibility = Visibility.Collapsed;
             if (e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } files && File.Exists(files[0]))
             {
                 LoadFile(files[0]);
