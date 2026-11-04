@@ -23,7 +23,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class LoudnessView : UserControl
     {
-        private const string DialogTitle = "Loudness Meter & Normalizer";
+        private static string DialogTitle => Loc.T("Str_Tool_loudness-meter_Name", "Loudness Meter & Normalizer");
 
         private readonly ObservableCollection<LoudnessItem> _items = new();
         private CancellationTokenSource? _cts;

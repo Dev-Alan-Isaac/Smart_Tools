@@ -28,7 +28,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Organize Files";
+        private static string DialogTitle => Loc.T("Str_Tool_organize-files_Name", "Organize Files");
 
         private readonly OrganizeManager _manager = new();
         private readonly ObservableCollection<OrganizeStepRow> _steps = new();
@@ -591,7 +591,7 @@ namespace Smart_Tools.WPF.Views
         {
             string folder = EffectiveDestination;
             if (ShellExplorer.Show(folder) != ShellExplorer.ShowResult.Shown)
-                MessageBox.Show("Choose a folder first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ChooseAFolderFirst", "Choose a folder first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         /// <summary>Double-click: the file where it is now.</summary>
@@ -600,7 +600,7 @@ namespace Smart_Tools.WPF.Views
             if (DataGridPreview.SelectedItem is not OrganizeFileItem item) return;
             string path = item.Status is OrganizeStatus.Moved or OrganizeStatus.Copied ? item.Destination : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show("That file is no longer there.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileIsNo", "That file is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -699,8 +699,11 @@ namespace Smart_Tools.WPF.Views
                 if (failedRows.Count > 0)
                 {
                     string list = string.Join("\n\n", failedRows.Take(8).Select(i => $"• {i.Message}"));
-                    if (failedRows.Count > 8) list += $"\n\n…and {failedRows.Count - 8} more (see the Failed rows in the preview).";
-                    MessageBox.Show($"{failedRows.Count} file{(failedRows.Count == 1 ? "" : "s")} couldn't be moved and stayed where {(failedRows.Count == 1 ? "it was" : "they were")}:\n\n{list}",
+                    if (failedRows.Count > 8) list += Loc.F("Str_MB_AndMoreSeeFailed", "\n\n…and {0} more (see the Failed rows in the preview).", failedRows.Count - 8);
+                    MessageBox.Show(Loc.N(failedRows.Count,
+                            "Str_MB_OrgFailedOne", "{0} file couldn't be moved and stayed where it was:\n\n{1}",
+                            "Str_MB_OrgFailedMany", "{0} files couldn't be moved and stayed where they were:\n\n{1}",
+                            failedRows.Count, list),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
@@ -708,7 +711,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetBusy(false, undo: false);
                 TxtProgress.Text = "Organize failed.";
-                MessageBox.Show($"Organize failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_OrganizeFailed", "Organize failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -731,11 +734,14 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
-            string verb = journal.Moved ? "Move" : "Remove the copies of";
+            int n = journal.Entries.Count;
+            string head = journal.Moved
+                ? Loc.N(n, "Str_MB_OrgUndoMoveOne", "Move the {0:N0} file from the run on {1:g} back?", "Str_MB_OrgUndoMoveMany", "Move the {0:N0} files from the run on {1:g} back?", n, journal.When)
+                : Loc.N(n, "Str_MB_OrgUndoCopyOne", "Remove the copy of the {0:N0} file from the run on {1:g}?", "Str_MB_OrgUndoCopyMany", "Remove the copies of the {0:N0} files from the run on {1:g}?", n, journal.When);
             var answer = MessageBox.Show(
-                $"{verb} the {journal.Entries.Count:N0} file{(journal.Entries.Count == 1 ? "" : "s")} from the run on {journal.When:g} back?\n\n" +
-                (journal.Moved ? "Files go back to where they were, and the folders that run created are removed if empty." : "Only copies that haven't been changed since are removed."),
-                "Undo Organize", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                head + "\n\n" +
+                (journal.Moved ? Loc.T("Str_MB_OrgUndoMovedNote", "Files go back to where they were, and the folders that run created are removed if empty.") : Loc.T("Str_MB_OrgUndoCopiedNote", "Only copies that haven't been changed since are removed.")),
+                Loc.T("Str_MB_UndoOrganizeTitle", "Undo Organize"), MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (answer != MessageBoxResult.Yes) return;
 
             _runCts?.Dispose();
@@ -758,7 +764,7 @@ namespace Smart_Tools.WPF.Views
                 TxtProgress.Text = string.Join(" · ", parts);
 
                 if (result.Errors.Count > 0)
-                    MessageBox.Show("Some files couldn't be undone:\n\n" + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? $"\n...and {result.Errors.Count - 12} more" : ""),
+                    MessageBox.Show(Loc.T("Str_MB_SomeFilesCouldnT", "Some files couldn't be undone:\n\n") + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? Loc.F("Str_MB_AndNMore", "\n...and {0} more", result.Errors.Count - 12) : ""),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (OperationCanceledException)
@@ -769,7 +775,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetBusy(false, undo: true);
-                MessageBox.Show($"Undo failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_UndoFailed", "Undo failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

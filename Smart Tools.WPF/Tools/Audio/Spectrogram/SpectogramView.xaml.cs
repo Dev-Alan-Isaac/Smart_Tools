@@ -43,7 +43,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const int ThumbnailWidth = 168;
-        private const string DialogTitle = "Spectrogram Generator";
+        private static string DialogTitle => Loc.T("Str_Tool_spectrogram_Name", "Spectrogram Generator");
 
         private readonly BulkObservableCollection<SpectrogramItem> _items = new();
         private readonly HashSet<string> _known = new(StringComparer.OrdinalIgnoreCase);
@@ -691,7 +691,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show("The picture couldn't be saved.\n\n" + SpectrogramManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_ThePictureCouldnT", "The picture couldn't be saved.\n\n") + SpectrogramManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

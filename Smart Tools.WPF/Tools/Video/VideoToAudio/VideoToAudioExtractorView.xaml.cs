@@ -34,7 +34,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Video to Audio";
+        private static string DialogTitle => Loc.T("Str_Tool_video-to-audio_Name", "Video to Audio");
         private const string ReadyHint = "Add videos, pick a format, then press Extract Audio.";
 
         private readonly List<VtaSource> _sources = new();
@@ -587,7 +587,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't open {Path.GetFileName(path)}: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

@@ -48,7 +48,7 @@ namespace Smart_Tools.WPF.Views
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
         private const double MinZoom = 0.3, MaxZoom = 4.0;
-        private const string DialogTitle = "PDF Reader & Signer";
+        private static string DialogTitle => Loc.T("Str_Tool_pdf-reader_Name", "PDF Reader & Signer");
 
         private readonly ObservableCollection<PdfReaderPage> _pages = new();
         private readonly ObservableCollection<PdfReaderFile> _files = new();

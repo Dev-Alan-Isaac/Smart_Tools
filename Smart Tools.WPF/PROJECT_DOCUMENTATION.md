@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 111 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 112 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **111 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -282,7 +282,7 @@ Smart Tools has **111 tools** in 21 sidebar categories. Every tool opens inside 
   - **Seek bar (Mixed page, `MediaViewerView.PosSlider`)**: pressing the bar pauses playback, dragging only scrubs a frame about every 100 ms (`ScrubbingEnabled`), and one seek plus resume happens on release (`_isUserSeeking`, `EndUserSeek`). The position timer never writes to the bar while the user is seeking, and changing `Maximum` on a new clip is guarded by `_updatingSlider`. Never seek on every `ValueChanged` while playing: it garbles the picture and crackles the audio.
   - **Mini player** (`MediaViewerWidgetWindow`, borderless, always on top, no taskbar button): its Minimize button hides the mini player *and* minimizes the app. Restoring the app from the taskbar shows the mini player first (the app stays minimized); restoring again, with the mini player already visible, opens the tool. Hotkeys, the tray and "Back to the tool" open the tool at once and bring the mini player back too (`MainWindow.MinimizeForWidget`, `_restoreWidgetFirst`).
 
-Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` are placeholders for planned tools and show a shared "coming soon" page.
+Moving a tool to another sidebar section = change its `CategoryId` in `ToolCatalogManager.cs` (the catalog also holds each tool's keywords for search). Ids starting with `future-` would show a shared "coming soon" page (`FutureIdeaView`); none are in the catalog right now.
 
 ---
 
@@ -441,7 +441,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 111 tools have one. The tour only covers the page that is open.
+All 112 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -593,7 +593,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 111 tools*
+*Currently exploring unified testing approach across all 112 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

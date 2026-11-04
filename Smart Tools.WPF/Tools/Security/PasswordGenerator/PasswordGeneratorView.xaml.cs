@@ -33,7 +33,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Password Generator";
+        private static string DialogTitle => Loc.T("Str_Tool_password-generator_Name", "Password Generator");
         private static readonly TimeSpan ClipboardLifetime = TimeSpan.FromSeconds(30);
 
         private readonly BulkObservableCollection<PasswordGenItem> _results = new();

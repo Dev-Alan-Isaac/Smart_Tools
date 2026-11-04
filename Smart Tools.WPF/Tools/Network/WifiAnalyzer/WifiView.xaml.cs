@@ -22,7 +22,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class WifiView : UserControl
     {
-        private const string DialogTitle = "Wi-Fi Analyzer";
+        private static string DialogTitle => Loc.T("Str_Tool_wifi-analyzer_Name", "Wi-Fi Analyzer");
         private static readonly TimeSpan ScanWait = TimeSpan.FromSeconds(3);
 
         private readonly ObservableCollection<WifiNetwork> _networks = new();

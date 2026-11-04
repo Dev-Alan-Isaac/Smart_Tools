@@ -41,7 +41,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Large File Finder";
+        private static string DialogTitle => Loc.T("Str_Tool_large-files_Name", "Large File Finder");
 
         private enum RunState
         {

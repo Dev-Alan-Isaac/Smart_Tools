@@ -34,7 +34,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "File Encryption";
+        private static string DialogTitle => Loc.T("Str_Tool_file-encryption_Name", "File Encryption");
 
         private readonly EncryptManager _manager = new();
 
@@ -536,7 +536,7 @@ namespace Smart_Tools.WPF.Views
             string path = item.Status == EncryptStatus.Done && File.Exists(item.OutputPath) ? item.OutputPath! : item.FullPath;
             var shown = ShellExplorer.Show(File.Exists(path) ? path : item.Folder);
             if (shown != ShellExplorer.ShowResult.Shown && !quiet)
-                MessageBox.Show("That file or folder no longer exists.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder3", "That file or folder no longer exists."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -574,7 +574,7 @@ namespace Smart_Tools.WPF.Views
             }
 
             if (mode == EncryptMode.Encrypt && EncryptManager.RatePassword(PwdPassword.Password).Strength == PasswordStrength.Weak
-                && MessageBox.Show("This password is weak and could be guessed.\n\nEncrypt with it anyway?", DialogTitle,
+                && MessageBox.Show(Loc.T("Str_MB_ThisPasswordIsWeak", "This password is weak and could be guessed.\n\nEncrypt with it anyway?"), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
             {
                 PwdPassword.Focus();
@@ -626,7 +626,7 @@ namespace Smart_Tools.WPF.Views
                 if (mode == EncryptMode.Decrypt && result.Done == 0 && result.Failed > 0
                     && _rows.Where(i => i.Status == EncryptStatus.Failed).All(i => i.Message.StartsWith("Wrong password", StringComparison.Ordinal)))
                 {
-                    MessageBox.Show("The password didn't open any of the files. Check it (and Caps Lock) and try again.",
+                    MessageBox.Show(Loc.T("Str_MB_ThePasswordDidnT", "The password didn't open any of the files. Check it (and Caps Lock) and try again."),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     PwdPassword.Focus();
                     PwdPassword.SelectAll();
@@ -636,7 +636,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetRunning(false);
                 TxtProgress.Text = "Stopped - something went wrong.";
-                MessageBox.Show($"Couldn't finish: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTFinish", "Couldn't finish: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

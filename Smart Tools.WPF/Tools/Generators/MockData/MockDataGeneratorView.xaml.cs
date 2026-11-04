@@ -31,7 +31,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Mock Data Generator";
+        private static string DialogTitle => Loc.T("Str_Tool_mock-data_Name", "Mock Data Generator");
 
         private readonly ObservableCollection<MockDataField> _fields = new();
         private readonly DispatcherTimer _refreshTimer;

@@ -26,7 +26,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class MicRecorderView : UserControl
     {
-        private const string DialogTitle = "Audio Recorder";
+        private static string DialogTitle => Loc.T("Str_Tool_audio-recorder_Name", "Audio Recorder");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;
 

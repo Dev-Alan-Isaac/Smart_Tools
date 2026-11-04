@@ -41,7 +41,7 @@ namespace Smart_Tools.WPF.Controls
         private const double SidebarCollapsedWidth = 56;
         private const double PlaylistExpandedWidth = 380;
         private const int ThumbnailSide = 64;
-        private const string DialogTitle = "Image Viewer";
+        private static string DialogTitle => Loc.T("Str_Dlg_ImageViewer", "Image Viewer");
 
         private readonly BulkObservableCollection<ImageQueueItem> _queue = new();
         private readonly ObservableCollection<ImageQueueGroup> _groups = new();
@@ -364,7 +364,7 @@ namespace Smart_Tools.WPF.Controls
             if (addedCount > 0) UiMotion.Pop(DropArea, 0.97);
             SummaryPill.ToolTip = notes.Count > 0 ? "Last add: " + string.Join(" · ", notes) : "Images in the list";
             if (addedCount == 0 && notes.Count > 0)
-                MessageBox.Show("Nothing was added: " + string.Join("; ", notes) + ".", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_NothingWasAdded", "Nothing was added: ") + string.Join("; ", notes) + ".", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
 
             if (_current == null && first != null) await ShowAsync(first);
         }
@@ -600,7 +600,7 @@ namespace Smart_Tools.WPF.Controls
         {
             if (MenuTarget() is not { } item) return;
             if (ShellExplorer.Show(item.FullPath) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show($"\"{item.Name}\" is no longer there.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.Name), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void MenuDeleteFile_Click(object sender, RoutedEventArgs e)
@@ -619,7 +619,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't delete \"{item.Name}\": {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.Name, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             RemoveItems(new[] { item });
@@ -961,7 +961,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't save: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

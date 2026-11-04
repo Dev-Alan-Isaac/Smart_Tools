@@ -22,7 +22,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
-        private const string DialogTitle = "Environment Variables";
+        private static string DialogTitle => Loc.T("Str_Tool_environment-variables_Name", "Environment Variables");
 
         private readonly EnvironmentVariablesManager _env = new();
         private readonly DispatcherTimer _pathTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };

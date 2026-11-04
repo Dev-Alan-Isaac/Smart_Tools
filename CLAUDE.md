@@ -1,6 +1,6 @@
 # Smart Tools - context for Claude
 
-WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 111 tools in 21 sidebar categories, one window, English + Spanish, light + dark theme.
+WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 112 tools in 21 sidebar categories, one window, English + Spanish, light + dark theme.
 Details live in `Smart Tools.WPF/PROJECT_DOCUMENTATION.md` (every tool, architecture, shortcuts, safe file ops, data locations) and
 `Smart Tools.WPF/Themes/ui-style-guide.md` (layout, shared styles, motion). Ideas for new tools: `Smart Tools.WPF/FUTURE_IDEAS.md`.
 Read those before changing a view; do not repeat their content here.
@@ -29,7 +29,7 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Keep WPF drawing off non-UI threads (STA), and keep clipboard calls in the view.
 - Media seeking (`MediaViewerView`): never seek on every slider `ValueChanged` while playing. Pause on press, scrub throttled, one seek on release.
 - Mini player: Minimize hides mini + app; first taskbar restore shows the mini, the next opens the tool (`MainWindow._restoreWidgetFirst`).
-- Catalog ids starting with `future-` show the shared "coming soon" page (`FutureIdeaView`).
+- Catalog ids starting with `future-` would show the shared "coming soon" page (`FutureIdeaView`); none exist now.
 
 ## Working preferences (Alan)
 - Subagents that only search/read (Explore) run on `model: haiku`.

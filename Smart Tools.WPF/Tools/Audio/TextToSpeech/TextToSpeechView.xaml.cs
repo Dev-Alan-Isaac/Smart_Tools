@@ -23,7 +23,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class TextToSpeechView : UserControl
     {
-        private const string DialogTitle = "Text to Speech";
+        private static string DialogTitle => Loc.T("Str_Tool_text-to-speech_Name", "Text to Speech");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;
 

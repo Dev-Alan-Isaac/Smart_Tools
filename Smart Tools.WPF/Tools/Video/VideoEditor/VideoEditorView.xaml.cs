@@ -38,7 +38,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double QueueExpandedWidth = 420;
-        private const string DialogTitle = "Video Stitcher";
+        private static string DialogTitle => Loc.T("Str_Tool_video-editor_Name", "Video Stitcher");
 
         private readonly ObservableCollection<EditClip> _clips = new();
         private readonly ObservableCollection<EditClipGroup> _groups = new();
@@ -1346,8 +1346,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgress.Text = "The video couldn't be saved: " + ex.Message.Split('\n')[0];
-                MessageBox.Show(
-                    $"The video couldn't be saved.\n\n{ex.Message}\n\nCheck that the folder exists, you can write to it, and there's enough free space.",
+                MessageBox.Show(Loc.F("Str_MB_TheVideoCouldnT", "The video couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and there's enough free space.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally

@@ -47,7 +47,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowColumnThreshold = 1100;
-        private const string DialogTitle = "Find Similar Files";
+        private static string DialogTitle => Loc.T("Str_Tool_find-similar_Name", "Find Similar Files");
         private const int ThumbnailSize = 240;
         private const int MaxBackgroundThumbnails = 600;
 
@@ -334,7 +334,7 @@ namespace Smart_Tools.WPF.Views
             if (_folders.Count == 0)
             {
                 InputCard.PopDropArea();
-                MessageBox.Show("Add at least one folder to scan first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_AddAtLeastOne2", "Add at least one folder to scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -402,7 +402,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 TxtProgress.Text = "Scan failed.";
-                MessageBox.Show($"Scan failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -757,7 +757,7 @@ namespace Smart_Tools.WPF.Views
         private static void ShowInFolder(string path)
         {
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show("That file no longer exists. Rescan to refresh the results.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileNoLonger2", "That file no longer exists. Rescan to refresh the results."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -916,8 +916,7 @@ namespace Smart_Tools.WPF.Views
             var emptied = SimilarManager.GroupsLosingEveryCopy(_groups);
             if (emptied.Count == 0) return true;
             string which = string.Join(", ", emptied.Take(5).Select(g => g.Id)) + (emptied.Count > 5 ? ", ..." : "");
-            return MessageBox.Show(
-                $"In {emptied.Count} group(s) (group {which}) every file is selected, so {verb} would leave none of them.\n\nContinue anyway?",
+            return MessageBox.Show(Loc.F("Str_MB_InGroupSGroup2", "In {0} group(s) (group {1}) every file is selected, so {2} would leave none of them.\n\nContinue anyway?", emptied.Count, which, verb),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
 
@@ -955,7 +954,7 @@ namespace Smart_Tools.WPF.Views
                 : ChkRecycleBin.IsChecked == true
                     ? $"Permanently delete {what}?\n\n{string.Join(", ", rootsWithoutBin)} has no Recycle Bin, so this can't be undone."
                     : $"Permanently delete {what}?\n\nThis can't be undone.";
-            if (MessageBox.Show(message, recycle ? "Delete" : "Delete permanently", MessageBoxButton.YesNo,
+            if (MessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
                     recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -978,7 +977,7 @@ namespace Smart_Tools.WPF.Views
             string destination = dialog.FolderName;
 
             if (_folders.Any(f => destination.StartsWith(f.FullPath.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase))
-                && MessageBox.Show("That folder is inside one of the scanned folders, so the moved files would be found again next scan.\n\nMove there anyway?",
+                && MessageBox.Show(Loc.T("Str_MB_ThatFolderIsInside2", "That folder is inside one of the scanned folders, so the moved files would be found again next scan.\n\nMove there anyway?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -1035,7 +1034,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"That didn't work: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_DidntWork", "That didn't work: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

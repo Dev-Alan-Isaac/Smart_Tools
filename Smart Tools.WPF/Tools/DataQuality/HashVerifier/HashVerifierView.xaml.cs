@@ -34,7 +34,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Hash & Checksum Verifier";
+        private static string DialogTitle => Loc.T("Str_Tool_hash-verifier_Name", "Hash & Checksum Verifier");
         private const long MaxListBytes = 64L * 1024 * 1024;
 
         private readonly HashVerifierManager _manager = new();
@@ -393,14 +393,14 @@ namespace Smart_Tools.WPF.Views
             {
                 if (new FileInfo(dialog.FileName).Length > MaxListBytes)
                 {
-                    MessageBox.Show("That file is too large to be a checksum list.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Loc.T("Str_MB_ThatFileIsToo", "That file is too large to be a checksum list."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 var entries = HashVerifierManager.ParseChecksumList(File.ReadAllText(dialog.FileName), Path.GetFileName(dialog.FileName), out int skipped);
                 if (entries.Count == 0)
                 {
-                    MessageBox.Show("No checksums were found in that file.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(Loc.T("Str_MB_NoChecksumsWereFound", "No checksums were found in that file."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -415,7 +415,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show($"Couldn't read the checksum file: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTReadThe", "Couldn't read the checksum file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -511,7 +511,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetRunning(false);
                 TxtProgress.Text = "Stopped - something went wrong.";
-                MessageBox.Show($"Hashing failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_HashingFailed", "Hashing failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -735,7 +735,7 @@ namespace Smart_Tools.WPF.Views
         {
             string path = File.Exists(row.FullPath) ? row.FullPath : row.Folder;
             if (ShellExplorer.Show(path) != ShellExplorer.ShowResult.Shown)
-                MessageBox.Show("That file or folder is no longer there.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder2", "That file or folder is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         /// <summary>Raised before the menu opens: one checksum-file item per algorithm that has hashes, plus CSV.</summary>
@@ -793,7 +793,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not save the file: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldNotSaveThe", "Could not save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -821,7 +821,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not save the file: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldNotSaveThe", "Could not save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

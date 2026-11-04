@@ -44,7 +44,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const double ClipsExpandedWidth = 340;
         private const double NarrowLayoutWidth = 1000;
-        private const string DialogTitle = "Audio Trimmer & Joiner";
+        private static string DialogTitle => Loc.T("Str_Tool_audio-trimmer_Name", "Audio Trimmer & Joiner");
 
         private static readonly string[] AudioExtensions =
         {

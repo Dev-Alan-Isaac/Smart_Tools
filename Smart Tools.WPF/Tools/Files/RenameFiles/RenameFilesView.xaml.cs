@@ -38,7 +38,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowColumnThreshold = 1000;
-        private const string DialogTitle = "Rename Files";
+        private static string DialogTitle => Loc.T("Str_Tool_rename-files_Name", "Rename Files");
 
         private readonly ObservableCollection<FolderListEntry> _folders = new();
         private readonly DispatcherTimer _refreshTimer;
@@ -604,7 +604,7 @@ namespace Smart_Tools.WPF.Views
             if (FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject)?.Item is not RenamePreviewItem item) return;
             string path = item.Status == RenameStatus.Renamed ? item.NewFullPath : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show("That file is no longer there.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileIsNo", "That file is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
@@ -648,7 +648,7 @@ namespace Smart_Tools.WPF.Views
             if (_rows.Count == 0)
             {
                 InputCard.PopDropArea();
-                MessageBox.Show("Add a folder with files in it first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_AddAFolderWith", "Add a folder with files in it first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             if (TxtPlanError.Text.Length > 0)
@@ -660,7 +660,7 @@ namespace Smart_Tools.WPF.Views
             var ready = _rows.Where(i => i.Status == RenameStatus.Ready).ToList();
             if (ready.Count == 0)
             {
-                MessageBox.Show("None of these names change with the current settings.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_NoneOfTheseNames", "None of these names change with the current settings."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -715,7 +715,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetBusy(false, undo: false);
                 TxtProgress.Text = "Rename failed.";
-                MessageBox.Show($"Rename failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_RenameFailed", "Rename failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -740,8 +740,10 @@ namespace Smart_Tools.WPF.Views
             }
 
             int files = Math.Max(journal.FileCount, journal.Steps.Count(s => !RenameManager.IsTempName(s.From)));
-            if (MessageBox.Show($"Give the {files:N0} file{(files == 1 ? "" : "s")} renamed on {journal.When:g} their old names back?",
-                    "Undo Rename", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            if (MessageBox.Show(Loc.N(files,
+                        "Str_MB_RenUndoOne", "Give the {0:N0} file renamed on {1:g} its old name back?",
+                        "Str_MB_RenUndoMany", "Give the {0:N0} files renamed on {1:g} their old names back?", files, journal.When),
+                    Loc.T("Str_MB_UndoRenameTitle", "Undo Rename"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
             _runCts?.Dispose();
@@ -773,13 +775,13 @@ namespace Smart_Tools.WPF.Views
                 TxtProgress.Text = string.Join(" · ", parts);
 
                 if (result.Errors.Count > 0)
-                    MessageBox.Show("Some files couldn't be undone:\n\n" + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? $"\n...and {result.Errors.Count - 12} more" : ""),
+                    MessageBox.Show(Loc.T("Str_MB_SomeFilesCouldnT", "Some files couldn't be undone:\n\n") + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? Loc.F("Str_MB_AndNMore", "\n...and {0} more", result.Errors.Count - 12) : ""),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
                 SetBusy(false, undo: true);
-                MessageBox.Show($"Undo failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_UndoFailed", "Undo failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

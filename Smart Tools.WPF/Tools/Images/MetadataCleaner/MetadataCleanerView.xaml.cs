@@ -26,7 +26,7 @@ namespace Smart_Tools.WPF.Views
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
         private const int ThumbnailLimit = 300;
-        private const string DialogTitle = "Image Metadata Cleaner";
+        private static string DialogTitle => Loc.T("Str_Tool_image-metadata-cleaner_Name", "Image Metadata Cleaner");
 
         private readonly MetadataCleanerManager _cleaner = new();
         private readonly ObservableCollection<MetaItem> _items = new();

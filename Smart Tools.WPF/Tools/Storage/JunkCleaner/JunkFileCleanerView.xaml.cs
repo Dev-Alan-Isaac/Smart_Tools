@@ -26,7 +26,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Junk File Cleaner";
+        private static string DialogTitle => Loc.T("Str_Tool_junk-cleaner_Name", "Junk File Cleaner");
 
         private readonly ObservableCollection<JunkGroup> _groups = new();
         private readonly bool _viewConstructed;

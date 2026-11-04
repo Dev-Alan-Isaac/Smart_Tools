@@ -26,7 +26,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
-        private const string DialogTitle = "Screen Recorder";
+        private static string DialogTitle => Loc.T("Str_Tool_screen-recorder_Name", "Screen Recorder");
 
         private readonly ScreenRecorderManager _recorder = new();
         private readonly ObservableCollection<RecordingEntry> _recordings = new();

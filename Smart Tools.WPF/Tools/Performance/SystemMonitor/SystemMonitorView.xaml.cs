@@ -30,7 +30,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "System Monitor";
+        private static string DialogTitle => Loc.T("Str_Tool_system-monitor_Name", "System Monitor");
 
         private readonly SystemMonitorManager _manager = new();
         private readonly ObservableCollection<SystemMonitorSection> _sections = new();
@@ -436,12 +436,12 @@ namespace Smart_Tools.WPF.Views
                 using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
                     writer.Write(text);
                 string note = path != dialog.FileName ? $"\n\n{Path.GetFileName(dialog.FileName)} already exists, so it was kept and this report got its own name." : "";
-                if (MessageBox.Show($"Saved to:\n{path}{note}\n\nOpen it now?", DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, note), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                MessageBox.Show("Couldn't save the report: " + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

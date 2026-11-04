@@ -26,7 +26,7 @@ namespace Smart_Tools.WPF.Views
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
         private const long MaxFileBytes = 20 * 1024 * 1024;
-        private const string DialogTitle = "JSON / YAML / XML Formatter";
+        private static string DialogTitle => Loc.T("Str_Tool_data-formatter_Name", "JSON / YAML / XML Formatter");
 
         private readonly DispatcherTimer _debounce = new() { Interval = TimeSpan.FromMilliseconds(250) };
         private readonly bool _viewConstructed;

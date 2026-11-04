@@ -37,7 +37,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Regex Tester";
+        private static string DialogTitle => Loc.T("Str_Tool_regex-tester_Name", "Regex Tester");
 
         /// <summary>The highlighted copy shows this much text; every match is still counted and listed.</summary>
         private const int MaxPreviewChars = 300_000;
@@ -973,7 +973,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show("Couldn't save the CSV: " + RegexManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe", "Couldn't save the CSV: ") + RegexManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

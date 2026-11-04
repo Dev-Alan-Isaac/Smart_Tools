@@ -29,7 +29,7 @@ namespace Smart_Tools.WPF.Views
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
         private const int ThumbnailLimit = 300;   // thumbnails for the first pictures only: 10,000 of them would be slow and heavy
-        private const string DialogTitle = "Bulk Image Resizer";
+        private static string DialogTitle => Loc.T("Str_Tool_bulk-image-resizer_Name", "Bulk Image Resizer");
 
         private readonly BulkImageResizerManager _resizer = new();
         private readonly ObservableCollection<BulkImageItem> _items = new();

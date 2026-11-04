@@ -28,7 +28,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class VoiceChangerView : UserControl
     {
-        private const string DialogTitle = "Voice Changer";
+        private static string DialogTitle => Loc.T("Str_Tool_voice-changer_Name", "Voice Changer");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;
 

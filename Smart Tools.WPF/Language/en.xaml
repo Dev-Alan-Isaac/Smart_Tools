@@ -1,4 +1,4 @@
-<ResourceDictionary
+﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:system="clr-namespace:System;assembly=mscorlib">
@@ -8935,4 +8935,174 @@
     <system:String x:Key="Str_Tour_PdfReader_Pages_Text">Scroll through the PDF. Click your additions to select them, and drag to move them.</system:String>
     <system:String x:Key="Str_PdfReader_NoPdf">That is not a PDF.</system:String>
     <system:String x:Key="Str_PdfReader_FilterAll">All files</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Pick_Title">Choose a tool</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Pick_Text">Ping a host, scan ports, open a TCP or UDP socket, or look at your network adapters. The options below change with your choice.</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Run_Title">Start and stop</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Run_Text">Runs the chosen tool with the options on the left. The same button stops it.</system:String>
+    <system:String x:Key="Str_Tour_NetTools_State_Title">Status</system:String>
+    <system:String x:Key="Str_Tour_NetTools_State_Text">Shows whether the tool is idle, running or finished.</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Console_Title">Console</system:String>
+    <system:String x:Key="Str_Tour_NetTools_Console_Text">Every message from every tool, with time and source. Copy or save the lines you need.</system:String>
+    <system:String x:Key="Str_Err_ExportFailed">Export failed: {0}</system:String>
+    <system:String x:Key="Str_Err_CouldntSave">Couldn't save: {0}</system:String>
+    <system:String x:Key="Str_Err_ScanFailed">Scan failed: {0}</system:String>
+    <system:String x:Key="Str_Err_ClipboardRead">Couldn't read the clipboard: {0}</system:String>
+    <system:String x:Key="Str_Err_UndoFailed">Undo failed: {0}</system:String>
+    <system:String x:Key="Str_Err_DidntWork">That didn't work: {0}</system:String>
+    <system:String x:Key="Str_Err_CouldntCopy">Couldn't copy: {0}</system:String>
+    <system:String x:Key="Str_Err_FolderRead">Couldn't read that folder: {0}</system:String>
+    <system:String x:Key="Str_Err_ImageLoad">Couldn't load that image: {0}</system:String>
+    <system:String x:Key="Str_Err_SaveFile">Couldn't save the file: {0}</system:String>
+    <system:String x:Key="Str_Err_OpenFile">Couldn't open {0}: {1}</system:String>
+    <system:String x:Key="Str_MB_AddAFolderWith" xml:space="preserve">Add a folder with files in it first.</system:String>
+    <system:String x:Key="Str_MB_AddAtLeastOne" xml:space="preserve">Add at least one folder to search first.</system:String>
+    <system:String x:Key="Str_MB_AddAtLeastOne2" xml:space="preserve">Add at least one folder to scan first.</system:String>
+    <system:String x:Key="Str_MB_AddOrLoadAt" xml:space="preserve">Add or load at least one value first.</system:String>
+    <system:String x:Key="Str_MB_BatchGenerationFailed" xml:space="preserve">Batch generation failed: {0}</system:String>
+    <system:String x:Key="Str_MB_CanTSaveThere" xml:space="preserve">Can't save there: </system:String>
+    <system:String x:Key="Str_MB_CanTSaveTo" xml:space="preserve">Can't save to {0}: {1}.&#10;&#10;Choose another folder in Save to.</system:String>
+    <system:String x:Key="Str_MB_CanTSaveTo2" xml:space="preserve">Can't save to {0}: {1}</system:String>
+    <system:String x:Key="Str_MB_ChangeNN" xml:space="preserve">Change {0}?&#10;&#10;{1}{2}</system:String>
+    <system:String x:Key="Str_MB_ChooseADriveTo" xml:space="preserve">Choose a drive to analyze first.</system:String>
+    <system:String x:Key="Str_MB_ChooseAFolderFirst" xml:space="preserve">Choose a folder first.</system:String>
+    <system:String x:Key="Str_MB_ChooseAFolderTo" xml:space="preserve">Choose a folder to analyze first.</system:String>
+    <system:String x:Key="Str_MB_ClearAllSavedResults" xml:space="preserve">Clear all {0} saved results?</system:String>
+    <system:String x:Key="Str_MB_ConversionFailed" xml:space="preserve">Conversion failed: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldNotSaveThe" xml:space="preserve">Could not save the file: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldNotSaveThe2" xml:space="preserve">Could not save the report: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTCreate" xml:space="preserve">Couldn't create {0}: {1}</system:String>
+    <system:String x:Key="Str_MB_CouldnTDelete" xml:space="preserve">Couldn't delete "{0}": {1}</system:String>
+    <system:String x:Key="Str_MB_CouldnTExport" xml:space="preserve">Couldn't export: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTExport2" xml:space="preserve">Couldn't export: </system:String>
+    <system:String x:Key="Str_MB_CouldnTFindThis" xml:space="preserve">Couldn't find this app's executable to restart it.</system:String>
+    <system:String x:Key="Str_MB_CouldnTFinish" xml:space="preserve">Couldn't finish: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenExplorer" xml:space="preserve">Couldn't open Explorer: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenIt" xml:space="preserve">Couldn't open it: </system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe" xml:space="preserve">Couldn't open the folder.</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe2" xml:space="preserve">Couldn't open the file.</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe3" xml:space="preserve">Couldn't open the browser: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTOpenThe4" xml:space="preserve">Couldn't open the browser. The driver is at https://pawnio.eu</system:String>
+    <system:String x:Key="Str_MB_CouldnTPrepareThe" xml:space="preserve">Couldn't prepare the files: </system:String>
+    <system:String x:Key="Str_MB_CouldnTReadThat" xml:space="preserve">Couldn't read that file: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTReadThe" xml:space="preserve">Couldn't read the checksum file: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTRestartAs" xml:space="preserve">Couldn't restart as administrator: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTSaveThe" xml:space="preserve">Couldn't save the CSV: </system:String>
+    <system:String x:Key="Str_MB_CouldnTSaveThe2" xml:space="preserve">Couldn't save the report: </system:String>
+    <system:String x:Key="Str_MB_CouldnTStartRecording" xml:space="preserve">Couldn't start recording: {0}</system:String>
+    <system:String x:Key="Str_MB_CouldnTUseThe" xml:space="preserve">Couldn't use the quarantine folder: {0}</system:String>
+    <system:String x:Key="Str_MB_DeleteFailed" xml:space="preserve">Delete failed: {0}</system:String>
+    <system:String x:Key="Str_MB_Disable" xml:space="preserve">Disable {0}?{1}</system:String>
+    <system:String x:Key="Str_MB_ExportedToNN" xml:space="preserve">Exported {0} to:&#10;{1}{2}&#10;&#10;Open the file now?</system:String>
+    <system:String x:Key="Str_MB_ForgetAllReadingsOf" xml:space="preserve">Forget all {0:N0} readings of {1}?&#10;&#10;The drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.</system:String>
+    <system:String x:Key="Str_MB_HashingFailed" xml:space="preserve">Hashing failed: {0}</system:String>
+    <system:String x:Key="Str_MB_InGroupSGroup" xml:space="preserve">In {0} group(s) (group {1}) every copy is selected, so {2} would leave no copy behind.&#10;&#10;Continue anyway?</system:String>
+    <system:String x:Key="Str_MB_InGroupSGroup2" xml:space="preserve">In {0} group(s) (group {1}) every file is selected, so {2} would leave none of them.&#10;&#10;Continue anyway?</system:String>
+    <system:String x:Key="Str_MB_IsADriveOr" xml:space="preserve">"{0}" is a drive or a system folder. Shredding it would damage Windows or take everything on it, so it can't be added.&#10;&#10;Add the specific folders or files you want to shred instead.</system:String>
+    <system:String x:Key="Str_MB_IsNoLongerThere" xml:space="preserve">"{0}" is no longer there.</system:String>
+    <system:String x:Key="Str_MB_NoChecksumsWereFound" xml:space="preserve">No checksums were found in that file.</system:String>
+    <system:String x:Key="Str_MB_NoDamagedFilesTo" xml:space="preserve">No damaged files to move. Tick corrupted or warning files first ("Tick corrupted" ticks every damaged one).</system:String>
+    <system:String x:Key="Str_MB_NoLongerExistsRescan" xml:space="preserve">"{0}" no longer exists. Rescan to refresh.</system:String>
+    <system:String x:Key="Str_MB_NoneOfTheseNames" xml:space="preserve">None of these names change with the current settings.</system:String>
+    <system:String x:Key="Str_MB_NothingHasBeenSaved" xml:space="preserve">Nothing has been saved to {0} yet.</system:String>
+    <system:String x:Key="Str_MB_NothingToExportYet" xml:space="preserve">Nothing to export yet - click Convert All first.</system:String>
+    <system:String x:Key="Str_MB_NothingToExportYet2" xml:space="preserve">Nothing to export yet - click Generate All first.</system:String>
+    <system:String x:Key="Str_MB_NothingToExportYet3" xml:space="preserve">Nothing to export yet - run a scan first.</system:String>
+    <system:String x:Key="Str_MB_NothingWasAdded" xml:space="preserve">Nothing was added: </system:String>
+    <system:String x:Key="Str_MB_OrganizeFailed" xml:space="preserve">Organize failed: {0}</system:String>
+    <system:String x:Key="Str_MB_PasteAtLeastOne" xml:space="preserve">Paste at least one color first - one per line.</system:String>
+    <system:String x:Key="Str_MB_RemoveAllEntries" xml:space="preserve">Remove all {0:N0} entries?</system:String>
+    <system:String x:Key="Str_MB_RemoveEveryClipFrom" xml:space="preserve">Remove every clip from the playlist?</system:String>
+    <system:String x:Key="Str_MB_RenameFailed" xml:space="preserve">Rename failed: {0}</system:String>
+    <system:String x:Key="Str_MB_RunAScanFirst" xml:space="preserve">Run a scan first - there are no results to export yet.</system:String>
+    <system:String x:Key="Str_MB_SavedToNN" xml:space="preserve">Saved to:&#10;{0}{1}&#10;&#10;Open it now?</system:String>
+    <system:String x:Key="Str_MB_SmartToolsWillClose" xml:space="preserve">Smart Tools will close and reopen as administrator so it can read SMART details.&#10;&#10;Anything unsaved in other tools will be lost. Continue?</system:String>
+    <system:String x:Key="Str_MB_SomeFilesCouldnT" xml:space="preserve">Some files couldn't be undone:&#10;&#10;</system:String>
+    <system:String x:Key="Str_MB_SwitchingModesStopsWhat" xml:space="preserve">Switching modes stops what is running. Switch?</system:String>
+    <system:String x:Key="Str_MB_ThatFileIsNo" xml:space="preserve">That file is no longer there.</system:String>
+    <system:String x:Key="Str_MB_ThatFileIsToo" xml:space="preserve">That file is too large to be a checksum list.</system:String>
+    <system:String x:Key="Str_MB_ThatFileNoLonger" xml:space="preserve">That file no longer exists.</system:String>
+    <system:String x:Key="Str_MB_ThatFileNoLonger2" xml:space="preserve">That file no longer exists. Rescan to refresh the results.</system:String>
+    <system:String x:Key="Str_MB_ThatFileOrFolder" xml:space="preserve">That file or folder no longer exists. Rescan to refresh the results.</system:String>
+    <system:String x:Key="Str_MB_ThatFileOrFolder2" xml:space="preserve">That file or folder is no longer there.</system:String>
+    <system:String x:Key="Str_MB_ThatFileOrFolder3" xml:space="preserve">That file or folder no longer exists.</system:String>
+    <system:String x:Key="Str_MB_ThatFolderIsInside" xml:space="preserve">That folder is inside one of the folders being scanned, so the moved files would show up as duplicates again next scan.&#10;&#10;Move there anyway?</system:String>
+    <system:String x:Key="Str_MB_ThatFolderIsInside2" xml:space="preserve">That folder is inside one of the scanned folders, so the moved files would be found again next scan.&#10;&#10;Move there anyway?</system:String>
+    <system:String x:Key="Str_MB_ThatSTheLog" xml:space="preserve">That's the log file being followed - choose another name.</system:String>
+    <system:String x:Key="Str_MB_TheClipboardHasNo" xml:space="preserve">The clipboard has no image. Copy a screenshot or an image first.</system:String>
+    <system:String x:Key="Str_MB_TheClipboardHasNo2" xml:space="preserve">The clipboard has no text. Copy a column from Excel or a list of lines first.</system:String>
+    <system:String x:Key="Str_MB_TheExportCouldnT" xml:space="preserve">The export couldn't be saved.&#10;&#10;</system:String>
+    <system:String x:Key="Str_MB_ThePasswordDidnT" xml:space="preserve">The password didn't open any of the files. Check it (and Caps Lock) and try again.</system:String>
+    <system:String x:Key="Str_MB_ThePdfCouldnT" xml:space="preserve">The PDF couldn't be saved.&#10;&#10;{0}&#10;&#10;Check that the folder exists, you can write to it, and the file isn't open in another program.</system:String>
+    <system:String x:Key="Str_MB_ThePictureCouldnT" xml:space="preserve">The picture couldn't be saved.&#10;&#10;</system:String>
+    <system:String x:Key="Str_MB_ThereAreNoLines" xml:space="preserve">There are no lines to save yet.</system:String>
+    <system:String x:Key="Str_MB_TheReportCouldnT" xml:space="preserve">The report couldn't be saved: {0}</system:String>
+    <system:String x:Key="Str_MB_TheResultCouldnT" xml:space="preserve">The result couldn't be saved.&#10;&#10;{0}&#10;&#10;Check that the folder exists, you can write to it, and the file isn't open in another program.</system:String>
+    <system:String x:Key="Str_MB_TheScanStoppedUnexpectedly" xml:space="preserve">The scan stopped unexpectedly: {0}</system:String>
+    <system:String x:Key="Str_MB_TheseResultsWereMatched" xml:space="preserve">These results were matched by name only, so the files may have different contents.&#10;&#10;Select all copies but one anyway?</system:String>
+    <system:String x:Key="Str_MB_TheVideoCouldnT" xml:space="preserve">The video couldn't be saved.&#10;&#10;{0}&#10;&#10;Check that the folder exists, you can write to it, and there's enough free space.</system:String>
+    <system:String x:Key="Str_MB_ThisPasswordIsWeak" xml:space="preserve">This password is weak and could be guessed.&#10;&#10;Encrypt with it anyway?</system:String>
+    <system:String x:Key="Str_MB_TickAtLeastOne" xml:space="preserve">Tick at least one image to save.</system:String>
+    <system:String x:Key="Str_MB_ValidationFailed" xml:space="preserve">Validation failed: {0}</system:String>
+    <system:String x:Key="Str_Tool_screen-recorder_Name">Screen Recorder</system:String>
+    <system:String x:Key="Str_Tool_screen-recorder_Description">Record a screen, a window, or an area to an MP4, with your microphone if you like</system:String>
+    <system:String x:Key="Str_Tool_bulk-image-resizer_Name">Bulk Image Resizer</system:String>
+    <system:String x:Key="Str_Tool_bulk-image-resizer_Description">Shrink and recompress many pictures at once, with a target file size</system:String>
+    <system:String x:Key="Str_Tool_startup-apps_Name">Startup Apps</system:String>
+    <system:String x:Key="Str_Tool_startup-apps_Description">See what starts with Windows and switch each app on or off</system:String>
+    <system:String x:Key="Str_Tool_services_Name">Services</system:String>
+    <system:String x:Key="Str_Tool_services_Description">See every Windows service and start, stop, restart, or change how each one starts</system:String>
+    <system:String x:Key="Str_Tool_environment-variables_Name">Environment Variables</system:String>
+    <system:String x:Key="Str_Tool_environment-variables_Description">Edit user and system variables, and clean up the PATH folder by folder</system:String>
+    <system:String x:Key="Str_Tool_network-connections_Name">Network Connections</system:String>
+    <system:String x:Key="Str_Tool_network-connections_Description">See which apps are connected outside your PC, and to where</system:String>
+    <system:String x:Key="Str_Tool_hosts-editor_Name">Hosts File Editor</system:String>
+    <system:String x:Key="Str_Tool_hosts-editor_Description">Edit the hosts file safely: switch lines on and off, with a backup on every save</system:String>
+    <system:String x:Key="Str_Tool_jwt-decoder_Name">JWT Decoder</system:String>
+    <system:String x:Key="Str_Tool_jwt-decoder_Description">Read a token's header, payload, and expiry. Offline, and the signature is not checked</system:String>
+    <system:String x:Key="Str_Tool_data-formatter_Name">JSON / YAML / XML Formatter</system:String>
+    <system:String x:Key="Str_Tool_data-formatter_Description">Format, minify, validate, and convert between JSON, YAML, and XML</system:String>
+    <system:String x:Key="Str_Tool_clipboard-history_Name">Clipboard History</system:String>
+    <system:String x:Key="Str_Tool_clipboard-history_Description">Everything you copied, searchable, with pins. Saved only if you turn it on</system:String>
+    <system:String x:Key="Str_Tool_translate_Name">Translate</system:String>
+    <system:String x:Key="Str_Tool_translate_Description">Translate text offline between English and Spanish</system:String>
+    <system:String x:Key="Str_Dlg_VideoReplay">Video Replay</system:String>
+    <system:String x:Key="Str_Dlg_ImageViewer">Image Viewer</system:String>
+    <system:String x:Key="Str_Dlg_SmartHistory">SMART history</system:String>
+    <system:String x:Key="Str_Dlg_NetworkTools">Network Tools</system:String>
+    <system:String x:Key="Str_Dlg_Delete">Delete</system:String>
+    <system:String x:Key="Str_Dlg_DeletePermanently">Delete permanently</system:String>
+    <system:String x:Key="Str_Dlg_ExportFailed">Export failed</system:String>
+    <system:String x:Key="Str_Dlg_RemoveAllFiles">Remove all files</system:String>
+    <system:String x:Key="Str_Dlg_ExportComplete">Export complete</system:String>
+    <system:String x:Key="Str_MB_FfmpegNeededVideo">Converting videos needs ffmpeg.exe in {0}. It wasn't found there.</system:String>
+    <system:String x:Key="Str_MB_FfmpegNeededAudio">Converting audio needs ffmpeg.exe in {0}. It wasn't found there.</system:String>
+    <system:String x:Key="Str_MB_QuarantineMoveOne" xml:space="preserve">Move {0:N0} file to&#10;{1}?&#10;&#10;Nothing is deleted. A log in that folder lists where each file came from, so you can put it back.</system:String>
+    <system:String x:Key="Str_MB_QuarantineMoveMany" xml:space="preserve">Move {0:N0} files to&#10;{1}?&#10;&#10;Nothing is deleted. A log in that folder lists where each file came from, so you can put it back.</system:String>
+    <system:String x:Key="Str_MB_MovedToQuarantineOne">Moved {0:N0} file to quarantine</system:String>
+    <system:String x:Key="Str_MB_MovedToQuarantineMany">Moved {0:N0} files to quarantine</system:String>
+    <system:String x:Key="Str_MB_QuarantineFailedSuffix" xml:space="preserve"> · {0:N0} couldn't be moved</system:String>
+    <system:String x:Key="Str_MB_FilesCouldntBeMoved" xml:space="preserve">{0:N0} file(s) couldn't be moved:&#10;</system:String>
+    <system:String x:Key="Str_MB_CqMoveOne" xml:space="preserve">Move {0:N0} file ({1}) to&#10;{2}?&#10;&#10;Each original is removed only after its copy has been checked against it. You can undo the move afterwards.</system:String>
+    <system:String x:Key="Str_MB_CqMoveMany" xml:space="preserve">Move {0:N0} files ({1}) to&#10;{2}?&#10;&#10;Each original is removed only after its copy has been checked against it. You can undo the move afterwards.</system:String>
+    <system:String x:Key="Str_MB_CqPutBackOne" xml:space="preserve">Put {0:N0} file back where it came from?&#10;&#10;It is verified on the way, like the original move.</system:String>
+    <system:String x:Key="Str_MB_CqPutBackMany" xml:space="preserve">Put {0:N0} files back where they came from?&#10;&#10;They are verified on the way, like the original move.</system:String>
+    <system:String x:Key="Str_MB_AndMoreSeeFailed" xml:space="preserve">&#10;&#10;…and {0} more (see the Failed rows in the preview).</system:String>
+    <system:String x:Key="Str_MB_OrgFailedOne" xml:space="preserve">{0} file couldn't be moved and stayed where it was:&#10;&#10;{1}</system:String>
+    <system:String x:Key="Str_MB_OrgFailedMany" xml:space="preserve">{0} files couldn't be moved and stayed where they were:&#10;&#10;{1}</system:String>
+    <system:String x:Key="Str_MB_OrgUndoMoveOne">Move the {0:N0} file from the run on {1:g} back?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoMoveMany">Move the {0:N0} files from the run on {1:g} back?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoCopyOne">Remove the copy of the {0:N0} file from the run on {1:g}?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoCopyMany">Remove the copies of the {0:N0} files from the run on {1:g}?</system:String>
+    <system:String x:Key="Str_MB_OrgUndoMovedNote">Files go back to where they were, and the folders that run created are removed if empty.</system:String>
+    <system:String x:Key="Str_MB_OrgUndoCopiedNote">Only copies that haven't been changed since are removed.</system:String>
+    <system:String x:Key="Str_MB_UndoOrganizeTitle">Undo Organize</system:String>
+    <system:String x:Key="Str_MB_UndoRenameTitle">Undo Rename</system:String>
+    <system:String x:Key="Str_MB_RenUndoOne">Give the {0:N0} file renamed on {1:g} its old name back?</system:String>
+    <system:String x:Key="Str_MB_RenUndoMany">Give the {0:N0} files renamed on {1:g} their old names back?</system:String>
+    <system:String x:Key="Str_MB_AndNMore" xml:space="preserve">&#10;...and {0} more</system:String>
+    <system:String x:Key="Str_MB_AndNMoreDot" xml:space="preserve">&#10;...and {0} more.</system:String>
+    <system:String x:Key="Str_MB_NothingDeleted">Nothing was deleted.</system:String>
+    <system:String x:Key="Str_MB_MovedToBin">Moved {0:N0} item(s) to the Recycle Bin · {1}</system:String>
+    <system:String x:Key="Str_MB_DeletedFreed">Deleted {0:N0} item(s) · {1} freed</system:String>
+    <system:String x:Key="Str_MB_CouldntDeleteItems" xml:space="preserve">Couldn't delete {0} item(s):&#10;&#10;{1}{2}</system:String>
 </ResourceDictionary>

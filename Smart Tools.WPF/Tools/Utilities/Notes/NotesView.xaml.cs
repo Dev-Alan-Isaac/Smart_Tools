@@ -31,7 +31,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class NotesView : UserControl
     {
-        private const string DialogTitle = "Notes";
+        private static string DialogTitle => Loc.T("Str_Tool_notes_Name", "Notes");
 
         private readonly DispatcherTimer _saveTimer;
         private readonly DispatcherTimer _clockTimer;

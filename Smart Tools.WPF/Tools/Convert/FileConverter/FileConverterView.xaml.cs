@@ -35,7 +35,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "File Converter";
+        private static string DialogTitle => Loc.T("Str_Tool_convert-files_Name", "File Converter");
         private const string ReadyHint = "Add files, choose what to convert them to, then press Convert.";
 
         private readonly ConverterManager _manager = new();
@@ -764,7 +764,7 @@ namespace Smart_Tools.WPF.Views
             if (DataGridFiles.SelectedItem is not ConvertFileItem item) return;
             string path = item.Status == ConvertStatus.Converted && File.Exists(item.OutputPath) ? item.OutputPath! : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show("That file no longer exists.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(Loc.T("Str_MB_ThatFileNoLonger", "That file no longer exists."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnOpenOutput_Click(object sender, RoutedEventArgs e) => OpenOutput(BuildOptions(), quiet: false);
@@ -832,7 +832,10 @@ namespace Smart_Tools.WPF.Views
             var options = BuildOptions();
             if (options.FileType != ConvertFileType.Image && ConverterManager.FfmpegExe == null)
             {
-                MessageBox.Show($"Converting {(options.FileType == ConvertFileType.Video ? "videos" : "audio")} needs ffmpeg.exe in {ConverterManager.FfmpegFolder}. It wasn't found there.",
+                bool isVideo = options.FileType == ConvertFileType.Video;
+                MessageBox.Show(isVideo
+                        ? Loc.F("Str_MB_FfmpegNeededVideo", "Converting videos needs ffmpeg.exe in {0}. It wasn't found there.", ConverterManager.FfmpegFolder)
+                        : Loc.F("Str_MB_FfmpegNeededAudio", "Converting audio needs ffmpeg.exe in {0}. It wasn't found there.", ConverterManager.FfmpegFolder),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -842,7 +845,7 @@ namespace Smart_Tools.WPF.Views
                 if (OutputCard.Status.State is OutputFolderState.Missing or OutputFolderState.NotWritable)
                 {
                     UiMotion.Pop(OutputCard, 0.95);
-                    MessageBox.Show($"Can't save to {options.OutputFolder}: {OutputCard.Status.Text}.\n\nChoose another folder in Save to.",
+                    MessageBox.Show(Loc.F("Str_MB_CanTSaveTo", "Can't save to {0}: {1}.\n\nChoose another folder in Save to.", options.OutputFolder, OutputCard.Status.Text),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -852,7 +855,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                 {
-                    MessageBox.Show($"Couldn't create {options.OutputFolder}: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Loc.F("Str_MB_CouldnTCreate", "Couldn't create {0}: {1}", options.OutputFolder, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
@@ -896,7 +899,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetConverting(false);
                 TxtProgress.Text = "Conversion failed.";
-                MessageBox.Show($"Conversion failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_ConversionFailed", "Conversion failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

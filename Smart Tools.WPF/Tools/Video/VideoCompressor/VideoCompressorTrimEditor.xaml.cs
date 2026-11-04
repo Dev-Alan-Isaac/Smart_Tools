@@ -21,7 +21,7 @@ namespace Smart_Tools.WPF.Controls
     /// </summary>
     public partial class VideoCompressorTrimEditor : UserControl
     {
-        private const string DialogTitle = "Video Compressor";
+        private static string DialogTitle => Loc.T("Str_Tool_video-compressor_Name", "Video Compressor");
 
         private readonly DispatcherTimer _frameTimer = new() { Interval = TimeSpan.FromMilliseconds(140) };
         private VcFileItem? _item;

@@ -22,7 +22,7 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class HostsEditorView : UserControl
     {
-        private const string DialogTitle = "Hosts File Editor";
+        private static string DialogTitle => Loc.T("Str_Tool_hosts-editor_Name", "Hosts File Editor");
 
         private readonly HostsEditorManager _hosts = new();
         private readonly ObservableCollection<HostsRow> _shown = new();

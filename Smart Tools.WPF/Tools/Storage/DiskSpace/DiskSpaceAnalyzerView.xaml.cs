@@ -47,7 +47,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowWidth = 1000;
         private const double TileGap = 2;
-        private const string DialogTitle = "Disk Space Analyzer";
+        private static string DialogTitle => Loc.T("Str_Tool_disk-space_Name", "Disk Space Analyzer");
 
         private readonly SpaceAnalyzerManager _manager = new();
         private readonly ObservableCollection<SpaceListItem> _rows = new();
@@ -292,7 +292,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (CmbDrive.SelectedItem is not DriveSummary drive)
                 {
-                    MessageBox.Show("Choose a drive to analyze first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Loc.T("Str_MB_ChooseADriveTo", "Choose a drive to analyze first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return null;
                 }
                 root = drive.RootPath;
@@ -303,7 +303,7 @@ namespace Smart_Tools.WPF.Views
                 root = InputCard.FolderPath;
                 if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
                 {
-                    MessageBox.Show("Choose a folder to analyze first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(Loc.T("Str_MB_ChooseAFolderTo", "Choose a folder to analyze first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     InputCard.PopDropArea();
                     return null;
                 }
@@ -355,7 +355,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 TxtProgress.Text = "Scan failed.";
-                MessageBox.Show($"Scan failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -921,11 +921,11 @@ namespace Smart_Tools.WPF.Views
                 else if (Directory.Exists(path))
                     Process.Start("explorer.exe", $"\"{path}\"");
                 else
-                    MessageBox.Show($"\"{path}\" no longer exists. Rescan to refresh.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(Loc.F("Str_MB_NoLongerExistsRescan", "\"{0}\" no longer exists. Rescan to refresh.", path), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Couldn't open Explorer: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_CouldnTOpenExplorer", "Couldn't open Explorer: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -956,7 +956,7 @@ namespace Smart_Tools.WPF.Views
                 ? $"Move {what} to the Recycle Bin?"
                 : $"Permanently delete {what}?\n\nThis drive has no Recycle Bin, so this can't be undone.";
 
-            var answer = MessageBox.Show(message, recycle ? "Delete" : "Delete permanently",
+            var answer = MessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"),
                 MessageBoxButton.YesNo, recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 
@@ -983,22 +983,22 @@ namespace Smart_Tools.WPF.Views
 
                 string freed = SpaceAnalyzerManager.FormatBytes(result.BytesFreed);
                 TxtProgress.Text = result.Deleted.Count == 0
-                    ? "Nothing was deleted."
+                    ? Loc.T("Str_MB_NothingDeleted", "Nothing was deleted.")
                     : recycle
-                        ? $"Moved {result.Deleted.Count:N0} item(s) to the Recycle Bin · {freed}"
-                        : $"Deleted {result.Deleted.Count:N0} item(s) · {freed} freed";
+                        ? Loc.F("Str_MB_MovedToBin", "Moved {0:N0} item(s) to the Recycle Bin · {1}", result.Deleted.Count, freed)
+                        : Loc.F("Str_MB_DeletedFreed", "Deleted {0:N0} item(s) · {1} freed", result.Deleted.Count, freed);
 
                 if (result.Failed.Count > 0)
                 {
                     var lines = result.Failed.Take(8).Select(f => $"• {f.Node.Name}: {f.Error}");
-                    string more = result.Failed.Count > 8 ? $"\n...and {result.Failed.Count - 8} more." : "";
-                    MessageBox.Show($"Couldn't delete {result.Failed.Count} item(s):\n\n{string.Join("\n", lines)}{more}",
+                    string more = result.Failed.Count > 8 ? Loc.F("Str_MB_AndNMoreDot", "\n...and {0} more.", result.Failed.Count - 8) : "";
+                    MessageBox.Show(Loc.F("Str_MB_CouldntDeleteItems", "Couldn't delete {0} item(s):\n\n{1}{2}", result.Failed.Count, string.Join("\n", lines), more),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Delete failed: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.F("Str_MB_DeleteFailed", "Delete failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
