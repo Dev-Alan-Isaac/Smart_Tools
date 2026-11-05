@@ -45,7 +45,7 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public static void SaveStripPng(IReadOnlyList<PaletteColor> colors, string path)
         {
-            if (colors.Count == 0) throw new InvalidOperationException("There are no colours to save.");
+            if (colors.Count == 0) throw new InvalidOperationException(Loc.T("Str_PaletteExtractor_MsgNoColours", "There are no colours to save."));
 
             const int block = 240, perRow = 6;
             int columns = Math.Min(colors.Count, perRow);

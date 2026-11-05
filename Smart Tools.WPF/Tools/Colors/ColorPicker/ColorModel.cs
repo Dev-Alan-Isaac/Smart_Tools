@@ -52,6 +52,9 @@ namespace Smart_Tools.WPF.Models
         public string Rgb { get; init; } = "";
         public string Hsl { get; init; } = "";
 
+        /// <summary>Where a scanned color was found ("theme.css:14", plus how many more times); empty for typed lines.</summary>
+        public string Source { get; init; } = "";
+
         /// <summary>"Converted", or why the input couldn't be read.</summary>
         public string Message { get; init; } = "";
 

@@ -212,10 +212,10 @@ namespace Smart_Tools.WPF.Views
             text.SetResourceReference(TextBlock.ForegroundProperty, fg);
             pill.ToolTip = contrast.Grade switch
             {
-                "AAA" => "Passes AAA - fine for any text",
-                "AA" => "Passes AA for normal text",
-                "AA Large" => "Only for large or bold text (and icons)",
-                _ => "Too little contrast for text",
+                "AAA" => Loc.T("Str_Color_MsgPassAaa", "Passes AAA - fine for any text"),
+                "AA" => Loc.T("Str_Color_MsgPassAa", "Passes AA for normal text"),
+                "AA Large" => Loc.T("Str_Color_MsgAaLarge", "Only for large or bold text (and icons)"),
+                _ => Loc.T("Str_Color_MsgTooLittle", "Too little contrast for text"),
             };
         }
 
@@ -395,7 +395,7 @@ namespace Smart_Tools.WPF.Views
             bool ok = TryChannel(TxtR, 255, out int r) & TryChannel(TxtG, 255, out int g) & TryChannel(TxtB, 255, out int b);
             if (!ok)
             {
-                ShowFieldError(RgbBar, "RGB values are whole numbers from 0 to 255");
+                ShowFieldError(RgbBar, Loc.T("Str_Color_MsgRgbWhole", "RGB values are whole numbers from 0 to 255"));
                 return;
             }
 
@@ -409,7 +409,7 @@ namespace Smart_Tools.WPF.Views
             bool ok = TryNumber(TxtH, 360, out double h) & TryNumber(TxtS, 100, out double s) & TryNumber(TxtL, 100, out double l);
             if (!ok)
             {
-                ShowFieldError(HslBar, "Hue is 0-360; saturation and lightness 0-100");
+                ShowFieldError(HslBar, Loc.T("Str_Color_MsgHslRanges", "Hue is 0-360; saturation and lightness 0-100"));
                 return;
             }
 
@@ -549,7 +549,7 @@ namespace Smart_Tools.WPF.Views
 
                     items.Add(SwatchChips.Item(string.Format(SwatchChips.Text("Str_Color_CopyItem"), hex), () =>
                     {
-                        try { Clipboard.SetText(hex); } catch (Exception) { }
+                        try { Clipboard.SetText(hex); } catch (System.Runtime.InteropServices.ExternalException) { }
                     }));
                     items.Add(SwatchChips.Item(SwatchChips.Text("Str_Color_RemoveItem"), () =>
                     {
@@ -576,8 +576,8 @@ namespace Smart_Tools.WPF.Views
         {
             var dialog = new OpenFileDialog
             {
-                Title = "Select an image",
-                Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.ico|All files|*.*",
+                Title = Loc.T("Str_Color_MsgSelectImage", "Select an image"),
+                Filter = Loc.T("Str_Color_MsgImageFilter", "Image files|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.ico|All files|*.*"),
             };
             if (dialog.ShowDialog() == true)
                 LoadImageFile(dialog.FileName);
@@ -769,22 +769,101 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_viewConstructed) return;
             int lines = ColorManager.SplitLines(TxtBatchInput.Text).Count(l => l.Trim().Length > 0);
-            TxtBatchLineCount.Text = lines == 0 ? "One color per line" : lines == 1 ? "1 line" : $"{lines:N0} lines";
+            TxtBatchLineCount.Text = lines == 0 ? Loc.T("Str_Color_MsgOnePerLine", "One color per line") : lines == 1 ? Loc.T("Str_Color_MsgLineOne", "1 line") : Loc.F("Str_Color_MsgLineMany", "{0:N0} lines", lines);
         }
 
-        private void BtnLoadFromFile_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog { Title = "Select a text file of colors", Filter = "Text files|*.txt;*.csv|All files|*.*" };
-            if (dialog.ShowDialog() != true) return;
+        // ---- colors written inside files ----
 
+        private List<string> _scanPaths = new();
+        private int _scanRun;
+
+        private void BtnScanFiles_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = Loc.T("Str_Color_MsgScanTitle", "Choose files that contain colors"),
+                Filter = Loc.F("Str_Color_MsgScanFilter", "Files with colors|{0}|All files|*.*", ColorFileScanner.DialogPatterns),
+                Multiselect = true,
+            };
+            if (dialog.ShowDialog() == true) _ = ScanAsync(dialog.FileNames);
+        }
+
+        private void BtnScanFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Loc.T("Str_Color_MsgScanFolderTitle", "Choose a folder to search for colors"), Multiselect = true };
+            if (dialog.ShowDialog() == true) _ = ScanAsync(dialog.FolderNames);
+        }
+
+        private void ChkUniqueColors_Click(object sender, RoutedEventArgs e)
+        {
+            if (_scanPaths.Count > 0) _ = ScanAsync(_scanPaths);
+        }
+
+        private static bool HasFiles(DragEventArgs e) => e.Data.GetDataPresent(DataFormats.FileDrop);
+
+        private void BatchArea_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effects = HasFiles(e) ? DragDropEffects.Copy : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void BatchArea_Drop(object sender, DragEventArgs e)
+        {
+            e.Handled = true;
+            if (e.Data.GetData(DataFormats.FileDrop) is string[] { Length: > 0 } paths) _ = ScanAsync(paths);
+        }
+
+        /// <summary>Reads the files off the UI thread and shows every color found, with the file and line it came from.</summary>
+        private async Task ScanAsync(IEnumerable<string> paths)
+        {
+            var list = paths.ToList();
+            bool unique = ChkUniqueColors.IsChecked == true;
+            int run = ++_scanRun;
+            BtnScanFiles.IsEnabled = BtnScanFolder.IsEnabled = false;
             try
             {
-                TxtBatchInput.Text = File.ReadAllText(dialog.FileName);
+                var result = await Task.Run(() => ColorFileScanner.Scan(list, unique));
+                if (run != _scanRun) return;
+
+                _scanPaths = list;
+                if (result.Rows.Count == 0)
+                {
+                    MessageBox.Show(
+                        result.FilesRead == 0
+                            ? Loc.T("Str_Color_MsgScanNoFiles", "None of those files could be read as text (they may be binary, empty or over 5 MB).")
+                            : Loc.F("Str_Color_MsgScanNone", "No colors were found in {0:N0} file(s).", result.FilesRead),
+                        DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                ShowBatchRows(result.Rows);
+                TxtSummaryCount.Text = Loc.F("Str_Color_MsgScanned", "{0:N0} colors in {1:N0} files", result.Rows.Count, result.FilesRead)
+                    + (result.Truncated ? " · " + Loc.T("Str_Color_MsgScanTruncated", "list shortened") : "");
+                TxtFailedCount.Text = result.FilesSkipped == 1
+                    ? Loc.T("Str_Color_MsgScanSkippedOne", "1 file skipped")
+                    : Loc.F("Str_Color_MsgScanSkippedMany", "{0:N0} files skipped", result.FilesSkipped);
+                FailedPill.Visibility = result.FilesSkipped > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 MessageBox.Show(Loc.F("Str_MB_CouldnTReadThat", "Couldn't read that file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                BtnScanFiles.IsEnabled = BtnScanFolder.IsEnabled = true;
+            }
+        }
+
+        /// <summary>Puts rows in the results grid and turns Export on.</summary>
+        private void ShowBatchRows(List<BatchColorRow> rows)
+        {
+            _batchRows = rows;
+            DataGridBatch.ItemsSource = rows;
+            UiMotion.FadeVisibility(BatchEmptyStatePanel, false);
+            UiMotion.FadeIn(DataGridBatch, 4);
+            SummaryPill.Visibility = Visibility.Visible;
+            UiMotion.Pop(SummaryPill);
+            BtnExportBatch.IsEnabled = rows.Count > 0;
         }
 
         private void BtnPasteBatch_Click(object sender, RoutedEventArgs e)
@@ -816,22 +895,16 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
-            _batchRows = rows;
-            DataGridBatch.ItemsSource = rows;
-            UiMotion.FadeVisibility(BatchEmptyStatePanel, false);
-            UiMotion.FadeIn(DataGridBatch, 4);
+            _scanPaths = new List<string>();   // typed lines replace a file scan
+            ShowBatchRows(rows);
 
             int ok = rows.Count(r => r.Status == ColorRowStatus.Converted);
             int failed = rows.Count - ok;
 
-            TxtSummaryCount.Text = $"{ok:N0} of {rows.Count:N0} converted";
-            SummaryPill.Visibility = Visibility.Visible;
-            UiMotion.Pop(SummaryPill);
+            TxtSummaryCount.Text = Loc.F("Str_Color_MsgConverted", "{0:N0} of {1:N0} converted", ok, rows.Count);
 
-            TxtFailedCount.Text = failed == 1 ? "1 not recognised" : $"{failed:N0} not recognised";
+            TxtFailedCount.Text = failed == 1 ? Loc.T("Str_Color_MsgFailedOne", "1 not recognised") : Loc.F("Str_Color_MsgFailedMany", "{0:N0} not recognised", failed);
             FailedPill.Visibility = failed > 0 ? Visibility.Visible : Visibility.Collapsed;
-
-            BtnExportBatch.IsEnabled = rows.Count > 0;
         }
 
         private void MenuExport_Click(object sender, RoutedEventArgs e)
@@ -846,7 +919,7 @@ namespace Smart_Tools.WPF.Views
             string ext = ColorManager.ExtensionFor(format);
             var dialog = new SaveFileDialog
             {
-                Title = "Export colors",
+                Title = Loc.T("Str_Color_MsgExportTitle", "Export colors"),
                 Filter = ColorManager.FileFilterFor(format),
                 DefaultExt = ext,
                 FileName = "colors" + ext,
@@ -856,7 +929,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 ColorManager.Export(rows, dialog.FileName, format);
-                TxtSummaryCount.Text = $"Exported {rows.Count:N0} rows to {Path.GetFileName(dialog.FileName)}";
+                TxtSummaryCount.Text = Loc.F("Str_Color_MsgExported", "Exported {0:N0} rows to {1}", rows.Count, Path.GetFileName(dialog.FileName));
                 UiMotion.Pop(SummaryPill);
             }
             catch (Exception ex)

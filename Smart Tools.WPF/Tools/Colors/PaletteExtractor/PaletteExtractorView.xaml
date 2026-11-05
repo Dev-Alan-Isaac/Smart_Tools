@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
     Loaded="Root_Loaded"
     Unloaded="Root_Unloaded">
@@ -17,6 +18,61 @@
     -->
 
     <UserControl.Resources>
+
+        <!--  One picture in the list on the Pictures card (same look as Image to Pixel)  -->
+        <DataTemplate x:Key="SourceTemplate" DataType="{x:Type models:PaletteSource}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileImageOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding ToolTipText}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="10.5"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveSource_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+        </DataTemplate>
 
         <Style x:Key="ValuePill" TargetType="Border">
             <Setter Property="Padding" Value="7,1" />
@@ -135,64 +191,43 @@
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="16,4,16,16">
 
-                            <!--  ============ IMAGE ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_PaletteExtractor_Image" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_Palette_ImageHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
-
-                                    <TextBlock
-                                        x:Name="TxtImageInfo"
-                                        Margin="0,0,0,10"
-                                        FontSize="11.5"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_Palette_NoImageInfo}"
-                                        TextTrimming="CharacterEllipsis" />
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="6" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button
-                                            x:Name="BtnLoadImage"
-                                            HorizontalAlignment="Stretch"
-                                            Click="BtnLoadImage_Click"
-                                            Style="{StaticResource PrimaryButtonStyle}">
-                                            <Grid HorizontalAlignment="Center">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <materialDesign:PackIcon
-                                                    Grid.Column="0"
-                                                    Width="15"
-                                                    Height="15"
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    Kind="FolderOpenOutline" />
-                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Palette_OpenImage}" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Button>
-                                        <Button
-                                            x:Name="BtnPasteImage"
-                                            Grid.Column="2"
-                                            Width="32"
-                                            Height="32"
-                                            Click="BtnPasteImage_Click"
-                                            Style="{StaticResource NeutralIconButtonStyle}"
-                                            ToolTip="{DynamicResource Str_Palette_PasteTooltip}">
+                            <!--  ============ PICTURES ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ctl:Tour.Key="Str_Tour_PaletteExtractor_Image"
+                                ctl:Tour.Order="1"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Palette_ImageHeader}"
+                                HeaderIcon="ImageMultipleOutline"
+                                ItemTemplate="{StaticResource SourceTemplate}"
+                                Mode="Files"
+                                PathsAdded="InputCard_PathsAdded">
+                                <controls:InputFolderCard.Options>
+                                    <Button
+                                        Margin="0,10,0,0"
+                                        Click="BtnPasteImage_Click"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Palette_PasteTooltip}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
                                             <materialDesign:PackIcon
                                                 Width="15"
                                                 Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
                                                 Kind="ContentPaste" />
-                                        </Button>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource Str_PaletteExtractor_PastePicture}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </controls:InputFolderCard.Options>
+                            </controls:InputFolderCard>
 
                             <!--  ============ EXTRACTION ============  -->
                             <Border Margin="0,0,0,4" ctl:Tour.Key="Str_Tour_PaletteExtractor_Extract" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
@@ -336,6 +371,12 @@
                                     Margin="6"
                                     RenderOptions.BitmapScalingMode="HighQuality"
                                     Stretch="Uniform" />
+
+                                <!--  Several pictures: a small contact sheet (built in code)  -->
+                                <UniformGrid
+                                    x:Name="PreviewGrid"
+                                    Margin="3"
+                                    Visibility="Collapsed" />
 
                                 <Grid x:Name="EmptyState" IsHitTestVisible="False">
                                     <Rectangle

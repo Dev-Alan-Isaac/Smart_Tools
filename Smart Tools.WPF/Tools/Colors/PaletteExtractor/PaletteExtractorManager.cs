@@ -369,10 +369,10 @@ namespace Smart_Tools.WPF.Controllers
 
         public static string FileFilterFor(PaletteExportFormat format) => format switch
         {
-            PaletteExportFormat.Css => "CSS file (*.css)|*.css",
-            PaletteExportFormat.Json => "JSON file (*.json)|*.json",
-            PaletteExportFormat.Png => "PNG image (*.png)|*.png",
-            _ => "Text file (*.txt)|*.txt",
+            PaletteExportFormat.Css => Loc.T("Str_PaletteExtractor_MsgCssFilter", "CSS file (*.css)|*.css"),
+            PaletteExportFormat.Json => Loc.T("Str_PaletteExtractor_MsgJsonFilter", "JSON file (*.json)|*.json"),
+            PaletteExportFormat.Png => Loc.T("Str_PaletteExtractor_MsgPngFilter", "PNG image (*.png)|*.png"),
+            _ => Loc.T("Str_PaletteExtractor_MsgTxtFilter", "Text file (*.txt)|*.txt"),
         };
 
         /// <summary>Writes a text export (not PNG) via a hidden temp file, then moves it into place. The caller's Save dialog already asked about replacing.</summary>
@@ -446,9 +446,7 @@ namespace Smart_Tools.WPF.Controllers
                     IgnoreNearWhite = options.IgnoreNearWhite,
                     IgnoreNearBlack = options.IgnoreNearBlack,
                 }, new JsonSerializerOptions { WriteIndented = true });
-                string temp = path + ".tmp";
-                File.WriteAllText(temp, json);
-                File.Move(temp, path, overwrite: true);
+                AtomicFile.WriteAllText(path, json);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

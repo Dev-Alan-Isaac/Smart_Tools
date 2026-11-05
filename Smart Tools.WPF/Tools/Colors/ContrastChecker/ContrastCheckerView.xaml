@@ -21,6 +21,13 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="PairGroupLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,10,0,6" />
+        </Style>
+
         <!--  A ready-made pair in the sidebar: shows "Aa" in its own colors.  -->
         <Style x:Key="PairChip" TargetType="Button">
             <Setter Property="Cursor" Value="Hand" />
@@ -78,7 +85,7 @@
                 <DataTrigger Binding="{Binding Pass}" Value="True">
                     <Setter TargetName="Pill" Property="Background" Value="{DynamicResource StatusSuccessBg}" />
                     <Setter TargetName="PillText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
-                    <Setter TargetName="PillText" Property="Text" Value="Pass" />
+                    <Setter TargetName="PillText" Property="Text" Value="{DynamicResource Str_Palette_Pass}" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -95,27 +102,98 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel>
-                    <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Pairs" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<Border ctl:Tour.Key="Str_Tour_ContrastChecker_Pairs" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_ContrastChecker_QuickPairs}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteSwatchOutline}" />
-                            <WrapPanel Margin="0,8,0,0">
-                                <Button Click="Pair_Click" Background="#FFFFFF" Foreground="#111827" Style="{StaticResource PairChip}" Tag="#111827|#FFFFFF" ToolTip="{DynamicResource Str_ContrastChecker_NearBlackOnWhite}" />
-                                <Button Click="Pair_Click" Background="#111827" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#111827" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnNearBlack}" />
-                                <Button Click="Pair_Click" Background="#F3F4F6" Foreground="#4B5563" Style="{StaticResource PairChip}" Tag="#4B5563|#F3F4F6" ToolTip="{DynamicResource Str_ContrastChecker_GreyOnLightGrey}" />
-                                <Button Click="Pair_Click" Background="#2563EB" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#2563EB" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnBlue}" />
-                                <Button Click="Pair_Click" Background="#FACC15" Foreground="#111827" Style="{StaticResource PairChip}" Tag="#111827|#FACC15" ToolTip="{DynamicResource Str_ContrastChecker_DarkOnYellow}" />
-                                <Button Click="Pair_Click" Background="#DC2626" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#DC2626" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnRed}" />
-                                <Button Click="Pair_Click" Background="#16A34A" Foreground="#FFFFFF" Style="{StaticResource PairChip}" Tag="#FFFFFF|#16A34A" ToolTip="{DynamicResource Str_ContrastChecker_WhiteOnGreen}" />
-                                <Button Click="Pair_Click" Background="#FDE68A" Foreground="#78350F" Style="{StaticResource PairChip}" Tag="#78350F|#FDE68A" ToolTip="{DynamicResource Str_ContrastChecker_BrownOnCream}" />
-                            </WrapPanel>
-                            <TextBlock Margin="2,4,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_ClickAPairTo}" />
+
+                            <!--  Ready-made pairs by use (built in code), then the user's own  -->
+                            <StackPanel x:Name="PairGroups" />
+
+                            <Grid Margin="0,2,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock VerticalAlignment="Bottom" Style="{StaticResource PairGroupLabel}" Text="{DynamicResource Str_ContrastChecker_GroupYours}" />
+                                <Button x:Name="BtnSavePair" Grid.Column="1" Width="28" Height="28" Margin="0,8,0,0" Click="BtnSavePair_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_ContrastChecker_SavePairTooltip}">
+                                    <materialDesign:PackIcon Width="15" Height="15" Kind="PlusCircleOutline" />
+                                </Button>
+                            </Grid>
+                            <WrapPanel x:Name="CustomPairPanel" />
+                            <TextBlock x:Name="TxtCustomHint" Margin="2,0,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_YoursHint}" />
+
+                            <TextBlock Margin="2,10,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_ClickAPairTo}" />
                         </StackPanel>
                     </Border>
 
                     <Border ctl:Tour.Key="Str_Tour_ContrastChecker_Rules" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_ContrastChecker_WhatPasses}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
-                            <TextBlock Margin="2,8,0,0" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_NormalTextNeedsAa}" />
+<Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Top" Background="{DynamicResource AccentColor}" CornerRadius="9">
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5" FontWeight="Bold" Foreground="White" Text="1" />
+                                </Border>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk1Title}" />
+                                    <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk1Body}" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Top" Background="{DynamicResource AccentColor}" CornerRadius="9">
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5" FontWeight="Bold" Foreground="White" Text="2" />
+                                </Border>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk2Title}" />
+                                    <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk2Body}" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Top" Background="{DynamicResource AccentColor}" CornerRadius="9">
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5" FontWeight="Bold" Foreground="White" Text="3" />
+                                </Border>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk3Title}" />
+                                    <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk3Body}" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Top" Background="{DynamicResource AccentColor}" CornerRadius="9">
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5" FontWeight="Bold" Foreground="White" Text="4" />
+                                </Border>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk4Title}" />
+                                    <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk4Body}" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="18" Height="18" HorizontalAlignment="Left" VerticalAlignment="Top" Background="{DynamicResource AccentColor}" CornerRadius="9">
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5" FontWeight="Bold" Foreground="White" Text="5" />
+                                </Border>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk5Title}" />
+                                    <TextBlock Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_ContrastChecker_Walk5Body}" />
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -227,6 +305,60 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <ContentControl Margin="0,0,0,6" Content="{DynamicResource Str_ContrastChecker_WcagChecks}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
+                            <TextBlock x:Name="TxtExplain" Margin="0,0,0,12" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+
+                            <!--  Where the pair sits between 1 : 1 and 21 : 1 (log scale, so the 3, 4.5 and 7 steps are easy to see)  -->
+                            <Grid Height="26" Margin="0,0,0,2">
+                                <Border Height="14" VerticalAlignment="Center" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" ClipToBounds="True" CornerRadius="7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="36*" />
+                                            <ColumnDefinition Width="13.4*" />
+                                            <ColumnDefinition Width="14.5*" />
+                                            <ColumnDefinition Width="36.1*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="{DynamicResource StatusErrorBg}" />
+                                        <Border Grid.Column="1" Background="{DynamicResource StatusWarningBg}" />
+                                        <Border Grid.Column="2" Background="{DynamicResource StatusSuccessBg}" />
+                                        <Border Grid.Column="3" Background="{DynamicResource StatusSuccessFg}" Opacity="0.55" />
+                                    </Grid>
+                                </Border>
+                                <Grid x:Name="ScaleMarkerHost" IsHitTestVisible="False" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition x:Name="MarkLeft" Width="0.5*" />
+                                        <ColumnDefinition x:Name="MarkRight" Width="0.5*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="5" Margin="0,0,-2.5,0" HorizontalAlignment="Right" Background="{DynamicResource TextPrimary}" BorderBrush="{DynamicResource CardBg}" BorderThickness="1" CornerRadius="3" />
+                                </Grid>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36*" />
+                                    <ColumnDefinition Width="13.4*" />
+                                    <ColumnDefinition Width="14.5*" />
+                                    <ColumnDefinition Width="36.1*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid>
+                                    <TextBlock HorizontalAlignment="Left" FontSize="10" Foreground="{DynamicResource TextSecondary}" Text="1" />
+                                    <TextBlock HorizontalAlignment="Right" FontSize="10" Foreground="{DynamicResource TextSecondary}" Text="3" />
+                                </Grid>
+                                <TextBlock Grid.Column="1" HorizontalAlignment="Right" FontSize="10" Foreground="{DynamicResource TextSecondary}" Text="4.5" />
+                                <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontSize="10" Foreground="{DynamicResource TextSecondary}" Text="7" />
+                                <TextBlock Grid.Column="3" HorizontalAlignment="Right" FontSize="10" Foreground="{DynamicResource TextSecondary}" Text="21" />
+                            </Grid>
+                            <Grid Margin="0,2,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36*" />
+                                    <ColumnDefinition Width="13.4*" />
+                                    <ColumnDefinition Width="14.5*" />
+                                    <ColumnDefinition Width="36.1*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock HorizontalAlignment="Center" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusErrorFg}" Text="{DynamicResource Str_Palette_Fail}" />
+                                <TextBlock Grid.Column="1" HorizontalAlignment="Center" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" Text="{DynamicResource Str_ContrastChecker_ScaleLarge}" />
+                                <TextBlock Grid.Column="2" HorizontalAlignment="Center" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Text="AA" />
+                                <TextBlock Grid.Column="3" HorizontalAlignment="Center" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Text="AAA" />
+                            </Grid>
+
                             <ItemsControl ctl:Tour.Key="Str_Tour_ContrastChecker_Checks" ctl:Tour.Order="4" x:Name="CheckList" ItemTemplate="{StaticResource CheckTemplate}" />
 
                             <TextBlock Margin="0,20,0,6" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ContrastChecker_ClosestTextColorThat}" />

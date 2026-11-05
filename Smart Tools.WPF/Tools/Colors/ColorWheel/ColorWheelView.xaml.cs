@@ -272,7 +272,7 @@ namespace Smart_Tools.WPF.Views
         private void ResetHoverPill()
         {
             WheelHoverSwatch.Visibility = Visibility.Collapsed;
-            TxtWheelHover.Text = "Click a colour to select it · right-click: gradient end";
+            TxtWheelHover.Text = Loc.T("Str_ColorWheel_MsgHover", "Click a colour to select it · right-click: gradient end");
             TxtWheelHover.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
         }
 
@@ -287,7 +287,7 @@ namespace Smart_Tools.WPF.Views
             int index = IndexAt(e);
             if (index < 0) return;
             SetGradientColor(isStart: false, _wheel[index].Color);
-            SetStatus($"{_wheel[index].Name} set as the gradient end", StatusKind.Success);
+            SetStatus(Loc.F("Str_ColorWheel_MsgSetEnd", "{0} set as the gradient end", _wheel[index].Name), StatusKind.Success);
         }
 
         private void BtnUseAsStart_Click(object sender, RoutedEventArgs e)
@@ -360,7 +360,7 @@ namespace Smart_Tools.WPF.Views
                     Background = ToBrush(color),
                     BorderBrush = System.Windows.Media.Brushes.Transparent,
                     Padding = new Thickness(4),
-                    ToolTip = $"Click to copy {color.Hex}",
+                    ToolTip = Loc.F("Str_ColorWheel_MsgClickCopy", "Click to copy {0}", color.Hex),
                 };
                 tile.SetResourceReference(StyleProperty, "ColorTileStyle");
                 tile.Click += (_, _) => CopyText(color.Hex, CopiedHex(color.Hex));
@@ -519,7 +519,7 @@ namespace Smart_Tools.WPF.Views
                     Padding = new Thickness(2),
                     Background = ToBrush(color),
                     BorderBrush = System.Windows.Media.Brushes.Transparent,
-                    ToolTip = $"Click to copy {color.Hex}",
+                    ToolTip = Loc.F("Str_ColorWheel_MsgClickCopy", "Click to copy {0}", color.Hex),
                     Content = new TextBlock
                     {
                         Text = color.Hex,
@@ -539,7 +539,7 @@ namespace Smart_Tools.WPF.Views
             var dialog = new SaveFileDialog
             {
                 Title = TryString("Str_ColorWheel_SaveDialogTitle", "Save color wheel and gradient"),
-                Filter = "PNG image|*.png",
+                Filter = Loc.T("Str_ColorWheel_MsgPngFilter", "PNG image|*.png"),
                 DefaultExt = ".png",
                 FileName = "color-wheel-gradient.png",
             };

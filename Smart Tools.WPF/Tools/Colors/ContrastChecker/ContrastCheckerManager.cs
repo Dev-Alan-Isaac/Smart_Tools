@@ -9,6 +9,9 @@ namespace Smart_Tools.WPF.Controllers
     {
         public string Foreground { get; set; } = "#1F2937";
         public string Background { get; set; } = "#FFFFFF";
+
+        /// <summary>The user's own pairs, "#text|#background" each, oldest first.</summary>
+        public List<string> SavedPairs { get; set; } = new();
     }
 
     /// <summary>
@@ -25,11 +28,11 @@ namespace Smart_Tools.WPF.Controllers
             double ratio = ColorManager.Contrast(foreground, background).Ratio;
             var checks = new List<ContrastCheck>
             {
-                new("Normal text - AA", "4.5 : 1", ratio >= 4.5),
-                new("Normal text - AAA", "7 : 1", ratio >= 7),
-                new("Large text - AA", "3 : 1", ratio >= 3),
-                new("Large text - AAA", "4.5 : 1", ratio >= 4.5),
-                new("Icons, borders, inputs (AA)", "3 : 1", ratio >= 3),
+                new(Loc.T("Str_ContrastChecker_MsgNormalAa", "Normal text - AA"), "4.5 : 1", ratio >= 4.5),
+                new(Loc.T("Str_ContrastChecker_MsgNormalAaa", "Normal text - AAA"), "7 : 1", ratio >= 7),
+                new(Loc.T("Str_ContrastChecker_MsgLargeAa", "Large text - AA"), "3 : 1", ratio >= 3),
+                new(Loc.T("Str_ContrastChecker_MsgLargeAaa", "Large text - AAA"), "4.5 : 1", ratio >= 4.5),
+                new(Loc.T("Str_ContrastChecker_MsgIcons", "Icons, borders, inputs (AA)"), "3 : 1", ratio >= 3),
             };
             return (ratio, checks);
         }

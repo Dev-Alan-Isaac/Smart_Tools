@@ -212,7 +212,7 @@ namespace Smart_Tools.WPF.Controllers
                 double r = Parse(rgb.Groups[1].Value), g = Parse(rgb.Groups[2].Value), b = Parse(rgb.Groups[3].Value);
                 if (r > 255 || g > 255 || b > 255)
                 {
-                    error = "RGB values must be 0-255";
+                    error = Loc.T("Str_Color_MsgRgbRange", "RGB values must be 0-255");
                     return false;
                 }
                 color = new RgbColor((byte)Math.Round(r), (byte)Math.Round(g), (byte)Math.Round(b));
@@ -225,7 +225,7 @@ namespace Smart_Tools.WPF.Controllers
                 double h = Parse(hsl.Groups[1].Value), sat = Parse(hsl.Groups[2].Value), l = Parse(hsl.Groups[3].Value);
                 if (h > 360 || sat > 100 || l > 100)
                 {
-                    error = "HSL needs hue 0-360 and saturation/lightness 0-100%";
+                    error = Loc.T("Str_Color_MsgHslRange", "HSL needs hue 0-360 and saturation/lightness 0-100%");
                     return false;
                 }
                 color = HslToRgb(new HslColor(h, sat, l));
@@ -236,8 +236,8 @@ namespace Smart_Tools.WPF.Controllers
                 return true;
 
             error = s.StartsWith('#') || s.All(Uri.IsHexDigit)
-                ? "Hex colors need 3, 4, 6 or 8 digits"
-                : "Not a recognised color - try #1A2B3C, rgb(26, 43, 60), hsl(210, 40%, 17%) or a name like 'tomato'";
+                ? Loc.T("Str_Color_MsgHexDigits", "Hex colors need 3, 4, 6 or 8 digits")
+                : Loc.T("Str_Color_MsgNotRecognised", "Not a recognised color - try #1A2B3C, rgb(26, 43, 60), hsl(210, 40%, 17%) or a name like 'tomato'");
             return false;
         }
 
@@ -344,7 +344,7 @@ namespace Smart_Tools.WPF.Controllers
                         Hex = rgb.Hex,
                         Rgb = ToRgbTriplet(rgb),
                         Hsl = ToHslTriplet(rgb),
-                        Message = "Converted",
+                        Message = Loc.T("Str_Color_MsgRowConverted", "Converted"),
                     });
                 }
                 else
@@ -379,9 +379,9 @@ namespace Smart_Tools.WPF.Controllers
 
         public static string FileFilterFor(ColorExportFormat format) => format switch
         {
-            ColorExportFormat.Json => "JSON file (*.json)|*.json",
-            ColorExportFormat.Xml => "XML file (*.xml)|*.xml",
-            _ => "CSV file (*.csv)|*.csv",
+            ColorExportFormat.Json => Loc.T("Str_Color_MsgJsonFilter", "JSON file (*.json)|*.json"),
+            ColorExportFormat.Xml => Loc.T("Str_Color_MsgXmlFilter", "XML file (*.xml)|*.xml"),
+            _ => Loc.T("Str_Color_MsgCsvFilter", "CSV file (*.csv)|*.csv"),
         };
 
         public static void Export(IReadOnlyList<BatchColorRow> rows, string path, ColorExportFormat format)
@@ -393,19 +393,20 @@ namespace Smart_Tools.WPF.Controllers
                 _ => ToCsv(rows),
             };
             // UTF-8 with BOM for CSV so Excel shows "°" correctly; plain UTF-8 otherwise.
-            File.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: format == ColorExportFormat.Csv));
+            AtomicFile.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: format == ColorExportFormat.Csv));
         }
 
         public static string ToCsv(IReadOnlyList<BatchColorRow> rows)
         {
-            var sb = new StringBuilder("Input,Hex,RGB,HSL,Status\r\n");
+            var sb = new StringBuilder("Input,Hex,RGB,HSL,Status,Source\r\n");
             foreach (var row in rows)
             {
                 sb.Append(CsvField(row.Input)).Append(',')
                   .Append(CsvField(row.Hex)).Append(',')
                   .Append(CsvField(row.Rgb)).Append(',')
                   .Append(CsvField(row.Hsl)).Append(',')
-                  .Append(CsvField(row.Message))
+                  .Append(CsvField(row.Message)).Append(',')
+                  .Append(CsvField(row.Source))
                   .Append("\r\n");
             }
             return sb.ToString();
@@ -421,6 +422,7 @@ namespace Smart_Tools.WPF.Controllers
                 hsl = r.Hsl,
                 status = r.Status == ColorRowStatus.Converted ? "Converted" : "Failed",
                 message = r.Message,
+                source = r.Source,
             });
 
             return JsonSerializer.Serialize(items, new JsonSerializerOptions
@@ -446,6 +448,7 @@ namespace Smart_Tools.WPF.Controllers
                     w.WriteElementString("Hsl", r.Hsl);
                     w.WriteElementString("Status", r.Status == ColorRowStatus.Converted ? "Converted" : "Failed");
                     w.WriteElementString("Message", XmlSafe(r.Message));
+                    w.WriteElementString("Source", XmlSafe(r.Source));
                     w.WriteEndElement();
                 }
                 w.WriteEndElement();

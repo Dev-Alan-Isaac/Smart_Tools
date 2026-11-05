@@ -2,6 +2,7 @@ using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -40,7 +41,14 @@ namespace Smart_Tools.WPF.Views
         private static readonly string[] ImageExtensions =
             { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".ico", ".jxr", ".wdp" };
 
-        private const int PreviewLongSide = 1600;
+        private const int PreviewLongSide = 900;   // pictures stay in memory while they are listed
+        private const int MaxPictures = 40;
+        private const int MaxTiles = 12;           // thumbnails in the contact sheet
+
+        private readonly ObservableCollection<PaletteSource> _sources = new();
+        private readonly SemaphoreSlim _loadGate = new(1, 1);
+        private int _pasteCount;
+        private string _note = "";       // appended to the next status line (pictures skipped, list full)
 
         private readonly ColorHistoryStore _history = new();
         private readonly PaletteExtractOptions _options;
@@ -70,6 +78,11 @@ namespace Smart_Tools.WPF.Views
             _options = new PaletteExtractOptions();
             _debounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
             _debounce.Tick += (_, _) => { _debounce.Stop(); _ = RunExtractAsync(); };
+
+            InputCard.ItemsSource = _sources;
+            InputCard.FileFilterProvider = () => Loc.F("Str_PaletteExtractor_MsgImageFilter2", "Pictures|{0}|All files|*.*", PictureFilter);
+            _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
+            InputCard.SetEmpty(true);
 
             PreviewKeyDown += Root_PreviewKeyDown;
             _viewConstructed = true;
@@ -225,18 +238,25 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Getting a picture in
+        //  Getting pictures in
         // =================================================================
 
-        private void BtnLoadImage_Click(object sender, RoutedEventArgs e)
+        private const string PictureFilter = "*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.jxr;*.wdp";
+
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e) => _ = AddPathsAsync(e.Paths);
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog
-            {
-                Title = S("Str_Palette_OpenImage"),
-                Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.jxr;*.wdp|All files|*.*",
-            };
-            if (dialog.ShowDialog() == true)
-                _ = LoadImageFileAsync(dialog.FileName);
+            _sources.Clear();
+            _note = "";
+            ClearResult();
+        }
+
+        private void BtnRemoveSource_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not PaletteSource source) return;
+            _sources.Remove(source);
+            RefreshCombined();
         }
 
         private void BtnPasteImage_Click(object sender, RoutedEventArgs e) => PasteImage();
@@ -254,7 +274,7 @@ namespace Smart_Tools.WPF.Views
         private static bool ClipboardHasPicture()
         {
             try { return Clipboard.ContainsImage() || Clipboard.ContainsFileDropList(); }
-            catch (Exception) { return false; }
+            catch (System.Runtime.InteropServices.ExternalException) { return false; }
         }
 
         private void PasteImage()
@@ -264,20 +284,19 @@ namespace Smart_Tools.WPF.Views
                 if (Clipboard.ContainsImage() && Clipboard.GetImage() is BitmapSource image)
                 {
                     image.Freeze();
-                    _ = UseBitmapAsync(image, S("Str_Palette_Pasted"));
+                    _ = UseBitmapAsync(image);
                     return;
                 }
 
-                if (Clipboard.ContainsFileDropList()
-                    && Clipboard.GetFileDropList().Cast<string>().FirstOrDefault(IsImageFile) is string file)
+                if (Clipboard.ContainsFileDropList())
                 {
-                    _ = LoadImageFileAsync(file);
+                    _ = AddPathsAsync(Clipboard.GetFileDropList().Cast<string>().ToList());
                     return;
                 }
 
                 SetStatus(S("Str_Palette_NoClipboardImage"), StatusKind.Warning, PackIconKind.ContentPaste);
             }
-            catch (Exception)
+            catch (System.Runtime.InteropServices.ExternalException)
             {
                 SetStatus(S("Str_Palette_NoClipboardImage"), StatusKind.Error, PackIconKind.AlertCircleOutline);
             }
@@ -286,96 +305,298 @@ namespace Smart_Tools.WPF.Views
         private static bool IsImageFile(string path) =>
             ImageExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
 
-        private async Task LoadImageFileAsync(string path)
+        /// <summary>Files and folders in, pictures out (a folder gives its pictures; subfolders only when the card's box is ticked).</summary>
+        private static List<string> ExpandPictures(IEnumerable<string> paths, bool subfolders)
         {
-            int id = ++_loadId;
-            SetWorking(true);
-            try
+            var found = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var options = new EnumerationOptions { RecurseSubdirectories = subfolders, IgnoreInaccessible = true };
+
+            foreach (string path in paths)
             {
-                var (preview, pixels, w, h) = await Task.Run(() =>
+                if (found.Count > MaxPictures) break;
+                if (Directory.Exists(path))
                 {
-                    // Open through a stream, never new Uri(path): a '#' or '%' in the name breaks a Uri.
-                    BitmapImage bitmap;
-                    using (var header = File.OpenRead(path))
+                    foreach (string file in Directory.EnumerateFiles(path, "*", options).Where(IsImageFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
                     {
-                        var frame = BitmapDecoder.Create(header, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None).Frames[0];
-                        int wide = frame.PixelWidth, high = frame.PixelHeight;
-
-                        bitmap = new BitmapImage();
-                        using var stream = File.OpenRead(path);
-                        bitmap.BeginInit();
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
-                        bitmap.StreamSource = stream;
-                        if (Math.Max(wide, high) > PreviewLongSide)
-                        {
-                            if (wide >= high) bitmap.DecodePixelWidth = PreviewLongSide;
-                            else bitmap.DecodePixelHeight = PreviewLongSide;
-                        }
-                        bitmap.EndInit();
-                        bitmap.Freeze();
+                        if (found.Count > MaxPictures) break;
+                        if (seen.Add(file)) found.Add(file);
                     }
-                    var sampled = PaletteExtractorManager.SamplePixels(bitmap);
-                    return (bitmap, sampled.Pixels, sampled.Width, sampled.Height);
-                });
-
-                if (id != _loadId) return; // a newer load took over
-                AcceptImage(preview, pixels, w, h, Path.GetFileName(path));
+                }
+                else if (File.Exists(path) && IsImageFile(path) && seen.Add(path))
+                {
+                    found.Add(path);
+                }
             }
-            catch (Exception ex)
-            {
-                if (id != _loadId) return;
-                SetWorking(false);
-                SetStatus(SF("Str_Palette_LoadFailed", ex.Message), StatusKind.Error, PackIconKind.AlertCircleOutline);
-            }
+            return found;
         }
 
-        private async Task UseBitmapAsync(BitmapSource bitmap, string name)
+        private async Task AddPathsAsync(IEnumerable<string> paths)
         {
-            int id = ++_loadId;
-            SetWorking(true);
+            var wanted = paths.ToList();
+            bool subfolders = InputCard.IncludeSubfolders;
+            List<string> files;
             try
             {
-                var (pixels, w, h) = await Task.Run(() => PaletteExtractorManager.SamplePixels(bitmap));
-                if (id != _loadId) return;
-                AcceptImage(bitmap, pixels, w, h, name);
+                files = await Task.Run(() => ExpandPictures(wanted, subfolders));
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                if (id != _loadId) return;
-                SetWorking(false);
                 SetStatus(SF("Str_Palette_LoadFailed", ex.Message), StatusKind.Error, PackIconKind.AlertCircleOutline);
+                return;
+            }
+
+            if (files.Count == 0)
+            {
+                SetStatus(Loc.T("Str_PaletteExtractor_MsgNoPictures", "No pictures were found there."), StatusKind.Warning, PackIconKind.ImageOffOutline);
+                return;
+            }
+
+            var fresh = new List<PaletteSource>();
+            bool full = false;
+            foreach (string file in files)
+            {
+                if (_sources.Concat(fresh).Any(s => string.Equals(s.FullPath, file, StringComparison.OrdinalIgnoreCase))) continue;
+                if (_sources.Count + fresh.Count >= MaxPictures) { full = true; break; }
+                fresh.Add(new PaletteSource { FullPath = file, Name = Path.GetFileName(file), Subtitle = Loc.T("Str_PaletteExtractor_MsgReading", "Reading…") });
+            }
+            if (full) _note = Loc.F("Str_PaletteExtractor_MsgListFull", "the list holds {0} pictures at most", MaxPictures);
+            if (fresh.Count == 0)
+            {
+                if (full) SetStatus(_note, StatusKind.Warning, PackIconKind.AlertCircleOutline);
+                return;
+            }
+
+            foreach (var source in fresh) _sources.Add(source);
+            await LoadAsync(fresh);
+        }
+
+        /// <summary>Reads each new picture (preview + sampled pixels) one after another, then rebuilds the palette from the whole list.</summary>
+        private async Task LoadAsync(IReadOnlyList<PaletteSource> fresh)
+        {
+            await _loadGate.WaitAsync();
+            try
+            {
+                SetWorking(true);
+                int failed = 0;
+                string lastError = "";
+                foreach (var source in fresh)
+                {
+                    if (!_sources.Contains(source)) continue;   // taken off the list meanwhile
+                    try
+                    {
+                        var (preview, pixels, w, h) = await Task.Run(() => DecodeFile(source.FullPath));
+                        source.Preview = preview;
+                        source.Pixels = pixels;
+                        source.Subtitle = $"{w} × {h}";
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException or ArgumentException)
+                    {
+                        failed++;
+                        lastError = ex.Message;
+                        _sources.Remove(source);
+                    }
+                }
+
+                if (failed > 0)
+                    _note = (_note.Length > 0 ? _note + " · " : "") + (failed == 1
+                        ? Loc.F("Str_PaletteExtractor_MsgSkippedOne", "1 picture couldn't be read ({0})", lastError)
+                        : Loc.F("Str_PaletteExtractor_MsgSkippedMany", "{0} pictures couldn't be read", failed));
+                RefreshCombined();
+            }
+            finally
+            {
+                _loadGate.Release();
             }
         }
 
-        private void AcceptImage(BitmapSource preview, byte[] pixels, int w, int h, string name)
+        /// <summary>Preview (long side capped) and the downsized pixels. Opens through a stream: a '#' or '%' in the name breaks a Uri.</summary>
+        private static (BitmapSource Preview, byte[] Pixels, int Width, int Height) DecodeFile(string path)
         {
-            _pixels = pixels;
-            _pixelsWidth = w;
-            _pixelsHeight = h;
-            _imageName = name;
+            int wide, high;
+            using (var header = File.OpenRead(path))
+            {
+                var frame = BitmapDecoder.Create(header, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None).Frames[0];
+                wide = frame.PixelWidth;
+                high = frame.PixelHeight;
+            }
 
-            PreviewImage.Source = preview;
-            EmptyState.Visibility = Visibility.Collapsed;
-            UiMotion.FadeIn(PreviewImage);
-            TxtImageInfo.Text = $"{name} · {preview.PixelWidth} × {preview.PixelHeight}";
+            var bitmap = new BitmapImage();
+            using var stream = File.OpenRead(path);
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.CreateOptions = BitmapCreateOptions.IgnoreColorProfile;
+            bitmap.StreamSource = stream;
+            if (Math.Max(wide, high) > PreviewLongSide)
+            {
+                if (wide >= high) bitmap.DecodePixelWidth = PreviewLongSide;
+                else bitmap.DecodePixelHeight = PreviewLongSide;
+            }
+            bitmap.EndInit();
+            bitmap.Freeze();
+
+            var sampled = PaletteExtractorManager.SamplePixels(bitmap);
+            return (bitmap, sampled.Pixels, wide, high);
+        }
+
+        private async Task UseBitmapAsync(BitmapSource bitmap)
+        {
+            var source = new PaletteSource
+            {
+                FullPath = "",
+                Name = _sources.Any(s => s.FullPath.Length == 0)
+                    ? S("Str_Palette_Pasted") + " " + (++_pasteCount + 1).ToString(CultureInfo.CurrentCulture)
+                    : S("Str_Palette_Pasted"),
+                Subtitle = $"{bitmap.PixelWidth} × {bitmap.PixelHeight}",
+            };
+            if (_sources.Count >= MaxPictures)
+            {
+                SetStatus(Loc.F("Str_PaletteExtractor_MsgListFull", "the list holds {0} pictures at most", MaxPictures), StatusKind.Warning, PackIconKind.AlertCircleOutline);
+                return;
+            }
+
+            await _loadGate.WaitAsync();
+            try
+            {
+                SetWorking(true);
+                var (pixels, _, _) = await Task.Run(() => PaletteExtractorManager.SamplePixels(bitmap));
+                source.Preview = bitmap;
+                source.Pixels = pixels;
+                _sources.Add(source);
+                RefreshCombined();
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or NotSupportedException)
+            {
+                SetWorking(false);
+                SetStatus(SF("Str_Palette_LoadFailed", ex.Message), StatusKind.Error, PackIconKind.AlertCircleOutline);
+            }
+            finally
+            {
+                _loadGate.Release();
+            }
+        }
+
+        /// <summary>Shows the pictures and (re)starts the palette. One palette comes from every listed picture together.</summary>
+        private void RefreshCombined()
+        {
+            var ready = _sources.Where(s => s.Pixels != null).ToList();
+            if (ready.Count == 0)
+            {
+                ClearResult();
+                return;
+            }
+
+            ShowPreview(ready);
+
+            if (ready.Count == 1)
+            {
+                _pixels = ready[0].Pixels;
+                _pixelsWidth = ready[0].Pixels!.Length / 4;
+                _pixelsHeight = 1;
+                _imageName = ready[0].Name;
+            }
+            else
+            {
+                int total = ready.Sum(s => s.Pixels!.Length);
+                var all = new byte[total];
+                int at = 0;
+                foreach (var s in ready)
+                {
+                    Buffer.BlockCopy(s.Pixels!, 0, all, at, s.Pixels!.Length);
+                    at += s.Pixels!.Length;
+                }
+                _pixels = all;
+                _pixelsWidth = total / 4;
+                _pixelsHeight = 1;
+                _imageName = S("Str_PaletteExtractor_CombinedName");
+            }
 
             _ = RunExtractAsync();
         }
 
-        // ---- drag and drop ------------------------------------------------
+        private void ShowPreview(IReadOnlyList<PaletteSource> ready)
+        {
+            EmptyState.Visibility = Visibility.Collapsed;
+            if (ready.Count == 1)
+            {
+                PreviewGrid.Visibility = Visibility.Collapsed;
+                PreviewGrid.Children.Clear();
+                PreviewImage.Source = ready[0].Preview;
+                PreviewImage.Visibility = Visibility.Visible;
+                UiMotion.FadeIn(PreviewImage);
+                return;
+            }
 
-        private static string? DroppedImage(DragEventArgs e) =>
-            e.Data.GetData(DataFormats.FileDrop) is string[] files ? files.FirstOrDefault(IsImageFile) : null;
+            PreviewImage.Visibility = Visibility.Collapsed;
+            PreviewImage.Source = null;
+            PreviewGrid.Children.Clear();
+            int shown = Math.Min(ready.Count, MaxTiles);
+            PreviewGrid.Columns = shown <= 4 ? 2 : shown <= 9 ? 3 : 4;
+            for (int i = 0; i < shown; i++)
+            {
+                var tile = new Grid { Margin = new Thickness(3), ToolTip = ready[i].Name };
+                tile.Children.Add(new System.Windows.Controls.Image { Source = ready[i].Preview, Stretch = Stretch.Uniform });
+                if (i == shown - 1 && ready.Count > shown)
+                {
+                    var more = new Border { Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(150, 0, 0, 0)), CornerRadius = new CornerRadius(6) };
+                    more.Child = new TextBlock
+                    {
+                        Text = "+" + (ready.Count - shown + 1).ToString(CultureInfo.CurrentCulture),
+                        Foreground = System.Windows.Media.Brushes.White,
+                        FontWeight = FontWeights.SemiBold,
+                        FontSize = 16,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
+                    tile.Children.Add(more);
+                }
+                PreviewGrid.Children.Add(tile);
+            }
+            PreviewGrid.Visibility = Visibility.Visible;
+            UiMotion.FadeIn(PreviewGrid);
+        }
+
+        /// <summary>Nothing listed: back to the empty page.</summary>
+        private void ClearResult()
+        {
+            try { _extractCts?.Cancel(); } catch (ObjectDisposedException) { }
+            _pixels = null;
+            _result = null;
+            _selected = -1;
+            _imageName = "";
+
+            PreviewImage.Source = null;
+            PreviewGrid.Children.Clear();
+            PreviewGrid.Visibility = Visibility.Collapsed;
+            EmptyState.Visibility = Visibility.Visible;
+            ShareBar.Children.Clear();
+            ShareBar.ColumnDefinitions.Clear();
+            SwatchPanel.Children.Clear();
+            ExportPanel.Visibility = Visibility.Collapsed;
+            SelectedPanel.Visibility = Visibility.Collapsed;
+            VariantsPanel.Visibility = Visibility.Collapsed;
+            TxtVariantsHint.Visibility = Visibility.Visible;
+            ContrastPanel.Visibility = Visibility.Collapsed;
+            TxtContrastHint.Visibility = Visibility.Visible;
+            SetWorking(false);
+            SetStatus(S("Str_Palette_Ready"), StatusKind.Info, PackIconKind.InformationOutline);
+        }
+
+        // ---- drag and drop (the big picture area takes several files or folders) ----
+
+        private static string[] DroppedPaths(DragEventArgs e) =>
+            e.Data.GetData(DataFormats.FileDrop) is string[] files
+                ? files.Where(f => Directory.Exists(f) || IsImageFile(f)).ToArray()
+                : Array.Empty<string>();
 
         private void DropArea_DragEnter(object sender, DragEventArgs e)
         {
-            if (DroppedImage(e) != null) UiMotion.FadeVisibility(DropHighlight, true);
+            if (DroppedPaths(e).Length > 0) UiMotion.FadeVisibility(DropHighlight, true);
         }
 
         private void DropArea_DragOver(object sender, DragEventArgs e)
         {
-            e.Effects = DroppedImage(e) != null ? DragDropEffects.Copy : DragDropEffects.None;
+            e.Effects = DroppedPaths(e).Length > 0 ? DragDropEffects.Copy : DragDropEffects.None;
             e.Handled = true;
         }
 
@@ -389,8 +610,8 @@ namespace Smart_Tools.WPF.Views
         private void DropArea_Drop(object sender, DragEventArgs e)
         {
             UiMotion.FadeVisibility(DropHighlight, false);
-            if (DroppedImage(e) is string file)
-                _ = LoadImageFileAsync(file);
+            string[] paths = DroppedPaths(e);
+            if (paths.Length > 0) _ = AddPathsAsync(paths);
             e.Handled = true;
         }
 
@@ -486,6 +707,9 @@ namespace Smart_Tools.WPF.Views
             string status = SF("Str_Palette_StatusColors", result.Colors.Count, result.CountedPixels.ToString("N0", CultureInfo.CurrentCulture));
             if (result.SkippedPixels > 0)
                 status += " · " + SF("Str_Palette_StatusSkipped", result.SkippedPixels.ToString("N0", CultureInfo.CurrentCulture));
+            int pictures = _sources.Count(s => s.Pixels != null);
+            if (pictures > 1) status += " · " + Loc.F("Str_PaletteExtractor_MsgFromPictures", "from {0} pictures", pictures);
+            if (_note.Length > 0) { status += " · " + _note; _note = ""; }
             SetStatus(status, StatusKind.Success, PackIconKind.CheckCircleOutline);
 
             BuildContrastPickers(result);

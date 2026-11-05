@@ -135,11 +135,11 @@ namespace Smart_Tools.WPF.Controllers
 
         public static string Describe(ColorHarmony harmony) => harmony switch
         {
-            ColorHarmony.Complementary => "Opposite on the wheel - maximum contrast.",
-            ColorHarmony.Analogous => "Neighbours on the wheel - calm and cohesive.",
-            ColorHarmony.Triadic => "Three evenly spaced colors - lively but balanced.",
-            ColorHarmony.SplitComplementary => "A color plus the two beside its opposite - contrast with less tension.",
-            ColorHarmony.Tetradic => "Four colors in a square - rich; let one dominate.",
+            ColorHarmony.Complementary => Loc.T("Str_ColorWheel_MsgComplementary", "Opposite on the wheel - maximum contrast."),
+            ColorHarmony.Analogous => Loc.T("Str_ColorWheel_MsgAnalogous", "Neighbours on the wheel - calm and cohesive."),
+            ColorHarmony.Triadic => Loc.T("Str_ColorWheel_MsgTriadic", "Three evenly spaced colors - lively but balanced."),
+            ColorHarmony.SplitComplementary => Loc.T("Str_ColorWheel_MsgSplit", "A color plus the two beside its opposite - contrast with less tension."),
+            ColorHarmony.Tetradic => Loc.T("Str_ColorWheel_MsgTetradic", "Four colors in a square - rich; let one dominate."),
             _ => "",
         };
 

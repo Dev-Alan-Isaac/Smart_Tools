@@ -498,14 +498,14 @@
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="14" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <!--  ========== Wheel + selection + harmony + legend ==========  -->
                 <Border
-                    Grid.Row="0"
+                    Grid.Row="2"
                     ctl:Tour.Key="Str_Tour_ColorWheel_Stage"
                     ctl:Tour.Order="1"
                     Style="{StaticResource CardStyle}">
@@ -687,7 +687,7 @@
 
                 <!--  ========== Gradient ==========  -->
                 <Border
-                    Grid.Row="2"
+                    Grid.Row="0"
                     ctl:Tour.Key="Str_Tour_ColorWheel_Strip"
                     ctl:Tour.Order="5"
                     Style="{StaticResource CardStyle}">

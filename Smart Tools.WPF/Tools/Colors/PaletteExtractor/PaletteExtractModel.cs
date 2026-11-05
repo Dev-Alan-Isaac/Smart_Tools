@@ -1,5 +1,35 @@
+using System.ComponentModel;
+using System.IO;
+using System.Windows.Media.Imaging;
+
 namespace Smart_Tools.WPF.Models
 {
+    /// <summary>One picture in the Palette Extractor's list. The view fills the decoded data once the file is read.</summary>
+    public sealed class PaletteSource : INotifyPropertyChanged
+    {
+        private string _subtitle = "";
+
+        /// <summary>The file, or "" for a picture pasted from the clipboard.</summary>
+        public required string FullPath { get; init; }
+        public required string Name { get; init; }
+
+        public string Subtitle
+        {
+            get => _subtitle;
+            set { if (_subtitle != value) { _subtitle = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Subtitle))); } }
+        }
+
+        /// <summary>What the preview shows (null until decoded).</summary>
+        public BitmapSource? Preview { get; set; }
+
+        /// <summary>The downsized BGRA pixels the palette is computed from.</summary>
+        public byte[]? Pixels { get; set; }
+
+        public string ToolTipText => FullPath.Length > 0 ? FullPath : Name;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
+
     // =====================================================================
     //  Image Color Palette Extractor data model. Plain data only - no WPF
     //  brushes, no I/O. Colours are RgbColor (see ColorModel.cs).
