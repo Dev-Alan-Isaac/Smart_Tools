@@ -744,9 +744,11 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         item.Status = PdfItemStatus.Skipped;
                         item.Result = "No saving";
-                        item.Message = outcome.ImagesRecompressed == 0
-                            ? "Already compact - no pictures that could be made smaller, so no copy was saved."
-                            : "A copy wouldn't be smaller, so none was saved.";
+                        item.Message = outcome.ImagesRecompressed > 0
+                            ? "A copy wouldn't be smaller, so none was saved."
+                            : outcome.ImagesKept == 0
+                                ? "No pictures found in this PDF (it is text and shapes only), so there is nothing to shrink. No copy was saved."
+                                : $"{outcome.ImagesKept:N0} {PdfToolText.Plural(outcome.ImagesKept, "picture was", "pictures were")} found but none could be made smaller (already tight, or a kind that is left alone). Try Strong. No copy was saved.";
                         result.Skipped++;
                     }
                     else

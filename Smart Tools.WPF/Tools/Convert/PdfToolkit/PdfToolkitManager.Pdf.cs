@@ -134,7 +134,8 @@ namespace Smart_Tools.WPF.Controllers
                         PdfArray { Elements.Count: 1 } a => (Resolve(a.Elements[0]) as PdfName)?.Value,
                         _ => null,
                     };
-                    if (name != "/DCTDecode") return false;
+                    bool isFlate = name == "/FlateDecode";
+                    if (name != "/DCTDecode" && !isFlate) return false;
 
                     // Leave anything a re-encode could change the look of.
                     foreach (string key in new[] { "/DecodeParms", "/Decode", "/Mask", "/ImageMask", "/Alternates", "/OC" })
@@ -144,8 +145,9 @@ namespace Smart_Tools.WPF.Controllers
                     bool? gray = ColourSpaceIsGray(Resolve(image.Elements["/ColorSpace"]));
                     if (gray == null) return false;
 
-                    using var picture = new MagickImage(raw);
-                    if (picture.ColorSpace == ImageMagick.ColorSpace.CMYK) return false;
+                    // Scans and exported pages are often plain (Flate) pixels, not JPEGs: turn them into a JPEG, which is far smaller for photos and scans.
+                    using var picture = isFlate ? ReadFlatePixels(image, gray.Value) : new MagickImage(raw);
+                    if (picture == null || picture.ColorSpace == ImageMagick.ColorSpace.CMYK) return false;
 
                     uint width = picture.Width, height = picture.Height;
                     if (Math.Max(width, height) > maxSide)
@@ -169,6 +171,7 @@ namespace Smart_Tools.WPF.Controllers
                     }
 
                     image.Stream.Value = smaller;
+                    if (isFlate) image.Elements.SetName("/Filter", "/DCTDecode");
                     image.Elements.SetInteger("/Length", smaller.Length);
                     image.Elements.SetInteger("/Width", (int)picture.Width);
                     image.Elements.SetInteger("/Height", (int)picture.Height);
@@ -178,6 +181,18 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     return false;   // any doubt: keep the original picture
                 }
+            }
+
+            /// <summary>Decodes a plain 8-bit Flate picture into pixels, or null when its data is not exactly width x height x channels.</summary>
+            private static MagickImage? ReadFlatePixels(PdfDictionary image, bool gray)
+            {
+                int w = image.Elements.GetInteger("/Width"), h = image.Elements.GetInteger("/Height");
+                if (w <= 0 || h <= 0 || (long)w * h > 120_000_000) return null;
+                byte[]? pixels = image.Stream?.UnfilteredValue;
+                int channels = gray ? 1 : 3;
+                if (pixels == null || pixels.LongLength != (long)w * h * channels) return null;
+                var settings = new MagickReadSettings { Width = (uint)w, Height = (uint)h, Depth = 8, Format = gray ? MagickFormat.Gray : MagickFormat.Rgb };
+                return new MagickImage(pixels, settings);
             }
 
             /// <summary>true = grey, false = RGB, null = something else (CMYK, indexed, Lab …) that's left alone.</summary>
