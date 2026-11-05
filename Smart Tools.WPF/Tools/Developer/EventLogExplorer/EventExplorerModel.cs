@@ -96,9 +96,10 @@ namespace Smart_Tools.WPF.Models
         {
             get
             {
-                string count = RecordCount is { } n ? $"{n:N0} events" : NeedsAdmin ? "Needs administrator rights" : "";
+                string count = RecordCount is { } n ? Loc.F("Str_EventLog_MsgEventCount", "{0:N0} events", n) : NeedsAdmin ? Loc.T("Str_EventLog_MsgNeedsAdmin", "Needs administrator rights") : "";
                 if (Group != EventExplorerLogGroup.Windows) return count;
-                return count.Length == 0 ? "Windows log" : "Windows log · " + count;
+                string windows = Loc.T("Str_EventLog_MsgWindowsLog", "Windows log");
+                return count.Length == 0 ? windows : windows + " · " + count;
             }
         }
     }

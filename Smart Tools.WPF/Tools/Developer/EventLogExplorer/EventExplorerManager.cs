@@ -186,7 +186,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return XDocument.Parse(xml).ToString();
             }
-            catch (Exception)
+            catch (System.Xml.XmlException)
             {
                 return xml;
             }
@@ -279,7 +279,7 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         public static void WriteTextExport(string path, string content) =>
-            File.WriteAllText(path, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            AtomicFile.WriteAllText(path, content, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
         // =================================================================
         //  Settings
@@ -315,9 +315,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string file = path ?? SettingsPath;
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }

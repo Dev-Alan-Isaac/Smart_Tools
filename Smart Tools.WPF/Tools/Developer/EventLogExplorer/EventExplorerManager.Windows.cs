@@ -205,7 +205,7 @@ namespace Smart_Tools.WPF.Controllers
 
             string levelText = (auditFailure || auditSuccess ? Safe(() => record.KeywordsDisplayNames?.FirstOrDefault()) : null)
                 ?? Safe(() => record.LevelDisplayName)
-                ?? (auditFailure ? "Audit Failure" : auditSuccess ? "Audit Success" : level.ToString());
+                ?? (auditFailure ? Loc.T("Str_EventLog_MsgAuditFailure", "Audit Failure") : auditSuccess ? Loc.T("Str_EventLog_MsgAuditSuccess", "Audit Success") : level.ToString());
 
             string message = FormatMessage(record);
             return new EventExplorerEntry
@@ -305,7 +305,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return sid.Translate(typeof(NTAccount)).Value;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is SystemException or InvalidOperationException)
             {
                 return sid.Value;   // unknown or unreachable account: show the SID
             }
@@ -321,9 +321,21 @@ namespace Smart_Tools.WPF.Controllers
             {
                 var ids = ParseEventIds(query.EventIds, out _) ?? new EventIdFilter();
                 string xpath = BuildXPath(query.Levels, query.FromLocal, query.ToLocal, ids);
-                if (File.Exists(targetPath)) File.Delete(targetPath);   // ExportLog refuses to overwrite
-                using var session = new EventLogSession();
-                session.ExportLog(query.LogName, PathType.LogName, xpath, targetPath, tolerateQueryErrors: true);
+                // ExportLog refuses to overwrite, so write beside the target and swap it in once it worked:
+                // a failed export never costs the user the file that was already there.
+                string temp = targetPath + ".part";
+                if (File.Exists(temp)) File.Delete(temp);
+                try
+                {
+                    using (var session = new EventLogSession())
+                        session.ExportLog(query.LogName, PathType.LogName, xpath, temp, tolerateQueryErrors: true);
+                    File.Move(temp, targetPath, overwrite: true);
+                }
+                catch
+                {
+                    try { File.Delete(temp); } catch (IOException) { }
+                    throw;
+                }
             }, token);
 
         /// <summary>Opens Windows' own Event Viewer. False when it can't be started.</summary>
