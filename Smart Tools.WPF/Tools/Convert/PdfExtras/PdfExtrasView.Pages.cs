@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
@@ -49,11 +49,22 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Called when the Arrange action is chosen or left: gives the list and the editor their share of the height.</summary>
         private void ShowArrangeMode(bool arrange)
         {
-            RowFiles.Height = arrange ? new GridLength(190) : new GridLength(1, GridUnitType.Star);
-            RowPages.Height = arrange ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
-            CardPages.Visibility = arrange ? Visibility.Visible : Visibility.Collapsed;
+            ApplyRowHeights();
             if (arrange) _ = LoadEditorForSelectionAsync();
             else ReleaseEditor();
+        }
+
+        /// <summary>
+        /// Splits the height between the file list and the page editor. With nothing added the list card alone shows its empty state;
+        /// once PDFs are added in the Arrange action the list takes just the room its rows need and the editor gets the rest.
+        /// </summary>
+        private void ApplyRowHeights()
+        {
+            bool editor = Arranging && _items.Count > 0;
+            double listHeight = Math.Clamp(150 + _items.Count * 46, 196, 330);
+            RowFiles.Height = editor ? new GridLength(listHeight) : new GridLength(1, GridUnitType.Star);
+            RowPages.Height = editor ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+            CardPages.Visibility = editor ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private PdfToolItem? EditorTarget() =>

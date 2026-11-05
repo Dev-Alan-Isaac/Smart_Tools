@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -345,6 +345,7 @@ namespace Smart_Tools.WPF.Views
                     if (token.IsCancellationRequested) return;
 
                     _infos[item.FullPath] = info;
+                    if (info.NeedsPassword || info.Problem == "WrongPassword") SetSharedOpen(true);   // the card is closed until a PDF actually needs it
                     item.PageCount = info.PageCount > 0 ? info.PageCount : -1;
                     if (item.Status == PdfItemStatus.Ready)
                     {
@@ -371,6 +372,16 @@ namespace Smart_Tools.WPF.Views
             : info.Problem == "WrongPassword" ? T("Str_PdfX_RowWrongPassword")
             : info.NeedsOwnerPassword ? T("Str_PdfX_RowNeedsOwner")
             : "";
+
+        private void SharedHeader_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
+            SetSharedOpen(PanelShared.Visibility != Visibility.Visible);
+
+        private void SetSharedOpen(bool open)
+        {
+            PanelShared.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            IconSharedChevron.Kind = open ? MaterialDesignThemes.Wpf.PackIconKind.ChevronUp : MaterialDesignThemes.Wpf.PackIconKind.ChevronDown;
+            if (open) Dispatcher.InvokeAsync(() => PwdShared.Focus(), System.Windows.Threading.DispatcherPriority.Input);
+        }
 
         private void PwdShared_PasswordChanged(object sender, RoutedEventArgs e)
         {
@@ -472,6 +483,8 @@ namespace Smart_Tools.WPF.Views
             int total = _items.Count, ticked = _items.Count(i => i.IsIncluded);
             SummaryPanel.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
             EmptyStatePanel.Visibility = total > 0 ? Visibility.Collapsed : Visibility.Visible;
+            DataGridResults.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
+            ApplyRowHeights();
             TxtSummaryCount.Text = ticked == total ? Plural(total, "Str_PdfX_CountOne", "Str_PdfX_CountMany") : F("Str_PdfX_CountTicked", ticked, total);
 
             ChkIncludeAll.IsChecked = total == 0 || ticked == total ? true : ticked == 0 ? false : null;
@@ -496,9 +509,10 @@ namespace Smart_Tools.WPF.Views
         //  Operation and options
         // =================================================================
 
-        private void Operation_Click(object sender, RoutedEventArgs e)
+        private void Operation_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is RadioButton { Tag: string tag } && Enum.TryParse<PdfExtraOperation>(tag, out var op)) SetOperation(op);
+            if (_applying || !_viewConstructed) return;
+            if (CmbOperation.SelectedItem is ComboBoxItem { Tag: string tag } && Enum.TryParse<PdfExtraOperation>(tag, out var op)) SetOperation(op);
         }
 
         private void SetOperation(PdfExtraOperation op)
@@ -508,15 +522,7 @@ namespace Smart_Tools.WPF.Views
             _applying = true;
             try
             {
-                RbRotate.IsChecked = op == PdfExtraOperation.Rotate;
-                RbPages.IsChecked = op == PdfExtraOperation.Pages;
-                RbNumbers.IsChecked = op == PdfExtraOperation.PageNumbers;
-                RbProperties.IsChecked = op == PdfExtraOperation.Properties;
-                RbProtect.IsChecked = op == PdfExtraOperation.Protect;
-                RbUnlock.IsChecked = op == PdfExtraOperation.Unlock;
-                RbCrop.IsChecked = op == PdfExtraOperation.Crop;
-                RbSize.IsChecked = op == PdfExtraOperation.PageSize;
-                RbArrange.IsChecked = op == PdfExtraOperation.Arrange;
+                CmbOperation.SelectedItem = CmbOperation.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag is string tag && tag == op.ToString());
             }
             finally
             {
@@ -899,7 +905,7 @@ namespace Smart_Tools.WPF.Views
             InputCard.IsLocked = running;
             if (!running) OutputCard.Refresh();
 
-            foreach (var radio in new[] { RbRotate, RbPages, RbNumbers, RbProperties, RbProtect, RbUnlock, RbCrop, RbSize, RbArrange }) radio.IsEnabled = !running;
+            CmbOperation.IsEnabled = !running;
             EditorToolbar.IsEnabled = !running && _tiles.Count > 0;
             ListPages.IsEnabled = !running;
             UpdateListState();
