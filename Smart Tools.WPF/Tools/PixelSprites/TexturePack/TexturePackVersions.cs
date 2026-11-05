@@ -18,6 +18,9 @@ namespace Smart_Tools.WPF.Controllers
     public sealed class PackVersionFile
     {
         public List<PackVersionEntry> Versions { get; set; } = new();
+
+        /// <summary>The page "Update from wiki" reads. Empty = the built-in address. Set in Settings, because wikis move their pages.</summary>
+        public string WikiUrl { get; set; } = "";
     }
 
     /// <summary>
@@ -39,6 +42,43 @@ namespace Smart_Tools.WPF.Controllers
         public const int FirstMinMaxFormat = 65;
 
         public static string LauncherManifestPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "versions", "version_manifest_v2.json");
+
+        // =================================================================
+        //  The wiki address (Settings): the built-in one unless the user typed another
+        // =================================================================
+
+        /// <summary>The address in use: the one the user saved in Settings, or the built-in one.</summary>
+        public static string GetWikiUrl(string? path = null)
+        {
+            string saved = (JsonSettings.Load<PackVersionFile>(SettingsName, path).WikiUrl ?? "").Trim();
+            return saved.Length > 0 ? saved : WikiTemplateUrl;
+        }
+
+        /// <summary>Why an address can't be used (a localized sentence), or null when it can. Empty means "use the built-in one".</summary>
+        public static string? ValidateWikiUrl(string? url)
+        {
+            url = (url ?? "").Trim();
+            if (url.Length == 0) return null;
+            return Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https"
+                ? null
+                : Loc.T("Str_TexturePack_MsgBadUrl", "Type a full web address that starts with https://");
+        }
+
+        /// <summary>Remembers the address (empty puts the built-in one back). Throws nothing; returns the problem or null.</summary>
+        public static string? SetWikiUrl(string? url, string? path = null)
+        {
+            string? problem = ValidateWikiUrl(url);
+            if (problem != null) return problem;
+            var file = JsonSettings.Load<PackVersionFile>(SettingsName, path);
+            string clean = (url ?? "").Trim();
+            file.WikiUrl = string.Equals(clean, WikiTemplateUrl, StringComparison.OrdinalIgnoreCase) ? "" : clean;
+            JsonSettings.Save(SettingsName, file, path);
+            return null;
+        }
+
+        /// <summary>The page is read as raw wikitext, so "action=raw" is added when the address doesn't have it.</summary>
+        public static string RawWikiUrl(string url) =>
+            url.Contains("action=raw", StringComparison.OrdinalIgnoreCase) ? url : url + (url.Contains('?') ? "&" : "?") + "action=raw";
 
         // =================================================================
         //  The list: built-in + the user's file
@@ -161,11 +201,11 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 using var http = NewClient();
                 var online = ReleaseIdsFromManifest(await http.GetStringAsync(MojangManifestUrl, token));
-                return online.Count > 0 ? (online, null) : (online, "Mojang's version list couldn't be read.");
+                return online.Count > 0 ? (online, null) : (online, Loc.T("Str_TexturePack_MsgMojangUnreadable", "Mojang's version list couldn't be read."));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or HttpRequestException or TaskCanceledException)
             {
-                return (new List<string>(), "Couldn't read the Minecraft version list: " + ex.Message);
+                return (new List<string>(), Loc.F("Str_TexturePack_MsgVersionListFailed", "Couldn't read the Minecraft version list: {0}", ex.Message));
             }
         }
 
@@ -205,16 +245,16 @@ namespace Smart_Tools.WPF.Controllers
                 else
                 {
                     using var http = NewClient();
-                    text = await http.GetStringAsync(WikiTemplateUrl, token);
+                    text = await http.GetStringAsync(RawWikiUrl(GetWikiUrl(path)), token);
                 }
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or UriFormatException)
             {
-                return (0, 0, "Couldn't reach the Minecraft Wiki: " + ex.Message);
+                return (0, 0, Loc.F("Str_TexturePack_MsgWikiUnreachable", "Couldn't reach the wiki page: {0}", ex.Message));
             }
 
             var found = ParseWikiTemplate(text);
-            if (found.Count == 0) return (0, 0, "The wiki page didn't have the table in the shape I expected. Use Add version instead.");
+            if (found.Count == 0) return (0, 0, Loc.T("Str_TexturePack_MsgWikiShape", "That page doesn't have the pack format table in the shape I expected. Check the address in Settings, or use Add version in the Texture Pack tool."));
 
             var current = Load(path).ToDictionary(v => v.Label, StringComparer.OrdinalIgnoreCase);
             int added = 0, changed = 0;

@@ -98,6 +98,7 @@ namespace Smart_Tools.WPF.Views
             _doneTimer.Tick += (_, _) => { _doneTimer.Stop(); UiMotion.FadeVisibility(DonePill, false); };
 
             _viewConstructed = true;
+            SyncPaddingPreset();
         }
 
         // =================================================================
@@ -125,7 +126,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 TxtPadding.Text = s.Padding.ToString(CultureInfo.InvariantCulture);
-                (s.MaxSide switch { 512 => RadioMax512, 1024 => RadioMax1024, 4096 => RadioMax4096, 8192 => RadioMax8192, _ => RadioMax2048 }).IsChecked = true;
+                SelectMaxSide(s.MaxSide);
                 ChkPowerOfTwo.IsChecked = s.PowerOfTwo;
                 ChkTrim.IsChecked = s.Trim;
                 (s.Format switch { SpriteCoordFormat.Css => RadioFormatCss, SpriteCoordFormat.Xml => RadioFormatXml, SpriteCoordFormat.None => RadioFormatNone, _ => RadioFormatJson }).IsChecked = true;
@@ -237,7 +238,18 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
 
         private int MaxSide() =>
-            RadioMax512.IsChecked == true ? 512 : RadioMax1024.IsChecked == true ? 1024 : RadioMax4096.IsChecked == true ? 4096 : RadioMax8192.IsChecked == true ? 8192 : 2048;
+            CmbMaxSheet.SelectedItem is ComboBoxItem { Tag: string tag } && int.TryParse(tag, out int side) ? side : 2048;
+
+        private void SelectMaxSide(int side) =>
+            CmbMaxSheet.SelectedItem = CmbMaxSheet.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag is string t && t == side.ToString(CultureInfo.InvariantCulture))
+                                       ?? CmbMaxSheet.Items.OfType<ComboBoxItem>().First(i => (string)i.Tag == "2048");
+
+        private void PackSetting_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_viewConstructed) return;
+            SchedulePack();
+            ScheduleSave();
+        }
 
         private SpriteCoordFormat Format() =>
             RadioFormatCss.IsChecked == true ? SpriteCoordFormat.Css : RadioFormatXml.IsChecked == true ? SpriteCoordFormat.Xml : RadioFormatNone.IsChecked == true ? SpriteCoordFormat.None : SpriteCoordFormat.Json;
@@ -259,13 +271,34 @@ namespace Smart_Tools.WPF.Views
             if (!_viewConstructed) return;
             bool bad = !string.IsNullOrWhiteSpace(TxtPadding.Text) && ParseInt(TxtPadding.Text, 0, 32) == null;
             TxtPaddingError.Visibility = bad ? Visibility.Visible : Visibility.Collapsed;
+            SyncPaddingPreset();
             if (!bad) SchedulePack();
             ScheduleSave();
         }
 
-        private void PaddingChip_Click(object sender, RoutedEventArgs e)
+        private bool _syncingPadding;
+
+        /// <summary>The list shows the matching common value, or "Custom" when the box says something else.</summary>
+        private void SyncPaddingPreset()
         {
-            if ((sender as FrameworkElement)?.Tag is string n) TxtPadding.Text = n;
+            if (CmbPaddingPreset == null) return;
+            _syncingPadding = true;
+            try
+            {
+                string text = TxtPadding.Text.Trim();
+                CmbPaddingPreset.SelectedItem = CmbPaddingPreset.Items.OfType<ComboBoxItem>()
+                    .FirstOrDefault(i => i.Tag is string t && t.Length > 0 && t == text) ?? CmbPaddingPreset.Items[0];
+            }
+            finally
+            {
+                _syncingPadding = false;
+            }
+        }
+
+        private void CmbPaddingPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_viewConstructed || _syncingPadding) return;
+            if (CmbPaddingPreset.SelectedItem is ComboBoxItem { Tag: string n } && n.Length > 0) TxtPadding.Text = n;
         }
 
         private void SchedulePack()

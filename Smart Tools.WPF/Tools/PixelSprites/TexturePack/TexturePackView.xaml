@@ -2,8 +2,8 @@
     x:Class="Smart_Tools.WPF.Views.TexturePackView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
@@ -46,15 +46,50 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border Width="26" Height="26" Margin="0,0,8,0" Background="{DynamicResource AccentColorSubtle}" CornerRadius="7">
-                    <materialDesign:PackIcon x:Name="SourceIcon" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="FileImageOutline" />
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="SourceIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileImageOutline" />
                 </Border>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
-                    <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="10.5"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
-                    <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveSource_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
                 </Button>
             </Grid>
             <DataTemplate.Triggers>
@@ -74,18 +109,67 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="26" />
                 </Grid.ColumnDefinitions>
-                <CheckBox Margin="2,0,8,0" VerticalAlignment="Center" Click="TextureCheck_Click" IsChecked="{Binding IsChecked, Mode=TwoWay}" ToolTip="{DynamicResource Str_TexturePack_PutThisInThe}" />
-                <Border Grid.Column="1" Width="40" Height="40" Margin="0,0,10,0" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="6">
-                    <Image Margin="2" RenderOptions.BitmapScalingMode="NearestNeighbor" Source="{Binding Thumbnail}" Stretch="Uniform" />
+                <CheckBox
+                    Margin="2,0,8,0"
+                    VerticalAlignment="Center"
+                    Click="TextureCheck_Click"
+                    IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                    ToolTip="{DynamicResource Str_TexturePack_PutThisInThe}" />
+                <Border
+                    Grid.Column="1"
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,10,0"
+                    Background="{DynamicResource InputBg}"
+                    BorderBrush="{DynamicResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                    <Image
+                        Margin="2"
+                        RenderOptions.BitmapScalingMode="NearestNeighbor"
+                        Source="{Binding Thumbnail}"
+                        Stretch="Uniform" />
                 </Border>
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
-                    <TextBlock Margin="0,1,0,0" FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding SizeText}" />
+                    <TextBlock
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding FileName}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding SizeText}" />
                 </StackPanel>
-                <Border Grid.Column="3" Width="220" Height="30" Margin="8,0,0,0" VerticalAlignment="Center" Style="{StaticResource InputBarStyle}" ToolTip="{DynamicResource Str_TexturePack_WhereItGoesIn}">
-                    <TextBox VerticalContentAlignment="Center" LostFocus="SlotBox_LostFocus" Style="{StaticResource BareTextBox}" Text="{Binding Slot, UpdateSourceTrigger=LostFocus}" />
+                <Border
+                    Grid.Column="3"
+                    Width="220"
+                    Height="30"
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource InputBarStyle}"
+                    ToolTip="{DynamicResource Str_TexturePack_WhereItGoesIn}">
+                    <TextBox
+                        VerticalContentAlignment="Center"
+                        LostFocus="SlotBox_LostFocus"
+                        Tag="block/stone"
+                        Style="{StaticResource BareTextBox}"
+                        Text="{Binding Slot, UpdateSourceTrigger=LostFocus}" />
                 </Border>
-                <materialDesign:PackIcon x:Name="StateIcon" Grid.Column="4" Width="18" Height="18" Margin="6,0,0,0" VerticalAlignment="Center" Kind="AlertOutline" Foreground="{DynamicResource StatusWarningFg}" ToolTip="{Binding Message}" Visibility="Collapsed" />
+                <materialDesign:PackIcon
+                    x:Name="StateIcon"
+                    Grid.Column="4"
+                    Width="18"
+                    Height="18"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource StatusWarningFg}"
+                    Kind="AlertOutline"
+                    ToolTip="{Binding Message}"
+                    Visibility="Collapsed" />
             </Grid>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding State}" Value="Warning">
@@ -101,7 +185,7 @@
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
-        <Grid Margin="16,8,16,16">
+        <Grid x:Name="MainLayout" Margin="16,8,16,16">
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -111,82 +195,155 @@
 
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
-                    <StackPanel x:Name="SidebarStack">
+                <StackPanel x:Name="SidebarStack">
 
-                        <!--  ============ PICTURES ============  -->
-                        <controls:InputFolderCard ctl:Tour.Key="Str_Tour_TexturePack_Input" ctl:Tour.Order="1"
-                            x:Name="InputCard"
-                            ClearRequested="InputCard_ClearRequested"
-                            Header="{DynamicResource Str_PixelArt_FilterImages}"
-                            HeaderIcon="FileMultipleOutline"
-                            IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
-                            ItemTemplate="{StaticResource SourceTemplate}"
-                            PathsAdded="InputCard_PathsAdded" />
+                    <!--  ============ PICTURES ============  -->
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
+                        ctl:Tour.Key="Str_Tour_TexturePack_Input"
+                        ctl:Tour.Order="1"
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="{DynamicResource Str_PixelArt_FilterImages}"
+                        HeaderIcon="FileMultipleOutline"
+                        IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                        ItemTemplate="{StaticResource SourceTemplate}"
+                        PathsAdded="InputCard_PathsAdded" />
 
-                        <!--  ============ PACK ============  -->
-                        <Border ctl:Tour.Key="Str_Tour_TexturePack_Pack" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl Content="{DynamicResource Str_SpritePacker_ModePack}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
+                    <!--  ============ PACK ============  -->
+                    <Border
+                        ctl:Tour.Key="Str_Tour_TexturePack_Pack"
+                        ctl:Tour.Order="2"
+                        Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_SpritePacker_ModePack}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_Common_ColHeaderName}" />
-                                <Border Style="{StaticResource InputBarStyle}">
-                                    <TextBox x:Name="TxtPackName" MaxLength="100" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_Changed" />
-                                </Border>
+                            <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_Common_ColHeaderName}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox
+                                    x:Name="TxtPackName"
+                                    VerticalContentAlignment="Center"
+                                    MaxLength="100"
+                                    Style="{StaticResource BareTextBox}"
+                                    TextChanged="Setting_Changed" />
+                            </Border>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_DescriptionShownInThe}" />
-                                <Border Style="{StaticResource InputBarStyle}">
-                                    <TextBox x:Name="TxtDescription" MaxLength="300" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_Changed" />
-                                </Border>
+                            <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_DescriptionShownInThe}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox
+                                    x:Name="TxtDescription"
+                                    VerticalContentAlignment="Center"
+                                    MaxLength="300"
+                                    Style="{StaticResource BareTextBox}"
+                                    TextChanged="Setting_Changed" />
+                            </Border>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_MinecraftVersion}" />
-                                <Border Style="{StaticResource InputBarStyle}">
-                                    <ComboBox x:Name="CmbVersion" VerticalContentAlignment="Center" SelectionChanged="Setting_SelectionChanged" Style="{StaticResource BareComboBox}" />
-                                </Border>
-                                <TextBlock x:Name="TxtVersionHint" Style="{StaticResource TpSideHint}" />
-                                <WrapPanel Margin="0,8,0,0">
-                                    <Button x:Name="BtnAddVersion" MinHeight="30" Margin="0,0,4,4" Click="BtnAddVersion_Click" Content="{DynamicResource Str_TexturePack_AddVersion}" ToolTip="{DynamicResource Str_TexturePack_TypeInAMinecraft}" />
-                                    <Button x:Name="BtnCheckVersions" MinHeight="30" Margin="0,0,4,4" Click="BtnCheckVersions_Click" Content="{DynamicResource Str_TexturePack_CheckForNew}" ToolTip="{DynamicResource Str_TexturePack_LookInYourMinecraft}" />
-                                    <Button x:Name="BtnWikiUpdate" MinHeight="30" Margin="0,0,4,4" Click="BtnWikiUpdate_Click" Content="{DynamicResource Str_TexturePack_UpdateFromWiki}" ToolTip="{DynamicResource Str_TexturePack_ReadTheMinecraftWiki}" />
-                                </WrapPanel>
+                            <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_MinecraftVersion}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox
+                                    x:Name="CmbVersion"
+                                    VerticalContentAlignment="Center"
+                                    SelectionChanged="Setting_SelectionChanged"
+                                    Style="{StaticResource BareComboBox}" />
+                            </Border>
+                            <TextBlock x:Name="TxtVersionHint" Style="{StaticResource TpSideHint}" />
+                            <WrapPanel Margin="0,8,0,0">
+                                <Button
+                                    x:Name="BtnAddVersion"
+                                    MinHeight="30"
+                                    Margin="0,0,4,4"
+                                    Click="BtnAddVersion_Click"
+                                    Content="{DynamicResource Str_TexturePack_AddVersion}"
+                                    ToolTip="{DynamicResource Str_TexturePack_TypeInAMinecraft}" />
+                                <Button
+                                    x:Name="BtnVersionSettings"
+                                    MinHeight="30"
+                                    Margin="0,0,4,4"
+                                    Click="BtnVersionSettings_Click"
+                                    Content="{DynamicResource Str_TexturePack_OpenVersionSettings}"
+                                    ToolTip="{DynamicResource Str_TexturePack_VersionsInSettings}" />
+                            </WrapPanel>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_PackIconOptional}" />
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="BtnChooseIcon" MinHeight="34" Click="BtnChooseIcon_Click" HorizontalContentAlignment="Left" ToolTip="{DynamicResource Str_Rest_ChoosePackPng}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ImageOutline" />
-                                            <TextBlock x:Name="TxtIconName" MaxWidth="150" Text="{DynamicResource Str_TexturePack_ChooseAPng}" TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                    </Button>
-                                    <Button x:Name="BtnClearIcon" Grid.Column="1" Width="30" Height="30" Margin="6,0,0,0" Click="BtnClearIcon_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_TexturePack_NoIcon}" Visibility="Collapsed">
-                                        <materialDesign:PackIcon Width="14" Height="14" Kind="Close" />
-                                    </Button>
-                                </Grid>
+                            <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_TexturePack_PackIconOptional}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Name="BtnChooseIcon"
+                                    MinHeight="34"
+                                    HorizontalContentAlignment="Left"
+                                    Click="BtnChooseIcon_Click"
+                                    ToolTip="{DynamicResource Str_Rest_ChoosePackPng}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            Kind="ImageOutline" />
+                                        <TextBlock
+                                            x:Name="TxtIconName"
+                                            MaxWidth="150"
+                                            Text="{DynamicResource Str_TexturePack_ChooseAPng}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="BtnClearIcon"
+                                    Grid.Column="1"
+                                    Width="30"
+                                    Height="30"
+                                    Margin="6,0,0,0"
+                                    Click="BtnClearIcon_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_TexturePack_NoIcon}"
+                                    Visibility="Collapsed">
+                                    <materialDesign:PackIcon
+                                        Width="14"
+                                        Height="14"
+                                        Kind="Close" />
+                                </Button>
+                            </Grid>
 
-                                <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_Screenshot_Save}" />
-                                <UniformGrid Columns="2">
-                                    <RadioButton x:Name="RadioZip" Margin="0,0,2,0" Click="Setting_Click" Content="{DynamicResource Str_TexturePack_ZipFile}" GroupName="TpFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
-                                    <RadioButton x:Name="RadioFolder" Margin="2,0,0,0" Click="Setting_Click" Content="{DynamicResource Str_Common_ColHeaderFolder}" GroupName="TpFormat" Style="{StaticResource ModeToggleButtonStyle}" />
-                                </UniformGrid>
-                                <TextBlock Style="{StaticResource TpSideHint}" Text="{DynamicResource Str_TexturePack_CopyTheZipOr}" />
-                            </StackPanel>
-                        </Border>
+                            <TextBlock Style="{StaticResource TpSideLabel}" Text="{DynamicResource Str_Screenshot_Save}" />
+                            <UniformGrid Columns="2">
+                                <RadioButton
+                                    x:Name="RadioZip"
+                                    Margin="0,0,2,0"
+                                    Click="Setting_Click"
+                                    Content="{DynamicResource Str_TexturePack_ZipFile}"
+                                    GroupName="TpFormat"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton
+                                    x:Name="RadioFolder"
+                                    Margin="2,0,0,0"
+                                    Click="Setting_Click"
+                                    Content="{DynamicResource Str_Common_ColHeaderFolder}"
+                                    GroupName="TpFormat"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                            </UniformGrid>
+                            <TextBlock Style="{StaticResource TpSideHint}" Text="{DynamicResource Str_TexturePack_CopyTheZipOr}" />
+                        </StackPanel>
+                    </Border>
 
-                        <!--  ============ SAVE TO ============  -->
-                        <controls:OutputFolderCard ctl:Tour.Key="Str_Tour_TexturePack_Output" ctl:Tour.Order="3"
-                            x:Name="OutputCard"
-                            Margin="0,10,0,0"
-                            AllowAskEachTime="True"
-                            DefaultFileName="My Texture Pack"
-                            FileExtension=".zip"
-                            Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
-                            HeaderIcon="ContentSaveOutline"
-                            ShowFileName="True"
-                            ToolName="Texture Pack" />
-                    </StackPanel>
+                    <!--  ============ SAVE TO ============  -->
+                    <controls:OutputFolderCard
+                        x:Name="OutputCard"
+                        Margin="0,10,0,0"
+                        ctl:Tour.Key="Str_Tour_TexturePack_Output"
+                        ctl:Tour.Order="3"
+                        AllowAskEachTime="True"
+                        DefaultFileName="My Texture Pack"
+                        FileExtension=".zip"
+                        Header="{DynamicResource Str_BackgroundRemover_SaveTo}"
+                        HeaderIcon="ContentSaveOutline"
+                        ShowFileName="True"
+                        ToolName="Texture Pack" />
+                </StackPanel>
             </controls:ToolSidebar>
 
             <!--  ================= MAIN AREA =================  -->
@@ -201,42 +358,122 @@
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
-                            <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Orientation="Horizontal">
-                                <Border x:Name="DonePill" Margin="0,0,10,0" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
+                            <StackPanel
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Right"
+                                Orientation="Horizontal">
+                                <Border
+                                    x:Name="DonePill"
+                                    Margin="0,0,10,0"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusSuccessFg}" Kind="Check" />
-                                        <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
+                                        <materialDesign:PackIcon
+                                            Width="13"
+                                            Height="13"
+                                            Margin="0,0,5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource StatusSuccessFg}"
+                                            Kind="Check" />
+                                        <TextBlock
+                                            x:Name="TxtDonePill"
+                                            FontSize="11.5"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource StatusSuccessFg}" />
                                     </StackPanel>
                                 </Border>
-                                <Button x:Name="BtnOpenResult" Margin="0,0,8,0" Click="BtnOpenResult_Click" ToolTip="{DynamicResource Str_TexturePack_ShowTheSavedPack}" Visibility="Collapsed" Style="{StaticResource ListToolButtonStyle}">
-                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                                <Button
+                                    x:Name="BtnOpenResult"
+                                    Margin="0,0,8,0"
+                                    Click="BtnOpenResult_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_TexturePack_ShowTheSavedPack}"
+                                    Visibility="Collapsed">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="FolderOpenOutline" />
                                 </Button>
-                                <Button ctl:Tour.Key="Str_Tour_TexturePack_Run" ctl:Tour.Order="4" x:Name="BtnRun" MinHeight="38" Click="BtnRun_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <Button
+                                    x:Name="BtnRun"
+                                    MinHeight="38"
+                                    ctl:Tour.Key="Str_Tour_TexturePack_Run"
+                                    ctl:Tour.Order="4"
+                                    Click="BtnRun_Click"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="PackageVariantClosed" />
+                                        <materialDesign:PackIcon
+                                            Width="15"
+                                            Height="15"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="PackageVariantClosed" />
                                         <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TexturePack_CreateTexturePack}" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_TexturePack_MinecraftTexturePack}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_TexturePack_MinecraftTexturePack}" />
                                 <WrapPanel Margin="0,4,0,0">
-                                    <Border Margin="0,0,6,0" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}">
-                                        <TextBlock x:Name="TxtPillCount" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
+                                    <Border
+                                        Margin="0,0,6,0"
+                                        Background="{DynamicResource AccentColorSubtle}"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <TextBlock
+                                            x:Name="TxtPillCount"
+                                            FontSize="12"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource AccentColor}" />
                                     </Border>
-                                    <Border x:Name="PillIssues" Margin="0,0,6,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
-                                        <TextBlock x:Name="TxtPillIssues" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                                    <Border
+                                        x:Name="PillIssues"
+                                        Margin="0,0,6,0"
+                                        Background="{DynamicResource RowBg}"
+                                        Style="{StaticResource IconStatusPillStyle}"
+                                        Visibility="Collapsed">
+                                        <TextBlock
+                                            x:Name="TxtPillIssues"
+                                            FontSize="12"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource TextSecondary}" />
                                     </Border>
                                 </WrapPanel>
-                                <TextBlock x:Name="TxtActionInfo" Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                                <TextBlock
+                                    x:Name="TxtActionInfo"
+                                    Margin="0,6,0,0"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap" />
                             </StackPanel>
                         </DockPanel>
 
                         <!--  Messages  -->
-                        <Border x:Name="StatusBanner" Margin="0,12,0,0" Padding="12,9" HorizontalAlignment="Left" CornerRadius="10" Visibility="Collapsed">
+                        <Border
+                            x:Name="StatusBanner"
+                            Margin="0,12,0,0"
+                            Padding="12,9"
+                            HorizontalAlignment="Left"
+                            CornerRadius="10"
+                            Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon x:Name="StatusIcon" Width="16" Height="16" Margin="0,1,8,0" VerticalAlignment="Top" />
-                                <TextBlock x:Name="TxtStatus" MaxWidth="900" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <materialDesign:PackIcon
+                                    x:Name="StatusIcon"
+                                    Width="16"
+                                    Height="16"
+                                    Margin="0,1,8,0"
+                                    VerticalAlignment="Top" />
+                                <TextBlock
+                                    x:Name="TxtStatus"
+                                    MaxWidth="900"
+                                    FontSize="12.5"
+                                    FontWeight="SemiBold"
+                                    TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -249,31 +486,259 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_TexturePack_Textures}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
+                        <ContentControl
+                            Margin="0,0,0,10"
+                            Content="{DynamicResource Str_TexturePack_Textures}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
 
-                    <!--  The list  -->
-                    <Border x:Name="ListArea" Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
-                        <Grid>
-                            <ListBox ctl:Tour.Key="Str_Tour_TexturePack_List" ctl:Tour.Order="5"
-                                x:Name="TextureList"
-                                Padding="6"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                ItemTemplate="{StaticResource TextureTemplate}"
-                                KeyDown="TextureList_KeyDown"
-                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                SelectionMode="Extended"
-                                VirtualizingPanel.IsVirtualizing="True" />
-                            <StackPanel x:Name="ListEmpty" MaxWidth="320" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
-                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
-                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_TexturePack_AddYourTextures}" />
-                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_TexturePack_DropPngFilesOr}" TextAlignment="Center" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                        <!--  The list  -->
+                        <Border
+                            x:Name="ListArea"
+                            Grid.Row="1"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Grid>
+                                <ListBox
+                                    x:Name="TextureList"
+                                    Padding="6"
+                                    ctl:Tour.Key="Str_Tour_TexturePack_List"
+                                    ctl:Tour.Order="5"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemTemplate="{StaticResource TextureTemplate}"
+                                    KeyDown="TextureList_KeyDown"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    SelectionMode="Extended"
+                                    VirtualizingPanel.IsVirtualizing="True" />
+                                <StackPanel
+                                    x:Name="ListEmpty"
+                                    MaxWidth="480"
+                                    Margin="16"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    IsHitTestVisible="False">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.PackageVariantClosed}" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="{DynamicResource Str_TexturePack_AddYourTextures}" />
+                                    <TextBlock
+                                        Margin="0,6,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_TexturePack_DropPngFilesOr}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                    <Border
+                                        Margin="0,16,0,0"
+                                        Padding="14,12"
+                                        Background="{DynamicResource InputBg}"
+                                        BorderBrush="{DynamicResource CardBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="10">
+                                        <StackPanel>
+                                            <TextBlock
+                                                FontSize="12.5"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource TextPrimary}"
+                                                Text="{DynamicResource Str_TexturePack_GuideTitle}" />
+                                            <Grid Margin="0,8,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                Width="20"
+                                                Height="20"
+                                                Margin="0,0,10,0"
+                                                VerticalAlignment="Top"
+                                                Background="{DynamicResource AccentColorSubtle}"
+                                                CornerRadius="10">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Text="1" />
+                                            </Border>
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_TexturePack_GuideStep1}"
+                                                TextWrapping="Wrap" />
+                                    </Grid>
+                                            <Grid Margin="0,8,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                Width="20"
+                                                Height="20"
+                                                Margin="0,0,10,0"
+                                                VerticalAlignment="Top"
+                                                Background="{DynamicResource AccentColorSubtle}"
+                                                CornerRadius="10">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Text="2" />
+                                            </Border>
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_TexturePack_GuideStep2}"
+                                                TextWrapping="Wrap" />
+                                    </Grid>
+                                            <Grid Margin="0,8,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                Width="20"
+                                                Height="20"
+                                                Margin="0,0,10,0"
+                                                VerticalAlignment="Top"
+                                                Background="{DynamicResource AccentColorSubtle}"
+                                                CornerRadius="10">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    FontWeight="Bold"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Text="3" />
+                                            </Border>
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{DynamicResource Str_TexturePack_GuideStep3}"
+                                                TextWrapping="Wrap" />
+                                    </Grid>
+                                            <Border
+                                                Margin="30,10,0,0"
+                                                Padding="10,6"
+                                                HorizontalAlignment="Left"
+                                                Background="{DynamicResource RowBg}"
+                                                CornerRadius="6">
+                                                <TextBlock
+                                                    FontFamily="Cascadia Mono, Consolas"
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource AccentColor}"
+                                                    Text="stone.png   →   block/stone" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </Border>
             </Grid>
+        </Grid>
+        <!--  In-app dialog: add a Minecraft version  -->
+        <Grid
+            x:Name="ModalHost"
+            Panel.ZIndex="50"
+            PreviewKeyDown="Modal_PreviewKeyDown"
+            Visibility="Collapsed">
+            <Border Background="{DynamicResource TourScrim}" />
+            <Border
+                MaxWidth="520"
+                Margin="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_TexturePack_MsgAddVersionTitle}" />
+
+                    <TextBlock
+                        Margin="0,14,0,6"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_TexturePack_MsgVersionLabel}" />
+                    <Border Style="{StaticResource InputBarStyle}">
+                        <TextBox
+                            x:Name="TxtMvLabel"
+                            VerticalContentAlignment="Center"
+                            MaxLength="60"
+                            Style="{StaticResource BareTextBox}" />
+                    </Border>
+
+                    <TextBlock
+                        Margin="0,12,0,6"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_TexturePack_MsgFormatLabel}" />
+                    <Border Style="{StaticResource InputBarStyle}">
+                        <TextBox
+                            x:Name="TxtMvFormat"
+                            VerticalContentAlignment="Center"
+                            MaxLength="6"
+                            Style="{StaticResource BareTextBox}" />
+                    </Border>
+                    <TextBlock
+                        Margin="2,8,0,0"
+                        FontSize="11.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_TexturePack_MsgFormatHelp}"
+                        TextWrapping="Wrap" />
+
+                    <CheckBox
+                        x:Name="ChkMvNewStyle"
+                        Margin="0,12,0,0"
+                        Foreground="{DynamicResource TextPrimary}"
+                        IsChecked="True">
+                        <TextBlock Text="{DynamicResource Str_TexturePack_MsgNewStyle}" TextWrapping="Wrap" />
+                    </CheckBox>
+
+                    <TextBlock
+                        x:Name="TxtMvError"
+                        Margin="2,10,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource StatusErrorFg}"
+                        TextWrapping="Wrap"
+                        Visibility="Collapsed" />
+
+                    <StackPanel
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <Button
+                            MinWidth="90"
+                            Margin="0,0,8,0"
+                            Click="BtnMvCancel_Click"
+                            Content="{DynamicResource Str_TexturePack_MsgCancel}"
+                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
+                        <Button
+                            MinWidth="90"
+                            Click="BtnMvAdd_Click"
+                            Content="{DynamicResource Str_TexturePack_MsgAdd}"
+                            Style="{StaticResource AccentPrimaryButtonStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

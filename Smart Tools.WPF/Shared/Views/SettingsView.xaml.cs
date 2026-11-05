@@ -45,6 +45,7 @@ namespace Smart_Tools.WPF.Views
             PanelClipboard.SettingChanged += SaveAndConfirm;
             PanelTextRecognition.SettingChanged += SaveAndConfirm;
             PanelTranslate.SettingChanged += SaveAndConfirm;
+            PanelTexturePack.SettingChanged += SaveAndConfirm;
 
             CategoriesList.ItemsSource = AppSettingsStore.FileCategories;
             PatternsList.ItemsSource = AppSettingsStore.SavedPatterns;
@@ -300,6 +301,11 @@ namespace Smart_Tools.WPF.Views
                 BtnNavTranslate.IsChecked = true;
                 Nav_Click(BtnNavTranslate, new RoutedEventArgs());
             }
+            else if (RequestedSection == "TexturePack")
+            {
+                BtnNavTexturePack.IsChecked = true;
+                Nav_Click(BtnNavTexturePack, new RoutedEventArgs());
+            }
             RequestedSection = null;
         }
 
@@ -326,11 +332,12 @@ namespace Smart_Tools.WPF.Views
             LblNavClipboard.Visibility = visibility;
             LblNavTextRecognition.Visibility = visibility;
             LblNavTranslate.Visibility = visibility;
+            LblNavTexturePack.Visibility = visibility;
             SidebarContent.Margin = _optionsCollapsed ? new Thickness(4, 4, 4, 16) : new Thickness(12, 4, 12, 16);
 
             var padding = _optionsCollapsed ? new Thickness(0, 10, 0, 10) : new Thickness(14, 10, 14, 10);
             var alignment = _optionsCollapsed ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Left;
-            foreach (var nav in new[] { BtnNavGeneral, BtnNavCategories, BtnNavPatterns, BtnNavMockData, BtnNavEventDays, BtnNavShortcuts, BtnNavVault, BtnNavMediaViewer, BtnNavClipboard, BtnNavTextRecognition, BtnNavTranslate })
+            foreach (var nav in new[] { BtnNavGeneral, BtnNavCategories, BtnNavPatterns, BtnNavMockData, BtnNavEventDays, BtnNavShortcuts, BtnNavVault, BtnNavMediaViewer, BtnNavClipboard, BtnNavTextRecognition, BtnNavTranslate, BtnNavTexturePack })
             {
                 nav.Padding = padding;
                 nav.HorizontalContentAlignment = alignment;
@@ -356,6 +363,8 @@ namespace Smart_Tools.WPF.Views
             if (section == "TextRecognition") PanelTextRecognition.Load();   // languages may have been added since the page was built
             ShowSection(PanelTranslate, section == "Translate");
             if (section == "Translate") PanelTranslate.Load();
+            ShowSection(PanelTexturePack, section == "TexturePack");
+            if (section == "TexturePack") PanelTexturePack.Load();   // the Texture Pack tool may have changed the list since the page was built
             if (section == "Vault") LoadVaultSettings();   // the vault sidebar may have saved since the page was built
             ContentScroller.ScrollToTop();
         }

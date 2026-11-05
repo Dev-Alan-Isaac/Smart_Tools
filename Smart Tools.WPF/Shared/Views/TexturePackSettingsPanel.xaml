@@ -1,0 +1,106 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.TexturePackSettingsPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--  The Minecraft versions section of Settings - UI only. Logic: TexturePackVersions (list, wiki address, launcher check, wiki update).  -->
+    <StackPanel>
+
+        <!--  Where the wiki table is read from  -->
+        <Border Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <ContentControl
+                    Content="{DynamicResource Str_Settings_TpWikiHeader}"
+                    Style="{StaticResource CardHeader}"
+                    Tag="{x:Static materialDesign:PackIconKind.Web}" />
+                <TextBlock
+                    Margin="0,4,0,14"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{DynamicResource Str_Settings_TpWikiIntro}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Margin="0,0,0,6"
+                    FontSize="11.5"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{DynamicResource Str_Settings_TpWikiLabel}" />
+                <Border Style="{StaticResource InputBarStyle}">
+                    <TextBox
+                        x:Name="TxtWikiUrl"
+                        VerticalContentAlignment="Center"
+                        Style="{StaticResource BareTextBox}"
+                        TextChanged="TxtWikiUrl_TextChanged" />
+                </Border>
+                <TextBlock
+                    x:Name="TxtUrlError"
+                    Margin="2,6,0,0"
+                    FontSize="11.5"
+                    Foreground="{DynamicResource StatusErrorFg}"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+                <TextBlock
+                    Margin="2,8,0,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{DynamicResource Str_Settings_TpWikiHint}"
+                    TextWrapping="Wrap" />
+                <WrapPanel Margin="0,14,0,0">
+                    <Button
+                        x:Name="BtnSaveUrl"
+                        MinWidth="130"
+                        Margin="0,0,8,4"
+                        Click="BtnSaveUrl_Click"
+                        Content="{DynamicResource Str_Settings_TpWikiSave}"
+                        Style="{StaticResource AccentPrimaryButtonStyle}" />
+                    <Button
+                        x:Name="BtnDefaultUrl"
+                        Margin="0,0,0,4"
+                        Click="BtnDefaultUrl_Click"
+                        Content="{DynamicResource Str_Settings_TpWikiDefault}"
+                        Style="{StaticResource ListToolPrimaryButtonStyle}" />
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <!--  Keeping the list up to date  -->
+        <Border Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <ContentControl
+                    Content="{DynamicResource Str_Settings_TpListHeader}"
+                    Style="{StaticResource CardHeader}"
+                    Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
+                <TextBlock
+                    Margin="0,4,0,14"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{DynamicResource Str_Settings_TpListIntro}"
+                    TextWrapping="Wrap" />
+                <WrapPanel>
+                    <Button
+                        x:Name="BtnCheck"
+                        Margin="0,0,8,4"
+                        Click="BtnCheck_Click"
+                        Content="{DynamicResource Str_TexturePack_CheckForNew}"
+                        Style="{StaticResource ListToolPrimaryButtonStyle}"
+                        ToolTip="{DynamicResource Str_TexturePack_LookInYourMinecraft}" />
+                    <Button
+                        x:Name="BtnWiki"
+                        Margin="0,0,0,4"
+                        Click="BtnWiki_Click"
+                        Content="{DynamicResource Str_TexturePack_UpdateFromWiki}"
+                        Style="{StaticResource ListToolPrimaryButtonStyle}"
+                        ToolTip="{DynamicResource Str_TexturePack_ReadTheMinecraftWiki}" />
+                </WrapPanel>
+                <TextBlock
+                    x:Name="TxtResult"
+                    Margin="2,12,0,0"
+                    FontSize="12.5"
+                    FontWeight="SemiBold"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

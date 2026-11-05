@@ -67,6 +67,7 @@ namespace Smart_Tools.WPF.Views
             _doneTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _doneTimer.Tick += (_, _) => { _doneTimer.Stop(); DonePill.Visibility = Visibility.Collapsed; };
             _viewConstructed = true;
+            SyncGridPreset();
         }
 
         // =================================================================
@@ -150,9 +151,35 @@ namespace Smart_Tools.WPF.Views
         private void Option_SelectionChanged(object sender, SelectionChangedEventArgs e) => Changed();
         private void Option_Click(object sender, RoutedEventArgs e) => Changed();
 
-        private void GridChip_Click(object sender, RoutedEventArgs e)
+        private bool _syncingGridPreset;
+
+        private void GridText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if ((sender as Button)?.Tag is string t) TxtGrid.Text = t;
+            SyncGridPreset();
+            Changed();
+        }
+
+        /// <summary>The list shows the matching common width, or "Custom" when the box says something else.</summary>
+        private void SyncGridPreset()
+        {
+            if (CmbGridPreset == null) return;
+            _syncingGridPreset = true;
+            try
+            {
+                string text = TxtGrid.Text.Trim();
+                CmbGridPreset.SelectedItem = CmbGridPreset.Items.OfType<ComboBoxItem>()
+                    .FirstOrDefault(i => i.Tag is string t && t.Length > 0 && t == text) ?? CmbGridPreset.Items[0];
+            }
+            finally
+            {
+                _syncingGridPreset = false;
+            }
+        }
+
+        private void GridPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_viewConstructed || _syncingGridPreset) return;
+            if (CmbGridPreset.SelectedItem is ComboBoxItem { Tag: string t } && t.Length > 0) TxtGrid.Text = t;
         }
 
         // =================================================================

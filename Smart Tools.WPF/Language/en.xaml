@@ -10132,4 +10132,30 @@
     <system:String x:Key="Str_SpritePacker_MsgFolderAndSub">Folder and subfolders · {0}</system:String>
     <system:String x:Key="Str_SpritePacker_MsgFolderOnly">Folder · {0}</system:String>
     <system:String x:Key="Str_SpritePacker_MsgMoreThanOne">Images from more than one folder</system:String>
+    <system:String x:Key="Str_PixelArt_SizePresetLabel">Common sizes</system:String>
+    <system:String x:Key="Str_PixelArt_SizeCustom">Custom</system:String>
+    <system:String x:Key="Str_SpritePacker_PresetCustom">Custom</system:String>
+    <system:String x:Key="Str_ImageToPixel_PresetCustom">Custom</system:String>
+    <system:String x:Key="Str_TexturePack_GuideTitle">How to make a texture pack</system:String>
+    <system:String x:Key="Str_TexturePack_GuideStep1">Draw each texture as a PNG picture. 16 × 16 is the classic size; 32, 64 or bigger also work.</system:String>
+    <system:String x:Key="Str_TexturePack_GuideStep2">Name each file like the Minecraft texture it replaces, for example stone.png. The tool fills in where it goes (block/stone); fix it in the list if it guessed wrong.</system:String>
+    <system:String x:Key="Str_TexturePack_GuideStep3">Choose the Minecraft version and press Create texture pack. Put the .zip in .minecraft/resourcepacks.</system:String>
+    <system:String x:Key="Str_TexturePack_OpenVersionSettings">Version list…</system:String>
+    <system:String x:Key="Str_TexturePack_VersionsInSettings">Look for new Minecraft versions, update the list from the wiki or change the wiki address in Settings.</system:String>
+    <system:String x:Key="Str_TexturePack_MsgBadUrl">Type a full web address that starts with https://</system:String>
+    <system:String x:Key="Str_TexturePack_MsgWikiUnreachable">Couldn't reach the wiki page: {0}</system:String>
+    <system:String x:Key="Str_TexturePack_MsgWikiShape">That page doesn't have the pack format table in the shape I expected. Check the address in Settings, or use Add version in the Texture Pack tool.</system:String>
+    <system:String x:Key="Str_TexturePack_MsgMojangUnreadable">Mojang's version list couldn't be read.</system:String>
+    <system:String x:Key="Str_TexturePack_MsgVersionListFailed">Couldn't read the Minecraft version list: {0}</system:String>
+    <system:String x:Key="Str_Settings_NavTexturePack">Minecraft versions</system:String>
+    <system:String x:Key="Str_Settings_TpWikiHeader">Wiki page</system:String>
+    <system:String x:Key="Str_Settings_TpWikiIntro">"Update from wiki" reads the Minecraft version table from this page. If the wiki ever moves it, type the new address here and the Texture Pack Builder keeps working.</system:String>
+    <system:String x:Key="Str_Settings_TpWikiLabel">Address of the pack format page</system:String>
+    <system:String x:Key="Str_Settings_TpWikiHint">"action=raw" is added automatically, so you can paste the address you see in your browser.</system:String>
+    <system:String x:Key="Str_Settings_TpWikiSave">Save address</system:String>
+    <system:String x:Key="Str_Settings_TpWikiDefault">Use the built-in address</system:String>
+    <system:String x:Key="Str_Settings_TpWikiSaved">Address saved. "Update from wiki" will read it from now on.</system:String>
+    <system:String x:Key="Str_Settings_TpWikiReset">The built-in address is back.</system:String>
+    <system:String x:Key="Str_Settings_TpListHeader">Version list</system:String>
+    <system:String x:Key="Str_Settings_TpListIntro">Compare the list with the Minecraft releases your launcher knows, or fetch the numbers from the wiki. New rows go into your own file and show up in the Texture Pack Builder.</system:String>
 </ResourceDictionary>

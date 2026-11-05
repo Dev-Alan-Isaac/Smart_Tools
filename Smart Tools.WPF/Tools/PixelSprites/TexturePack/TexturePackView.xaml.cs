@@ -74,7 +74,8 @@ namespace Smart_Tools.WPF.Views
 
         private void Root_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_loadedOnce) return;
+            // The versions may have been updated in Settings while this page was away.
+            if (_loadedOnce) { RefreshVersions((CmbVersion.SelectedItem as PackVersion)?.Label); return; }
             _loadedOnce = true;
             ApplySettings(TexturePackManager.LoadSettings());
             UpdateListState();
@@ -153,9 +154,8 @@ namespace Smart_Tools.WPF.Views
 
         // =================================================================
         //  Keeping the Minecraft version list up to date
+        //  (looking for new releases and updating from the wiki live in Settings; the list is read again whenever this page opens)
         // =================================================================
-
-        private string? _suggestedVersion;
 
         /// <summary>Reloads the list (built-in + the user's file) and keeps the choice when it still exists.</summary>
         private void RefreshVersions(string? selectLabel)
@@ -175,95 +175,75 @@ namespace Smart_Tools.WPF.Views
             QueueSave();
         }
 
+        private void BtnVersionSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsView.RequestedSection = "TexturePack";
+            ShortcutManager.OpenToolRequested?.Invoke(ToolCatalogManager.SettingsId);
+        }
+
+        // =================================================================
+        //  The "Add a Minecraft version" dialog (inside the page, not a window)
+        // =================================================================
+
         private void BtnAddVersion_Click(object sender, RoutedEventArgs e)
         {
-            var version = AskVersion(_suggestedVersion ?? "");
-            if (version == null) return;
+            TxtMvLabel.Text = "";
+            TxtMvFormat.Text = "";
+            ChkMvNewStyle.IsChecked = true;
+            TxtMvError.Visibility = Visibility.Collapsed;
+            MainLayout.IsEnabled = false;
+            ModalHost.Visibility = Visibility.Visible;
+            Dispatcher.InvokeAsync(() => TxtMvLabel.Focus(), DispatcherPriority.Input);
+        }
+
+        private void CloseVersionDialog()
+        {
+            ModalHost.Visibility = Visibility.Collapsed;
+            MainLayout.IsEnabled = true;
+        }
+
+        private void BtnMvCancel_Click(object sender, RoutedEventArgs e) => CloseVersionDialog();
+
+        private void BtnMvAdd_Click(object sender, RoutedEventArgs e)
+        {
+            string name = TxtMvLabel.Text.Trim();
+            if (name.Length == 0 || name.Length > 60)
+            {
+                ShowVersionError(Loc.T("Str_TexturePack_MsgTypeVersion", "Type the version, for example 26.4."));
+                TxtMvLabel.Focus();
+                return;
+            }
+            if (!int.TryParse(TxtMvFormat.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out int format) || format is < 1 or > 100000)
+            {
+                ShowVersionError(Loc.T("Str_TexturePack_MsgWholeNumber", "The format number must be a whole number, for example 97."));
+                TxtMvFormat.Focus();
+                return;
+            }
+            var version = new PackVersion(name, format, ChkMvNewStyle.IsChecked == true);
             TexturePackVersions.AddOrUpdate(version);
-            _suggestedVersion = null;
+            CloseVersionDialog();
             RefreshVersions(version.Label);
             ShowStatus(Loc.F("Str_TexturePack_MsgVersionAdded", "Added {0} (format {1}) to your list.", version.Label, version.Format), StatusKind.Success);
         }
 
-        /// <summary>Compares the list with the releases your Minecraft launcher knows (works offline).</summary>
-        private async void BtnCheckVersions_Click(object sender, RoutedEventArgs e)
+        private void ShowVersionError(string text)
         {
-            BtnCheckVersions.IsEnabled = false;
-            var (ids, error) = await TexturePackVersions.GetReleaseIdsAsync();
-            BtnCheckVersions.IsEnabled = true;
-            if (error != null) { ShowStatus(error, StatusKind.Error); return; }
+            TxtMvError.Text = text;
+            TxtMvError.Visibility = Visibility.Visible;
+        }
 
-            var missing = TexturePackVersions.MissingReleases(ids, _versions);
-            string newest = ids.OrderByDescending(TexturePackVersions.KeyOf, TexturePackVersions.VersionKeyComparer.Instance).First();
-            if (missing.Count == 0)
+        private void Modal_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
             {
-                ShowStatus(Loc.F("Str_TexturePack_MsgListCovers", "Your list covers every Minecraft release (the newest is {0}).", newest), StatusKind.Success);
-                return;
+                CloseVersionDialog();
+                e.Handled = true;
             }
-            _suggestedVersion = missing[0];
-            ShowStatus(Loc.N(missing.Count, "Str_TexturePack_MsgMissingOne", "Minecraft {0} isn't in your list yet. Press \"Update from wiki\" to fetch the numbers, or \"Add version\" to type one in.", "Str_TexturePack_MsgMissingMany", "Minecraft {0} aren't in your list yet. Press \"Update from wiki\" to fetch the numbers, or \"Add version\" to type one in.", string.Join(", ", missing.Take(5))), StatusKind.Warning);
-        }
-
-        /// <summary>Best effort: reads the Minecraft Wiki's table and adds or corrects rows in your own file.</summary>
-        private async void BtnWikiUpdate_Click(object sender, RoutedEventArgs e)
-        {
-            BtnWikiUpdate.IsEnabled = false;
-            string? keep = (CmbVersion.SelectedItem as PackVersion)?.Label;
-            var (added, changed, error) = await TexturePackVersions.UpdateFromWikiAsync();
-            BtnWikiUpdate.IsEnabled = true;
-            if (error != null) { ShowStatus(error, StatusKind.Error); return; }
-
-            RefreshVersions(keep);
-            _suggestedVersion = null;
-            ShowStatus(added + changed == 0
-                ? Loc.T("Str_TexturePack_MsgWikiSame", "Your list already matches the Minecraft Wiki.")
-                : Loc.F("Str_TexturePack_MsgWikiUpdated", "Updated from the Minecraft Wiki: {0} added, {1} corrected.", added, changed), StatusKind.Success);
-        }
-
-        /// <summary>A small window asking for a version name and its format number.</summary>
-        private PackVersion? AskVersion(string label)
-        {
-            var labelBox = new System.Windows.Controls.TextBox { Text = label, MinWidth = 300, Margin = new Thickness(0, 4, 0, 10) };
-            var formatBox = new System.Windows.Controls.TextBox { MinWidth = 300, Margin = new Thickness(0, 4, 0, 10) };
-            var newStyle = new System.Windows.Controls.CheckBox { Content = Loc.T("Str_TexturePack_MsgNewStyle", "Newer style (Minecraft 1.21.9 and later: min_format / max_format)"), IsChecked = true, Margin = new Thickness(0, 0, 0, 12) };
-            var error = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) };
-            error.SetResourceReference(TextBlock.ForegroundProperty, "StatusErrorFg");
-            var ok = new System.Windows.Controls.Button { Content = Loc.T("Str_TexturePack_MsgAdd", "Add"), MinWidth = 90, MinHeight = 34, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
-            var cancel = new System.Windows.Controls.Button { Content = Loc.T("Str_TexturePack_MsgCancel", "Cancel"), MinWidth = 90, MinHeight = 34, IsCancel = true };
-            var link = new TextBlock { Margin = new Thickness(0, 0, 0, 12), TextWrapping = TextWrapping.Wrap, Text = Loc.T("Str_TexturePack_MsgFormatHelp", "The format number is on the Minecraft Wiki's \"Pack format\" page (minecraft.wiki/w/Pack_format). A number like 97.1 is entered as 97.") };
-
-            var window = new Window
+            else if (e.Key == Key.Enter && Keyboard.FocusedElement is TextBox)
             {
-                Title = Loc.T("Str_TexturePack_MsgAddVersionTitle", "Add a Minecraft version"),
-                SizeToContent = SizeToContent.WidthAndHeight,
-                ResizeMode = ResizeMode.NoResize,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = Window.GetWindow(this),
-                ShowInTaskbar = false,
-            };
-            window.SetResourceReference(Window.BackgroundProperty, "ContentBg");
-            PackVersion? result = null;
-            ok.Click += (_, _) =>
-            {
-                string name = labelBox.Text.Trim();
-                if (name.Length == 0 || name.Length > 60) { error.Text = Loc.T("Str_TexturePack_MsgTypeVersion", "Type the version, for example 26.4."); return; }
-                if (!int.TryParse(formatBox.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out int format) || format is < 1 or > 100000)
-                { error.Text = Loc.T("Str_TexturePack_MsgWholeNumber", "The format number must be a whole number, for example 97."); return; }
-                result = new PackVersion(name, format, newStyle.IsChecked == true);
-                window.DialogResult = true;
-            };
-            var panel = new StackPanel { Margin = new Thickness(20) };
-            panel.Children.Add(new TextBlock { Text = Loc.T("Str_TexturePack_MsgVersionLabel", "Minecraft version"), FontWeight = FontWeights.SemiBold });
-            panel.Children.Add(labelBox);
-            panel.Children.Add(new TextBlock { Text = Loc.T("Str_TexturePack_MsgFormatLabel", "Pack format number"), FontWeight = FontWeights.SemiBold });
-            panel.Children.Add(formatBox);
-            panel.Children.Add(link);
-            panel.Children.Add(newStyle);
-            panel.Children.Add(error);
-            panel.Children.Add(new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Children = { ok, cancel } });
-            window.Content = panel;
-            labelBox.Loaded += (_, _) => (string.IsNullOrEmpty(labelBox.Text) ? labelBox : formatBox).Focus();
-            return window.ShowDialog() == true ? result : null;
+                BtnMvAdd_Click(sender, e);
+                e.Handled = true;
+            }
         }
 
         // =================================================================

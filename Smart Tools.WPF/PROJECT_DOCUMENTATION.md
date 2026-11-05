@@ -551,6 +551,7 @@ If the app is already running, stop it (`Get-Process -Name SmartTools | Stop-Pro
 - **LanguageManager** - Runtime language switching
 - **ThemeManager** - Theme persistence and switching
 - **OutputFolderManager** - Output directory management
+- **Minecraft versions** (Settings > Minecraft versions, `Shared/Views/TexturePackSettingsPanel`) - the Texture Pack Builder's version list: the address of the wiki page "Update from wiki" reads (`PackVersionFile.WikiUrl` in `minecraft_pack_formats.json`; empty = built-in, `action=raw` is added automatically), "Check for new" against the launcher's own list, and "Update from wiki". The tool itself only has "Add version" (an in-page dialog) and re-reads the list whenever the page opens.
 - **Event days** (Settings > Event days) - holidays and special days (name, date, "every year", "non-working day"), stored in `settings.json` as `AppSettingsStore.EventDays` with three defaults. The Date & Time Toolkit shows them on their date and skips the non-working ones when counting business days
 - **Mock data lists** (Settings > Mock data) - named value lists stored as `AppSettingsStore.MockLists` (four defaults); they appear under "My lists" in the Mock Data Generator type drop-down
 

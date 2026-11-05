@@ -10134,4 +10134,30 @@
     <system:String x:Key="Str_SpritePacker_MsgFolderAndSub">Carpeta y subcarpetas · {0}</system:String>
     <system:String x:Key="Str_SpritePacker_MsgFolderOnly">Carpeta · {0}</system:String>
     <system:String x:Key="Str_SpritePacker_MsgMoreThanOne">Imágenes de más de una carpeta</system:String>
+    <system:String x:Key="Str_PixelArt_SizePresetLabel">Tamaños comunes</system:String>
+    <system:String x:Key="Str_PixelArt_SizeCustom">Personalizado</system:String>
+    <system:String x:Key="Str_SpritePacker_PresetCustom">Personalizado</system:String>
+    <system:String x:Key="Str_ImageToPixel_PresetCustom">Personalizado</system:String>
+    <system:String x:Key="Str_TexturePack_GuideTitle">Cómo crear un paquete de texturas</system:String>
+    <system:String x:Key="Str_TexturePack_GuideStep1">Dibuja cada textura como una imagen PNG. 16 × 16 es el tamaño clásico; 32, 64 o más también sirven.</system:String>
+    <system:String x:Key="Str_TexturePack_GuideStep2">Pon a cada archivo el nombre de la textura de Minecraft que reemplaza, por ejemplo stone.png. La herramienta rellena dónde va (block/stone); corrígelo en la lista si se equivocó.</system:String>
+    <system:String x:Key="Str_TexturePack_GuideStep3">Elige la versión de Minecraft y pulsa Crear paquete de texturas. Pon el .zip en .minecraft/resourcepacks.</system:String>
+    <system:String x:Key="Str_TexturePack_OpenVersionSettings">Lista de versiones…</system:String>
+    <system:String x:Key="Str_TexturePack_VersionsInSettings">Busca versiones nuevas de Minecraft, actualiza la lista desde la wiki o cambia la dirección de la wiki en Configuración.</system:String>
+    <system:String x:Key="Str_TexturePack_MsgBadUrl">Escribe una dirección web completa que empiece por https://</system:String>
+    <system:String x:Key="Str_TexturePack_MsgWikiUnreachable">No se pudo abrir la página de la wiki: {0}</system:String>
+    <system:String x:Key="Str_TexturePack_MsgWikiShape">Esa página no tiene la tabla de formatos con la forma esperada. Revisa la dirección en Configuración, o usa Agregar versión en la herramienta de paquetes de texturas.</system:String>
+    <system:String x:Key="Str_TexturePack_MsgMojangUnreadable">No se pudo leer la lista de versiones de Mojang.</system:String>
+    <system:String x:Key="Str_TexturePack_MsgVersionListFailed">No se pudo leer la lista de versiones de Minecraft: {0}</system:String>
+    <system:String x:Key="Str_Settings_NavTexturePack">Versiones de Minecraft</system:String>
+    <system:String x:Key="Str_Settings_TpWikiHeader">Página de la wiki</system:String>
+    <system:String x:Key="Str_Settings_TpWikiIntro">"Actualizar desde la wiki" lee la tabla de versiones de Minecraft de esta página. Si la wiki la mueve, escribe aquí la dirección nueva y el creador de paquetes de texturas sigue funcionando.</system:String>
+    <system:String x:Key="Str_Settings_TpWikiLabel">Dirección de la página de formatos de paquete</system:String>
+    <system:String x:Key="Str_Settings_TpWikiHint">"action=raw" se agrega solo, así que puedes pegar la dirección que ves en el navegador.</system:String>
+    <system:String x:Key="Str_Settings_TpWikiSave">Guardar dirección</system:String>
+    <system:String x:Key="Str_Settings_TpWikiDefault">Usar la dirección incluida</system:String>
+    <system:String x:Key="Str_Settings_TpWikiSaved">Dirección guardada. "Actualizar desde la wiki" la leerá a partir de ahora.</system:String>
+    <system:String x:Key="Str_Settings_TpWikiReset">Se restauró la dirección incluida.</system:String>
+    <system:String x:Key="Str_Settings_TpListHeader">Lista de versiones</system:String>
+    <system:String x:Key="Str_Settings_TpListIntro">Compara la lista con las versiones de Minecraft que conoce tu launcher, o trae los números de la wiki. Las filas nuevas van a tu propio archivo y aparecen en el creador de paquetes de texturas.</system:String>
 </ResourceDictionary>
