@@ -253,252 +253,85 @@
                                         Content="{DynamicResource Str_FileGen_FileTypeHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.FileMultipleOutline}" />
-                                    <UniformGrid
-                                        x:Name="FormatChips"
-                                        Columns="4"
+                                    <ComboBox
+                                        x:Name="CmbFormat"
+                                        Margin="0,0,0,4"
+                                        SelectedIndex="0"
+                                        SelectionChanged="Format_SelectionChanged"
                                         ToolTip="{DynamicResource Str_FileGen_FileTypeTooltip}">
-                                        <RadioButton
-                                            x:Name="RadioFormatTxt"
-                                            Margin="0,0,2,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            IsChecked="True"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Txt">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileDocumentOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_FileGenerator_Txt}" />
+                                        <ComboBoxItem Tag="Txt">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileDocumentOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_FileGenerator_Txt}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatCsv"
-                                            Margin="2,0,2,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Csv">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileDelimitedOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_ApiTester_Csv}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Csv">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileDelimitedOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_ApiTester_Csv}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatJson"
-                                            Margin="2,0,2,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Json">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="CodeJson" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_ApiTester_Json}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Json">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CodeJson" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_ApiTester_Json}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatXml"
-                                            Margin="2,0,0,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Xml">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="Xml" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_ApiTester_Xml}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Xml">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="Xml" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_ApiTester_Xml}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatPdf"
-                                            Margin="0,0,2,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Pdf">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FilePdfBox" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_BarcodeGenerator_Pdf}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Pdf">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FilePdfBox" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_BarcodeGenerator_Pdf}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatDocx"
-                                            Margin="2,0,2,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Docx">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileWordBox" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_FileGenerator_Word}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Docx">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileWordBox" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_FileGenerator_Word}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatJpg"
-                                            Margin="2,0,2,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Jpg">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileImageOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_BackgroundRemover_Jpg}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Jpg">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileImageOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_BackgroundRemover_Jpg}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatPng"
-                                            Margin="2,0,0,4"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Png">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="ImageOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_BarcodeGenerator_Png}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Png">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="ImageOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_BarcodeGenerator_Png}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatMp4"
-                                            Margin="0,0,2,0"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Mp4">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileVideoOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="MP4" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Mp4">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileVideoOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="MP4" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatBin"
-                                            Margin="2,0,2,0"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Bin">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileCogOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_FileGenerator_Bin}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Bin">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileCogOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_FileGenerator_Bin}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatDat"
-                                            Margin="2,0,2,0"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Dat">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="DatabaseOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_FileGenerator_Dat}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Dat">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="DatabaseOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_FileGenerator_Dat}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioFormatCustom"
-                                            Margin="2,0,0,0"
-                                            Click="Format_Click"
-                                            GroupName="FileGenFormat"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            Tag="Custom">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileQuestionOutline" />
-                                                <TextBlock
-                                                    Margin="0,2,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="11"
-                                                    Text="{DynamicResource Str_FileGenerator_Other}" />
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Custom">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="FileQuestionOutline" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_FileGenerator_Other}" />
                                             </StackPanel>
-                                        </RadioButton>
-                                    </UniformGrid>
+                                        </ComboBoxItem>
+                                    </ComboBox>
                                     <TextBlock x:Name="TxtFormatHint" Style="{StaticResource SidebarHint}" />
 
                                     <StackPanel x:Name="PanelCustomExtension" Visibility="Collapsed">

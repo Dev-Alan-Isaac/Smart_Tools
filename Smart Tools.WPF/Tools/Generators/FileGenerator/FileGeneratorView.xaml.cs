@@ -126,12 +126,6 @@ namespace Smart_Tools.WPF.Views
         //  Chips and fields
         // =================================================================
 
-        private RadioButton[] FormatChipList => new[]
-        {
-            RadioFormatTxt, RadioFormatCsv, RadioFormatJson, RadioFormatXml, RadioFormatPdf, RadioFormatDocx,
-            RadioFormatJpg, RadioFormatPng, RadioFormatMp4, RadioFormatBin, RadioFormatDat, RadioFormatCustom,
-        };
-
         private RadioButton[] FillChipList => new[] { RadioFillZeroes, RadioFillRandom, RadioFillPattern, RadioFillLorem };
         private RadioButton[] ArchiveChipList => new[] { RadioArchiveNone, RadioArchiveZip, RadioArchiveTar };
 
@@ -144,10 +138,10 @@ namespace Smart_Tools.WPF.Views
             (list.FirstOrDefault(c => c.Tag as string == value.ToString()) ?? list[0]).IsChecked = true;
         }
 
-        private void Format_Click(object sender, RoutedEventArgs e)
+        private void Format_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (Ignore) return;
-            _format = ChipValue(FormatChipList, FileGenFormat.Txt);
+            _format = (CmbFormat.SelectedItem as ComboBoxItem)?.Tag is string tag && Enum.TryParse(tag, out FileGenFormat picked) ? picked : FileGenFormat.Txt;
             OnOptionChanged();
         }
 
@@ -555,7 +549,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 _format = s.Format;
-                CheckChip(FormatChipList, s.Format);
+                CmbFormat.SelectedItem = CmbFormat.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == s.Format.ToString()) ?? CmbFormat.Items[0];
                 TxtCustomExtension.Text = s.CustomExtension;
                 (s.SizeMode == FileGenSizeMode.Exact ? RadioSizeExact : RadioSizeRandom).IsChecked = true;
                 TxtExactSize.Text = s.ExactSize;

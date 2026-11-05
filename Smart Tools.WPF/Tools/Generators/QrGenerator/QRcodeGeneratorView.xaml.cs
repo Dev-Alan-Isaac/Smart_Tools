@@ -51,6 +51,8 @@ namespace Smart_Tools.WPF.Views
 
         private readonly QrCodeManager _qr = new();
         private readonly ObservableCollection<string> _batchEntries = new();
+        private readonly ObservableCollection<BatchEntrySource> _sources = new();
+        private readonly Dictionary<BatchEntrySource, List<string>> _sourceEntries = new();
         private readonly DispatcherTimer _regenTimer;
 
         private QrCodeGenerationResult? _currentResult;
@@ -84,6 +86,10 @@ namespace Smart_Tools.WPF.Views
                 RegenerateSingle();
             };
 
+            InputCard.ItemsSource = _sources;
+            InputCard.FileFilterProvider = () => Loc.T("Str_Generators_MsgEntryFilter", "Lists of codes|*.csv;*.tsv;*.json;*.xml;*.txt;*.list|All files|*.*");
+            _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
+            InputCard.SetEmpty(true);
             ListBoxBatchEntries.ItemsSource = _batchEntries;
             _batchEntries.CollectionChanged += BatchEntries_CollectionChanged;
             _viewConstructed = true;
@@ -140,7 +146,7 @@ namespace Smart_Tools.WPF.Views
             UiMotion.FadeVisibility(SingleModeArea, !batch);
             UiMotion.FadeVisibility(BatchModeArea, batch);
             UiMotion.FadeVisibility(SingleInputSection, !batch);
-            UiMotion.FadeVisibility(BatchInputSection, batch);
+            UiMotion.FadeVisibility(InputCard, batch);
 
             if (!batch)
                 RegenerateSingle();
@@ -756,21 +762,64 @@ namespace Smart_Tools.WPF.Views
             AddEntries(text.Split(new[] { '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries));
         }
 
-        private void BtnLoadNamesFromFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFolderDialog { Title = Loc.T("Str_Generators_MsgPickNamesFolder", "Choose a folder - each file name becomes an entry") };
-            if (dialog.ShowDialog() != true) return;
+        // ---- files and folders in the Input card ----
 
-            try
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e) => _ = AddSourcesAsync(e.Paths);
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            if (_isBatchGenerating) return;
+            foreach (var source in _sources.ToList()) DropSource(source);
+        }
+
+        private void BtnRemoveSource_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isBatchGenerating || (sender as FrameworkElement)?.Tag is not BatchEntrySource source) return;
+            DropSource(source);
+        }
+
+        /// <summary>Takes a source off the list together with the codes it gave.</summary>
+        private void DropSource(BatchEntrySource source)
+        {
+            if (_sourceEntries.Remove(source, out var entries))
             {
-                AddEntries(Directory.EnumerateFiles(dialog.FolderName)
-                    .Select(Path.GetFileName)
-                    .OfType<string>());
+                _batchEntries.CollectionChanged -= BatchEntries_CollectionChanged;
+                ListBoxBatchEntries.ItemsSource = null;
+                foreach (string entry in entries) _batchEntries.Remove(entry);
+                ListBoxBatchEntries.ItemsSource = _batchEntries;
+                _batchEntries.CollectionChanged += BatchEntries_CollectionChanged;
+                UpdateBatchEntriesState(animate: false);
             }
-            catch (Exception ex)
+            _sources.Remove(source);
+        }
+
+        private async Task AddSourcesAsync(IEnumerable<string> paths)
+        {
+            var wanted = paths.Where(p => !_sources.Any(s => string.Equals(s.FullPath, p, StringComparison.OrdinalIgnoreCase))).ToList();
+            var problems = new List<string>();
+            int added = 0;
+
+            foreach (string path in wanted)
             {
-                MessageBox.Show(Loc.F("Str_Err_FolderRead", "Couldn't read that folder: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                bool folder = Directory.Exists(path);
+                var (entries, error) = await Task.Run(() => folder ? BatchEntryReader.ReadFolderNames(path) : BatchEntryReader.ReadFile(path));
+                if (error != null) { problems.Add(error); continue; }
+                if (entries.Count == 0)
+                {
+                    problems.Add(Loc.F("Str_Generators_ErrSourceEmpty", "{0}: no codes found.", Path.GetFileName(path.TrimEnd('\\', '/'))));
+                    continue;
+                }
+
+                var source = new BatchEntrySource { FullPath = path, IsFolder = folder, Count = entries.Count };
+                _sources.Add(source);
+                _sourceEntries[source] = entries;
+                AddEntries(entries);
+                added += entries.Count;
             }
+
+            if (added > 0) TxtBatchProgress.Text = Loc.F("Str_Generators_MsgAddedCodes", "Added {0:N0} codes", added);
+            if (problems.Count > 0)
+                MessageBox.Show(string.Join(Environment.NewLine, problems), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnRemoveBatchEntry_Click(object sender, RoutedEventArgs e)
@@ -797,6 +846,8 @@ namespace Smart_Tools.WPF.Views
                 return;
 
             _batchEntries.Clear();
+            _sourceEntries.Clear();
+            _sources.Clear();
         }
 
         // =================================================================
@@ -876,7 +927,7 @@ namespace Smart_Tools.WPF.Views
             // Lock the inputs that would change the run underneath it.
             BtnAddBatchEntry.IsEnabled = !running;
             BtnPasteBatchEntries.IsEnabled = !running;
-            BtnLoadNamesFromFolder.IsEnabled = !running;
+            InputCard.IsLocked = running;
             BtnRemoveBatchEntry.IsEnabled = !running;
             BtnClearBatchEntries.IsEnabled = !running && _batchEntries.Count > 0;
             RadioModeSingle.IsEnabled = !running;

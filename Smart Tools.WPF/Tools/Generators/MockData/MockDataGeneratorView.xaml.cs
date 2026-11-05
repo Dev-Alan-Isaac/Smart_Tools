@@ -301,24 +301,31 @@ namespace Smart_Tools.WPF.Views
         //  Columns
         // =================================================================
 
+        private bool _fillingTemplates;
+
+        /// <summary>Fills the "Start from" list in the sidebar: a prompt, then one entry per ready-made column set.</summary>
         private void BuildPresetChips()
         {
+            _fillingTemplates = true;
+            CmbTemplate.Items.Add(new ComboBoxItem { Content = Str("Str_Mock_ChooseTemplate", "Choose a template…"), Tag = "" });
             foreach (var preset in MockDataManager.Presets)
-            {
-                var chip = new Button
-                {
-                    Content = Str($"Str_Mock_Preset_{preset.Key}", preset.Key),
-                    Tag = preset.Key,
-                    Style = (Style)FindResource("PresetChipStyle"),
-                };
-                chip.Click += Preset_Click;
-                PresetPanel.Children.Add(chip);
-            }
+                CmbTemplate.Items.Add(new ComboBoxItem { Content = Str($"Str_Mock_Preset_{preset.Key}", preset.Key), Tag = preset.Key });
+            CmbTemplate.SelectedIndex = 0;
+            _fillingTemplates = false;
         }
 
-        private void Preset_Click(object sender, RoutedEventArgs e)
+        private void Template_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_isSaving || (sender as Button)?.Tag is not string key) return;
+            if (_fillingTemplates || (CmbTemplate.SelectedItem as ComboBoxItem)?.Tag is not string key || key.Length == 0) return;
+            ApplyPreset(key);
+            _fillingTemplates = true;
+            CmbTemplate.SelectedIndex = 0;   // back to the prompt, so the same template can be picked again
+            _fillingTemplates = false;
+        }
+
+        private void ApplyPreset(string key)
+        {
+            if (_isSaving) return;
             var preset = MockDataManager.Presets.FirstOrDefault(p => p.Key == key);
             if (preset == null) return;
 
@@ -463,9 +470,24 @@ namespace Smart_Tools.WPF.Views
             ScheduleSave();
         }
 
-        private void RowsPreset_Click(object sender, RoutedEventArgs e)
+        private bool _syncingRows;
+
+        private void RowsPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if ((sender as Button)?.Tag is string rows) TxtRows.Text = rows;
+            if (_syncingRows || !_viewConstructed) return;
+            if ((CmbRowsPreset.SelectedItem as ComboBoxItem)?.Tag is string rows && rows.Length > 0) TxtRows.Text = rows;
+        }
+
+        private void Rows_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_viewConstructed)
+            {
+                _syncingRows = true;
+                string digits = new string(TxtRows.Text.Where(char.IsAsciiDigit).ToArray());
+                CmbRowsPreset.SelectedItem = CmbRowsPreset.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == digits) ?? CmbRowsPreset.Items[0];
+                _syncingRows = false;
+            }
+            Setting_Changed(sender, e);
         }
 
         private void BtnNewData_Click(object sender, RoutedEventArgs e)

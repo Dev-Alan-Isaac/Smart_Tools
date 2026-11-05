@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Controllers"
     x:Name="Root"
     Loaded="Root_Loaded">
 
@@ -21,6 +22,32 @@
         <!--  "px" suffix inside a size field  -->
 
         <!--  Round colour swatch that opens the colour picker  -->
+
+        <!--  One file or folder in the Input card  -->
+        <DataTemplate x:Key="EntrySourceTemplate" DataType="{x:Type models:BatchEntrySource}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="26" Height="26" Margin="0,0,8,0" Background="{DynamicResource AccentColorSubtle}" CornerRadius="7">
+                    <materialDesign:PackIcon x:Name="SourceIcon" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="FileDelimitedOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                    <TextBlock Margin="0,1,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSource_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
+                    <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="SourceIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
 
         <!--  Batch status chip, coloured from theme tokens by Status (enum)  -->
         <DataTemplate x:Key="BatchStatusChipTemplate">
@@ -339,102 +366,21 @@
                                 </StackPanel>
                             </Border>
 
-                            <!--  ============ BATCH ENTRIES (batch mode) ============  -->
-                            <Border
-                                x:Name="BatchInputSection"
-                                Style="{StaticResource SidebarGroupCardStyle}"
+                            <!--  ============ BATCH INPUT (batch mode) ============  -->
+                            <controls:InputFolderCard
+                                x:Name="InputCard"
+                                ClearRequested="InputCard_ClearRequested"
+                                Header="{DynamicResource Str_Generators_SourcesHeader}"
+                                HeaderIcon="FileDelimitedOutline"
+                                ItemTemplate="{StaticResource EntrySourceTemplate}"
+                                Mode="Files"
+                                PathsAdded="InputCard_PathsAdded"
+                                ShowSubfolders="False"
                                 Visibility="Collapsed">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_Common_BatchEntriesHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.PlaylistPlus}" />
-
-                                    <!--  Type + Enter (or +) adds one entry  -->
-                                    <Border Padding="0,0,4,0" Style="{StaticResource InputBarStyle}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox
-                                                x:Name="TxtNewBatchEntry"
-                                                FontFamily="Consolas"
-                                                KeyDown="TxtNewBatchEntry_KeyDown"
-                                                Style="{StaticResource BareTextBox}"
-                                                Tag="Type a value, press Enter"
-                                                ToolTip="{DynamicResource Str_Barcode_TypeValueTooltip}" />
-                                            <Button
-                                                x:Name="BtnAddBatchEntry"
-                                                Grid.Column="1"
-                                                Width="28"
-                                                Height="28"
-                                                Margin="2,4"
-                                                Click="BtnAddBatchEntry_Click"
-                                                Style="{StaticResource NeutralIconButtonStyle}"
-                                                ToolTip="{DynamicResource Str_Barcode_AddValueTooltip}">
-                                                <materialDesign:PackIcon
-                                                    Width="15"
-                                                    Height="15"
-                                                    Kind="Plus" />
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-
-                                    <Grid Margin="0,8,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="6" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Button
-                                            x:Name="BtnPasteBatchEntries"
-                                            Grid.Column="0"
-                                            MinHeight="30"
-                                            Click="BtnPasteBatchEntries_Click"
-                                            ToolTip="{DynamicResource Str_BarcodeGenerator_AddEveryLineCurrently}">
-                                            <Grid HorizontalAlignment="Center">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <materialDesign:PackIcon
-                                                    Grid.Column="0"
-                                                    Width="14"
-                                                    Height="14"
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    Kind="ContentPaste" />
-                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_BarcodeGenerator_PasteList}" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Button>
-                                        <Button
-                                            x:Name="BtnLoadNamesFromFolder"
-                                            Grid.Column="2"
-                                            MinHeight="30"
-                                            Click="BtnLoadNamesFromFolder_Click"
-                                            ToolTip="{DynamicResource Str_Barcode_LoadNamesFromFolderTooltip}">
-                                            <Grid HorizontalAlignment="Center">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <materialDesign:PackIcon
-                                                    Grid.Column="0"
-                                                    Width="14"
-                                                    Height="14"
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    Kind="FolderOpenOutline" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Center"
-                                                    Text="{DynamicResource Str_Barcode_LoadNamesFromFolder}" TextWrapping="Wrap" />
-                                            </Grid>
-                                        </Button>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
+                                <controls:InputFolderCard.Options>
+                                    <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_Generators_SourcesHint}" TextWrapping="Wrap" />
+                                </controls:InputFolderCard.Options>
+                            </controls:InputFolderCard>
 
                             <!--  ============ TYPE ============  -->
                             <Border ctl:Tour.Key="Str_Tour_BarcodeGenerator_Type" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
@@ -1119,7 +1065,7 @@
                         </Grid>
                     </Border>
 
-                    <!--  Entries  -->
+                    <!--  Entries: title, count and the list buttons on one row  -->
                     <Border
                         Grid.Row="1"
                         Grid.Column="0"
@@ -1127,13 +1073,14 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <ContentControl
@@ -1143,6 +1090,7 @@
                                 <Border
                                     x:Name="BatchCountPill"
                                     Grid.Column="1"
+                                    Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource StatusInfoBg}"
                                     Style="{StaticResource IconStatusPillStyle}"
@@ -1154,11 +1102,69 @@
                                         Foreground="{DynamicResource StatusInfoFg}"
                                         Text="0" />
                                 </Border>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
+                                    <Button
+                                        x:Name="BtnPasteBatchEntries"
+                                        Margin="0,0,6,0"
+                                        Click="BtnPasteBatchEntries_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_BarcodeGenerator_AddEveryLineCurrently}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="ContentPaste" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnRemoveBatchEntry"
+                                        Margin="0,0,6,0"
+                                        Click="BtnRemoveBatchEntry_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Common_RemoveSelectedEntriesTooltip}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="PlaylistRemove" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnClearBatchEntries"
+                                        Click="BtnClearBatchEntries_Click"
+                                        Style="{StaticResource ListToolDangerButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Common_ClearAllEntriesTooltip}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteSweepOutline" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Margin="0,0,0,10">
+                        <!--  Type + Enter (or +) adds one entry  -->
+                        <Border Padding="0,0,4,0" Style="{StaticResource InputBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    x:Name="TxtNewBatchEntry"
+                                    FontFamily="Consolas"
+                                    KeyDown="TxtNewBatchEntry_KeyDown"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="{DynamicResource Str_Generators_TypeValueHint}"
+                                    ToolTip="{DynamicResource Str_Barcode_TypeValueTooltip}" />
+                                <Button
+                                    x:Name="BtnAddBatchEntry"
+                                    Grid.Column="1"
+                                    Width="28"
+                                    Height="28"
+                                    Margin="2,4"
+                                    Click="BtnAddBatchEntry_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Barcode_AddValueTooltip}">
+                                    <materialDesign:PackIcon
+                                        Width="15"
+                                        Height="15"
+                                        Kind="Plus" />
+                                </Button>
+                            </Grid>
+                        </Border>
                             </Grid>
 
                             <ListBox
                                 x:Name="ListBoxBatchEntries"
-                                Grid.Row="1"
+                                Grid.Row="2"
                                 HorizontalContentAlignment="Stretch"
                                 FontFamily="Consolas"
                                 SelectionMode="Extended"
@@ -1192,7 +1198,7 @@
 
                             <StackPanel
                                 x:Name="BatchEntriesEmptyPanel"
-                                Grid.Row="1"
+                                Grid.Row="2"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 IsHitTestVisible="False">
@@ -1209,49 +1215,21 @@
                                     TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <Grid Grid.Row="2" Margin="0,10,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="8" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Button
-                                    x:Name="BtnRemoveBatchEntry"
-                                    Grid.Column="0"
-                                    Click="BtnRemoveBatchEntry_Click"
-                                    ToolTip="{DynamicResource Str_Common_RemoveSelectedEntriesTooltip}"
-                                    Style="{StaticResource ListToolButtonStyle}">
-                                    <materialDesign:PackIcon
-                                        Width="16"
-                                        Height="16"
-                                        Kind="PlaylistRemove" />
-                                </Button>
-                                <Button
-                                    x:Name="BtnClearBatchEntries"
-                                    Grid.Column="2"
-                                    Click="BtnClearBatchEntries_Click"
-                                    ToolTip="{DynamicResource Str_Common_ClearAllEntriesTooltip}"
-                                    Style="{StaticResource ListToolDangerButtonStyle}">
-                                    <materialDesign:PackIcon
-                                        Width="16"
-                                        Height="16"
-                                        Kind="DeleteSweepOutline" />
-                                </Button>
-                            </Grid>
                         </Grid>
                     </Border>
 
                     <!--  Results  -->
-                    <Border
-                        Grid.Row="1"
-                        Grid.Column="2"
-                        Style="{StaticResource CardStyle}">
+                    <Grid Grid.Row="1" Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource CardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
+</Grid.RowDefinitions>
 
                             <Grid Grid.Row="0" Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
@@ -1353,20 +1331,20 @@
                                     TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <Grid Grid.Row="2" Margin="0,12,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock
-                                    x:Name="TxtBatchExportInfo"
-                                    VerticalAlignment="Center"
-                                    FontSize="11.5"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Text="{DynamicResource Str_BarcodeGenerator_ExportsEveryGeneratedCode}" />
+                        </Grid>
+                        </Border>
+
+                        <!--  Export: its own card, the explanation under the button  -->
+                        <Border Grid.Row="1" Margin="0,14,0,0" Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Margin="0,0,0,10"
+                                    Content="{DynamicResource Str_Common_ExportHeader}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.ExportVariant}" />
                                 <controls:ExportButton
                                     x:Name="BatchExportButton"
-                                    Grid.Column="1"
+                                    HorizontalAlignment="Stretch"
                                     IsEnabled="False"
                                     ToolTip="{DynamicResource Str_Barcode_ExportAllToFolderTooltip}">
                                     <Button.ContextMenu>
@@ -1410,9 +1388,16 @@
                                         </ContextMenu>
                                     </Button.ContextMenu>
                                 </controls:ExportButton>
-                            </Grid>
-                        </Grid>
-                    </Border>
+                                <TextBlock
+                                    x:Name="TxtBatchExportInfo"
+                                    Margin="0,10,0,0"
+                                    TextWrapping="Wrap"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_BarcodeGenerator_ExportsEveryGeneratedCode}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
 
                 </Grid>
 
