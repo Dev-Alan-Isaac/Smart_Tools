@@ -50,11 +50,69 @@ namespace Smart_Tools.WPF.Controllers
             /// <summary>Opens a PDF. Throws when the password is wrong or the file is not a PDF Windows can read.</summary>
             public static async Task<PageRenderer> OpenAsync(string path, string? password)
             {
-                var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask().ConfigureAwait(false);
-                var document = string.IsNullOrEmpty(password)
-                    ? await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file).AsTask().ConfigureAwait(false)
-                    : await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file, password).AsTask().ConfigureAwait(false);
-                return new PageRenderer(document);
+                try
+                {
+                    var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(Path.GetFullPath(path)).AsTask().ConfigureAwait(false);
+                    return new PageRenderer(await LoadAsync(file, null, password).ConfigureAwait(false));
+                }
+                catch (Exception first) when (first is not OperationCanceledException && !IsPasswordProblem(first))
+                {
+                    // Windows' reader is stricter than a browser: it refuses files that are open elsewhere, odd paths and slightly damaged PDFs.
+                    // Read the bytes ourselves, and if that still fails let PDFsharp rewrite the file cleanly in memory.
+                    try
+                    {
+                        var bytes = await Task.Run(() => ReadShared(path)).ConfigureAwait(false);
+                        try { return new PageRenderer(await LoadAsync(null, bytes, password).ConfigureAwait(false)); }
+                        catch (Exception) when (!IsPasswordProblem(first))
+                        {
+                            var repaired = await Task.Run(() => Rewrite(bytes, password)).ConfigureAwait(false);
+                            return new PageRenderer(await LoadAsync(null, repaired, password: null).ConfigureAwait(false));
+                        }
+                    }
+                    catch (Exception) { throw first is System.Runtime.InteropServices.COMException ? first : new InvalidOperationException(first.Message, first); }
+                }
+            }
+
+            /// <summary>True when Windows refused the file because it needs a password or the one given is wrong (ERROR_WRONG_PASSWORD).</summary>
+            public static bool IsPasswordProblem(Exception ex) => ex.HResult == unchecked((int)0x8007052B);
+
+            private static byte[] ReadShared(string path)
+            {
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                var bytes = new byte[stream.Length];
+                stream.ReadExactly(bytes);
+                return bytes;
+            }
+
+            private static byte[] Rewrite(byte[] bytes, string? password)
+            {
+                using var input = new MemoryStream(bytes);
+                using var source = PdfSharp.Pdf.IO.PdfReader.Open(input, string.IsNullOrEmpty(password) ? null : password, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Import);
+                using var output = new PdfSharp.Pdf.PdfDocument();
+                foreach (var page in source.Pages) output.AddPage(page);
+                using var result = new MemoryStream();
+                output.Save(result, false);
+                return result.ToArray();
+            }
+
+            private static async Task<Windows.Data.Pdf.PdfDocument> LoadAsync(Windows.Storage.StorageFile? file, byte[]? bytes, string? password)
+            {
+                if (file != null)
+                    return string.IsNullOrEmpty(password)
+                        ? await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file).AsTask().ConfigureAwait(false)
+                        : await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file, password).AsTask().ConfigureAwait(false);
+
+                var memory = new Windows.Storage.Streams.InMemoryRandomAccessStream();   // not disposed: the document reads pages from it later
+                using (var writer = new Windows.Storage.Streams.DataWriter(memory))
+                {
+                    writer.WriteBytes(bytes!);
+                    await writer.StoreAsync().AsTask().ConfigureAwait(false);
+                    writer.DetachStream();
+                }
+                memory.Seek(0);
+                return string.IsNullOrEmpty(password)
+                    ? await Windows.Data.Pdf.PdfDocument.LoadFromStreamAsync(memory).AsTask().ConfigureAwait(false)
+                    : await Windows.Data.Pdf.PdfDocument.LoadFromStreamAsync(memory, password).AsTask().ConfigureAwait(false);
             }
 
             /// <summary>The size of a page as shown, in points.</summary>

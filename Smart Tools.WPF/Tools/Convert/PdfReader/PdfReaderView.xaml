@@ -174,20 +174,16 @@
                                 Style="{StaticResource SidebarGroupCardStyle}"
                                 Visibility="Collapsed">
                                 <StackPanel>
-                                    <StackPanel x:Name="PanelPassword">
-                                        <TextBlock
-                                            Margin="0,8,0,6"
-                                            Style="{StaticResource FieldLabel}"
-                                            Text="{DynamicResource Str_PdfReader_Password}" />
-                                        <Border Style="{StaticResource InputBarStyle}">
-                                            <PasswordBox x:Name="PwdBox" KeyDown="PwdBox_KeyDown" />
-                                        </Border>
-                                        <Button
-                                            Margin="0,6,0,0"
-                                            Click="BtnUnlock_Click"
-                                            Content="{DynamicResource Str_PdfReader_Unlock}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                    </StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_PdfReader_Password}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.LockOutline}" />
+                                    <PasswordBox x:Name="PwdBox" KeyDown="PwdBox_KeyDown" />
+                                    <Button
+                                        Margin="0,8,0,0"
+                                        Click="BtnUnlock_Click"
+                                        Content="{DynamicResource Str_PdfReader_Unlock}"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}" />
                                 </StackPanel>
                             </Border>
 

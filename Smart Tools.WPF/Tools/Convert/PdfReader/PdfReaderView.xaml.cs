@@ -325,10 +325,13 @@ namespace Smart_Tools.WPF.Views
                 ReleaseDocument();
                 _path = path;   // so Unlock can try again with a password
                 SetCurrent(path);
-                PanelPasswordCard.Visibility = Visibility.Visible;
+                bool needsPassword = PdfExtrasManager.PageRenderer.IsPasswordProblem(ex) || (ex.InnerException != null && PdfExtrasManager.PageRenderer.IsPasswordProblem(ex.InnerException));
+                PanelPasswordCard.Visibility = needsPassword ? Visibility.Visible : Visibility.Collapsed;
                 UpdateAll();
                 TxtProgress.Text = T("Str_PdfReader_CantOpen", "This PDF could not be opened.");
-                TxtProgressDetail.Text = T("Str_PdfReader_CantOpenDetail", "If it has a password, type it in the sidebar and press Unlock. Otherwise the file may be damaged.");
+                TxtProgressDetail.Text = needsPassword
+                    ? T("Str_PdfReader_CantOpenDetail", "If it has a password, type it in the sidebar and press Unlock.")
+                    : T("Str_PdfReader_CantOpenOther", "Windows could not read this file: ") + ex.Message;
             }
             finally
             {
