@@ -789,9 +789,7 @@ namespace Smart_Tools.WPF.Controllers
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-                string temp = SettingsPath + ".tmp";
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-                File.Move(temp, SettingsPath, overwrite: true);
+                AtomicFile.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings, JsonOptions));
             }
             catch (Exception)
             {

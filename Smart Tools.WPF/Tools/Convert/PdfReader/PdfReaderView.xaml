@@ -2,8 +2,8 @@
     x:Class="Smart_Tools.WPF.Views.PdfReaderView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -15,8 +15,8 @@
     AllowDrop="True"
     DragOver="Root_DragOver"
     Drop="Root_Drop"
-    mc:Ignorable="d"
-    Loaded="View_Loaded">
+    Loaded="View_Loaded"
+    mc:Ignorable="d">
 
     <!--
         PDF Reader and Signer - read a PDF, then add text, a date, a signature or a check mark and save a new copy.
@@ -126,7 +126,10 @@
                                 Style="{StaticResource SidebarHint}" />
 
                             <!--  ============ PASSWORD (only when the PDF needs one) ============  -->
-                            <Border x:Name="PanelPasswordCard" Style="{StaticResource SidebarGroupCardStyle}" Visibility="Collapsed">
+                            <Border
+                                x:Name="PanelPasswordCard"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
                                 <StackPanel>
                                     <StackPanel x:Name="PanelPassword">
                                         <TextBlock
@@ -162,13 +165,16 @@
                                         BorderThickness="1"
                                         CornerRadius="8">
                                         <Grid>
-                                            <Image x:Name="SigPreview" Margin="6" Stretch="Uniform" />
+                                            <Image
+                                                x:Name="SigPreview"
+                                                Margin="6"
+                                                Stretch="Uniform" />
                                             <TextBlock
                                                 x:Name="TxtNoSignature"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center"
                                                 FontSize="11.5"
-                                                Foreground="#6B7280"
+                                                Foreground="{DynamicResource TextSecondary}"
                                                 Text="{DynamicResource Str_PdfReader_NoSignature}" />
                                         </Grid>
                                     </Border>
@@ -372,6 +378,7 @@
                                 Foreground="{DynamicResource TextSecondary}"
                                 TextAlignment="Center" />
                             <Button
+                                Margin="0,0,4,0"
                                 Click="BtnZoomIn_Click"
                                 Style="{StaticResource ListToolButtonStyle}"
                                 ToolTip="{DynamicResource Str_PdfReader_ZoomIn}">

@@ -303,7 +303,7 @@ namespace Smart_Tools.WPF.Views
             bool subfolders = InputCard.IncludeSubfolders;
             _adding++;
             UpdateButtons();
-            TxtProgress.Text = "Looking for images…";
+            TxtProgress.Text = Loc.T("Str_ImageConvertPDF_StatusLooking", "Looking for images…");
             try
             {
                 int added = 0, inaccessible = 0, missing = 0;
@@ -489,7 +489,7 @@ namespace Smart_Tools.WPF.Views
             _items.Clear();
             _groups.Clear();
             ResetResult();
-            TxtProgress.Text = "Add images to make a PDF.";
+            TxtProgress.Text = Loc.T("Str_ImageConvertPDF_AddImagesToMake", "Add images to make a PDF.");
         }
 
         private void RemoveItems(IReadOnlyCollection<ImagePdfItem> items)
@@ -590,7 +590,7 @@ namespace Smart_Tools.WPF.Views
             var snapshot = _items.ToList();
             if (!snapshot.Any(i => i.IsIncluded))
             {
-                TxtProgress.Text = "Tick at least one image to put in the PDF.";
+                TxtProgress.Text = Loc.T("Str_ImageConvertPDF_StatusNoneTicked", "Tick at least one image to put in the PDF.");
                 return;
             }
 
@@ -634,7 +634,7 @@ namespace Smart_Tools.WPF.Views
             {
                 ProgressConversion.Value = 0;
                 TxtProgressPercent.Text = "";
-                TxtProgress.Text = "The PDF couldn't be saved: " + ImageToPdfManager.PlainError(ex);
+                TxtProgress.Text = Loc.F("Str_ImageConvertPDF_StatusSaveFailed", "The PDF couldn't be saved: {0}", ImageToPdfManager.PlainError(ex));
                 MessageBox.Show(Loc.F("Str_MB_ThePdfCouldnT", "The PDF couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
@@ -728,7 +728,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (File.Exists(file)) Process.Start("explorer.exe", $"/select,\"{file}\"");
                 else if (Directory.Exists(Path.GetDirectoryName(file))) Process.Start("explorer.exe", $"\"{Path.GetDirectoryName(file)}\"");
-                else TxtProgress.Text = "The PDF is no longer there.";
+                else TxtProgress.Text = Loc.T("Str_ImageConvertPDF_StatusGone", "The PDF is no longer there.");
             }
             catch (Exception ex)
             {

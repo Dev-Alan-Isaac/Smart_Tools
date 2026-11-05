@@ -9977,4 +9977,14 @@
     <system:String x:Key="Str_SysSnap_PortableDone">Done. The portable version is in {0}. On the other PC run SmartTools.exe and open System Snapshot.</system:String>
     <system:String x:Key="Str_SysSnap_PortableFailed">Could not make the portable version: {0}</system:String>
     <system:String x:Key="Str_SysSnap_PortableDev">Not available in a build run from Visual Studio. Use the installed or published app.</system:String>
+    <system:String x:Key="Str_ImageConvertPDF_StatusLooking" xml:space="preserve">Looking for images…</system:String>
+    <system:String x:Key="Str_ImageConvertPDF_StatusNoneTicked" xml:space="preserve">Tick at least one image to put in the PDF.</system:String>
+    <system:String x:Key="Str_ImageConvertPDF_StatusSaveFailed" xml:space="preserve">The PDF couldn't be saved: {0}</system:String>
+    <system:String x:Key="Str_ImageConvertPDF_StatusGone" xml:space="preserve">The PDF is no longer there.</system:String>
+    <system:String x:Key="Str_PdfToolkit_StatusLooking" xml:space="preserve">Looking for PDFs…</system:String>
+    <system:String x:Key="Str_PdfToolkit_StatusCheckPages" xml:space="preserve">Check the pages to split out - {0}</system:String>
+    <system:String x:Key="Str_PdfToolkit_StatusFolderFailed" xml:space="preserve">The folder couldn't be created: {0}</system:String>
+    <system:String x:Key="Str_PdfToolkit_StatusGone" xml:space="preserve">The result is no longer there.</system:String>
+    <system:String x:Key="Str_PdfToolkit_SaveWithoutAsking" xml:space="preserve">Save without asking</system:String>
+    <system:String x:Key="Str_PdfToolkit_SaveWithoutAskingTip" xml:space="preserve">Save straight into the folder above. Off: pick where to save each time.</system:String>
 </ResourceDictionary>

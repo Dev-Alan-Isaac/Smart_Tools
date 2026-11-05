@@ -354,7 +354,7 @@ namespace Smart_Tools.WPF.Views
             if (_isBusy || paths.Count == 0) return;
             _adding++;
             UpdateButtons();
-            TxtProgressStatus.Text = "Looking for PDFs…";
+            TxtProgressStatus.Text = Loc.T("Str_PdfToolkit_StatusLooking", "Looking for PDFs…");
             try
             {
                 // Each folder is one Files card row; loose PDFs share one.
@@ -526,7 +526,7 @@ namespace Smart_Tools.WPF.Views
             _items.Clear();
             _groups.Clear();
             ResetResults();
-            TxtProgressStatus.Text = "Add PDFs to get started.";
+            TxtProgressStatus.Text = Loc.T("Str_PdfToolkit_AddPdfsToGet", "Add PDFs to get started.");
         }
 
         private void RemoveItems(IReadOnlyCollection<PdfToolItem> items)
@@ -610,10 +610,10 @@ namespace Smart_Tools.WPF.Views
         {
             AutoSaveCheckBox = new CheckBox
             {
-                Content = "Save without asking",
+                Content = Loc.T("Str_PdfToolkit_SaveWithoutAsking", "Save without asking"),
                 IsChecked = true,
                 Margin = new Thickness(0, 8, 0, 0),
-                ToolTip = "Save straight into the folder above. Off: pick where to save each time.",
+                ToolTip = Loc.T("Str_PdfToolkit_SaveWithoutAskingTip", "Save straight into the folder above. Off: pick where to save each time."),
             };
             AutoSaveCheckBox.SetResourceReference(ForegroundProperty, "SidebarText");
             AutoSaveCheckBox.Checked += Option_Changed;
@@ -654,7 +654,7 @@ namespace Smart_Tools.WPF.Views
             _settings = ReadSettings();
             if (op == PdfToolOperation.Split && _settings.SplitMode == PdfSplitMode.Ranges && !PdfToolkitManager.ParseRanges(TxtPageRanges.Text).IsValid)
             {
-                TxtProgressStatus.Text = "Check the pages to split out - " + PdfToolkitManager.DescribeRanges(PdfToolkitManager.ParseRanges(TxtPageRanges.Text));
+                TxtProgressStatus.Text = Loc.F("Str_PdfToolkit_StatusCheckPages", "Check the pages to split out - {0}", PdfToolkitManager.DescribeRanges(PdfToolkitManager.ParseRanges(TxtPageRanges.Text)));
                 TxtPageRanges.Focus();
                 return;
             }
@@ -674,7 +674,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                 {
-                    TxtProgressStatus.Text = "The folder couldn't be created: " + PdfToolkitManager.PlainError(ex);
+                    TxtProgressStatus.Text = Loc.F("Str_PdfToolkit_StatusFolderFailed", "The folder couldn't be created: {0}", PdfToolkitManager.PlainError(ex));
                     return;
                 }
             }
@@ -818,7 +818,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (File.Exists(file)) Process.Start("explorer.exe", $"/select,\"{file}\"");
                 else if (Directory.Exists(Path.GetDirectoryName(file))) Process.Start("explorer.exe", $"\"{Path.GetDirectoryName(file)}\"");
-                else TxtProgressStatus.Text = "The result is no longer there.";
+                else TxtProgressStatus.Text = Loc.T("Str_PdfToolkit_StatusGone", "The result is no longer there.");
             }
             catch (Exception ex)
             {
