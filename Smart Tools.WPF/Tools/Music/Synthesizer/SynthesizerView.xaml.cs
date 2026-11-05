@@ -278,26 +278,59 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>Window closing: release the audio device and discard any scratch recording (safe to call twice).</summary>
-        public void CancelActiveRun() => Root_Unloaded(this, new RoutedEventArgs());
+        public void CancelActiveRun() => ReleaseAudio(askNow: true);
 
-        private void Root_Unloaded(object sender, RoutedEventArgs e)
+        private void Root_Unloaded(object sender, RoutedEventArgs e) => ReleaseAudio(askNow: false);
+
+        /// <summary>
+        /// Lets go of the audio device. If a take was still being recorded, it is stopped and the user is asked whether to keep it:
+        /// at once when the window closes, or right after the page has finished unloading when they just went to another tool.
+        /// </summary>
+        private void ReleaseAudio(bool askNow)
         {
             _output?.Stop();
             _output?.Dispose();
             _output = null;
             StopRecording();
 
-            // Leaving the view mid-recording: there's no one left to answer
-            // a Save dialog, so just discard the scratch file rather than
-            // leaving it orphaned in the temp folder.
-            if (_tempRecordingPath != null)
-            {
-                try { File.Delete(_tempRecordingPath); }
-                catch { /* best-effort */ }
-                _tempRecordingPath = null;
-            }
+            string unfinished = _tempRecordingPath;
+            _tempRecordingPath = null;
             _isRecording = false;
             _recTimer.Stop();
+            RecDot.Opacity = 0;
+            if (unfinished == null) return;
+            SetRecordButtonState(recording: false);   // coming back to the tool must not show a recording that is gone
+
+            if (askNow) AskAboutUnfinishedTake(unfinished);
+            else Dispatcher.BeginInvoke(() => AskAboutUnfinishedTake(unfinished), DispatcherPriority.Background);
+        }
+
+        private void AskAboutUnfinishedTake(string path)
+        {
+            try
+            {
+                // A take with no sound in it (just the file header) is not worth asking about.
+                if (!File.Exists(path) || new FileInfo(path).Length <= 64)
+                {
+                    DeleteScratch(path);
+                    return;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return;
+            }
+
+            var answer = MessageBox.Show(Loc.T("Str_Synth_UnfinishedTake", "You were still recording when you left. Save the recording?"),
+                Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
+            if (answer == MessageBoxResult.Yes) OfferToSave(path);
+            else DeleteScratch(path);
+        }
+
+        private static void DeleteScratch(string path)
+        {
+            try { File.Delete(path); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* best-effort scratch-file cleanup */ }
         }
 
         // ---------------- Parameter wiring ----------------
@@ -429,14 +462,19 @@ namespace Smart_Tools.WPF.Views
 
             string finishedPath = _tempRecordingPath;
             _tempRecordingPath = null;
+            OfferToSave(finishedPath);
+        }
 
+        /// <summary>Asks where to put a finished take, copies it there and removes the scratch file.</summary>
+        private void OfferToSave(string finishedPath)
+        {
             if (finishedPath == null || !File.Exists(finishedPath))
                 return;
 
             var dialog = new SaveFileDialog
             {
-                Title = "Save recording",
-                Filter = "WAV audio|*.wav",
+                Title = Loc.T("Str_Synth_SaveRecordingTitle", "Save recording"),
+                Filter = Loc.T("Str_Synth_WavFilter", "WAV audio|*.wav"),
                 DefaultExt = ".wav",
                 FileName = $"Synth {DateTime.Now:yyyy-MM-dd HH-mm-ss}.wav"
             };
@@ -448,7 +486,7 @@ namespace Smart_Tools.WPF.Views
                     File.Copy(finishedPath, dialog.FileName, overwrite: true);
                     StatusText.Text = string.Format((string)FindResource("Str_Synth_SavedStatus"), dialog.FileName);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
                     MessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                         MessageBoxButton.OK, MessageBoxImage.Error);
@@ -456,7 +494,7 @@ namespace Smart_Tools.WPF.Views
             }
 
             try { File.Delete(finishedPath); }
-            catch { /* best-effort scratch-file cleanup */ }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* best-effort scratch-file cleanup */ }
         }
 
         private void StopRecording()

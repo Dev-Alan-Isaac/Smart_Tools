@@ -86,7 +86,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_closed) return;
             StopTone();
-            if (_tuner.IsListening) ListeningStopped("Stopped while you were on another page.", error: false);
+            if (_tuner.IsListening) ListeningStopped(Loc.T("Str_InstrumentTuner_MsgStoppedAway", "Stopped while you were on another page."), error: false);
         }
 
         private void ApplySettings(InstrumentTunerSettings s)
@@ -180,8 +180,8 @@ namespace Smart_Tools.WPF.Views
                 _applying = false;
             }
             TxtMicHint.Text = devices.Count > 0
-                ? "Play one string at a time, close to the microphone."
-                : "No microphone found. Plug one in, then press Look again (top right).";
+                ? Loc.T("Str_InstrumentTuner_PlayOneStringAt", "Play one string at a time, close to the microphone.")
+                : Loc.T("Str_InstrumentTuner_MsgNoMicFound", "No microphone found. Plug one in, then press Look again (top right).");
             TxtMicHint.SetResourceReference(TextBlock.ForegroundProperty, devices.Count > 0 ? "SidebarTextMuted" : "StatusErrorFg");
             UpdateListenUi();
         }
@@ -209,7 +209,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnListen_Click(object sender, RoutedEventArgs e)
         {
-            if (_tuner.IsListening) ListeningStopped("Stopped.", error: false);
+            if (_tuner.IsListening) ListeningStopped(Loc.T("Str_InstrumentTuner_MsgStopped", "Stopped."), error: false);
             else StartListening();
         }
 
@@ -217,7 +217,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (CmbInputDevice.SelectedItem is not InstrumentTunerDevice device)
             {
-                ShowStatus("No microphone to listen to.", error: true);
+                ShowStatus(Loc.T("Str_InstrumentTuner_MsgNoMic", "No microphone to listen to."), error: true);
                 return;
             }
             try
@@ -226,12 +226,12 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is NAudio.MmException or InvalidOperationException or ArgumentException)
             {
-                ShowStatus($"Couldn't open {device.Name}: {ex.Message} It may be in use, or blocked in Windows' privacy settings.", error: true);
+                ShowStatus(Loc.F("Str_InstrumentTuner_MsgOpenFailed", "Couldn't open {0}: {1} It may be in use, or blocked in Windows' privacy settings.", device.Name, ex.Message), error: true);
                 UpdateListenUi();
                 return;
             }
             _holdTimer.Start();
-            ShowStatus($"Listening to {device.Name} - play a note.");
+            ShowStatus(Loc.F("Str_InstrumentTuner_MsgListening", "Listening to {0} - play a note.", device.Name));
             UiMotion.Pop(BtnListen, 0.94);
             UpdateListenUi();
         }
@@ -251,7 +251,7 @@ namespace Smart_Tools.WPF.Views
         {
             bool listening = _tuner.IsListening;
             IconListen.Kind = listening ? PackIconKind.Stop : PackIconKind.Microphone;
-            TxtListenLabel.Text = listening ? "Stop" : "Start tuning";
+            TxtListenLabel.Text = listening ? Loc.T("Str_InstrumentTuner_Stop", "Stop") : Loc.T("Str_InstrumentTuner_StartTuning", "Start tuning");
             BtnListen.IsEnabled = listening || CmbInputDevice.SelectedItem is InstrumentTunerDevice;
             BtnRefreshDevices.IsEnabled = !listening;
         }
@@ -315,8 +315,8 @@ namespace Smart_Tools.WPF.Views
                 : Math.Abs(smoothed) <= 15 ? "StatusWarningFg" : "StatusErrorFg";
             TxtNoteName.SetResourceReference(TextBlock.ForegroundProperty, accuracy);
             TxtGuidance.SetResourceReference(TextBlock.ForegroundProperty, accuracy);
-            TxtGuidance.Text = inTune ? "In tune" : smoothed < 0 ? "Too low - tighten / tune up ↑" : "Too high - loosen / tune down ↓";
-            TxtFrequency.Text = $"{freq:0.0} Hz  ·  target {InstrumentTunerManager.FrequencyOf(targetMidi, A4):0.0} Hz";
+            TxtGuidance.Text = inTune ? Loc.T("Str_InstrumentTuner_InTune", "In tune") : smoothed < 0 ? Loc.T("Str_InstrumentTuner_TooLow", "Too low - tighten / tune up ↑") : Loc.T("Str_InstrumentTuner_TooHigh", "Too high - loosen / tune down ↓");
+            TxtFrequency.Text = Loc.F("Str_InstrumentTuner_FreqTarget", "{0:0.0} Hz  ·  target {1:0.0} Hz", freq, InstrumentTunerManager.FrequencyOf(targetMidi, A4));
             TxtCentsValue.Text = $"{smoothed:+0;−0;0}¢";
 
             PositionNeedle(smoothed, active: true);
@@ -342,7 +342,7 @@ namespace Smart_Tools.WPF.Views
             TxtOctave.Text = "";
             TxtNoteName.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
             TxtGuidance.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
-            TxtGuidance.Text = _tuner.IsListening ? "Waiting for a note" : "Not listening";
+            TxtGuidance.Text = _tuner.IsListening ? Loc.T("Str_InstrumentTuner_WaitingForANote", "Waiting for a note") : Loc.T("Str_InstrumentTuner_NotListening", "Not listening");
             TxtFrequency.Text = "";
             TxtCentsValue.Text = "0¢";
             InTunePill.Visibility = Visibility.Collapsed;
@@ -382,8 +382,8 @@ namespace Smart_Tools.WPF.Views
             _preset = preset;
             IconPreset.Kind = Enum.TryParse(preset.Icon, out PackIconKind kind) ? kind : PackIconKind.MusicNote;
             TxtPresetHint.Text = preset.IsChromatic
-                ? "Names any note you play."
-                : $"{preset.Strings.Count} strings: {string.Join(" ", preset.Strings.Select(s => InstrumentTunerManager.NoteName(s.MidiNote, Notation)))}";
+                ? Loc.T("Str_InstrumentTuner_NamesAnyNote", "Names any note you play.")
+                : Loc.F("Str_InstrumentTuner_StringsList", "{0} strings: {1}", preset.Strings.Count, string.Join(" ", preset.Strings.Select(s => InstrumentTunerManager.NoteName(s.MidiNote, Notation))));
             BuildStrings();
         }
 
@@ -410,7 +410,7 @@ namespace Smart_Tools.WPF.Views
                     CornerRadius = new CornerRadius(12),
                     Cursor = Cursors.Hand,
                     Tag = i,
-                    ToolTip = "Click to hear this note; click again to stop",
+                    ToolTip = Loc.T("Str_InstrumentTuner_ChipTip", "Click to hear this note; click again to stop"),
                     RenderTransformOrigin = new System.Windows.Point(0.5, 0.5),
                     Child = new StackPanel { Orientation = Orientation.Vertical, Children = { name, hz, cents } },
                 };

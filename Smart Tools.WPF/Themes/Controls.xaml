@@ -20,6 +20,18 @@
     <CornerRadius x:Key="RadiusLg">12</CornerRadius>
     <FontFamily x:Key="AppFont">Segoe UI Variable Text, Segoe UI</FontFamily>
 
+    <!--
+        Piano keys (Synthesizer and MIDI Instruments). A piano is black and white in either
+        theme, so these are fixed colours and live here, not in Light/Dark. The pressed key
+        uses the theme accent (AccentColor / AccentColorPressed).
+    -->
+    <SolidColorBrush x:Key="PianoWhiteKey" Color="#FBFAF6" />
+    <SolidColorBrush x:Key="PianoWhiteKeyEdge" Color="#C9C6BD" />
+    <SolidColorBrush x:Key="PianoWhiteKeyText" Color="#6B6A66" />
+    <SolidColorBrush x:Key="PianoBlackKey" Color="#1F232B" />
+    <SolidColorBrush x:Key="PianoBlackKeyEdge" Color="#0E1015" />
+    <SolidColorBrush x:Key="PianoBlackKeyText" Color="#C8CBD2" />
+
     <CubicEase x:Key="EaseOut" EasingMode="EaseOut" />
     <BackEase
         x:Key="EasePop"

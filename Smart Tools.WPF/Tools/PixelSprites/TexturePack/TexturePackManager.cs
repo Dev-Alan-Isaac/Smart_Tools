@@ -93,13 +93,13 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Null when Minecraft can use the slot; otherwise why not.</summary>
         public static string? CheckSlot(string slot)
         {
-            if (slot.Length == 0) return "Pick where this texture goes (for example block/stone).";
-            if (!slot.Contains('/')) return "Use folder/name, for example block/stone.";
+            if (slot.Length == 0) return Loc.T("Str_TexturePack_MsgSlotPick", "Pick where this texture goes (for example block/stone).");
+            if (!slot.Contains('/')) return Loc.T("Str_TexturePack_MsgSlotFolder", "Use folder/name, for example block/stone.");
             if (slot.Contains("//") || slot.Split('/').Any(part => part is "" or "." or ".."))
-                return "That path has an empty or invalid part.";
+                return Loc.T("Str_TexturePack_MsgSlotEmptyPart", "That path has an empty or invalid part.");
             foreach (char c in slot)
                 if (!(c is >= 'a' and <= 'z' or >= '0' and <= '9' or '_' or '-' or '.' or '/'))
-                    return "Only lowercase letters, numbers and _ - . / are allowed.";
+                    return Loc.T("Str_TexturePack_MsgSlotChars", "Only lowercase letters, numbers and _ - . / are allowed.");
             return null;
         }
 
@@ -119,26 +119,26 @@ namespace Smart_Tools.WPF.Controllers
                 t.State = PackTextureState.Ok;
                 t.Message = "";
 
-                if (!t.IsChecked) { t.Message = "Left out of the pack."; continue; }
-                if (t.Width <= 0 || t.Height <= 0) { Set(t, PackTextureState.Error, "This picture couldn't be read, so it won't be exported."); continue; }
+                if (!t.IsChecked) { t.Message = Loc.T("Str_TexturePack_MsgLeftOutOfPack", "Left out of the pack."); continue; }
+                if (t.Width <= 0 || t.Height <= 0) { Set(t, PackTextureState.Error, Loc.T("Str_TexturePack_MsgUnreadable", "This picture couldn't be read, so it won't be exported.")); continue; }
                 string? bad = CheckSlot(slot);
-                if (bad != null) { Set(t, PackTextureState.Error, bad + " It won't be exported until you do."); continue; }
+                if (bad != null) { Set(t, PackTextureState.Error, Loc.F("Str_TexturePack_MsgUntilYouDo", "{0} It won't be exported until you do.", bad)); continue; }
                 if (used.TryGetValue(slot, out var first))
                 {
-                    Set(t, PackTextureState.Error, $"{first.FileName} already goes to {slot}; this one won't be exported.");
+                    Set(t, PackTextureState.Error, Loc.F("Str_TexturePack_MsgDuplicateSlot", "{0} already goes to {1}; this one won't be exported.", first.FileName, slot));
                     continue;
                 }
                 used[slot] = t;
 
                 var notes = new List<string>();
                 if (!IsPowerOfTwo(t.Width))
-                    notes.Add($"{t.Width} px wide isn't a power of two (16, 32, 64...).");
+                    notes.Add(Loc.F("Str_TexturePack_MsgNotPowerOfTwo", "{0} px wide isn't a power of two (16, 32, 64...).", t.Width));
                 if (t.Height != t.Width && t.Height % t.Width != 0)
-                    notes.Add("It isn't square (only animated strips may be taller).");
+                    notes.Add(Loc.T("Str_TexturePack_MsgNotSquare", "It isn't square (only animated strips may be taller)."));
                 if (!IsKnownSlot(slot) && (slot.StartsWith("block/", StringComparison.Ordinal) || slot.StartsWith("item/", StringComparison.Ordinal)))
-                    notes.Add("Not in the built-in name list - fine for names we don't have, but Minecraft ignores names it doesn't use.");
+                    notes.Add(Loc.T("Str_TexturePack_MsgUnknownName", "Not in the built-in name list - fine for names we don't have, but Minecraft ignores names it doesn't use."));
                 else if (!slot.StartsWith("block/", StringComparison.Ordinal) && !slot.StartsWith("item/", StringComparison.Ordinal) && !TextureFolders.Contains(slot[..slot.IndexOf('/')]))
-                    notes.Add("Not a usual texture folder.");
+                    notes.Add(Loc.T("Str_TexturePack_MsgUnusualFolder", "Not a usual texture folder."));
                 if (notes.Count > 0) Set(t, PackTextureState.Warning, string.Join(" ", notes));
             }
 
@@ -189,7 +189,7 @@ namespace Smart_Tools.WPF.Controllers
             IReadOnlyList<PackTexture> textures, string? iconPath, CancellationToken token = default)
         {
             var items = Exportable(textures);
-            if (items.Count == 0 && iconPath == null) return new TexturePackResult(null, 0, 0, "There is nothing to put in the pack yet.");
+            if (items.Count == 0 && iconPath == null) return new TexturePackResult(null, 0, 0, Loc.T("Str_TexturePack_MsgNothingToPut", "There is nothing to put in the pack yet."));
             int skipped = textures.Count - items.Count;
             string mcmeta = BuildMcmeta(description, version);
             string textureRoot = "assets/minecraft/textures/";
@@ -248,7 +248,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (OperationCanceledException)
             {
-                return new TexturePackResult(null, 0, skipped, "Stopped.");
+                return new TexturePackResult(null, 0, skipped, Loc.T("Str_TexturePack_MsgStopped", "Stopped."));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or InvalidDataException)
             {
@@ -302,16 +302,14 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(TexturePackSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            string temp = file + ".tmp";
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, SettingsJson));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, SettingsJson));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                Log.Info($"Settings not saved: {ex.Message}");
             }
         }
     }

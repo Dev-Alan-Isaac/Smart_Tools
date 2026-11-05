@@ -221,10 +221,10 @@ namespace Smart_Tools.WPF.Views
             }
             FamilyBar.Opacity = searching ? 0.5 : 1;
             TxtInstrumentHint.Text = !searching
-                ? "Click a sound and play - the keys change straight away."
+                ? Loc.T("Str_MidiInstruments_ClickASoundAnd", "Click a sound and play - the keys change straight away.")
                 : list.Count == 0
-                    ? "Nothing matches - try \"piano\", \"strings\", \"sax\" or \"drum\"."
-                    : $"{list.Count} {(list.Count == 1 ? "sound" : "sounds")} found.";
+                    ? Loc.T("Str_MidiInstruments_MsgNoMatch", "Nothing matches - try \"piano\", \"strings\", \"sax\" or \"drum\".")
+                    : Loc.N(list.Count, "Str_MidiInstruments_MsgFoundOne", "{0:N0} sound found.", "Str_MidiInstruments_MsgFoundMany", "{0:N0} sounds found.", list.Count);
         }
 
         private void ListInstruments_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -342,7 +342,7 @@ namespace Smart_Tools.WPF.Views
 
         private void UpdateOctaveUi()
         {
-            TxtOctave.Text = $"Octave {_octave}";
+            TxtOctave.Text = Loc.F("Str_MidiInstruments_Octave", "Octave {0}", _octave);
             int first = MidiInstrumentsManager.OctaveStart(_octave);
             int last = Math.Min(127, first + MidiInstrumentsManager.VisibleOctaves * 12);
             string range = $"{MidiInstrumentsManager.NoteName(first)} – {MidiInstrumentsManager.NoteName(last)}";
@@ -664,7 +664,7 @@ namespace Smart_Tools.WPF.Views
                 DevicePill.SetResourceReference(Border.BackgroundProperty, "StatusErrorBg");
                 TxtDevice.SetResourceReference(TextBlock.ForegroundProperty, "StatusErrorFg");
                 IconDevice.Kind = PackIconKind.MusicNoteOff;
-                TxtDevice.Text = "No sound";
+                TxtDevice.Text = Loc.T("Str_MidiInstruments_MsgNoSound", "No sound");
             }
             else if (keyboard != null)
             {
@@ -678,7 +678,7 @@ namespace Smart_Tools.WPF.Views
                 DevicePill.SetResourceReference(Border.BackgroundProperty, "RowBg");
                 TxtDevice.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
                 IconDevice.Kind = PackIconKind.KeyboardOutline;
-                TxtDevice.Text = "Mouse and computer keys";
+                TxtDevice.Text = Loc.T("Str_MidiInstruments_MsgMouseKeys", "Mouse and computer keys");
             }
 
             TxtDeviceHint.Text = inError != null
@@ -686,10 +686,10 @@ namespace Smart_Tools.WPF.Views
                 : outError != null
                     ? outError
                     : inputCount == 0
-                        ? "No MIDI keyboard found. Plug one in, then press Look again (top right)."
+                        ? Loc.T("Str_MidiInstruments_MsgNoKeyboard", "No MIDI keyboard found. Plug one in, then press Look again (top right).")
                         : keyboard != null
-                            ? "Your keyboard plays the sound chosen above, on any channel; its pedal works too."
-                            : "Pick your keyboard to play with it.";
+                            ? Loc.T("Str_MidiInstruments_MsgKeyboardPlays", "Your keyboard plays the sound chosen above, on any channel; its pedal works too.")
+                            : Loc.T("Str_MidiInstruments_MsgPickKeyboard", "Pick your keyboard to play with it.");
             TxtDeviceHint.SetResourceReference(TextBlock.ForegroundProperty, inError != null || outError != null ? "StatusErrorFg" : "SidebarTextMuted");
         }
 
@@ -706,7 +706,7 @@ namespace Smart_Tools.WPF.Views
             }
             if (_manager.IsPlaying) return;
             if (_take is { IsEmpty: false } && !_takeSaved &&
-                MessageBox.Show(Window.GetWindow(this)!, "Record over the last take? It hasn't been saved.", DialogTitle,
+                MessageBox.Show(Window.GetWindow(this)!, Loc.T("Str_MidiInstruments_MsgRecordOver", "Record over the last take? It hasn't been saved."), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -714,9 +714,9 @@ namespace Smart_Tools.WPF.Views
             _pulse = 0;
             _recorderTimer.Start();
             IconRecord.Kind = PackIconKind.Stop;
-            TxtRecordLabel.Text = "Stop";
+            TxtRecordLabel.Text = Loc.T("Str_MidiInstruments_Stop", "Stop");
             TxtRecorderTime.Text = "0:00";
-            TxtRecorderStatus.Text = $"Recording {_manager.Instrument.Name}…";
+            TxtRecorderStatus.Text = Loc.F("Str_MidiInstruments_MsgRecording", "Recording {0}…", _manager.Instrument.Name);
             UiMotion.Pop(BtnRecord, 0.94);
             UpdateRecorderButtons();
             Focus();
@@ -727,10 +727,10 @@ namespace Smart_Tools.WPF.Views
             var take = _manager.StopRecording();
             _recorderTimer.Stop();
             IconRecord.Kind = PackIconKind.RecordCircleOutline;
-            TxtRecordLabel.Text = "Record";
+            TxtRecordLabel.Text = Loc.T("Str_MicRecorder_Record", "Record");
             if (take == null || take.IsEmpty)
             {
-                TxtRecorderStatus.Text = "Nothing was played, so nothing was kept.";
+                TxtRecorderStatus.Text = Loc.T("Str_MidiInstruments_MsgNothingKept", "Nothing was played, so nothing was kept.");
                 TxtRecorderTime.Text = _take == null ? "0:00" : MidiInstrumentsManager.FormatDuration(_take.DurationMs);
             }
             else
@@ -738,7 +738,7 @@ namespace Smart_Tools.WPF.Views
                 _take = take;
                 _takeSaved = false;
                 TxtRecorderTime.Text = MidiInstrumentsManager.FormatDuration(take.DurationMs);
-                TxtRecorderStatus.Text = $"{take.NoteCount:N0} {(take.NoteCount == 1 ? "note" : "notes")} · {take.InstrumentName} · not saved yet";
+                TxtRecorderStatus.Text = Loc.N(take.NoteCount, "Str_MidiInstruments_MsgTakeOne", "{0:N0} note · {1} · not saved yet", "Str_MidiInstruments_MsgTakeMany", "{0:N0} notes · {1} · not saved yet", take.NoteCount, take.InstrumentName);
                 UiMotion.Pop(TxtRecorderTime, 0.9);
             }
             UpdateRecorderButtons();
@@ -762,7 +762,7 @@ namespace Smart_Tools.WPF.Views
 
             var take = _take;
             IconPlay.Kind = PackIconKind.Stop;
-            TxtPlayLabel.Text = "Stop";
+            TxtPlayLabel.Text = Loc.T("Str_MidiInstruments_Stop", "Stop");
             UpdateRecorderButtons(playing: true);
             var progress = new Progress<long>(ms => TxtRecorderTime.Text = MidiInstrumentsManager.FormatDuration(ms));
             try
@@ -775,11 +775,11 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is InvalidOperationException or MidiDeviceException)
             {
-                TxtRecorderStatus.Text = "Couldn't play: " + ex.Message;
+                TxtRecorderStatus.Text = Loc.F("Str_MidiInstruments_MsgPlayFailed", "Couldn't play: {0}", ex.Message);
             }
             if (_closed) return;
             IconPlay.Kind = PackIconKind.Play;
-            TxtPlayLabel.Text = "Play";
+            TxtPlayLabel.Text = Loc.T("Str_AudioReplayControl_Play", "Play");
             TxtRecorderTime.Text = MidiInstrumentsManager.FormatDuration(take.DurationMs);
             UpdateRecorderButtons();
         }
@@ -789,8 +789,8 @@ namespace Smart_Tools.WPF.Views
             if (_take == null) return;
             var dialog = new SaveFileDialog
             {
-                Title = "Save the recording",
-                Filter = "MIDI file (*.mid)|*.mid",
+                Title = Loc.T("Str_MidiInstruments_SaveTitle", "Save the recording"),
+                Filter = Loc.T("Str_MidiInstruments_MidiFilter", "MIDI file (*.mid)|*.mid"),
                 FileName = MidiInstrumentsManager.SuggestedFileName(DateTime.Now, _take.InstrumentName),
                 DefaultExt = ".mid",
                 AddExtension = true,
@@ -803,12 +803,12 @@ namespace Smart_Tools.WPF.Views
                 MidiInstrumentsManager.SaveMidiFile(_take, dialog.FileName);
                 _takeSaved = true;
                 _lastSaveFolder = Path.GetDirectoryName(dialog.FileName);
-                TxtRecorderStatus.Text = $"Saved {Path.GetFileName(dialog.FileName)}";
+                TxtRecorderStatus.Text = Loc.F("Str_MidiInstruments_MsgSaved", "Saved {0}", Path.GetFileName(dialog.FileName));
                 UiMotion.Pop(BtnSaveMidi, 0.94);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(Window.GetWindow(this)!, $"Couldn't save the file: {ex.Message}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Window.GetWindow(this)!, Loc.F("Str_MidiInstruments_MsgSaveFailed", "Couldn't save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

@@ -68,20 +68,20 @@ namespace Smart_Tools.WPF.Models
         public List<SpriteItem> Items { get; } = new();
 
         public string Name => FolderPath == null
-            ? "Several folders"
+            ? Loc.T("Str_SpritePacker_MsgSeveralFolders", "Several folders")
             : Path.GetFileName(FolderPath.TrimEnd('\\', '/')) is { Length: > 0 } n ? n : FolderPath;
 
         public string Subtitle
         {
             get
             {
-                string count = Items.Count == 1 ? "1 image" : $"{Items.Count:N0} images";
+                string count = Items.Count == 1 ? Loc.T("Str_SpritePacker_MsgImageOne", "1 image") : Loc.F("Str_SpritePacker_MsgImageMany", "{0:N0} images", Items.Count);
                 if (!IsFolder) return count;
-                return IncludeSubfolders ? $"Folder and subfolders · {count}" : $"Folder · {count}";
+                return IncludeSubfolders ? Loc.F("Str_SpritePacker_MsgFolderAndSub", "Folder and subfolders · {0}", count) : Loc.F("Str_SpritePacker_MsgFolderOnly", "Folder · {0}", count);
             }
         }
 
-        public string ToolTip => FolderPath ?? "Images from more than one folder";
+        public string ToolTip => FolderPath ?? Loc.T("Str_SpritePacker_MsgMoreThanOne", "Images from more than one folder");
 
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Subtitle)));
 

@@ -211,12 +211,12 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex) when (ex is NAudio.MmException or InvalidOperationException or System.Runtime.InteropServices.COMException or ArgumentException)
             {
                 StopDevice();
-                TxtMessage.Text = "Couldn't start the sound: " + ex.Message;
+                TxtMessage.Text = Loc.F("Str_Metronome_MsgStartFailed", "Couldn't start the sound: {0}", ex.Message);
                 return;
             }
             _lastBeat = -1;
             _beatTimer.Start();
-            TxtStart.Text = "Stop";
+            TxtStart.Text = Loc.T("Str_Metronome_Stop", "Stop");
             IconStart.Kind = PackIconKind.Stop;
         }
 
@@ -234,7 +234,7 @@ namespace Smart_Tools.WPF.Views
         {
             _restartTimer.Stop();
             StopDevice();
-            TxtStart.Text = "Start";
+            TxtStart.Text = Loc.T("Str_Metronome_Start", "Start");
             IconStart.Kind = PackIconKind.Play;
             BuildDots(-1);
         }

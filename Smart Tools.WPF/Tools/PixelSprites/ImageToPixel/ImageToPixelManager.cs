@@ -247,7 +247,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
-                var all = sources.Select(s => new PixelItemResult(s, null, "Couldn't use the output folder: " + ex.Message)).ToList();
+                var all = sources.Select(s => new PixelItemResult(s, null, Loc.F("Str_ImageToPixel_MsgOutputFolderFailed", "Couldn't use the output folder: {0}", ex.Message))).ToList();
                 return new PixelBatchResult(all, 0, all.Count, false);
             }
 
@@ -259,12 +259,12 @@ namespace Smart_Tools.WPF.Controllers
                 try
                 {
                     var (bgra, w, h, problem) = load(source);
-                    if (bgra == null) result = new PixelItemResult(source, null, problem == "ImageTooBig" ? "Too big to open" : "Couldn't be opened");
+                    if (bgra == null) result = new PixelItemResult(source, null, problem == "ImageTooBig" ? Loc.T("Str_ImageToPixel_MsgTooBigShort", "Too big to open") : Loc.T("Str_ImageToPixel_MsgCantOpenShort", "Couldn't be opened"));
                     else
                     {
                         var pixels = Pixelize(bgra, w, h, settings);
                         var png = ToPng(pixels, settings.ExportScale, out string? tooBig);
-                        if (png == null) result = new PixelItemResult(source, null, tooBig ?? "Couldn't make the PNG");
+                        if (png == null) result = new PixelItemResult(source, null, tooBig ?? Loc.T("Str_ImageToPixel_MsgNoPngShort", "Couldn't make the PNG"));
                         else
                         {
                             string target = UniquePath(Path.Combine(folder, OutputName(source, suffix)));
@@ -297,7 +297,7 @@ namespace Smart_Tools.WPF.Controllers
             long w = (long)result.Width * scale, h = (long)result.Height * scale;
             if (w > PixelArtManager.MaxExportSide || h > PixelArtManager.MaxExportSide)
             {
-                problem = $"That would be {w:N0} x {h:N0} pixels - pick a smaller enlargement (the limit is {PixelArtManager.MaxExportSide:N0}).";
+                problem = Loc.F("Str_ImageToPixel_MsgEnlargeLimit", "That would be {0:N0} x {1:N0} pixels - pick a smaller enlargement (the limit is {2:N0}).", w, h, PixelArtManager.MaxExportSide);
                 return null;
             }
             var rgba = PixelArtManager.ToRgba(result.Pixels);

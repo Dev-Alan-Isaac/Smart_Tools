@@ -50,12 +50,12 @@ namespace Smart_Tools.WPF.Views
         public ImageToPixelView()
         {
             InitializeComponent();
-            CmbPalette.Items.Add(new ComboBoxItem { Content = "From the picture", Tag = "Auto" });
+            CmbPalette.Items.Add(new ComboBoxItem { Content = Loc.T("Str_ImageToPixel_MsgFromPicture", "From the picture"), Tag = "Auto" });
             foreach (var p in PixelArtManager.Palettes) CmbPalette.Items.Add(new ComboBoxItem { Content = p.Name + " (" + p.Colors.Length + " colors)", Tag = p.Name });
             foreach (int scale in ImageToPixelManager.Scales) CmbScale.Items.Add(new ComboBoxItem { Content = scale + " ×", Tag = scale });
 
             InputCard.ItemsSource = _sources;
-            InputCard.FileFilterProvider = () => "Pictures|" + ImageToPixelManager.PictureFilter + "|All files|*.*";
+            InputCard.FileFilterProvider = () => Loc.F("Str_ImageToPixel_MsgPicturesFilter", "Pictures|{0}|All files|*.*", ImageToPixelManager.PictureFilter);
             PictureList.ItemsSource = _items;
             _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
             _items.CollectionChanged += (_, _) => UpdateListState();
@@ -126,13 +126,13 @@ namespace Smart_Tools.WPF.Views
             {
                 int gw = Math.Min(s.GridWidth, _width);
                 int gh = Math.Max(1, (int)Math.Round((double)_height * gw / _width));
-                TxtGridInfo.Text = $"Result: {gw} × {gh} pixels";
-                TxtSaveInfo.Text = $"Saved pictures are {gw * s.ExportScale:N0} × {gh * s.ExportScale:N0} px.";
+                TxtGridInfo.Text = Loc.F("Str_ImageToPixel_MsgResultSize", "Result: {0} × {1} pixels", gw, gh);
+                TxtSaveInfo.Text = Loc.F("Str_ImageToPixel_MsgSavedSize", "Saved pictures are {0:N0} × {1:N0} px.", gw * s.ExportScale, gh * s.ExportScale);
             }
             else
             {
                 TxtGridInfo.Text = "";
-                TxtSaveInfo.Text = "Saved as PNG, for example \"photo" + s.Suffix + ".png\".";
+                TxtSaveInfo.Text = Loc.F("Str_ImageToPixel_MsgSavedAs", "Saved as PNG, for example \"photo{0}.png\".", s.Suffix);
             }
         }
 
@@ -243,9 +243,9 @@ namespace Smart_Tools.WPF.Views
             InputCard.ItemsSource = null;
             InputCard.ItemsSource = _sources;
 
-            if (inaccessible > 0) ShowStatus($"{inaccessible} folder(s) couldn't be read and were skipped.", StatusKind.Warning);
-            else if (capped) ShowStatus($"The list is full ({ImageToPixelManager.MaxPictures:N0} pictures).", StatusKind.Warning);
-            else if (_sources.Count > 0 && files.Count == 0) ShowStatus("No pictures were found there.", StatusKind.Warning);
+            if (inaccessible > 0) ShowStatus(Loc.F("Str_ImageToPixel_MsgInaccessible", "{0} folder(s) couldn't be read and were skipped.", inaccessible), StatusKind.Warning);
+            else if (capped) ShowStatus(Loc.F("Str_ImageToPixel_MsgListFull", "The list is full ({0:N0} pictures).", ImageToPixelManager.MaxPictures), StatusKind.Warning);
+            else if (_sources.Count > 0 && files.Count == 0) ShowStatus(Loc.T("Str_ImageToPixel_MsgNoneFound", "No pictures were found there."), StatusKind.Warning);
             else HideStatus();
 
             LoadThumbnails(added);
@@ -277,7 +277,7 @@ namespace Smart_Tools.WPF.Views
         {
             ListEmpty.Visibility = _items.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
             TxtCount.Text = _items.Count == 0 ? "" : $"{_items.Count:N0} picture{(_items.Count == 1 ? "" : "s")}";
-            TxtConvert.Text = _busy ? "Stop" : _items.Count > 1 ? $"Convert all {_items.Count:N0}" : "Convert";
+            TxtConvert.Text = _busy ? Loc.T("Str_ImageToPixel_MsgStop", "Stop") : _items.Count > 1 ? Loc.F("Str_ImageToPixel_MsgConvertAll", "Convert all {0:N0}", _items.Count) : Loc.T("Str_ImageToPixel_MsgConvert", "Convert");
             if (!_busy) BtnConvertAll.IsEnabled = _items.Count > 0;
         }
 
@@ -299,7 +299,7 @@ namespace Smart_Tools.WPF.Views
             if (loaded.bgra == null)
             {
                 ClearPreview();
-                ShowStatus(loaded.problem == "ImageTooBig" ? $"{item.Name} is too big to open." : $"{item.Name} couldn't be opened.", StatusKind.Error);
+                ShowStatus(loaded.problem == "ImageTooBig" ? Loc.F("Str_ImageToPixel_MsgTooBig", "{0} is too big to open.", item.Name) : Loc.F("Str_ImageToPixel_MsgCantOpen", "{0} couldn't be opened.", item.Name), StatusKind.Error);
                 return;
             }
             _current = item;
@@ -325,7 +325,7 @@ namespace Smart_Tools.WPF.Views
             PreviewEmpty.Visibility = Visibility.Visible;
             PillSize.Visibility = PillColors.Visibility = Visibility.Collapsed;
             BtnSave.IsEnabled = false;
-            TxtHeroHint.Text = "Add pictures or folders on the left to start.";
+            TxtHeroHint.Text = Loc.T("Str_ImageToPixel_MsgAddHint", "Add pictures or folders on the left to start.");
             UpdateInfo();
         }
 
@@ -347,7 +347,7 @@ namespace Smart_Tools.WPF.Views
             PreviewEmpty.Visibility = Visibility.Collapsed;
             PillSize.Visibility = PillColors.Visibility = Visibility.Visible;
             TxtPillSize.Text = $"{result.Width} × {result.Height} px";
-            TxtPillColors.Text = $"{result.ColorsUsed} color{(result.ColorsUsed == 1 ? "" : "s")}";
+            TxtPillColors.Text = Loc.N(result.ColorsUsed, "Str_ImageToPixel_MsgColorOne", "{0:N0} color", "Str_ImageToPixel_MsgColorMany", "{0:N0} colors", result.ColorsUsed);
             BtnSave.IsEnabled = true;
             UpdateInfo();
         }
@@ -361,12 +361,12 @@ namespace Smart_Tools.WPF.Views
             if (_result == null || _current == null) return;
             var settings = ReadSettings();
             var png = ImageToPixelManager.ToPng(_result, settings.ExportScale, out string? problem);
-            if (png == null) { ShowStatus(problem ?? "Couldn't make the PNG.", StatusKind.Error); return; }
+            if (png == null) { ShowStatus(problem ?? Loc.T("Str_ImageToPixel_MsgNoPng", "Couldn't make the PNG."), StatusKind.Error); return; }
 
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                Title = "Save pixel art",
-                Filter = "PNG picture|*.png",
+                Title = Loc.T("Str_ImageToPixel_MsgSaveTitle", "Save pixel art"),
+                Filter = Loc.T("Str_ImageToPixel_MsgPngFilter", "PNG picture|*.png"),
                 FileName = ImageToPixelManager.OutputName(_current.FullPath, settings.Suffix),
                 OverwritePrompt = true,
             };
@@ -386,7 +386,7 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
             if (_items.Count == 0) return;
-            if (OutputCard.Status.IsError) { ShowStatus("Can't save there: " + OutputCard.Status.Text, StatusKind.Error); return; }
+            if (OutputCard.Status.IsError) { ShowStatus(Loc.F("Str_ImageToPixel_MsgCantSaveThere", "Can't save there: {0}", OutputCard.Status.Text), StatusKind.Error); return; }
 
             string? folder;
             try
@@ -395,10 +395,10 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
-                ShowStatus("Can't save there: " + ex.Message, StatusKind.Error);
+                ShowStatus(Loc.F("Str_ImageToPixel_MsgCantSaveThere", "Can't save there: {0}", ex.Message), StatusKind.Error);
                 return;
             }
-            if (folder == null) { ShowStatus("Choose a folder to save the pictures into first.", StatusKind.Warning); return; }
+            if (folder == null) { ShowStatus(Loc.T("Str_ImageToPixel_MsgPickFolder", "Choose a folder to save the pictures into first."), StatusKind.Warning); return; }
 
             var snapshot = _items.ToList();
             var settings = ReadSettings();
@@ -429,7 +429,7 @@ namespace Smart_Tools.WPF.Views
             _lastFolder = folder;
             BtnOpenFolder.Visibility = batch.Done > 0 ? Visibility.Visible : Visibility.Collapsed;
             ShowDone(batch.Cancelled ? $"Stopped - {batch.Done:N0} saved" : $"Saved {batch.Done:N0} picture{(batch.Done == 1 ? "" : "s")}");
-            if (batch.Failed > 0) ShowStatus($"{batch.Failed:N0} picture{(batch.Failed == 1 ? "" : "s")} couldn't be converted - the list shows why.", StatusKind.Warning);
+            if (batch.Failed > 0) ShowStatus(Loc.N(batch.Failed, "Str_ImageToPixel_MsgFailedOne", "{0:N0} picture couldn't be converted - the list shows why.", "Str_ImageToPixel_MsgFailedMany", "{0:N0} pictures couldn't be converted - the list shows why.", batch.Failed), StatusKind.Warning);
             OutputCard.Refresh();
         }
 
@@ -454,7 +454,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
             {
-                ShowStatus("Couldn't open the folder: " + ex.Message, StatusKind.Error);
+                ShowStatus(Loc.F("Str_ImageToPixel_MsgOpenFolderFailed", "Couldn't open the folder: {0}", ex.Message), StatusKind.Error);
             }
         }
 

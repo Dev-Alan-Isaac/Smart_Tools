@@ -50,7 +50,7 @@ namespace Smart_Tools.WPF.Views
             InitializeComponent();
             TextureList.ItemsSource = _textures;
             InputCard.ItemsSource = _sources;
-            InputCard.FileFilterProvider = () => "PNG pictures|*.png|All files|*.*";
+            InputCard.FileFilterProvider = () => Loc.T("Str_TexturePack_MsgPngFilter", "PNG pictures|*.png|All files|*.*");
             _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
             _textures.CollectionChanged += (_, _) => UpdateListState();
 
@@ -147,8 +147,8 @@ namespace Smart_Tools.WPF.Views
         {
             if (CmbVersion.SelectedItem is not PackVersion v) { TxtVersionHint.Text = ""; return; }
             TxtVersionHint.Text = v.UsesMinMax
-                ? $"Writes min_format and max_format {v.Format}."
-                : $"Writes pack_format {v.Format}.";
+                ? Loc.F("Str_TexturePack_MsgWritesMinMax", "Writes min_format and max_format {0}.", v.Format)
+                : Loc.F("Str_TexturePack_MsgWritesPackFormat", "Writes pack_format {0}.", v.Format);
         }
 
         // =================================================================
@@ -182,7 +182,7 @@ namespace Smart_Tools.WPF.Views
             TexturePackVersions.AddOrUpdate(version);
             _suggestedVersion = null;
             RefreshVersions(version.Label);
-            ShowStatus($"Added {version.Label} (format {version.Format}) to your list.", StatusKind.Success);
+            ShowStatus(Loc.F("Str_TexturePack_MsgVersionAdded", "Added {0} (format {1}) to your list.", version.Label, version.Format), StatusKind.Success);
         }
 
         /// <summary>Compares the list with the releases your Minecraft launcher knows (works offline).</summary>
@@ -197,11 +197,11 @@ namespace Smart_Tools.WPF.Views
             string newest = ids.OrderByDescending(TexturePackVersions.KeyOf, TexturePackVersions.VersionKeyComparer.Instance).First();
             if (missing.Count == 0)
             {
-                ShowStatus($"Your list covers every Minecraft release (the newest is {newest}).", StatusKind.Success);
+                ShowStatus(Loc.F("Str_TexturePack_MsgListCovers", "Your list covers every Minecraft release (the newest is {0}).", newest), StatusKind.Success);
                 return;
             }
             _suggestedVersion = missing[0];
-            ShowStatus($"Minecraft {string.Join(", ", missing.Take(5))} {(missing.Count == 1 ? "isn't" : "aren't")} in your list yet. Press \"Update from wiki\" to fetch the numbers, or \"Add version\" to type one in.", StatusKind.Warning);
+            ShowStatus(Loc.N(missing.Count, "Str_TexturePack_MsgMissingOne", "Minecraft {0} isn't in your list yet. Press \"Update from wiki\" to fetch the numbers, or \"Add version\" to type one in.", "Str_TexturePack_MsgMissingMany", "Minecraft {0} aren't in your list yet. Press \"Update from wiki\" to fetch the numbers, or \"Add version\" to type one in.", string.Join(", ", missing.Take(5))), StatusKind.Warning);
         }
 
         /// <summary>Best effort: reads the Minecraft Wiki's table and adds or corrects rows in your own file.</summary>
@@ -216,8 +216,8 @@ namespace Smart_Tools.WPF.Views
             RefreshVersions(keep);
             _suggestedVersion = null;
             ShowStatus(added + changed == 0
-                ? "Your list already matches the Minecraft Wiki."
-                : $"Updated from the Minecraft Wiki: {added} added, {changed} corrected.", StatusKind.Success);
+                ? Loc.T("Str_TexturePack_MsgWikiSame", "Your list already matches the Minecraft Wiki.")
+                : Loc.F("Str_TexturePack_MsgWikiUpdated", "Updated from the Minecraft Wiki: {0} added, {1} corrected.", added, changed), StatusKind.Success);
         }
 
         /// <summary>A small window asking for a version name and its format number.</summary>
@@ -225,15 +225,16 @@ namespace Smart_Tools.WPF.Views
         {
             var labelBox = new System.Windows.Controls.TextBox { Text = label, MinWidth = 300, Margin = new Thickness(0, 4, 0, 10) };
             var formatBox = new System.Windows.Controls.TextBox { MinWidth = 300, Margin = new Thickness(0, 4, 0, 10) };
-            var newStyle = new System.Windows.Controls.CheckBox { Content = "Newer style (Minecraft 1.21.9 and later: min_format / max_format)", IsChecked = true, Margin = new Thickness(0, 0, 0, 12) };
-            var error = new TextBlock { Foreground = System.Windows.Media.Brushes.IndianRed, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) };
-            var ok = new System.Windows.Controls.Button { Content = "Add", MinWidth = 90, MinHeight = 34, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
-            var cancel = new System.Windows.Controls.Button { Content = "Cancel", MinWidth = 90, MinHeight = 34, IsCancel = true };
-            var link = new TextBlock { Margin = new Thickness(0, 0, 0, 12), TextWrapping = TextWrapping.Wrap, Text = "The format number is on the Minecraft Wiki's \"Pack format\" page (minecraft.wiki/w/Pack_format). A number like 97.1 is entered as 97." };
+            var newStyle = new System.Windows.Controls.CheckBox { Content = Loc.T("Str_TexturePack_MsgNewStyle", "Newer style (Minecraft 1.21.9 and later: min_format / max_format)"), IsChecked = true, Margin = new Thickness(0, 0, 0, 12) };
+            var error = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) };
+            error.SetResourceReference(TextBlock.ForegroundProperty, "StatusErrorFg");
+            var ok = new System.Windows.Controls.Button { Content = Loc.T("Str_TexturePack_MsgAdd", "Add"), MinWidth = 90, MinHeight = 34, IsDefault = true, Margin = new Thickness(0, 0, 8, 0) };
+            var cancel = new System.Windows.Controls.Button { Content = Loc.T("Str_TexturePack_MsgCancel", "Cancel"), MinWidth = 90, MinHeight = 34, IsCancel = true };
+            var link = new TextBlock { Margin = new Thickness(0, 0, 0, 12), TextWrapping = TextWrapping.Wrap, Text = Loc.T("Str_TexturePack_MsgFormatHelp", "The format number is on the Minecraft Wiki's \"Pack format\" page (minecraft.wiki/w/Pack_format). A number like 97.1 is entered as 97.") };
 
             var window = new Window
             {
-                Title = "Add a Minecraft version",
+                Title = Loc.T("Str_TexturePack_MsgAddVersionTitle", "Add a Minecraft version"),
                 SizeToContent = SizeToContent.WidthAndHeight,
                 ResizeMode = ResizeMode.NoResize,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -245,16 +246,16 @@ namespace Smart_Tools.WPF.Views
             ok.Click += (_, _) =>
             {
                 string name = labelBox.Text.Trim();
-                if (name.Length == 0 || name.Length > 60) { error.Text = "Type the version, for example 26.4."; return; }
+                if (name.Length == 0 || name.Length > 60) { error.Text = Loc.T("Str_TexturePack_MsgTypeVersion", "Type the version, for example 26.4."); return; }
                 if (!int.TryParse(formatBox.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out int format) || format is < 1 or > 100000)
-                { error.Text = "The format number must be a whole number, for example 97."; return; }
+                { error.Text = Loc.T("Str_TexturePack_MsgWholeNumber", "The format number must be a whole number, for example 97."); return; }
                 result = new PackVersion(name, format, newStyle.IsChecked == true);
                 window.DialogResult = true;
             };
             var panel = new StackPanel { Margin = new Thickness(20) };
-            panel.Children.Add(new TextBlock { Text = "Minecraft version", FontWeight = FontWeights.SemiBold });
+            panel.Children.Add(new TextBlock { Text = Loc.T("Str_TexturePack_MsgVersionLabel", "Minecraft version"), FontWeight = FontWeights.SemiBold });
             panel.Children.Add(labelBox);
-            panel.Children.Add(new TextBlock { Text = "Pack format number", FontWeight = FontWeights.SemiBold });
+            panel.Children.Add(new TextBlock { Text = Loc.T("Str_TexturePack_MsgFormatLabel", "Pack format number"), FontWeight = FontWeights.SemiBold });
             panel.Children.Add(formatBox);
             panel.Children.Add(link);
             panel.Children.Add(newStyle);
@@ -341,11 +342,11 @@ namespace Smart_Tools.WPF.Views
             InputCard.ItemsSource = _sources;
 
             if (inaccessible > 0)
-                ShowStatus($"{inaccessible} folder(s) couldn't be read and were skipped.", StatusKind.Warning);
+                ShowStatus(Loc.F("Str_TexturePack_MsgInaccessible", "{0} folder(s) couldn't be read and were skipped.", inaccessible), StatusKind.Warning);
             else if (capped)
-                ShowStatus($"The list is full ({TexturePackManager.MaxTextures:N0} pictures).", StatusKind.Warning);
+                ShowStatus(Loc.F("Str_TexturePack_MsgListFull", "The list is full ({0:N0} pictures).", TexturePackManager.MaxTextures), StatusKind.Warning);
             else if (_sources.Count > 0 && files.Count == 0)
-                ShowStatus("No PNG pictures were found there.", StatusKind.Warning);
+                ShowStatus(Loc.T("Str_TexturePack_MsgNoPngFound", "No PNG pictures were found there."), StatusKind.Warning);
             else HideStatus();
 
             ScheduleValidate();
@@ -404,16 +405,16 @@ namespace Smart_Tools.WPF.Views
             int errors = _textures.Count(t => t.IsChecked && t.State == PackTextureState.Error);
 
             ListEmpty.Visibility = total > 0 ? Visibility.Collapsed : Visibility.Visible;
-            TxtPillCount.Text = string.Format(CultureInfo.CurrentCulture, "{0} of {1} textures in the pack", usable, total);
+            TxtPillCount.Text = Loc.F("Str_TexturePack_MsgCount", "{0} of {1} textures in the pack", usable, total);
             PillIssues.Visibility = warnings + errors > 0 ? Visibility.Visible : Visibility.Collapsed;
             TxtPillIssues.Text = string.Join(" · ", new[]
             {
-                errors > 0 ? $"{errors} left out (see the red icon)" : "",
-                warnings > 0 ? $"{warnings} to check" : "",
+                errors > 0 ? Loc.F("Str_TexturePack_MsgLeftOut", "{0} left out (see the red icon)", errors) : "",
+                warnings > 0 ? Loc.F("Str_TexturePack_MsgToCheck", "{0} to check", warnings) : "",
             }.Where(t => t.Length > 0));
             TxtActionInfo.Text = usable > 0
-                ? $"{usable} texture{(usable == 1 ? "" : "s")} will be written to assets/minecraft/textures."
-                : "Add pictures and give each one a texture name to build a pack.";
+                ? Loc.N(usable, "Str_TexturePack_MsgWrittenOne", "{0} texture will be written to assets/minecraft/textures.", "Str_TexturePack_MsgWrittenMany", "{0} textures will be written to assets/minecraft/textures.", usable)
+                : Loc.T("Str_TexturePack_MsgAddPictures", "Add pictures and give each one a texture name to build a pack.");
             if (!_busy) BtnRun.IsEnabled = usable > 0;
         }
 
@@ -441,7 +442,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnChooseIcon_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog { Title = "Pack icon (pack.png)", Filter = "PNG picture|*.png" };
+            var dialog = new OpenFileDialog { Title = Loc.T("Str_TexturePack_MsgIconTitle", "Pack icon (pack.png)"), Filter = Loc.T("Str_TexturePack_MsgPngOne", "PNG picture|*.png") };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             _iconPath = dialog.FileName;
             TxtIconName.Text = Path.GetFileName(_iconPath);
@@ -451,7 +452,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearIcon_Click(object sender, RoutedEventArgs e)
         {
             _iconPath = null;
-            TxtIconName.Text = "Choose a PNG";
+            TxtIconName.Text = Loc.T("Str_TexturePack_MsgChoosePng", "Choose a PNG");
             BtnClearIcon.Visibility = Visibility.Collapsed;
         }
 
@@ -468,14 +469,14 @@ namespace Smart_Tools.WPF.Views
             var items = TexturePackManager.Exportable(_textures);
             if (items.Count == 0 && _iconPath == null)
             {
-                ShowStatus("There is nothing to put in the pack yet - add pictures and give each a texture name.", StatusKind.Warning);
+                ShowStatus(Loc.T("Str_TexturePack_MsgNothingYet", "There is nothing to put in the pack yet - add pictures and give each a texture name."), StatusKind.Warning);
                 return;
             }
 
-            string? path = OutputCard.GetSavePath("Zip file|*.zip", out bool overwriteAllowed, out string? problem);
+            string? path = OutputCard.GetSavePath(Loc.T("Str_TexturePack_MsgZipFilter", "Zip file|*.zip"), out bool overwriteAllowed, out string? problem);
             if (path == null)
             {
-                if (problem != null) ShowStatus("Can't save there: " + problem, StatusKind.Error);
+                if (problem != null) ShowStatus(Loc.F("Str_TexturePack_MsgCantSaveThere", "Can't save there: {0}", problem), StatusKind.Error);
                 return;
             }
 
@@ -492,15 +493,15 @@ namespace Smart_Tools.WPF.Views
 
             if (result.Problem != null)
             {
-                ShowStatus("Couldn't create the pack: " + result.Problem, StatusKind.Error);
+                ShowStatus(Loc.F("Str_TexturePack_MsgCreateFailed", "Couldn't create the pack: {0}", result.Problem), StatusKind.Error);
                 return;
             }
             HideStatus();
             _lastOutput = result.Path;
             BtnOpenResult.Visibility = _lastOutput != null ? Visibility.Visible : Visibility.Collapsed;
-            ShowDone($"Saved {result.Written} texture{(result.Written == 1 ? "" : "s")}");
+            ShowDone(Loc.N(result.Written, "Str_TexturePack_MsgSavedOne", "Saved {0} texture", "Str_TexturePack_MsgSavedMany", "Saved {0} textures", result.Written));
             if (result.Skipped > 0)
-                ShowStatus($"{result.Skipped} picture(s) were left out (unticked, no valid name, or a repeated name).", StatusKind.Warning);
+                ShowStatus(Loc.F("Str_TexturePack_MsgSkipped", "{0} picture(s) were left out (unticked, no valid name, or a repeated name).", result.Skipped), StatusKind.Warning);
             OutputCard.Refresh();
         }
 
@@ -524,7 +525,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
             {
-                ShowStatus("Couldn't open it: " + ex.Message, StatusKind.Error);
+                ShowStatus(Loc.F("Str_TexturePack_MsgOpenFailed", "Couldn't open it: {0}", ex.Message), StatusKind.Error);
             }
         }
 

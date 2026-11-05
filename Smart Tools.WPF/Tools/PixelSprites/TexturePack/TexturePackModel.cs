@@ -21,7 +21,7 @@ namespace Smart_Tools.WPF.Models
         public int Count { get; set; }
 
         public string Name => Path.GetFileName(FullPath.TrimEnd('\\', '/')) is { Length: > 0 } n ? n : FullPath;
-        public string Subtitle => IsFolder ? $"Folder · {Count} PNG" : "PNG file";
+        public string Subtitle => IsFolder ? Loc.F("Str_TexturePack_MsgFolderSubtitle", "Folder · {0} PNG", Count) : Loc.T("Str_TexturePack_MsgFileSubtitle", "PNG file");
     }
 
     /// <summary>One picture and the Minecraft texture it will replace (for example "block/stone").</summary>

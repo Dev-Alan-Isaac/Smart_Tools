@@ -222,9 +222,7 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Writes through a temp file so a failed save never leaves half a file.</summary>
         public static void SaveMidiFile(MidiRecording recording, string path)
         {
-            string temp = path + ".tmp";
-            File.WriteAllBytes(temp, BuildMidiFile(recording));
-            File.Move(temp, path, overwrite: true);
+            AtomicFile.WriteAllBytes(path, BuildMidiFile(recording));
         }
 
         public static string SuggestedFileName(DateTime now, string instrumentName)
@@ -281,9 +279,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string file = path ?? SettingsPath;
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }
