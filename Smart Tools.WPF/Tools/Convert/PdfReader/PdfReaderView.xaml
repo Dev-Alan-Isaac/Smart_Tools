@@ -19,28 +19,75 @@
     mc:Ignorable="d">
 
     <!--
-        PDF Reader and Signer - read a PDF, then add text, a date, a signature or a check mark and save a new copy.
+        PDF Reader and Signer - read a PDF, then add text, a date, a signature, a check mark, a cross, a line or a highlight and save a new copy.
         Backend: Controllers/PdfReaderManager.cs; Models/PdfReaderModel.cs. UI only here.
+        Code-behind: PdfReaderView.xaml.cs (list, opening, pages), .Marks.cs (things on the page), .Signature.cs (signature + the in-app dialog).
     -->
 
     <UserControl.Resources>
         <views:ThumbnailConverter x:Key="Thumb" />
 
-        <!--  The PDF in the sidebar queue  -->
+        <!--  A PDF in the sidebar list: click to open it, X to take it off the list. The name always gives way to the X.  -->
         <DataTemplate x:Key="FileItemTemplate" DataType="{x:Type models:PdfReaderFile}">
-            <TextBlock
-                Margin="0,2"
-                VerticalAlignment="Center"
-                FontSize="12"
-                Foreground="{DynamicResource SidebarText}"
-                Text="{Binding Name}"
-                TextTrimming="CharacterEllipsis"
-                ToolTip="{Binding Path}" />
+            <Border
+                x:Name="Row"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="1"
+                CornerRadius="6"
+                Cursor="Hand"
+                MouseLeftButtonUp="FileRow_MouseLeftButtonUp"
+                ToolTip="{Binding Path}">
+                <Grid MinWidth="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="0" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon
+                        Width="18"
+                        Height="18"
+                        Margin="4,0,8,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource StatusErrorFg}"
+                        Kind="FilePdfBox" />
+                    <TextBlock
+                        x:Name="FileName"
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button
+                        Grid.Column="2"
+                        Width="24"
+                        Height="24"
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        Click="BtnRemoveFile_Click"
+                        Style="{StaticResource IconButtonStyle}"
+                        Tag="{Binding}"
+                        ToolTip="{DynamicResource Str_PdfReader_RemoveFile}">
+                        <materialDesign:PackIcon
+                            Width="13"
+                            Height="13"
+                            Kind="Close" />
+                    </Button>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter TargetName="Row" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                    <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="FileName" Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
-        <Grid Margin="16,8,16,16">
+        <Grid x:Name="MainLayout" Margin="16,8,16,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="OptionsColumn" Width="280" />
                 <ColumnDefinition Width="14" />
@@ -109,7 +156,7 @@
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="16,4,16,16">
 
-                            <!--  ============ THE PDF ============  -->
+                            <!--  ============ THE PDFs (one file, or every PDF of a folder; one is open at a time) ============  -->
                             <controls:InputFolderCard
                                 x:Name="InputCard"
                                 ctl:Tour.Key="Str_Tour_PdfReader_Open"
@@ -120,32 +167,28 @@
                                 ItemTemplate="{StaticResource FileItemTemplate}"
                                 PathsAdded="InputCard_PathsAdded"
                                 ShowSubfolders="False" />
-                            <TextBlock
-                                x:Name="TxtPageInfo"
-                                Margin="4,0,4,8"
-                                Style="{StaticResource SidebarHint}" />
 
                             <!--  ============ PASSWORD (only when the PDF needs one) ============  -->
                             <Border
                                 x:Name="PanelPasswordCard"
                                 Style="{StaticResource SidebarGroupCardStyle}"
                                 Visibility="Collapsed">
-                                <StackPanel>
-                                    <StackPanel x:Name="PanelPassword">
-                                        <TextBlock
-                                            Margin="0,8,0,6"
-                                            Style="{StaticResource FieldLabel}"
-                                            Text="{DynamicResource Str_PdfReader_Password}" />
-                                        <Border Style="{StaticResource InputBarStyle}">
-                                            <PasswordBox x:Name="PwdBox" KeyDown="PwdBox_KeyDown" />
-                                        </Border>
-                                        <Button
-                                            Margin="0,6,0,0"
-                                            Click="BtnUnlock_Click"
-                                            Content="{DynamicResource Str_PdfReader_Unlock}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                    </StackPanel>
+
+                                <StackPanel x:Name="PanelPassword">
+                                    <TextBlock
+                                        Margin="0,8,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_PdfReader_Password}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <PasswordBox x:Name="PwdBox" KeyDown="PwdBox_KeyDown" />
+                                    </Border>
+                                    <Button
+                                        Margin="0,6,0,0"
+                                        Click="BtnUnlock_Click"
+                                        Content="{DynamicResource Str_PdfReader_Unlock}"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}" />
                                 </StackPanel>
+
                             </Border>
 
                             <!--  ============ SIGNATURE ============  -->
@@ -178,36 +221,81 @@
                                                 Text="{DynamicResource Str_PdfReader_NoSignature}" />
                                         </Grid>
                                     </Border>
-                                    <UniformGrid Margin="0,8,0,0" Columns="3">
+
+                                    <!--  Draw and Type side by side; the picture and forget buttons get a full row each so no label has to wrap  -->
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
                                         <Button
                                             Margin="0,0,3,0"
                                             Click="BtnSigDraw_Click"
-                                            Content="{DynamicResource Str_PdfReader_Draw}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
+                                            Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Draw" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_PdfReader_Draw}" />
+                                            </StackPanel>
+                                        </Button>
                                         <Button
-                                            Margin="3,0,3,0"
-                                            Click="BtnSigType_Click"
-                                            Content="{DynamicResource Str_PdfReader_Type}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                        <Button
+                                            Grid.Column="1"
                                             Margin="3,0,0,0"
-                                            Click="BtnSigPicture_Click"
-                                            Content="{DynamicResource Str_PdfReader_Picture}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                    </UniformGrid>
+                                            Click="BtnSigType_Click"
+                                            Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FormatText" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_PdfReader_Type}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                    <Button
+                                        Margin="0,6,0,0"
+                                        Click="BtnSigPicture_Click"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="ImageOutline" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_PdfReader_PictureButton}" />
+                                        </StackPanel>
+                                    </Button>
                                     <Button
                                         x:Name="BtnSigForget"
                                         Margin="0,6,0,0"
-                                        HorizontalAlignment="Left"
                                         Click="BtnSigForget_Click"
-                                        Content="{DynamicResource Str_PdfReader_Forget}"
-                                        Style="{StaticResource ListToolDangerButtonStyle}"
-                                        Visibility="Collapsed" />
+                                        Style="{StaticResource DangerButtonStyle}"
+                                        Visibility="Collapsed">
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="DeleteOutline" />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource Str_PdfReader_Forget}"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Button>
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_PdfReader_SignatureHint}" />
                                 </StackPanel>
                             </Border>
 
-                            <!--  ============ ADD TO THE PAGE ============  -->
+                            <!--  ============ ADD TO THE PAGE (a dropdown: there are more than five kinds) ============  -->
                             <Border
                                 ctl:Tour.Key="Str_Tour_PdfReader_Add"
                                 ctl:Tour.Order="3"
@@ -217,32 +305,114 @@
                                         Content="{DynamicResource Str_PdfReader_AddHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.PlusBoxOutline}" />
-                                    <UniformGrid Columns="2">
-                                        <Button
-                                            x:Name="BtnAddSignature"
-                                            Margin="0,0,3,6"
-                                            Click="BtnAddSignature_Click"
-                                            Content="{DynamicResource Str_PdfReader_AddSignature}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                        <Button
-                                            x:Name="BtnAddText"
-                                            Margin="3,0,0,6"
-                                            Click="BtnAddText_Click"
-                                            Content="{DynamicResource Str_PdfReader_AddText}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                        <Button
-                                            x:Name="BtnAddDate"
-                                            Margin="0,0,3,0"
-                                            Click="BtnAddDate_Click"
-                                            Content="{DynamicResource Str_PdfReader_AddDate}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                        <Button
-                                            x:Name="BtnAddCheck"
-                                            Margin="3,0,0,0"
-                                            Click="BtnAddCheck_Click"
-                                            Content="{DynamicResource Str_PdfReader_AddCheck}"
-                                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
-                                    </UniformGrid>
+                                    <ComboBox x:Name="CmbAddKind" SelectedIndex="0">
+                                        <ComboBoxItem Tag="Signature">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Draw" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddSignature}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Text">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="FormatText" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddText}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Date">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="CalendarOutline" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddDate}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Check">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Check" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddCheck}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Cross">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Close" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddCross}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Line">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Minus" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddLine}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                        <ComboBoxItem Tag="Highlight">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    VerticalAlignment="Center"
+                                                    Kind="MarkerCheck" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Text="{DynamicResource Str_PdfReader_AddHighlight}" />
+                                            </StackPanel>
+                                        </ComboBoxItem>
+                                    </ComboBox>
+                                    <Button
+                                        x:Name="BtnAddMark"
+                                        Margin="0,6,0,0"
+                                        Click="BtnAddMark_Click"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="PlusCircleOutline" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_PdfReader_AddButton}" />
+                                        </StackPanel>
+                                    </Button>
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_PdfReader_AddHint}" />
                                 </StackPanel>
                             </Border>
@@ -319,6 +489,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Button
                             x:Name="BtnSave"
@@ -354,8 +525,81 @@
                                 Foreground="{DynamicResource TextSecondary}"
                                 TextTrimming="CharacterEllipsis" />
                         </StackPanel>
+
+                        <!--  Badges: how many pages the open PDF has, and which PDF of the list this is, with previous / next  -->
                         <StackPanel
                             Grid.Column="2"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Border
+                                x:Name="BadgeFiles"
+                                Margin="0,0,6,0"
+                                Padding="4,0"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AccentColorSubtle}"
+                                CornerRadius="10"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        Width="24"
+                                        Height="24"
+                                        Click="BtnPrevPdf_Click"
+                                        Style="{StaticResource IconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_PdfReader_PrevPdf}">
+                                        <materialDesign:PackIcon
+                                            Width="14"
+                                            Height="14"
+                                            Kind="ChevronLeft" />
+                                    </Button>
+                                    <TextBlock
+                                        x:Name="TxtFileInfo"
+                                        MinWidth="40"
+                                        VerticalAlignment="Center"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource AccentColor}"
+                                        TextAlignment="Center" />
+                                    <Button
+                                        Width="24"
+                                        Height="24"
+                                        Click="BtnNextPdf_Click"
+                                        Style="{StaticResource IconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_PdfReader_NextPdf}">
+                                        <materialDesign:PackIcon
+                                            Width="14"
+                                            Height="14"
+                                            Kind="ChevronRight" />
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="BadgePages"
+                                Padding="9,4"
+                                VerticalAlignment="Center"
+                                Background="{DynamicResource AccentColorSubtle}"
+                                CornerRadius="10"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="14"
+                                        Height="14"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource AccentColor}"
+                                        Kind="FileDocumentOutline" />
+                                    <TextBlock
+                                        x:Name="TxtPageInfo"
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        FontSize="11.5"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource AccentColor}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="3"
                             Margin="12,0,0,0"
                             VerticalAlignment="Center"
                             ctl:Tour.Key="Str_Tour_PdfReader_Zoom"
@@ -412,11 +656,6 @@
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Auto">
                             <ItemsControl x:Name="PageList" Margin="0,4,0,4">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:PdfReaderPage}">
                                         <Border
@@ -466,6 +705,54 @@
                     </Grid>
                 </Border>
             </Grid>
+        </Grid>
+
+        <!--
+            In-app dialog (draw / type a signature). The page behind is switched off while it is open. The content is built by the
+            code-behind (PdfReaderView.Signature.cs) and put in ModalBody.
+        -->
+        <Grid
+            x:Name="ModalHost"
+            Panel.ZIndex="50"
+            PreviewKeyDown="Modal_PreviewKeyDown"
+            Visibility="Collapsed">
+            <Border Background="{DynamicResource TourScrim}" />
+            <Border
+                MaxWidth="560"
+                Margin="24"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock
+                        x:Name="ModalTitle"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        TextTrimming="CharacterEllipsis" />
+                    <ContentPresenter x:Name="ModalBody" Margin="0,12,0,14" />
+                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                        <Button
+                            x:Name="BtnModalClear"
+                            MinWidth="80"
+                            Margin="0,0,8,0"
+                            Click="BtnModalClear_Click"
+                            Content="{DynamicResource Str_PdfReader_Clear}"
+                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
+                        <Button
+                            MinWidth="80"
+                            Margin="0,0,8,0"
+                            Click="BtnModalCancel_Click"
+                            Content="{DynamicResource Str_PdfReader_Cancel}"
+                            Style="{StaticResource ListToolPrimaryButtonStyle}" />
+                        <Button
+                            MinWidth="80"
+                            Click="BtnModalUse_Click"
+                            Content="{DynamicResource Str_PdfReader_Use}"
+                            Style="{StaticResource AccentPrimaryButtonStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

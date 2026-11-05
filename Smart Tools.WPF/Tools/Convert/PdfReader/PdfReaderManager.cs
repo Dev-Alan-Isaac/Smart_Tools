@@ -119,8 +119,70 @@ namespace Smart_Tools.WPF.Controllers
                         new XPoint(ox + s * 0.85, oy + s * 0.20),
                     });
                     break;
+
+                case PdfMarkKind.Cross:
+                    {
+                        var crossPen = new XPen(XColors.Black, Math.Max(1, mark.Size * scale * 0.1)) { LineCap = XLineCap.Round };
+                        double side = mark.Size * scale, left = mark.X * scale, top = mark.Y * scale;
+                        gfx.DrawLine(crossPen, left + side * 0.20, top + side * 0.20, left + side * 0.80, top + side * 0.80);
+                        gfx.DrawLine(crossPen, left + side * 0.80, top + side * 0.20, left + side * 0.20, top + side * 0.80);
+                        break;
+                    }
+
+                case PdfMarkKind.Line:
+                    {
+                        var linePen = new XPen(XColors.Black, LineThickness * scale);
+                        double middle = (mark.Y + PdfMark.LineBox / 2) * scale;
+                        gfx.DrawLine(linePen, mark.X * scale, middle, (mark.X + mark.Size) * scale, middle);
+                        break;
+                    }
+
+                case PdfMarkKind.Highlight:
+                    gfx.DrawRectangle(new XSolidBrush(XColor.FromArgb(110, 255, 235, 59)), mark.X * scale, mark.Y * scale, mark.Size * scale, mark.Height * scale);
+                    break;
             }
         }
+
+        /// <summary>Thickness in points of a line mark (also used to draw it on screen).</summary>
+        public const double LineThickness = 1.5;
+
+        /// <summary>
+        /// Every PDF in the files and folders given (a folder gives the PDFs directly inside it, in natural order: 2 before 10),
+        /// without repeats, at most <paramref name="limit"/>. Unreadable folders are skipped.
+        /// </summary>
+        public static List<string> FindPdfs(IEnumerable<string> paths, int limit = 20000)
+        {
+            var result = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string path in paths)
+            {
+                if (result.Count >= limit) break;
+                try
+                {
+                    if (File.Exists(path))
+                    {
+                        if (IsPdf(path) && seen.Add(path)) result.Add(path);
+                    }
+                    else if (Directory.Exists(path))
+                    {
+                        var here = Directory.EnumerateFiles(path, "*.pdf", SearchOption.TopDirectoryOnly).Where(IsPdf).ToList();
+                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        foreach (string file in here)
+                        {
+                            if (result.Count >= limit) break;
+                            if (seen.Add(file)) result.Add(file);
+                        }
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // An unreadable folder adds nothing.
+                }
+            }
+            return result;
+        }
+
+        private static bool IsPdf(string path) => string.Equals(Path.GetExtension(path), ".pdf", StringComparison.OrdinalIgnoreCase);
 
         // =================================================================
         //  The remembered signature + settings
