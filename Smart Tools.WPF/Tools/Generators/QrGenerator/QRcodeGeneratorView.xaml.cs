@@ -190,8 +190,8 @@ namespace Smart_Tools.WPF.Views
         {
             var dialog = new OpenFileDialog
             {
-                Title = "Choose a text file to encode",
-                Filter = "Text and contact files|*.txt;*.vcf;*.ics;*.csv;*.json;*.xml;*.md|All files|*.*",
+                Title = Loc.T("Str_QrGen_MsgPickTextFile", "Choose a text file to encode"),
+                Filter = Loc.T("Str_QrGen_MsgTextFilter", "Text and contact files|*.txt;*.vcf;*.ics;*.csv;*.json;*.xml;*.md|All files|*.*"),
             };
             if (dialog.ShowDialog() != true) return;
 
@@ -411,8 +411,8 @@ namespace Smart_Tools.WPF.Views
         {
             var dialog = new OpenFileDialog
             {
-                Title = "Choose a logo image",
-                Filter = "Image files|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.webp|All files|*.*",
+                Title = Loc.T("Str_QrGen_MsgPickLogo", "Choose a logo image"),
+                Filter = Loc.T("Str_QrGen_MsgImageFilter", "Image files|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.webp|All files|*.*"),
             };
             if (dialog.ShowDialog() != true) return;
 
@@ -505,8 +505,9 @@ namespace Smart_Tools.WPF.Views
 
         private void UpdateExportHints()
         {
-            TxtBatchExportInfo.Text = "Each generated code is saved as an image file" +
-                                      (_logoImage != null ? ", with your logo" : "");
+            TxtBatchExportInfo.Text = _logoImage != null
+                ? Loc.T("Str_QrGen_MsgExportHintLogo", "Each generated code is saved as an image file, with your logo")
+                : Loc.T("Str_QrGen_MsgExportHint", "Each generated code is saved as an image file");
         }
 
         /// <summary>Builds options from the sidebar, or returns null with the first problem.</summary>
@@ -584,14 +585,13 @@ namespace Smart_Tools.WPF.Views
             BtnSaveAs.IsEnabled = true;
             BtnCopyToClipboard.IsEnabled = true;
 
-            TxtPreviewInfo.Text =
-                $"{result.ContentKind} · version {result.Version} · {result.ModuleCount}×{result.ModuleCount} modules · " +
-                $"{result.PixelWidth} × {result.PixelHeight} px · {result.ModulePx} px per module";
+            TxtPreviewInfo.Text = Loc.F("Str_QrGen_MsgPreviewInfo", "{0} · version {1} · {2}×{2} modules · {3} × {4} px · {5} px per module",
+                result.ContentKind, result.Version, result.ModuleCount, result.PixelWidth, result.PixelHeight, result.ModulePx);
 
             string ec = result.EffectiveErrorCorrection.ToString();
             string status = result.ModulePx < 3
-                ? $"Ready - small modules ({result.ModulePx} px); make it larger for print"
-                : _logoImage != null ? $"Ready - {ec} error correction (logo)" : $"Ready - {ec} error correction";
+                ? Loc.F("Str_QrGen_MsgReadySmall", "Ready - small modules ({0} px); make it larger for print", result.ModulePx)
+                : _logoImage != null ? Loc.F("Str_QrGen_MsgReadyLogo", "Ready - {0} error correction (logo)", ec) : Loc.F("Str_QrGen_MsgReadyEc", "Ready - {0} error correction", ec);
             SetStatus(status, result.ModulePx < 3 ? StatusKind.Warning : StatusKind.Success);
 
             // Animate only the empty -> image transition; live edits stay still.
@@ -641,7 +641,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 Clipboard.SetImage(_currentResult.Image);
-                SetStatus("Copied to clipboard", StatusKind.Success);
+                SetStatus(Loc.T("Str_Generators_MsgCopied", "Copied to clipboard"), StatusKind.Success);
                 UiMotion.Pop(BorderStatus);
             }
             catch (Exception ex)
@@ -657,7 +657,7 @@ namespace Smart_Tools.WPF.Views
             string ext = QrCodeManager.ExtensionFor(format);
             var dialog = new SaveFileDialog
             {
-                Title = "Save QR code",
+                Title = Loc.T("Str_QrGen_MsgSaveTitle", "Save QR code"),
                 Filter = QrCodeManager.FileFilterFor(format),
                 DefaultExt = ext,
                 FileName = "qrcode" + ext,
@@ -668,7 +668,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 QrCodeManager.SaveToFile(_currentResult, dialog.FileName, format);
-                SetStatus($"Saved {Path.GetFileName(dialog.FileName)}", StatusKind.Success);
+                SetStatus(Loc.F("Str_Generators_MsgSaved", "Saved {0}", Path.GetFileName(dialog.FileName)), StatusKind.Success);
                 UiMotion.Pop(BorderStatus);
             }
             catch (Exception ex)
@@ -758,7 +758,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnLoadNamesFromFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog { Title = "Choose a folder - each file name becomes an entry" };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_Generators_MsgPickNamesFolder", "Choose a folder - each file name becomes an entry") };
             if (dialog.ShowDialog() != true) return;
 
             try
@@ -827,9 +827,9 @@ namespace Smart_Tools.WPF.Views
 
             _batchCts = new CancellationTokenSource();
             SetBatchRunning(true);
-            ReportBatchProgress(0, inputs.Count, "Generating");
+            ReportBatchProgress(0, inputs.Count, Loc.T("Str_Generators_VerbGenerating", "Generating"));
 
-            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, "Generating"));
+            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, Loc.T("Str_Generators_VerbGenerating", "Generating")));
 
             try
             {
@@ -838,13 +838,13 @@ namespace Smart_Tools.WPF.Views
             }
             catch (OperationCanceledException)
             {
-                TxtBatchProgress.Text = "Cancelled - nothing was kept";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgBatchCancelled", "Cancelled - nothing was kept");
                 ProgressBarBatch.Value = 0;
                 TxtProgressPercent.Text = "0%";
             }
             catch (Exception ex)
             {
-                TxtBatchProgress.Text = "Batch failed";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgBatchFailed", "Batch failed");
                 MessageBox.Show(Loc.F("Str_MB_BatchGenerationFailed", "Batch generation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -860,7 +860,7 @@ namespace Smart_Tools.WPF.Views
             double percent = total == 0 ? 0 : done * 100.0 / total;
             ProgressBarBatch.Value = percent;
             TxtProgressPercent.Text = $"{percent:0}%";
-            TxtBatchProgress.Text = $"{verb} {done:N0} of {total:N0}";
+            TxtBatchProgress.Text = Loc.F("Str_Generators_MsgProgress", "{0} {1:N0} of {2:N0}", verb, done, total);
         }
 
         private void SetBatchRunning(bool running)
@@ -896,13 +896,13 @@ namespace Smart_Tools.WPF.Views
 
             UiMotion.FadeVisibility(BatchEmptyStatePanel, rows.Count == 0);
 
-            TxtSummaryCount.Text = $"{ok:N0} of {rows.Count:N0} generated";
+            TxtSummaryCount.Text = Loc.F("Str_Generators_MsgGeneratedOf", "{0:N0} of {1:N0} generated", ok, rows.Count);
             SummaryPill.Visibility = Visibility.Visible;
             UiMotion.Pop(SummaryPill);
 
             TxtBatchProgress.Text = failed == 0
-                ? $"Done - all {rows.Count:N0} generated"
-                : $"Done - {failed:N0} failed (hover a status for the reason)";
+                ? Loc.F("Str_Generators_MsgDoneAll", "Done - all {0:N0} generated", rows.Count)
+                : Loc.F("Str_QrGen_MsgDoneFailed", "Done - {0:N0} failed (hover a status for the reason)", failed);
         }
 
         private async void MenuBatchExport_Click(object sender, RoutedEventArgs e)
@@ -914,7 +914,7 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
-            var dialog = new OpenFolderDialog { Title = "Choose where to save the QR codes" };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_QrGen_MsgPickExportFolder", "Choose where to save the QR codes") };
             if (dialog.ShowDialog() != true) return;
 
             int total =_batchRows.Count(r => r.Status == QrRowStatus.Generated);
@@ -923,24 +923,24 @@ namespace Smart_Tools.WPF.Views
             BtnExportAll.IsEnabled = false;
             BtnGenerateAll.IsEnabled = false;
             _batchCts = new CancellationTokenSource();
-            ReportBatchProgress(0, total, "Exporting");
+            ReportBatchProgress(0, total, Loc.T("Str_Generators_VerbExporting", "Exporting"));
 
-            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, "Exporting"));
+            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, Loc.T("Str_Generators_VerbExporting", "Exporting")));
 
             try
             {
                 int written = await _qr.ExportBatchAsync(_batchRows, dialog.FolderName, format, progress, _batchCts.Token);
-                TxtBatchProgress.Text = $"Exported {written:N0} files";
+                TxtBatchProgress.Text = Loc.F("Str_Generators_MsgExportedFiles", "Exported {0:N0} files", written);
                 Smart_Tools.WPF.Controllers.ToastNotificationManager.ShowToast(DialogTitle,
-                    $"Exported {written:N0} of {total:N0} QR codes to {dialog.FolderName}");
+                    Loc.F("Str_QrGen_MsgExportToast", "Exported {0:N0} of {1:N0} QR codes to {2}", written, total, dialog.FolderName));
             }
             catch (OperationCanceledException)
             {
-                TxtBatchProgress.Text = "Export cancelled";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgExportCancelled", "Export cancelled");
             }
             catch (Exception ex)
             {
-                TxtBatchProgress.Text = "Export failed";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgExportFailed", "Export failed");
                 MessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

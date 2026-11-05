@@ -307,7 +307,7 @@ namespace Smart_Tools.WPF.Controllers
                         {
                             item.SizeBytes = size;
                             item.Status = FileGenStatus.Created;
-                            if (final != item.FullPath) item.Message = "Saved as " + Path.GetFileName(final);
+                            if (final != item.FullPath) item.Message = Loc.F("Str_FileGen_MsgSavedAs", "Saved as {0}", Path.GetFileName(final));
                         });
                         created.Add(item);
                     }
@@ -339,7 +339,7 @@ namespace Smart_Tools.WPF.Controllers
                                 OnUi(() =>
                                 {
                                     rest.Status = FileGenStatus.Cancelled;
-                                    rest.Message = "Stopped: the disk is full.";
+                                    rest.Message = Loc.T("Str_FileGen_MsgDiskFull", "Stopped: the disk is full.");
                                 });
                             }
                             break;
@@ -361,7 +361,7 @@ namespace Smart_Tools.WPF.Controllers
                             foreach (var c in created)
                             {
                                 TryDelete(c.FullPath);
-                                OnUi(() => c.Message = "Packed into " + Path.GetFileName(archivePath));
+                                OnUi(() => c.Message = Loc.F("Str_FileGen_MsgPackedItem", "Packed into {0}", Path.GetFileName(archivePath)));
                             }
                         }
                     }
@@ -449,12 +449,12 @@ namespace Smart_Tools.WPF.Controllers
 
         public static string DescribeSummary(FileGenSummary s)
         {
-            var parts = new List<string> { $"{s.Created:N0} {FileGenText.Plural(s.Created, "file", "files")} created ({FileGenText.Bytes(s.TotalBytes)})" };
-            if (s.Failed > 0) parts.Add($"{s.Failed:N0} failed");
-            if (s.ArchivePath != null) parts.Add("packed into " + Path.GetFileName(s.ArchivePath));
+            var parts = new List<string> { Loc.N((int)Math.Min(s.Created, int.MaxValue), "Str_FileGen_MsgCreatedOne", "1 file created ({1})", "Str_FileGen_MsgCreatedMany", "{0:N0} files created ({1})", s.Created, FileGenText.Bytes(s.TotalBytes)) };
+            if (s.Failed > 0) parts.Add(Loc.F("Str_FileGen_MsgFailedN", "{0:N0} failed", s.Failed));
+            if (s.ArchivePath != null) parts.Add(Loc.F("Str_FileGen_MsgPackedInto", "packed into {0}", Path.GetFileName(s.ArchivePath)));
             parts.Add(s.Elapsed.TotalSeconds < 1 ? $"{s.Elapsed.TotalMilliseconds:0} ms" : $"{s.Elapsed.TotalSeconds:0.0} s");
             string text = string.Join(" · ", parts) + ".";
-            return s.Cancelled ? "Stopped. " + text : text;
+            return s.Cancelled ? Loc.T("Str_FileGen_MsgStopped", "Stopped.") + " " + text : text;
         }
 
         // =================================================================

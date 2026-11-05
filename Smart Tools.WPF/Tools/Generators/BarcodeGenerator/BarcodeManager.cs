@@ -39,7 +39,7 @@ namespace Smart_Tools.WPF.Controllers
 
             if (string.IsNullOrWhiteSpace(data))
             {
-                error = "Enter some content to encode first.";
+                error = Loc.T("Str_Generators_ErrNoContent", "Enter some content to encode first.");
                 return false;
             }
 
@@ -48,12 +48,12 @@ namespace Smart_Tools.WPF.Controllers
                 case BarcodeSymbology.Ean13:
                     if (!data.All(char.IsAsciiDigit))
                     {
-                        error = "EAN-13 only accepts digits (12 digits; the 13th check digit is added for you).";
+                        error = Loc.T("Str_BarcodeGen_ErrEanDigits", "EAN-13 only accepts digits (12 digits; the 13th check digit is added for you).");
                         return false;
                     }
                     if (data.Length != 12 && data.Length != 13)
                     {
-                        error = $"EAN-13 needs 12 digits - you have {data.Length}.";
+                        error = Loc.F("Str_BarcodeGen_ErrEanCount", "EAN-13 needs 12 digits - you have {0}.", data.Length);
                         return false;
                     }
                     if (data.Length == 13)
@@ -62,7 +62,7 @@ namespace Smart_Tools.WPF.Controllers
                         char expected = ComputeEan13CheckDigit(data[..12]);
                         if (data[12] != expected)
                         {
-                            error = $"The last digit should be {expected} (EAN-13 check digit). Enter just the first 12 digits to have it added automatically.";
+                            error = Loc.F("Str_BarcodeGen_ErrEanCheck", "The last digit should be {0} (EAN-13 check digit). Enter just the first 12 digits to have it added automatically.", expected);
                             return false;
                         }
                     }
@@ -71,12 +71,12 @@ namespace Smart_Tools.WPF.Controllers
                 case BarcodeSymbology.Interleaved2of5:
                     if (!data.All(char.IsAsciiDigit))
                     {
-                        error = "Interleaved 2 of 5 only accepts digits.";
+                        error = Loc.T("Str_BarcodeGen_ErrItfDigits", "Interleaved 2 of 5 only accepts digits.");
                         return false;
                     }
                     if (data.Length % 2 != 0)
                     {
-                        error = "Interleaved 2 of 5 needs an even number of digits - try adding a leading zero.";
+                        error = Loc.T("Str_BarcodeGen_ErrItfEven", "Interleaved 2 of 5 needs an even number of digits - try adding a leading zero.");
                         return false;
                     }
                     break;
@@ -85,7 +85,7 @@ namespace Smart_Tools.WPF.Controllers
                     char bad = data.ToUpperInvariant().FirstOrDefault(c => Code39Charset.IndexOf(c) < 0);
                     if (bad != default)
                     {
-                        error = $"Code 39 can't encode \"{bad}\" - it supports digits, A-Z, space and - . $ / + %.";
+                        error = Loc.F("Str_BarcodeGen_ErrCode39", "Code 39 can't encode \"{0}\" - it supports digits, A-Z, space and - . $ / + %.", bad);
                         return false;
                     }
                     break;
@@ -94,7 +94,7 @@ namespace Smart_Tools.WPF.Controllers
                     char nonAscii = data.FirstOrDefault(c => c > 127);
                     if (nonAscii != default)
                     {
-                        error = $"Code 128 can't encode \"{nonAscii}\" - only standard ASCII characters.";
+                        error = Loc.F("Str_BarcodeGen_ErrCode128", "Code 128 can't encode \"{0}\" - only standard ASCII characters.", nonAscii);
                         return false;
                     }
                     break;
@@ -170,7 +170,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex)
             {
-                return Failure(data, symbology, options, $"Couldn't generate barcode: {ex.Message}");
+                return Failure(data, symbology, options, Loc.F("Str_BarcodeGen_ErrGenerate", "Couldn't generate barcode: {0}", ex.Message));
             }
         }
 
@@ -395,16 +395,16 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveToFile(BarcodeGenerationResult result, string filePath, BarcodeExportFormat format)
         {
             if (result.Image == null)
-                throw new InvalidOperationException("Nothing to export - generate a barcode first.");
+                throw new InvalidOperationException(Loc.T("Str_BarcodeGen_ErrNothingToExport", "Nothing to export - generate a barcode first."));
 
             switch (format)
             {
                 case BarcodeExportFormat.Jpg:
-                    File.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new JpegBitmapEncoder { QualityLevel = 95 }));
+                    AtomicFile.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new JpegBitmapEncoder { QualityLevel = 95 }));
                     break;
 
                 case BarcodeExportFormat.Svg:
-                    File.WriteAllText(filePath, BuildVectorSvg(result), Encoding.UTF8);
+                    AtomicFile.WriteAllText(filePath, BuildVectorSvg(result), Encoding.UTF8);
                     break;
 
                 case BarcodeExportFormat.Pdf:
@@ -413,7 +413,7 @@ namespace Smart_Tools.WPF.Controllers
                     break;
 
                 default:
-                    File.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new PngBitmapEncoder()));
+                    AtomicFile.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new PngBitmapEncoder()));
                     break;
             }
         }

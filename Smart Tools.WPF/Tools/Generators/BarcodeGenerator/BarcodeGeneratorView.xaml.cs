@@ -137,7 +137,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog { Title = "Select a file to encode" };
+            var dialog = new OpenFileDialog { Title = Loc.T("Str_BarcodeGen_MsgSelectFile", "Select a file to encode") };
             if (dialog.ShowDialog() == true)
                 PathTextBox.Text = dialog.FileName; // TextChanged -> RegenerateSingle
         }
@@ -413,11 +413,11 @@ namespace Smart_Tools.WPF.Views
 
             TxtPreviewInfo.Text =
                 $"{BarcodeNames.Display(symbology)} · {result.PixelWidth} × {result.PixelHeight} px · " +
-                (result.EncodedText.Length == 1 ? "1 character" : $"{result.EncodedText.Length} characters");
+                Loc.N(result.EncodedText.Length, "Str_BarcodeGen_MsgCharOne", "1 character", "Str_BarcodeGen_MsgCharMany", "{0} characters", result.EncodedText.Length);
 
             string status = result.EncodedText != data.Trim() && symbology == BarcodeSymbology.Ean13
-                ? $"Ready - check digit added: {result.EncodedText}"
-                : "Ready";
+                ? Loc.F("Str_BarcodeGen_MsgReadyCheck", "Ready - check digit added: {0}", result.EncodedText)
+                : Loc.T("Str_Generators_MsgReady", "Ready");
             SetStatus(status, StatusKind.Success);
 
             // Animate only the empty -> image transition; live edits stay still.
@@ -467,7 +467,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 Clipboard.SetImage(_currentResult.Image);
-                SetStatus("Copied to clipboard", StatusKind.Success);
+                SetStatus(Loc.T("Str_Generators_MsgCopied", "Copied to clipboard"), StatusKind.Success);
             }
             catch (Exception ex)
             {
@@ -482,7 +482,7 @@ namespace Smart_Tools.WPF.Views
             string ext = BarcodeManager.ExtensionFor(format);
             var dialog = new SaveFileDialog
             {
-                Title = "Save barcode",
+                Title = Loc.T("Str_BarcodeGen_MsgSaveTitle", "Save barcode"),
                 Filter = BarcodeManager.FileFilterFor(format),
                 DefaultExt = ext,
                 FileName = ZxingImageHelpers.SanitizeFileName(_currentResult.EncodedText, 1, "barcode") + ext,
@@ -493,7 +493,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 BarcodeManager.SaveToFile(_currentResult, dialog.FileName, format);
-                SetStatus($"Saved {Path.GetFileName(dialog.FileName)}", StatusKind.Success);
+                SetStatus(Loc.F("Str_Generators_MsgSaved", "Saved {0}", Path.GetFileName(dialog.FileName)), StatusKind.Success);
             }
             catch (Exception ex)
             {
@@ -581,7 +581,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnLoadNamesFromFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog { Title = "Choose a folder - each file name becomes an entry" };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_Generators_MsgPickNamesFolder", "Choose a folder - each file name becomes an entry") };
             if (dialog.ShowDialog() != true) return;
 
             try
@@ -651,9 +651,9 @@ namespace Smart_Tools.WPF.Views
 
             _batchCts = new CancellationTokenSource();
             SetBatchRunning(true);
-            ReportBatchProgress(0, inputs.Count, "Generating");
+            ReportBatchProgress(0, inputs.Count, Loc.T("Str_Generators_VerbGenerating", "Generating"));
 
-            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, "Generating"));
+            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, Loc.T("Str_Generators_VerbGenerating", "Generating")));
 
             try
             {
@@ -662,13 +662,13 @@ namespace Smart_Tools.WPF.Views
             }
             catch (OperationCanceledException)
             {
-                TxtBatchProgress.Text = "Cancelled - nothing was kept";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgBatchCancelled", "Cancelled - nothing was kept");
                 ProgressBarBatch.Value = 0;
                 TxtProgressPercent.Text = "0%";
             }
             catch (Exception ex)
             {
-                TxtBatchProgress.Text = "Batch failed";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgBatchFailed", "Batch failed");
                 MessageBox.Show(Loc.F("Str_MB_BatchGenerationFailed", "Batch generation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -684,7 +684,7 @@ namespace Smart_Tools.WPF.Views
             double percent = total == 0 ? 0 : done * 100.0 / total;
             ProgressBarBatch.Value = percent;
             TxtProgressPercent.Text = $"{percent:0}%";
-            TxtBatchProgress.Text = $"{verb} {done:N0} of {total:N0}";
+            TxtBatchProgress.Text = Loc.F("Str_Generators_MsgProgress", "{0} {1:N0} of {2:N0}", verb, done, total);
         }
 
         private void SetBatchRunning(bool running)
@@ -720,13 +720,13 @@ namespace Smart_Tools.WPF.Views
 
             UiMotion.FadeVisibility(BatchEmptyStatePanel, rows.Count == 0);
 
-            TxtSummaryCount.Text = $"{ok:N0} of {rows.Count:N0} generated";
+            TxtSummaryCount.Text = Loc.F("Str_Generators_MsgGeneratedOf", "{0:N0} of {1:N0} generated", ok, rows.Count);
             SummaryPill.Visibility = Visibility.Visible;
             UiMotion.Pop(SummaryPill);
 
             TxtBatchProgress.Text = failed == 0
-                ? $"Done - all {rows.Count:N0} generated"
-                : $"Done - {failed:N0} failed (see the Message column)";
+                ? Loc.F("Str_Generators_MsgDoneAll", "Done - all {0:N0} generated", rows.Count)
+                : Loc.F("Str_BarcodeGen_MsgDoneFailed", "Done - {0:N0} failed (see the Message column)", failed);
         }
 
         private async void MenuBatchExport_Click(object sender, RoutedEventArgs e)
@@ -738,7 +738,7 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
-            var dialog = new OpenFolderDialog { Title = "Choose where to save the barcodes" };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_BarcodeGen_MsgPickExportFolder", "Choose where to save the barcodes") };
             if (dialog.ShowDialog() != true) return;
 
             int total =_batchRows.Count(r => r.Status == BarcodeRowStatus.Generated);
@@ -747,24 +747,24 @@ namespace Smart_Tools.WPF.Views
             BatchExportButton.IsEnabled = false;
             BtnGenerateAll.IsEnabled = false;
             _batchCts = new CancellationTokenSource();
-            ReportBatchProgress(0, total, "Exporting");
+            ReportBatchProgress(0, total, Loc.T("Str_Generators_VerbExporting", "Exporting"));
 
-            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, "Exporting"));
+            var progress = new Progress<(int Done, int Total)>(p => ReportBatchProgress(p.Done, p.Total, Loc.T("Str_Generators_VerbExporting", "Exporting")));
 
             try
             {
                 int written = await _barcode.ExportBatchAsync(_batchRows, dialog.FolderName, format, progress, _batchCts.Token);
-                TxtBatchProgress.Text = $"Exported {written:N0} files";
+                TxtBatchProgress.Text = Loc.F("Str_Generators_MsgExportedFiles", "Exported {0:N0} files", written);
                 Smart_Tools.WPF.Controllers.ToastNotificationManager.ShowToast(DialogTitle,
-                    $"Exported {written:N0} of {total:N0} barcodes to {dialog.FolderName}");
+                    Loc.F("Str_BarcodeGen_MsgExportToast", "Exported {0:N0} of {1:N0} barcodes to {2}", written, total, dialog.FolderName));
             }
             catch (OperationCanceledException)
             {
-                TxtBatchProgress.Text = "Export cancelled";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgExportCancelled", "Export cancelled");
             }
             catch (Exception ex)
             {
-                TxtBatchProgress.Text = "Export failed";
+                TxtBatchProgress.Text = Loc.T("Str_Generators_MsgExportFailed", "Export failed");
                 MessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

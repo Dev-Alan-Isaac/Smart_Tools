@@ -355,12 +355,12 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Stopping… (the file being written is removed)";
+                TxtProgress.Text = Loc.T("Str_FileGen_MsgStopping", "Stopping… (the file being written is removed)");
                 return;
             }
             if (_outputFolder.Length == 0 || OutputCard.Status.IsError)
             {
-                TxtProgress.Text = "Can't save there: " + OutputCard.Status.Text + ". Choose another folder in Output.";
+                TxtProgress.Text = Loc.F("Str_FileGen_MsgCantSave", "Can't save there: {0}. Choose another folder in Output.", OutputCard.Status.Text);
                 UiMotion.Pop(OutputCard, 0.95);
                 return;
             }
@@ -415,11 +415,11 @@ namespace Smart_Tools.WPF.Views
                 TxtProgress.Text = FileGeneratorManager.DescribeSummary(summary);
                 if (summary.ArchiveError != null)
                     MessageBox.Show(summary.ArchiveError, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                if (!summary.Cancelled && summary.Elapsed > TimeSpan.FromSeconds(5)) Toast("File generation complete", FileGeneratorManager.DescribeSummary(summary));
+                if (!summary.Cancelled && summary.Elapsed > TimeSpan.FromSeconds(5)) Toast(Loc.T("Str_FileGen_MsgComplete", "File generation complete"), FileGeneratorManager.DescribeSummary(summary));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                TxtProgress.Text = "Couldn't write there: " + FileGeneratorManager.PlainError(ex);
+                TxtProgress.Text = Loc.F("Str_FileGen_MsgCantWrite", "Couldn't write there: {0}", FileGeneratorManager.PlainError(ex));
             }
             finally
             {
@@ -435,7 +435,7 @@ namespace Smart_Tools.WPF.Views
         private void SetRunningUi(bool running)
         {
             IconGenerate.Kind = running ? PackIconKind.StopCircleOutline : PackIconKind.FilePlusOutline;
-            if (running) TxtGenerateLabel.Text = "Cancel";
+            if (running) TxtGenerateLabel.Text = Loc.T("Str_Common_Cancel", "Cancel");
             else TxtGenerateLabel.SetResourceReference(TextBlock.TextProperty, "Str_FileGen_GenerateButton");
             BtnGenerate.IsEnabled = true;
             UiMotion.Pop(BtnGenerate, 0.96);
@@ -453,7 +453,7 @@ namespace Smart_Tools.WPF.Views
             SummaryPanel.Visibility = s != null ? Visibility.Visible : Visibility.Collapsed;
             if (s != null)
             {
-                TxtSummaryCount.Text = $"{s.Created:N0} {FileGenText.Plural(s.Created, "file", "files")}";
+                TxtSummaryCount.Text = Loc.N((int)Math.Min(s.Created, int.MaxValue), "Str_FileGen_MsgFileOne", "{0:N0} file", "Str_FileGen_MsgFileMany", "{0:N0} files", s.Created);
                 TxtTotalSize.Text = FileGenText.Bytes(s.TotalBytes);
                 PillFailed.Visibility = s.Failed > 0 ? Visibility.Visible : Visibility.Collapsed;
                 TxtFailedCount.Text = $"{s.Failed:N0} failed";
@@ -490,8 +490,8 @@ namespace Smart_Tools.WPF.Views
             string ext = format.ToString().ToLowerInvariant();
             var dialog = new SaveFileDialog
             {
-                Title = "Export the report",
-                Filter = $"{format.ToString().ToUpperInvariant()} file|*.{ext}",
+                Title = Loc.T("Str_FileGen_MsgExportReport", "Export the report"),
+                Filter = Loc.F("Str_FileGen_MsgReportFilter", "{0} file|*.{1}", format.ToString().ToUpperInvariant(), ext),
                 DefaultExt = "." + ext,
                 FileName = "file-report." + ext,
             };

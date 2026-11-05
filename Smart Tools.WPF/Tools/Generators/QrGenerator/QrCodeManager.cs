@@ -82,12 +82,12 @@ namespace Smart_Tools.WPF.Controllers
                 var info = new FileInfo(path);
                 if (!info.Exists)
                 {
-                    error = "That file no longer exists.";
+                    error = Loc.T("Str_QrGen_ErrFileGone", "That file no longer exists.");
                     return false;
                 }
                 if (info.Length == 0)
                 {
-                    error = "That file is empty.";
+                    error = Loc.T("Str_QrGen_ErrFileEmpty", "That file is empty.");
                     return false;
                 }
                 if (info.Length > MaxFileBytes)
@@ -99,7 +99,7 @@ namespace Smart_Tools.WPF.Controllers
                 byte[] bytes = File.ReadAllBytes(path);
                 if (Array.IndexOf(bytes, (byte)0) >= 0)
                 {
-                    error = "That looks like a binary file - QR codes can only hold text here. Encode a link to the file instead.";
+                    error = Loc.T("Str_QrGen_ErrBinary", "That looks like a binary file - QR codes can only hold text here. Encode a link to the file instead.");
                     return false;
                 }
 
@@ -125,10 +125,10 @@ namespace Smart_Tools.WPF.Controllers
         public QrCodeGenerationResult Generate(string data, QrCodeOptions options)
         {
             if (string.IsNullOrEmpty(data) || data.Trim().Length == 0)
-                return Failure(data, options, "Enter some content to encode first.");
+                return Failure(data, options, Loc.T("Str_Generators_ErrNoContent", "Enter some content to encode first."));
 
             if (options.WidthPx <= 0 || options.HeightPx <= 0 || options.WidthPx > MaxDimensionPx || options.HeightPx > MaxDimensionPx)
-                return Failure(data, options, $"Width and height must be between 1 and {MaxDimensionPx} px.");
+                return Failure(data, options, Loc.F("Str_QrGen_ErrSize", "Width and height must be between 1 and {0} px.", MaxDimensionPx));
 
             QrErrorCorrection level = options.LogoImage != null ? QrErrorCorrection.High : options.ErrorCorrection;
 
@@ -145,9 +145,11 @@ namespace Smart_Tools.WPF.Controllers
             {
                 int bytes = Encoding.UTF8.GetByteCount(data);
                 string hint = level == QrErrorCorrection.Low
-                    ? "Shorten the content, or encode a link to it instead."
-                    : "Shorten the content or choose a lower error-correction level" + (options.LogoImage != null ? " (remove the logo first - it forces High)." : ".");
-                return Failure(data, options, $"Too much content for one QR code ({bytes:N0} bytes). {hint}");
+                    ? Loc.T("Str_QrGen_ErrHintLow", "Shorten the content, or encode a link to it instead.")
+                    : options.LogoImage != null
+                        ? Loc.T("Str_QrGen_ErrHintLogo", "Shorten the content or choose a lower error-correction level (remove the logo first - it forces High).")
+                        : Loc.T("Str_QrGen_ErrHintLevel", "Shorten the content or choose a lower error-correction level.");
+                return Failure(data, options, Loc.F("Str_QrGen_ErrTooMuch", "Too much content for one QR code ({0:N0} bytes). {1}", bytes, hint));
             }
 
             try
@@ -157,7 +159,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex)
             {
-                return Failure(data, options, $"Couldn't generate the QR code: {ex.Message}");
+                return Failure(data, options, Loc.F("Str_QrGen_ErrGenerate", "Couldn't generate the QR code: {0}", ex.Message));
             }
         }
 
@@ -480,16 +482,16 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveToFile(QrCodeGenerationResult result, string filePath, QrExportFormat format)
         {
             if (result.Image == null)
-                throw new InvalidOperationException("Nothing to export - generate a QR code first.");
+                throw new InvalidOperationException(Loc.T("Str_QrGen_ErrNothingToExport", "Nothing to export - generate a QR code first."));
 
             switch (format)
             {
                 case QrExportFormat.Jpg:
-                    File.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new JpegBitmapEncoder { QualityLevel = 95 }));
+                    AtomicFile.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new JpegBitmapEncoder { QualityLevel = 95 }));
                     break;
 
                 case QrExportFormat.Svg:
-                    File.WriteAllText(filePath, BuildVectorSvg(result), new UTF8Encoding(false));
+                    AtomicFile.WriteAllText(filePath, BuildVectorSvg(result), new UTF8Encoding(false));
                     break;
 
                 case QrExportFormat.Pdf:
@@ -497,7 +499,7 @@ namespace Smart_Tools.WPF.Controllers
                     break;
 
                 default:
-                    File.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new PngBitmapEncoder()));
+                    AtomicFile.WriteAllBytes(filePath, ZxingImageHelpers.EncodeToBytes(result.Image, new PngBitmapEncoder()));
                     break;
             }
         }
@@ -509,7 +511,7 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public static string BuildVectorSvg(QrCodeGenerationResult result)
         {
-            var modules = result.Modules ?? throw new InvalidOperationException("No module data to export.");
+            var modules = result.Modules ?? throw new InvalidOperationException(Loc.T("Str_QrGen_ErrNoModules", "No module data to export."));
             var options = result.Options;
             int width = result.PixelWidth, height = result.PixelHeight, m = result.ModulePx, n = result.ModuleCount;
 

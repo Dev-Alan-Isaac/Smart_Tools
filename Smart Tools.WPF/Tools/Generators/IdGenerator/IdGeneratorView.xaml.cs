@@ -80,11 +80,11 @@ namespace Smart_Tools.WPF.Views
             ChkNoHyphens.Visibility = kind is IdKind.Uuid4 or IdKind.Uuid7 ? Visibility.Visible : Visibility.Collapsed;
             TxtKindHint.Text = kind switch
             {
-                IdKind.Uuid4 => "128 random bits, the usual choice for a unique ID.",
-                IdKind.Uuid7 => "Starts with the time, so new IDs sort after older ones - good for database keys.",
-                IdKind.Ulid => "26 characters, sorts by time, easy to read aloud.",
-                IdKind.Hex => "Random bytes written as hexadecimal - handy for keys and tokens.",
-                _ => "Placeholder text for layouts. It always starts with \"Lorem ipsum dolor sit amet\".",
+                IdKind.Uuid4 => Loc.T("Str_IdGen_HintUuid4", "128 random bits, the usual choice for a unique ID."),
+                IdKind.Uuid7 => Loc.T("Str_IdGen_HintUuid7", "Starts with the time, so new IDs sort after older ones - good for database keys."),
+                IdKind.Ulid => Loc.T("Str_IdGen_HintUlid", "26 characters, sorts by time, easy to read aloud."),
+                IdKind.Hex => Loc.T("Str_IdGen_HintHex", "Random bytes written as hexadecimal - handy for keys and tokens."),
+                _ => Loc.T("Str_IdGen_HintLorem", "Placeholder text for layouts. It always starts with \"Lorem ipsum dolor sit amet\"."),
             };
         }
 
@@ -126,22 +126,22 @@ namespace Smart_Tools.WPF.Views
         private void BtnCopy_Click(object sender, RoutedEventArgs e)
         {
             if (TxtOutput.Text.Length == 0) return;
-            TxtInfo.Text = JsonSettings.TryCopy(TxtOutput.Text) ? "Copied" : "The clipboard is busy - try again";
+            TxtInfo.Text = JsonSettings.TryCopy(TxtOutput.Text) ? Loc.T("Str_IdGen_MsgCopied", "Copied") : Loc.T("Str_IdGen_MsgClipboardBusy", "The clipboard is busy - try again");
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (TxtOutput.Text.Length == 0) return;
-            var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Save", Filter = "Text file|*.txt", FileName = "generated.txt", OverwritePrompt = true };
+            var dialog = new Microsoft.Win32.SaveFileDialog { Title = Loc.T("Str_IdGen_MsgSaveTitle", "Save"), Filter = Loc.T("Str_IdGen_MsgSaveFilter", "Text file|*.txt"), FileName = "generated.txt", OverwritePrompt = true };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try
             {
-                File.WriteAllText(dialog.FileName, TxtOutput.Text);
-                TxtInfo.Text = "Saved " + Path.GetFileName(dialog.FileName);
+                AtomicFile.WriteAllText(dialog.FileName, TxtOutput.Text);
+                TxtInfo.Text = Loc.F("Str_Generators_MsgSaved", "Saved {0}", Path.GetFileName(dialog.FileName));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                TxtInfo.Text = "Couldn't save: " + ex.Message;
+                TxtInfo.Text = Loc.F("Str_IdGen_MsgCantSave", "Couldn't save: {0}", ex.Message);
             }
         }
 
