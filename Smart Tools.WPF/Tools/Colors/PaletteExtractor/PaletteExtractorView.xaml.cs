@@ -43,7 +43,6 @@ namespace Smart_Tools.WPF.Views
 
         private const int PreviewLongSide = 900;   // pictures stay in memory while they are listed
         private const int MaxPictures = 40;
-        private const int MaxTiles = 12;           // thumbnails in the contact sheet
 
         private readonly ObservableCollection<PaletteSource> _sources = new();
         private readonly SemaphoreSlim _loadGate = new(1, 1);
@@ -402,7 +401,7 @@ namespace Smart_Tools.WPF.Views
                     _note = (_note.Length > 0 ? _note + " · " : "") + (failed == 1
                         ? Loc.F("Str_PaletteExtractor_MsgSkippedOne", "1 picture couldn't be read ({0})", lastError)
                         : Loc.F("Str_PaletteExtractor_MsgSkippedMany", "{0} pictures couldn't be read", failed));
-                RefreshCombined();
+                RefreshCombined(fresh.FirstOrDefault(s => s.Pixels != null));
             }
             finally
             {
@@ -463,7 +462,7 @@ namespace Smart_Tools.WPF.Views
                 source.Preview = bitmap;
                 source.Pixels = pixels;
                 _sources.Add(source);
-                RefreshCombined();
+                RefreshCombined(source);
             }
             catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or NotSupportedException)
             {
@@ -476,84 +475,56 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
-        /// <summary>Shows the pictures and (re)starts the palette. One palette comes from every listed picture together.</summary>
-        private void RefreshCombined()
+        private int _current;   // index (among the read pictures) of the one whose palette is shown
+
+        private List<PaletteSource> ReadySources() => _sources.Where(s => s.Pixels != null).ToList();
+
+        /// <summary>Shows one picture and its own palette. <paramref name="focus"/>: jump to this picture (e.g. the one just added).</summary>
+        private void RefreshCombined(PaletteSource? focus = null)
         {
-            var ready = _sources.Where(s => s.Pixels != null).ToList();
+            var ready = ReadySources();
             if (ready.Count == 0)
             {
                 ClearResult();
                 return;
             }
 
-            ShowPreview(ready);
+            if (focus != null && ready.IndexOf(focus) is var at and >= 0) _current = at;
+            _current = Math.Clamp(_current, 0, ready.Count - 1);
+            var source = ready[_current];
 
-            if (ready.Count == 1)
-            {
-                _pixels = ready[0].Pixels;
-                _pixelsWidth = ready[0].Pixels!.Length / 4;
-                _pixelsHeight = 1;
-                _imageName = ready[0].Name;
-            }
-            else
-            {
-                int total = ready.Sum(s => s.Pixels!.Length);
-                var all = new byte[total];
-                int at = 0;
-                foreach (var s in ready)
-                {
-                    Buffer.BlockCopy(s.Pixels!, 0, all, at, s.Pixels!.Length);
-                    at += s.Pixels!.Length;
-                }
-                _pixels = all;
-                _pixelsWidth = total / 4;
-                _pixelsHeight = 1;
-                _imageName = S("Str_PaletteExtractor_CombinedName");
-            }
+            EmptyState.Visibility = Visibility.Collapsed;
+            PreviewImage.Source = source.Preview;
+            UiMotion.FadeIn(PreviewImage);
+            UpdateNavigation(ready);
+
+            _pixels = source.Pixels;
+            _pixelsWidth = source.Pixels!.Length / 4;
+            _pixelsHeight = 1;
+            _imageName = source.Name;
 
             _ = RunExtractAsync();
         }
 
-        private void ShowPreview(IReadOnlyList<PaletteSource> ready)
+        private void UpdateNavigation(IReadOnlyList<PaletteSource> ready)
         {
-            EmptyState.Visibility = Visibility.Collapsed;
-            if (ready.Count == 1)
-            {
-                PreviewGrid.Visibility = Visibility.Collapsed;
-                PreviewGrid.Children.Clear();
-                PreviewImage.Source = ready[0].Preview;
-                PreviewImage.Visibility = Visibility.Visible;
-                UiMotion.FadeIn(PreviewImage);
-                return;
-            }
+            PictureNav.Visibility = ready.Count > 1 ? Visibility.Visible : Visibility.Hidden;   // hidden keeps its space, so nothing jumps
+            BtnPrevPicture.IsEnabled = _current > 0;
+            BtnNextPicture.IsEnabled = _current < ready.Count - 1;
+            TxtPictureName.Text = ready[_current].Name;
+            TxtPictureName.ToolTip = ready[_current].Name;
+            TxtPictureIndex.Text = $"{_current + 1} / {ready.Count}";
+        }
 
-            PreviewImage.Visibility = Visibility.Collapsed;
-            PreviewImage.Source = null;
-            PreviewGrid.Children.Clear();
-            int shown = Math.Min(ready.Count, MaxTiles);
-            PreviewGrid.Columns = shown <= 4 ? 2 : shown <= 9 ? 3 : 4;
-            for (int i = 0; i < shown; i++)
-            {
-                var tile = new Grid { Margin = new Thickness(3), ToolTip = ready[i].Name };
-                tile.Children.Add(new System.Windows.Controls.Image { Source = ready[i].Preview, Stretch = Stretch.Uniform });
-                if (i == shown - 1 && ready.Count > shown)
-                {
-                    var more = new Border { Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(150, 0, 0, 0)), CornerRadius = new CornerRadius(6) };
-                    more.Child = new TextBlock
-                    {
-                        Text = "+" + (ready.Count - shown + 1).ToString(CultureInfo.CurrentCulture),
-                        Foreground = System.Windows.Media.Brushes.White,
-                        FontWeight = FontWeights.SemiBold,
-                        FontSize = 16,
-                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                        VerticalAlignment = VerticalAlignment.Center,
-                    };
-                    tile.Children.Add(more);
-                }
-                PreviewGrid.Children.Add(tile);
-            }
-            PreviewGrid.Visibility = Visibility.Visible;
-            UiMotion.FadeIn(PreviewGrid);
+        private void BtnPrevPicture_Click(object sender, RoutedEventArgs e) => Step(-1);
+        private void BtnNextPicture_Click(object sender, RoutedEventArgs e) => Step(1);
+
+        private void Step(int by)
+        {
+            int count = ReadySources().Count;
+            if (count < 2 || _current + by < 0 || _current + by >= count) return;
+            _current += by;
+            RefreshCombined();
         }
 
         /// <summary>Nothing listed: back to the empty page.</summary>
@@ -566,8 +537,8 @@ namespace Smart_Tools.WPF.Views
             _imageName = "";
 
             PreviewImage.Source = null;
-            PreviewGrid.Children.Clear();
-            PreviewGrid.Visibility = Visibility.Collapsed;
+            PictureNav.Visibility = Visibility.Hidden;
+            _current = 0;
             EmptyState.Visibility = Visibility.Visible;
             ShareBar.Children.Clear();
             ShareBar.ColumnDefinitions.Clear();
@@ -707,8 +678,6 @@ namespace Smart_Tools.WPF.Views
             string status = SF("Str_Palette_StatusColors", result.Colors.Count, result.CountedPixels.ToString("N0", CultureInfo.CurrentCulture));
             if (result.SkippedPixels > 0)
                 status += " · " + SF("Str_Palette_StatusSkipped", result.SkippedPixels.ToString("N0", CultureInfo.CurrentCulture));
-            int pictures = _sources.Count(s => s.Pixels != null);
-            if (pictures > 1) status += " · " + Loc.F("Str_PaletteExtractor_MsgFromPictures", "from {0} pictures", pictures);
             if (_note.Length > 0) { status += " · " + _note; _note = ""; }
             SetStatus(status, StatusKind.Success, PackIconKind.CheckCircleOutline);
 

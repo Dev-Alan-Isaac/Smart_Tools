@@ -121,11 +121,11 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Color Picker** | `color-picker` | Pick colors and convert color codes |
+| **Color Picker** | `color-picker` | Pick colors and convert color codes; batch mode finds the colors written inside files (CSS, JSON, XAML, code, palettes) |
 | **Screen Color Picker** | `screen-color-picker` | Pick any color from anywhere on screen with a magnifier |
 | **Color Wheel** | `color-wheel` | Build palettes and gradients |
-| **Palette Extractor** | `palette-extractor` | Pull the main colors out of a picture |
-| **Contrast Checker** | `contrast-checker` | Check WCAG contrast between two colors and find the closest passing text color |
+| **Palette Extractor** | `palette-extractor` | Pull the main colors out of one or several pictures (or folders) |
+| **Contrast Checker** | `contrast-checker` | Check WCAG contrast between two colors, with a step-by-step explanation, quick and saved pairs, and the closest passing text color |
 
 ### Storage
 *Free up space, check your drives*
