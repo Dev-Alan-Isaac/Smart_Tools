@@ -213,7 +213,11 @@ namespace Smart_Tools.WPF.Controllers
         /// scan) is cancelled. stderr is drained in parallel so its pipe
         /// can't fill up and deadlock the process.
         /// </summary>
-        private static async Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token)
+        private static Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token) =>
+            RunForBytesAsync(exe, args, token, ProcessTimeout);
+
+        /// <summary>Same, with a custom time limit (decoding a whole song takes longer than grabbing one frame).</summary>
+        internal static async Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token, TimeSpan processTimeout)
         {
             if (!File.Exists(exe)) return Array.Empty<byte>();
 
@@ -234,7 +238,7 @@ namespace Smart_Tools.WPF.Controllers
 
             using var process = new Process { StartInfo = psi };
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-            timeout.CancelAfter(ProcessTimeout);
+            timeout.CancelAfter(processTimeout);
 
             try
             {
@@ -253,7 +257,7 @@ namespace Smart_Tools.WPF.Controllers
             catch (OperationCanceledException) when (!token.IsCancellationRequested)
             {
                 // Not logged per successful run (28k files), only the ones that go wrong.
-                Log.Warn($"{Path.GetFileName(exe)} timed out after {ProcessTimeout.TotalSeconds:0}s and was killed: {string.Join(' ', args.TakeLast(1))}");
+                Log.Warn($"{Path.GetFileName(exe)} timed out after {processTimeout.TotalSeconds:0}s and was killed: {string.Join(' ', args.TakeLast(1))}");
                 return Array.Empty<byte>();   // this file timed out - skip it
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)

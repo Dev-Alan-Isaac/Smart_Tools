@@ -197,46 +197,12 @@ namespace Smart_Tools.WPF.Controllers
             state.Total = files.Count;
             state.Report("", force: true);
 
-            var cache = Cache;
-            cache?.BeginScan();
-            int fromCache = 0;
-            var prints = new FileFingerprint?[files.Count];
-            await Parallel.ForEachAsync(Enumerable.Range(0, files.Count), new ParallelOptions
+            var (prints, fromCache) = await FingerprintFilesAsync(files, options.Method, options.MaxDegreeOfParallelism, path =>
             {
-                MaxDegreeOfParallelism = Math.Max(1, options.MaxDegreeOfParallelism),
-                CancellationToken = token,
-            }, async (i, ct) =>
-            {
-                try
-                {
-                    if (cache != null && cache.TryGet(files[i], options.Method, out var known))
-                    {
-                        prints[i] = known;
-                        Interlocked.Increment(ref fromCache);
-                    }
-                    else
-                    {
-                        prints[i] = await _fingerprinter(files[i].FullName, options.Method, ct).ConfigureAwait(false);
-                        if (prints[i] != null) cache?.Put(files[i], options.Method, prints[i]!);
-                    }
-                }
-                catch (OperationCanceledException) when (!token.IsCancellationRequested)
-                {
-                    // A per-file timeout (hung ffmpeg) - skip just this file.
-                    Log.Warn($"Fingerprint timed out, skipped: {files[i].FullName}");
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
-                {
-                    // Capped: a bad drive could fail thousands of files.
-                    if (Volatile.Read(ref state.Unreadable) < 50) Log.Info($"Fingerprint failed, skipped: {files[i].FullName} ({ex.GetType().Name}: {ex.Message})");
-                }
-
-                if (prints[i] == null) Interlocked.Increment(ref state.Unreadable);
                 Interlocked.Increment(ref state.Processed);
-                state.Report(files[i].FullName);
-            }).ConfigureAwait(false);
+                state.Report(path);
+            }, () => Interlocked.Increment(ref state.Unreadable), () => Volatile.Read(ref state.Unreadable), token).ConfigureAwait(false);
 
-            cache?.Save();
             Log.Info($"Scan fingerprinting finished in {state.Watch.Elapsed.TotalSeconds:0.0}s ({fromCache} of {files.Count} from the cache), grouping");
             state.Phase = SimilarScanPhase.Grouping;
             state.Report("", force: true);

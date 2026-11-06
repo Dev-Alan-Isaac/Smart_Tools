@@ -190,14 +190,28 @@ namespace Smart_Tools.WPF.Views
             ContentOptionsPanel.Visibility = content ? Visibility.Visible : Visibility.Collapsed;
             UiMotion.FadeVisibility(NameModeWarning, !content);
             if (content) UiMotion.FadeIn(ContentOptionsPanel, 4);
+            UpdateSameContentPanel();
             SaveSettings();
         }
 
         private void Option_Changed(object sender, RoutedEventArgs e)
         {
             if (!_viewConstructed) return;
+            UpdateSameContentPanel();
             SaveSettings();
         }
+
+        /// <summary>The tolerance choice only matters for "same content, any format".</summary>
+        private void UpdateSameContentPanel()
+        {
+            bool show = RadioMatchContent.IsChecked == true && SelectedMatchMode == DuplicateMatchMode.SameContent;
+            if (show == (SameContentPanel.Visibility == Visibility.Visible)) return;
+            if (_applyingSettings) SameContentPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            else UiMotion.FadeVisibility(SameContentPanel, show);
+        }
+
+        private SameContentLevel SelectedSameContentLevel =>
+            (CmbSameContentLevel.SelectedItem as ComboBoxItem)?.Tag is string tag && Enum.TryParse(tag, out SameContentLevel l) ? l : SameContentLevel.FormatOnly;
 
         private void TxtExcludeExtensions_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -241,6 +255,7 @@ namespace Smart_Tools.WPF.Views
             VerifyWithByteCompare = ChkCompareFileContents.IsChecked == true,
             FileTypes = SelectedFileTypes,
             ExcludedExtensions = DuplicateManager.ParseExtensionList(TxtExcludeExtensions.Text),
+            SameContentLevel = SelectedSameContentLevel,
         };
 
         // ---------------- Settings ----------------
@@ -279,10 +294,12 @@ namespace Smart_Tools.WPF.Views
                 minRadio.IsChecked = true;
 
                 SelectComboTag(CmbKeepRule, s.KeepRule.ToString());
+                SelectComboTag(CmbSameContentLevel, s.SameContentLevel.ToString());
 
                 bool content = RadioMatchContent.IsChecked == true;
                 ContentOptionsPanel.Visibility = content ? Visibility.Visible : Visibility.Collapsed;
                 NameModeWarning.Visibility = content ? Visibility.Collapsed : Visibility.Visible;
+                UpdateSameContentPanel();
             }
             finally
             {
@@ -311,6 +328,7 @@ namespace Smart_Tools.WPF.Views
             _settings.MinFileSizeBytes = SelectedMinSize;
             _settings.ExcludedExtensions = TxtExcludeExtensions.Text;
             _settings.KeepRule = SelectedKeepRule;
+            _settings.SameContentLevel = SelectedSameContentLevel;
 
             try
             {
@@ -372,7 +390,7 @@ namespace Smart_Tools.WPF.Views
                 var result = await _manager.ScanAsync(options, progress, token);
 
                 _lastScanVerified = result.IsContentVerified;
-                DuplicateManager.ApplyKeepRule(result.Groups, SelectedKeepRule, options.Folders, selectOthers: result.IsContentVerified);
+                DuplicateManager.ApplyKeepRule(result.Groups, SelectedKeepRule, options.Folders, selectOthers: result.IsContentVerified, selectApproximate: false);
                 ShowGroups(result.Groups);
                 ShowScanSummary(result);
                 StartThumbnailLoading(_results.Take(MaxBackgroundThumbnails).ToList());
@@ -433,6 +451,7 @@ namespace Smart_Tools.WPF.Views
                 DuplicateScanPhase.Listing => $"Finding files · {p.FilesFound:N0} so far",
                 DuplicateScanPhase.Comparing => $"Comparing {p.FilesFound:N0} files · {DuplicateText.FormatBytes(p.BytesProcessed)} of {DuplicateText.FormatBytes(p.BytesTotal)}",
                 DuplicateScanPhase.Verifying => $"Double-checking matches · {DuplicateText.FormatBytes(p.BytesProcessed)} of {DuplicateText.FormatBytes(p.BytesTotal)}",
+                DuplicateScanPhase.Fingerprinting => Loc.F("Str_Dup_MsgFingerprinting", "Comparing pictures, videos and songs by content · {0:N0} of {1:N0} files", p.BytesProcessed, p.BytesTotal),
                 _ => "Finishing...",
             };
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentPath) ? phase : $"{phase} · {p.CurrentPath}";
@@ -476,6 +495,9 @@ namespace Smart_Tools.WPF.Views
             if (result.InaccessibleFolders > 0) notes.Add(Loc.F("Str_DataQuality_MsgFoldersUnreadable", "{0:N0} folders unreadable", result.InaccessibleFolders));
             if (result.UnreadableFiles > 0) notes.Add(Loc.F("Str_DataQuality_MsgFilesUnreadable", "{0:N0} files unreadable", result.UnreadableFiles));
             if (result.SkippedLinks > 0) notes.Add(Loc.F("Str_DataQuality_MsgLinksSkipped", "{0:N0} links not followed", result.SkippedLinks));
+            if (result.MediaSkippedNoFfmpeg) notes.Add(Loc.T("Str_Dup_MsgNoFfmpeg", "videos and songs compared byte for byte only (ffmpeg not found)"));
+            if (result.AudioLimited) notes.Add(Loc.F("Str_Dup_MsgAudioLimited", "only the first {0:N0} songs were compared by sound", 6000));
+            if (result.HeavyLimited) notes.Add(Loc.F("Str_Dup_MsgHeavyLimited", "only the first {0:N0} pictures were compared for crops and rotations", 800));
             string extra = notes.Count > 0 ? " · " + string.Join(" · ", notes) : "";
             TxtProgress.Text = Loc.F("Str_DataQuality_MsgChecked", "Checked {0:N0} files in {1:0.0} s{2}", result.FilesScanned, result.Elapsed.TotalSeconds, extra);
 
@@ -582,6 +604,7 @@ namespace Smart_Tools.WPF.Views
             Add(Loc.T("Str_Dup_KeepNewest", "Keep the newest copy"), PackIconKind.SortClockDescendingOutline, KeepRule.Newest);
             Add(Loc.T("Str_Dup_KeepShortest", "Keep the shortest path"), PackIconKind.FormatLetterCase, KeepRule.ShortestPath);
             Add(Loc.T("Str_Dup_KeepFirstFolder", "Keep the copy in the first folder listed"), PackIconKind.FolderStarOutline, KeepRule.FolderOrder);
+            Add(Loc.T("Str_Dup_KeepHighestQuality", "Keep the highest quality (most pixels, then largest file)"), PackIconKind.StarCircleOutline, KeepRule.HighestQuality);
             menu.IsOpen = true;
         }
 

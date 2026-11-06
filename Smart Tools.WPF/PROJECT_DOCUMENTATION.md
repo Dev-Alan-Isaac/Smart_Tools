@@ -386,7 +386,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 
 ### File Operations
 - `FileSearchManager` - Search and find files
-- `DuplicateManager` - Find duplicate files
+- `DuplicateManager` - Find duplicate files (exact: size, head/tail fingerprint, full hash). The "Same content, any format" mode (`DuplicateManager.CrossFormat.cs`) then groups converted/re-encoded pictures, videos and songs by content, reusing Find Similar's fingerprints, OpenCvSharp ORB for heavy edits and SoundFingerprinting for audio
 - `SimilarManager` - Find similar files
 - `CopyQueueManager` - Verified copy/move with pause, undo and resume
 - `FolderTreeManager` - Export a folder's structure as text, Markdown, JSON or CSV
