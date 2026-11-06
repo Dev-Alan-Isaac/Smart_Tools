@@ -43,6 +43,7 @@ namespace Smart_Tools.WPF.Views
         private OrganizeSettings _settings = new();
 
         private string _sourceFolder = "";
+        private readonly ObservableCollection<FolderListEntry> _folderList = new();
         private string _destinationFolder = "";
 
         private CancellationTokenSource? _refreshCts;
@@ -63,6 +64,8 @@ namespace Smart_Tools.WPF.Views
             InitializeComponent();
 
             StepsList.ItemsSource = _steps;
+            InputCard.ItemsSource = _folderList;
+            _folderList.CollectionChanged += (_, _) => InputCard.SetEmpty(_folderList.Count == 0);
             DataGridPreview.ItemsSource = CreateGroupedView(_rows);
             _refreshTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) { Interval = TimeSpan.FromMilliseconds(350) };
             _refreshTimer.Tick += (_, _) =>
@@ -116,10 +119,30 @@ namespace Smart_Tools.WPF.Views
         //  Folders
         // =================================================================
 
-        /// <summary>The Input card changed (or re-checked) its source folder: the view follows it.</summary>
-        private void InputCard_FolderChanged(object? sender, EventArgs e)
+        /// <summary>Organize works on one source folder: a folder added (or dropped) replaces the one shown.</summary>
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
         {
-            if (!string.Equals(InputCard.FolderPath, _sourceFolder, StringComparison.OrdinalIgnoreCase)) SetSource(InputCard.FolderPath);
+            if (_isBusy) return;
+            string? folder = e.Paths.FirstOrDefault(Directory.Exists);
+            if (folder == null) return;
+            InputCard.PopDropArea();
+            if (!string.Equals(folder, _sourceFolder, StringComparison.OrdinalIgnoreCase)) SetSource(folder);
+        }
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            if (!_isBusy && _sourceFolder.Length > 0) SetSource("");
+        }
+
+        private void BtnRemoveSingleFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_isBusy) SetSource("");
+        }
+
+        private void ShowSourceInCard(string folder)
+        {
+            _folderList.Clear();
+            if (folder.Length > 0) _folderList.Add(new FolderListEntry { FullPath = folder });
         }
 
         private void InputCard_IncludeSubfoldersChanged(object? sender, EventArgs e) => ScanOption_Changed(sender ?? this, new RoutedEventArgs());
@@ -140,7 +163,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_isBusy) return;
             _sourceFolder = folder;
-            if (InputCard.FolderPath != folder) InputCard.FolderPath = folder;
+            ShowSourceInCard(folder);
             _lastRun = null;
             UpdateFolderUi();
             SaveSettings();
@@ -626,7 +649,7 @@ namespace Smart_Tools.WPF.Views
             if (_isBusy) return;
             _refreshCts?.Cancel();
             _sourceFolder = "";
-            InputCard.FolderPath = "";
+            ShowSourceInCard("");
             _destinationFolder = "";
             RadioSameFolder.IsChecked = true;   // reset clears the destination too, not only the source
             _scan = null;

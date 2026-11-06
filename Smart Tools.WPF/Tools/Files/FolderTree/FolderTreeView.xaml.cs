@@ -2,6 +2,7 @@ using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -25,16 +26,21 @@ namespace Smart_Tools.WPF.Views
         private string _text = "";
         private bool _busy;
         private bool _loadedOnce;
+        private string _folder = "";
+        private readonly ObservableCollection<FolderListEntry> _folderList = new();
 
         public FolderTreeView()
         {
             InitializeComponent();
+            InputCard.ItemsSource = _folderList;
+            _folderList.CollectionChanged += (_, _) => InputCard.SetEmpty(_folderList.Count == 0);
         }
 
         private void Root_Loaded(object sender, RoutedEventArgs e)
         {
             if (_loadedOnce) return;
             _loadedOnce = true;
+            UpdateFormatHint();
             UpdateState();
         }
 
@@ -44,11 +50,8 @@ namespace Smart_Tools.WPF.Views
 
         private FolderTreeOptions ReadOptions() => new()
         {
-            Folder = InputCard.FolderPath,
-            Format = RadioMarkdown.IsChecked == true ? FolderTreeFormat.Markdown
-                : RadioJson.IsChecked == true ? FolderTreeFormat.Json
-                : RadioCsv.IsChecked == true ? FolderTreeFormat.Csv
-                : FolderTreeFormat.Text,
+            Folder = _folder,
+            Format = SelectedFormat,
             MaxDepth = Math.Max(0, CmbDepth.SelectedIndex),
             IncludeFiles = ChkFiles.IsChecked == true,
             ShowSize = ChkSize.IsChecked == true,
@@ -57,10 +60,59 @@ namespace Smart_Tools.WPF.Views
             SkipNoise = ChkNoise.IsChecked == true,
         };
 
-        private void InputCard_FolderChanged(object? sender, EventArgs e)
+        /// <summary>One folder is exported at a time: a folder added (or dropped) replaces the one shown.</summary>
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
         {
             if (_busy) return;
+            string? folder = e.Paths.FirstOrDefault(Directory.Exists);
+            if (folder == null) return;
+            InputCard.PopDropArea();
+            SetFolder(folder);
+        }
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            if (!_busy && _folder.Length > 0) SetFolder("");
+        }
+
+        private void BtnRemoveSingleFolder_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_busy) SetFolder("");
+        }
+
+        private void SetFolder(string folder)
+        {
+            _folder = folder;
+            _folderList.Clear();
+            if (folder.Length > 0) _folderList.Add(new FolderListEntry { FullPath = folder });
             ClearResult();
+        }
+
+        private FolderTreeFormat SelectedFormat =>
+            (CmbFormat?.SelectedItem as ComboBoxItem)?.Tag is string tag && Enum.TryParse(tag, out FolderTreeFormat f) ? f : FolderTreeFormat.Text;
+
+        private void CmbFormat_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateFormatHint();
+            Option_Changed(sender, e);
+        }
+
+        private void UpdateFormatHint()
+        {
+            if (TxtFormatHint == null) return;
+            TxtFormatHint.Text = SelectedFormat switch
+            {
+                FolderTreeFormat.Markdown => Loc.T("Str_FolderTree_ANestedListFor", "A nested list for READMEs and wikis"),
+                FolderTreeFormat.Html => Loc.T("Str_FolderTree_HintHtml", "A web page for any browser: folders fold and unfold."),
+                FolderTreeFormat.Json => Loc.T("Str_FolderTree_NestedObjectsForScripts", "Nested objects for scripts"),
+                FolderTreeFormat.Xml => Loc.T("Str_FolderTree_HintXml", "Nested folder and file elements, for programs that read XML."),
+                FolderTreeFormat.Yaml => Loc.T("Str_FolderTree_HintYaml", "A nested list for config files and scripts."),
+                FolderTreeFormat.Csv => Loc.T("Str_FolderTree_OneRowPerItem", "One row per item"),
+                FolderTreeFormat.Paths => Loc.T("Str_FolderTree_HintPaths", "One full path per line, for scripts and search tools."),
+                FolderTreeFormat.Pdf => Loc.T("Str_FolderTree_HintPdf", "A drawn tree with folder and file icons, split over pages. Any size. The preview on the right is the text version."),
+                FolderTreeFormat.Image => Loc.F("Str_FolderTree_HintImage", "A picture of the tree (PNG), up to {0:N0} items; use PDF for bigger trees. The preview on the right is the text version.", FolderTreeVisual.MaxImageRows),
+                _ => Loc.T("Str_FolderTree_LikeTheTreeCommand", "Like the tree command"),
+            };
         }
 
         private void Option_Changed(object sender, RoutedEventArgs e)
@@ -191,7 +243,7 @@ namespace Smart_Tools.WPF.Views
             {
                 Title = DialogTitle,
                 FileName = Loc.F("Str_FolderTree_FileName", "{0} tree{1}", SafeName(_result.Root.Name), ext),
-                Filter = $"{o.Format} (*{ext})|*{ext}",
+                Filter = $"{FolderTreeManager.FormatTitle(o.Format)} (*{ext})|*{ext}",
                 DefaultExt = ext,
                 OverwritePrompt = false,   // never replaced - a taken name gets ' (2)'
             };
@@ -200,8 +252,34 @@ namespace Smart_Tools.WPF.Views
             BtnSave.IsEnabled = false;
             try
             {
-                string written = await FolderTreeManager.SaveAsync(_text, dialog.FileName);
-                TxtProgress.Text = Loc.F("Str_FolderTree_MsgSaved", "Saved {0}", Path.GetFileName(written));
+                string written;
+                string saved;
+                if (FolderTreeManager.IsVisual(o.Format))
+                {
+                    // Drawing a big tree takes a moment: off the UI thread, with a message.
+                    TxtProgress.Text = Loc.T("Str_FolderTree_MsgDrawing", "Drawing the tree...");
+                    var tree = _result!;
+                    var (data, drawn, total) = await Task.Run(() =>
+                    {
+                        if (o.Format == FolderTreeFormat.Pdf)
+                        {
+                            byte[] pdf = FolderTreeVisual.RenderPdf(tree, o, out int d, out int t);
+                            return (pdf, d, t);
+                        }
+                        byte[] png = FolderTreeVisual.RenderPng(tree, o, CancellationToken.None, out int d2, out int t2);
+                        return (png, d2, t2);
+                    });
+                    written = await FolderTreeManager.SaveBytesAsync(data, dialog.FileName);
+                    saved = drawn < total
+                        ? Loc.F("Str_FolderTree_MsgSavedPartial", "Saved {0} - the first {1:N0} of {2:N0} items. Use PDF for the whole tree.", Path.GetFileName(written), drawn, total)
+                        : Loc.F("Str_FolderTree_MsgSaved", "Saved {0}", Path.GetFileName(written));
+                }
+                else
+                {
+                    written = await FolderTreeManager.SaveAsync(_text, dialog.FileName);
+                    saved = Loc.F("Str_FolderTree_MsgSaved", "Saved {0}", Path.GetFileName(written));
+                }
+                TxtProgress.Text = saved;
                 ShellExplorer.Show(written);
             }
             catch (Exception ex)
@@ -249,7 +327,7 @@ namespace Smart_Tools.WPF.Views
             if (!has)
             {
                 SummaryPanel.Visibility = Visibility.Collapsed;
-                if (!_busy) TxtProgress.Text = string.IsNullOrWhiteSpace(InputCard.FolderPath) ? Loc.T("Str_FolderTree_MsgChooseStart", "Choose a folder to start.") : Loc.T("Str_FolderTree_MsgReady", "Ready - press Build tree.");
+                if (!_busy) TxtProgress.Text = string.IsNullOrWhiteSpace(_folder) ? Loc.T("Str_FolderTree_MsgChooseStart", "Choose a folder to start.") : Loc.T("Str_FolderTree_MsgReady", "Ready - press Build tree.");
             }
         }
 

@@ -341,6 +341,61 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
+        <!--  The folder row in the input card (same look as Rename's list; this tool keeps one folder)  -->
+        <DataTemplate x:Key="QueueItemTemplate" DataType="{x:Type models:FolderListEntry}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="Folder" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="11"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding FullPath}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveSingleFolder_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_Rename_RemoveFolderTooltip}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
@@ -422,12 +477,14 @@
                             <controls:InputFolderCard
                                 x:Name="InputCard"
                                 ctl:Tour.Key="Str_Tour_OrganizeFiles_Input" ctl:Tour.Order="1"
-                                FolderChanged="InputCard_FolderChanged"
+                                ClearRequested="InputCard_ClearRequested"
                                 Header="{DynamicResource Str_Organize_SourceFolder}"
                                 HeaderIcon="FolderOutline"
                                 IncludeSubfolders="False"
                                 IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
-                                Mode="SingleFolder" />
+                                ItemTemplate="{StaticResource QueueItemTemplate}"
+                                Mode="Folders"
+                                PathsAdded="InputCard_PathsAdded" />
 
                             <!--  ============ DESTINATION ============  -->
                             <Border ctl:Tour.Key="Str_Tour_OrganizeFiles_Destination" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">

@@ -11067,4 +11067,22 @@ This can't be undone.</system:String>
 
 Show them all anyway?</system:String>
     <system:String x:Key="Str_Files_MsgPreviewHeld">Preview not shown: this folder has {0:N0} files. Turn off subfolders or pick a smaller folder.</system:String>
+    <system:String x:Key="Str_FolderTree_FormatTooltip">Choose how the tree is written or drawn</system:String>
+    <system:String x:Key="Str_FolderTree_FmtHtml">HTML page</system:String>
+    <system:String x:Key="Str_FolderTree_FmtPaths">List of paths</system:String>
+    <system:String x:Key="Str_FolderTree_FmtPdf">PDF document</system:String>
+    <system:String x:Key="Str_FolderTree_FmtImage">Picture (PNG)</system:String>
+    <system:String x:Key="Str_FolderTree_HintHtml">A web page for any browser: folders fold and unfold.</system:String>
+    <system:String x:Key="Str_FolderTree_HintXml">Nested folder and file elements, for programs that read XML.</system:String>
+    <system:String x:Key="Str_FolderTree_HintYaml">A nested list for config files and scripts.</system:String>
+    <system:String x:Key="Str_FolderTree_HintPaths">One full path per line, for scripts and search tools.</system:String>
+    <system:String x:Key="Str_FolderTree_HintPdf">A drawn tree with folder and file icons, split over pages. Any size. The preview on the right is the text version.</system:String>
+    <system:String x:Key="Str_FolderTree_HintImage">A picture of the tree (PNG), up to {0:N0} items; use PDF for bigger trees. The preview on the right is the text version.</system:String>
+    <system:String x:Key="Str_FolderTree_VisualCut">… {0:N0} more items are not drawn.</system:String>
+    <system:String x:Key="Str_FolderTree_VisualCutPdf">… {0:N0} more items are not drawn - use PDF for the whole tree.</system:String>
+    <system:String x:Key="Str_FolderTree_NoFont">Drawing needs one of the Verdana, Arial, Tahoma or Segoe UI fonts, and none was found.</system:String>
+    <system:String x:Key="Str_FolderTree_MsgDrawing">Drawing the tree...</system:String>
+    <system:String x:Key="Str_FolderTree_MsgSavedPartial">Saved {0} - the first {1:N0} of {2:N0} items. Use PDF for the whole tree.</system:String>
+    <system:String x:Key="Str_FolderTree_HtmlCollapse">Collapse all</system:String>
+    <system:String x:Key="Str_FolderTree_HtmlExpand">Expand all</system:String>
 </ResourceDictionary>
