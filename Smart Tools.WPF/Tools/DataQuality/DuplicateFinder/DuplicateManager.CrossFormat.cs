@@ -106,7 +106,9 @@ namespace Smart_Tools.WPF.Controllers
 
             // ---- Pictures ----
             var pictures = candidates.Where(c => FileTypeDetector.Detect(c.File.Name) == MediaKind.Image).ToList();
-            if (pictures.Count > 1)
+            if (pictures.Count > 1 && options.SameContentLevel >= SameContentLevel.Medium)
+                merged.AddRange(await MatchPicturesEditedAsync(pictures, options, Tick, state, token).ConfigureAwait(false));
+            else if (pictures.Count > 1)
                 merged.AddRange(await MatchHashedAsync(sim, pictures, SimilarDetectionMethod.PHash, levelPercent, options, state, Tick, token).ConfigureAwait(false));
             else foreach (var c in pictures) Tick(c.File.FullName);
 
@@ -214,6 +216,34 @@ namespace Smart_Tools.WPF.Controllers
                 result.Add((cluster.Select(i => readable[i]).ToList(), percent));
             }
             return result;
+        }
+
+        // ---------------- Pictures that were edited (Medium and Heavy) ----------------
+
+        /// <summary>
+        /// Flipped, rotated, resized, stretched, letterboxed or recoloured (and cropped or inverted at Heavy);
+        /// see <see cref="ImageContentMatcher"/>.
+        /// </summary>
+        private static async Task<List<(List<Candidate>, int)>> MatchPicturesEditedAsync(
+            List<Candidate> pictures, DuplicateScanOptions options, Action<string> tick, ScanState state, CancellationToken token)
+        {
+            bool crops = options.SameContentLevel == SameContentLevel.Heavy;
+            var sigs = new ImageSig?[pictures.Count];
+
+            await Parallel.ForEachAsync(Enumerable.Range(0, pictures.Count), new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Math.Max(1, options.MaxDegreeOfParallelism),
+                CancellationToken = token,
+            }, async (i, ct) =>
+            {
+                sigs[i] = await Task.Run(() => ImageContentMatcher.Read(pictures[i].File.FullName, crops, ct), ct).ConfigureAwait(false);
+                if (sigs[i] == null) Interlocked.Increment(ref state.UnreadableFiles);
+                else pictures[i].Print = new FileFingerprint { Fingerprint = new Fingerprint(0UL), Width = sigs[i]!.Width, Height = sigs[i]!.Height };
+                tick(pictures[i].File.FullName);
+            }).ConfigureAwait(false);
+
+            var groups = await ImageContentMatcher.MatchAsync(sigs, options.SameContentLevel, options.MaxDegreeOfParallelism, token).ConfigureAwait(false);
+            return groups.Select(g => (g.Members.Select(i => pictures[i]).ToList(), g.Percent)).ToList();
         }
 
         // ---------------- Videos that were edited (Medium and Heavy) ----------------

@@ -114,8 +114,8 @@ namespace Smart_Tools.WPF.Controllers
             return (x0, y0, x1, y1);
         }
 
-        /// <summary>The picture region resampled to 72x72, then hashed in all 8 flips/rotations.</summary>
-        private static ulong[] Variants(byte[] raw, int offset, double fx, double fy, double fw, double fh)
+        /// <summary>The picture region resampled to 72x72 (bilinear), the common starting point of every hash.</summary>
+        private static float[] Resample(byte[] raw, int offset, double fx, double fy, double fw, double fh)
         {
             var grid = new float[G * G];
             for (int i = 0; i < G; i++)
@@ -133,29 +133,117 @@ namespace Smart_Tools.WPF.Controllers
                     grid[i * G + j] = (float)(top * (1 - ty) + bottom * ty);
                 }
             }
+            return grid;
+        }
 
+        /// <summary>Orientation 0-7: 0-3 turn by 90 degrees each, 4-7 are the same turns of the mirror image.</summary>
+        private static void Turn(float[] grid, int o, float[] turned)
+        {
+            int turns = o & 3;
+            bool mirror = o >= 4;
+            for (int y = 0; y < G; y++)
+                for (int x = 0; x < G; x++)
+                {
+                    int sx = mirror ? G - 1 - x : x;
+                    (int ry, int rx) = turns switch
+                    {
+                        0 => (y, sx),
+                        1 => (G - 1 - sx, y),
+                        2 => (G - 1 - y, G - 1 - sx),
+                        _ => (sx, G - 1 - y),
+                    };
+                    turned[y * G + x] = grid[ry * G + rx];
+                }
+        }
+
+        /// <summary>The region hashed in all 8 flips/rotations (difference hash).</summary>
+        private static ulong[] Variants(byte[] raw, int offset, double fx, double fy, double fw, double fh)
+        {
+            var grid = Resample(raw, offset, fx, fy, fw, fh);
             var result = new ulong[Orientations];
             var turned = new float[G * G];
             for (int o = 0; o < Orientations; o++)
             {
-                int turns = o & 3;
-                bool mirror = o >= 4;
-                for (int y = 0; y < G; y++)
-                    for (int x = 0; x < G; x++)
-                    {
-                        int sx = mirror ? G - 1 - x : x;
-                        (int ry, int rx) = turns switch
-                        {
-                            0 => (y, sx),
-                            1 => (G - 1 - sx, y),
-                            2 => (G - 1 - y, G - 1 - sx),
-                            _ => (sx, G - 1 - y),
-                        };
-                        turned[y * G + x] = grid[ry * G + rx];
-                    }
+                Turn(grid, o, turned);
                 result[o] = DHash(turned);
             }
             return result;
+        }
+
+        /// <summary>For pictures: difference hash and perceptual hash in all 8 orientations. A picture needs both to agree.</summary>
+        private static (ulong[] D, ulong[] P) VariantsBoth(byte[] raw, double fx, double fy, double fw, double fh)
+        {
+            var grid = Resample(raw, 0, fx, fy, fw, fh);
+            var d = new ulong[Orientations];
+            var ph = new ulong[Orientations];
+            var turned = new float[G * G];
+            for (int o = 0; o < Orientations; o++)
+            {
+                Turn(grid, o, turned);
+                d[o] = DHash(turned);
+                ph[o] = PHash(turned);
+            }
+            return (d, ph);
+        }
+
+        private static ulong PHash(float[] g72)
+        {
+            const int n = SimilarHashing.PHashSize;
+            var grid = new double[n, n];
+            for (int i = 0; i < n; i++)
+            {
+                double sy = Math.Clamp((i + 0.5) * G / n - 0.5, 0, G - 1);
+                int y0 = (int)sy, y1 = Math.Min(G - 1, y0 + 1);
+                double ty = sy - y0;
+                for (int j = 0; j < n; j++)
+                {
+                    double sx = Math.Clamp((j + 0.5) * G / n - 0.5, 0, G - 1);
+                    int x0 = (int)sx, x1 = Math.Min(G - 1, x0 + 1);
+                    double tx = sx - x0;
+                    double top = g72[y0 * G + x0] * (1 - tx) + g72[y0 * G + x1] * tx;
+                    double bottom = g72[y1 * G + x0] * (1 - tx) + g72[y1 * G + x1] * tx;
+                    grid[i, j] = top * (1 - ty) + bottom * ty;
+                }
+            }
+            return SimilarHashing.PHash(grid);
+        }
+
+        /// <summary>
+        /// A picture's hashes from its 64x64 grey thumbnail: black bars trimmed, 8 orientations of both hashes and,
+        /// for <paramref name="withCrops"/>, the same for the <see cref="CropShapes"/> centre crops.
+        /// False for a blank picture (exact copies of those are found by the byte comparison).
+        /// </summary>
+        public static bool TryHashPicture(byte[] gray64, bool withCrops, out ulong[] d, out ulong[] p, out ulong[]? cropD, out ulong[]? cropP)
+        {
+            d = p = Array.Empty<ulong>();
+            cropD = cropP = null;
+
+            double sum = 0, sum2 = 0;
+            for (int i = 0; i < FrameBytes; i++)
+            {
+                double v = gray64[i];
+                sum += v;
+                sum2 += v * v;
+            }
+            double mean = sum / FrameBytes;
+            if (sum2 / FrameBytes - mean * mean < FlatStdDev * FlatStdDev) return false;
+
+            var (x0, y0, x1, y1) = TrimBars(gray64, 0);
+            (d, p) = VariantsBoth(gray64, x0, y0, x1 - x0, y1 - y0);
+
+            if (withCrops)
+            {
+                cropD = new ulong[CropShapes.Length * Orientations];
+                cropP = new ulong[CropShapes.Length * Orientations];
+                for (int k = 0; k < CropShapes.Length; k++)
+                {
+                    double w = (x1 - x0) * CropShapes[k].W, h = (y1 - y0) * CropShapes[k].H;
+                    var (cd, cp) = VariantsBoth(gray64, x0 + (x1 - x0 - w) / 2, y0 + (y1 - y0 - h) / 2, w, h);
+                    Array.Copy(cd, 0, cropD, k * Orientations, Orientations);
+                    Array.Copy(cp, 0, cropP, k * Orientations, Orientations);
+                }
+            }
+            return true;
         }
 
         private static ulong DHash(float[] g)
