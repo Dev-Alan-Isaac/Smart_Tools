@@ -35,6 +35,8 @@ namespace Smart_Tools.WPF.Views
         private readonly DispatcherTimer _refreshTimer;
 
         private ObservableCollection<OrganizeFileItem> _rows = new();
+        private List<OrganizeFolderGroup> _folderGroups = new();
+        private readonly HashSet<string> _foldedFolders = new(StringComparer.Ordinal);
         private OrganizeScanResult? _scan;
         private OrganizeRunResult? _lastRun;
         private OrganizeJournal? _journal;
@@ -452,10 +454,17 @@ namespace Smart_Tools.WPF.Views
             {
                 if (rescan)
                 {
+                    _largeAnswer = null;
                     TxtProgress.Text = Loc.T("Str_Organize_MsgReading", "Reading the folder...");
                     _scan = await OrganizeManager.ScanAsync(options, progress, token);
                 }
                 if (token.IsCancellationRequested) return;
+                if (!ConfirmLargePreview(_scan!.Files.Count))
+                {
+                    ShowRows(new List<OrganizeFileItem>());
+                    TxtProgress.Text = Loc.F("Str_Files_MsgPreviewHeld", "Preview not shown: this folder has {0:N0} files. Turn off subfolders or pick a smaller folder.", _scan.Files.Count);
+                    return;
+                }
                 var items = await _manager.PlanAsync(_scan!.Files, options, progress, token);
                 if (token.IsCancellationRequested) return;
 
@@ -490,6 +499,19 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+
+        private const int LargePreviewFiles = 100_000;
+        private bool? _largeAnswer;
+
+        /// <summary>Asks once per scan before listing 100,000+ files in the preview (the grid and the plan get slow and large).</summary>
+        private bool ConfirmLargePreview(int count)
+        {
+            if (count < LargePreviewFiles) return true;
+            _largeAnswer ??= MessageBox.Show(Loc.F("Str_Files_AskLargePreview", "This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.\n\nShow them all anyway?", count),
+                DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            return _largeAnswer.Value;
+        }
+
         private string PlanText(IReadOnlyCollection<OrganizeFileItem> items)
         {
             if (items.Count == 0) return Loc.T("Str_Organize_MsgNoFiles", "No files to organize in this folder.");
@@ -501,10 +523,20 @@ namespace Smart_Tools.WPF.Views
             return string.Join(" · ", parts);
         }
 
+        private void BtnCollapseFolders_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var g in _folderGroups) g.IsExpanded = false;
+        }
+
+        private void BtnExpandFolders_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var g in _folderGroups) g.IsExpanded = true;
+        }
+
         private static ListCollectionView CreateGroupedView(ObservableCollection<OrganizeFileItem> rows)
         {
             var view = new ListCollectionView(rows);
-            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OrganizeFileItem.DestinationFolderDisplay)));
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OrganizeFileItem.FolderGroup)));
             view.SortDescriptions.Add(new SortDescription(nameof(OrganizeFileItem.DestinationFolderDisplay), ListSortDirection.Ascending));
             view.SortDescriptions.Add(new SortDescription(nameof(OrganizeFileItem.Name), ListSortDirection.Ascending));
             return view;
@@ -513,6 +545,23 @@ namespace Smart_Tools.WPF.Views
         /// <summary>A new collection and a new grouped view per result (never refill a grouped view in place).</summary>
         private void ShowRows(List<OrganizeFileItem> items)
         {
+            // One group object per destination folder; folded folders stay folded when the list is rebuilt.
+            var byFolder = new Dictionary<string, OrganizeFolderGroup>(StringComparer.Ordinal);
+            foreach (var item in items)
+            {
+                if (!byFolder.TryGetValue(item.DestinationFolderDisplay, out var group))
+                {
+                    group = new OrganizeFolderGroup { Name = item.DestinationFolderDisplay, IsExpanded = !_foldedFolders.Contains(item.DestinationFolderDisplay) };
+                    group.PropertyChanged += (s, _) =>
+                    {
+                        var g = (OrganizeFolderGroup)s!;
+                        if (g.IsExpanded) _foldedFolders.Remove(g.Name); else _foldedFolders.Add(g.Name);
+                    };
+                    byFolder[item.DestinationFolderDisplay] = group;
+                }
+                item.FolderGroup = group;
+            }
+            _folderGroups = byFolder.Values.ToList();
             _rows = new ObservableCollection<OrganizeFileItem>(items);
             DataGridPreview.ItemsSource = CreateGroupedView(_rows);
             if (_rows.Count > 0) UiMotion.FadeIn(DataGridPreview, 6);

@@ -831,7 +831,7 @@
     <!--  ============ ORGANIZE FILES ============  -->
     <system:String x:Key="Str_Organize_Title">Organize Files</system:String>
     <system:String x:Key="Str_Organize_Subtitle">Automatically sort and organize your files based on type, date, size, or custom criteria.</system:String>
-    <system:String x:Key="Str_Organize_SourceFolder">Source Folder</system:String>
+    <system:String x:Key="Str_Organize_SourceFolder">SOURCE FOLDER</system:String>
     <system:String x:Key="Str_Organize_SourceFolderTooltip">The folder whose files will be organized</system:String>
     <system:String x:Key="Str_Organize_Browse">Browse</system:String>
     <system:String x:Key="Str_Organize_BrowseSourceTooltip">Pick the folder to organize</system:String>
@@ -3022,7 +3022,7 @@
     <system:String x:Key="Str_OrganizeFiles_MoveDownALevel">Move down a level</system:String>
     <system:String x:Key="Str_OrganizeFiles_NoFolderYet">No folder yet</system:String>
     <system:String x:Key="Str_OrganizeFiles_DropAFolderHere">Drop a folder here or browse</system:String>
-    <system:String x:Key="Str_OrganizeFiles_PutOrganizedFilesIn">Put organized files in</system:String>
+    <system:String x:Key="Str_OrganizeFiles_PutOrganizedFilesIn">PUT ORGANIZED FILES IN</system:String>
     <system:String x:Key="Str_OrganizeFiles_SameFolder">Same folder</system:String>
     <system:String x:Key="Str_OrganizeFiles_AnotherFolder">Another folder</system:String>
     <system:String x:Key="Str_OrganizeFiles_ChooseAFolder">Choose a folder</system:String>
@@ -9285,7 +9285,7 @@
     <system:String x:Key="Str_CopyQueue_EmptyTheQueueNo">Empty the queue (no files are touched)</system:String>
     <system:String x:Key="Str_CopyQueue_AddFilesOrFolders2">Add files or folders</system:String>
     <system:String x:Key="Str_CopyQueue_DropThemOnThe">Drop them on the left, pick where they go, then press Start.</system:String>
-    <system:String x:Key="Str_FolderTree_FolderToExport">Folder to export</system:String>
+    <system:String x:Key="Str_FolderTree_FolderToExport">FOLDER TO EXPORT</system:String>
     <system:String x:Key="Str_FolderTree_TextTree">Text tree</system:String>
     <system:String x:Key="Str_FolderTree_LikeTheTreeCommand">├── like the tree command</system:String>
     <system:String x:Key="Str_FolderTree_ANestedListFor">A nested list for READMEs and wikis</system:String>
@@ -10786,9 +10786,9 @@ This can't be undone.</system:String>
     <system:String x:Key="Str_Files_StatusCanTUse">Can't use</system:String>
     <system:String x:Key="Str_Files_StatusRenamed">Renamed</system:String>
     <system:String x:Key="Str_CopyQueue_MsgSameFile">The source and the target are the same file.</system:String>
-    <system:String x:Key="Str_CopyQueue_MsgIdenticalRecycled">An identical file was already there - the original went to the Recycle Bin.</system:String>
-    <system:String x:Key="Str_CopyQueue_MsgIdenticalKept">An identical file was already there - the original was kept.</system:String>
-    <system:String x:Key="Str_CopyQueue_MsgIdentical">An identical file was already there.</system:String>
+    <system:String x:Key="Str_CopyQueue_MsgIdenticalRecycled">An identical file was already there (compared byte for byte) - the original went to the Recycle Bin.</system:String>
+    <system:String x:Key="Str_CopyQueue_MsgIdenticalKept">An identical file was already there (compared byte for byte) - the original was kept.</system:String>
+    <system:String x:Key="Str_CopyQueue_MsgIdentical">An identical file was already there (compared byte for byte).</system:String>
     <system:String x:Key="Str_CopyQueue_ErrMoveMissing">The file isn't where it should be after the move - check the destination.</system:String>
     <system:String x:Key="Str_CopyQueue_ErrCopyMismatch">The copy didn't match the original - the original was left where it is.</system:String>
     <system:String x:Key="Str_CopyQueue_MsgInterrupted">Your last queue was interrupted. Press Start to continue - files that were already done are recognised and skipped.</system:String>
@@ -11058,4 +11058,13 @@ This can't be undone.</system:String>
 
 {0} already exists, so it was kept and this export got its own name.</system:String>
     <system:String x:Key="Str_SearchFiles_SkipSlowName">A pattern was too slow on the file name.</system:String>
+    <system:String x:Key="Str_FolderTree_FormatHeader">FORMAT</system:String>
+    <system:String x:Key="Str_FolderTree_GoodToKnowHeader">GOOD TO KNOW</system:String>
+    <system:String x:Key="Str_Common_FoldGroupTooltip">Fold or unfold this group</system:String>
+    <system:String x:Key="Str_SearchFiles_SumLongLineOne">{0:N0} file had a very long line, read in pieces</system:String>
+    <system:String x:Key="Str_SearchFiles_SumLongLineMany">{0:N0} files had a very long line, read in pieces</system:String>
+    <system:String x:Key="Str_Files_AskLargePreview" xml:space="preserve">This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.
+
+Show them all anyway?</system:String>
+    <system:String x:Key="Str_Files_MsgPreviewHeld">Preview not shown: this folder has {0:N0} files. Turn off subfolders or pick a smaller folder.</system:String>
 </ResourceDictionary>

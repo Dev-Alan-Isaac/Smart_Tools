@@ -25,10 +25,12 @@ namespace Smart_Tools.WPF.Controllers
 
         public static readonly IReadOnlyList<ToolCategoryInfo> Categories = new[]
         {
-            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
             new ToolCategoryInfo { Id = "data-quality", Keywords = "datos calidad verificar", Title = "Data Quality", Icon = "ShieldCheckOutline", AccentHex = "#3B82F6", Blurb = "Check, de-duplicate and compare" },
             new ToolCategoryInfo { Id = "files", Keywords = "archivos carpetas", Title = "Files", Icon = "FolderOutline", AccentHex = "#F59E0B", Blurb = "Rename, sort and search" },
+            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
+            new ToolCategoryInfo { Id = "utilities", Keywords = "utilidades", Title = "Utilities", Icon = "NotebookOutline", AccentHex = "#84CC16", Blurb = "Everyday helpers" },
             new ToolCategoryInfo { Id = "convert", Keywords = "convertir formato", Title = "Convert", Icon = "SwapHorizontal", AccentHex = "#0EA5E9", Blurb = "Change file formats" },
+            new ToolCategoryInfo { Id = "calculators", Keywords = "calculadora calcular convertir unidades fecha red", Title = "Calculators", Icon = "Calculator", AccentHex = "#EAB308", Blurb = "Work things out" },
             new ToolCategoryInfo { Id = "pdf", Keywords = "pdf documento documentos pdfs", Title = "PDF", Icon = "FilePdfBox", AccentHex = "#DC2626", Blurb = "Make, edit and protect PDFs" },
             new ToolCategoryInfo { Id = "video", Keywords = "videos pelicula", Title = "Video", Icon = "MovieOpenOutline", AccentHex = "#EF4444", Blurb = "Watch and edit" },
             new ToolCategoryInfo { Id = "audio", Keywords = "sonido sound", Title = "Audio", Icon = "VolumeHigh", AccentHex = "#8B5CF6", Blurb = "Play, record and transform sound" },
@@ -42,9 +44,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolCategoryInfo { Id = "security", Keywords = "seguridad privacidad", Title = "Security", Icon = "ShieldLockOutline", AccentHex = "#10B981", Blurb = "Protect, destroy, make passwords" },
             new ToolCategoryInfo { Id = "network", Keywords = "red internet wifi", Title = "Network", Icon = "Lan", AccentHex = "#06B6D4", Blurb = "Diagnose your connection" },
             new ToolCategoryInfo { Id = "developer", Keywords = "desarrollador programacion", Title = "Developer", Icon = "CodeBraces", AccentHex = "#64748B", Blurb = "Test, inspect and format" },
-            new ToolCategoryInfo { Id = "calculators", Keywords = "calculadora calcular convertir unidades fecha red", Title = "Calculators", Icon = "Calculator", AccentHex = "#EAB308", Blurb = "Work things out" },
             new ToolCategoryInfo { Id = "generators", Keywords = "generar crear", Title = "Generators", Icon = "Creation", AccentHex = "#F97316", Blurb = "Make files and codes" },
-            new ToolCategoryInfo { Id = "utilities", Keywords = "utilidades", Title = "Utilities", Icon = "NotebookOutline", AccentHex = "#84CC16", Blurb = "Everyday helpers" },
             new ToolCategoryInfo { Id = "art", Keywords = "arte art pixel sprite juegos game dibujo", Title = "Art", Icon = "GridLarge", AccentHex = "#A855F7", Blurb = "Draw pixel art, pack sprite sheets and build texture packs" },
         };
 
@@ -72,11 +72,23 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "copy-queue", Name = "Copy Queue", Icon = "FolderMoveOutline", CategoryId = "files", Description = "Copy or move big sets of files safely, with pause and verify", Keywords = "copy move batch queue backup transfer verify pause resume checksum copiar mover cola respaldo" },
             new ToolInfo { Id = "folder-tree", Name = "Folder Tree Exporter", Icon = "FileTreeOutline", CategoryId = "files", Description = "Export a folder's structure as a text tree, Markdown, JSON or CSV", Keywords = "folder tree structure export directory listing map tree command markdown json csv arbol carpetas estructura exportar" },
             new ToolInfo { Id = "metadata-extract", Name = "Metadata Extractor", Icon = "TagMultiple", CategoryId = "files", Description = "Read the hidden details in files", Keywords = "metadata exif tags properties" },
+              
+            // Utilities
+            new ToolInfo { Id = "notes", Name = "Notes", Icon = "Notebook", CategoryId = "utilities", Description = "Write quick notes", Keywords = "notes notepad text memo" },
+            new ToolInfo { Id = "clipboard-history", Name = "Clipboard History", Icon = "ClipboardTextOutline", CategoryId = "utilities", Description = "Everything you copied, searchable, with pins. Saved only if you turn it on", Keywords = "clipboard history paste copy pin portapapeles historial copiar" },
+            new ToolInfo { Id = "screen-ocr", Name = "Screen OCR", Title = "Screen Text Extractor", Icon = "TextRecognition", CategoryId = "utilities", Description = "Extract text from a screenshot or screen region", Keywords = "ocr text extract screenshot capture recognize image to text" },
+            new ToolInfo { Id = "translate", Name = "Translate", Icon = "Translate", CategoryId = "utilities", Description = "Translate text offline between English and Spanish", Keywords = "translate translator language english spanish offline traducir traductor idioma ingles espanol" },
+            new ToolInfo { Id = "timer-stopwatch", Name = "Timer & Stopwatch", Icon = "TimerOutline", CategoryId = "utilities", Description = "Stopwatch with laps, countdown timer and a Pomodoro cycle", Keywords = "timer stopwatch countdown pomodoro lap alarm focus clock cronometro temporizador cuenta atras" },
 
             // Convert
             new ToolInfo { Id = "convert-files", Name = "Convert Files", Icon = "SwapHorizontal", CategoryId = "convert", Description = "Convert files between formats", Keywords = "converter format mp3 mp4 docx png" },
             new ToolInfo { Id = "csv-json", Name = "CSV / JSON Converter", Icon = "CodeJson", CategoryId = "convert", Description = "Turn CSV into JSON and JSON back into CSV, with quotes and separators handled", Keywords = "csv json convert converter table spreadsheet excel delimiter semicolon tab comma convertir tabla" },
             new ToolInfo { Id = "watermark", Name = "Watermarker", Title = "Batch Watermarker", Icon = "Stamper", CategoryId = "convert", Description = "Stamp text or a logo on many pictures, videos and PDFs", Keywords = "watermark stamp logo copyright text draft confidential brand marca de agua sello pictures photos videos pdf batch" },
+
+            // Calculators
+            new ToolInfo { Id = "subnet-calc", Name = "Subnet Calculator", Title = "Subnet / CIDR Calculator", Icon = "Calculator", CategoryId = "calculators", Description = "Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets", Keywords = "subnet cidr mask netmask wildcard broadcast ip ipv4 ipv6 prefix range hosts calculadora subred mascara" },
+            new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "calculators", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
+            new ToolInfo { Id = "date-time", Name = "Date & Time Toolkit", Icon = "CalendarClock", CategoryId = "calculators", Description = "Timestamps, time zones and date maths in one place", Keywords = "unix timestamp epoch timezone time zone date difference duration add subtract days business utc iso fecha hora" },
 
             // PDF
             new ToolInfo { Id = "images-to-pdf", Name = "Images to PDF", Icon = "FileSwap", CategoryId = "pdf", Description = "Turn images into a PDF", Keywords = "jpg png pdf combine scan" },
@@ -184,24 +196,12 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "db-migrate", Name = "Database Migrator", Icon = "DatabaseSyncOutline", CategoryId = "developer", Description = "Copy a SQL Server database to a newer or older server version, no backup file needed", Keywords = "sql server database migrate migration copy move restore bak backup version upgrade downgrade downlevel schema data transfer base de datos migrar copiar mover versión" },
             new ToolInfo { Id = "encode-decode", Name = "Base64 & URL Encoder", Title = "Base64 & URL Encoder / Decoder", Icon = "SwapHorizontal", CategoryId = "developer", Description = "Encode and decode Base64, URLs, HTML entities and files", Keywords = "base64 url percent encode decode html entities data uri urlencode escape unescape codificar decodificar" },
 
-            // Calculators
-            new ToolInfo { Id = "subnet-calc", Name = "Subnet Calculator", Title = "Subnet / CIDR Calculator", Icon = "Calculator", CategoryId = "calculators", Description = "Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets", Keywords = "subnet cidr mask netmask wildcard broadcast ip ipv4 ipv6 prefix range hosts calculadora subred mascara" },
-            new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "calculators", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
-            new ToolInfo { Id = "date-time", Name = "Date & Time Toolkit", Icon = "CalendarClock", CategoryId = "calculators", Description = "Timestamps, time zones and date maths in one place", Keywords = "unix timestamp epoch timezone time zone date difference duration add subtract days business utc iso fecha hora" },
-
             // Generators
             new ToolInfo { Id = "file-generator", Name = "File Generator", Icon = "FilePlus", CategoryId = "generators", Description = "Make test files of any size", Keywords = "dummy test files size generate" },
             new ToolInfo { Id = "barcode-generator", Name = "Barcode Generator", Icon = "Barcode", CategoryId = "generators", Description = "Create barcodes", Keywords = "barcode ean code128 upc" },
             new ToolInfo { Id = "qr-generator", Name = "QR Code Generator", Icon = "Qrcode", CategoryId = "generators", Description = "Create QR codes", Keywords = "qr code link wifi" },
             new ToolInfo { Id = "mock-data", Name = "Mock Data Generator", Icon = "DatabaseCogOutline", CategoryId = "generators", Description = "Generate fake data for testing", Keywords = "fake data csv json sql names emails test dummy seed" },
             new ToolInfo { Id = "id-generator", Name = "ID & Lorem Generator", Icon = "Identifier", CategoryId = "generators", Description = "Make UUIDs (v4, v7), ULIDs, random hex and lorem ipsum text", Keywords = "uuid guid ulid id unique random hex lorem ipsum placeholder text generator identificador aleatorio" },
-
-            // Utilities
-            new ToolInfo { Id = "notes", Name = "Notes", Icon = "Notebook", CategoryId = "utilities", Description = "Write quick notes", Keywords = "notes notepad text memo" },
-            new ToolInfo { Id = "clipboard-history", Name = "Clipboard History", Icon = "ClipboardTextOutline", CategoryId = "utilities", Description = "Everything you copied, searchable, with pins. Saved only if you turn it on", Keywords = "clipboard history paste copy pin portapapeles historial copiar" },
-            new ToolInfo { Id = "screen-ocr", Name = "Screen OCR", Title = "Screen Text Extractor", Icon = "TextRecognition", CategoryId = "utilities", Description = "Extract text from a screenshot or screen region", Keywords = "ocr text extract screenshot capture recognize image to text" },
-            new ToolInfo { Id = "translate", Name = "Translate", Icon = "Translate", CategoryId = "utilities", Description = "Translate text offline between English and Spanish", Keywords = "translate translator language english spanish offline traducir traductor idioma ingles espanol" },
-            new ToolInfo { Id = "timer-stopwatch", Name = "Timer & Stopwatch", Icon = "TimerOutline", CategoryId = "utilities", Description = "Stopwatch with laps, countdown timer and a Pomodoro cycle", Keywords = "timer stopwatch countdown pomodoro lap alarm focus clock cronometro temporizador cuenta atras" },
 
             // Art
             new ToolInfo { Id = "pixel-art", Name = "Pixel Art Editor", Icon = "GridLarge", CategoryId = "art", Description = "Draw on a small grid, animate frames and export sharp PNGs", Keywords = "pixel art sprite draw png animation frames palette editor dibujar" },

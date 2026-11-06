@@ -160,6 +160,29 @@ namespace Smart_Tools.WPF.Models
     public sealed record OrganizeImageFacts(int Width, int Height, string Format, int Depth);
 
     /// <summary>One row in the preview grid.</summary>
+    /// <summary>One destination folder in the preview grid. The group header folds its rows through <see cref="IsExpanded"/>.</summary>
+    public sealed class OrganizeFolderGroup : INotifyPropertyChanged
+    {
+        private bool _isExpanded = true;
+
+        public required string Name { get; init; }
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (_isExpanded == value) return;
+                _isExpanded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
+            }
+        }
+
+        public override string ToString() => Name;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
+
     public sealed class OrganizeFileItem : INotifyPropertyChanged
     {
         private OrganizeStatus _status = OrganizeStatus.Ready;
@@ -194,6 +217,9 @@ namespace Smart_Tools.WPF.Models
 
         /// <summary>Destination folder relative to the destination root - the grid groups by this.</summary>
         public string DestinationFolderDisplay { get; set; } = "";
+
+        /// <summary>The preview group this file sits in (grouping key of the grid).</summary>
+        public OrganizeFolderGroup? FolderGroup { get; set; }
 
         public string DestinationName => Path.GetFileName(_destination);
         public bool IsRenamed => _destination.Length > 0 && !string.Equals(DestinationName, Name, StringComparison.OrdinalIgnoreCase);

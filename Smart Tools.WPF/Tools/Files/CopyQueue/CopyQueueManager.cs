@@ -240,11 +240,11 @@ namespace Smart_Tools.WPF.Controllers
                         if (move && SafeFileOps.HasRecycleBin(item.Source))
                         {
                             FileSystem.DeleteFile(item.Source, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                            item.Message = Loc.T("Str_CopyQueue_MsgIdenticalRecycled", "An identical file was already there - the original went to the Recycle Bin.");
+                            item.Message = Loc.T("Str_CopyQueue_MsgIdenticalRecycled", "An identical file was already there (compared byte for byte) - the original went to the Recycle Bin.");
                         }
                         else
                         {
-                            item.Message = move ? Loc.T("Str_CopyQueue_MsgIdenticalKept", "An identical file was already there - the original was kept.") : Loc.T("Str_CopyQueue_MsgIdentical", "An identical file was already there.");
+                            item.Message = move ? Loc.T("Str_CopyQueue_MsgIdenticalKept", "An identical file was already there (compared byte for byte) - the original was kept.") : Loc.T("Str_CopyQueue_MsgIdentical", "An identical file was already there (compared byte for byte).");
                         }
                         return;
                     }

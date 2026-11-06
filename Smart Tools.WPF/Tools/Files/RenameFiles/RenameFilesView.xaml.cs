@@ -468,10 +468,17 @@ namespace Smart_Tools.WPF.Views
             {
                 if (rescan)
                 {
+                    _largeAnswer = null;
                     TxtProgress.Text = Loc.T("Str_Rename_MsgReading", "Reading the folders...");
                     _scan = await RenameManager.ScanAsync(_folders.Select(f => f.FullPath).ToList(), options, progress, token);
                 }
                 var scan = _scan!;
+                if (!ConfirmLargePreview(scan.Files.Count))
+                {
+                    ShowPlan(null);
+                    TxtProgress.Text = Loc.F("Str_Files_MsgPreviewHeld", "Preview not shown: this folder has {0:N0} files. Turn off subfolders or pick a smaller folder.", scan.Files.Count);
+                    return;
+                }
                 var plan = await Task.Run(() => RenameManager.BuildPlan(scan.Files, options, null, token), token);
                 if (token.IsCancellationRequested) return;
 
@@ -496,6 +503,19 @@ namespace Smart_Tools.WPF.Views
                     TxtProgressPercent.Text = "";
                 }
             }
+        }
+
+
+        private const int LargePreviewFiles = 100_000;
+        private bool? _largeAnswer;
+
+        /// <summary>Asks once per scan before listing 100,000+ files in the preview (the grid and the plan get slow and large).</summary>
+        private bool ConfirmLargePreview(int count)
+        {
+            if (count < LargePreviewFiles) return true;
+            _largeAnswer ??= MessageBox.Show(Loc.F("Str_Files_AskLargePreview", "This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.\n\nShow them all anyway?", count),
+                DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            return _largeAnswer.Value;
         }
 
         private string PlanText(IReadOnlyCollection<RenamePreviewItem> items)

@@ -184,6 +184,9 @@ namespace Smart_Tools.WPF.Models
 
         public IReadOnlyList<FileSearchSkip> Skipped { get; init; } = Array.Empty<FileSearchSkip>();
         public int InaccessibleFolders { get; init; }
+
+        /// <summary>Files with a line longer than the read limit (searched in pieces: a match across a cut can be missed).</summary>
+        public int LongLineFiles { get; init; }
         public bool Truncated { get; init; }
         public bool Cancelled { get; init; }
         public TimeSpan Elapsed { get; init; }

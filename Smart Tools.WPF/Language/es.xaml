@@ -877,7 +877,7 @@
     <!--  ============ ORGANIZE FILES ============  -->
     <system:String x:Key="Str_Organize_Title">Organizar Archivos</system:String>
     <system:String x:Key="Str_Organize_Subtitle">Ordena y organiza automáticamente tus archivos según tipo, fecha, tamaño o criterios personalizados.</system:String>
-    <system:String x:Key="Str_Organize_SourceFolder">Carpeta de Origen</system:String>
+    <system:String x:Key="Str_Organize_SourceFolder">CARPETA DE ORIGEN</system:String>
     <system:String x:Key="Str_Organize_SourceFolderTooltip">La carpeta cuyos archivos se organizarán</system:String>
     <system:String x:Key="Str_Organize_Browse">Examinar</system:String>
     <system:String x:Key="Str_Organize_BrowseSourceTooltip">Elige la carpeta a organizar</system:String>
@@ -3069,7 +3069,7 @@
     <system:String x:Key="Str_OrganizeFiles_MoveDownALevel">Bajar un nivel</system:String>
     <system:String x:Key="Str_OrganizeFiles_NoFolderYet">Aún no hay carpeta</system:String>
     <system:String x:Key="Str_OrganizeFiles_DropAFolderHere">Suelta una carpeta aquí o examina</system:String>
-    <system:String x:Key="Str_OrganizeFiles_PutOrganizedFilesIn">Poner los archivos organizados en</system:String>
+    <system:String x:Key="Str_OrganizeFiles_PutOrganizedFilesIn">PONER LOS ARCHIVOS ORGANIZADOS EN</system:String>
     <system:String x:Key="Str_OrganizeFiles_SameFolder">La misma carpeta</system:String>
     <system:String x:Key="Str_OrganizeFiles_AnotherFolder">Otra carpeta</system:String>
     <system:String x:Key="Str_OrganizeFiles_ChooseAFolder">Elegir una carpeta</system:String>
@@ -9287,7 +9287,7 @@
     <system:String x:Key="Str_CopyQueue_EmptyTheQueueNo">Vaciar la cola (no se toca ningún archivo)</system:String>
     <system:String x:Key="Str_CopyQueue_AddFilesOrFolders2">Agregar archivos o carpetas</system:String>
     <system:String x:Key="Str_CopyQueue_DropThemOnThe">Suéltalos a la izquierda, elige adónde van y pulsa Iniciar.</system:String>
-    <system:String x:Key="Str_FolderTree_FolderToExport">Carpeta que exportar</system:String>
+    <system:String x:Key="Str_FolderTree_FolderToExport">CARPETA QUE EXPORTAR</system:String>
     <system:String x:Key="Str_FolderTree_TextTree">Árbol de texto</system:String>
     <system:String x:Key="Str_FolderTree_LikeTheTreeCommand">├── como el comando tree</system:String>
     <system:String x:Key="Str_FolderTree_ANestedListFor">Una lista anidada para README y wikis</system:String>
@@ -10788,9 +10788,9 @@ No se puede deshacer.</system:String>
     <system:String x:Key="Str_Files_StatusCanTUse">No se puede usar</system:String>
     <system:String x:Key="Str_Files_StatusRenamed">Renombrado</system:String>
     <system:String x:Key="Str_CopyQueue_MsgSameFile">El origen y el destino son el mismo archivo.</system:String>
-    <system:String x:Key="Str_CopyQueue_MsgIdenticalRecycled">Ya había un archivo idéntico: el original fue a la Papelera de reciclaje.</system:String>
-    <system:String x:Key="Str_CopyQueue_MsgIdenticalKept">Ya había un archivo idéntico: se conservó el original.</system:String>
-    <system:String x:Key="Str_CopyQueue_MsgIdentical">Ya había un archivo idéntico.</system:String>
+    <system:String x:Key="Str_CopyQueue_MsgIdenticalRecycled">Ya había un archivo idéntico (comparado byte a byte): el original fue a la Papelera de reciclaje.</system:String>
+    <system:String x:Key="Str_CopyQueue_MsgIdenticalKept">Ya había un archivo idéntico (comparado byte a byte): se conservó el original.</system:String>
+    <system:String x:Key="Str_CopyQueue_MsgIdentical">Ya había un archivo idéntico (comparado byte a byte).</system:String>
     <system:String x:Key="Str_CopyQueue_ErrMoveMissing">El archivo no está donde debería tras mover: revisa el destino.</system:String>
     <system:String x:Key="Str_CopyQueue_ErrCopyMismatch">La copia no coincidía con el original: el original se dejó donde estaba.</system:String>
     <system:String x:Key="Str_CopyQueue_MsgInterrupted">Tu última cola se interrumpió. Pulsa Iniciar para continuar: los archivos ya terminados se reconocen y se omiten.</system:String>
@@ -11060,4 +11060,13 @@ No se puede deshacer.</system:String>
 
 {0} ya existe, así que se conservó y esta exportación recibió su propio nombre.</system:String>
     <system:String x:Key="Str_SearchFiles_SkipSlowName">Un patrón fue demasiado lento con el nombre del archivo.</system:String>
+    <system:String x:Key="Str_FolderTree_FormatHeader">FORMATO</system:String>
+    <system:String x:Key="Str_FolderTree_GoodToKnowHeader">CONVIENE SABER</system:String>
+    <system:String x:Key="Str_Common_FoldGroupTooltip">Plegar o desplegar este grupo</system:String>
+    <system:String x:Key="Str_SearchFiles_SumLongLineOne">{0:N0} archivo tenía una línea muy larga, leída por partes</system:String>
+    <system:String x:Key="Str_SearchFiles_SumLongLineMany">{0:N0} archivos tenían una línea muy larga, leída por partes</system:String>
+    <system:String x:Key="Str_Files_AskLargePreview" xml:space="preserve">Esta carpeta tiene {0:N0} archivos. Mostrar todos en la vista previa puede ser lento y usar mucha memoria.
+
+¿Mostrarlos todos de todos modos?</system:String>
+    <system:String x:Key="Str_Files_MsgPreviewHeld">No se muestra la vista previa: esta carpeta tiene {0:N0} archivos. Desactiva las subcarpetas o elige una carpeta más pequeña.</system:String>
 </ResourceDictionary>

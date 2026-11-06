@@ -184,7 +184,7 @@
                         VerticalAlignment="Center"
                         FontWeight="SemiBold"
                         Foreground="{DynamicResource TextPrimary}"
-                        Text="{Binding Name}" />
+                        Text="{Binding Name.Name}" />
                     <Border
                         Margin="8,0,0,0"
                         Padding="7,1"
@@ -424,6 +424,7 @@
                                 ctl:Tour.Key="Str_Tour_OrganizeFiles_Input" ctl:Tour.Order="1"
                                 FolderChanged="InputCard_FolderChanged"
                                 Header="{DynamicResource Str_Organize_SourceFolder}"
+                                HeaderIcon="FolderOutline"
                                 IncludeSubfolders="False"
                                 IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
                                 Mode="SingleFolder" />
@@ -513,80 +514,63 @@
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
 
-                                    <!--  Layout Selector Grid  -->
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="4" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="4" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-
+                                    <!--  Layout choice: one full-width row each (three thirds of the sidebar clipped the labels)  -->
+                                    <StackPanel>
                                         <RadioButton
                                             x:Name="RadioLayoutRules"
-                                            Grid.Column="0"
+                                            Margin="0,0,0,4"
                                             Click="RadioLayout_Click"
-                                            GroupName="Layout"
-                                            IsChecked="True"
-                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            GroupName="Layout" IsChecked="True"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
                                             Tag="Rules"
                                             ToolTip="{DynamicResource Str_OrganizeFiles_SortIntoFoldersBy}">
-                                            <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon
                                                     Width="17"
                                                     Height="17"
-                                                    HorizontalAlignment="Center"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
                                                     Kind="FormatListNumbered" />
-                                                <TextBlock
-                                                    Margin="0,3,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Text="{DynamicResource Str_OrganizeFiles_ByRules}" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_OrganizeFiles_ByRules}" />
                                             </StackPanel>
                                         </RadioButton>
-
                                         <RadioButton
                                             x:Name="RadioLayoutFlatten"
-                                            Grid.Column="2"
+                                            Margin="0,0,0,4"
                                             Click="RadioLayout_Click"
                                             GroupName="Layout"
-                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
                                             Tag="Flatten"
                                             ToolTip="{DynamicResource Str_Organize_FlattenTooltip}">
-                                            <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon
                                                     Width="17"
                                                     Height="17"
-                                                    HorizontalAlignment="Center"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
                                                     Kind="ArrowCollapseVertical" />
-                                                <TextBlock
-                                                    Margin="0,3,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Text="{DynamicResource Str_OrganizeFiles_Flatten}" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_OrganizeFiles_Flatten}" />
                                             </StackPanel>
                                         </RadioButton>
-
                                         <RadioButton
                                             x:Name="RadioLayoutKeep"
-                                            Grid.Column="4"
+                                            Margin="0,0,0,0"
                                             Click="RadioLayout_Click"
                                             GroupName="Layout"
-                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
                                             Tag="KeepStructure"
                                             ToolTip="{DynamicResource Str_Organize_PreserveTooltip}">
-                                            <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon
                                                     Width="17"
                                                     Height="17"
-                                                    HorizontalAlignment="Center"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
                                                     Kind="FolderMultipleOutline" />
-                                                <TextBlock
-                                                    Margin="0,3,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Text="{DynamicResource Str_OrganizeFiles_KeepFolders}" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_OrganizeFiles_KeepFolders}" />
                                             </StackPanel>
                                         </RadioButton>
-                                    </Grid>
+                                    </StackPanel>
 
                                     <TextBlock
                                         x:Name="TxtLayoutHint"
@@ -1011,6 +995,28 @@
                                 VerticalAlignment="Center"
                                 Orientation="Horizontal">
                                 <Button
+                                    x:Name="BtnCollapseFolders"
+                                    Margin="0,0,6,0"
+                                    Click="BtnCollapseFolders_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Shortcut_GroupsCollapseAll}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="UnfoldLessHorizontal" />
+                                </Button>
+                                <Button
+                                    x:Name="BtnExpandFolders"
+                                    Margin="0,0,6,0"
+                                    Click="BtnExpandFolders_Click"
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Shortcut_GroupsExpandAll}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="UnfoldMoreHorizontal" />
+                                </Button>
+                                <Button
                                     x:Name="BtnOpenDestination"
                                     Margin="0,0,6,0"
                                     Click="BtnOpenDestination_Click"
@@ -1081,7 +1087,7 @@
                             VirtualizingPanel.ScrollUnit="Pixel"
                             VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.GroupStyle>
-                                <GroupStyle HeaderTemplate="{StaticResource GroupHeaderTemplate}" />
+                                <GroupStyle ContainerStyle="{StaticResource CollapsibleGroupItemStyle}" HeaderTemplate="{StaticResource GroupHeaderTemplate}" />
                             </DataGrid.GroupStyle>
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn

@@ -297,6 +297,9 @@ namespace Smart_Tools.WPF.Controllers
             public List<RawMatch> Matches { get; } = new();
             public long MatchCount { get; set; }
             public string? Skip { get; set; }
+
+            /// <summary>A line was longer than the read limit and was searched in pieces.</summary>
+            public bool LongLine { get; set; }
         }
 
         /// <summary>
@@ -368,6 +371,7 @@ namespace Smart_Tools.WPF.Controllers
                 while ((line = lines.ReadLine()) != null)
                 {
                     if (!lines.IsContinuation) lineNumber++;
+                    else scan.LongLine = true;
                     if ((lineNumber & 255) == 0) token.ThrowIfCancellationRequested();
                     List<Hit> hits;
                     try
@@ -509,6 +513,7 @@ namespace Smart_Tools.WPF.Controllers
             var seen = new Dictionary<string, Seen>(o.IgnoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
             var dirty = new HashSet<Seen>();
             var skipped = new List<FileSearchSkip>();
+            int longLineFiles = 0;
             int next = 0, withMatches = 0;
             long matchesSeen = 0;
             bool truncated = false;
@@ -535,6 +540,7 @@ namespace Smart_Tools.WPF.Controllers
             void Merge(string path, FileScan scan)
             {
                 if (scan.Skip != null) skipped.Add(new FileSearchSkip(path, scan.Skip));
+                if (scan.LongLine) longLineFiles++;
                 if (scan.MatchCount == 0) return;
                 withMatches++;
                 matchesSeen += scan.MatchCount;
@@ -620,6 +626,7 @@ namespace Smart_Tools.WPF.Controllers
                 FilesWithMatches = withMatches,
                 MatchesSeen = matchesSeen,
                 Skipped = skipped,
+                LongLineFiles = longLineFiles,
                 InaccessibleFolders = inaccessible,
                 Truncated = truncated,
                 Cancelled = cancelled,
@@ -636,6 +643,7 @@ namespace Smart_Tools.WPF.Controllers
             parts.Add(Loc.F("Str_SearchFiles_SumIn", "{0} in {1:N0} of {2}", rows, s.FilesWithMatches, SearchCounts.Files(s.FilesScanned)));
             if (s.Skipped.Count > 0) parts.Add(Loc.F("Str_CopyQueue_RunSkipped", "{0:N0} skipped", s.Skipped.Count));
             if (s.InaccessibleFolders > 0) parts.Add(Loc.N(s.InaccessibleFolders, "Str_SearchFiles_SumFolderOne", "{0:N0} folder couldn't be opened", "Str_SearchFiles_SumFolderMany", "{0:N0} folders couldn't be opened", s.InaccessibleFolders));
+            if (s.LongLineFiles > 0) parts.Add(Loc.N(s.LongLineFiles, "Str_SearchFiles_SumLongLineOne", "{0:N0} file had a very long line, read in pieces", "Str_SearchFiles_SumLongLineMany", "{0:N0} files had a very long line, read in pieces", s.LongLineFiles));
             if (s.Truncated) parts.Add(Loc.F("Str_SearchFiles_SumTruncated", "list stopped at {0:N0} rows", MaxResults));
             parts.Add(s.Elapsed.TotalSeconds < 1 ? $"{s.Elapsed.TotalMilliseconds:0} ms" : $"{s.Elapsed.TotalSeconds:0.0} s");
             string text = string.Join(" · ", parts) + ".";

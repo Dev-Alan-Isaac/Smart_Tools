@@ -32,7 +32,7 @@
 
                     <Border ctl:Tour.Key="Str_Tour_FolderTree_Format" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="{DynamicResource Str_VideoEditor_Format}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
+                            <ContentControl Content="{DynamicResource Str_FolderTree_FormatHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
                                 <RadioButton x:Name="RadioText" Margin="0,0,2,4" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_TextTree}" GroupName="FtFormat" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_LikeTheTreeCommand}" />
                                 <RadioButton x:Name="RadioMarkdown" Margin="2,0,0,4" Checked="Option_Changed" Content="{DynamicResource Str_MarkdownHtmlEditor_Markdown}" GroupName="FtFormat" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_FolderTree_ANestedListFor}" />
@@ -64,7 +64,7 @@
 
                     <Border Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
-                            <ContentControl Content="{DynamicResource Str_SecureFileShredder_GoodToKnow}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <ContentControl Content="{DynamicResource Str_FolderTree_GoodToKnowHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
                             <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" Text="{DynamicResource Str_FolderTree_ThisOnlyReadsYour}" />
                         </StackPanel>
                     </Border>
