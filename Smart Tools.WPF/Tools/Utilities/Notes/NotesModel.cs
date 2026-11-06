@@ -85,7 +85,7 @@ namespace Smart_Tools.WPF.Models
             }
         }
 
-        public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? UntitledLabel : Title.Trim();
+        public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? Loc.T("Str_Notes_Untitled", UntitledLabel) : Title.Trim();
 
         /// <summary>The first two non-empty lines of the text (for the card).</summary>
         public string Snippet

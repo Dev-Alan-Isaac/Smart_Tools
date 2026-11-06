@@ -73,7 +73,7 @@ namespace Smart_Tools.WPF.Views
                 TxtLoadMessage.Text = load.Message;
                 LoadMessageBar.Visibility = Visibility.Visible;
             }
-            if (NotesManager.SavingPaused) ShowSaveState(false, "Saving paused - your notes file couldn't be opened.");
+            if (NotesManager.SavingPaused) ShowSaveState(false, Loc.T("Str_Notes_MsgSavingPaused", "Saving paused - your notes file couldn't be opened."));
 
             if (NotesManager.Notes.Count > 0) ListNotes.SelectedIndex = 0;
             else ShowEditor(null);
@@ -361,7 +361,7 @@ namespace Smart_Tools.WPF.Views
         private void ScheduleSave()
         {
             _dirty = true;
-            if (!NotesManager.SavingPaused) ShowSaveState(null, "Saving…");
+            if (!NotesManager.SavingPaused) ShowSaveState(null, Loc.T("Str_Notes_MsgSaving", "Saving…"));
             _saveTimer.Stop();
             _saveTimer.Start();
         }
@@ -429,7 +429,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     GroupName = "NoteColor",
                     Background = BrushOf(color.Hex),
-                    ToolTip = color.Name,
+                    ToolTip = Loc.T("Str_Notes_Color" + color.Name, color.Name),
                     Tag = color.Hex,
                 };
                 swatch.SetResourceReference(StyleProperty, "SwatchStyle");
@@ -482,8 +482,8 @@ namespace Smart_Tools.WPF.Views
             if (sender is not MenuItem { Tag: string ext }) return;
             var dialog = new SaveFileDialog
             {
-                Title = "Save the note as a text file",
-                Filter = ext == "md" ? "Markdown (*.md)|*.md" : "Text file (*.txt)|*.txt",
+                Title = Loc.T("Str_Notes_MsgExportTitle", "Save the note as a text file"),
+                Filter = ext == "md" ? Loc.T("Str_Notes_MsgMdFilter", "Markdown (*.md)|*.md") : Loc.T("Str_Notes_MsgTxtFilter", "Text file (*.txt)|*.txt"),
                 DefaultExt = "." + ext,
                 FileName = Path.ChangeExtension(NotesManager.SuggestedFileName(note), ext),
                 AddExtension = true,

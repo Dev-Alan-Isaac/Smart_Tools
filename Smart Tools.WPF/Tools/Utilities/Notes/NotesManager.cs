@@ -96,7 +96,7 @@ namespace Smart_Tools.WPF.Controllers
                     result = new NotesLoadResult
                     {
                         ReadFailed = true,
-                        Message = "Your notes couldn't be opened (" + PlainError(mainError) + "). Nothing will be saved until Smart Tools is restarted, so they can't be overwritten.",
+                        Message = Loc.F("Str_Notes_MsgOpenFailed", "Your notes couldn't be opened ({0}). Nothing will be saved until Smart Tools is restarted, so they can't be overwritten.", PlainError(mainError)),
                     };
                 }
                 else
@@ -120,7 +120,7 @@ namespace Smart_Tools.WPF.Controllers
                         {
                             KeptAside = keptAside,
                             Message = keptAside != null
-                                ? $"Your notes file was damaged and couldn't be read. It was kept as {Path.GetFileName(keptAside)} in {DataFolder}, so nothing in it is lost."
+                                ? Loc.F("Str_Notes_MsgDamaged", "Your notes file was damaged and couldn't be read. It was kept as {0} in {1}, so nothing in it is lost.", Path.GetFileName(keptAside), DataFolder)
                                 : null,
                         };
                     }
@@ -207,7 +207,7 @@ namespace Smart_Tools.WPF.Controllers
         public static string? Save()
         {
             if (!IsLoaded) EnsureLoaded();
-            if (SavingPaused) return "Saving is paused because your notes file couldn't be opened. Restart Smart Tools to try again.";
+            if (SavingPaused) return Loc.T("Str_Notes_MsgSavingPausedLong", "Saving is paused because your notes file couldn't be opened. Restart Smart Tools to try again.");
 
             string temp = NotesFile + ".tmp";
             try
@@ -223,16 +223,16 @@ namespace Smart_Tools.WPF.Controllers
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
             {
                 try { if (File.Exists(temp)) File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
-                return "Couldn't save: " + PlainError(ex);
+                return Loc.F("Str_Notes_MsgCantSave", "Couldn't save: {0}", PlainError(ex));
             }
         }
 
         public static string PlainError(Exception? ex) => ex switch
         {
-            UnauthorizedAccessException => "Windows didn't allow it",
-            IOException io when (io.HResult & 0xFFFF) is 32 or 33 => "the file is open in another program",
-            IOException io when (io.HResult & 0xFFFF) is 39 or 112 => "the disk is full",
-            null => "unknown error",
+            UnauthorizedAccessException => Loc.T("Str_Notes_ErrDenied", "Windows didn't allow it"),
+            IOException io when (io.HResult & 0xFFFF) is 32 or 33 => Loc.T("Str_Notes_ErrInUse", "the file is open in another program"),
+            IOException io when (io.HResult & 0xFFFF) is 39 or 112 => Loc.T("Str_Notes_ErrDiskFull", "the disk is full"),
+            null => Loc.T("Str_Notes_ErrUnknown", "unknown error"),
             _ => ex.Message,
         };
 
@@ -350,7 +350,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string name = new string(note.DisplayTitle.Select(c => Path.GetInvalidFileNameChars().Contains(c) || c is ':' or '*' or '?' or '"' or '<' or '>' or '|' or '/' or '\\' ? ' ' : c).ToArray()).Trim().TrimEnd('.');
             if (name.Length > 60) name = name[..60].Trim();
-            return (name.Length == 0 ? "Note" : name) + ".txt";
+            return (name.Length == 0 ? Loc.T("Str_Notes_FileNameFallback", "Note") : name) + ".txt";
         }
 
         /// <summary>Saves one note as a text file (title, blank line, text), under a temporary name first.</summary>

@@ -138,9 +138,9 @@ namespace Smart_Tools.WPF.Controllers
             from = NormalizeLanguage(from);
             to = NormalizeLanguage(to);
             if (!LanguageCode.IsMatch(from) || !LanguageCode.IsMatch(to))
-                return (null, "Use the short language codes, like en, es, or zh (or the language name).");
-            if (from == to) return (null, "Pick two different languages.");
-            if (NameVariants(from, to).Any(v => Find(v.From, v.To) != null)) return (null, "That pair is already in the list.");
+                return (null, Loc.T("Str_Translate_ErrCodes", "Use the short language codes, like en, es, or zh (or the language name)."));
+            if (from == to) return (null, Loc.T("Str_Translate_ErrSame", "Pick two different languages."));
+            if (NameVariants(from, to).Any(v => Find(v.From, v.To) != null)) return (null, Loc.T("Str_Translate_ErrDuplicate", "That pair is already in the list."));
 
             foreach (var (f, t) in NameVariants(from, to))
             {
@@ -180,7 +180,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException)
             {
-                return (null, "Couldn't reach the download server. Check your internet connection and try again.", false);
+                return (null, Loc.T("Str_Download_ErrServer", "Couldn't reach the download server. Check your internet connection and try again."), false);
             }
         }
 
