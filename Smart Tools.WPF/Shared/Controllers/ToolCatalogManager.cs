@@ -189,7 +189,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "screen-ocr", Name = "Screen OCR", Title = "Screen Text Extractor", Icon = "TextRecognition", CategoryId = "utilities", Description = "Extract text from a screenshot or screen region", Keywords = "ocr text extract screenshot capture recognize image to text" },
             new ToolInfo { Id = "translate", Name = "Translate", Icon = "Translate", CategoryId = "utilities", Description = "Translate text offline between English and Spanish", Keywords = "translate translator language english spanish offline traducir traductor idioma ingles espanol" },
 
-            // Pixel & Sprites
+            // Art
             new ToolInfo { Id = "pixel-art", Name = "Pixel Art Editor", Icon = "GridLarge", CategoryId = "art", Description = "Draw on a small grid, animate frames and export sharp PNGs", Keywords = "pixel art sprite draw png animation frames palette editor dibujar" },
             new ToolInfo { Id = "sprite-packer", Name = "Sprite Sheet Packer", Title = "Image Sprite Sheet Packer", Icon = "ViewGridPlusOutline", CategoryId = "art", Description = "Pack images into a sprite sheet with coordinates, or slice a sheet back into frames", Keywords = "sprite sheet atlas pack slice frames texture json css xml trim padding power of two hoja sprites cortar" },
             new ToolInfo { Id = "texture-pack", Name = "Texture Pack Builder", Title = "Minecraft Texture Pack Builder", Icon = "PackageVariantClosed", CategoryId = "art", Description = "Turn your PNGs into a Minecraft Java resource pack (.zip) with pack.mcmeta", Keywords = "minecraft texture pack resource pack java mcmeta pack.png blocks items skin mod paquete texturas recursos" },
