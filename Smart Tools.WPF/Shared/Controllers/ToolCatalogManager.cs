@@ -73,7 +73,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "folder-tree", Name = "Folder Tree Exporter", Icon = "FileTreeOutline", CategoryId = "files", Description = "Export a folder's structure as a text tree, Markdown, JSON or CSV", Keywords = "folder tree structure export directory listing map tree command markdown json csv arbol carpetas estructura exportar" },
             new ToolInfo { Id = "metadata-extract", Name = "Metadata Extractor", Icon = "TagMultiple", CategoryId = "files", Description = "Read the hidden details in files", Keywords = "metadata exif tags properties" },
 
-            // Convert and PDF
+            // Convert
             new ToolInfo { Id = "convert-files", Name = "Convert Files", Icon = "SwapHorizontal", CategoryId = "convert", Description = "Convert files between formats", Keywords = "converter format mp3 mp4 docx png" },
             new ToolInfo { Id = "images-to-pdf", Name = "Images to PDF", Icon = "FileSwap", CategoryId = "pdf", Description = "Turn images into a PDF", Keywords = "jpg png pdf combine scan" },
             new ToolInfo { Id = "pdf-reader", Name = "PDF Reader & Signer", Icon = "FileDocumentEditOutline", CategoryId = "pdf", Description = "Read a PDF, then add your signature, text, a date or a check mark and save a signed copy", Keywords = "pdf reader viewer sign signature fill form text date check mark annotate firmar firma rellenar leer visor" },
