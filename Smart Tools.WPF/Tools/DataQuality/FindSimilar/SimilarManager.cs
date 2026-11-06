@@ -59,11 +59,11 @@ namespace Smart_Tools.WPF.Controllers
 
         public static string DisplayName(SimilarDetectionMethod method) => method switch
         {
-            SimilarDetectionMethod.PHash => "Perceptual hash (pHash)",
-            SimilarDetectionMethod.WHash => "Wavelet hash (wHash)",
-            SimilarDetectionMethod.DHash => "Difference hash (dHash)",
-            SimilarDetectionMethod.VideoFrameHash => "Frame sampling + hashing",
-            SimilarDetectionMethod.AudioChromaprint => "Acoustic fingerprint",
+            SimilarDetectionMethod.PHash => Loc.T("Str_Similar_MethodPHash", "Perceptual hash (pHash)"),
+            SimilarDetectionMethod.WHash => Loc.T("Str_Similar_MethodWHash", "Wavelet hash (wHash)"),
+            SimilarDetectionMethod.DHash => Loc.T("Str_Similar_MethodDHash", "Difference hash (dHash)"),
+            SimilarDetectionMethod.VideoFrameHash => Loc.T("Str_Similar_MethodFrames", "Frame sampling + hashing"),
+            SimilarDetectionMethod.AudioChromaprint => Loc.T("Str_Similar_MethodAudio", "Acoustic fingerprint"),
             _ => method.ToString(),
         };
 
@@ -430,7 +430,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         if (!File.Exists(item.FullPath))
                         {
-                            result.Failed.Add((item, "The file no longer exists."));
+                            result.Failed.Add((item, Loc.T("Str_DataQuality_MsgFileGone", "The file no longer exists.")));
                             continue;
                         }
                         File.Move(item.FullPath, UniquePath(Path.Combine(destination, item.Name)));
@@ -491,7 +491,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
                 return new DriveInfo(root).DriveType == DriveType.Fixed;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
                 return false;
             }
@@ -517,7 +517,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.ThresholdPercent = Math.Clamp(s.ThresholdPercent, 50, 100);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new SimilarFinderSettings();
             }

@@ -17,11 +17,11 @@ namespace Smart_Tools.WPF.Controllers
             {
                 using var fs = OpenShared(path);
                 var decoder = BitmapDecoder.Create(fs, BitmapCreateOptions.PreservePixelFormat | BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None);
-                if (decoder.Frames.Count == 0) return new ImageProbe(0, 0, "no picture frames could be decoded");
+                if (decoder.Frames.Count == 0) return new ImageProbe(0, 0, Loc.T("Str_Validate_ProbNoFrames", "no picture frames could be decoded"));
 
                 var frame = decoder.Frames[0];
                 int w = frame.PixelWidth, h = frame.PixelHeight;
-                if (w <= 0 || h <= 0) return new ImageProbe(w, h, "the picture has no size");
+                if (w <= 0 || h <= 0) return new ImageProbe(w, h, Loc.T("Str_Validate_ProbNoSize", "the picture has no size"));
 
                 if (fullDecode)
                 {

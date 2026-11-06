@@ -99,7 +99,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         FullPath = baseDir.Length > 0 ? full : NormalizeListPath(entry.Path!).Replace('/', Path.DirectorySeparatorChar),
                         Verdict = HashVerdict.Missing,
-                        Details = "Listed in the checksum list but not found",
+                        Details = Loc.T("Str_Hash_DetMissing", "Listed in the checksum list but not found"),
                         Expected = entry.Hash,
                     };
                     row.UpperCase = upperCase;
@@ -166,7 +166,7 @@ namespace Smart_Tools.WPF.Controllers
                     else
                     {
                         row.Verdict = HashVerdict.Extra;
-                        row.Details = "Not in the checksum list";
+                        row.Details = Loc.T("Str_Hash_DetExtra", "Not in the checksum list");
                     }
                     break;
 
@@ -182,17 +182,17 @@ namespace Smart_Tools.WPF.Controllers
             if (!row.TryGetHash(algo, out string actual))
             {
                 row.Verdict = HashVerdict.Unreadable;
-                row.Details = $"{DisplayName(algo)} could not be computed";
+                row.Details = Loc.F("Str_Hash_DetCantCompute", "{0} could not be computed", DisplayName(algo));
             }
             else if (HashesEqual(actual, expected))
             {
                 row.Verdict = HashVerdict.Match;
-                row.Details = $"{DisplayName(algo)} matches";
+                row.Details = Loc.F("Str_Hash_DetMatches", "{0} matches", DisplayName(algo));
             }
             else
             {
                 row.Verdict = HashVerdict.Mismatch;
-                row.Details = $"{DisplayName(algo)} differs - expected {expected}, got {actual}";
+                row.Details = Loc.F("Str_Hash_DetDiffers", "{0} differs - expected {1}, got {2}", DisplayName(algo), expected, actual);
             }
         }
 
@@ -279,7 +279,7 @@ namespace Smart_Tools.WPF.Controllers
                     Ui(() =>
                     {
                         row.Verdict = HashVerdict.Cancelled;
-                        row.Details = "Cancelled before it was hashed";
+                        row.Details = Loc.T("Str_Hash_DetCancelled", "Cancelled before it was hashed");
                     });
             }, CancellationToken.None);
 
@@ -304,16 +304,16 @@ namespace Smart_Tools.WPF.Controllers
         {
             var parts = new List<string>();
             if (mode == HashVerifyMode.Compute)
-                parts.Add($"{r.Computed:N0} file{(r.Computed == 1 ? "" : "s")} hashed");
+                parts.Add(Loc.N(r.Computed, "Str_Hash_SumHashedOne", "{0:N0} file hashed", "Str_Hash_SumHashedMany", "{0:N0} files hashed", r.Computed));
             else
             {
-                parts.Add($"{r.Matched:N0} match");
-                if (r.Mismatched > 0) parts.Add($"{r.Mismatched:N0} different");
-                if (r.Missing > 0) parts.Add($"{r.Missing:N0} missing");
-                if (r.Extra > 0) parts.Add($"{r.Extra:N0} extra");
+                parts.Add(Loc.F("Str_Hash_SumMatch", "{0:N0} match", r.Matched));
+                if (r.Mismatched > 0) parts.Add(Loc.F("Str_Hash_SumDifferent", "{0:N0} different", r.Mismatched));
+                if (r.Missing > 0) parts.Add(Loc.F("Str_Hash_SumMissing", "{0:N0} missing", r.Missing));
+                if (r.Extra > 0) parts.Add(Loc.F("Str_Hash_SumExtra", "{0:N0} extra", r.Extra));
             }
-            if (r.Unreadable > 0) parts.Add($"{r.Unreadable:N0} unreadable");
-            if (r.Cancelled > 0) parts.Add($"{r.Cancelled:N0} cancelled");
+            if (r.Unreadable > 0) parts.Add(Loc.F("Str_Hash_SumUnreadable", "{0:N0} unreadable", r.Unreadable));
+            if (r.Cancelled > 0) parts.Add(Loc.F("Str_Hash_SumCancelled", "{0:N0} cancelled", r.Cancelled));
             return string.Join(" · ", parts) + $" · {r.Elapsed.TotalSeconds:0.#}s";
         }
 

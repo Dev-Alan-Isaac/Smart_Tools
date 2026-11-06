@@ -42,7 +42,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string exe = FfprobeExe ?? throw new InvalidOperationException("ffprobe wasn't found.");
             var run = RunTool(exe, new[] { "-v", "error", "-show_entries", "format=duration:stream=codec_type,codec_name,duration", "-of", "json", path }, TimeSpan.FromSeconds(60), token);
-            if (run.TimedOut) return new MediaProbe(false, "reading the file took too long", 0, Array.Empty<MediaStream>());
+            if (run.TimedOut) return new MediaProbe(false, Loc.T("Str_Validate_ProbTooLong", "reading the file took too long"), 0, Array.Empty<MediaStream>());
             var parsed = ParseProbeJson(run.Output);
             if (run.ExitCode != 0 || parsed == null)
                 return new MediaProbe(false, FriendlyMediaError(run.Errors), 0, Array.Empty<MediaStream>());
@@ -84,13 +84,13 @@ namespace Smart_Tools.WPF.Controllers
         {
             string all = string.Join("\n", errors);
             if (all.Contains("moov atom not found", StringComparison.OrdinalIgnoreCase))
-                return "the video's index (moov) is missing - the recording was probably cut off before it finished";
+                return Loc.T("Str_Validate_ProbMoov", "the video's index (moov) is missing - the recording was probably cut off before it finished");
             if (all.Contains("Invalid data found when processing input", StringComparison.OrdinalIgnoreCase) && errors.Count <= 2)
-                return "it can't be read as media - it's damaged or not really this kind of file";
+                return Loc.T("Str_Validate_ProbNotMedia", "it can't be read as media - it's damaged or not really this kind of file");
             if (all.Contains("partial file", StringComparison.OrdinalIgnoreCase) || all.Contains("Truncat", StringComparison.OrdinalIgnoreCase) || all.Contains("End of file", StringComparison.OrdinalIgnoreCase))
-                return "the file is cut short";
+                return Loc.T("Str_Validate_ProbMediaCut", "the file is cut short");
             string? first = errors.Select(CleanLogLine).FirstOrDefault(l => l.Length > 0);
-            return first ?? "ffmpeg couldn't read it";
+            return first ?? Loc.T("Str_Validate_ProbFfmpegRead", "ffmpeg couldn't read it");
         }
 
         /// <summary>"[h264 @ 0x55..] [error] cabac decode failed" -> "cabac decode failed".</summary>
@@ -215,37 +215,37 @@ namespace Smart_Tools.WPF.Controllers
         //  The checks
         // =================================================================
 
-        private static string NoFfmpegNote => $"stream checks need ffmpeg in {FfmpegFolder} (not found)";
+        private static string NoFfmpegNote => Loc.F("Str_Validate_NoteNoFfmpeg", "stream checks need ffmpeg in {0} (not found)", FfmpegFolder);
 
         private static string CheckVideo(string path, ValidationOptions o, Findings f, CancellationToken token)
         {
             bool deep = o.VideoCheckStream || o.VideoCheckAudioStream || o.VideoCheckDuration || o.VideoCheckFrames;
-            if (!deep) return "Container header OK";
+            if (!deep) return Loc.T("Str_Validate_DetContainerOk", "Container header OK");
             if (!HasFfmpeg)
             {
                 f.Notes.Add(NoFfmpegNote);
-                return "Container header OK";
+                return Loc.T("Str_Validate_DetContainerOk", "Container header OK");
             }
 
             var probe = Probe(path, token);
             if (!probe.Ok)
             {
-                f.Problems.Add(probe.Error ?? "it can't be read as video");
+                f.Problems.Add(probe.Error ?? Loc.T("Str_Validate_ProbNotVideo", "it can't be read as video"));
                 return "";
             }
             var video = probe.Video;
             var audio = probe.Audio;
             if (video == null)
             {
-                f.Warnings.Add(audio != null ? "it has no video track - it's audio only" : "it has no video or audio tracks");
+                f.Warnings.Add(audio != null ? Loc.T("Str_Validate_WarnAudioOnly", "it has no video track - it's audio only") : Loc.T("Str_Validate_WarnNoTracks", "it has no video or audio tracks"));
                 return "";
             }
 
             if (o.VideoCheckDuration)
             {
-                if (probe.Duration <= 0) f.Warnings.Add("its length is unknown - the index may be damaged, so seeking may not work");
+                if (probe.Duration <= 0) f.Warnings.Add(Loc.T("Str_Validate_WarnLenIndex", "its length is unknown - the index may be damaged, so seeking may not work"));
                 else if (video.Duration > 0 && Math.Abs(video.Duration - probe.Duration) > Math.Max(2, probe.Duration * 0.05))
-                    f.Warnings.Add($"the video track is {Clock(video.Duration)} long but the file says {Clock(probe.Duration)} - part may be missing");
+                    f.Warnings.Add(Loc.F("Str_Validate_WarnTrackLen", "the video track is {0} long but the file says {1} - part may be missing", Clock(video.Duration), Clock(probe.Duration)));
             }
 
             // Stream check = a quick decode; frame check = decode at the chosen depth.
@@ -256,14 +256,14 @@ namespace Smart_Tools.WPF.Controllers
                 if (o.VideoCheckStream || o.VideoCheckFrames) maps.Add("0:v:0");
                 if (o.VideoCheckAudioStream && audio != null) maps.Add("0:a:0");
                 var d = Decode(path, maps, DecodePlan(depth, probe.Duration), probe.Duration, false, token);
-                ReportDecode(d, f, maps.Count > 1 ? "video or audio" : "video");
+                ReportDecode(d, f, maps.Count > 1 ? Loc.T("Str_Validate_WhatVideoAudio", "video or audio") : Loc.T("Str_Validate_WhatVideo", "video"));
                 string how = depth switch
                 {
-                    VideoScanDepth.Full => "every frame decoded",
-                    VideoScanDepth.Standard => "samples decoded through the file",
-                    _ => "start and end decoded",
+                    VideoScanDepth.Full => Loc.T("Str_Validate_DetDepthFull", "every frame decoded"),
+                    VideoScanDepth.Standard => Loc.T("Str_Validate_DetDepthStandard", "samples decoded through the file"),
+                    _ => Loc.T("Str_Validate_DetDepthQuick", "start and end decoded"),
                 };
-                if (audio == null && o.VideoCheckAudioStream) f.Notes.Add("no audio track");
+                if (audio == null && o.VideoCheckAudioStream) f.Notes.Add(Loc.T("Str_Validate_NoteNoAudio", "no audio track"));
                 return $"{video.Codec.ToUpperInvariant()}{(audio != null ? " + " + audio.Codec.ToUpperInvariant() : "")}, {Clock(probe.Duration)}, {how}";
             }
             return $"{video.Codec.ToUpperInvariant()}{(audio != null ? " + " + audio.Codec.ToUpperInvariant() : "")}, {Clock(probe.Duration)}";
@@ -272,34 +272,34 @@ namespace Smart_Tools.WPF.Controllers
         private static string CheckAudioStreams(string path, ValidationOptions o, Findings f, CancellationToken token)
         {
             bool deep = o.AudioFullDecode || o.AudioCheckDuration || o.AudioFlagSilent || o.AudioCheckTruncated;
-            if (!deep) return "Header OK";
+            if (!deep) return Loc.T("Str_Validate_DetHeaderOk", "Header OK");
             if (!HasFfmpeg)
             {
                 f.Notes.Add(NoFfmpegNote);
-                return "Header OK";
+                return Loc.T("Str_Validate_DetHeaderOk", "Header OK");
             }
 
             var probe = Probe(path, token);
             if (!probe.Ok)
             {
-                f.Problems.Add(probe.Error ?? "it can't be read as audio");
+                f.Problems.Add(probe.Error ?? Loc.T("Str_Validate_ProbNotAudio", "it can't be read as audio"));
                 return "";
             }
             var audio = probe.Audio;
             if (audio == null)
             {
-                f.Problems.Add("it has no audio track");
+                f.Problems.Add(Loc.T("Str_Validate_ProbNoAudio", "it has no audio track"));
                 return "";
             }
             if (o.AudioCheckDuration && probe.Duration <= 0)
-                f.Warnings.Add("its length is unknown - players may not be able to seek");
+                f.Warnings.Add(Loc.T("Str_Validate_WarnLenSeek", "its length is unknown - players may not be able to seek"));
 
             if (o.AudioFullDecode || o.AudioFlagSilent || o.AudioCheckTruncated)
             {
                 var d = Decode(path, new[] { "0:a:0" }, null, probe.Duration, o.AudioFlagSilent, token);
-                ReportDecode(d, f, "audio");
+                ReportDecode(d, f, Loc.T("Str_Validate_WhatAudio", "audio"));
                 if (o.AudioFlagSilent && d.MaxVolumeDb is double db && db <= -80)
-                    f.Warnings.Add("it's silent (no sound above -80 dB)");
+                    f.Warnings.Add(Loc.T("Str_Validate_WarnSilent", "it's silent (no sound above -80 dB)"));
                 return $"{audio.Codec.ToUpperInvariant()}, {Clock(probe.Duration)}, fully decoded";
             }
             return $"{audio.Codec.ToUpperInvariant()}, {Clock(probe.Duration)}";
@@ -308,16 +308,16 @@ namespace Smart_Tools.WPF.Controllers
         private static void ReportDecode(DecodeResult d, Findings f, string what)
         {
             if (d.TimedOut)
-                f.CantCheck.Add($"decoding the {what} took too long and was stopped");
+                f.CantCheck.Add(Loc.F("Str_Validate_CantDecodeSlow", "decoding the {0} took too long and was stopped", what));
             else if (d.Failed)
-                f.Problems.Add(d.FailReason ?? $"the {what} can't be decoded");
+                f.Problems.Add(d.FailReason ?? Loc.F("Str_Validate_ProbCantDecode", "the {0} can't be decoded", what));
             else if (d.ErrorCount > 0)
-                f.Problems.Add($"{d.ErrorCount:N0} decoding error{(d.ErrorCount == 1 ? "" : "s")} - damaged {what} data (first: {d.FirstError})");
+                f.Problems.Add(Loc.N(d.ErrorCount, "Str_Validate_ProbDecodeErrOne", "{0:N0} decoding error - damaged {1} data (first: {2})", "Str_Validate_ProbDecodeErrMany", "{0:N0} decoding errors - damaged {1} data (first: {2})", d.ErrorCount, what, d.FirstError));
         }
 
         private static string Clock(double seconds)
         {
-            if (seconds <= 0) return "length unknown";
+            if (seconds <= 0) return Loc.T("Str_Validate_LengthUnknown", "length unknown");
             var t = TimeSpan.FromSeconds(seconds);
             return t.TotalHours >= 1 ? $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}" : $"{t.Minutes}:{t.Seconds:00}";
         }

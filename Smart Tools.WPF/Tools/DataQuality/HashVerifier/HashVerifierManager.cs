@@ -374,7 +374,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!Enum.IsDefined(s.Mode)) s.Mode = HashVerifyMode.Compute;
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new HashVerifierSettings();
             }

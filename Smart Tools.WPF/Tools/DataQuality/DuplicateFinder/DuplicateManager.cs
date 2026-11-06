@@ -679,7 +679,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         if (!File.Exists(item.FullPath))
                         {
-                            result.Failed.Add((item, "The file no longer exists."));
+                            result.Failed.Add((item, Loc.T("Str_DataQuality_MsgFileGone", "The file no longer exists.")));
                             continue;
                         }
                         string target = UniquePath(Path.Combine(destination, item.Name));
@@ -745,7 +745,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
                 return new DriveInfo(root).DriveType == DriveType.Fixed;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
                 return false;
             }
@@ -798,7 +798,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!File.Exists(file)) return new DuplicateFinderSettings();
                 return JsonSerializer.Deserialize<DuplicateFinderSettings>(File.ReadAllText(file), JsonOptions) ?? new DuplicateFinderSettings();
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new DuplicateFinderSettings();
             }

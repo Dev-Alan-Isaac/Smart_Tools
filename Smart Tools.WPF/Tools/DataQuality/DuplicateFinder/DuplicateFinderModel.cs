@@ -149,22 +149,22 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Every copy is selected - acting would leave none behind.</summary>
         public bool AllSelected => Files.Count > 0 && Files.All(f => f.IsSelected);
 
-        public string Title => $"Group {Number}";
+        public string Title => Loc.F("Str_DataQuality_MsgGroupN", "Group {0}", Number);
 
         public string Subtitle
         {
             get
             {
                 string sizes = Files.Select(f => f.SizeBytes).Distinct().Count() == 1
-                    ? $"{DuplicateText.FormatBytes(Files[0].SizeBytes)} each"
-                    : "different sizes";
-                return $"{FileCount} files · {sizes}";
+                    ? Loc.F("Str_Dup_MsgSizeEach", "{0} each", DuplicateText.FormatBytes(Files[0].SizeBytes))
+                    : Loc.T("Str_Dup_MsgSizesDiffer", "different sizes");
+                return Loc.F("Str_Dup_MsgGroupSubtitle", "{0} files · {1}", FileCount, sizes);
             }
         }
 
         public string SelectionText => SelectedCount == 0
-            ? "nothing selected"
-            : $"{SelectedCount} selected · {DuplicateText.FormatBytes(SelectedBytes)}";
+            ? Loc.T("Str_DataQuality_MsgNothingSelected", "nothing selected")
+            : Loc.F("Str_DataQuality_MsgSelectedBytes", "{0} selected · {1}", SelectedCount, DuplicateText.FormatBytes(SelectedBytes));
 
         public string ShortHash => Hash.Length > 12 ? Hash[..12] : Hash;
 

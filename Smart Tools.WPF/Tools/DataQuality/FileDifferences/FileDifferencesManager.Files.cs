@@ -299,7 +299,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!Enum.IsDefined(settings.ViewMode)) settings.ViewMode = FileDiffViewMode.SideBySide;
                 return settings;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new FileDiffSettings();
             }

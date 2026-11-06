@@ -224,18 +224,18 @@ namespace Smart_Tools.WPF.Views
 
             TxtMethodHint.Text = kind switch
             {
-                MediaKind.Video => "Samples 5 frames from each video and compares them. Finds the same clip re-encoded, resized or trimmed a little.",
-                MediaKind.Audio => "Compares the sound of the first minute, section by section. Finds the same recording in another format or bitrate.",
+                MediaKind.Video => Loc.T("Str_Similar_HintVideo", "Samples 5 frames from each video and compares them. Finds the same clip re-encoded, resized or trimmed a little."),
+                MediaKind.Audio => Loc.T("Str_Similar_HintAudio", "Compares the sound of the first minute, section by section. Finds the same recording in another format or bitrate."),
                 _ => SelectedMethod switch
                 {
-                    SimilarDetectionMethod.DHash => "Fastest. Good for resized or re-saved copies.",
-                    SimilarDetectionMethod.WHash => "Most tolerant of small edits and colour changes.",
-                    _ => "Best all-rounder: survives resizing, recompression and small edits.",
+                    SimilarDetectionMethod.DHash => Loc.T("Str_Similar_HintDHash", "Fastest. Good for resized or re-saved copies."),
+                    SimilarDetectionMethod.WHash => Loc.T("Str_Similar_HintWHash", "Most tolerant of small edits and colour changes."),
+                    _ => Loc.T("Str_Similar_HintPHash", "Best all-rounder: survives resizing, recompression and small edits."),
                 },
             };
 
             bool needsFfmpeg = kind != MediaKind.Image && !SimilarManager.FfmpegAvailable;
-            TxtFfmpegWarning.Text = $"Needs ffmpeg.exe and ffprobe.exe in {SimilarManager.FfmpegFolder} - they weren't found.";
+            TxtFfmpegWarning.Text = Loc.F("Str_Similar_MsgNeedsFfmpeg", "Needs ffmpeg.exe and ffprobe.exe in {0} - they weren't found.", SimilarManager.FfmpegFolder);
             UiMotion.FadeVisibility(FfmpegWarning, needsFfmpeg);
         }
 
@@ -253,10 +253,10 @@ namespace Smart_Tools.WPF.Views
             if (TxtThresholdValue == null || TxtThresholdHint == null) return;
             int value = (int)Math.Round(rawValue);
             TxtThresholdValue.Text = $"{value}%";
-            TxtThresholdHint.Text = value >= 95 ? "Only near-identical copies (resized or re-saved)."
-                : value >= 85 ? "Copies and lightly edited versions. A good default."
-                : value >= 70 ? "Also finds crops, filters and bigger edits - expect some look-alikes."
-                : "Very loose - finds things that merely look alike. Review before deleting.";
+            TxtThresholdHint.Text = value >= 95 ? Loc.T("Str_Similar_Thr95", "Only near-identical copies (resized or re-saved).")
+                : value >= 85 ? Loc.T("Str_Similar_Thr85", "Copies and lightly edited versions. A good default.")
+                : value >= 70 ? Loc.T("Str_Similar_Thr70", "Also finds crops, filters and bigger edits - expect some look-alikes.")
+                : Loc.T("Str_Similar_ThrLow", "Very loose - finds things that merely look alike. Review before deleting.");
         }
 
         // ---------------- Settings ----------------
@@ -380,10 +380,10 @@ namespace Smart_Tools.WPF.Views
 
                 try
                 {
-                    ToastNotificationManager.ShowToast("Similar Files Scan Complete",
+                    ToastNotificationManager.ShowToast(Loc.T("Str_Similar_MsgToastTitle", "Similar Files Scan Complete"),
                         result.Groups.Count > 0
-                            ? $"{result.FileCount} files in {result.Groups.Count} groups · {SimilarText.FormatBytes(result.ReclaimableBytes)} reclaimable."
-                            : "No similar files found.");
+                            ? Loc.F("Str_Dup_MsgToastFound", "{0} files in {1} groups · {2} reclaimable.", result.FileCount, result.Groups.Count, SimilarText.FormatBytes(result.ReclaimableBytes))
+                            : Loc.T("Str_Similar_MsgNoneFound", "No similar files found."));
                 }
                 catch (Exception ex)
                 {
@@ -392,7 +392,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (OperationCanceledException)
             {
-                TxtProgress.Text = "Scan cancelled.";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgScanCancelled", "Scan cancelled.");
             }
             catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException)
             {
@@ -401,7 +401,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "Scan failed.";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgScanFailed", "Scan failed.");
                 MessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -440,16 +440,16 @@ namespace Smart_Tools.WPF.Views
 
             string noun = SimilarManager.KindOf(_lastOptions?.Method ?? SimilarDetectionMethod.PHash) switch
             {
-                MediaKind.Video => "videos",
-                MediaKind.Audio => "audio files",
-                _ => "images",
+                MediaKind.Video => Loc.T("Str_Similar_NounVideos", "videos"),
+                MediaKind.Audio => Loc.T("Str_Similar_NounAudio", "audio files"),
+                _ => Loc.T("Str_Similar_NounImages", "images"),
             };
             string phase = p.Phase switch
             {
-                SimilarScanPhase.Listing => $"Finding {noun} · {p.Total:N0} so far",
-                SimilarScanPhase.Fingerprinting => $"Fingerprinting {p.Processed:N0} of {p.Total:N0} {noun}",
-                SimilarScanPhase.Grouping => "Grouping look-alikes...",
-                _ => "Finishing...",
+                SimilarScanPhase.Listing => Loc.F("Str_Similar_PhaseListing", "Finding {0} · {1:N0} so far", noun, p.Total),
+                SimilarScanPhase.Fingerprinting => Loc.F("Str_Similar_PhaseFingerprinting", "Fingerprinting {0:N0} of {1:N0} {2}", p.Processed, p.Total, noun),
+                SimilarScanPhase.Grouping => Loc.T("Str_Similar_PhaseGrouping", "Grouping look-alikes..."),
+                _ => Loc.T("Str_Similar_PhaseFinishing", "Finishing..."),
             };
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentPath) ? phase : $"{phase} · {Path.GetFileName(p.CurrentPath)}";
         }
@@ -476,7 +476,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressScan.IsIndeterminate = true;
                 ProgressScan.Value = 0;
                 TxtProgressPercent.Text = "";
-                TxtProgress.Text = "Finding files...";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgFindingFiles", "Finding files...");
             }
             else
             {
@@ -489,13 +489,13 @@ namespace Smart_Tools.WPF.Views
         {
             ProgressScan.Value = 100;
             var notes = new List<string>();
-            if (result.UnreadableFiles > 0) notes.Add($"{result.UnreadableFiles:N0} couldn't be read");
-            if (result.InaccessibleFolders > 0) notes.Add($"{result.InaccessibleFolders:N0} folders unreadable");
-            if (result.SkippedLinks > 0) notes.Add($"{result.SkippedLinks:N0} links not followed");
+            if (result.UnreadableFiles > 0) notes.Add(Loc.F("Str_DataQuality_MsgFilesCouldntRead", "{0:N0} couldn't be read", result.UnreadableFiles));
+            if (result.InaccessibleFolders > 0) notes.Add(Loc.F("Str_DataQuality_MsgFoldersUnreadable", "{0:N0} folders unreadable", result.InaccessibleFolders));
+            if (result.SkippedLinks > 0) notes.Add(Loc.F("Str_DataQuality_MsgLinksSkipped", "{0:N0} links not followed", result.SkippedLinks));
             string extra = notes.Count > 0 ? " · " + string.Join(" · ", notes) : "";
-            TxtProgress.Text = $"Checked {result.FilesScanned:N0} files in {result.Elapsed.TotalSeconds:0.0} s{extra}";
+            TxtProgress.Text = Loc.F("Str_DataQuality_MsgChecked", "Checked {0:N0} files in {1:0.0} s{2}", result.FilesScanned, result.Elapsed.TotalSeconds, extra);
 
-            ColDetails.Header = result.Kind == MediaKind.Image ? "Resolution" : "Length";
+            ColDetails.Header = result.Kind == MediaKind.Image ? Loc.T("Str_Similar_ColResolution", "Resolution") : Loc.T("Str_Similar_ColLength", "Length");
             ColDetails.Binding = new Binding(result.Kind == MediaKind.Image ? nameof(SimilarFileItem.Resolution) : nameof(SimilarFileItem.Duration));
         }
 
@@ -565,7 +565,7 @@ namespace Smart_Tools.WPF.Views
         {
             bool empty = _rows.Count == 0;
             if (empty && _lastOptions != null && !_isScanning)
-                EmptyStatePanel.Description = "Nothing similar found. Try a lower threshold, another method or more folders.";
+                EmptyStatePanel.Description = Loc.T("Str_Similar_MsgNoneTry", "Nothing similar found. Try a lower threshold, another method or more folders.");
             else if (empty)
                 EmptyStatePanel.SetResourceReference(Controls.EmptyStateCard.DescriptionProperty, "Str_FindSimilar_ResultsHint");
 
@@ -589,10 +589,10 @@ namespace Smart_Tools.WPF.Views
                 };
                 menu.Items.Add(item);
             }
-            Add("Keep the best quality", PackIconKind.CheckDecagramOutline, SimilarKeepRule.BestQuality);
-            Add("Keep the largest file", PackIconKind.ArrowExpandAll, SimilarKeepRule.LargestFile);
-            Add("Keep the oldest", PackIconKind.SortClockAscendingOutline, SimilarKeepRule.Oldest);
-            Add("Keep the newest", PackIconKind.SortClockDescendingOutline, SimilarKeepRule.Newest);
+            Add(Loc.T("Str_Similar_KeepBest", "Keep the best quality"), PackIconKind.CheckDecagramOutline, SimilarKeepRule.BestQuality);
+            Add(Loc.T("Str_Similar_KeepLargest", "Keep the largest file"), PackIconKind.ArrowExpandAll, SimilarKeepRule.LargestFile);
+            Add(Loc.T("Str_Similar_KeepOldest", "Keep the oldest"), PackIconKind.SortClockAscendingOutline, SimilarKeepRule.Oldest);
+            Add(Loc.T("Str_Similar_KeepNewest", "Keep the newest"), PackIconKind.SortClockDescendingOutline, SimilarKeepRule.Newest);
             menu.IsOpen = true;
         }
 
@@ -695,16 +695,16 @@ namespace Smart_Tools.WPF.Views
                 return mi;
             }
 
-            Item("Side by side", PackIconKind.CompareHorizontal, (_, _) => { if (_contextItem?.GroupInfo is { } g) OpenCompare(g); });
-            Item("Review this group", PackIconKind.ViewCarouselOutline, (_, _) => { if (_contextItem?.GroupInfo is { } g) OpenReview(g); });
-            Item("Keep this copy", PackIconKind.StarOutline, (_, _) => _contextItem?.GroupInfo?.SetKeep(_contextItem));
-            Item("Delete the other copies in this group", PackIconKind.DeleteSweepOutline, async (_, _) =>
+            Item(Loc.T("Str_Similar_MenuSideBySide", "Side by side"), PackIconKind.CompareHorizontal, (_, _) => { if (_contextItem?.GroupInfo is { } g) OpenCompare(g); });
+            Item(Loc.T("Str_Similar_MenuReview", "Review this group"), PackIconKind.ViewCarouselOutline, (_, _) => { if (_contextItem?.GroupInfo is { } g) OpenReview(g); });
+            Item(Loc.T("Str_DataQuality_MenuKeepThis", "Keep this copy"), PackIconKind.StarOutline, (_, _) => _contextItem?.GroupInfo?.SetKeep(_contextItem));
+            Item(Loc.T("Str_Similar_MenuDeleteOthers", "Delete the other copies in this group"), PackIconKind.DeleteSweepOutline, async (_, _) =>
             {
                 if (_contextItem?.GroupInfo is { } g) await DeleteOthersInGroupAsync(g);
             });
             menu.Items.Add(new Separator());
-            Item("Show in folder", PackIconKind.FolderOpenOutline, (_, _) => { if (_contextItem != null) ShowInFolder(_contextItem.FullPath); });
-            Item("Copy full path", PackIconKind.ContentCopy, (_, _) =>
+            Item(Loc.T("Str_DataQuality_MenuShowInFolder", "Show in folder"), PackIconKind.FolderOpenOutline, (_, _) => { if (_contextItem != null) ShowInFolder(_contextItem.FullPath); });
+            Item(Loc.T("Str_DataQuality_MenuCopyPath", "Copy full path"), PackIconKind.ContentCopy, (_, _) =>
             {
                 if (_contextItem == null) return;
                 try
@@ -797,7 +797,7 @@ namespace Smart_Tools.WPF.Views
             TxtGroupPosition.Text = index >= 0 ? $"Group {index + 1} of {_groups.Count}" : _reviewGroup.Title;
             TxtKeepSidebarGroupLabel.Text = $"{_reviewGroup.Subtitle} · {_reviewGroup.SelectionText}";
             BtnPrevGroup.IsEnabled = BtnNextGroup.IsEnabled = _groups.Count > 1;
-            TxtNextReviewLabel.Text = index >= 0 && index == _groups.Count - 1 ? "Done" : "Next group";
+            TxtNextReviewLabel.Text = index >= 0 && index == _groups.Count - 1 ? Loc.T("Str_DataQuality_MsgDone", "Done") : Loc.T("Str_DataQuality_MsgNextGroup", "Next group");
         }
 
         private void CloseReview()
@@ -950,20 +950,20 @@ namespace Smart_Tools.WPF.Views
 
             string what = $"{selected.Count:N0} file(s) ({SimilarText.FormatBytes(bytes)})";
             string message = recycle
-                ? $"Move {what} to the Recycle Bin?"
+                ? Loc.F("Str_DataQuality_MsgAskMoveToBin", "Move {0} to the Recycle Bin?", what)
                 : ChkRecycleBin.IsChecked == true
-                    ? $"Permanently delete {what}?\n\n{string.Join(", ", rootsWithoutBin)} has no Recycle Bin, so this can't be undone."
-                    : $"Permanently delete {what}?\n\nThis can't be undone.";
+                    ? Loc.F("Str_DataQuality_MsgAskDeleteNoBin", "Permanently delete {0}?\n\n{1} has no Recycle Bin, so this can't be undone.", what, string.Join(", ", rootsWithoutBin))
+                    : Loc.F("Str_DataQuality_MsgAskDelete", "Permanently delete {0}?\n\nThis can't be undone.", what);
             if (MessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
                     recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
-            await RunActionAsync(selected, recycle ? "Moving to the Recycle Bin..." : "Deleting...",
+            await RunActionAsync(selected, recycle ? Loc.T("Str_DataQuality_MsgMovingToBin", "Moving to the Recycle Bin...") : Loc.T("Str_DataQuality_MsgDeleting", "Deleting..."),
                 () => _manager.DeleteAsync(selected, recycle),
                 r => recycle
-                    ? $"Moved {r.Succeeded.Count:N0} file(s) to the Recycle Bin · {SimilarText.FormatBytes(r.Bytes)} freed"
-                    : $"Deleted {r.Succeeded.Count:N0} file(s) · {SimilarText.FormatBytes(r.Bytes)} freed",
-                "Delete Complete");
+                    ? Loc.F("Str_DataQuality_MsgMovedToBin", "Moved {0:N0} file(s) to the Recycle Bin · {1} freed", r.Succeeded.Count, SimilarText.FormatBytes(r.Bytes))
+                    : Loc.F("Str_DataQuality_MsgDeleted", "Deleted {0:N0} file(s) · {1} freed", r.Succeeded.Count, SimilarText.FormatBytes(r.Bytes)),
+                Loc.T("Str_DataQuality_MsgDeleteComplete", "Delete Complete"));
         }
 
         private async void BtnMoveSelected_Click(object sender, RoutedEventArgs e)
@@ -972,7 +972,7 @@ namespace Smart_Tools.WPF.Views
             if (selected.Count == 0 || _isBusy) return;
             if (!ConfirmNoGroupEmptied("moving them")) return;
 
-            var dialog = new OpenFolderDialog { Title = $"Choose where to move {selected.Count} selected file(s)" };
+            var dialog = new OpenFolderDialog { Title = Loc.F("Str_DataQuality_MsgChooseMoveFolder", "Choose where to move {0} selected file(s)", selected.Count) };
             if (dialog.ShowDialog() != true) return;
             string destination = dialog.FolderName;
 
@@ -981,10 +981,10 @@ namespace Smart_Tools.WPF.Views
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
-            await RunActionAsync(selected, "Moving...",
+            await RunActionAsync(selected, Loc.T("Str_DataQuality_MsgMoving", "Moving..."),
                 () => _manager.MoveAsync(selected, destination),
-                r => $"Moved {r.Succeeded.Count:N0} file(s) · {SimilarText.FormatBytes(r.Bytes)} to {destination}",
-                "Move Complete");
+                r => Loc.F("Str_DataQuality_MsgMoved", "Moved {0:N0} file(s) · {1} to {2}", r.Succeeded.Count, SimilarText.FormatBytes(r.Bytes), destination),
+                Loc.T("Str_DataQuality_MsgMoveComplete", "Move Complete"));
         }
 
         private async Task RunActionAsync(List<SimilarFileItem> targets, string busyText, Func<Task<SimilarManager.ActionResult>> action,

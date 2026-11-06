@@ -177,7 +177,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             if (HeaderMatches(path, header)) return null;
             string? kind = Sniff(header);
-            return kind == null ? null : $"it's really a {kind} file with a {Path.GetExtension(path).ToLowerInvariant()} name";
+            return kind == null ? null : Loc.F("Str_Validate_ReallyA", "it's really a {0} file with a {1} name", kind, Path.GetExtension(path).ToLowerInvariant());
         }
 
         // =================================================================
@@ -273,7 +273,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (o.SkipFilesLargerThanBytes > 0 && f.Length > o.SkipFilesLargerThanBytes)
                 {
                     row.Status = ValidationStatus.Skipped;
-                    row.Details = $"Larger than the {ValidateText.FormatBytes(o.SkipFilesLargerThanBytes)} limit.";
+                    row.Details = Loc.F("Str_Validate_DetLarger", "Larger than the {0} limit.", ValidateText.FormatBytes(o.SkipFilesLargerThanBytes));
                 }
                 result.Items.Add(row);
             }
@@ -316,23 +316,23 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>"Checked 1,204 in 0:42 · 3 corrupted · 12 warnings".</summary>
         public static string DescribeRun(ValidationRunResult r)
         {
-            var parts = new List<string> { $"Checked {r.Checked:N0} file{(r.Checked == 1 ? "" : "s")} in {ValidateText.FormatDuration(r.Elapsed)}" };
-            if (r.Corrupted > 0) parts.Add($"{r.Corrupted:N0} corrupted");
-            if (r.Warning > 0) parts.Add($"{r.Warning:N0} with warnings");
-            if (r.Unknown > 0) parts.Add($"{r.Unknown:N0} couldn't be checked");
-            if (r.Cancelled > 0) parts.Add($"{r.Cancelled:N0} not checked (cancelled)");
-            if (r.Corrupted + r.Warning + r.Unknown == 0 && r.Checked > 0) parts.Add("no problems found");
+            var parts = new List<string> { Loc.N(r.Checked, "Str_Validate_SumCheckedOne", "Checked {0:N0} file in {1}", "Str_Validate_SumCheckedMany", "Checked {0:N0} files in {1}", r.Checked, ValidateText.FormatDuration(r.Elapsed)) };
+            if (r.Corrupted > 0) parts.Add(Loc.F("Str_Validate_SumCorrupted", "{0:N0} corrupted", r.Corrupted));
+            if (r.Warning > 0) parts.Add(Loc.F("Str_Validate_SumWarnings", "{0:N0} with warnings", r.Warning));
+            if (r.Unknown > 0) parts.Add(Loc.F("Str_Validate_SumUnknown", "{0:N0} couldn't be checked", r.Unknown));
+            if (r.Cancelled > 0) parts.Add(Loc.F("Str_Validate_SumCancelled", "{0:N0} not checked (cancelled)", r.Cancelled));
+            if (r.Corrupted + r.Warning + r.Unknown == 0 && r.Checked > 0) parts.Add(Loc.T("Str_Validate_SumNoProblems", "no problems found"));
             return string.Join(" · ", parts);
         }
 
         public static string TypeHint(ValidationType t) => t switch
         {
-            ValidationType.Video => "Only videos are listed. Needs ffmpeg for stream and frame checks.",
-            ValidationType.Image => "Only pictures are listed. Each one is fully decoded to find damage.",
-            ValidationType.Audio => "Only audio files are listed. Needs ffmpeg to decode them.",
-            ValidationType.Document => "Only documents are listed (PDF, Office, OpenDocument, RTF, text).",
-            ValidationType.Archive => "Only archives are listed. ZIP, GZIP and TAR are fully tested; 7Z and RAR by header.",
-            _ => "Every file is checked. Each kind uses its own settings - pick a kind to fine-tune them.",
+            ValidationType.Video => Loc.T("Str_Validate_HintVideo", "Only videos are listed. Needs ffmpeg for stream and frame checks."),
+            ValidationType.Image => Loc.T("Str_Validate_HintImage", "Only pictures are listed. Each one is fully decoded to find damage."),
+            ValidationType.Audio => Loc.T("Str_Validate_HintAudio", "Only audio files are listed. Needs ffmpeg to decode them."),
+            ValidationType.Document => Loc.T("Str_Validate_HintDoc", "Only documents are listed (PDF, Office, OpenDocument, RTF, text)."),
+            ValidationType.Archive => Loc.T("Str_Validate_HintArchive", "Only archives are listed. ZIP, GZIP and TAR are fully tested; 7Z and RAR by header."),
+            _ => Loc.T("Str_Validate_HintAll", "Every file is checked. Each kind uses its own settings - pick a kind to fine-tune them."),
         };
 
         // =================================================================

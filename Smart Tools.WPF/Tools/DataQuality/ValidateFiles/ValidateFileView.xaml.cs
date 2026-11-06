@@ -244,7 +244,7 @@ namespace Smart_Tools.WPF.Views
             if (_sources.Any(s => s.IsFolder))
             {
                 ProgressValidation.IsIndeterminate = true;
-                TxtProgress.Text = "Reading folders...";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgReadingFolders", "Reading folders...");
             }
             try
             {
@@ -376,7 +376,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnBrowseQuarantine_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog { Title = "Move corrupted files to", Multiselect = false };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_Validate_MsgQuarantineTitle", "Move corrupted files to"), Multiselect = false };
             if (Directory.Exists(EffectiveQuarantineFolder)) dialog.InitialDirectory = EffectiveQuarantineFolder;
             if (dialog.ShowDialog() != true) return;
             _quarantineFolder = dialog.FolderName;
@@ -420,15 +420,15 @@ namespace Smart_Tools.WPF.Views
 
             long skip = ValidateManager.SkipBytes(SkipSizeValue, ComboTag(CmbSkipSizeUnit, SizeUnit.MB));
             TxtSkipHint.Text = skip > 0
-                ? $"Files over {ValidateText.FormatBytes(skip)} are listed as Skipped."
-                : "No size limit - every file is checked.";
+                ? Loc.F("Str_Validate_MsgSkipHint", "Files over {0} are listed as Skipped.", ValidateText.FormatBytes(skip))
+                : Loc.T("Str_Validate_MsgNoLimit", "No size limit - every file is checked.");
 
             UiMotion.FadeVisibility(PanelQuarantineFolder, ChkQuarantine.IsChecked == true);
             TxtQuarantineFolder.Text = EffectiveQuarantineFolder;
             TxtQuarantineFolder.ToolTip = EffectiveQuarantineFolder;
             BtnResetQuarantine.IsEnabled = !string.IsNullOrWhiteSpace(_quarantineFolder);
 
-            TxtReportHint.Text = $"Saved to {ValidateManager.ReportsFolder}";
+            TxtReportHint.Text = Loc.F("Str_Validate_MsgReportSavedTo", "Saved to {0}", ValidateManager.ReportsFolder);
             UiMotion.FadeVisibility(TxtReportHint, ChkGenerateReport.IsChecked == true);
         }
 
@@ -564,7 +564,7 @@ namespace Smart_Tools.WPF.Views
             TxtProgressPercent.Text = "";
             if (_rows.Count == 0 && _sources.Count == 0)
             {
-                TxtProgress.Text = "Add files or folders, then press Validate.";
+                TxtProgress.Text = Loc.T("Str_Validate_MsgAddThenValidate", "Add files or folders, then press Validate.");
                 return;
             }
 
@@ -616,9 +616,9 @@ namespace Smart_Tools.WPF.Views
         {
             bool empty = _view == null || _view.IsEmpty;
             EmptyStatePanel.Description =
-                _rows.Count > 0 ? "No problems to show - untick \"Only problems\" to see every file." :
-                _sources.Count > 0 ? $"None of the added files are {SelectedType.ToString().ToLowerInvariant()} files. Pick All to check everything." :
-                "Drop files or folders here (or on the left), then press Validate to find damaged, cut-off and unreadable files.";
+                _rows.Count > 0 ? Loc.T("Str_Validate_MsgNoProblems", "No problems to show - untick \"Only problems\" to see every file.") :
+                _sources.Count > 0 ? Loc.F("Str_Validate_MsgNoneOfType", "None of the added files are {0} files. Pick All to check everything.", SelectedType.ToString().ToLowerInvariant()) :
+                Loc.T("Str_Validate_MsgDropHere", "Drop files or folders here (or on the left), then press Validate to find damaged, cut-off and unreadable files.");
             UiMotion.FadeVisibility(EmptyStatePanel, empty);
             DataGridResults.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;   // hidden until there's something to list
         }
@@ -752,8 +752,8 @@ namespace Smart_Tools.WPF.Views
 
             var dialog = new SaveFileDialog
             {
-                Title = "Export validation report",
-                Filter = "CSV file (*.csv)|*.csv",
+                Title = Loc.T("Str_Validate_MsgExportTitle", "Export validation report"),
+                Filter = Loc.T("Str_DataQuality_MsgCsvFilter", "CSV file (*.csv)|*.csv"),
                 FileName = $"Validation report {DateTime.Now:yyyy-MM-dd HH-mm}.csv",
             };
             if (dialog.ShowDialog() != true) return;
@@ -761,7 +761,7 @@ namespace Smart_Tools.WPF.Views
             {
                 // What's on screen: respects "Only problems".
                 ValidateManager.SaveReport(_view?.Cast<FileValidationResult>().ToList() ?? _rows.ToList(), dialog.FileName);
-                ToastNotificationManager.ShowToast("Export Complete", "Report saved.");
+                ToastNotificationManager.ShowToast(Loc.T("Str_DataQuality_MsgExportComplete", "Export Complete"), Loc.T("Str_Validate_MsgReportSaved", "Report saved."));
             }
             catch (Exception ex)
             {
@@ -835,7 +835,7 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Cancelling - finishing the files being checked...";
+                TxtProgress.Text = Loc.T("Str_Validate_MsgCancelling", "Cancelling - finishing the files being checked...");
                 return;
             }
 
@@ -853,8 +853,8 @@ namespace Smart_Tools.WPF.Views
             {
                 InputCard.PopDropArea();
                 MessageBox.Show(_rows.Count == 0
-                        ? "Add some files or a folder first (left side, or drop them anywhere here)."
-                        : "Every listed file is over the size limit - raise or clear the limit in Options.",
+                        ? Loc.T("Str_Validate_MsgAddFirst", "Add some files or a folder first (left side, or drop them anywhere here).")
+                        : Loc.T("Str_Validate_MsgAllOverLimit", "Every listed file is over the size limit - raise or clear the limit in Options."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
@@ -880,10 +880,10 @@ namespace Smart_Tools.WPF.Views
 
                 try
                 {
-                    ToastNotificationManager.ShowToast("Validation Complete",
+                    ToastNotificationManager.ShowToast(Loc.T("Str_Validate_MsgToastTitle", "Validation Complete"),
                         result.Corrupted > 0
-                            ? $"Checked {result.Checked:N0} files - {result.Corrupted:N0} corrupted."
-                            : $"Checked {result.Checked:N0} files - no damaged files found.");
+                            ? Loc.F("Str_Validate_MsgToastBad", "Checked {0:N0} files - {1:N0} corrupted.", result.Checked, result.Corrupted)
+                            : Loc.F("Str_Validate_MsgToastGood", "Checked {0:N0} files - no damaged files found.", result.Checked));
                 }
                 catch (Exception ex)
                 {
@@ -913,7 +913,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetRunning(false);
-                TxtProgress.Text = "Validation stopped - something went wrong.";
+                TxtProgress.Text = Loc.T("Str_Validate_MsgStopped", "Validation stopped - something went wrong.");
                 MessageBox.Show(Loc.F("Str_MB_ValidationFailed", "Validation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -934,7 +934,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     return DriveHealthManager.GetMediaKindForPath(f) is DriveKind.Ssd or DriveKind.StorageClassMemory;
                 }
-                catch (Exception)
+                catch (Exception)   // a probe for a speed hint only: whatever the drive query throws, fall back to the safe setting
                 {
                     return false;
                 }
@@ -974,7 +974,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressValidation.IsIndeterminate = false;
                 ProgressValidation.Value = 0;
                 TxtProgressPercent.Text = "0%";
-                TxtProgress.Text = "Starting...";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgStarting", "Starting...");
                 TxtProgress.ToolTip = null;
             }
         }

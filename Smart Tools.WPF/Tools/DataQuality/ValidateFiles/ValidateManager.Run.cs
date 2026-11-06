@@ -196,7 +196,7 @@ namespace Smart_Tools.WPF.Controllers
                     catch (OperationCanceledException)
                     {
                         row.Status = ValidationStatus.Cancelled;
-                        row.Details = "Not checked - the scan was cancelled.";
+                        row.Details = Loc.T("Str_Validate_DetNotChecked", "Not checked - the scan was cancelled.");
                         return;
                     }
                     lock (gate) done++;
@@ -216,7 +216,7 @@ namespace Smart_Tools.WPF.Controllers
                     case ValidationStatus.Unknown: result.Unknown++; break;
                     default:
                         row.Status = ValidationStatus.Cancelled;
-                        if (row.Details.Length == 0) row.Details = "Not checked - the scan was cancelled.";
+                        if (row.Details.Length == 0) row.Details = Loc.T("Str_Validate_DetNotChecked", "Not checked - the scan was cancelled.");
                         result.Cancelled++;
                         break;
                 }
@@ -273,7 +273,7 @@ namespace Smart_Tools.WPF.Controllers
                         string dest = UniquePath(Path.Combine(folder, row.FileName), File.Exists);
                         File.Move(row.FullPath, dest);
                         row.QuarantinedTo = dest;
-                        row.Details = $"Moved to quarantine: {dest}. " + row.Details;
+                        row.Details = Loc.F("Str_Validate_DetQuarantined", "Moved to quarantine: {0}. ", dest) + row.Details;
                         row.IsSelected = false;
                         log.AppendLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss},{CsvEscape(row.FullPath)},{CsvEscape(dest)}");
                         result.Moved++;

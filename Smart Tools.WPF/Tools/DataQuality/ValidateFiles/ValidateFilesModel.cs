@@ -97,8 +97,8 @@ namespace Smart_Tools.WPF.Models
         }
 
         public string Subtitle => IsFolder
-            ? (IncludeSubfolders ? "Whole folder, with subfolders" : "This folder only")
-            : FilePaths.Count == 1 ? Path.GetFileName(FilePaths[0]) : $"{FilePaths.Count} files";
+            ? (IncludeSubfolders ? Loc.T("Str_Validate_SrcWholeFolder", "Whole folder, with subfolders") : Loc.T("Str_Validate_SrcThisFolder", "This folder only"))
+            : FilePaths.Count == 1 ? Path.GetFileName(FilePaths[0]) : Loc.F("Str_Validate_SrcNFiles", "{0} files", FilePaths.Count);
 
         public string ToolTip => IsFolder
             ? FolderPath
@@ -282,14 +282,14 @@ namespace Smart_Tools.WPF.Models
 
         public static string StatusLabel(ValidationStatus s) => s switch
         {
-            ValidationStatus.Checking => "Checking",
-            ValidationStatus.Valid => "Valid",
-            ValidationStatus.Warning => "Warning",
-            ValidationStatus.Corrupted => "Corrupted",
-            ValidationStatus.Unknown => "Couldn't check",
-            ValidationStatus.Skipped => "Skipped",
-            ValidationStatus.Cancelled => "Cancelled",
-            _ => "Waiting",
+            ValidationStatus.Checking => Loc.T("Str_Validate_StChecking", "Checking"),
+            ValidationStatus.Valid => Loc.T("Str_Validate_StValid", "Valid"),
+            ValidationStatus.Warning => Loc.T("Str_Validate_StWarning", "Warning"),
+            ValidationStatus.Corrupted => Loc.T("Str_Validate_StCorrupted", "Corrupted"),
+            ValidationStatus.Unknown => Loc.T("Str_Validate_StUnknown", "Couldn't check"),
+            ValidationStatus.Skipped => Loc.T("Str_Validate_StSkipped", "Skipped"),
+            ValidationStatus.Cancelled => Loc.T("Str_Validate_StCancelled", "Cancelled"),
+            _ => Loc.T("Str_Validate_StWaiting", "Waiting"),
         };
     }
 }

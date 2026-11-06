@@ -210,11 +210,11 @@ namespace Smart_Tools.WPF.Models
         public int SelectedCount => Items.Count(i => i.IsSelected);
         public bool AllSelected => Items.Count > 0 && Items.All(i => i.IsSelected);
 
-        public string Title => $"Group {Id}";
-        public string Subtitle => $"{ItemCount} files · {SimilarityPercent}% alike";
+        public string Title => Loc.F("Str_DataQuality_MsgGroupN", "Group {0}", Id);
+        public string Subtitle => Loc.F("Str_Similar_MsgGroupSubtitle", "{0} files · {1}% alike", ItemCount, SimilarityPercent);
         public string SelectionText => SelectedCount == 0
-            ? "nothing selected"
-            : $"{SelectedCount} selected · {SimilarText.FormatBytes(SelectedReclaimableBytes)}";
+            ? Loc.T("Str_DataQuality_MsgNothingSelected", "nothing selected")
+            : Loc.F("Str_DataQuality_MsgSelectedBytes", "{0} selected · {1}", SelectedCount, SimilarText.FormatBytes(SelectedReclaimableBytes));
 
         private bool _isExpanded = true;
 
