@@ -34,7 +34,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const double StackDetailsBelowWidth = 1250;
+        private const double StackDetailsBelowWidth = 1150;
         private static string DialogTitle => Loc.T("Str_Tool_metadata-extract_Name", "Metadata Extractor");
 
         private readonly BulkObservableCollection<MetadataFileItem> _files = new();
@@ -111,13 +111,14 @@ namespace Smart_Tools.WPF.Views
                 _detailsBelow = below;
                 Grid.SetColumn(DetailsCard, below ? 0 : 2);
                 Grid.SetRow(DetailsCard, below ? 2 : 0);
-                DetailsColumn.Width = new GridLength(below ? 0 : 430);
+                DetailsColumn.MinWidth = below ? 0 : 460;
+                DetailsColumn.Width = below ? new GridLength(0) : new GridLength(3, GridUnitType.Star);
                 DetailsGapColumn.Width = new GridLength(below ? 0 : 14);
                 DetailsGapRow.Height = new GridLength(below ? 14 : 0);
-                DetailsRow.Height = below ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+                DetailsRow.Height = below ? new GridLength(3, GridUnitType.Star) : new GridLength(0);   // stacked: the details get the larger share
             }
-            ColSummary.Visibility = width < 1000 ? Visibility.Collapsed : Visibility.Visible;
-            ColSize.Visibility = width < 900 ? Visibility.Collapsed : Visibility.Visible;
+            ColSummary.Visibility = width < 1500 ? Visibility.Collapsed : Visibility.Visible;
+            ColSize.Visibility = width < 1250 ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
