@@ -108,7 +108,7 @@ namespace Smart_Tools.WPF.Models
         public FileSearchMatchKind Kind { get; init; }
 
         public string LineLabel => LineNumber > 0 ? $"{LineNumber}:{Column}" : "";
-        public string KindLabel => Kind == FileSearchMatchKind.FileName ? "Name" : "Content";
+        public string KindLabel => Kind == FileSearchMatchKind.FileName ? Loc.T("Str_SearchFiles_KindName", "Name") : Loc.T("Str_SearchFiles_KindContent", "Content");
 
         /// <summary>Unique mode: how many times this value was found in total.</summary>
         public int Occurrences
@@ -141,11 +141,11 @@ namespace Smart_Tools.WPF.Models
 
         public bool SeenMore => _occurrences > 1;
 
-        public string SeenLabel => _occurrences <= 1 ? "once" : _fileCount <= 1 ? $"×{_occurrences:N0}" : $"×{_occurrences:N0} · {_fileCount:N0} files";
+        public string SeenLabel => _occurrences <= 1 ? Loc.T("Str_SearchFiles_SeenOnce", "once") : _fileCount <= 1 ? $"×{_occurrences:N0}" : $"×{_occurrences:N0} · {Smart_Tools.WPF.Controllers.SearchCounts.Files(_fileCount)}";
 
         public string SeenTooltip => _otherFiles.Count == 0
-            ? "Found only here"
-            : "Also found in:\n" + string.Join("\n", _otherFiles) + (_fileCount - 1 > _otherFiles.Count ? $"\n… and {_fileCount - 1 - _otherFiles.Count:N0} more files" : "");
+            ? Loc.T("Str_SearchFiles_FoundOnlyHere", "Found only here")
+            : Loc.T("Str_SearchFiles_AlsoFoundIn", "Also found in:") + "\n" + string.Join("\n", _otherFiles) + (_fileCount - 1 > _otherFiles.Count ? "\n" + Loc.F("Str_SearchFiles_AndMoreFiles", "… and {0:N0} more files", _fileCount - 1 - _otherFiles.Count) : "");
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -243,7 +243,7 @@ namespace Smart_Tools.WPF.Models
 
         public bool HasError => _error != null;
 
-        public string Tooltip => (IsWildcard ? "Wildcard (whole file name or line): " : "") + _pattern + (_error != null ? "\n⚠ " + _error : "");
+        public string Tooltip => (IsWildcard ? Loc.T("Str_SearchFiles_TipWildcard", "Wildcard (whole file name or line): ") : "") + _pattern + (_error != null ? "\n⚠ " + _error : "");
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

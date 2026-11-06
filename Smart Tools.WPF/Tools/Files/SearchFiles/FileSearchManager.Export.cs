@@ -194,7 +194,7 @@ namespace Smart_Tools.WPF.Controllers
                 string values = ValuesText(g);
                 int count = values.Count(c => c == '\n');
                 if (sb.Length > 0) sb.AppendLine();
-                sb.AppendLine($"{(g.Key.Length > 0 ? g.Key : "Other")} ({count:N0})");
+                sb.AppendLine($"{(g.Key.Length > 0 ? g.Key : Loc.T("Str_SearchFiles_GroupOther", "Other"))} ({count:N0})");
                 sb.Append(values);
             }
             return sb.ToString();
@@ -221,8 +221,8 @@ namespace Smart_Tools.WPF.Controllers
 
         public static string PlainSaveError(Exception ex) => ex switch
         {
-            UnauthorizedAccessException => "Windows didn't allow saving there - pick another folder.",
-            IOException io when (io.HResult & 0xFFFF) is 32 or 33 => "The file is open in another program (Excel?) - close it and try again.",
+            UnauthorizedAccessException => Loc.T("Str_SearchFiles_ErrSaveDenied", "Windows didn't allow saving there - pick another folder."),
+            IOException io when (io.HResult & 0xFFFF) is 32 or 33 => Loc.T("Str_SearchFiles_ErrSaveOpen", "The file is open in another program (Excel?) - close it and try again."),
             _ => ex.Message,
         };
 
@@ -258,16 +258,13 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(FileSearchSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            string temp = file + ".tmp";
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, SettingsJson));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, SettingsJson));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                // settings are only a convenience: not saving them must never stop a search
             }
         }
     }

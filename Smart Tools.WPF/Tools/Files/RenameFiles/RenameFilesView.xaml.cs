@@ -213,7 +213,7 @@ namespace Smart_Tools.WPF.Views
             else if (_rows.Count > 0 && !_isBusy)
             {
                 _planStale = true;
-                TxtProgress.Text = "Settings changed - press Preview to update the list. Rename uses the new settings either way.";
+                TxtProgress.Text = Loc.T("Str_Rename_MsgSettingsChanged", "Settings changed - press Preview to update the list. Rename uses the new settings either way.");
             }
         }
 
@@ -243,15 +243,15 @@ namespace Smart_Tools.WPF.Views
 
             TxtMethodHint.Text = method switch
             {
-                RenameMethod.PrefixSuffix => "Adds text before and after each name.",
-                RenameMethod.NumberSequence => "Numbers the files - by name or by date, per folder or across them all.",
-                RenameMethod.ReplaceName => "Gives every file the same new name plus a number: 1.png and abc.png become album_001.png and album_002.png.",
-                RenameMethod.ChangeCase => "Changes upper and lower case. A change of case alone works too.",
-                RenameMethod.TrimStrip => "Cuts characters off the start or end of each name.",
-                RenameMethod.RegexReplace => "For advanced patterns. A pattern that isn't valid is explained above the list.",
-                RenameMethod.RemoveCharacters => "Removes the characters you choose from each name.",
-                RenameMethod.CleanSuffixes => "Takes copy leftovers off the end of names: Ia (1)_1 becomes Ia (1). If the clean name is taken, the file gets (2).",
-                _ => "Replaces text in every name. The extension is never touched.",
+                RenameMethod.PrefixSuffix => Loc.T("Str_Rename_HintPrefixSuffix", "Adds text before and after each name."),
+                RenameMethod.NumberSequence => Loc.T("Str_Rename_HintNumber", "Numbers the files - by name or by date, per folder or across them all."),
+                RenameMethod.ReplaceName => Loc.T("Str_Rename_HintReplaceName", "Gives every file the same new name plus a number: 1.png and abc.png become album_001.png and album_002.png."),
+                RenameMethod.ChangeCase => Loc.T("Str_Rename_HintCase", "Changes upper and lower case. A change of case alone works too."),
+                RenameMethod.TrimStrip => Loc.T("Str_Rename_HintTrim", "Cuts characters off the start or end of each name."),
+                RenameMethod.RegexReplace => Loc.T("Str_Rename_HintRegex", "For advanced patterns. A pattern that isn't valid is explained above the list."),
+                RenameMethod.RemoveCharacters => Loc.T("Str_Rename_HintRemove", "Removes the characters you choose from each name."),
+                RenameMethod.CleanSuffixes => Loc.T("Str_Rename_HintSuffixes", "Takes copy leftovers off the end of names: Ia (1)_1 becomes Ia (1). If the clean name is taken, the file gets (2)."),
+                _ => Loc.T("Str_Rename_HintFind", "Replaces text in every name. The extension is never touched."),
             };
 
             bool change = CheckedTag(RenameExtensionMode.Keep, ExtensionRadios) == RenameExtensionMode.Change;
@@ -269,12 +269,12 @@ namespace Smart_Tools.WPF.Views
             if (text.Length == 0) return fallback;
             if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out int value))
             {
-                problems.Add($"{label} must be a whole number - using {fallback}.");
+                problems.Add(Loc.F("Str_Rename_ErrWholeNumber", "{0} must be a whole number - using {1}.", label, fallback));
                 return fallback;
             }
             if (value < min || value > max)
             {
-                problems.Add($"{label} must be between {min} and {max}.");
+                problems.Add(Loc.F("Str_Rename_ErrBetween", "{0} must be between {1} and {2}.", label, min, max));
                 return Math.Clamp(value, min, max);
             }
             return value;
@@ -303,9 +303,9 @@ namespace Smart_Tools.WPF.Views
                 NewName = TxtNewName.Text,
                 WindowsStyleNumbering = ChkWindowsStyle.IsChecked == true,
 
-                StartAt = ReadInt(TxtStartAt, "Start", 1, -1_000_000_000, 1_000_000_000, problems),
-                Increment = ReadInt(TxtIncrement, "Step", 1, -1_000_000, 1_000_000, problems),
-                Padding = ReadInt(TxtPadding, "Digits", 0, 0, 10, problems),
+                StartAt = ReadInt(TxtStartAt, Loc.T("Str_Rename_FieldStart", "Start"), 1, -1_000_000_000, 1_000_000_000, problems),
+                Increment = ReadInt(TxtIncrement, Loc.T("Str_Rename_FieldStep", "Step"), 1, -1_000_000, 1_000_000, problems),
+                Padding = ReadInt(TxtPadding, Loc.T("Str_Rename_FieldDigits", "Digits"), 0, 0, 10, problems),
                 Separator = TxtSeparator.Text,
                 NumberPosition = CheckedTag(RenameNumberPosition.Suffix, PositionRadios),
                 NumberOrder = CheckedTag(RenameNumberOrder.Name, OrderRadios),
@@ -314,8 +314,8 @@ namespace Smart_Tools.WPF.Views
                 CaseStyle = TagOf(ComboCaseStyle.SelectedItem, RenameCaseStyle.Upper),
                 ApplyCaseToExtension = ChkCaseExtension.IsChecked == true,
 
-                TrimStart = ReadInt(TxtTrimStart, "Trim from start", 0, 0, 255, problems),
-                TrimEnd = ReadInt(TxtTrimEnd, "Trim from end", 0, 0, 255, problems),
+                TrimStart = ReadInt(TxtTrimStart, Loc.T("Str_Rename_FieldTrimStart", "Trim from start"), 0, 0, 255, problems),
+                TrimEnd = ReadInt(TxtTrimEnd, Loc.T("Str_Rename_FieldTrimEnd", "Trim from end"), 0, 0, 255, problems),
                 StripLeadingTrailingSpaces = ChkStripSpaces.IsChecked == true,
                 CollapseRepeatedSpaces = ChkCollapseSpaces.IsChecked == true,
 
@@ -453,7 +453,7 @@ namespace Smart_Tools.WPF.Views
             {
                 _scan = null;
                 ShowPlan(null);
-                TxtProgress.Text = "Add a folder to see the new names.";
+                TxtProgress.Text = Loc.T("Str_Rename_MsgAddFolder", "Add a folder to see the new names.");
                 return;
             }
 
@@ -468,7 +468,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (rescan)
                 {
-                    TxtProgress.Text = "Reading the folders...";
+                    TxtProgress.Text = Loc.T("Str_Rename_MsgReading", "Reading the folders...");
                     _scan = await RenameManager.ScanAsync(_folders.Select(f => f.FullPath).ToList(), options, progress, token);
                 }
                 var scan = _scan!;
@@ -485,7 +485,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                if (ReferenceEquals(_refreshCts, cts)) TxtProgress.Text = $"Couldn't build the preview: {ex.Message}";
+                if (ReferenceEquals(_refreshCts, cts)) TxtProgress.Text = Loc.F("Str_Files_MsgPreviewFailed", "Couldn't build the preview: {0}", ex.Message);
             }
             finally
             {
@@ -501,10 +501,10 @@ namespace Smart_Tools.WPF.Views
         private string PlanText(IReadOnlyCollection<RenamePreviewItem> items)
         {
             var parts = new List<string> { RenameManager.DescribePlan(items) };
-            if (_scan?.HiddenSkipped > 0) parts.Add($"{_scan.HiddenSkipped:N0} hidden left alone");
-            if (_scan?.InaccessibleFolders > 0) parts.Add($"{_scan.InaccessibleFolders:N0} folders couldn't be read");
-            if (_scan?.LinksSkipped > 0) parts.Add($"{_scan.LinksSkipped:N0} linked folders not followed");
-            if (_scan?.MissingFolders > 0) parts.Add($"{_scan.MissingFolders:N0} folders no longer exist");
+            if (_scan?.HiddenSkipped > 0) parts.Add(Loc.F("Str_Files_NoteHidden", "{0:N0} hidden left alone", _scan.HiddenSkipped));
+            if (_scan?.InaccessibleFolders > 0) parts.Add(Loc.F("Str_Files_NoteFoldersUnreadable", "{0:N0} folders couldn't be read", _scan.InaccessibleFolders));
+            if (_scan?.LinksSkipped > 0) parts.Add(Loc.F("Str_Files_NoteLinks", "{0:N0} linked folders not followed", _scan.LinksSkipped));
+            if (_scan?.MissingFolders > 0) parts.Add(Loc.F("Str_Rename_NoteMissing", "{0:N0} folders no longer exist", _scan.MissingFolders));
             return string.Join(" · ", parts);
         }
 
@@ -542,18 +542,18 @@ namespace Smart_Tools.WPF.Views
             int adjusted = _rows.Count(i => i.Status == RenameStatus.Ready && i.IsAdjusted);
             int invalid = _rows.Count(i => i.Status == RenameStatus.Invalid);
 
-            TxtSummaryReady.Text = $"{ready:N0} to rename";
-            TxtSummarySame.Text = $"{same:N0} unchanged";
+            TxtSummaryReady.Text = Loc.F("Str_Rename_SumReady", "{0:N0} to rename", ready);
+            TxtSummarySame.Text = Loc.F("Str_Rename_SumUnchanged", "{0:N0} unchanged", same);
             PillSame.Visibility = same > 0 ? Visibility.Visible : Visibility.Collapsed;
-            TxtSummaryAdjusted.Text = $"{adjusted:N0} name taken";
+            TxtSummaryAdjusted.Text = Loc.F("Str_Rename_SumTaken", "{0:N0} name taken", adjusted);
             PillAdjusted.Visibility = adjusted > 0 ? Visibility.Visible : Visibility.Collapsed;
-            TxtSummaryInvalid.Text = $"{invalid:N0} can't use";
+            TxtSummaryInvalid.Text = Loc.F("Str_Rename_SumInvalid", "{0:N0} can't use", invalid);
             PillInvalid.Visibility = invalid > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             if (_lastRun is { } run)
             {
-                TxtSummaryDone.Text = $"{run.Renamed:N0} renamed";
-                TxtSummaryFailed.Text = $"{run.Failed:N0} failed";
+                TxtSummaryDone.Text = Loc.F("Str_Files_SumRenamed", "{0:N0} renamed", run.Renamed);
+                TxtSummaryFailed.Text = Loc.F("Str_CopyQueue_RunFailed", "{0:N0} failed", run.Failed);
                 PillDone.Visibility = run.Renamed > 0 ? Visibility.Visible : Visibility.Collapsed;
                 PillFailed.Visibility = run.Failed > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
@@ -573,8 +573,8 @@ namespace Smart_Tools.WPF.Views
         {
             bool empty = _rows.Count == 0;
             EmptyStatePanel.Description = _folders.Count > 0
-                ? "No files to rename in these folders. Try including subfolders, or hidden files."
-                : "Add a folder on the left. Every new name shows here before anything is renamed.";
+                ? Loc.T("Str_Rename_EmptyNothing", "No files to rename in these folders. Try including subfolders, or hidden files.")
+                : Loc.T("Str_Rename_EmptyAdd", "Add a folder on the left. Every new name shows here before anything is renamed.");
             UiMotion.FadeVisibility(EmptyStatePanel, empty);
             UiMotion.FadeVisibility(DataGridPreview, !empty);
         }
@@ -595,7 +595,7 @@ namespace Smart_Tools.WPF.Views
             _folders.Clear();
             _scan = null;
             ShowPlan(null);
-            TxtProgress.Text = "Add a folder to see the new names.";
+            TxtProgress.Text = Loc.T("Str_Rename_MsgAddFolder", "Add a folder to see the new names.");
         }
 
         /// <summary>Double-click a row: the file where it is now.</summary>
@@ -628,7 +628,7 @@ namespace Smart_Tools.WPF.Views
             if (_isBusy)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Stopping after the file in progress...";
+                TxtProgress.Text = Loc.T("Str_Rename_MsgStopping", "Stopping after the file in progress...");
                 return;
             }
 
@@ -665,9 +665,9 @@ namespace Smart_Tools.WPF.Views
             }
 
             int adjusted = ready.Count(i => i.IsAdjusted);
-            string question = $"Rename {ready.Count:N0} file{(ready.Count == 1 ? "" : "s")}?" +
-                (adjusted > 0 ? $"\n\n{adjusted:N0} of them get \" (2)\" because their new name is taken." : "") +
-                "\n\nYou can undo this afterwards.";
+            string question = Loc.N(ready.Count, "Str_Rename_AskOne", "Rename {0:N0} file?", "Str_Rename_AskMany", "Rename {0:N0} files?", ready.Count) +
+                (adjusted > 0 ? "\n\n" + Loc.F("Str_Rename_AskTaken", "{0:N0} of them get \" (2)\" because their new name is taken.", adjusted) : "") +
+                "\n\n" + Loc.T("Str_Rename_AskUndo", "You can undo this afterwards.");
             if (MessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             _runCts?.Dispose();
@@ -703,8 +703,8 @@ namespace Smart_Tools.WPF.Views
 
                 try
                 {
-                    ToastNotificationManager.ShowToast("Rename Complete",
-                        result.Failed > 0 ? $"Renamed {result.Renamed:N0} files - {result.Failed:N0} failed." : $"Renamed {result.Renamed:N0} file{(result.Renamed == 1 ? "" : "s")}.");
+                    ToastNotificationManager.ShowToast(Loc.T("Str_Rename_ToastTitle", "Rename Complete"),
+                        result.Failed > 0 ? Loc.F("Str_Rename_ToastFailed", "Renamed {0:N0} files - {1:N0} failed.", result.Renamed, result.Failed) : Loc.N(result.Renamed, "Str_Rename_ToastOne", "Renamed {0:N0} file.", "Str_Rename_ToastMany", "Renamed {0:N0} files.", result.Renamed));
                 }
                 catch (Exception ex)
                 {
@@ -714,7 +714,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetBusy(false, undo: false);
-                TxtProgress.Text = "Rename failed.";
+                TxtProgress.Text = Loc.T("Str_Rename_MsgFailed", "Rename failed.");
                 MessageBox.Show(Loc.F("Str_MB_RenameFailed", "Rename failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -766,11 +766,11 @@ namespace Smart_Tools.WPF.Views
                     _journal = null;
                 }
 
-                var parts = new List<string> { $"Undone: {result.Restored:N0} back to their old names" };
-                if (result.RestoredWithNewName > 0) parts.Add($"{result.RestoredWithNewName:N0} got \" (2)\" (the old name was taken)");
-                if (result.Missing > 0) parts.Add($"{result.Missing:N0} no longer there");
-                if (result.Failed > 0) parts.Add($"{result.Failed:N0} couldn't be undone");
-                if (result.Remaining.Count > 0) parts.Add("stopped - press Undo again to finish");
+                var parts = new List<string> { Loc.F("Str_Rename_UndoDone", "Undone: {0:N0} back to their old names", result.Restored) };
+                if (result.RestoredWithNewName > 0) parts.Add(Loc.F("Str_Rename_UndoWithNew", "{0:N0} got \" (2)\" (the old name was taken)", result.RestoredWithNewName));
+                if (result.Missing > 0) parts.Add(Loc.F("Str_Rename_UndoMissing", "{0:N0} no longer there", result.Missing));
+                if (result.Failed > 0) parts.Add(Loc.F("Str_Files_UndoFailed", "{0:N0} couldn't be undone", result.Failed));
+                if (result.Remaining.Count > 0) parts.Add(Loc.T("Str_Rename_UndoStopped", "stopped - press Undo again to finish"));
                 SetBusy(false, undo: true);
                 TxtProgress.Text = string.Join(" · ", parts);
 
@@ -796,8 +796,8 @@ namespace Smart_Tools.WPF.Views
         {
             BtnUndoRename.IsEnabled = !_isBusy && _journal != null;
             BtnUndoRename.ToolTip = _journal != null
-                ? $"Undo the last rename ({_journal.When:g} · {_journal.FileCount:N0} file{(_journal.FileCount == 1 ? "" : "s")})"
-                : "Nothing to undo yet";
+                ? Loc.N(_journal.FileCount, "Str_Rename_UndoOne", "Undo the last rename ({0:g} · {1:N0} file)", "Str_Rename_UndoMany", "Undo the last rename ({0:g} · {1:N0} files)", _journal.When, _journal.FileCount)
+                : Loc.T("Str_Rename_UndoNothing", "Nothing to undo yet");
         }
 
         private void ReportProgress(RenameProgress p)
@@ -816,9 +816,9 @@ namespace Smart_Tools.WPF.Views
 
             string phase = p.Phase switch
             {
-                RenamePhase.Scanning => $"Reading the folders · {p.Processed:N0} files so far",
-                RenamePhase.Undoing => $"Undoing · {p.Processed:N0} of {p.Total:N0}",
-                _ => $"Renaming · {p.Processed:N0} of {p.Total:N0}",
+                RenamePhase.Scanning => Loc.F("Str_Rename_PhaseScanning", "Reading the folders · {0:N0} files so far", p.Processed),
+                RenamePhase.Undoing => Loc.F("Str_Files_PhaseUndoing", "Undoing · {0:N0} of {1:N0}", p.Processed, p.Total),
+                _ => Loc.F("Str_Rename_PhaseRenaming", "Renaming · {0:N0} of {1:N0}", p.Processed, p.Total),
             };
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentFile) ? phase : $"{phase} · {p.CurrentFile}";
         }
@@ -836,12 +836,12 @@ namespace Smart_Tools.WPF.Views
                 ProgressRename.IsIndeterminate = false;
                 ProgressRename.Value = 0;
                 TxtProgressPercent.Text = "0%";
-                TxtProgress.Text = undo ? "Undoing..." : "Starting...";
+                TxtProgress.Text = undo ? Loc.T("Str_Rename_MsgUndoing", "Undoing...") : Loc.T("Str_Rename_MsgStarting", "Starting...");
             }
             else
             {
                 IconRename.Kind = PackIconKind.RenameOutline;
-                TxtRenameLabel.Text = "Rename files";
+                TxtRenameLabel.Text = Loc.T("Str_Rename_RenameFiles", "Rename files");
             }
             UiMotion.Pop(BtnRenameFiles, 0.96);
 

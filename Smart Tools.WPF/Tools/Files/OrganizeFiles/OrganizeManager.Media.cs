@@ -51,7 +51,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     process.Kill(entireProcessTree: true);
                 }
-                catch (Exception)
+                catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
                 {
                     // already gone
                 }

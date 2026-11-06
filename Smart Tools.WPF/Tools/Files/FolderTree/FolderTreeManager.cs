@@ -69,7 +69,7 @@ namespace Smart_Tools.WPF.Controllers
                         {
                             attrs = entry.Attributes;
                         }
-                        catch (Exception)
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                         {
                             continue;
                         }
@@ -106,7 +106,7 @@ namespace Smart_Tools.WPF.Controllers
                             {
                                 length = ((FileInfo)entry).Length;
                             }
-                            catch (Exception)
+                            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                             {
                                 // listed with size 0; the file may be gone or locked
                             }
@@ -134,7 +134,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return info.LastWriteTime;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 return default;
             }
@@ -173,8 +173,8 @@ namespace Smart_Tools.WPF.Controllers
             n.Children.OrderByDescending(c => c.IsFolder).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase);
 
         private static string Footer(FolderTreeResult r) =>
-            $"{r.Folders:N0} folder{(r.Folders == 1 ? "" : "s")}, {r.Files:N0} file{(r.Files == 1 ? "" : "s")}, {CopyQueueManager.FormatSize(r.Bytes)}"
-            + (r.Unreadable > 0 ? $" ({r.Unreadable:N0} folder{(r.Unreadable == 1 ? "" : "s")} could not be opened)" : "");
+            $"{FilesText.Folders(r.Folders)}, {FilesText.Files(r.Files)}, {CopyQueueManager.FormatSize(r.Bytes)}"
+            + (r.Unreadable > 0 ? Loc.N(r.Unreadable, "Str_FolderTree_FooterUnreadableOne", " ({0:N0} folder could not be opened)", "Str_FolderTree_FooterUnreadableMany", " ({0:N0} folders could not be opened)", r.Unreadable) : "");
 
         private static string RenderText(FolderTreeResult r, FolderTreeOptions o)
         {

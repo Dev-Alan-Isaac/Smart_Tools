@@ -45,14 +45,14 @@ namespace Smart_Tools.WPF.Models
 
         public string StatusText => Status switch
         {
-            CopyQueueStatus.Waiting => "Waiting",
-            CopyQueueStatus.Working => "Copying",
-            CopyQueueStatus.Verifying => "Verifying",
-            CopyQueueStatus.Done => "Done",
-            CopyQueueStatus.AlreadyThere => "Already there",
-            CopyQueueStatus.Skipped => "Skipped",
-            CopyQueueStatus.Failed => "Failed",
-            _ => "Stopped",
+            CopyQueueStatus.Waiting => Loc.T("Str_Files_StatusWaiting", "Waiting"),
+            CopyQueueStatus.Working => Loc.T("Str_Files_StatusCopying", "Copying"),
+            CopyQueueStatus.Verifying => Loc.T("Str_Files_StatusVerifying", "Verifying"),
+            CopyQueueStatus.Done => Loc.T("Str_Files_StatusDone", "Done"),
+            CopyQueueStatus.AlreadyThere => Loc.T("Str_Files_StatusAlreadyThere", "Already there"),
+            CopyQueueStatus.Skipped => Loc.T("Str_Files_StatusSkipped", "Skipped"),
+            CopyQueueStatus.Failed => Loc.T("Str_Files_StatusFailed", "Failed"),
+            _ => Loc.T("Str_Files_StatusStopped", "Stopped"),
         };
 
         /// <summary>Bytes of work this file adds to the progress bar (copy pass, plus the verify pass).</summary>

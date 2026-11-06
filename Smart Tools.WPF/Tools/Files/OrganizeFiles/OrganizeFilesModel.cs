@@ -223,13 +223,13 @@ namespace Smart_Tools.WPF.Models
 
         public string StatusText => _status switch
         {
-            OrganizeStatus.Ready => "Ready",
-            OrganizeStatus.InPlace => "In place",
-            OrganizeStatus.Moved => "Moved",
-            OrganizeStatus.Copied => "Copied",
-            OrganizeStatus.Duplicate => "Already there",
-            OrganizeStatus.Failed => "Failed",
-            OrganizeStatus.Cancelled => "Cancelled",
+            OrganizeStatus.Ready => Loc.T("Str_Files_StatusReady", "Ready"),
+            OrganizeStatus.InPlace => Loc.T("Str_Files_StatusInPlace", "In place"),
+            OrganizeStatus.Moved => Loc.T("Str_Files_StatusMoved", "Moved"),
+            OrganizeStatus.Copied => Loc.T("Str_Files_StatusCopied", "Copied"),
+            OrganizeStatus.Duplicate => Loc.T("Str_Files_StatusAlreadyThere", "Already there"),
+            OrganizeStatus.Failed => Loc.T("Str_Files_StatusFailed", "Failed"),
+            OrganizeStatus.Cancelled => Loc.T("Str_Files_StatusCancelled", "Cancelled"),
             _ => "",
         };
 
@@ -264,9 +264,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>What a video/audio/image rule does with other files - shown under the card.</summary>
         public string Hint => _criterion switch
         {
-            >= OrganizeCriterion.VideoResolution and <= OrganizeCriterion.VideoFrameRate => "Sorts videos only (read with ffprobe).",
-            >= OrganizeCriterion.AudioBitrate and <= OrganizeCriterion.AudioChannels => "Sorts audio files only (read with ffprobe).",
-            >= OrganizeCriterion.ImageResolution and <= OrganizeCriterion.ImageColorDepth => "Sorts images only.",
+            >= OrganizeCriterion.VideoResolution and <= OrganizeCriterion.VideoFrameRate => Loc.T("Str_Organize_HintVideoOnly", "Sorts videos only (read with ffprobe)."),
+            >= OrganizeCriterion.AudioBitrate and <= OrganizeCriterion.AudioChannels => Loc.T("Str_Organize_HintAudioOnly", "Sorts audio files only (read with ffprobe)."),
+            >= OrganizeCriterion.ImageResolution and <= OrganizeCriterion.ImageColorDepth => Loc.T("Str_Organize_HintImagesOnly", "Sorts images only."),
             _ => "",
         };
 

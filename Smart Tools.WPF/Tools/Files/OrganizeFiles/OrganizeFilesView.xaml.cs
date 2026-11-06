@@ -124,7 +124,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnBrowseDestination_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog { Title = "Choose where organized files go" };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_Organize_DlgDestination", "Choose where organized files go") };
             if (Directory.Exists(_destinationFolder)) dialog.InitialDirectory = _destinationFolder;
             else if (Directory.Exists(_sourceFolder)) dialog.InitialDirectory = _sourceFolder;
             if (dialog.ShowDialog() != true) return;
@@ -161,7 +161,7 @@ namespace Smart_Tools.WPF.Views
             bool other = RadioOtherFolder.IsChecked == true;
             if (animate) UiMotion.FadeVisibility(PanelDestination, other);
             else PanelDestination.Visibility = other ? Visibility.Visible : Visibility.Collapsed;
-            TxtDestinationFolder.Text = string.IsNullOrWhiteSpace(_destinationFolder) ? "Choose a folder" : _destinationFolder;
+            TxtDestinationFolder.Text = string.IsNullOrWhiteSpace(_destinationFolder) ? Loc.T("Str_Organize_ChooseFolder", "Choose a folder") : _destinationFolder;
             TxtDestinationFolder.ToolTip = _destinationFolder;
         }
 
@@ -220,14 +220,14 @@ namespace Smart_Tools.WPF.Views
 
             TxtLayoutHint.Text = layout switch
             {
-                OrganizeLayout.Flatten => "Every file goes straight into the destination folder, out of any subfolders. Same names get ' (2)'.",
-                OrganizeLayout.KeepStructure => "Files keep the subfolders they're in now - useful for moving or copying a whole tree somewhere else.",
-                _ => "Each rule adds one folder level, top to bottom.",
+                OrganizeLayout.Flatten => Loc.T("Str_Organize_HintFlatten", "Every file goes straight into the destination folder, out of any subfolders. Same names get ' (2)'."),
+                OrganizeLayout.KeepStructure => Loc.T("Str_Organize_HintKeep", "Files keep the subfolders they're in now - useful for moving or copying a whole tree somewhere else."),
+                _ => Loc.T("Str_Organize_HintRules", "Each rule adds one folder level, top to bottom."),
             };
             TxtExample.Text = OrganizeManager.ExamplePath(layout, _steps.Select(s => s.ToStep()), ChkEmoji.IsChecked == true);
 
             int count = _steps.Count;
-            TxtStepsHint.Text = $"{count} of {OrganizeManager.MaxSteps}";
+            TxtStepsHint.Text = Loc.F("Str_Organize_StepsHint", "{0} of {1}", count, OrganizeManager.MaxSteps);
             BtnAddStep.IsEnabled = count < OrganizeManager.MaxSteps;
             ChkEmoji.Visibility = _steps.Any(s => s.Criterion == OrganizeCriterion.Category) ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -428,14 +428,14 @@ namespace Smart_Tools.WPF.Views
                 _scan = null;
                 ShowRows(new List<OrganizeFileItem>());
                 TxtProgress.Text = string.IsNullOrWhiteSpace(_sourceFolder)
-                    ? "Choose a folder to see how it would be organized."
-                    : $"The folder {_sourceFolder} doesn't exist any more.";
+                    ? Loc.T("Str_Organize_MsgChoose", "Choose a folder to see how it would be organized.")
+                    : Loc.F("Str_Organize_MsgFolderGone", "The folder {0} doesn't exist any more.", _sourceFolder);
                 return;
             }
             if (RadioOtherFolder.IsChecked == true && string.IsNullOrWhiteSpace(_destinationFolder))
             {
                 ShowRows(new List<OrganizeFileItem>());
-                TxtProgress.Text = "Choose the destination folder (or switch to 'Same folder').";
+                TxtProgress.Text = Loc.T("Str_Organize_MsgChooseDest", "Choose the destination folder (or switch to 'Same folder').");
                 return;
             }
 
@@ -452,7 +452,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (rescan)
                 {
-                    TxtProgress.Text = "Reading the folder...";
+                    TxtProgress.Text = Loc.T("Str_Organize_MsgReading", "Reading the folder...");
                     _scan = await OrganizeManager.ScanAsync(options, progress, token);
                 }
                 if (token.IsCancellationRequested) return;
@@ -472,12 +472,12 @@ namespace Smart_Tools.WPF.Views
                 ShowRows(new List<OrganizeFileItem>());
                 TxtWarning.Text = ex.Message + " Pick a General or Image rule instead, or add ffprobe.exe.";
                 UiMotion.FadeVisibility(FfprobeWarning, true);
-                TxtProgress.Text = "Can't read video/audio details.";
+                TxtProgress.Text = Loc.T("Str_Organize_MsgNoFfprobe", "Can't read video/audio details.");
             }
             catch (Exception ex)
             {
                 if (!ReferenceEquals(_refreshCts, cts)) return;
-                TxtProgress.Text = $"Couldn't build the preview: {ex.Message}";
+                TxtProgress.Text = Loc.F("Str_Files_MsgPreviewFailed", "Couldn't build the preview: {0}", ex.Message);
             }
             finally
             {
@@ -492,12 +492,12 @@ namespace Smart_Tools.WPF.Views
 
         private string PlanText(IReadOnlyCollection<OrganizeFileItem> items)
         {
-            if (items.Count == 0) return "No files to organize in this folder.";
+            if (items.Count == 0) return Loc.T("Str_Organize_MsgNoFiles", "No files to organize in this folder.");
             var parts = new List<string> { OrganizeManager.DescribePlan(items) };
-            if (_scan?.HiddenSkipped > 0) parts.Add($"{_scan.HiddenSkipped:N0} hidden left alone");
-            if (_scan?.InaccessibleFolders > 0) parts.Add($"{_scan.InaccessibleFolders:N0} folders couldn't be read");
-            if (_scan?.LinksSkipped > 0) parts.Add($"{_scan.LinksSkipped:N0} linked folders not followed");
-            if (_scan?.InDestinationSkipped > 0) parts.Add($"{_scan.InDestinationSkipped:N0} already in the destination");
+            if (_scan?.HiddenSkipped > 0) parts.Add(Loc.F("Str_Files_NoteHidden", "{0:N0} hidden left alone", _scan.HiddenSkipped));
+            if (_scan?.InaccessibleFolders > 0) parts.Add(Loc.F("Str_Files_NoteFoldersUnreadable", "{0:N0} folders couldn't be read", _scan.InaccessibleFolders));
+            if (_scan?.LinksSkipped > 0) parts.Add(Loc.F("Str_Files_NoteLinks", "{0:N0} linked folders not followed", _scan.LinksSkipped));
+            if (_scan?.InDestinationSkipped > 0) parts.Add(Loc.F("Str_Organize_NoteInDestination", "{0:N0} already in the destination", _scan.InDestinationSkipped));
             return string.Join(" · ", parts);
         }
 
@@ -529,18 +529,18 @@ namespace Smart_Tools.WPF.Views
             int inPlace = _rows.Count(i => i.Status == OrganizeStatus.InPlace);
             int renamed = _rows.Count(i => OrganizeManager.IsPending(i) && i.IsRenamed);
 
-            TxtSummaryFiles.Text = $"{ready:N0} file{(ready == 1 ? "" : "s")} · {OrganizeText.FormatBytes(bytes)}";
-            TxtSummaryFolders.Text = $"{folders:N0} folder{(folders == 1 ? "" : "s")}";
-            TxtSummaryInPlace.Text = $"{inPlace:N0} in place";
+            TxtSummaryFiles.Text = $"{FilesText.Files(ready)} · {OrganizeText.FormatBytes(bytes)}";
+            TxtSummaryFolders.Text = FilesText.Folders(folders);
+            TxtSummaryInPlace.Text = Loc.F("Str_Organize_SumInPlace", "{0:N0} in place", inPlace);
             PillInPlace.Visibility = inPlace > 0 ? Visibility.Visible : Visibility.Collapsed;
-            TxtSummaryRenamed.Text = $"{renamed:N0} renamed";
+            TxtSummaryRenamed.Text = Loc.F("Str_Files_SumRenamed", "{0:N0} renamed", renamed);
             PillRenamed.Visibility = renamed > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             if (_lastRun is { } run)
             {
                 int done = run.Moved + run.Copied;
-                TxtSummaryDone.Text = $"{done:N0} {(run.Moved > 0 ? "moved" : "copied")}" + (run.Duplicates > 0 ? $" · {run.Duplicates:N0} already there" : "");
-                TxtSummaryFailed.Text = $"{run.Failed:N0} failed";
+                TxtSummaryDone.Text = (run.Moved > 0 ? Loc.F("Str_Files_SumMoved", "{0:N0} moved", done) : Loc.F("Str_Files_SumCopied", "{0:N0} copied", done)) + (run.Duplicates > 0 ? " · " + Loc.F("Str_CopyQueue_RunAlreadyThere", "{0:N0} already there", run.Duplicates) : "");
+                TxtSummaryFailed.Text = Loc.F("Str_CopyQueue_RunFailed", "{0:N0} failed", run.Failed);
                 PillDone.Visibility = done + run.Duplicates > 0 ? Visibility.Visible : Visibility.Collapsed;
                 PillFailed.Visibility = run.Failed > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
@@ -560,8 +560,8 @@ namespace Smart_Tools.WPF.Views
         {
             bool empty = _rows.Count == 0;
             EmptyStatePanel.Description = Directory.Exists(_sourceFolder)
-                ? "Nothing to organize here. Try including subfolders, or showing hidden files."
-                : "Choose a folder on the left. The preview shows where every file will go before anything moves.";
+                ? Loc.T("Str_Organize_EmptyNothing", "Nothing to organize here. Try including subfolders, or showing hidden files.")
+                : Loc.T("Str_Organize_EmptyChoose", "Choose a folder on the left. The preview shows where every file will go before anything moves.");
             UiMotion.FadeVisibility(EmptyStatePanel, empty);
             UiMotion.FadeVisibility(DataGridPreview, !empty);
         }
@@ -584,7 +584,7 @@ namespace Smart_Tools.WPF.Views
             UpdateFolderUi();
             SaveSettings();
             ShowRows(new List<OrganizeFileItem>());
-            TxtProgress.Text = "Choose a folder to see how it would be organized.";
+            TxtProgress.Text = Loc.T("Str_Organize_MsgChoose", "Choose a folder to see how it would be organized.");
         }
 
         private void BtnOpenDestination_Click(object sender, RoutedEventArgs e)
@@ -612,7 +612,7 @@ namespace Smart_Tools.WPF.Views
             if (_isBusy)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Stopping after the files in progress...";
+                TxtProgress.Text = Loc.T("Str_Organize_MsgStopping", "Stopping after the files in progress...");
                 return;
             }
 
@@ -634,8 +634,8 @@ namespace Smart_Tools.WPF.Views
             {
                 InputCard.PopDropArea();
                 MessageBox.Show(_rows.Count == 0
-                        ? "Choose a folder with files in it first."
-                        : "Nothing to do - every file is already where it belongs.",
+                        ? Loc.T("Str_Organize_MsgChooseWithFiles", "Choose a folder with files in it first.")
+                        : Loc.T("Str_Organize_MsgNothingToDo", "Nothing to do - every file is already where it belongs."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
@@ -684,10 +684,10 @@ namespace Smart_Tools.WPF.Views
 
                 try
                 {
-                    ToastNotificationManager.ShowToast("Organize Complete",
+                    ToastNotificationManager.ShowToast(Loc.T("Str_Organize_ToastTitle", "Organize Complete"),
                         result.Failed > 0
-                            ? $"Organized {result.Moved + result.Copied} files - {result.Failed} failed."
-                            : $"Organized {result.Moved + result.Copied} file{(result.Moved + result.Copied == 1 ? "" : "s")}.");
+                            ? Loc.F("Str_Organize_ToastFailed", "Organized {0} files - {1} failed.", result.Moved + result.Copied, result.Failed)
+                            : Loc.N(result.Moved + result.Copied, "Str_Organize_ToastOne", "Organized {0} file.", "Str_Organize_ToastMany", "Organized {0} files.", result.Moved + result.Copied));
                 }
                 catch (Exception ex)
                 {
@@ -710,7 +710,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetBusy(false, undo: false);
-                TxtProgress.Text = "Organize failed.";
+                TxtProgress.Text = Loc.T("Str_Organize_MsgFailed", "Organize failed.");
                 MessageBox.Show(Loc.F("Str_MB_OrganizeFailed", "Organize failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -756,10 +756,10 @@ namespace Smart_Tools.WPF.Views
                 OrganizeManager.DeleteJournal();
                 _journal = null;
 
-                var parts = new List<string> { $"Undone: {result.Restored:N0} back in place" };
-                if (result.Renamed > 0) parts.Add($"{result.Renamed:N0} restored with a new name (the old name was taken)");
-                if (result.Missing > 0) parts.Add($"{result.Missing:N0} no longer at the organized location");
-                if (result.Failed > 0) parts.Add($"{result.Failed:N0} couldn't be undone");
+                var parts = new List<string> { Loc.F("Str_Organize_UndoDone", "Undone: {0:N0} back in place", result.Restored) };
+                if (result.Renamed > 0) parts.Add(Loc.F("Str_Organize_UndoRenamed", "{0:N0} restored with a new name (the old name was taken)", result.Renamed));
+                if (result.Missing > 0) parts.Add(Loc.F("Str_Organize_UndoMissing", "{0:N0} no longer at the organized location", result.Missing));
+                if (result.Failed > 0) parts.Add(Loc.F("Str_Files_UndoFailed", "{0:N0} couldn't be undone", result.Failed));
                 SetBusy(false, undo: true);
                 TxtProgress.Text = string.Join(" · ", parts);
 
@@ -770,7 +770,7 @@ namespace Smart_Tools.WPF.Views
             catch (OperationCanceledException)
             {
                 SetBusy(false, undo: true);
-                TxtProgress.Text = "Undo stopped - files already put back stay back. Undo again to finish.";
+                TxtProgress.Text = Loc.T("Str_Organize_MsgUndoStopped", "Undo stopped - files already put back stay back. Undo again to finish.");
             }
             catch (Exception ex)
             {
@@ -790,7 +790,7 @@ namespace Smart_Tools.WPF.Views
         {
             BtnUndoOrganize.IsEnabled = !_isBusy && _journal != null;
             BtnUndoOrganize.ToolTip = _journal != null
-                ? (object)$"Undo the last run ({_journal.When:g} · {_journal.Entries.Count:N0} file{(_journal.Entries.Count == 1 ? "" : "s")} {(_journal.Moved ? "moved" : "copied")})"
+                ? (object)Loc.F(_journal.Moved ? "Str_Organize_UndoMoved" : "Str_Organize_UndoCopied", _journal.Moved ? "Undo the last run ({0:g} · {1:N0} files moved)" : "Undo the last run ({0:g} · {1:N0} files copied)", _journal.When, _journal.Entries.Count)
                 : TryFindResource("Str_Organize_UndoTooltip");
         }
 
@@ -810,10 +810,10 @@ namespace Smart_Tools.WPF.Views
 
             string phase = p.Phase switch
             {
-                OrganizePhase.Scanning => $"Reading the folder · {p.Processed:N0} files so far",
-                OrganizePhase.Planning => $"Reading video/audio/image details · {p.Processed:N0} of {p.Total:N0}",
-                OrganizePhase.Undoing => $"Undoing · {p.Processed:N0} of {p.Total:N0}",
-                _ => $"{(RadioMove.IsChecked == true ? "Moving" : "Copying")} · {p.Processed:N0} of {p.Total:N0}",
+                OrganizePhase.Scanning => Loc.F("Str_Organize_PhaseScanning", "Reading the folder · {0:N0} files so far", p.Processed),
+                OrganizePhase.Planning => Loc.F("Str_Organize_PhasePlanning", "Reading video/audio/image details · {0:N0} of {1:N0}", p.Processed, p.Total),
+                OrganizePhase.Undoing => Loc.F("Str_Files_PhaseUndoing", "Undoing · {0:N0} of {1:N0}", p.Processed, p.Total),
+                _ => (RadioMove.IsChecked == true ? Loc.F("Str_Organize_PhaseMoving", "Moving · {0:N0} of {1:N0}", p.Processed, p.Total) : Loc.F("Str_Organize_PhaseCopying", "Copying · {0:N0} of {1:N0}", p.Processed, p.Total)),
             };
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentFile) ? phase : $"{phase} · {p.CurrentFile}";
         }

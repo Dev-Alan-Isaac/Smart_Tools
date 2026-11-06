@@ -104,7 +104,7 @@ namespace Smart_Tools.WPF.Views
             var o = ReadOptions();
             if (string.IsNullOrWhiteSpace(o.Folder) || !Directory.Exists(o.Folder))
             {
-                ShowStatus("Choose the folder to export.", StatusKind.Warning);
+                ShowStatus(Loc.T("Str_FolderTree_MsgChoose", "Choose the folder to export."), StatusKind.Warning);
                 InputCard.PopDropArea();
                 return;
             }
@@ -114,26 +114,26 @@ namespace Smart_Tools.WPF.Views
             ClearResult();
             SetBusy(true);
             Bar.IsIndeterminate = true;
-            TxtProgress.Text = "Reading the folder...";
+            TxtProgress.Text = Loc.T("Str_FolderTree_MsgReading", "Reading the folder...");
 
             FolderTreeResult result;
             try
             {
                 var progress = new Progress<FolderTreeProgress>(p =>
-                    TxtProgress.Text = $"{p.Folders:N0} folders · {p.Files:N0} files · {p.Current}");
+                    TxtProgress.Text = Loc.F("Str_FolderTree_Progress", "{0:N0} folders · {1:N0} files · {2}", p.Folders, p.Files, p.Current));
                 result = await FolderTreeManager.ScanAsync(o, progress, _cts.Token);
             }
             catch (OperationCanceledException)
             {
                 SetBusy(false);
-                TxtProgress.Text = "Stopped.";
+                TxtProgress.Text = Loc.T("Str_FolderTree_MsgStopped", "Stopped.");
                 UpdateState();
                 return;
             }
             catch (Exception ex)
             {
                 SetBusy(false);
-                ShowStatus($"The folder couldn't be read: {ex.Message}", StatusKind.Error);
+                ShowStatus(Loc.F("Str_FolderTree_MsgReadFailed", "The folder couldn't be read: {0}", ex.Message), StatusKind.Error);
                 return;
             }
 
@@ -143,9 +143,9 @@ namespace Smart_Tools.WPF.Views
             Bar.Value = 100;
             TxtProgressPercent.Text = "100%";
             ShowTree(result, ReadOptions());
-            TxtProgress.Text = $"Done in {result.Elapsed.TotalSeconds:0.0} s.";
+            TxtProgress.Text = Loc.F("Str_FolderTree_MsgDone", "Done in {0:0.0} s.", result.Elapsed.TotalSeconds);
             if (result.Unreadable > 0)
-                ShowStatus($"{result.Unreadable:N0} folder{(result.Unreadable == 1 ? "" : "s")} couldn't be opened and {(result.Unreadable == 1 ? "is" : "are")} marked 'no access'.", StatusKind.Warning);
+                ShowStatus(Loc.N(result.Unreadable, "Str_FolderTree_UnreadableOne", "{0:N0} folder couldn't be opened and is marked 'no access'.", "Str_FolderTree_UnreadableMany", "{0:N0} folders couldn't be opened and are marked 'no access'.", result.Unreadable), StatusKind.Warning);
         }
 
         private void ShowTree(FolderTreeResult result, FolderTreeOptions o)
@@ -153,10 +153,10 @@ namespace Smart_Tools.WPF.Views
             _text = FolderTreeManager.Render(result, o);
             TxtPreview.Text = _text;
             TxtPreview.ScrollToHome();
-            TxtSummaryFolders.Text = $"{result.Folders:N0} folder{(result.Folders == 1 ? "" : "s")}";
-            TxtSummaryFiles.Text = $"{result.Files:N0} file{(result.Files == 1 ? "" : "s")}";
+            TxtSummaryFolders.Text = FilesText.Folders(result.Folders);
+            TxtSummaryFiles.Text = FilesText.Files(result.Files);
             TxtSummarySize.Text = CopyQueueManager.FormatSize(result.Bytes);
-            TxtSummaryUnreadable.Text = $"{result.Unreadable:N0} no access";
+            TxtSummaryUnreadable.Text = Loc.F("Str_FolderTree_SumNoAccess", "{0:N0} no access", result.Unreadable);
             PillUnreadable.Visibility = result.Unreadable > 0 ? Visibility.Visible : Visibility.Collapsed;
             bool firstShow = SummaryPanel.Visibility != Visibility.Visible;
             SummaryPanel.Visibility = Visibility.Visible;
@@ -174,11 +174,11 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 System.Windows.Clipboard.SetText(_text);
-                TxtProgress.Text = "Copied to the clipboard.";
+                TxtProgress.Text = Loc.T("Str_FolderTree_MsgCopied", "Copied to the clipboard.");
             }
             catch (Exception ex)
             {
-                ShowStatus($"The clipboard is busy: {ex.Message}", StatusKind.Error);
+                ShowStatus(Loc.F("Str_FolderTree_MsgClipboardBusy", "The clipboard is busy: {0}", ex.Message), StatusKind.Error);
             }
         }
 
@@ -190,7 +190,7 @@ namespace Smart_Tools.WPF.Views
             var dialog = new SaveFileDialog
             {
                 Title = DialogTitle,
-                FileName = $"{SafeName(_result.Root.Name)} tree{ext}",
+                FileName = Loc.F("Str_FolderTree_FileName", "{0} tree{1}", SafeName(_result.Root.Name), ext),
                 Filter = $"{o.Format} (*{ext})|*{ext}",
                 DefaultExt = ext,
                 OverwritePrompt = false,   // never replaced - a taken name gets ' (2)'
@@ -201,12 +201,12 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 string written = await FolderTreeManager.SaveAsync(_text, dialog.FileName);
-                TxtProgress.Text = $"Saved {Path.GetFileName(written)}";
+                TxtProgress.Text = Loc.F("Str_FolderTree_MsgSaved", "Saved {0}", Path.GetFileName(written));
                 ShellExplorer.Show(written);
             }
             catch (Exception ex)
             {
-                ShowStatus($"The file couldn't be saved: {ex.Message}", StatusKind.Error);
+                ShowStatus(Loc.F("Str_FolderTree_MsgSaveFailed", "The file couldn't be saved: {0}", ex.Message), StatusKind.Error);
             }
             finally
             {
@@ -235,7 +235,7 @@ namespace Smart_Tools.WPF.Views
         {
             _busy = busy;
             SidebarStack.IsEnabled = !busy;
-            TxtStart.Text = busy ? "Stop" : "Build tree";
+            TxtStart.Text = busy ? Loc.T("Str_FolderTree_Stop", "Stop") : Loc.T("Str_FolderTree_Build", "Build tree");
             IconStart.Kind = busy ? PackIconKind.Stop : PackIconKind.FileTreeOutline;
             if (!busy) Bar.IsIndeterminate = false;
         }
@@ -249,7 +249,7 @@ namespace Smart_Tools.WPF.Views
             if (!has)
             {
                 SummaryPanel.Visibility = Visibility.Collapsed;
-                if (!_busy) TxtProgress.Text = string.IsNullOrWhiteSpace(InputCard.FolderPath) ? "Choose a folder to start." : "Ready - press Build tree.";
+                if (!_busy) TxtProgress.Text = string.IsNullOrWhiteSpace(InputCard.FolderPath) ? Loc.T("Str_FolderTree_MsgChooseStart", "Choose a folder to start.") : Loc.T("Str_FolderTree_MsgReady", "Ready - press Build tree.");
             }
         }
 
