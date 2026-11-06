@@ -248,7 +248,12 @@ namespace Smart_Tools.WPF.Views
                 OverwritePrompt = false,   // never replaced - a taken name gets ' (2)'
             };
             if (dialog.ShowDialog() != true) return;
+            await SaveToAsync(dialog.FileName, o);
+        }
 
+        /// <summary>Writes (or draws) the tree to <paramref name="fileName"/>; a taken name gets " (2)".</summary>
+        private async Task SaveToAsync(string fileName, FolderTreeOptions o)
+        {
             BtnSave.IsEnabled = false;
             try
             {
@@ -269,14 +274,14 @@ namespace Smart_Tools.WPF.Views
                         byte[] png = FolderTreeVisual.RenderPng(tree, o, CancellationToken.None, out int d2, out int t2);
                         return (png, d2, t2);
                     });
-                    written = await FolderTreeManager.SaveBytesAsync(data, dialog.FileName);
+                    written = await FolderTreeManager.SaveBytesAsync(data, fileName);
                     saved = drawn < total
                         ? Loc.F("Str_FolderTree_MsgSavedPartial", "Saved {0} - the first {1:N0} of {2:N0} items. Use PDF for the whole tree.", Path.GetFileName(written), drawn, total)
                         : Loc.F("Str_FolderTree_MsgSaved", "Saved {0}", Path.GetFileName(written));
                 }
                 else
                 {
-                    written = await FolderTreeManager.SaveAsync(_text, dialog.FileName);
+                    written = await FolderTreeManager.SaveAsync(_text, fileName);
                     saved = Loc.F("Str_FolderTree_MsgSaved", "Saved {0}", Path.GetFileName(written));
                 }
                 TxtProgress.Text = saved;
