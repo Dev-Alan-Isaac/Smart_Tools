@@ -42,6 +42,9 @@ namespace Smart_Tools.WPF.Controllers
     {
         private sealed record Frame(BitmapSource Source, int Left, int Top, int Delay, int Disposal);
 
+        /// <summary>Most memory the preview may hold for decoded frames (the frames are kept for the whole animation).</summary>
+        private const long MaxPreviewBytes = 768L * 1024 * 1024;
+
         private readonly List<Frame> _frames;
         private readonly byte[] _canvas;
         private byte[]? _saved;
@@ -116,6 +119,9 @@ namespace Smart_Tools.WPF.Controllers
                 }
 
                 if (width <= 0 || height <= 0) return null;
+
+                // Every frame is decoded and kept for the preview: a huge GIF is not previewed rather than filling memory.
+                if ((long)frames.Count * frames.Max(fr => (long)fr.Source.PixelWidth * fr.Source.PixelHeight) * 4 > MaxPreviewBytes) return null;
                 var animator = new GifAnimator(frames, width, height);
                 animator.Advance();
                 return animator;

@@ -77,6 +77,7 @@ namespace Smart_Tools.WPF
             // Tool and section names come from the language dictionaries (Str_Tool_*, Str_Cat_*); the model itself stays WPF-free.
             Smart_Tools.WPF.Models.CatalogText.Lookup = key => Current.TryFindResource(key) as string;
 
+            ImageLoad.ConfigureLimits();
             base.OnStartup(e);
             ResourceMonitor.Start(Dispatcher);
 

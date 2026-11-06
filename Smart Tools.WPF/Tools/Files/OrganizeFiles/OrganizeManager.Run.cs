@@ -571,9 +571,10 @@ namespace Smart_Tools.WPF.Controllers
                     removed++;
                 }
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // locked or protected folder: leave it
+                // locked or protected folder: leave it, but say why in the log
+                Log.Info($"Organize: empty folder left in place ({ex.GetType().Name}: {ex.Message})");
             }
             return removed;
         }
@@ -624,9 +625,10 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
                     }
-                    catch (Exception)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                     {
-                        // still in use - leave it
+                        // in use or protected - leave it, but say why in the log
+                        Log.Info($"Organize undo: folder left in place ({ex.GetType().Name}): {folder}");
                     }
                 }
                 return result;

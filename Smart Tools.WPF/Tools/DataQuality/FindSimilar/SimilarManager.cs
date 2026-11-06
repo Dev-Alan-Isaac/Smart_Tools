@@ -33,6 +33,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             _fingerprinter = ComputeFingerprintAsync;
             _usesMediaDecoders = true;
+            _cache = new(() => SimilarFingerprintCache.Load());   // only the real scanner remembers fingerprints (tests inject their own)
         }
 
         public SimilarManager(Fingerprinter fingerprinter) => _fingerprinter = fingerprinter;
@@ -113,6 +114,8 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public Task<SimilarScanResult> ScanAsync(SimilarScanOptions options, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token = default)
         {
+            if (options.Auto) return Task.Run(() => ScanAutoAsync(options, keepRule, progress, token), token);
+
             if (!IsImplemented(options.Method))
                 throw new NotSupportedException($"{DisplayName(options.Method)} isn't available. Use pHash, dHash or wHash for images, frame sampling for video, or the acoustic fingerprint for audio.");
 
@@ -122,6 +125,66 @@ namespace Smart_Tools.WPF.Controllers
 
             return Task.Run(() => ScanCoreAsync(options, kind, keepRule, progress, token), token);
         }
+
+        /// <summary>
+        /// Auto: pictures, videos and audio in the chosen folders are each compared with their own method, one
+        /// kind after another (so memory and ffmpeg processes never add up), and the groups are merged into one list.
+        /// Video and audio are skipped, and logged, when ffmpeg is missing.
+        /// </summary>
+        private async Task<SimilarScanResult> ScanAutoAsync(SimilarScanOptions options, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token)
+        {
+            var watch = Stopwatch.StartNew();
+            var plan = new List<(MediaKind Kind, SimilarDetectionMethod Method)>
+            {
+                (MediaKind.Image, KindOf(options.Method) == MediaKind.Image ? options.Method : SimilarDetectionMethod.PHash),
+            };
+            if (!_usesMediaDecoders || FfmpegAvailable)
+            {
+                plan.Add((MediaKind.Video, SimilarDetectionMethod.VideoFrameHash));
+                plan.Add((MediaKind.Audio, SimilarDetectionMethod.AudioChromaprint));
+            }
+            else Log.Warn("Auto scan: ffmpeg not found, videos and audio are skipped.");
+
+            var groups = new List<SimilarGroup>();
+            int scanned = 0, unreadable = 0, inaccessible = 0, links = 0;
+            foreach (var (kind, method) in plan)
+            {
+                token.ThrowIfCancellationRequested();
+                var part = await ScanCoreAsync(new SimilarScanOptions
+                {
+                    Folders = options.Folders,
+                    IncludeSubfolders = options.IncludeSubfolders,
+                    IgnoreSystemFiles = options.IgnoreSystemFiles,
+                    Method = method,
+                    ThresholdPercent = options.ThresholdPercent,
+                    MaxDegreeOfParallelism = kind == MediaKind.Image ? options.MaxDegreeOfParallelism : Math.Min(options.MaxDegreeOfParallelism, 4),
+                }, kind, keepRule, progress, token).ConfigureAwait(false);
+
+                groups.AddRange(part.Groups);
+                scanned += part.FilesScanned;
+                unreadable += part.UnreadableFiles;
+                inaccessible = Math.Max(inaccessible, part.InaccessibleFolders);
+                links = Math.Max(links, part.SkippedLinks);
+            }
+
+            groups.Sort((a, b) => b.PotentialBytes.CompareTo(a.PotentialBytes));
+            for (int i = 0; i < groups.Count; i++) groups[i].Id = i + 1;
+
+            return new SimilarScanResult
+            {
+                Groups = groups,
+                Kind = MediaKind.Image,
+                IsMixed = true,
+                FilesScanned = scanned,
+                UnreadableFiles = unreadable,
+                InaccessibleFolders = inaccessible,
+                SkippedLinks = links,
+                Elapsed = watch.Elapsed,
+            };
+        }
+
+        private Lazy<SimilarFingerprintCache?> _cache = new(() => null);
+        private SimilarFingerprintCache? Cache => _cache.Value;
 
         private async Task<SimilarScanResult> ScanCoreAsync(SimilarScanOptions options, MediaKind kind, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token)
         {
@@ -134,6 +197,9 @@ namespace Smart_Tools.WPF.Controllers
             state.Total = files.Count;
             state.Report("", force: true);
 
+            var cache = Cache;
+            cache?.BeginScan();
+            int fromCache = 0;
             var prints = new FileFingerprint?[files.Count];
             await Parallel.ForEachAsync(Enumerable.Range(0, files.Count), new ParallelOptions
             {
@@ -143,7 +209,16 @@ namespace Smart_Tools.WPF.Controllers
             {
                 try
                 {
-                    prints[i] = await _fingerprinter(files[i].FullName, options.Method, ct).ConfigureAwait(false);
+                    if (cache != null && cache.TryGet(files[i], options.Method, out var known))
+                    {
+                        prints[i] = known;
+                        Interlocked.Increment(ref fromCache);
+                    }
+                    else
+                    {
+                        prints[i] = await _fingerprinter(files[i].FullName, options.Method, ct).ConfigureAwait(false);
+                        if (prints[i] != null) cache?.Put(files[i], options.Method, prints[i]!);
+                    }
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 {
@@ -161,7 +236,8 @@ namespace Smart_Tools.WPF.Controllers
                 state.Report(files[i].FullName);
             }).ConfigureAwait(false);
 
-            Log.Info($"Scan fingerprinting finished in {state.Watch.Elapsed.TotalSeconds:0.0}s, grouping");
+            cache?.Save();
+            Log.Info($"Scan fingerprinting finished in {state.Watch.Elapsed.TotalSeconds:0.0}s ({fromCache} of {files.Count} from the cache), grouping");
             state.Phase = SimilarScanPhase.Grouping;
             state.Report("", force: true);
 

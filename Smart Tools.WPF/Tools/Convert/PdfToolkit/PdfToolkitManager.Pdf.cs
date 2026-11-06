@@ -146,6 +146,10 @@ namespace Smart_Tools.WPF.Controllers
                     if (gray == null) return false;
 
                     // Scans and exported pages are often plain (Flate) pixels, not JPEGs: turn them into a JPEG, which is far smaller for photos and scans.
+                    // Both kinds are decoded whole: ask the budget for the pixels first (and leave absurd sizes alone).
+                    int declaredW = image.Elements.GetInteger("/Width"), declaredH = image.Elements.GetInteger("/Height");
+                    if (declaredW <= 0 || declaredH <= 0 || (long)declaredW * declaredH > 120_000_000) return false;
+                    using var budget = MemoryBudget.Acquire(ImageLoad.EstimateBytes((ulong)declaredW, (ulong)declaredH));
                     using var picture = isFlate ? ReadFlatePixels(image, gray.Value) : new MagickImage(raw);
                     if (picture == null || picture.ColorSpace == ImageMagick.ColorSpace.CMYK) return false;
 

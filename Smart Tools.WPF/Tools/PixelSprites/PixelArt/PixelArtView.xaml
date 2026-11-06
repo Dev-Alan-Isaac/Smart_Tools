@@ -365,12 +365,12 @@
                                                     ViewportUnits="Absolute">
                                                     <DrawingBrush.Drawing>
                                                         <DrawingGroup>
-                                                            <GeometryDrawing Brush="#FFBDBDBD">
+                                                            <GeometryDrawing Brush="{DynamicResource CheckerLight}">
                                                                 <GeometryDrawing.Geometry>
                                                                     <RectangleGeometry Rect="0,0,12,12" />
                                                                 </GeometryDrawing.Geometry>
                                                             </GeometryDrawing>
-                                                            <GeometryDrawing Brush="#FF8A8A8A">
+                                                            <GeometryDrawing Brush="{DynamicResource CheckerDark}">
                                                                 <GeometryDrawing.Geometry>
                                                                     <GeometryGroup>
                                                                         <RectangleGeometry Rect="0,0,6,6" />

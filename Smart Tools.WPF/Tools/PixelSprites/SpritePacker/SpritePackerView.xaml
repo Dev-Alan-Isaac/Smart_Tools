@@ -1087,13 +1087,13 @@
                                             <Canvas x:Name="HighlightLayer" IsHitTestVisible="False">
                                                 <Rectangle
                                                     x:Name="SelectRect"
-                                                    Fill="#331E88E5"
-                                                    Stroke="#FF1E88E5"
+                                                    Fill="{DynamicResource SelectionFill}"
+                                                    Stroke="{DynamicResource AccentColor}"
                                                     Visibility="Collapsed" />
                                                 <Rectangle
                                                     x:Name="HoverRect"
-                                                    Fill="#33FFFFFF"
-                                                    Stroke="#FFFFFFFF"
+                                                    Fill="{DynamicResource HoverOverlayFill}"
+                                                    Stroke="{DynamicResource HoverOverlayStroke}"
                                                     Visibility="Collapsed" />
                                             </Canvas>
                                         </Grid>
@@ -1179,12 +1179,12 @@
                                             Stretch="Fill" />
                                         <Path
                                             x:Name="SkipPath"
-                                            Fill="#99000000"
+                                            Fill="{DynamicResource ScrimBg}"
                                             IsHitTestVisible="False" />
                                         <Path
                                             x:Name="CellsPath"
                                             IsHitTestVisible="False"
-                                            Stroke="#FF1E88E5" />
+                                            Stroke="{DynamicResource AccentColor}" />
                                     </Grid>
                                 </Viewbox>
 

@@ -397,7 +397,7 @@ namespace Smart_Tools.WPF.Controllers
                         Options = options,
                         Status = result.Success ? QrRowStatus.Generated : QrRowStatus.Failed,
                         Message = result.Success ? "Generated" : result.ErrorMessage,
-                        Thumbnail = result.Image,
+                        Thumbnail = i < BarcodeManager.BatchThumbnailRows ? result.Image : null,   // later rows keep no picture: 100,000 thumbnails would be gigabytes
                         SizeInfo = result.Success ? $"v{result.Version} · {result.ModuleCount}×{result.ModuleCount}" : "",
                     });
 

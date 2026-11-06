@@ -65,7 +65,7 @@
                         <Grid VerticalAlignment="Center">
                             <Border
                                 Height="3"
-                                Background="#33FFFFFF"
+                                Background="{DynamicResource SliderTrack}"
                                 CornerRadius="1.5" />
                             <Track x:Name="PART_Track">
                                 <Track.DecreaseRepeatButton>
@@ -630,6 +630,26 @@
                                         Content="{DynamicResource Str_FindSimilar_DetectionMethodHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.ImageSearchOutline}" />
+
+                                    <RadioButton
+                                        x:Name="RadioKindAuto"
+                                        Margin="0,0,0,4"
+                                        Checked="RadioKind_Checked"
+                                        GroupName="MediaKind"
+                                        Style="{StaticResource ModeToggleTallStyle}"
+                                        ToolTip="{DynamicResource Str_Similar_AutoTip}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <materialDesign:PackIcon
+                                                Width="17"
+                                                Height="17"
+                                                VerticalAlignment="Center"
+                                                Kind="AutoFix" />
+                                            <TextBlock
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Text="{DynamicResource Str_Similar_Auto}" />
+                                        </StackPanel>
+                                    </RadioButton>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -1286,7 +1306,7 @@
             <Border
                 x:Name="KeepSidebarScrim"
                 Grid.Column="2"
-                Background="Black"
+                Background="{DynamicResource MediaStageBg}"
                 CornerRadius="12"
                 MouseDown="KeepSidebarScrim_MouseDown"
                 Opacity="0.35"
@@ -1499,7 +1519,7 @@
             <Border
                 x:Name="CompareScrim"
                 Grid.ColumnSpan="3"
-                Background="Black"
+                Background="{DynamicResource MediaStageBg}"
                 MouseDown="CompareScrim_MouseDown"
                 Opacity="0.6"
                 Visibility="Collapsed" />
@@ -1619,7 +1639,7 @@
                             </Grid.RowDefinitions>
                             <Border
                                 x:Name="LeftStage"
-                                Background="#0E0F12"
+                                Background="{DynamicResource MediaStageBg}"
                                 BorderBrush="{DynamicResource StatusSuccessFg}"
                                 BorderThickness="2"
                                 ClipToBounds="True"
@@ -1650,7 +1670,7 @@
                                             Width="72"
                                             Height="72"
                                             HorizontalAlignment="Center"
-                                            Foreground="#8A8F99"
+                                            Foreground="{DynamicResource MediaStageTextMuted}"
                                             Kind="MusicBoxOutline" />
                                         <materialDesign:PackIcon
                                             x:Name="IconPlayingLeft"
@@ -1658,7 +1678,7 @@
                                             Height="28"
                                             Margin="0,8,0,0"
                                             HorizontalAlignment="Center"
-                                            Foreground="#8A8F99"
+                                            Foreground="{DynamicResource MediaStageTextMuted}"
                                             Kind="Waveform" />
                                     </StackPanel>
                                     <Border
@@ -1732,7 +1752,7 @@
                             </Grid.RowDefinitions>
                             <Border
                                 x:Name="RightStage"
-                                Background="#0E0F12"
+                                Background="{DynamicResource MediaStageBg}"
                                 BorderBrush="Transparent"
                                 BorderThickness="2"
                                 ClipToBounds="True"
@@ -1763,14 +1783,14 @@
                                             Width="72"
                                             Height="72"
                                             HorizontalAlignment="Center"
-                                            Foreground="#8A8F99"
+                                            Foreground="{DynamicResource MediaStageTextMuted}"
                                             Kind="MusicBoxOutline" />
                                         <materialDesign:PackIcon
                                             Width="28"
                                             Height="28"
                                             Margin="0,8,0,0"
                                             HorizontalAlignment="Center"
-                                            Foreground="#8A8F99"
+                                            Foreground="{DynamicResource MediaStageTextMuted}"
                                             Kind="Waveform" />
                                     </StackPanel>
                                     <Border
@@ -1778,7 +1798,7 @@
                                         Padding="4"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Top"
-                                        Background="#99000000"
+                                        Background="{DynamicResource ScrimBg}"
                                         CornerRadius="12">
                                         <StackPanel Orientation="Horizontal">
                                             <Button
@@ -1799,7 +1819,7 @@
                                                 VerticalAlignment="Center"
                                                 FontSize="11.5"
                                                 FontWeight="SemiBold"
-                                                Foreground="#E9EBEF" />
+                                                Foreground="{DynamicResource MediaStageText}" />
                                             <Button
                                                 x:Name="BtnNextDuplicate"
                                                 Width="28"
@@ -1909,7 +1929,7 @@
                             x:Name="TransportBar"
                             Grid.Column="1"
                             Padding="10,6"
-                            Background="#0E0F12"
+                            Background="{DynamicResource MediaStageBg}"
                             CornerRadius="30">
                             <StackPanel Orientation="Horizontal">
                                 <Button

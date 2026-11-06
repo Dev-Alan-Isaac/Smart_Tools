@@ -26,7 +26,7 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **Validate Data** | `validate-data` | Check files for broken or invalid data |
 | **Duplicate Data** | `duplicate-data` | Find and remove duplicate files |
-| **Find Similar Files** | `find-similar` | Spot near-identical files and images |
+| **Find Similar Files** | `find-similar` | Spot near-identical files and images; "Auto" compares pictures, videos and audio in one run, and a fingerprint cache makes rescans fast |
 | **File Differences** | `file-differences` | Compare two files side by side |
 | **Text Diff** | `text-diff` | Paste two texts and see what changed, line by line |
 | **Hash & Checksum Verifier** | `hash-verifier` | Check a file is what it claims to be |

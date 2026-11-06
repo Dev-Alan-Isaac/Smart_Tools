@@ -25,6 +25,16 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
+                // A file that cannot be parsed would be overwritten by the next save: keep a copy first.
+                if (ex is JsonException or NotSupportedException)
+                {
+                    try
+                    {
+                        string bad = path ?? PathFor(name);
+                        File.Copy(bad, bad + ".bad", overwrite: true);
+                    }
+                    catch (Exception copyEx) when (copyEx is IOException or UnauthorizedAccessException) { }
+                }
                 return new T();
             }
         }

@@ -342,7 +342,8 @@ namespace Smart_Tools.WPF.Controllers
                 frames.Ping(source);
                 if (frames.Count > 1) return "Animated pictures are left alone (the mark would be lost or the animation flattened).";
             }
-            using var image = new MagickImage(source);
+            using var loaded = ImageLoad.Open(source, CancellationToken.None);   // pixels held in the shared byte budget
+            var image = loaded.Image;
             image.AutoOrient();                                        // camera rotation first, so the mark sits where the preview shows it
             var stamp = RenderStamp((int)image.Width, (int)image.Height, s, logo) ?? throw new InvalidOperationException("The mark doesn't fall on this picture.");
             using var mark = new MagickImage(ToPng(stamp.Bitmap));

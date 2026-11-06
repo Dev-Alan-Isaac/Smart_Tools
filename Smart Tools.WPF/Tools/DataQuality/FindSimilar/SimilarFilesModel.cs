@@ -72,6 +72,12 @@ namespace Smart_Tools.WPF.Models
         public bool IgnoreSystemFiles { get; init; } = true;
         public SimilarDetectionMethod Method { get; init; } = SimilarDetectionMethod.PHash;
 
+        /// <summary>
+        /// Auto: look at every file's category (picture, video, audio) and compare each kind with its own method in one run.
+        /// <see cref="Method"/> then only chooses the picture method.
+        /// </summary>
+        public bool Auto { get; init; }
+
         /// <summary>50-100: how alike files must be to be grouped.</summary>
         public double ThresholdPercent { get; init; } = 85;
 
@@ -95,6 +101,9 @@ namespace Smart_Tools.WPF.Models
     {
         public List<SimilarGroup> Groups { get; init; } = new();
         public MediaKind Kind { get; init; }
+
+        /// <summary>An Auto scan: groups of several kinds in one list.</summary>
+        public bool IsMixed { get; init; }
         public int FilesScanned { get; init; }
         public int UnreadableFiles { get; init; }
         public int InaccessibleFolders { get; init; }
@@ -131,6 +140,9 @@ namespace Smart_Tools.WPF.Models
         public int Width { get; init; }
         public int Height { get; init; }
         public string Resolution => Width > 0 && Height > 0 ? $"{Width}x{Height}" : "";
+
+        /// <summary>Resolution for pictures, length for video and audio (the one "Details" column of an Auto scan).</summary>
+        public string KindDetails => Kind == MediaKind.Image ? Resolution : Duration;
         public long PixelCount => (long)Width * Height;
 
         /// <summary>"4032x3024 · 3.1 MB" / "0:42 · 1920x1080 · 12 MB" - the compare cards' detail line.</summary>
@@ -257,6 +269,7 @@ namespace Smart_Tools.WPF.Models
     {
         public List<string> Folders { get; set; } = new();
         public SimilarDetectionMethod Method { get; set; } = SimilarDetectionMethod.PHash;
+        public bool AutoKinds { get; set; }
         public double ThresholdPercent { get; set; } = 85;
         public bool IncludeSubfolders { get; set; } = true;
         public bool IgnoreSystemFiles { get; set; } = true;

@@ -56,14 +56,13 @@ namespace Smart_Tools.WPF.Controllers
         {
             try
             {
-                var info = new MagickImageInfo(path);
-                var settings = new MagickReadSettings { Width = ImageDecodeHint, Height = ImageDecodeHint };
-
-                using var image = new MagickImage(path, settings);
+                // Reduced JPEG decode under the byte budget (Width/Height in MagickReadSettings do not shrink a real photo).
+                using var loaded = ImageLoad.Open(path, CancellationToken.None, ImageDecodeHint);
+                var image = loaded.Image;
                 image.AutoOrient();
 
                 // Header size is before rotation; follow the decoded orientation.
-                int width = (int)info.Width, height = (int)info.Height;
+                int width = (int)loaded.SourceWidth, height = (int)loaded.SourceHeight;
                 if ((image.Width > image.Height) != (width > height) && image.Width != image.Height) (width, height) = (height, width);
 
                 using var small = (MagickImage)image.Clone();

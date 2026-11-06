@@ -533,9 +533,20 @@ namespace Smart_Tools.WPF.Views
             var bgra = SpritePackerManager.LoadBgra(path, out width, out height, out problem);
             lock (_cacheLock)
             {
-                if (_cacheBytes > CacheLimitBytes) { _cache.Clear(); _cacheBytes = 0; }
+                long add = bgra?.Length ?? 0;
+                if (_cache.Remove(path, out var replaced)) _cacheBytes -= replaced.Bgra?.Length ?? 0;
+                if (_cacheBytes + add > CacheLimitBytes)
+                {
+                    // Drop the oldest pictures until there is room (down to half the limit), instead of emptying the whole cache.
+                    foreach (string key in _cache.Keys.ToList())
+                    {
+                        if (_cacheBytes + add <= CacheLimitBytes / 2) break;
+                        _cacheBytes -= _cache[key].Bgra?.Length ?? 0;
+                        _cache.Remove(key);
+                    }
+                }
                 _cache[path] = new CachedSprite(length, modified, bgra, width, height, problem);
-                _cacheBytes += bgra?.Length ?? 0;
+                _cacheBytes += add;
             }
             return bgra;
         }

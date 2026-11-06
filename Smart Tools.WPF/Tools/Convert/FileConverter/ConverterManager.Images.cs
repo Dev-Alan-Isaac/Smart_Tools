@@ -7,6 +7,9 @@ namespace Smart_Tools.WPF.Controllers
     /// <summary>Image conversion with Magick.NET, following <see cref="ImagePlan"/>.</summary>
     public sealed partial class ConverterManager
     {
+        /// <summary>Largest animation (frames x full canvas, in bytes) converted in memory; bigger ones are refused with a message.</summary>
+        private const long MaxAnimatedBytes = 3L << 30;
+
         private static MagickFormat MagickFormatFor(ConvertImageFormat format) => format switch
         {
             ConvertImageFormat.Png => MagickFormat.Png,
@@ -54,6 +57,19 @@ namespace Smart_Tools.WPF.Controllers
             // An SVG is one picture: skip reading it twice.
             if (plan.KeepAnimation && !string.Equals(Path.GetExtension(input), ".svg", StringComparison.OrdinalIgnoreCase))
             {
+                // Headers only: every frame is expanded to a full canvas below, so the cost is frames x canvas.
+                var headers = MagickImageInfo.ReadCollection(input).ToList();
+                MemoryBudget.Lease animLease = default;
+                if (headers.Count > 1)
+                {
+                    long estimate = headers.Count * ImageLoad.EstimateBytes(headers.Max(i => i.Width), headers.Max(i => i.Height));
+                    if (estimate > MaxAnimatedBytes)
+                        throw new NotSupportedException(Loc.F("Str_Converter_AnimTooBig",
+                            "This animation has {0} frames; converting it needs about {1} MB of memory, over the {2} MB limit.",
+                            headers.Count, estimate >> 20, MaxAnimatedBytes >> 20));
+                    animLease = MemoryBudget.Acquire(estimate, token);
+                }
+                using var animGuard = animLease;
                 using var frames = new MagickImageCollection(input);
                 if (frames.Count > 1)
                 {
@@ -70,7 +86,8 @@ namespace Smart_Tools.WPF.Controllers
             }
 
             token.ThrowIfCancellationRequested();
-            using var image = new MagickImage(input);
+            using var loaded = ImageLoad.Open(input, token);
+            var image = loaded.Image;
             Prepare(image, plan);
             image.Write(output, format);
         }

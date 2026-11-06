@@ -187,6 +187,9 @@ namespace Smart_Tools.WPF.Views
             RadioKindVideos.IsChecked == true ? MediaKind.Video :
             RadioKindAudio.IsChecked == true ? MediaKind.Audio : MediaKind.Image;
 
+        /// <summary>Auto: every file's category is looked at and each kind is compared with its own method.</summary>
+        private bool IsAuto => RadioKindAuto.IsChecked == true;
+
         private SimilarDetectionMethod SelectedMethod => SelectedKind switch
         {
             MediaKind.Video => SimilarDetectionMethod.VideoFrameHash,
@@ -222,7 +225,7 @@ namespace Smart_Tools.WPF.Views
                 if (images && animate) UiMotion.FadeIn(ImageMethodPanel, 4);
             }
 
-            TxtMethodHint.Text = kind switch
+            TxtMethodHint.Text = IsAuto ? Loc.T("Str_Similar_HintAuto", "Looks at every file's type and compares pictures, videos and audio each with its own method, in one run. The picture method below applies to the pictures. Files already checked and unchanged are not read again.") : kind switch
             {
                 MediaKind.Video => Loc.T("Str_Similar_HintVideo", "Samples 5 frames from each video and compares them. Finds the same clip re-encoded, resized or trimmed a little."),
                 MediaKind.Audio => Loc.T("Str_Similar_HintAudio", "Compares the sound of the first minute, section by section. Finds the same recording in another format or bitrate."),
@@ -234,7 +237,7 @@ namespace Smart_Tools.WPF.Views
                 },
             };
 
-            bool needsFfmpeg = kind != MediaKind.Image && !SimilarManager.FfmpegAvailable;
+            bool needsFfmpeg = (kind != MediaKind.Image || IsAuto) && !SimilarManager.FfmpegAvailable;
             TxtFfmpegWarning.Text = Loc.F("Str_Similar_MsgNeedsFfmpeg", "Needs ffmpeg.exe and ffprobe.exe in {0} - they weren't found.", SimilarManager.FfmpegFolder);
             UiMotion.FadeVisibility(FfmpegWarning, needsFfmpeg);
         }
@@ -281,6 +284,8 @@ namespace Smart_Tools.WPF.Views
                         break;
                 }
 
+                if (s.AutoKinds) RadioKindAuto.IsChecked = true;
+
                 SliderThreshold.Value = s.ThresholdPercent;
                 UpdateThresholdUi(SliderThreshold.Value);
                 ChkIncludeSubfolders.IsChecked = s.IncludeSubfolders;
@@ -303,6 +308,7 @@ namespace Smart_Tools.WPF.Views
 
             _settings.Folders = _folders.Select(f => f.FullPath).ToList();
             _settings.Method = SelectedMethod;
+            _settings.AutoKinds = IsAuto;
             _settings.ThresholdPercent = SliderThreshold.Value;
             _settings.IncludeSubfolders = ChkIncludeSubfolders.IsChecked == true;
             _settings.IgnoreSystemFiles = ChkIgnoreSystemFiles.IsChecked == true;
@@ -344,6 +350,7 @@ namespace Smart_Tools.WPF.Views
                 IncludeSubfolders = ChkIncludeSubfolders.IsChecked == true,
                 IgnoreSystemFiles = ChkIgnoreSystemFiles.IsChecked == true,
                 Method = SelectedMethod,
+                Auto = IsAuto,
                 ThresholdPercent = SliderThreshold.Value,
             });
         }
@@ -495,6 +502,12 @@ namespace Smart_Tools.WPF.Views
             string extra = notes.Count > 0 ? " · " + string.Join(" · ", notes) : "";
             TxtProgress.Text = Loc.F("Str_DataQuality_MsgChecked", "Checked {0:N0} files in {1:0.0} s{2}", result.FilesScanned, result.Elapsed.TotalSeconds, extra);
 
+            if (result.IsMixed)
+            {
+                ColDetails.Header = Loc.T("Str_Similar_ColDetails", "Details");
+                ColDetails.Binding = new Binding(nameof(SimilarFileItem.KindDetails));
+                return;
+            }
             ColDetails.Header = result.Kind == MediaKind.Image ? Loc.T("Str_Similar_ColResolution", "Resolution") : Loc.T("Str_Similar_ColLength", "Length");
             ColDetails.Binding = new Binding(result.Kind == MediaKind.Image ? nameof(SimilarFileItem.Resolution) : nameof(SimilarFileItem.Duration));
         }

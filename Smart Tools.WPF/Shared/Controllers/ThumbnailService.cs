@@ -78,16 +78,12 @@ namespace Smart_Tools.WPF.Engines
             // Decoding straight into a bounded raster (rather than full
             // resolution then downscaling) keeps memory sane when a duplicate
             // set includes a 40MP photo or an uncompressed RAW file.
-            var readSettings = new MagickReadSettings
-            {
-                Width = (uint)(size * 4),
-                Height = (uint)(size * 4)
-            };
-
+            // (MagickReadSettings.Width/Height do not shrink a real photo; ImageLoad decodes JPEGs reduced and
+            // holds the bytes in the shared memory budget.)
             byte[] pngBytes = await Task.Run(() =>
             {
-                using var image = new MagickImage();
-                image.Read(path, readSettings);
+                using var loaded = ImageLoad.Open(path, cancellationToken, (uint)(size * 4));
+                var image = loaded.Image;
                 image.AutoOrient();
                 image.Thumbnail(new MagickGeometry((uint)size, (uint)size));
                 image.Format = MagickFormat.Png;
