@@ -123,7 +123,9 @@ namespace Smart_Tools.WPF.Controllers
             }
             else
             {
-                if (videos.Count > 1)
+                if (videos.Count > 1 && options.SameContentLevel >= SameContentLevel.Medium)
+                    merged.AddRange(await MatchVideosEditedAsync(videos, options, state, Tick, token).ConfigureAwait(false));
+                else if (videos.Count > 1)
                     merged.AddRange(await MatchHashedAsync(sim, videos, SimilarDetectionMethod.VideoFrameHash, levelPercent,
                         options, state, Tick, token, Math.Min(options.MaxDegreeOfParallelism, 4)).ConfigureAwait(false));
                 else foreach (var c in videos) Tick(c.File.FullName);
@@ -212,6 +214,46 @@ namespace Smart_Tools.WPF.Controllers
                 result.Add((cluster.Select(i => readable[i]).ToList(), percent));
             }
             return result;
+        }
+
+        // ---------------- Videos that were edited (Medium and Heavy) ----------------
+
+        /// <summary>
+        /// Rotated, flipped, stretched, letterboxed, with an intro / outro, cut or trimmed (and centre-cropped at Heavy).
+        /// One ffmpeg process per window of the file; see <see cref="VideoContentMatcher"/>.
+        /// </summary>
+        private static async Task<List<(List<Candidate>, int)>> MatchVideosEditedAsync(
+            List<Candidate> videos, DuplicateScanOptions options, ScanState state, Action<string> tick, CancellationToken token)
+        {
+            bool crops = options.SameContentLevel == SameContentLevel.Heavy;
+            var sigs = new VideoSig?[videos.Count];
+
+            await Parallel.ForEachAsync(Enumerable.Range(0, videos.Count), new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Math.Max(1, Math.Min(options.MaxDegreeOfParallelism, 8)),
+                CancellationToken = token,
+            }, async (i, ct) =>
+            {
+                try
+                {
+                    sigs[i] = await VideoSignatureReader.ReadAsync(videos[i].File.FullName, crops, ct).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (!token.IsCancellationRequested)
+                {
+                    Log.Warn($"Video fingerprint timed out, skipped: {videos[i].File.FullName}");
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+                {
+                    Log.Info($"Video fingerprint failed, skipped: {videos[i].File.FullName} ({ex.GetType().Name}: {ex.Message})");
+                }
+
+                if (sigs[i] == null) Interlocked.Increment(ref state.UnreadableFiles);
+                else videos[i].Print = new FileFingerprint { Fingerprint = new Fingerprint(0UL), Width = sigs[i]!.Width, Height = sigs[i]!.Height, DurationSeconds = sigs[i]!.Duration };
+                tick(videos[i].File.FullName);
+            }).ConfigureAwait(false);
+
+            var groups = await VideoContentMatcher.MatchAsync(sigs, options.SameContentLevel, options.MaxDegreeOfParallelism, token).ConfigureAwait(false);
+            return groups.Select(g => (g.Members.Select(i => videos[i]).ToList(), g.Percent)).ToList();
         }
 
         // ---------------- Heavy edits: ORB keypoints ----------------

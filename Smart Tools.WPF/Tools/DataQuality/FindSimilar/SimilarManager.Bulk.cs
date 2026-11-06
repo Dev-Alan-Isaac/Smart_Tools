@@ -12,6 +12,10 @@ namespace Smart_Tools.WPF.Controllers
     {
         internal static string FfmpegPath => FfmpegExe;
 
+        /// <summary>Duration and picture size (rotation applied) of a video; zeros when ffprobe can't read it.</summary>
+        internal static async Task<ProbeResult> ProbeVideoAsync(string path, CancellationToken token) =>
+            await ProbeAsync(path, video: true, token).ConfigureAwait(false);
+
         /// <summary>Length in seconds from ffprobe; 0 when it can't be read.</summary>
         internal static async Task<double> ProbeDurationAsync(string path, CancellationToken token) =>
             (await ProbeAsync(path, video: false, token).ConfigureAwait(false)).Duration;
