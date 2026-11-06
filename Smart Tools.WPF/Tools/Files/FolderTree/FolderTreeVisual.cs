@@ -1,15 +1,15 @@
-using ImageMagick;
-using ImageMagick.Drawing;
 using PdfSharp.Drawing;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
 using Smart_Tools.WPF.Models;
 using System.IO;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Smart_Tools.WPF.Controllers
 {
     /// <summary>
-    /// The "drawn" exports of a folder tree: a PDF (PDFsharp, any size, split over pages) and a PNG picture (Magick,
+    /// The "drawn" exports of a folder tree: a PDF (PDFsharp, any size, split over pages) and a PNG picture (WPF drawing,
     /// limited to <see cref="MaxImageRows"/> items because one picture cannot be arbitrarily tall). Both draw the same
     /// rows: connector lines, a folder or file icon, the name, and the size/date next to it. No WPF types, so it can
     /// run on any thread.
@@ -17,6 +17,9 @@ namespace Smart_Tools.WPF.Controllers
     internal static class FolderTreeVisual
     {
         public const int MaxImageRows = 600;
+
+        /// <summary>Phase timings of the last picture (for the log and tests).</summary>
+        internal static string LastPictureTimings { get; private set; } = "";
         public const int MaxPdfRows = 60_000;
 
         private readonly record struct Rgb(string Hex);
@@ -236,83 +239,78 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         // =================================================================
-        //  Picture (Magick)
+        //  Picture (WPF drawing on an STA thread, PNG encoder)
         // =================================================================
 
-        private static string? FindFont(bool bold)
+        /// <summary>
+        /// Draws onto a WPF <see cref="DrawingContext"/>, or only measures when the context is null (the first pass,
+        /// which finds how wide the picture has to be). Magick can draw the same rows but needs ~5 ms per text item
+        /// (about 8 s for 600 items); WPF does them in a fraction of a second.
+        /// </summary>
+        private sealed class WpfSurface : ISurface
         {
-            string dir = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
-            foreach (var (regular, boldFile) in new[] { ("verdana.ttf", "verdanab.ttf"), ("arial.ttf", "arialbd.ttf"), ("tahoma.ttf", "tahomabd.ttf"), ("segoeui.ttf", "segoeuib.ttf") })
-            {
-                string path = Path.Combine(dir, bold ? boldFile : regular);
-                if (File.Exists(path)) return path;
-                string fallback = Path.Combine(dir, regular);
-                if (bold && File.Exists(fallback)) return fallback;
-            }
-            return null;
-        }
-
-        /// <summary>Measures text with Magick; also remembers the widest right edge, to size the picture.</summary>
-        private sealed class MagickMeasure : ISurface
-        {
-            private readonly MagickImage _scratch = new(MagickColors.White, 8, 8);
-            private readonly string _regular, _bold;
-            private readonly Dictionary<(string, double, bool), double> _cache = new();
+            private readonly DrawingContext? _dc;
+            private readonly Dictionary<(string, double, bool), double> _widths = new();
+            private readonly Dictionary<string, SolidColorBrush> _brushes = new();
+            private static readonly Typeface Regular = new(new System.Windows.Media.FontFamily("Segoe UI"), System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal);
+            private static readonly Typeface Bold = new(new System.Windows.Media.FontFamily("Segoe UI"), System.Windows.FontStyles.Normal, System.Windows.FontWeights.Bold, System.Windows.FontStretches.Normal);
             public double MaxRight;
 
-            public MagickMeasure(string regular, string bold) { _regular = regular; _bold = bold; }
+            public WpfSurface(DrawingContext? dc) => _dc = dc;
+
+            private SolidColorBrush Brush(Rgb c)
+            {
+                if (!_brushes.TryGetValue(c.Hex, out var b))
+                {
+                    b = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(c.Hex));
+                    b.Freeze();
+                    _brushes[c.Hex] = b;
+                }
+                return b;
+            }
+
+            private static FormattedText Format(string text, double size, bool bold, System.Windows.Media.Brush brush) =>
+                new(text, System.Globalization.CultureInfo.CurrentUICulture, System.Windows.FlowDirection.LeftToRight, bold ? Bold : Regular, size, brush, 1.0);
 
             public double Measure(string text, double size, bool bold)
             {
                 if (text.Length == 0) return 0;
-                if (_cache.TryGetValue((text, size, bold), out double w)) return w;
-                _scratch.Settings.Font = bold ? _bold : _regular;
-                _scratch.Settings.FontPointsize = size;
-                w = _scratch.FontTypeMetrics(text)?.TextWidth ?? text.Length * size * 0.6;
-                if (_cache.Count < 20_000) _cache[(text, size, bold)] = w;
+                if (_widths.TryGetValue((text, size, bold), out double w)) return w;
+                w = Format(text, size, bold, System.Windows.Media.Brushes.Black).WidthIncludingTrailingWhitespace;
+                if (_widths.Count < 20_000) _widths[(text, size, bold)] = w;
                 return w;
             }
 
-            public void Text(string text, double x, double top, double size, bool bold, Rgb color) => MaxRight = Math.Max(MaxRight, x + Measure(text, size, bold));
-            public void Line(double x1, double y1, double x2, double y2, double width, Rgb color) { }
-            public void Fill(double x, double y, double w, double h, Rgb color) { }
-            public void Outline(double x, double y, double w, double h, double width, Rgb color) { }
-        }
-
-        private sealed class MagickSurface : ISurface
-        {
-            private readonly MagickMeasure _m;
-            private readonly string _regular, _bold;
-            public IDrawables<ushort> Ops { get; } = new Drawables();
-
-            public MagickSurface(MagickMeasure m, string regular, string bold) { _m = m; _regular = regular; _bold = bold; }
-
-            private static IMagickColor<ushort> C(Rgb c) => new MagickColor(c.Hex);
-
-            public double Measure(string text, double size, bool bold) => _m.Measure(text, size, bold);
-
             public void Text(string text, double x, double top, double size, bool bold, Rgb color)
             {
-                if (text.Length == 0) return;   // Magick refuses empty text (the blank spacer row)
-                Ops.StrokeColor(MagickColors.Transparent).Font(bold ? _bold : _regular).FontPointSize(size).FillColor(C(color)).Text(x, top + size * 0.92, text);
+                if (text.Length == 0) return;
+                MaxRight = Math.Max(MaxRight, x + Measure(text, size, bold));
+                _dc?.DrawText(Format(text, size, bold, Brush(color)), new System.Windows.Point(x, top));
             }
 
-            public void Line(double x1, double y1, double x2, double y2, double width, Rgb color) =>
-                Ops.FillColor(MagickColors.Transparent).StrokeColor(C(color)).StrokeWidth(width).Line(x1, y1, x2, y2);
+            public void Line(double x1, double y1, double x2, double y2, double width, Rgb color)
+            {
+                if (_dc == null) return;
+                var pen = new System.Windows.Media.Pen(Brush(color), width);
+                pen.Freeze();
+                _dc.DrawLine(pen, new System.Windows.Point(x1, y1), new System.Windows.Point(x2, y2));
+            }
 
             public void Fill(double x, double y, double w, double h, Rgb color) =>
-                Ops.StrokeColor(MagickColors.Transparent).FillColor(C(color)).Rectangle(x, y, x + w, y + h);
+                _dc?.DrawRectangle(Brush(color), null, new System.Windows.Rect(x, y, w, h));
 
-            public void Outline(double x, double y, double w, double h, double width, Rgb color) =>
-                Ops.FillColor(MagickColors.Transparent).StrokeColor(C(color)).StrokeWidth(width).Rectangle(x, y, x + w, y + h);
+            public void Outline(double x, double y, double w, double h, double width, Rgb color)
+            {
+                if (_dc == null) return;
+                var pen = new System.Windows.Media.Pen(Brush(color), width);
+                pen.Freeze();
+                _dc.DrawRectangle(null, pen, new System.Windows.Rect(x, y, w, h));
+            }
         }
 
         /// <summary>The first <see cref="MaxImageRows"/> items as a PNG. <paramref name="drawn"/> is how many items fit.</summary>
         public static byte[] RenderPng(FolderTreeResult r, FolderTreeOptions o, CancellationToken token, out int drawn, out int total)
         {
-            string regular = FindFont(false) ?? throw new FileNotFoundException(Loc.T("Str_FolderTree_NoFont", "Drawing needs one of the Verdana, Arial, Tahoma or Segoe UI fonts, and none was found."));
-            string bold = FindFont(true) ?? regular;
-
             total = CountNodes(r.Root);
             var rows = Flatten(r, MaxImageRows);
             drawn = rows.Count;
@@ -320,24 +318,38 @@ namespace Smart_Tools.WPF.Controllers
             rows.Add(new Row(null, 0, Array.Empty<bool>(), ""));
             rows.Add(new Row(null, 0, Array.Empty<bool>(), FolderTreeManager.Footer(r)));
 
+            var clock = System.Diagnostics.Stopwatch.StartNew();
             const double margin = 24, rowH = 22, size = 12, indent = 22, maxWidth = 1800;
-            var measure = new MagickMeasure(regular, bold);
-            for (int i = 0; i < rows.Count; i++)
-                DrawRow(measure, rows[i], o, margin, margin + i * rowH, rowH, indent, size, maxWidth - margin);
-            uint width = (uint)Math.Clamp(Math.Ceiling(measure.MaxRight + margin), 480, maxWidth);
-            uint height = (uint)Math.Ceiling(margin * 2 + rows.Count * rowH);
+            var bytes = ZxingImageHelpers.RunOnStaThread(() =>
+            {
+                var measure = new WpfSurface(null);
+                for (int i = 0; i < rows.Count; i++)
+                    DrawRow(measure, rows[i], o, margin, margin + i * rowH, rowH, indent, size, maxWidth - margin);
+                int width = (int)Math.Clamp(Math.Ceiling(measure.MaxRight + margin), 480, maxWidth);
+                int height = (int)Math.Ceiling(margin * 2 + rows.Count * rowH);
 
-            token.ThrowIfCancellationRequested();
-            var surface = new MagickSurface(measure, regular, bold);
-            for (int i = 0; i < rows.Count; i++)
-                DrawRow(surface, rows[i], o, margin, margin + i * rowH, rowH, indent, size, width - margin);
-
-            using var lease = MemoryBudget.Acquire(ImageLoad.EstimateBytes(width, height), token);
-            using var image = new MagickImage(new MagickColor(Paper.Hex), width, height);
-            surface.Ops.Draw(image);
-            image.Settings.SetDefine(MagickFormat.Png, "compression-level", "2");
-            image.Format = MagickFormat.Png;
-            return image.ToByteArray();
+                token.ThrowIfCancellationRequested();
+                using var lease = MemoryBudget.Acquire(ImageLoad.EstimateBytes((ulong)width, (ulong)height), token);
+                var visual = new DrawingVisual();
+                using (var dc = visual.RenderOpen())
+                {
+                    dc.DrawRectangle(new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(Paper.Hex)), null, new System.Windows.Rect(0, 0, width, height));
+                    var surface = new WpfSurface(dc);
+                    for (int i = 0; i < rows.Count; i++)
+                        DrawRow(surface, rows[i], o, margin, margin + i * rowH, rowH, indent, size, width - margin);
+                }
+                var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+                bitmap.Render(visual);
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                using var ms = new MemoryStream();
+                encoder.Save(ms);
+                LastPictureTimings = $"{rows.Count} rows, {width}x{height}px, {ms.Length >> 10} KB";
+                return ms.ToArray();
+            }).GetAwaiter().GetResult();
+            LastPictureTimings += $", {clock.ElapsedMilliseconds} ms";
+            Log.Info("Folder tree picture: " + LastPictureTimings);
+            return bytes;
         }
     }
 }

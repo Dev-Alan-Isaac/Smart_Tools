@@ -263,6 +263,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     // Drawing a big tree takes a moment: off the UI thread, with a message.
                     TxtProgress.Text = Loc.T("Str_FolderTree_MsgDrawing", "Drawing the tree...");
+                    Bar.IsIndeterminate = true;
                     var tree = _result!;
                     var (data, drawn, total) = await Task.Run(() =>
                     {
@@ -289,10 +290,12 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
+                Log.Warn($"Folder tree: could not save {fileName} as {o.Format}", ex);
                 ShowStatus(Loc.F("Str_FolderTree_MsgSaveFailed", "The file couldn't be saved: {0}", ex.Message), StatusKind.Error);
             }
             finally
             {
+                Bar.IsIndeterminate = false;
                 BtnSave.IsEnabled = _text.Length > 0;
             }
         }
