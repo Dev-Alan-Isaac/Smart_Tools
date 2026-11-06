@@ -242,10 +242,10 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Notes** | `notes` | Write quick notes |
-| **Clipboard History** | `clipboard-history` | Everything you copied, searchable, with pins. Saved only if you turn it on |
+| **Notes** | `notes` | Sticky notes with bold, italic, underline, strikethrough, bullet lists, pictures and screenshots (with their source), a source link per note, and a desktop widget per note |
+| **Clipboard History** | `clipboard-history` | Everything you copied, searchable, grouped by day with a day filter, with pins, and a floating widget. Saved only if you turn it on |
 | **Screen OCR** | `screen-ocr` | Extract text from a screenshot or screen region |
-| **Translate** | `translate` | Translate text offline between English and Spanish |
+| **Translate** | `translate` | Translate text offline between the installed language pairs (swap button; optional indirect translation through English, off by default) |
 | **Timer & Stopwatch** | `timer-stopwatch` | Stopwatch with laps, countdown timer and a Pomodoro cycle |
 
 ### Pixel & Sprites

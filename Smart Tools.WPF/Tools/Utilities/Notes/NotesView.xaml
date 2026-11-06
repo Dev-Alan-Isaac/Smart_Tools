@@ -512,7 +512,9 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
@@ -618,40 +620,101 @@
                                 Margin="0,12,0,8"
                                 Background="{DynamicResource CardBorder}" />
 
-                            <TextBox
-                                x:Name="TxtBody"
-                                Grid.Row="3"
-                                Height="Auto"
-                                MinHeight="160"
-                                Padding="2,6,2,6"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                HorizontalContentAlignment="Left"
-                                VerticalContentAlignment="Top"
-                                AcceptsReturn="True"
-                                AcceptsTab="True"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                CaretBrush="{DynamicResource TextPrimary}"
-                                Cursor="IBeam"
-                                FontSize="14.5"
-                                Foreground="{DynamicResource TextPrimary}"
-                                HorizontalScrollBarVisibility="Disabled"
-                                SpellCheck.IsEnabled="True"
-                                Tag="Start typing your note…"
-                                TextChanged="TxtBody_TextChanged"
-                                TextWrapping="Wrap"
-                                VerticalScrollBarVisibility="Auto" />
-                            <!--
-                                Height/alignment are set on purpose: the app-wide TextBox
-                                style (Controls.xaml) gives every TextBox Height="30" and
-                                centred text, which turned this into a thin strip in the
-                                middle of the note. Here it fills the note, text from the top.
-                            -->
+                            <!--  Formatting, pictures and the desktop widget  -->
+                            <Grid Grid.Row="3" Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="BtnBold" Margin="0,0,4,0" Command="{x:Static EditingCommands.ToggleBold}" CommandTarget="{Binding ElementName=RtbBody}" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_FmtBold}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FormatBold" />
+                                    </Button>
+                                    <Button x:Name="BtnItalic" Margin="0,0,4,0" Command="{x:Static EditingCommands.ToggleItalic}" CommandTarget="{Binding ElementName=RtbBody}" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_FmtItalic}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FormatItalic" />
+                                    </Button>
+                                    <Button x:Name="BtnUnderline" Margin="0,0,4,0" Command="{x:Static EditingCommands.ToggleUnderline}" CommandTarget="{Binding ElementName=RtbBody}" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_FmtUnderline}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FormatUnderline" />
+                                    </Button>
+                                    <Button x:Name="BtnStrike" Margin="0,0,4,0" Click="BtnStrike_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_FmtStrike}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FormatStrikethrough" />
+                                    </Button>
+                                    <Button x:Name="BtnBullets" Margin="0,0,10,0" Command="{x:Static EditingCommands.ToggleBullets}" CommandTarget="{Binding ElementName=RtbBody}" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_FmtBullets}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FormatListBulleted" />
+                                    </Button>
+                                    <Button x:Name="BtnAddPicture" Margin="0,0,4,0" Click="BtnAddPicture_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_AddPicture}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="ImagePlusOutline" />
+                                    </Button>
+                                    <Button x:Name="BtnPastePicture" Click="BtnPastePicture_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_PastePicture}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="ContentPaste" />
+                                    </Button>
+                                </StackPanel>
+                                <Button x:Name="BtnWidget" Grid.Column="1" Click="BtnWidget_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_WidgetPin}">
+                                    <materialDesign:PackIcon x:Name="IconWidget" Width="16" Height="16" Kind="PictureInPictureBottomRight" />
+                                </Button>
+                            </Grid>
+
+                            <Grid Grid.Row="4">
+                                <RichTextBox
+                                    x:Name="RtbBody"
+                                    MinHeight="160"
+                                    Padding="2,6,2,6"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    AcceptsReturn="True"
+                                    AcceptsTab="True"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    CaretBrush="{DynamicResource TextPrimary}"
+                                    FontSize="14.5"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    HorizontalScrollBarVisibility="Disabled"
+                                    SelectionChanged="RtbBody_SelectionChanged"
+                                    SpellCheck.IsEnabled="True"
+                                    TextChanged="RtbBody_TextChanged"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <RichTextBox.Resources>
+                                        <Style TargetType="Paragraph">
+                                            <Setter Property="Margin" Value="0,0,0,4" />
+                                        </Style>
+                                    </RichTextBox.Resources>
+                                </RichTextBox>
+                                <!--  Placeholder, shown while the note is empty  -->
+                                <TextBlock
+                                    x:Name="TxtBodyHint"
+                                    Margin="7,6,0,0"
+                                    FontSize="14.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    IsHitTestVisible="False"
+                                    Opacity="0.7"
+                                    Text="{DynamicResource Str_Notes_BodyHint}" />
+                            </Grid>
+
+                            <!--  Where the note's content came from  -->
+                            <Grid Grid.Row="5" Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Width="15" Height="15" Margin="2,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}" Kind="LinkVariant" />
+                                <TextBox
+                                    x:Name="TxtSource"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Style="{StaticResource BareTextBox}"
+                                    Tag="{DynamicResource Str_Notes_SourceHint}"
+                                    TextChanged="TxtSource_TextChanged"
+                                    ToolTip="{DynamicResource Str_Notes_SourceTooltip}" />
+                                <Button x:Name="BtnOpenSource" Grid.Column="2" Click="BtnOpenSource_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_SourceOpen}" Visibility="Collapsed">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="OpenInNew" />
+                                </Button>
+                            </Grid>
 
                             <!--  Save state + counts  -->
                             <StackPanel
-                                Grid.Row="4"
+                                Grid.Row="6"
                                 Margin="0,8,0,0"
                                 Orientation="Horizontal">
                                 <materialDesign:PackIcon

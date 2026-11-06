@@ -44,7 +44,22 @@ namespace Smart_Tools.WPF.Controllers
         public static string NotesFile => Path.Combine(DataFolder, "notes.json");
         public static string BackupFile => NotesFile + ".bak";
 
+        /// <summary>The pictures pasted or added into notes (one PNG each); the note text refers to them by file name.</summary>
+        public static string ImagesFolder => Path.Combine(DataFolder, "note-images");
+
         public static bool IsLoaded { get; private set; }
+
+        /// <summary>A note another window (a pinned widget) wants the Notes page to show.</summary>
+        public static Guid? PendingSelect { get; set; }
+
+        /// <summary>Raised after <see cref="RequestSelect"/>, for a Notes page that is already open.</summary>
+        public static event Action? SelectRequested;
+
+        public static void RequestSelect(Guid id)
+        {
+            PendingSelect = id;
+            SelectRequested?.Invoke();
+        }
 
         /// <summary>True when the file couldn't be read - saving is refused so it isn't overwritten.</summary>
         public static bool SavingPaused { get; private set; }
@@ -153,6 +168,8 @@ namespace Smart_Tools.WPF.Controllers
             CreatedAt = r.CreatedAt == default ? DateTime.Now : r.CreatedAt,
             Title = r.Title ?? "",
             Text = r.Text ?? "",
+            Rich = r.Rich ?? "",
+            Source = r.Source ?? "",
             ColorHex = IsColor(r.ColorHex) ? r.ColorHex!.ToUpperInvariant() : DefaultColorHex,
             Pinned = r.Pinned,
             ModifiedAt = r.ModifiedAt == default ? (r.CreatedAt == default ? DateTime.Now : r.CreatedAt) : r.ModifiedAt,
@@ -164,6 +181,8 @@ namespace Smart_Tools.WPF.Controllers
             CreatedAt = n.CreatedAt,
             Title = n.Title,
             Text = n.Text,
+            Rich = string.IsNullOrEmpty(n.Rich) ? null : n.Rich,
+            Source = string.IsNullOrEmpty(n.Source) ? null : n.Source,
             ColorHex = n.ColorHex,
             Pinned = n.Pinned,
             ModifiedAt = n.ModifiedAt,
@@ -323,7 +342,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             var words = Fold(query ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length == 0) return true;
-            string hay = Fold(note.Title + " " + note.Text);
+            string hay = Fold(note.Title + " " + note.Text + " " + note.Source);
             return words.All(w => hay.Contains(w, StringComparison.Ordinal));
         }
 
@@ -353,6 +372,50 @@ namespace Smart_Tools.WPF.Controllers
             return (name.Length == 0 ? Loc.T("Str_Notes_FileNameFallback", "Note") : name) + ".txt";
         }
 
+        /// <summary>The rich text as Markdown: **bold**, *italic*, ~~strikethrough~~, "- " list items. Pictures become a short [picture] mark.</summary>
+        public static string ToMarkdown(string rich)
+        {
+            System.Xml.Linq.XElement root;
+            try
+            {
+                root = System.Xml.Linq.XElement.Parse("<n>" + rich + "</n>", System.Xml.Linq.LoadOptions.PreserveWhitespace);
+            }
+            catch (System.Xml.XmlException)
+            {
+                return rich;
+            }
+
+            var lines = new List<string>();
+            foreach (var block in root.Elements())
+            {
+                if (block.Name.LocalName == "ul") lines.AddRange(block.Elements("li").Select(li => "- " + Inline(li)));
+                else lines.Add(Inline(block));
+            }
+            return string.Join("\n", lines);
+
+            static string Inline(System.Xml.Linq.XElement parent)
+            {
+                var sb = new StringBuilder();
+                foreach (var node in parent.Nodes())
+                {
+                    if (node is System.Xml.Linq.XText t) { sb.Append(t.Value); continue; }
+                    if (node is not System.Xml.Linq.XElement e) continue;
+                    string inner = e.Name.LocalName == "img" ? "" : Inline(e);
+                    sb.Append(e.Name.LocalName switch
+                    {
+                        "b" => "**" + inner + "**",
+                        "i" => "*" + inner + "*",
+                        "s" => "~~" + inner + "~~",
+                        "u" => "<u>" + inner + "</u>",
+                        "br" => "  \n",
+                        "img" => "[" + Loc.T("Str_Notes_ExportPicture", "picture") + "]",
+                        _ => inner,
+                    });
+                }
+                return sb.ToString();
+            }
+        }
+
         /// <summary>Saves one note as a text file (title, blank line, text), under a temporary name first.</summary>
         public static Task ExportAsync(NoteItem note, string path) =>
             Task.Run(() =>
@@ -360,8 +423,10 @@ namespace Smart_Tools.WPF.Controllers
                 string temp = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, $".{Guid.NewGuid():N}.tmp");
                 try
                 {
-                    string body = note.Text.Replace("\r\n", "\n").Replace("\n", "\r\n");
-                    File.WriteAllText(temp, note.DisplayTitle + "\r\n\r\n" + body, new UTF8Encoding(true));
+                    bool markdown = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+                    string body = (markdown && note.Rich.Length > 0 ? ToMarkdown(note.Rich) : note.Text).Replace("\r\n", "\n").Replace("\n", "\r\n");
+                    string source = note.Source.Length > 0 ? "\r\n\r\n" + Loc.F("Str_Notes_ExportSource", "Source: {0}", note.Source) : "";
+                    File.WriteAllText(temp, (markdown ? "# " : "") + note.DisplayTitle + "\r\n\r\n" + body + source, new UTF8Encoding(true));
                     File.Move(temp, path, overwrite: true);
                 }
                 finally

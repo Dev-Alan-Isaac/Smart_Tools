@@ -84,8 +84,15 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>Shows the pairs and which are downloaded. Click handlers only fire for the user, so nothing needs guarding.</summary>
+        private void ChkIndirect_Click(object sender, RoutedEventArgs e)
+        {
+            TranslateManager.AllowIndirect = ChkIndirect.IsChecked == true;
+            SettingChanged?.Invoke();
+        }
+
         public void Load()
         {
+            ChkIndirect.IsChecked = TranslateManager.AllowIndirect;
             BuildCodeRows();
             TxtModelsRoot.Text = TranslateManager.ModelsRoot;
 
