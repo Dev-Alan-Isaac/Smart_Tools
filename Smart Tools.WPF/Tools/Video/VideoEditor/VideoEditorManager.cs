@@ -646,7 +646,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.Volume = double.IsFinite(s.Volume) ? Math.Clamp(s.Volume, 0, 1) : 1;
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
             {
                 return new EditorSettings();
             }
@@ -655,10 +655,14 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(EditorSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            try
+            {
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Settings are a convenience; never fail the tool over them.
+            }
         }
     }
 }

@@ -462,7 +462,7 @@ namespace Smart_Tools.WPF.Views
             _expandCts?.Cancel();
             var cts = _expandCts = new CancellationTokenSource();
             bool subfolders = InputCard.IncludeSubfolders;
-            TxtUpNext.Text = "Reading folders...";
+            TxtUpNext.Text = Loc.T("Str_VideoReplay_MsgReadingFolders", "Reading folders...");
             try
             {
                 var result = await VideoReplayManager.ExpandAsync(fresh, subfolders, cts.Token);
@@ -870,7 +870,7 @@ namespace Smart_Tools.WPF.Views
             {
                 // End of the playlist: stop (the old one wrapped around forever), ready to start again.
                 StopPlayback();
-                TxtUpNext.Text = "End of the playlist - press Play to start again, or tick \"Repeat the playlist\".";
+                TxtUpNext.Text = Loc.T("Str_VideoReplay_MsgPlaylistEnd", "End of the playlist - press Play to start again, or tick \"Repeat the playlist\".");
                 return;
             }
             _ = LoadAndPlayAsync(next);
@@ -920,7 +920,7 @@ namespace Smart_Tools.WPF.Views
                 _backend.Stop();
                 ShowSurface(false);
                 ProgressConvert.IsIndeterminate = true;
-                TxtConvert.Text = "Starting VLC - the first start takes a few seconds while it reads its plugins.";
+                TxtConvert.Text = Loc.T("Str_VideoReplay_MsgStartingVlc", "Starting VLC - the first start takes a few seconds while it reads its plugins.");
                 UiMotion.FadeVisibility(ConvertingPanel, true);
                 await starting;
                 if (cts.IsCancellationRequested) return;   // another clip was chosen meanwhile

@@ -353,7 +353,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!ImageDurations.Any(v => Math.Abs(v - s.SecondsPerImage) < 0.001)) s.SecondsPerImage = 0.5;
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
             {
                 return new GifSettings();
             }
@@ -365,9 +365,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 string file = path ?? SettingsPath;
                 Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                string temp = file + ".tmp";
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

@@ -500,7 +500,7 @@ namespace Smart_Tools.WPF.Controllers
                 File.AppendAllText(SkipLogPath,
                     $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  [{engine}]  {clipPath}  -  {reason}{Environment.NewLine}");
             }
-            catch (Exception) { }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* a skip log is a nicety */ }
         }
 
         // =================================================================
@@ -508,20 +508,7 @@ namespace Smart_Tools.WPF.Controllers
         // =================================================================
 
         /// <summary>Fixed local drives have a Recycle Bin; network and removable drives don't.</summary>
-        public static bool HasRecycleBin(string path)
-        {
-            if (!OperatingSystem.IsWindows()) return false;
-            try
-            {
-                string? root = Path.GetPathRoot(Path.GetFullPath(path));
-                if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
-                return new DriveInfo(root).DriveType == DriveType.Fixed;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+        public static bool HasRecycleBin(string path) => SafeFileOps.HasRecycleBin(path);
 
         /// <summary>To the Recycle Bin where there is one (the old view always deleted permanently).</summary>
         public static void DeleteClip(string path)

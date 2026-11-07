@@ -238,7 +238,7 @@ namespace Smart_Tools.WPF.Views
             if (slow)
             {
                 ProgressRun.IsIndeterminate = true;
-                TxtProgress.Text = "Reading folders...";
+                TxtProgress.Text = Loc.T("Str_VideoToAudio_MsgReadingFolders", "Reading folders...");
             }
 
             List<(string Path, long Size)> files;
@@ -252,7 +252,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "Couldn't read the folders: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_VideoToAudio_MsgCouldntReadFolders", "Couldn't read the folders: {0}", ex.Message);
                 return;
             }
             finally
@@ -279,7 +279,7 @@ namespace Smart_Tools.WPF.Views
             RebuildQueueDisplay();
             UpdateSummary();
             if (slow || fresh.Count > 0) TxtProgress.Text = fresh.Count > 0 ? $"Reading {VtaText.Plural(fresh.Count, "video", "videos")}..." : ReadyHint;
-            if (wanted.Count == 0 && sources.Count > 0) TxtProgress.Text = "No videos found in what was added.";
+            if (wanted.Count == 0 && sources.Count > 0) TxtProgress.Text = Loc.T("Str_VideoToAudio_MsgNoVideos", "No videos found in what was added.");
             if (fresh.Count > 0) await ProbeAsync(fresh);
         }
 
@@ -615,7 +615,7 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Cancelling - finished files are kept...";
+                TxtProgress.Text = Loc.T("Str_VideoToAudio_MsgCancellingKeep", "Cancelling - finished files are kept...");
                 return;
             }
             await StartAsync();
@@ -632,13 +632,13 @@ namespace Smart_Tools.WPF.Views
             }
             if (_rows.Count == 0)
             {
-                TxtProgress.Text = "Add some videos first.";
+                TxtProgress.Text = Loc.T("Str_VideoToAudio_MsgAddVideosFirst", "Add some videos first.");
                 InputCard.PopDropArea();
                 return;
             }
             if (_probing > 0 || _rows.Any(r => r.Status == VtaItemStatus.Reading))
             {
-                TxtProgress.Text = "Still reading the videos - try again in a moment.";
+                TxtProgress.Text = Loc.T("Str_VideoToAudio_MsgStillReading", "Still reading the videos - try again in a moment.");
                 return;
             }
             var pending = _rows.Where(r => r.CanRun).ToList();
@@ -651,7 +651,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (!OutputCard.Status.CanSave && OutputCard.Status.State != OutputFolderState.None)
                 {
-                    TxtProgress.Text = "Can't save there: " + OutputCard.Status.Text;
+                    TxtProgress.Text = Loc.F("Str_VideoToAudio_MsgCantSave", "Can't save there: {0}", OutputCard.Status.Text);
                     return;
                 }
                 try
@@ -660,7 +660,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                 {
-                    TxtProgress.Text = "The output folder couldn't be created: " + ex.Message;
+                    TxtProgress.Text = Loc.F("Str_VideoToAudio_MsgOutputFolder", "The output folder couldn't be created: {0}", ex.Message);
                     return;
                 }
             }
@@ -734,7 +734,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressRun.IsIndeterminate = false;
                 ProgressRun.Value = 0;
                 TxtProgressPercent.Text = "0%";
-                TxtProgress.Text = "Starting...";
+                TxtProgress.Text = Loc.T("Str_VideoToAudio_MsgStarting", "Starting...");
             }
         }
     }

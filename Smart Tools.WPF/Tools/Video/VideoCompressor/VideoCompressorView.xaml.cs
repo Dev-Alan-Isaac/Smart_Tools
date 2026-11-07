@@ -593,7 +593,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (!OutputCard.Status.CanSave && OutputCard.Status.State != OutputFolderState.None)
                 {
-                    TxtProgress.Text = "Can't save there: " + OutputCard.Status.Text;
+                    TxtProgress.Text = Loc.F("Str_Vc_MsgCantSave", "Can't save there: {0}", OutputCard.Status.Text);
                     return;
                 }
                 try
@@ -602,7 +602,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                 {
-                    TxtProgress.Text = "The output folder couldn't be created: " + ex.Message;
+                    TxtProgress.Text = Loc.F("Str_Vc_MsgOutputFolder", "The output folder couldn't be created: {0}", ex.Message);
                     return;
                 }
             }

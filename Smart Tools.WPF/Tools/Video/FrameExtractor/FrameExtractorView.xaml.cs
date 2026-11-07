@@ -240,8 +240,8 @@ namespace Smart_Tools.WPF.Views
             InputCard.ItemsSource = _sources;
 
             if (inaccessible > 0) ShowStatus($"{inaccessible} folder(s) couldn't be read and were skipped.", StatusKind.Warning);
-            else if (capped) ShowStatus($"The list is full ({FrameExtractorManager.MaxVideos:N0} videos).", StatusKind.Warning);
-            else if (_sources.Count > 0 && files.Count == 0) ShowStatus("No videos were found there.", StatusKind.Warning);
+            else if (capped) ShowStatus(Loc.F("Str_FrameExtractor_MsgListFull", "The list is full ({0:N0} videos).", FrameExtractorManager.MaxVideos), StatusKind.Warning);
+            else if (_sources.Count > 0 && files.Count == 0) ShowStatus(Loc.T("Str_FrameExtractor_MsgNoVideos", "No videos were found there."), StatusKind.Warning);
             else if (FrameExtractorManager.MissingTools() is { } missing) ShowStatus(missing, StatusKind.Error);
             else HideStatus();
 
@@ -302,10 +302,10 @@ namespace Smart_Tools.WPF.Views
             _current = null;
             _previewCts?.Cancel();
             PreviewImage.Source = null;
-            TxtPreviewNote.Text = "Click a video in the list to see it here.";
+            TxtPreviewNote.Text = Loc.T("Str_FrameExtractor_MsgClickVideo", "Click a video in the list to see it here.");
             TxtPreviewNote.Visibility = Visibility.Visible;
             SetTimeControls(false, 1);
-            HeroName.Text = "No video yet";
+            HeroName.Text = Loc.T("Str_FrameExtractor_MsgNoVideoYet", "No video yet");
             UpdateInfo();
         }
 
@@ -320,7 +320,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetTimeControls(false, 1);
                 PreviewImage.Source = null;
-                TxtPreviewNote.Text = "This video can't be read: " + item.Problem;
+                TxtPreviewNote.Text = Loc.F("Str_FrameExtractor_MsgCantRead", "This video can't be read: {0}", item.Problem);
                 TxtPreviewNote.Visibility = Visibility.Visible;
                 return;
             }
@@ -328,7 +328,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetTimeControls(false, 1);
                 PreviewImage.Source = null;
-                TxtPreviewNote.Text = "Reading the video...";
+                TxtPreviewNote.Text = Loc.T("Str_FrameExtractor_MsgReading", "Reading the video...");
                 TxtPreviewNote.Visibility = Visibility.Visible;
                 return;
             }
@@ -400,7 +400,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnAddMoment_Click(object sender, RoutedEventArgs e)
         {
             if (_current?.Duration == null) return;
-            if (_picked.Count >= FrameExtractorManager.MaxFrames) { ShowStatus($"That is the most moments I can take ({FrameExtractorManager.MaxFrames}).", StatusKind.Warning); return; }
+            if (_picked.Count >= FrameExtractorManager.MaxFrames) { ShowStatus(Loc.F("Str_FrameExtractor_MsgMostMoments", "That is the most moments I can take ({0}).", FrameExtractorManager.MaxFrames), StatusKind.Warning); return; }
             if (_picked.Any(c => Math.Abs(c.Seconds - _time) < 0.001)) return;
             var all = _picked.Select(c => c.Seconds).Append(_time).OrderBy(t => t).ToList();
             _picked.Clear();
@@ -463,7 +463,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException or FileFormatException or IOException)
             {
                 PreviewImage.Source = null;
-                TxtPreviewNote.Text = "The picture couldn't be shown.";
+                TxtPreviewNote.Text = Loc.T("Str_FrameExtractor_MsgPictureFailed", "The picture couldn't be shown.");
                 TxtPreviewNote.Visibility = Visibility.Visible;
             }
         }
@@ -481,7 +481,7 @@ namespace Smart_Tools.WPF.Views
 
             if (_videos.Count == 0)
             {
-                TxtActionInfo.Text = "Add videos or folders on the left to start.";
+                TxtActionInfo.Text = Loc.T("Str_FrameExtractor_MsgAddToStart", "Add videos or folders on the left to start.");
                 if (!_busy) BtnRun.IsEnabled = false;
                 return;
             }
@@ -519,7 +519,7 @@ namespace Smart_Tools.WPF.Views
 
             string? tools = FrameExtractorManager.MissingTools();
             if (tools != null) { ShowStatus(tools, StatusKind.Error); return; }
-            if (OutputCard.Status.IsError) { ShowStatus("Can't save there: " + OutputCard.Status.Text, StatusKind.Error); return; }
+            if (OutputCard.Status.IsError) { ShowStatus(Loc.F("Str_FrameExtractor_MsgCantSave", "Can't save there: {0}", OutputCard.Status.Text), StatusKind.Error); return; }
 
             string? folder;
             try
@@ -528,10 +528,10 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
-                ShowStatus("Can't save there: " + ex.Message, StatusKind.Error);
+                ShowStatus(Loc.F("Str_FrameExtractor_MsgCantSave", "Can't save there: {0}", ex.Message), StatusKind.Error);
                 return;
             }
-            if (folder == null) { ShowStatus("Choose a folder to save the frames into first.", StatusKind.Warning); return; }
+            if (folder == null) { ShowStatus(Loc.T("Str_FrameExtractor_MsgChooseFolder", "Choose a folder to save the frames into first."), StatusKind.Warning); return; }
 
             var s = ReadSettings();
             List<string> videos;
@@ -555,7 +555,7 @@ namespace Smart_Tools.WPF.Views
             var progress = new Progress<FrameExtractorManager.FrameBatchProgress>(p =>
             {
                 RunProgress.Value = (p.VideoIndex + (p.Total == 0 ? 0 : (double)p.Done / p.Total)) / Math.Max(1, p.VideoCount);
-                TxtActionInfo.Text = $"Video {p.VideoIndex + 1} of {p.VideoCount}: frame {Math.Min(p.Done + 1, p.Total)} of {p.Total}...";
+                TxtActionInfo.Text = Loc.F("Str_FrameExtractor_MsgProgress", "Video {0} of {1}: frame {2} of {3}...", p.VideoIndex + 1, p.VideoCount, Math.Min(p.Done + 1, p.Total), p.Total);
             });
             var result = await Task.Run(() => FrameExtractorManager.ExtractBatch(videos, folder, s, picked, progress, token));
             SetBusy(false);
@@ -583,8 +583,8 @@ namespace Smart_Tools.WPF.Views
             var items = await Task.Run(() => shown.Select(f => new FramePicture(f, Path.GetFileNameWithoutExtension(f), SpritePackerManager.LoadThumbnail(f, 300))).ToList());
             ResultList.ItemsSource = items;
             ListEmpty.Visibility = items.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
-            TxtEmptyTitle.Text = "No frames were saved";
-            if (files.Count > MaxThumbnails) ShowStatus($"Showing the first {MaxThumbnails} of {files.Count:N0} frames - all of them are in the folder.", StatusKind.Warning);
+            TxtEmptyTitle.Text = Loc.T("Str_FrameExtractor_MsgNoFramesSaved", "No frames were saved");
+            if (files.Count > MaxThumbnails) ShowStatus(Loc.F("Str_FrameExtractor_MsgShowingFirst", "Showing the first {0} of {1:N0} frames - all of them are in the folder.", MaxThumbnails, files.Count), StatusKind.Warning);
         }
 
         private void SetBusy(bool busy)
@@ -608,7 +608,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
             {
-                ShowStatus("Couldn't open the folder: " + ex.Message, StatusKind.Error);
+                ShowStatus(Loc.F("Str_FrameExtractor_MsgOpenFolder", "Couldn't open the folder: {0}", ex.Message), StatusKind.Error);
             }
         }
 

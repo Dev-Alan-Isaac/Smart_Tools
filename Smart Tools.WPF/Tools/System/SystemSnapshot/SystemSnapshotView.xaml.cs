@@ -416,43 +416,43 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Portable version: the whole app on a USB drive or in any folder
+        //  Another PC: the stand-alone Collector on a USB drive or in any folder
         // =================================================================
 
         /// <summary>
-        /// Copies the app (not the settings or any scan) into a new "Smart Tools Portable" folder inside the folder or drive that was
-        /// chosen, so a stick with other files on it works too. An existing folder is never touched: a taken name becomes "(2)".
+        /// Unpacks the Collector (project SystemSnapshot.Collector, shipped inside the app as a zip) into a new
+        /// "System Snapshot Collector" folder inside the chosen drive or folder. Nothing that exists is touched: a taken
+        /// name becomes "(2)". Making a portable copy of the whole app lives in Settings > Installation.
         /// </summary>
-        private void BtnPortable_Click(object sender, RoutedEventArgs e)
+        private void BtnCollector_Click(object sender, RoutedEventArgs e)
         {
-            if (AppMode.Current == AppRunMode.Development)
+            if (!SystemSnapshotCollectorPackage.IsAvailable)
             {
-                ShowStatus(Str("Str_SysSnap_PortableDev"), StatusKind.Info);
+                ShowStatus(Str("Str_SysSnap_CollectorMissing"), StatusKind.Info);
                 return;
             }
 
             using var dialog = new System.Windows.Forms.FolderBrowserDialog
             {
-                Description = Str("Str_SysSnap_PortableChoose"),
+                Description = Str("Str_SysSnap_CollectorChoose"),
                 UseDescriptionForTitle = true,
                 ShowNewFolderButton = true,
             };
             if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 
-            string target = SafeFileOps.UniquePath(Path.Combine(dialog.SelectedPath, Str("Str_SysSnap_PortableFolder", "Smart Tools Portable")));
-            var result = CopyProgressWindow.Run(Window.GetWindow(this), Str("Str_Install_Copying", "Making a portable copy..."),
-                (progress, token) => AppInstaller.MakePortableCopyAsync(target, copyData: false, progress, token));
+            string destination = dialog.SelectedPath;
+            var result = CopyProgressWindow.Run(Window.GetWindow(this), Str("Str_SysSnap_CollectorSaving", "Saving the collector..."),
+                (progress, token) => SystemSnapshotCollectorPackage.SaveAsync(destination, progress, token));
             if (result.Cancelled) return;
             if (!result.Ok)
             {
-                ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_SysSnap_PortableFailed"), result.Message), StatusKind.Error);
+                ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_SysSnap_CollectorFailed"), result.Message), StatusKind.Error);
                 return;
             }
 
-            ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_SysSnap_PortableDone"), target), StatusKind.Success);
+            ShowStatus(string.Format(CultureInfo.CurrentCulture, Str("Str_SysSnap_CollectorDone"), result.ExePath), StatusKind.Success);
             ShellExplorer.Show(result.ExePath!);
         }
-
         // =================================================================
         //  Status
         // =================================================================

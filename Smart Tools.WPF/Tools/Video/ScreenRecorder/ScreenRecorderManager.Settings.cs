@@ -40,9 +40,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 string path = SettingsPath;
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                string temp = path + ".tmp";
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, SettingsJson));
-                File.Move(temp, path, overwrite: true);
+                AtomicFile.WriteAllText(path, JsonSerializer.Serialize(settings, SettingsJson));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

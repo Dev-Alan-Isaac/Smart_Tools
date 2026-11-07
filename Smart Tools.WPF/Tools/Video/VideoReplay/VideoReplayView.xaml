@@ -76,13 +76,13 @@
                         <Border
                             x:Name="Bd"
                             Padding="{TemplateBinding Padding}"
-                            Background="#1AFFFFFF"
+                            Background="{DynamicResource MediaChromeFill}"
                             CornerRadius="18">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2AFFFFFF" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MediaChromeFillHover}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -101,7 +101,7 @@
                         <Grid VerticalAlignment="Center" Background="Transparent">
                             <Border
                                 Height="3"
-                                Background="#33FFFFFF"
+                                Background="{DynamicResource MediaChromeFillPressed}"
                                 CornerRadius="1.5" />
                             <Track x:Name="PART_Track">
                                 <Track.DecreaseRepeatButton>
@@ -516,7 +516,7 @@
                             x:Name="Stage"
                             ctl:Tour.Key="Str_Tour_VideoReplay_Stage"
                             ctl:Tour.Order="3"
-                            Background="#0E0F12"
+                            Background="{DynamicResource MediaStageBg}"
                             ClipToBounds="True"
                             CornerRadius="12"
                             MouseLeftButtonDown="Stage_MouseLeftButtonDown">
@@ -584,14 +584,14 @@
                                         Width="64"
                                         Height="64"
                                         HorizontalAlignment="Center"
-                                        Background="#1AFFFFFF"
+                                        Background="{DynamicResource MediaChromeFill}"
                                         CornerRadius="32">
                                         <materialDesign:PackIcon
                                             Width="30"
                                             Height="30"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            Foreground="#C9CDD4"
+                                            Foreground="{DynamicResource MediaStageTextSoft}"
                                             Kind="MovieOpenOutline" />
                                     </Border>
                                     <TextBlock
@@ -600,7 +600,7 @@
                                         Margin="0,12,0,0"
                                         HorizontalAlignment="Center"
                                         FontSize="13"
-                                        Foreground="#C9CDD4"
+                                        Foreground="{DynamicResource MediaStageTextSoft}"
                                         Text="{DynamicResource Str_VideoReplay_NoClipHint}"
                                         TextAlignment="Center"
                                         TextWrapping="Wrap" />
@@ -613,7 +613,7 @@
                                     Padding="18,14"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Background="#CC16181D"
+                                    Background="{DynamicResource MediaChromeBg}"
                                     CornerRadius="12"
                                     Visibility="Collapsed">
                                     <StackPanel Width="260">
@@ -623,12 +623,12 @@
                                                 Height="16"
                                                 Margin="0,0,8,0"
                                                 VerticalAlignment="Center"
-                                                Foreground="#E9EBEF"
+                                                Foreground="{DynamicResource MediaStageText}"
                                                 Kind="Autorenew" />
                                             <TextBlock
                                                 FontSize="12.5"
                                                 FontWeight="SemiBold"
-                                                Foreground="#E9EBEF"
+                                                Foreground="{DynamicResource MediaStageText}"
                                                 Text="{DynamicResource Str_VideoEditor_MakingAPreviewCopy}" />
                                         </StackPanel>
                                         <ProgressBar
@@ -640,7 +640,7 @@
                                         <TextBlock
                                             x:Name="TxtConvert"
                                             FontSize="11"
-                                            Foreground="#A9AFB9"
+                                            Foreground="{DynamicResource MediaStageTextSubtle}"
                                             Text="{DynamicResource Str_VideoEditor_WindowsCanTPlay}"
                                             TextWrapping="Wrap" />
                                     </StackPanel>
@@ -689,7 +689,7 @@
                                                 x:Name="SkipRing"
                                                 ArcBrush="{DynamicResource StatusErrorFg}"
                                                 RingThickness="7"
-                                                TrackBrush="#33808080" />
+                                                TrackBrush="{DynamicResource MediaTrackBg}" />
                                         </Viewbox>
                                         <Button
                                             Grid.Column="3"
@@ -722,7 +722,7 @@
                                             VerticalAlignment="Center"
                                             FontFamily="Consolas"
                                             FontSize="11.5"
-                                            Foreground="#C9CDD4"
+                                            Foreground="{DynamicResource MediaStageTextSoft}"
                                             Text="0:00" />
                                         <Slider
                                             x:Name="SliderPosition"
@@ -742,7 +742,7 @@
                                             VerticalAlignment="Center"
                                             FontFamily="Consolas"
                                             FontSize="11.5"
-                                            Foreground="#C9CDD4"
+                                            Foreground="{DynamicResource MediaStageTextSoft}"
                                             Text="0:00"
                                             TextAlignment="Right" />
                                     </Grid>
@@ -848,7 +848,7 @@
                                                 x:Name="BtnSpeed"
                                                 Click="BtnSpeed_Click"
                                                 Content="1x"
-                                                Foreground="#E9EBEF"
+                                                Foreground="{DynamicResource MediaStageText}"
                                                 MouseRightButtonUp="BtnSpeed_MouseRightButtonUp"
                                                 Style="{StaticResource PlayerPillButtonStyle}"
                                                 ToolTip="{DynamicResource Str_VideoReplay_SpeedClickForFaster}" />

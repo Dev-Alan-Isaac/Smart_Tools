@@ -783,7 +783,7 @@
                                 <Border
                                     x:Name="ClipStage"
                                     MinHeight="160"
-                                    Background="#FF111114"
+                                    Background="{DynamicResource MediaStageBg}"
                                     CornerRadius="12"
                                     Visibility="Collapsed">
                                     <Grid>
@@ -797,13 +797,13 @@
                                             Padding="8,3"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
-                                            Background="#B3000000"
+                                            Background="{DynamicResource MediaOverlayBg}"
                                             CornerRadius="8">
                                             <TextBlock
                                                 x:Name="TxtFrameLabel"
                                                 FontSize="11"
                                                 FontWeight="SemiBold"
-                                                Foreground="#FFFFFFFF" />
+                                                Foreground="{DynamicResource MediaStageText}" />
                                         </Border>
                                         <Button
                                             x:Name="BtnLoop"
@@ -812,9 +812,9 @@
                                             Margin="10"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
-                                            Background="#B3000000"
+                                            Background="{DynamicResource MediaOverlayBg}"
                                             Click="BtnLoop_Click"
-                                            Foreground="#FFFFFFFF"
+                                            Foreground="{DynamicResource MediaStageText}"
                                             Style="{StaticResource NeutralIconButtonStyle}">
                                             <materialDesign:PackIcon
                                                 x:Name="IconLoop"

@@ -64,6 +64,15 @@
 		</Content>
 	</ItemGroup>
 
+	<!-- System Snapshot Collector (project SystemSnapshot.Collector): its ready-made zip travels with the app so System Snapshot can save it to a USB
+	     drive for scanning another PC. Skipped when the zip has not been built (the button then says so). -->
+	<ItemGroup Condition="Exists('..\SystemSnapshot.Collector\dist\SystemSnapshot-Collector.zip')">
+		<Content Include="..\SystemSnapshot.Collector\dist\SystemSnapshot-Collector.zip" Link="Engines\SystemSnapshot\SystemSnapshot-Collector.zip">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
 	<!-- IEEE OUI snapshot (MAC prefix -> manufacturer), read by OuiLookupManager. -->
 	<ItemGroup>
 		<Content Include="Data\oui.txt">

@@ -235,20 +235,27 @@ namespace Smart_Tools.WPF.Controls
                 }
 
                 string ext = Path.GetExtension(dialog.FileName);
+                byte[] bytes = png;
                 if (ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
                 {
+                    var bitmap = GifMakerManager.ToBitmap(png);
+                    if (bitmap == null)
+                    {
+                        MessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
                     var encoder = new JpegBitmapEncoder { QualityLevel = 92 };
-                    encoder.Frames.Add(BitmapFrame.Create(GifMakerManager.ToBitmap(png)!));
-                    await using var stream = File.Create(dialog.FileName);
-                    encoder.Save(stream);
+                    encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                    using var memory = new MemoryStream();
+                    encoder.Save(memory);
+                    bytes = memory.ToArray();
                 }
-                else
-                {
-                    await File.WriteAllBytesAsync(dialog.FileName, png);
-                }
+
+                // Through a temp file: a failure half-way must not leave a broken file over the one the user chose to replace.
+                AtomicFile.WriteAllBytes(dialog.FileName, bytes);
                 TxtFrameLabel.Text = T("Str_Vc_FrameSaved", "Saved ") + Path.GetFileName(dialog.FileName);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
             {
                 MessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }

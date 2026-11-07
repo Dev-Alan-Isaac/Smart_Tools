@@ -242,7 +242,7 @@ namespace Smart_Tools.WPF.Views
             {
                 VideoEditorManager.SaveSettings(_settings);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // Settings are a convenience - a locked file mustn't stop the tool.
             }
@@ -669,8 +669,8 @@ namespace Smart_Tools.WPF.Views
         {
             if (_playingPreview)
             {
-                TxtNowPlaying.Text = "Preview of the stitched video";
-                TxtTrimInfo.Text = "A small, quick version - the real one keeps the full picture size.";
+                TxtNowPlaying.Text = Loc.T("Str_VideoEditor_MsgPreviewOf", "Preview of the stitched video");
+                TxtTrimInfo.Text = Loc.T("Str_VideoEditor_MsgPreviewNote", "A small, quick version - the real one keeps the full picture size.");
             }
             else if (_current is { } clip)
             {
@@ -682,7 +682,7 @@ namespace Smart_Tools.WPF.Views
             else
             {
                 TxtNowPlaying.SetResourceReference(TextBlock.TextProperty, "Str_Common_NothingLoaded");
-                TxtTrimInfo.Text = "Add clips.";
+                TxtTrimInfo.Text = Loc.T("Str_VideoEditor_MsgAddClips", "Add clips.");
             }
             bool canTrim = _current != null && !_playingPreview && !_isBusy;
             BtnSetStart.IsEnabled = canTrim;
@@ -950,7 +950,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                if (!_isBusy) TxtProgress.Text = "Couldn't read the folders again: " + ex.Message;
+                if (!_isBusy) TxtProgress.Text = Loc.F("Str_VideoEditor_MsgFoldersAgain", "Couldn't read the folders again: {0}", ex.Message);
             }
             finally
             {
@@ -995,7 +995,7 @@ namespace Smart_Tools.WPF.Views
             bool subfolders = InputCard.IncludeSubfolders;
             _adding++;
             UpdateButtons();
-            TxtProgress.Text = "Looking for videos…";
+            TxtProgress.Text = Loc.T("Str_VideoEditor_MsgLooking", "Looking for videos…");
             try
             {
                 int added = 0, inaccessible = 0, skipped = 0;
@@ -1035,7 +1035,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                if (!_isBusy) TxtProgress.Text = "Couldn't add the clips: " + ex.Message;
+                if (!_isBusy) TxtProgress.Text = Loc.F("Str_VideoEditor_MsgAddFailed", "Couldn't add the clips: {0}", ex.Message);
             }
             finally
             {
@@ -1182,7 +1182,7 @@ namespace Smart_Tools.WPF.Views
             _clips.Clear();
             _groups.Clear();
             ResetResult();
-            TxtProgress.Text = "Add clips, put them in order, then stitch.";
+            TxtProgress.Text = Loc.T("Str_VideoEditor_AddClipsPutThem", "Add clips, put them in order, then stitch.");
         }
 
         private void RemoveClips(IReadOnlyCollection<EditClip> clips)
@@ -1291,13 +1291,13 @@ namespace Smart_Tools.WPF.Views
             var snapshot = _clips.ToList();
             if (!snapshot.Any(c => c.IsIncluded))
             {
-                TxtProgress.Text = "Tick at least one clip.";
+                TxtProgress.Text = Loc.T("Str_VideoEditor_MsgTickOne", "Tick at least one clip.");
                 return;
             }
             _settings = ReadSettings();
             if (_settings.SaveWithoutAsking && OutputCard.Status.IsError)
             {
-                TxtProgress.Text = "Can't save there: " + OutputCard.Status.Text + ". Choose another folder in Save to.";
+                TxtProgress.Text = Loc.F("Str_VideoEditor_MsgCantSave", "Can't save there: {0}. Choose another folder in Save to.", OutputCard.Status.Text);
                 return;
             }
 
@@ -1309,7 +1309,7 @@ namespace Smart_Tools.WPF.Views
                 string ext = VideoEditorManager.Extension(_settings.Format);
                 var dialog = new Microsoft.Win32.SaveFileDialog
                 {
-                    Title = "Save the video",
+                    Title = Loc.T("Str_VideoEditor_MsgSaveTitle", "Save the video"),
                     Filter = $"{ext.TrimStart('.').ToUpperInvariant()} video|*{ext}",
                     DefaultExt = ext,
                     AddExtension = true,
@@ -1345,7 +1345,7 @@ namespace Smart_Tools.WPF.Views
             {
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "";
-                TxtProgress.Text = "The video couldn't be saved: " + ex.Message.Split('\n')[0];
+                TxtProgress.Text = Loc.F("Str_VideoEditor_MsgSaveFailed", "The video couldn't be saved: {0}", ex.Message.Split('\n')[0]);
                 MessageBox.Show(Loc.F("Str_MB_TheVideoCouldnT", "The video couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and there's enough free space.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
@@ -1365,7 +1365,7 @@ namespace Smart_Tools.WPF.Views
             var snapshot = _clips.ToList();
             if (!snapshot.Any(c => c.IsIncluded))
             {
-                TxtProgress.Text = "Tick at least one clip.";
+                TxtProgress.Text = Loc.T("Str_VideoEditor_MsgTickOne", "Tick at least one clip.");
                 return;
             }
             StopPlayback();   // the old preview file may still be open in the player
@@ -1375,12 +1375,12 @@ namespace Smart_Tools.WPF.Views
                 string path = await VideoEditorManager.RenderPreviewAsync(snapshot, ReadSettings().FadeSeconds, RunProgress(cts), cts.Token);
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "";
-                TxtProgress.Text = "Playing the preview - it shows the order, trims and fades at a small size.";
+                TxtProgress.Text = Loc.T("Str_VideoEditor_MsgPlayingPreview", "Playing the preview - it shows the order, trims and fades at a small size.");
                 await PlayPreviewFileAsync(path);
             }
             catch (OperationCanceledException)
             {
-                TxtProgress.Text = "Preview cancelled.";
+                TxtProgress.Text = Loc.T("Str_VideoEditor_MsgPreviewCancelled", "Preview cancelled.");
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "";
             }
@@ -1388,7 +1388,7 @@ namespace Smart_Tools.WPF.Views
             {
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "";
-                TxtProgress.Text = "No preview: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_VideoEditor_MsgNoPreview", "No preview: {0}", ex.Message);
                 ShowNotice("No preview could be made: " + ex.Message);
             }
             finally
@@ -1417,12 +1417,12 @@ namespace Smart_Tools.WPF.Views
             if (kind == RunKind.Stitch)
             {
                 IconRun.Kind = PackIconKind.Close;
-                TxtRunLabel.Text = "Cancel";
+                TxtRunLabel.Text = Loc.T("Str_Common_Cancel", "Cancel");
             }
             else
             {
                 IconPreview.Kind = PackIconKind.Close;
-                TxtPreviewLabel.Text = "Cancel preview";
+                TxtPreviewLabel.Text = Loc.T("Str_VideoEditor_MsgCancelPreview", "Cancel preview");
             }
             ProgressEdit.Value = 0;
             TxtProgressPercent.Text = "0%";
@@ -1434,7 +1434,7 @@ namespace Smart_Tools.WPF.Views
         private void CancelRun()
         {
             _runCts?.Cancel();
-            TxtProgress.Text = "Cancelling…";
+            TxtProgress.Text = Loc.T("Str_VideoEditor_MsgCancelling", "Cancelling…");
             BtnRunAction.IsEnabled = BtnPreviewStitch.IsEnabled = false;
         }
 
@@ -1449,9 +1449,9 @@ namespace Smart_Tools.WPF.Views
             OutputCard.Refresh();   // free space, or "made on the first save" is now "ready"
             ChkIncludeAll.IsEnabled = true;
             IconRun.Kind = PackIconKind.MovieEditOutline;
-            TxtRunLabel.Text = "Stitch videos";
+            TxtRunLabel.Text = Loc.T("Str_VideoEditor_StitchVideos", "Stitch videos");
             IconPreview.Kind = PackIconKind.MovieOpenPlayOutline;
-            TxtPreviewLabel.Text = "Preview";
+            TxtPreviewLabel.Text = Loc.T("Str_Common_PreviewHeader", "Preview");
             UpdateListState();
             UpdateNowPlaying();
         }
@@ -1471,7 +1471,7 @@ namespace Smart_Tools.WPF.Views
                 UiMotion.Pop(BtnOpenResult, 0.9);
                 try
                 {
-                    ToastNotificationManager.ShowToast("Video ready", TxtProgress.Text);
+                    ToastNotificationManager.ShowToast(Loc.T("Str_VideoEditor_MsgToastReady", "Video ready"), TxtProgress.Text);
                 }
                 catch (Exception)
                 {
@@ -1504,14 +1504,14 @@ namespace Smart_Tools.WPF.Views
             {
                 if (!File.Exists(file))
                 {
-                    TxtProgress.Text = "The video is no longer there.";
+                    TxtProgress.Text = Loc.T("Str_VideoEditor_MsgGone", "The video is no longer there.");
                     return;
                 }
                 Process.Start(new ProcessStartInfo(file) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "Couldn't open the video: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_VideoEditor_MsgOpenVideo", "Couldn't open the video: {0}", ex.Message);
             }
         }
 
@@ -1523,11 +1523,11 @@ namespace Smart_Tools.WPF.Views
             {
                 if (File.Exists(file)) Process.Start("explorer.exe", $"/select,\"{file}\"");
                 else if (Directory.Exists(Path.GetDirectoryName(file))) Process.Start("explorer.exe", $"\"{Path.GetDirectoryName(file)}\"");
-                else TxtProgress.Text = "The video is no longer there.";
+                else TxtProgress.Text = Loc.T("Str_VideoEditor_MsgGone", "The video is no longer there.");
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "Couldn't open the folder: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_VideoEditor_MsgOpenFolder", "Couldn't open the folder: {0}", ex.Message);
             }
         }
 

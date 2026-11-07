@@ -224,7 +224,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_isRunning) return;
             string pattern = string.Join(";", GifMakerManager.VideoExtensions.Select(x => "*" + x));
-            var dialog = new OpenFileDialog { Title = "Choose a video", Filter = $"Videos|{pattern}|All files (*.*)|*.*" };
+            var dialog = new OpenFileDialog { Title = Loc.T("Str_GifMaker_MsgChooseVideo", "Choose a video"), Filter = Loc.F("Str_GifMaker_MsgVideoFilter", "Videos|{0}|All files (*.*)|*.*", pattern) };
             if (dialog.ShowDialog() == true) _ = LoadVideoAsync(dialog.FileName);
         }
 
@@ -267,10 +267,10 @@ namespace Smart_Tools.WPF.Views
             _videoCts?.Cancel();
             var cts = _videoCts = new CancellationTokenSource();
             SetMode(GifSourceMode.Video);
-            TxtVideoHint.Text = "Reading " + Path.GetFileName(path) + "...";
+            TxtVideoHint.Text = Loc.F("Str_GifMaker_MsgReadingFile", "Reading {0}...", Path.GetFileName(path));
             VideoRow.Visibility = Visibility.Collapsed;
             VideoEmptyHint.Visibility = Visibility.Visible;
-            TxtProgress.Text = "Reading the video...";
+            TxtProgress.Text = Loc.T("Str_GifMaker_MsgReadingVideo", "Reading the video...");
 
             (GifVideoInfo? Info, string? Error) probe;
             try
@@ -468,8 +468,8 @@ namespace Smart_Tools.WPF.Views
                 var p = GifMakerManager.LoopPreviewOptions(o);
                 _loopAnimator = animator;
                 ImgFrame.Source = animator.Bitmap;
-                TxtFrameLabel.Text = $"Loop · {GifText.FormatPrecise(p.StartSeconds)} – {GifText.FormatPrecise(p.EndSeconds)}"
-                                     + (p.EndSeconds < o.EndSeconds - 0.001 ? $" (first {GifMakerManager.LoopPreviewMaxSeconds:0} s)" : "");
+                TxtFrameLabel.Text = Loc.F("Str_GifMaker_MsgLoop", "Loop · {0} – {1}", GifText.FormatPrecise(p.StartSeconds), GifText.FormatPrecise(p.EndSeconds))
+                                     + (p.EndSeconds < o.EndSeconds - 0.001 ? " " + Loc.F("Str_GifMaker_MsgLoopFirst", "(first {0:0} s)", GifMakerManager.LoopPreviewMaxSeconds) : "");
                 _loopTimer.Interval = TimeSpan.FromMilliseconds(animator.CurrentDelay);
                 _loopTimer.Start();
             }
@@ -666,7 +666,7 @@ namespace Smart_Tools.WPF.Views
             var cts = _expandCts = new CancellationTokenSource();
             var sources = _sources.ToList();
             bool subfolders = InputCard.IncludeSubfolders;
-            if (sources.Any(s => s.IsFolder)) TxtProgress.Text = "Reading folders...";
+            if (sources.Any(s => s.IsFolder)) TxtProgress.Text = Loc.T("Str_GifMaker_MsgReadingFolders", "Reading folders...");
 
             List<(string Path, long Size, DateTime Modified)> files;
             try
@@ -679,7 +679,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "Couldn't read the folders: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_GifMaker_MsgCouldntReadFolders", "Couldn't read the folders: {0}", ex.Message);
                 return;
             }
             if (cts.IsCancellationRequested || _isRunning) return;
@@ -701,7 +701,7 @@ namespace Smart_Tools.WPF.Views
             RebuildQueueDisplay();
             UpdateFramesUi();
             SuggestFileName();
-            if (wanted.Count == 0 && sources.Count > 0) TxtProgress.Text = "No images found in what was added.";
+            if (wanted.Count == 0 && sources.Count > 0) TxtProgress.Text = Loc.T("Str_GifMaker_MsgNoImages", "No images found in what was added.");
             if (fresh.Count > 0) await ProbeImagesAsync(fresh);
             AfterPlanChanged();
         }
@@ -711,7 +711,7 @@ namespace Smart_Tools.WPF.Views
         {
             var token = _probeCts.Token;
             _probing++;
-            TxtProgress.Text = $"Reading {GifText.Plural(items.Count, "image", "images")}...";
+            TxtProgress.Text = Loc.N(items.Count, "Str_GifMaker_MsgReadingImage1", "Reading {0:N0} image...", "Str_GifMaker_MsgReadingImageN", "Reading {0:N0} images...", items.Count);
             using var gate = new SemaphoreSlim(4);
             try
             {
@@ -1032,7 +1032,7 @@ namespace Smart_Tools.WPF.Views
             bool hasSource = Mode == GifSourceMode.Video ? _video != null : _images.Count > 0;
             if (!_isRunning && hasSource && GifMakerManager.MissingEngine() == null)
             {
-                TxtEstimate.Text = "Estimating...";
+                TxtEstimate.Text = Loc.T("Str_GifMaker_MsgEstimating", "Estimating...");
                 IconEstimate.Kind = PackIconKind.Harddisk;
                 PillEstimate.Visibility = Visibility.Visible;
                 _estimateTimer.Start();
@@ -1114,7 +1114,7 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Cancelling...";
+                TxtProgress.Text = Loc.T("Str_GifMaker_MsgCancelling", "Cancelling...");
                 return;
             }
             await CreateAsync();
@@ -1131,7 +1131,7 @@ namespace Smart_Tools.WPF.Views
             }
             if (_probing > 0)
             {
-                TxtProgress.Text = "Still reading the images - try again in a moment.";
+                TxtProgress.Text = Loc.T("Str_GifMaker_MsgStillReadingImages", "Still reading the images - try again in a moment.");
                 return;
             }
             var o = BuildOptions();
@@ -1145,7 +1145,7 @@ namespace Smart_Tools.WPF.Views
             string? target = OutputCard.GetSavePath("GIF image (*.gif)|*.gif", out bool overwrite, out string? saveProblem);
             if (target == null)
             {
-                if (saveProblem != null) TxtProgress.Text = "Can't save there: " + saveProblem;
+                if (saveProblem != null) TxtProgress.Text = Loc.F("Str_GifMaker_MsgCantSave", "Can't save there: {0}", saveProblem);
                 return;
             }
 
@@ -1168,11 +1168,11 @@ namespace Smart_Tools.WPF.Views
             }
             catch (OperationCanceledException)
             {
-                TxtProgress.Text = "Cancelled - nothing was saved.";
+                TxtProgress.Text = Loc.T("Str_GifMaker_MsgCancelled", "Cancelled - nothing was saved.");
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "The GIF couldn't be made: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_GifMaker_MsgFailed", "The GIF couldn't be made: {0}", ex.Message);
             }
             finally
             {
@@ -1191,9 +1191,9 @@ namespace Smart_Tools.WPF.Views
             ProgressRun.Value = 100;
             TxtProgressPercent.Text = "100%";
             string renamed = !string.Equals(Path.GetFullPath(result.Path), Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase)
-                ? " (the name was taken, so a number was added)"
+                ? " " + Loc.T("Str_GifMaker_MsgRenamed", "(the name was taken, so a number was added)")
                 : "";
-            TxtProgress.Text = $"Saved {Path.GetFileName(result.Path)} · {GifText.FormatBytes(result.Bytes)}{renamed}";
+            TxtProgress.Text = Loc.F("Str_GifMaker_MsgSaved", "Saved {0} · {1}{2}", Path.GetFileName(result.Path), GifText.FormatBytes(result.Bytes), renamed);
             ShowResult(result);
         }
 
@@ -1226,7 +1226,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressRun.IsIndeterminate = false;
                 ProgressRun.Value = 0;
                 TxtProgressPercent.Text = "0%";
-                TxtProgress.Text = "Starting...";
+                TxtProgress.Text = Loc.T("Str_GifMaker_MsgStarting", "Starting...");
             }
         }
 
@@ -1296,13 +1296,13 @@ namespace Smart_Tools.WPF.Views
         private void BtnOpenResult_Click(object sender, RoutedEventArgs e)
         {
             if (_result != null && File.Exists(_result.Path)) OpenWithShell(_result.Path);
-            else TxtProgress.Text = "The GIF isn't there any more.";
+            else TxtProgress.Text = Loc.T("Str_GifMaker_MsgGone", "The GIF isn't there any more.");
         }
 
         private void BtnShowResult_Click(object sender, RoutedEventArgs e)
         {
             if (_result == null || ShellExplorer.Show(_result.Path) != ShellExplorer.ShowResult.Shown)
-                TxtProgress.Text = "The GIF isn't there any more.";
+                TxtProgress.Text = Loc.T("Str_GifMaker_MsgGone", "The GIF isn't there any more.");
         }
 
         // =================================================================
