@@ -77,8 +77,8 @@ namespace Smart_Tools.WPF.Views
 
         private void UpdateHint() =>
             TxtFitHint.Text = Fit == IconFit.Fit
-                ? "Keeps the whole picture and adds see-through space if it is not square."
-                : "Fills the square and crops the edges of a picture that is not square.";
+                ? Loc.T("Str_IconMaker_MsgFitHint", "Keeps the whole picture and adds see-through space if it is not square.")
+                : Loc.T("Str_IconMaker_MsgFillHint", "Fills the square and crops the edges of a picture that is not square.");
 
         private void Option_Click(object sender, RoutedEventArgs e)
         {
@@ -127,7 +127,7 @@ namespace Smart_Tools.WPF.Views
             });
             if (result.bgra == null)
             {
-                ShowStatus(result.problem == "ImageTooBig" ? "That picture is too big to open." : "That picture couldn't be opened.", error: true);
+                ShowStatus(result.problem == "ImageTooBig" ? Loc.T("Str_IconMaker_MsgTooBig", "That picture is too big to open.") : Loc.T("Str_IconMaker_MsgCantOpen", "That picture couldn't be opened."), error: true);
                 return;
             }
             _bgra = result.bgra;
@@ -202,13 +202,13 @@ namespace Smart_Tools.WPF.Views
 
         private static string UseNote(int size) => size switch
         {
-            16 => "Title bars, small lists",
-            24 => "Toolbars",
-            32 => "Desktop shortcuts, lists",
-            48 => "Large lists, Explorer",
-            64 => "Large views",
-            128 => "Big thumbnails",
-            256 => "Largest, the jumbo size",
+            16 => Loc.T("Str_IconMaker_Use16", "Title bars, small lists"),
+            24 => Loc.T("Str_IconMaker_Use24", "Toolbars"),
+            32 => Loc.T("Str_IconMaker_Use32", "Desktop shortcuts, lists"),
+            48 => Loc.T("Str_IconMaker_Use48", "Large lists, Explorer"),
+            64 => Loc.T("Str_IconMaker_Use64", "Large views"),
+            128 => Loc.T("Str_IconMaker_Use128", "Big thumbnails"),
+            256 => Loc.T("Str_IconMaker_Use256", "Largest, the jumbo size"),
             _ => "",
         };
 

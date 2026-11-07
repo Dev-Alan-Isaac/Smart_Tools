@@ -104,10 +104,29 @@ namespace Smart_Tools.WPF.Views
         private void BtnCopy_Click(object sender, RoutedEventArgs e)
         {
             if (_code.Length == 0) return;
-            TxtCopy.Text = JsonSettings.TryCopy(_code) ? "Copied" : "Clipboard busy";
+            TxtCopy.Text = CopySecret(_code) ? Loc.T("Str_Totp_Copied", "Copied") : Loc.T("Str_Totp_ClipboardBusy", "Clipboard busy");
             var t = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
-            t.Tick += (_, _) => { t.Stop(); TxtCopy.Text = "Copy code"; };
+            t.Tick += (_, _) => { t.Stop(); TxtCopy.Text = Loc.T("Str_SvgTool_CopyCode", "Copy code"); };
             t.Start();
+        }
+
+        /// <summary>A one-time code is a secret: keep it out of Windows clipboard history, the cloud clipboard and clipboard monitors.</summary>
+        private static bool CopySecret(string text)
+        {
+            try
+            {
+                var data = new System.Windows.DataObject();
+                data.SetText(text, System.Windows.TextDataFormat.UnicodeText);
+                data.SetData("ExcludeClipboardContentFromMonitorProcessing", new System.IO.MemoryStream(new byte[] { 1, 0, 0, 0 }));
+                data.SetData("CanIncludeInClipboardHistory", new System.IO.MemoryStream(new byte[4]));
+                data.SetData("CanUploadToCloudClipboard", new System.IO.MemoryStream(new byte[4]));
+                System.Windows.Clipboard.SetDataObject(data, true);
+                return true;
+            }
+            catch (System.Runtime.InteropServices.ExternalException)
+            {
+                return false;
+            }
         }
 
         /// <summary>Called when the window closes: stops the clock and forgets the secret.</summary>
