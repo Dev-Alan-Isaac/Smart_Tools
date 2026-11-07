@@ -112,6 +112,8 @@ namespace Smart_Tools.WPF.Models
         public MediaKind Kind { get; init; }
         public int FilesScanned { get; init; }
         public int UnreadableFiles { get; init; }
+        /// <summary>Files whose picture/video signature was already known from an earlier (or interrupted) scan, so they were not read again.</summary>
+        public int FilesFromCache { get; init; }
         public int InaccessibleFolders { get; init; }
         public int SkippedLinks { get; init; }
         public TimeSpan Elapsed { get; init; }

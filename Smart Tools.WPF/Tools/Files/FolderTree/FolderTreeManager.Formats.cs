@@ -106,6 +106,8 @@ li{padding:1px 0}summary{cursor:pointer}summary::marker{color:var(--accent)}.m{c
                 {
                     xw.WriteAttributeString("name", X(n.Name));
                     if (o.ShowSize) xw.WriteAttributeString("size", n.Size.ToString(CultureInfo.InvariantCulture));
+                    // "fileCount", not "files": the root element already carries "files" (the grand total).
+                    if (o.ShowCount && n.IsFolder) xw.WriteAttributeString("fileCount", n.FileCount.ToString(CultureInfo.InvariantCulture));
                     if (o.ShowDate && n.Modified != default) xw.WriteAttributeString("modified", n.Modified.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture));
                     if (n.Note != null) xw.WriteAttributeString("note", X(n.Note));
                 }
@@ -149,6 +151,7 @@ li{padding:1px 0}summary{cursor:pointer}summary::marker{color:var(--accent)}.m{c
                 string pad = indent + new string(' ', firstPrefix.Length);
                 sb.Append(pad).Append("type: ").AppendLine(n.IsFolder ? "folder" : "file");
                 if (o.ShowSize) sb.Append(pad).Append("size: ").AppendLine(n.Size.ToString(CultureInfo.InvariantCulture));
+                if (o.ShowCount && n.IsFolder) sb.Append(pad).Append("fileCount: ").AppendLine(n.FileCount.ToString(CultureInfo.InvariantCulture));
                 if (o.ShowDate && n.Modified != default) sb.Append(pad).Append("modified: ").AppendLine(Y(n.Modified.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture)));
                 if (n.Note != null) sb.Append(pad).Append("note: ").AppendLine(Y(n.Note));
                 if (!n.IsFolder) return;

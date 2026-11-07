@@ -34,6 +34,7 @@ namespace Smart_Tools.WPF.Controllers
             var kind = KindOf(method);
             var cache = kind is MediaKind.Image or MediaKind.Video && _usesMediaDecoders ? SimilarFingerprintCache.Load() : null;
             int fromCache = 0;
+            using var closeJournalOnCancel = token.Register(() => cache?.Close());
             var prints = new FileFingerprint?[files.Count];
 
             await Parallel.ForEachAsync(Enumerable.Range(0, files.Count), new ParallelOptions

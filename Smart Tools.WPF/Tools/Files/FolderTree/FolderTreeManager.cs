@@ -42,8 +42,8 @@ namespace Smart_Tools.WPF.Controllers
                     progress?.Report(new FolderTreeProgress(result.Folders, result.Files, current));
                 }
 
-                // node == null: past the depth limit - only the size is added up, nothing is listed.
-                long Walk(DirectoryInfo folder, FolderTreeNode? node, int depth)
+                // node == null: past the depth limit - only the size and file count are added up, nothing is listed.
+                (long Size, long Files) Walk(DirectoryInfo folder, FolderTreeNode? node, int depth)
                 {
                     token.ThrowIfCancellationRequested();
                     Report(folder.Name);
@@ -57,10 +57,10 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         result.Unreadable++;
                         if (node != null) node.Note = "no access";
-                        return 0;
+                        return (0, 0);
                     }
 
-                    long total = 0;
+                    long total = 0, fileCount = 0;
                     foreach (var entry in entries)
                     {
                         token.ThrowIfCancellationRequested();
@@ -95,9 +95,14 @@ namespace Smart_Tools.WPF.Controllers
                                 if (child != null) child.Note = "link - not followed";
                                 continue;
                             }
-                            long size = Walk(sub, child, depth + 1);
-                            if (child != null) child.Size = size;
+                            var (size, count) = Walk(sub, child, depth + 1);
+                            if (child != null)
+                            {
+                                child.Size = size;
+                                child.FileCount = count;
+                            }
                             total += size;
+                            fileCount += count;
                         }
                         else
                         {
@@ -111,6 +116,7 @@ namespace Smart_Tools.WPF.Controllers
                                 // listed with size 0; the file may be gone or locked
                             }
                             total += length;
+                            fileCount++;
                             result.Bytes += length;
                             if (node != null && o.IncludeFiles && (o.MaxDepth == 0 || depth < o.MaxDepth))
                             {
@@ -119,10 +125,10 @@ namespace Smart_Tools.WPF.Controllers
                             }
                         }
                     }
-                    return total;
+                    return (total, fileCount);
                 }
 
-                root.Size = Walk(dir, root, 0);
+                (root.Size, root.FileCount) = Walk(dir, root, 0);
                 result.Elapsed = clock.Elapsed;
                 progress?.Report(new FolderTreeProgress(result.Folders, result.Files, ""));
                 return result;
@@ -173,6 +179,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             var parts = new List<string>();
             if (o.ShowSize) parts.Add(CopyQueueManager.FormatSize(n.Size));
+            if (o.ShowCount && n.IsFolder) parts.Add(FilesText.Files((int)Math.Min(n.FileCount, int.MaxValue)));
             if (o.ShowDate && n.Modified != default) parts.Add(n.Modified.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture));
             if (n.Note != null) parts.Add(n.Note);
             return parts.Count == 0 ? "" : "  [" + string.Join(" · ", parts) + "]";
@@ -248,6 +255,7 @@ namespace Smart_Tools.WPF.Controllers
                     ["type"] = n.IsFolder ? "folder" : "file",
                 };
                 if (o.ShowSize) d["size"] = n.Size;
+                if (o.ShowCount && n.IsFolder) d["fileCount"] = n.FileCount;
                 if (o.ShowDate && n.Modified != default) d["modified"] = n.Modified.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
                 if (n.Note != null) d["note"] = n.Note;
                 if (n.IsFolder) d["children"] = Sorted(n).Select(Node).ToList();
@@ -259,7 +267,7 @@ namespace Smart_Tools.WPF.Controllers
         private static string RenderCsv(FolderTreeResult r, FolderTreeOptions o)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Path,Name,Type,Depth,Size,Modified,Note");
+            sb.AppendLine("Path,Name,Type,Depth,Size,Modified,Note,FileCount");
             void Emit(FolderTreeNode n, string rel, int depth)
             {
                 foreach (var k in Sorted(n))
@@ -269,7 +277,8 @@ namespace Smart_Tools.WPF.Controllers
                         Csv(path), Csv(k.Name), k.IsFolder ? "Folder" : "File", depth.ToString(CultureInfo.InvariantCulture),
                         o.ShowSize ? k.Size.ToString(CultureInfo.InvariantCulture) : "",
                         o.ShowDate && k.Modified != default ? k.Modified.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "",
-                        Csv(k.Note ?? "")).AppendLine();
+                        Csv(k.Note ?? ""),
+                        o.ShowCount && k.IsFolder ? k.FileCount.ToString(CultureInfo.InvariantCulture) : "").AppendLine();
                     if (k.IsFolder) Emit(k, path, depth + 1);
                 }
             }

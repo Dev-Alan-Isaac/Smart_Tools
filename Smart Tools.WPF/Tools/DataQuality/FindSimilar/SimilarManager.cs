@@ -144,7 +144,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             var watch = Stopwatch.StartNew();
             var groups = new List<SimilarGroup>();
-            int files = 0, unreadable = 0, inaccessible = 0, links = 0;
+            int files = 0, unreadable = 0, inaccessible = 0, links = 0, fromCache = 0;
             bool skippedAudio = false;
 
             foreach (var kind in new[] { MediaKind.Image, MediaKind.Video, MediaKind.Audio })
@@ -161,6 +161,7 @@ namespace Smart_Tools.WPF.Controllers
                 groups.AddRange(result.Groups);
                 files += result.FilesScanned;
                 unreadable += result.UnreadableFiles;
+                fromCache += result.FilesFromCache;
                 inaccessible = Math.Max(inaccessible, result.InaccessibleFolders);   // the same folders are walked once per kind
                 links = Math.Max(links, result.SkippedLinks);
             }
@@ -175,6 +176,7 @@ namespace Smart_Tools.WPF.Controllers
                 Kind = MediaKind.Unsupported,
                 FilesScanned = files,
                 UnreadableFiles = unreadable,
+                FilesFromCache = fromCache,
                 InaccessibleFolders = inaccessible,
                 SkippedLinks = links,
                 Elapsed = watch.Elapsed,
@@ -196,6 +198,8 @@ namespace Smart_Tools.WPF.Controllers
 
             var cache = kind is MediaKind.Image or MediaKind.Video && _usesMediaDecoders ? SimilarFingerprintCache.Load() : null;
             int cached = 0;
+            // A cancelled scan keeps what it has read: the journal is flushed and closed the moment Cancel is pressed.
+            using var closeJournalOnCancel = token.Register(() => cache?.Close());
             var sigs = new MediaSignature?[files.Count];
             await Parallel.ForEachAsync(Enumerable.Range(0, files.Count), new ParallelOptions
             {
@@ -306,6 +310,7 @@ namespace Smart_Tools.WPF.Controllers
                 Kind = kind,
                 FilesScanned = files.Count,
                 UnreadableFiles = state.Unreadable,
+                FilesFromCache = cached,
                 InaccessibleFolders = state.Inaccessible,
                 SkippedLinks = state.Links,
                 Elapsed = state.Watch.Elapsed,

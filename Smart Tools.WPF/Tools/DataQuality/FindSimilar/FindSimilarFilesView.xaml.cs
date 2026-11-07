@@ -63,6 +63,8 @@ namespace Smart_Tools.WPF.Views
         private CancellationTokenSource? _scanCts;
         private CancellationTokenSource? _thumbnailCts;
         private bool _isScanning;
+        private readonly SimilarEta _eta = new();
+        private readonly Stopwatch _etaClock = Stopwatch.StartNew();
         private bool _isBusy;
         private bool _optionsCollapsed;
         private bool _loadedOnce;
@@ -452,6 +454,12 @@ namespace Smart_Tools.WPF.Views
                 SimilarScanPhase.Grouping => Loc.T("Str_FindSimilar_ProgGrouping", "Grouping look-alikes..."),
                 _ => Loc.T("Str_FindSimilar_ProgFinishing", "Finishing..."),
             };
+            // "about 2 h 10 min left" for the step that is running now (reading files, then comparing them).
+            // An Auto run does its kinds one after another, so the estimate is for the current kind.
+            if (p.Percent is double pct2 && p.Phase is SimilarScanPhase.Fingerprinting or SimilarScanPhase.Matching
+                && _eta.Update($"{p.Kind}:{p.Phase}", pct2, _etaClock.ElapsedMilliseconds) is TimeSpan left)
+                phase += " · " + Loc.F("Str_FindSimilar_EtaLeft", "about {0} left", SimilarEta.Format(left));
+
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentPath) ? phase : $"{phase} · {Path.GetFileName(p.CurrentPath)}";
         }
 
@@ -460,6 +468,7 @@ namespace Smart_Tools.WPF.Views
         private void SetScanning(bool scanning)
         {
             _isScanning = scanning;
+            if (scanning) _eta.Reset();
             if (scanning) _activity ??= Log.Activity("find-similar-files");
             else { _activity?.Dispose(); _activity = null; }
 
@@ -491,6 +500,7 @@ namespace Smart_Tools.WPF.Views
             ProgressScan.Value = 100;
             var notes = new List<string>();
             if (result.UnreadableFiles > 0) notes.Add($"{result.UnreadableFiles:N0} couldn't be read");
+            if (result.FilesFromCache > 0) notes.Add(Loc.F("Str_FindSimilar_FromCache", "{0:N0} already known from an earlier scan", result.FilesFromCache));
             if (result.InaccessibleFolders > 0) notes.Add($"{result.InaccessibleFolders:N0} folders unreadable");
             if (result.SkippedLinks > 0) notes.Add($"{result.SkippedLinks:N0} links not followed");
             string extra = notes.Count > 0 ? " · " + string.Join(" · ", notes) : "";

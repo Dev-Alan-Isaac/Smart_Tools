@@ -55,6 +55,7 @@ namespace Smart_Tools.WPF.Views
             MaxDepth = Math.Max(0, CmbDepth.SelectedIndex),
             IncludeFiles = ChkFiles.IsChecked == true,
             ShowSize = ChkSize.IsChecked == true,
+            ShowCount = ChkCount.IsChecked == true,
             ShowDate = ChkDate.IsChecked == true,
             IncludeHidden = ChkHidden.IsChecked == true,
             SkipNoise = ChkNoise.IsChecked == true,
