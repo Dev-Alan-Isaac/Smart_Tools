@@ -1,5 +1,6 @@
 using Microsoft.ML.OnnxRuntime;
 using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -28,11 +29,19 @@ namespace Smart_Tools.WPF.Views
         private bool _viewConstructed;
         private bool _applying;
         private bool _closing;
+        private readonly System.Collections.ObjectModel.ObservableCollection<TranslateFileItem> _files = new();
 
         public TranslateView()
         {
             InitializeComponent();
 
+            ResultsList.ItemsSource = _files;
+            InputCard.ItemsSource = _files;
+            InputCard.FileFilter = Loc.T("Str_Translate_FileFilter", "Text and subtitles") + "|"
+                + string.Join(";", TranslateManager.FileExtensions.Select(x => "*" + x)) + "|" + Loc.T("Str_Translate_FileFilterAll", "All files") + " (*.*)|*.*";
+            _files.CollectionChanged += (_, _) => UpdateFilesState();
+
+            UpdateFilesState();
             LoadLanguages("en", "es");
             _viewConstructed = true;
 
@@ -244,6 +253,12 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
+            if (FilesMode)
+            {
+                await RunFilesAsync();
+                return;
+            }
+
             string text = TxtInput.Text;
             if (string.IsNullOrWhiteSpace(text))
             {
@@ -301,16 +316,191 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+        // ---- Files mode -----------------------------------------------------------------------
+
+        private bool FilesMode => RadioModeFiles.IsChecked == true;
+
+        private void RadioMode_Click(object sender, RoutedEventArgs e) => ApplyMode();
+
+        private void ApplyMode()
+        {
+            bool files = FilesMode;
+            TextPanes.Visibility = files ? Visibility.Collapsed : Visibility.Visible;
+            FilesPanel.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
+            InputCard.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
+            TxtRunLabel.Text = _translateCts != null ? Str("Str_Common_Cancel") : files ? Loc.T("Str_Translate_RunFiles", "Translate files") : Str("Str_Translate_Run");
+            SetStatus(files ? Loc.T("Str_Translate_StatusFilesIdle", "Add files, then press Translate files.") : Str("Str_Translate_StatusIdle"));
+            UpdateFilesState();
+        }
+
+        private void UpdateFilesState()
+        {
+            FilesEmptyHint.Visibility = _files.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            InputCard.SetEmpty(_files.Count == 0);   // the card keeps its "drop files here" hint on top of the list until told
+        }
+
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
+        {
+            if (_translateCts != null) return;
+
+            int added = 0, skipped = 0;
+            foreach (string path in e.Paths)
+            {
+                IEnumerable<string> candidates;
+                try
+                {
+                    candidates = Directory.Exists(path)
+                        ? Directory.EnumerateFiles(path, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).ToList()
+                        : new[] { path };
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    continue;
+                }
+
+                foreach (string file in candidates)
+                {
+                    if (!TranslateManager.IsSupportedFile(file)) { if (!Directory.Exists(path)) skipped++; continue; }
+                    if (_files.Any(f => string.Equals(f.Path, file, StringComparison.OrdinalIgnoreCase))) continue;
+                    _files.Add(new TranslateFileItem(file) { Status = Loc.T("Str_Translate_FileWaiting", "Waiting") });
+                    added++;
+                }
+            }
+
+            if (skipped > 0)
+                SetStatus(Loc.N(skipped, "Str_Translate_FilesSkipped_One", "{0} file skipped: only .txt, .md, .srt and .vtt files can be translated.", "Str_Translate_FilesSkipped_Many", "{0} files skipped: only .txt, .md, .srt and .vtt files can be translated.", skipped));
+            else if (added > 0)
+                SetStatus(Loc.N(added, "Str_Translate_FilesAdded_One", "{0} file added.", "Str_Translate_FilesAdded_Many", "{0} files added.", added));
+        }
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            if (_translateCts == null) _files.Clear();
+        }
+
+        private void BtnRemoveFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (_translateCts == null && (sender as FrameworkElement)?.Tag is TranslateFileItem item) _files.Remove(item);
+        }
+
+        private void BtnShowFile_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not TranslateFileItem { OutputPath: { } path }) return;
+            if (!TranslateManager.OpenInExplorer(Path.GetDirectoryName(path) ?? "")) SetStatus(Str("Str_Translate_StatusOpenFailed"));
+        }
+
+        /// <summary>
+        /// Translates every file that is not done yet, one after the other. The bar and the percentage cover the whole
+        /// batch (each file counts the same); each row also shows its own progress. Cancel stops after the sentence being
+        /// translated and saves nothing for that file; files finished before keep their translation.
+        /// </summary>
+        private async Task RunFilesAsync()
+        {
+            var pending = _files.Where(f => f.State != TranslateFileState.Done).ToList();
+            if (_files.Count == 0) { SetStatus(Loc.T("Str_Translate_StatusNoFiles", "Add at least one file first.")); InputCard.PopDropArea(); return; }
+            if (pending.Count == 0) { SetStatus(Loc.T("Str_Translate_StatusAllDone", "Every file in the list is already translated. Add more files, or remove them and add them again to translate them once more.")); return; }
+
+            var route = TranslateManager.Route(TagOf(CmbFrom), TagOf(CmbTo));
+            if (route == null) { SetStatus(Str("Str_Translate_StatusSamePair")); return; }
+            if (!route.All(TranslateManager.IsInstalled)) { SetStatus(Str("Str_Translate_StatusNeedModel")); return; }
+
+            _translateCts = new CancellationTokenSource();
+            var token = _translateCts.Token;
+            SetRunning(true);
+            foreach (var f in pending) { f.State = TranslateFileState.Waiting; f.Percent = 0; f.OutputPath = null; f.Status = Loc.T("Str_Translate_FileWaiting", "Waiting"); }
+
+            int saved = 0, failedFiles = 0;
+            bool stopped = false;
+            try
+            {
+                for (int k = 0; k < pending.Count && !stopped; k++)
+                {
+                    var item = pending[k];
+                    int index = k;
+                    item.State = TranslateFileState.Running;
+                    item.Status = Loc.T("Str_Translate_FileRunning", "Translating...");
+                    SetStatus(Loc.F("Str_Translate_StatusFiles", "Translating file {0} of {1} · {2}", k + 1, pending.Count, item.Name));
+                    ShowProgress((double)k / pending.Count);
+
+                    var progress = new Progress<double>(f =>
+                    {
+                        item.Percent = f * 100;
+                        ShowProgress((index + f) / pending.Count);
+                    });
+
+                    TranslateFileResult result;
+                    try
+                    {
+                        result = await _manager.TranslateFileAsync(item.Path, route, progress, token);
+                    }
+                    catch (Exception ex) when (ex is OnnxRuntimeException or IOException or InvalidDataException or JsonException or InvalidOperationException)
+                    {
+                        result = new TranslateFileResult(null, false, 0, 0, "Str_Translate_FileError");
+                    }
+
+                    if (result.Canceled)
+                    {
+                        item.State = TranslateFileState.Stopped;
+                        item.Percent = 0;
+                        item.Status = Loc.T("Str_Translate_FileStopped", "Stopped");
+                        stopped = true;
+                    }
+                    else if (result.OutputPath is { } output)
+                    {
+                        item.State = TranslateFileState.Done;
+                        item.Percent = 100;
+                        item.OutputPath = output;
+                        item.Status = result.FailedParts > 0
+                            ? Loc.F("Str_Translate_FileSavedPartial", "Saved as {0} · {1} of {2} sentences were left as they were", Path.GetFileName(output), result.FailedParts, result.TotalParts)
+                            : Loc.F("Str_Translate_FileSaved", "Saved as {0}", Path.GetFileName(output));
+                        saved++;
+                    }
+                    else
+                    {
+                        item.State = TranslateFileState.Failed;
+                        item.Percent = 0;
+                        item.Status = Loc.T(result.ErrorKey ?? "Str_Translate_FileError", "Couldn't translate this file");
+                        failedFiles++;
+                    }
+                }
+
+                foreach (var f in pending.Where(f => f.State == TranslateFileState.Waiting))
+                {
+                    f.State = TranslateFileState.Stopped;
+                    f.Status = Loc.T("Str_Translate_FileStopped", "Stopped");
+                }
+
+                SetStatus(stopped
+                    ? Loc.N(saved, "Str_Translate_StatusFilesStopped_One", "Stopped: {0} file was saved before stopping.", "Str_Translate_StatusFilesStopped_Many", "Stopped: {0} files were saved before stopping.", saved)
+                    : failedFiles > 0
+                        ? Loc.F("Str_Translate_StatusFilesPartial", "Done: {0} saved next to the originals, {1} could not be translated.", saved, failedFiles)
+                        : Loc.N(saved, "Str_Translate_StatusFilesDone_One", "Done: {0} file saved next to the original.", "Str_Translate_StatusFilesDone_Many", "Done: {0} files saved next to the originals.", saved));
+            }
+            catch (Exception ex) when (ex is OnnxRuntimeException or IOException or InvalidDataException or JsonException or InvalidOperationException)
+            {
+                SetStatus(Str("Str_Translate_StatusLoadFailed"));
+            }
+            finally
+            {
+                _translateCts.Dispose();
+                _translateCts = null;
+                SetRunning(false);
+                if (_closing) _manager.Dispose();
+            }
+        }
+
         private void SetRunning(bool running)
         {
             IconRun.Kind = running ? MaterialDesignThemes.Wpf.PackIconKind.Stop : MaterialDesignThemes.Wpf.PackIconKind.Translate;
-            TxtRunLabel.Text = running ? Str("Str_Common_Cancel") : Str("Str_Translate_Run");
+            TxtRunLabel.Text = running ? Str("Str_Common_Cancel") : FilesMode ? Loc.T("Str_Translate_RunFiles", "Translate files") : Str("Str_Translate_Run");
             ProgressTranslate.Value = 0;
             ProgressTranslate.Visibility = TxtPercent.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
             TxtPercent.Text = "0%";
             TxtInput.IsReadOnly = running;
             BtnClear.IsEnabled = !running;
-            if (running) SetStatus(Str("Str_Translate_StatusTranslating"));
+            InputCard.IsLocked = running;
+            RadioModeText.IsEnabled = RadioModeFiles.IsEnabled = !running;
+            if (running && !FilesMode) SetStatus(Str("Str_Translate_StatusTranslating"));
             UpdateModelPanel();
         }
 

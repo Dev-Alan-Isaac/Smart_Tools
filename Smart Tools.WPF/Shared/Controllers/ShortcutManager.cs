@@ -44,6 +44,7 @@ namespace Smart_Tools.WPF.Controllers
             // Keys inside a tool. Views attach the handler with Attach(id, ...).
             Define(new ShortcutAction("notes.new", "Str_Shortcut_NotesNew", "New note", ShortcutScope.InApp, "Ctrl+N", "notes"));
             Define(new ShortcutAction("notes.search", "Str_Shortcut_NotesSearch", "Search notes", ShortcutScope.InApp, "Ctrl+F", "notes"));
+            Define(new ShortcutAction("notes.widget", "Str_Shortcut_NotesWidget", "Show or close the note as a widget", ShortcutScope.InApp, "Ctrl+Shift+W", "notes"));
             Define(new ShortcutAction("password.generate", "Str_Shortcut_PasswordGenerate", "Generate passwords", ShortcutScope.InApp, "F5", "password-generator"));
             Define(new ShortcutAction("password.generateAlt", "Str_Shortcut_PasswordGenerate", "Generate passwords", ShortcutScope.InApp, "Ctrl+G", "password-generator"));
             Define(new ShortcutAction("vault.lock", "Str_Shortcut_VaultLock", "Lock the vault", ShortcutScope.InApp, "Ctrl+Shift+L", "password-vault"));

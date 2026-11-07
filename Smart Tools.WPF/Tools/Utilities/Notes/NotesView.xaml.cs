@@ -89,6 +89,7 @@ namespace Smart_Tools.WPF.Views
 
             // Ctrl+N / Ctrl+F by default; the keys can be changed in Settings.
             ShortcutManager.Attach("notes.new", NewNote);
+            ShortcutManager.Attach("notes.widget", () => BtnWidget_Click(BtnWidget, new RoutedEventArgs()));
             ShortcutManager.Attach("notes.search", () =>
             {
                 TxtSearch.Focus();

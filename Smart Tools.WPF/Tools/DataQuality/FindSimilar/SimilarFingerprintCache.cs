@@ -20,7 +20,7 @@ namespace Smart_Tools.WPF.Controllers
     public sealed class SimilarFingerprintCache
     {
         /// <summary>Bump when an engine changes what it stores, so stale signatures are recomputed.</summary>
-        public const int EngineVersion = 3;
+        public const int EngineVersion = 4;
         private const int Magic = 0x53464331;          // "SFC1"
         private const int JournalMagic = 0x53464A31;   // "SFJ1"
         private const int MaxEntries = 200_000;

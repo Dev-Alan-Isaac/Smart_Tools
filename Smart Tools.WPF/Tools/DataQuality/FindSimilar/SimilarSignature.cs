@@ -50,6 +50,8 @@ namespace Smart_Tools.WPF.Controllers
         // ---- Video ----
         /// <summary>Seconds between sampled frames.</summary>
         public int VideoStep { get; set; }
+        /// <summary>Fast video scan: frames came from the keyframes nearest each sample time (much quicker to read, less exact for re-encodes).</summary>
+        public bool KeyframeSampled { get; set; }
         public ulong[] Frames { get; set; } = Array.Empty<ulong>();
         public ulong[] FramesMirror { get; set; } = Array.Empty<ulong>();
         /// <summary>Per frame: pHash of crop windows of each frame, 12 per frame (see SimilarVideoEngine.ZoomSlots). For cropped copies.</summary>
@@ -82,6 +84,7 @@ namespace Smart_Tools.WPF.Controllers
             WriteBytes(w, OrbMirror);
             WriteFloats(w, OrbMirrorPoints);
             w.Write(VideoStep);
+            w.Write(KeyframeSampled);
             WriteUlongs(w, Frames);
             WriteUlongs(w, FramesMirror);
             WriteUlongs(w, FrameZoom);
@@ -101,6 +104,7 @@ namespace Smart_Tools.WPF.Controllers
             s.OrbMirror = ReadBytes(r);
             s.OrbMirrorPoints = ReadFloats(r);
             s.VideoStep = r.ReadInt32();
+            s.KeyframeSampled = r.ReadBoolean();
             s.Frames = ReadUlongs(r);
             s.FramesMirror = ReadUlongs(r);
             s.FrameZoom = ReadUlongs(r);

@@ -155,9 +155,10 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (new FileInfo(path).Length <= OpenCvDecodeLimit)
                 {
-                    var flag = longSide >= 4096 * 2 ? ImreadModes.ReducedGrayscale8
-                        : longSide >= 2048 * 2 ? ImreadModes.ReducedGrayscale4
-                        : longSide >= 1024 * 2 ? ImreadModes.ReducedGrayscale2
+                    // Largest reduction that still leaves at least MaxSide (512) pixels on the long side.
+                    var flag = longSide >= MaxSide * 8 ? ImreadModes.ReducedGrayscale8
+                        : longSide >= MaxSide * 4 ? ImreadModes.ReducedGrayscale4
+                        : longSide >= MaxSide * 2 ? ImreadModes.ReducedGrayscale2
                         : ImreadModes.Grayscale;
                     mat = Cv2.ImDecode(File.ReadAllBytes(path), flag);
                 }

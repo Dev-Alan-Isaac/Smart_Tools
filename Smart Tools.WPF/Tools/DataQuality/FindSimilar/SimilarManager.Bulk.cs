@@ -46,7 +46,7 @@ namespace Smart_Tools.WPF.Controllers
                 try
                 {
                     var sig = cache?.TryGet(files[i]);
-                    if (sig != null)
+                    if (CacheUsable(sig, kind))
                     {
                         Interlocked.Increment(ref fromCache);
                     }

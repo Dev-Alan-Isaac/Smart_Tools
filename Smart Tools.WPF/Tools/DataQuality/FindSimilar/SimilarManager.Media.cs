@@ -25,7 +25,14 @@ namespace Smart_Tools.WPF.Controllers
         private static readonly TimeSpan DecodeTimeout = TimeSpan.FromMinutes(4);
         private static readonly TimeSpan ImageDecodeTimeout = TimeSpan.FromSeconds(60);
 
-        private static async Task<MediaSignature?> ComputeSignatureAsync(string path, MediaKind kind, CancellationToken token)
+        /// <summary>Set by a scan from its options. Duplicate Finder's same-content stage leaves it off (exact frame reads).</summary>
+        private volatile bool _fastVideo;
+
+        /// <summary>A cached video signature is only reusable when it was made the same way (keyframes or exact reads).</summary>
+        private bool CacheUsable(MediaSignature? sig, MediaKind kind) =>
+            sig != null && (kind != MediaKind.Video || sig.KeyframeSampled == _fastVideo);
+
+        private async Task<MediaSignature?> ComputeSignatureAsync(string path, MediaKind kind, CancellationToken token)
         {
             switch (kind)
             {
@@ -56,8 +63,16 @@ namespace Smart_Tools.WPF.Controllers
         //  Video
         // =================================================================
 
-        private static async Task<MediaSignature?> VideoSignatureAsync(string path, CancellationToken token)
+        private async Task<MediaSignature?> VideoSignatureAsync(string path, CancellationToken token)
         {
+            if (_fastVideo && FfmpegAvailable)
+            {
+                // Fast: one ffmpeg pass that decodes only the keyframes (skips every other frame), picking the one
+                // nearest each sample time. Measured on a 15-minute 1080p file: 2.4 s instead of 189 s.
+                var quick = await KeyframeSignatureAsync(path, token).ConfigureAwait(false);
+                if (quick != null) return quick;
+            }
+
             var sig = await Task.Run(() => SimilarVideoEngine.Sample(path, token), token).ConfigureAwait(false);
             if (sig != null || !FfmpegAvailable) return sig;
 
@@ -75,6 +90,58 @@ namespace Smart_Tools.WPF.Controllers
             }, token, DecodeTimeout).ConfigureAwait(false);
 
             return SimilarVideoEngine.FromRawFrames(raw, probe.Duration, probe.Width, probe.Height, step);
+        }
+
+        private static async Task<MediaSignature?> KeyframeSignatureAsync(string path, CancellationToken token)
+        {
+            var probe = await ProbeAsync(path, video: true, token).ConfigureAwait(false);
+            if (probe.Duration <= 0) return null;
+
+            // Seeks straight to each sample time (one ffmpeg process, one input per sample, no accurate seek = the
+            // keyframe at or before that time, one picture decoded each). Cost no longer depends on how the file
+            // is encoded: a 100-minute 2.3 GB file took 401 s with a keyframe-only pass (every frame was a
+            // keyframe) and 2.7 s this way. The step is a power of two so any two fast signatures line up.
+            int step = FastStepFor(probe.Duration);
+            int count = Math.Min(FastMaxSamples, (int)Math.Ceiling(probe.Duration / step));
+            if (count < 3) return null;
+
+            var args = new List<string> { "-threads", "1" };
+            var filter = new System.Text.StringBuilder();
+            string size = SimilarHashing.PHashSize.ToString(CultureInfo.InvariantCulture);
+            for (int i = 0; i < count; i++)
+            {
+                args.AddRange(new[] { "-noaccurate_seek", "-ss", (i * step).ToString(CultureInfo.InvariantCulture), "-i", path });
+                filter.Append(CultureInfo.InvariantCulture, $"[{i}:v:0]scale={size}:{size}:flags=area,format=gray,trim=end_frame=1,setpts=PTS-STARTPTS[a{i}];");
+            }
+            for (int i = 0; i < count; i++) filter.Append($"[a{i}]");
+            filter.Append(CultureInfo.InvariantCulture, $"concat=n={count}:v=1:a=0[o]");
+            args.AddRange(new[] { "-filter_complex", filter.ToString(), "-map", "[o]", "-fps_mode", "passthrough", "-f", "rawvideo", "-pix_fmt", "gray", "-" });
+
+            byte[] raw = await RunForBytesAsync(FfmpegExe, args, token, DecodeTimeout).ConfigureAwait(false);
+
+            // A sample that produced no picture would shift every later one: use the exact reader instead.
+            int expected = count * SimilarHashing.PHashSize * SimilarHashing.PHashSize;
+            if (raw.Length != expected)
+            {
+                Log.Info($"Fast video read gave {raw.Length / (SimilarHashing.PHashSize * SimilarHashing.PHashSize)} of {count} pictures, using the exact reader: {path}");
+                return null;
+            }
+
+            var sig = SimilarVideoEngine.FromRawFrames(raw, probe.Duration, probe.Width, probe.Height, step);
+            if (sig != null) sig.KeyframeSampled = true;
+            return sig;
+        }
+
+        // Each sample is one disk seek, so on a spinning drive the time per file is about this number x 45 ms.
+        // 32 is plenty to tell a copy from a different video (and 240 inputs would pass the Windows command-line limit).
+        private const int FastMaxSamples = 32;
+
+        /// <summary>Seconds between samples: 1, 2, 4, 8... so that at most <see cref="FastMaxSamples"/> fit in the video.</summary>
+        internal static int FastStepFor(double durationSeconds)
+        {
+            int step = 1;
+            while (durationSeconds / step > FastMaxSamples) step *= 2;
+            return step;
         }
 
         // =================================================================

@@ -198,6 +198,7 @@ namespace Smart_Tools.WPF.Controllers
 
         private async Task<SimilarScanResult> ScanCoreAsync(SimilarScanOptions options, MediaKind kind, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token)
         {
+            _fastVideo = options.FastVideo;
             var state = new ScanState { Progress = progress, Phase = SimilarScanPhase.Listing, Kind = kind };
             Log.Info($"Scan start: {kind}, threshold {options.ThresholdPercent}%, crops {options.FindCroppedCopies}, {options.MaxDegreeOfParallelism} workers, {options.Folders.Count()} folder(s)");
             var files = EnumerateCandidateFiles(options, kind, state, token);
@@ -246,10 +247,10 @@ namespace Smart_Tools.WPF.Controllers
                 try
                 {
                     var hit = cache?.TryGet(files[i]);
-                    if (hit != null)
+                    if (CacheUsable(hit, kind))
                     {
                         sigs[i] = hit;
-                        Interlocked.Increment(ref cached);
+                        Interlocked.Increment(ref cached);   // CacheUsable guarantees hit is not null
                     }
                     else
                     {

@@ -730,6 +730,18 @@
                                             Unchecked="Option_Changed" />
                                     </StackPanel>
 
+                                    <!--  Videos: keyframe-only reading (much faster)  -->
+                                    <StackPanel x:Name="VideoMethodPanel" Margin="0,12,0,0">
+                                        <CheckBox
+                                            x:Name="ChkFastVideo"
+                                            Checked="Option_Changed"
+                                            Content="{DynamicResource Str_FindSimilar_FastVideo}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_FindSimilar_FastVideoTooltip}"
+                                            Unchecked="Option_Changed" />
+                                    </StackPanel>
+
                                     <TextBlock
                                         x:Name="TxtMethodHint"
                                         Margin="0,10,0,0"

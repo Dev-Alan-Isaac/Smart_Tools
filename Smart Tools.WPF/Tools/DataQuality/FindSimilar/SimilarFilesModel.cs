@@ -87,6 +87,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Images: also look for cropped/edited copies (slower, uses ORB feature matching).</summary>
         public bool FindCroppedCopies { get; init; } = true;
 
+        /// <summary>Videos: read only the keyframes nearest each sample time. Far quicker (no full decode); exact copies still match, re-encodes match less reliably.</summary>
+        public bool FastVideo { get; init; } = true;
+
         /// <summary>50-100: how alike files must be to be grouped.</summary>
         public double ThresholdPercent { get; init; } = 85;
 
@@ -285,6 +288,7 @@ namespace Smart_Tools.WPF.Models
         public List<string> Folders { get; set; } = new();
         public SimilarDetectionMethod Method { get; set; } = SimilarDetectionMethod.ImageOpenCv;
         public bool FindCroppedCopies { get; set; } = true;
+        public bool FastVideo { get; set; } = true;
         public double ThresholdPercent { get; set; } = 85;
         public bool IncludeSubfolders { get; set; } = true;
         public bool IgnoreSystemFiles { get; set; } = true;
