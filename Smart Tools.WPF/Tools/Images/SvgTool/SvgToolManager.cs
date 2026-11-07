@@ -420,10 +420,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(SvgToolSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
 
         /// <summary>WebView2's cache and cookies; kept per-user so an installed copy never writes next to the .exe.</summary>
