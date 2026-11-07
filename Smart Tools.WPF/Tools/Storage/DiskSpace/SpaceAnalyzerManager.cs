@@ -627,8 +627,7 @@ namespace Smart_Tools.WPF.Controllers
             try
             {
                 string file = path ?? SettingsPath;
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(file, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

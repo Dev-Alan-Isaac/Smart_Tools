@@ -19,10 +19,11 @@ namespace Smart_Tools.WPF.Views
     /// <summary>Icon Maker - UI only. Resizing, the .ico and the favicon set are <see cref="IconMakerManager"/>'s.</summary>
     public partial class IconMakerView : UserControl
     {
-        public sealed record IconPreview(int Size, int Display, int Box, string Label, string Note, BitmapSource Picture);
+        /// <summary>One size in the real-size column. <c>Box</c> is the picture's frame (the size plus a 4 px margin each side).</summary>
+        public sealed record IconPreview(int Size, int Box, string Label, string Note, BitmapSource Picture, bool IsSelected);
 
         private readonly List<(int Size, BitmapSource Picture)> _pictures = new();
-        private double _zoom = 1;
+        private int _selectedSize;
 
         private static readonly string[] Extensions = { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".ico", ".webp" };
 
@@ -152,6 +153,7 @@ namespace Smart_Tools.WPF.Views
             if (_bgra == null)
             {
                 PreviewList.ItemsSource = null;
+                PreviewArea.Visibility = Visibility.Collapsed;
                 PreviewEmpty.Visibility = Visibility.Visible;
                 BtnIco.IsEnabled = BtnSet.IsEnabled = false;
                 return;
@@ -164,7 +166,9 @@ namespace Smart_Tools.WPF.Views
                 var square = IconMakerManager.ToSquare(_bgra, _width, _height, size, Fit);
                 _pictures.Add((size, SpritePackerManager.CreateBitmap(square, size, size)));
             }
+            if (!sizes.Contains(_selectedSize)) _selectedSize = sizes.Count > 0 ? sizes.Max() : 0;
             ShowCards();
+            PreviewArea.Visibility = sizes.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             PreviewEmpty.Visibility = sizes.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
             BtnIco.IsEnabled = sizes.Count > 0;
             BtnSet.IsEnabled = true;
@@ -173,39 +177,28 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Zoom (mouse wheel) and the per-size cards
+        //  Stage (the chosen size, fitted to the free space) and the real-size column
         // =================================================================
 
-        /// <summary>One card per size, drawn at size x zoom.</summary>
+        /// <summary>The column lists every size at its real pixel size; the stage shows the chosen one as large as the space allows.</summary>
         private void ShowCards()
         {
             var items = _pictures
-                .Select(p =>
-                {
-                    int display = Math.Max(1, (int)Math.Round(p.Size * _zoom));
-                    return new IconPreview(p.Size, display, display + 8, $"{p.Size} × {p.Size}", UseNote(p.Size), p.Picture);
-                })
+                .Select(p => new IconPreview(p.Size, p.Size + 8, $"{p.Size} × {p.Size}", UseNote(p.Size), p.Picture, p.Size == _selectedSize))
+                .OrderByDescending(i => i.Size)
                 .ToList();
             PreviewList.ItemsSource = items;
-            ZoomBadge.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            TxtZoom.Text = "×" + _zoom.ToString("0.##", CultureInfo.InvariantCulture);
-            FitWrapWidth(items);
+            ShowStage();
         }
 
-        /// <summary>
-        /// The cards wrap to the width of the window; if one card is wider than that (a big zoom), the area gets
-        /// exactly that wide and the horizontal scroll bar appears instead of the card being cut off.
-        /// </summary>
-        private void FitWrapWidth(IReadOnlyList<IconPreview>? items = null)
+        private void ShowStage()
         {
-            items ??= PreviewList.ItemsSource as IReadOnlyList<IconPreview>;
-            if (items == null || items.Count == 0) { PreviewList.ClearValue(WidthProperty); return; }
-            double widest = items.Max(i => i.Box) + 70;   // card padding and margins around the picture
-            double room = Math.Max(0, PreviewScroll.ActualWidth - 12);
-            PreviewList.Width = Math.Max(room, widest);
+            var chosen = _pictures.FirstOrDefault(p => p.Size == _selectedSize);
+            if (chosen.Picture == null) { StageImage.Source = null; StageTitle.Text = StageNote.Text = ""; return; }
+            StageImage.Source = chosen.Picture;
+            StageTitle.Text = $"{chosen.Size} × {chosen.Size}";
+            StageNote.Text = UseNote(chosen.Size);
         }
-
-        private void PreviewScroll_SizeChanged(object sender, SizeChangedEventArgs e) => FitWrapWidth();
 
         private static string UseNote(int size) => size switch
         {
@@ -219,31 +212,24 @@ namespace Smart_Tools.WPF.Views
             _ => "",
         };
 
-        private void Preview_MouseWheel(object sender, MouseWheelEventArgs e)
+        private void Tile_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (_bgra == null || _pictures.Count == 0) return;
-            double next = e.Delta > 0 ? _zoom * 1.25 : _zoom / 1.25;
-            _zoom = Math.Clamp(Math.Round(next, 3), 0.5, 8);
-            ShowCards();
-            e.Handled = true;   // the wheel zooms here; the scroll bars still scroll
-        }
-
-        private void BtnZoomReset_Click(object sender, RoutedEventArgs e) => ResetZoom();
-
-        private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ClickCount == 2) ResetZoom();
-        }
-
-        private void ResetZoom()
-        {
-            _zoom = 1;
+            if ((sender as FrameworkElement)?.Tag is not int size || size == _selectedSize) return;
+            _selectedSize = size;
             ShowCards();
         }
+
+        private void BtnSaveStage_Click(object sender, RoutedEventArgs e) => SavePng(_selectedSize);
 
         private void BtnSavePng_Click(object sender, RoutedEventArgs e)
         {
-            if (_bgra == null || (sender as FrameworkElement)?.Tag is not int size) return;
+            if ((sender as FrameworkElement)?.Tag is int size) SavePng(size);
+            e.Handled = true;
+        }
+
+        private void SavePng(int size)
+        {
+            if (_bgra == null || size <= 0) return;
             var dialog = new Microsoft.Win32.SaveFileDialog { Title = Loc.T("Str_IconMaker_MsgSavePngTitle", "Save PNG"), Filter = Loc.T("Str_IconMaker_MsgPngFilter", "PNG picture|*.png"), FileName = $"{(_name.Length > 0 ? _name : "icon")}-{size}.png", OverwritePrompt = true };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try

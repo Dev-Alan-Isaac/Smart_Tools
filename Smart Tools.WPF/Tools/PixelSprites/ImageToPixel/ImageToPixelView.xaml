@@ -284,15 +284,13 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.8*" MinWidth="210" />
+                    <ColumnDefinition Width="*" MinWidth="360" />
                     <ColumnDefinition Width="14" />
-                    <ColumnDefinition Width="1*" MinWidth="220" />
-                    <ColumnDefinition Width="14" />
-                    <ColumnDefinition Width="1*" MinWidth="220" />
+                    <ColumnDefinition Width="300" />
                 </Grid.ColumnDefinitions>
 
-                <!--  ========== Summary, saving ==========  -->
-                <Border Grid.ColumnSpan="5" Style="{StaticResource CardStyle}">
+                <!--  ========== Slim bar: summary and saving ==========  -->
+                <Border Grid.ColumnSpan="3" Padding="14,10" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <DockPanel>
                             <StackPanel
@@ -313,7 +311,7 @@
                                 </Button>
                                 <Button
                                     x:Name="BtnSave"
-                                    MinHeight="38"
+                                    MinHeight="36"
                                     Margin="0,0,8,0"
                                     Click="BtnSave_Click"
                                     IsEnabled="False"
@@ -330,7 +328,7 @@
                                 </Button>
                                 <Button
                                     x:Name="BtnConvertAll"
-                                    MinHeight="38"
+                                    MinHeight="36"
                                     ctl:Tour.Key="Str_Tour_ImageToPixel_Convert"
                                     ctl:Tour.Order="6"
                                     Click="BtnConvertAll_Click"
@@ -352,65 +350,58 @@
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock
-                                    FontSize="11"
-                                    FontWeight="Bold"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Text="{DynamicResource Str_ImageToPixel_PixelArt}" />
-                                <WrapPanel Margin="0,4,0,0">
-                                    <Border
-                                        x:Name="PillSize"
-                                        Margin="0,0,6,0"
-                                        Background="{DynamicResource RowBg}"
-                                        Style="{StaticResource IconStatusPillStyle}"
-                                        Visibility="Collapsed">
-                                        <TextBlock
-                                            x:Name="TxtPillSize"
-                                            FontSize="12"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource TextSecondary}" />
-                                    </Border>
-                                    <Border
-                                        x:Name="PillColors"
-                                        Margin="0,0,6,0"
-                                        Background="{DynamicResource AccentColorSubtle}"
-                                        Style="{StaticResource IconStatusPillStyle}"
-                                        Visibility="Collapsed">
-                                        <TextBlock
-                                            x:Name="TxtPillColors"
-                                            FontSize="12"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource AccentColor}" />
-                                    </Border>
-                                    <Border
-                                        x:Name="DonePill"
-                                        Background="{DynamicResource StatusSuccessBg}"
-                                        Style="{StaticResource IconStatusPillStyle}"
-                                        Visibility="Collapsed">
-                                        <TextBlock
-                                            x:Name="TxtDonePill"
-                                            FontSize="12"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource StatusSuccessFg}" />
-                                    </Border>
+                            <WrapPanel VerticalAlignment="Center">
+                                <Border
+                                    x:Name="PillSize"
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
                                     <TextBlock
-                                        x:Name="TxtHeroHint"
-                                        VerticalAlignment="Center"
-                                        FontSize="12.5"
-                                        Foreground="{DynamicResource TextSecondary}"
-                                        Text="{DynamicResource Str_ImageToPixel_AddPicturesOrFolders}" />
-                                </WrapPanel>
-                            </StackPanel>
+                                        x:Name="TxtPillSize"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </Border>
+                                <Border
+                                    x:Name="PillColors"
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource AccentColorSubtle}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <TextBlock
+                                        x:Name="TxtPillColors"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource AccentColor}" />
+                                </Border>
+                                <Border
+                                    x:Name="DonePill"
+                                    Background="{DynamicResource StatusSuccessBg}"
+                                    Style="{StaticResource IconStatusPillStyle}"
+                                    Visibility="Collapsed">
+                                    <TextBlock
+                                        x:Name="TxtDonePill"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusSuccessFg}" />
+                                </Border>
+                                <TextBlock
+                                    x:Name="TxtHeroHint"
+                                    VerticalAlignment="Center"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_ImageToPixel_AddPicturesOrFolders}" />
+                            </WrapPanel>
                         </DockPanel>
                         <ProgressBar
                             x:Name="RunProgress"
                             Height="5"
-                            Margin="0,12,0,0"
+                            Margin="0,10,0,0"
                             Visibility="Collapsed" />
                         <Border
                             x:Name="StatusBanner"
-                            Margin="0,12,0,0"
+                            Margin="0,10,0,0"
                             Padding="12,9"
                             HorizontalAlignment="Left"
                             CornerRadius="10"
@@ -425,73 +416,36 @@
                     </StackPanel>
                 </Border>
 
-                <!--  ========== The list of pictures ==========  -->
-                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <DockPanel Margin="0,0,0,10">
-                            <TextBlock
-                                x:Name="TxtCount"
-                                VerticalAlignment="Center"
-                                DockPanel.Dock="Right"
-                                FontSize="12"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextSecondary}" />
-                            <ContentControl
-                                Content="{DynamicResource Str_PixelArt_FilterImages}"
-                                Style="{StaticResource CardHeader}"
-                                Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
-                        </DockPanel>
-                        <Border
-                            Grid.Row="1"
-                            Background="{DynamicResource RowBg}"
-                            BorderBrush="{DynamicResource CardBorder}"
-                            BorderThickness="1"
-                            CornerRadius="12">
-                            <Grid>
-                                <ListBox
-                                    x:Name="PictureList"
-                                    Padding="6"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    ItemTemplate="{StaticResource PictureTemplate}"
-                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                    SelectionChanged="PictureList_SelectionChanged"
-                                    VirtualizingPanel.IsVirtualizing="True" />
-                                <TextBlock
-                                    x:Name="ListEmpty"
-                                    Margin="16"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    IsHitTestVisible="False"
-                                    Text="{DynamicResource Str_ImageToPixel_PicturesYouAddShow}"
-                                    TextAlignment="Center"
-                                    TextWrapping="Wrap" />
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <!--  ========== The original ==========  -->
+                <!--  ========== Stage: original and pixel art side by side, as large as the space allows ==========  -->
                 <Border
                     Grid.Row="2"
-                    Grid.Column="2"
+                    ctl:Tour.Key="Str_Tour_ImageToPixel_Preview"
+                    ctl:Tour.Order="7"
                     Style="{StaticResource CardStyle}">
                     <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="150" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" MinWidth="150" />
+                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
+
                         <ContentControl
                             Margin="0,0,0,10"
                             Content="{DynamicResource Str_FileDiff_Original}"
                             Style="{StaticResource CardHeader}"
                             Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
+                        <ContentControl
+                            Grid.Column="2"
+                            Margin="0,0,0,10"
+                            Content="{DynamicResource Str_ImageToPixel_PixelArt}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
+
+                        <!--  The original  -->
                         <Border
                             Grid.Row="1"
                             Background="{DynamicResource RowBg}"
@@ -506,34 +460,22 @@
                                     Stretch="Uniform" />
                                 <TextBlock
                                     x:Name="OriginalEmpty"
+                                    Margin="16"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     FontSize="12"
                                     Foreground="{DynamicResource TextSecondary}"
                                     IsHitTestVisible="False"
-                                    Text="{DynamicResource Str_ImageToPixel_ThePictureYouClick}" />
+                                    Text="{DynamicResource Str_ImageToPixel_ThePictureYouClick}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
                             </Grid>
                         </Border>
-                    </Grid>
-                </Border>
 
-                <!--  ========== The pixel art ==========  -->
-                <Border
-                    Grid.Row="2"
-                    Grid.Column="4"
-                    Style="{StaticResource CardStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <ContentControl
-                            Margin="0,0,0,10"
-                            Content="{DynamicResource Str_ImageToPixel_PixelArt}"
-                            Style="{StaticResource CardHeader}"
-                            Tag="{x:Static materialDesign:PackIconKind.ImageFilterFrames}" />
+                        <!--  The pixel art  -->
                         <Border
                             Grid.Row="1"
+                            Grid.Column="2"
                             Background="{DynamicResource RowBg}"
                             BorderBrush="{DynamicResource CardBorder}"
                             BorderThickness="1"
@@ -589,7 +531,9 @@
                                         FontSize="14"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimary}"
-                                        Text="{DynamicResource Str_ImageToPixel_TurnPicturesIntoPixel}" />
+                                        Text="{DynamicResource Str_ImageToPixel_TurnPicturesIntoPixel}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
                                     <TextBlock
                                         Margin="0,6,0,0"
                                         HorizontalAlignment="Center"
@@ -599,6 +543,61 @@
                                         TextAlignment="Center"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!--  ========== The list of pictures (a narrow column; the stage keeps the space) ==========  -->
+                <Border
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock
+                                x:Name="TxtCount"
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Right"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextSecondary}" />
+                            <ContentControl
+                                Content="{DynamicResource Str_PixelArt_FilterImages}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
+                        </DockPanel>
+                        <Border
+                            Grid.Row="1"
+                            Background="{DynamicResource RowBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Grid>
+                                <ListBox
+                                    x:Name="PictureList"
+                                    Padding="6"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemTemplate="{StaticResource PictureTemplate}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    SelectionChanged="PictureList_SelectionChanged"
+                                    VirtualizingPanel.IsVirtualizing="True" />
+                                <TextBlock
+                                    x:Name="ListEmpty"
+                                    Margin="16"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    IsHitTestVisible="False"
+                                    Text="{DynamicResource Str_ImageToPixel_PicturesYouAddShow}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
                             </Grid>
                         </Border>
                     </Grid>

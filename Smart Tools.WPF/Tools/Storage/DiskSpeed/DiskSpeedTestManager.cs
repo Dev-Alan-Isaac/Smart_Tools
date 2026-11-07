@@ -494,9 +494,10 @@ namespace Smart_Tools.WPF.Controllers
                 var list = JsonSerializer.Deserialize<List<DiskSpeedTestResult>>(File.ReadAllText(file), JsonOptions);
                 return list?.OrderByDescending(r => r.Timestamp).Take(MaxHistory).ToList() ?? new List<DiskSpeedTestResult>();
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
-                // Corrupt or unreadable history isn't worth an error - start fresh.
+                // Corrupt or unreadable history isn't worth an error - start fresh, but keep the old file as .bad.
+                if (ex is JsonException or NotSupportedException) JsonSettings.KeepBadCopy(path ?? HistoryPath);
                 return new List<DiskSpeedTestResult>();
             }
         }
@@ -504,11 +505,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveHistory(IEnumerable<DiskSpeedTestResult> history, string? path = null)
         {
             string file = path ?? HistoryPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string json = JsonSerializer.Serialize(history.Take(MaxHistory).ToList(), JsonOptions);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, json);
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(history.Take(MaxHistory).ToList(), JsonOptions));
         }
 
         /// <summary>Sets each result's bar widths relative to the fastest speed in the list.</summary>
