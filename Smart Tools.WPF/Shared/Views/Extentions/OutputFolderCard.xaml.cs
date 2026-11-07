@@ -204,14 +204,14 @@ namespace Smart_Tools.WPF.Controls
                 string? folder = EnsureFolder();
                 if (folder == null)
                 {
-                    problem = "Choose a folder first";
+                    problem = Loc.T("Str_OutputFolderCard_MsgChooseFirst", "Choose a folder first");
                     return null;
                 }
                 return OutputFolderManager.ResolveFilePath(folder, FileName, FileExtension, DefaultFileName);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
-                problem = "The folder couldn't be created: " + ex.Message;
+                problem = Loc.F("Str_OutputFolderCard_MsgCantCreate", "The folder couldn't be created: {0}", ex.Message);
                 return null;
             }
         }
@@ -412,8 +412,8 @@ namespace Smart_Tools.WPF.Controls
             if (same)
             {
                 FolderIcon.Kind = PackIconKind.FileTreeOutline;
-                TxtFolderName.Text = "Next to each file";
-                TxtFolderPath.Text = "Same folder as the source";
+                TxtFolderName.Text = Loc.T("Str_OutputFolderCard_NextToEachFile", "Next to each file");
+                TxtFolderPath.Text = Loc.T("Str_OutputFolderCard_SameFolderAsSource", "Same folder as the source");
                 FolderPanel.ToolTip = null;
             }
             else if (folder != null)
@@ -504,7 +504,7 @@ namespace Smart_Tools.WPF.Controls
         private void ChooseFolder()
         {
             if (IsLocked) return;
-            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Choose where the results are saved" };
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Loc.T("Str_OutputFolderCard_ChooseDialog", "Choose where the results are saved") };
             string? start = EffectiveFolder;
             if (start != null && Directory.Exists(start)) dialog.InitialDirectory = start;
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;

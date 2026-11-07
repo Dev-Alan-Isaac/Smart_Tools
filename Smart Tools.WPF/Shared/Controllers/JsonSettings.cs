@@ -47,16 +47,13 @@ namespace Smart_Tools.WPF.Controllers
         public static void Save<T>(string name, T settings, string? path = null)
         {
             string file = path ?? PathFor(name);
-            string temp = file + ".tmp";
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, Options));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, Options));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                // best effort: AtomicFile already removed its temp file
             }
         }
 

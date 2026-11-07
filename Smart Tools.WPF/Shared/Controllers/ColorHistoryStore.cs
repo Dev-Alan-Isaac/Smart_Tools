@@ -110,11 +110,8 @@ namespace Smart_Tools.WPF.Controllers
         {
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
                 string json = JsonSerializer.Serialize(new ColorHistory { Recent = Recent.ToList(), Favorites = Favorites.ToList() }, SerializerOptions);
-                string temp = _filePath + ".tmp";
-                File.WriteAllText(temp, json);
-                File.Move(temp, _filePath, overwrite: true);
+                AtomicFile.WriteAllText(_filePath, json);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

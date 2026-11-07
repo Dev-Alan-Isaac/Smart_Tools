@@ -241,7 +241,7 @@ namespace Smart_Tools.WPF.Controllers
                 Raw($"{offset:0000000000} 00000 n \n");
             Raw($"trailer\n<< /Size {offsets.Count + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF");
 
-            File.WriteAllBytes(filePath, stream.ToArray());
+            AtomicFile.WriteAllBytes(filePath, stream.ToArray());
         }
     }
 }

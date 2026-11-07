@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Modules;
@@ -31,7 +31,7 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const string DialogTitle = "Settings";
+        private string DialogTitle => Str("Str_Tool_settings_Name", "Settings");
 
         private readonly DispatcherTimer _savedTimer;
         private readonly DispatcherTimer _testTimer;
@@ -497,16 +497,14 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Installed to a portable copy: choose an empty folder; the installed copy and its settings stay untouched.</summary>
         private void BtnPortableCopy_Click(object sender, RoutedEventArgs e)
         {
-            using var dialog = new System.Windows.Forms.FolderBrowserDialog
+            var dialog = new Microsoft.Win32.OpenFolderDialog
             {
-                Description = InstallStr("Str_Install_ChooseFolder", "Choose an empty folder (or a USB drive) for the portable copy."),
-                UseDescriptionForTitle = true,
-                ShowNewFolderButton = true,
+                Title = InstallStr("Str_Install_ChooseFolder", "Choose an empty folder (or a USB drive) for the portable copy."),
             };
-            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
 
             AppSettingsStore.Save();
-            string target = dialog.SelectedPath;
+            string target = dialog.FolderName;
             var result = CopyProgressWindow.Run(Window.GetWindow(this), InstallStr("Str_Install_Copying", "Making a portable copy..."),
                 (progress, token) => AppInstaller.MakePortableCopyAsync(target, copyData: true, progress, token));
             if (result.Cancelled) return;
@@ -598,7 +596,7 @@ namespace Smart_Tools.WPF.Views
             System.IO.Directory.CreateDirectory(AppSettingsStore.SettingsDirectory);
             string target = System.IO.File.Exists(AppSettingsStore.SettingsFilePath) ? AppSettingsStore.SettingsFilePath : AppSettingsStore.SettingsDirectory;
             if (ShellExplorer.Show(target) != ShellExplorer.ShowResult.Shown)
-                MessageBox.Show($"Couldn't open {AppSettingsStore.SettingsDirectory}.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(string.Format(Str("Str_Settings_MsgCantOpenFolder", "Couldn't open {0}."), AppSettingsStore.SettingsDirectory), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void SaveAndConfirm()
@@ -793,7 +791,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (sender is not TextBox box || CategoryOf(box) is not FileCategory category) return;
             string hint = SettingsManager.DescribeAdd(category.Extensions, box.Text);
-            box.ToolTip = hint.Length > 0 ? hint : "Type one or more extensions (png, .png, *.png - any separator) and press Enter";
+            box.ToolTip = hint.Length > 0 ? hint : Loc.T("Str_Settings_MsgExtensionsHint", "Type one or more extensions (png, .png, *.png - any separator) and press Enter");
         }
 
         private void NewExtension_KeyDown(object sender, KeyEventArgs e)
@@ -851,14 +849,14 @@ namespace Smart_Tools.WPF.Views
         private void BtnRemoveCategory_Click(object sender, RoutedEventArgs e)
         {
             if (CategoryOf(sender as DependencyObject) is not FileCategory category) return;
-            if (!ConfirmRemove($"Remove the \"{category.Name}\" category? Organize Files won't sort into it any more.")) return;
+            if (!ConfirmRemove(string.Format(Str("Str_Settings_ConfirmRemoveCategory", "Remove the \"{0}\" category? Organize Files won't sort into it any more."), category.Name))) return;
             AppSettingsStore.FileCategories.Remove(category);
             SaveAndConfirm();
         }
 
         private void BtnResetCategories_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Replace your categories with the six built-in ones (Documents, Images, Videos, Audio, Archives, Other)?",
+            if (MessageBox.Show(Loc.T("Str_Settings_MsgResetCategories", "Replace your categories with the six built-in ones (Documents, Images, Videos, Audio, Archives, Other)?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             AppSettingsStore.ResetCategories();
             SaveAndConfirm();
@@ -901,14 +899,14 @@ namespace Smart_Tools.WPF.Views
         private void BtnRemovePattern_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button { DataContext: SavedSearchPattern pattern }) return;
-            if (!ConfirmRemove($"Remove the \"{pattern.Name}\" pattern?")) return;
+            if (!ConfirmRemove(string.Format(Str("Str_Settings_ConfirmRemovePattern", "Remove the \"{0}\" pattern?"), pattern.Name))) return;
             AppSettingsStore.SavedPatterns.Remove(pattern);
             SaveAndConfirm();
         }
 
         private void BtnResetPatterns_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Replace your saved patterns with the built-in ones?", DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (MessageBox.Show(Loc.T("Str_Settings_MsgResetPatterns", "Replace your saved patterns with the built-in ones?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             AppSettingsStore.ResetPatterns();
             SaveAndConfirm();
         }
@@ -942,18 +940,20 @@ namespace Smart_Tools.WPF.Views
             }
             else if (duplicate)
             {
-                (message, brush, icon) = ($"There's already a pattern called \"{name}\".", "StatusWarningFg", "AlertOutline");
+                (message, brush, icon) = (string.Format(Str("Str_Settings_MsgPatternExists", "There's already a pattern called \"{0}\"."), name), "StatusWarningFg", "AlertOutline");
             }
             else if (pattern.Length > 0 && name.Length > 0)
             {
                 string test = SettingsManager.DescribeMatches(pattern, NewPatternType, TxtPatternTest.Text);
-                (message, brush, icon) = ("Looks good" + (test.Length > 0 ? $" · {test} in the test text" : "") + ".", "StatusSuccessFg", "CheckCircleOutline");
+                (message, brush, icon) = (test.Length > 0
+                    ? string.Format(Str("Str_Settings_MsgLooksGoodWith", "Looks good · {0} in the test text."), test)
+                    : Str("Str_Settings_MsgLooksGood", "Looks good."), "StatusSuccessFg", "CheckCircleOutline");
             }
             else
             {
                 (message, brush, icon) = (NewPatternType == SettingsManager.PatternWildcard
-                    ? "Wildcard: * is any text, ? is one character - e.g. *.log or report_??.pdf"
-                    : "Give it a name and a pattern.", "TextSecondary", "InformationOutline");
+                    ? Loc.T("Str_Settings_MsgWildcardHint", "Wildcard: * is any text, ? is one character - e.g. *.log or report_??.pdf")
+                    : Loc.T("Str_Settings_MsgNameAndPattern", "Give it a name and a pattern."), "TextSecondary", "InformationOutline");
             }
 
             TxtNewPatternValidation.Text = message;

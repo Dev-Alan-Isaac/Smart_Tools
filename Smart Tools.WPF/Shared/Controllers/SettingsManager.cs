@@ -93,10 +93,10 @@ namespace Smart_Tools.WPF.Controllers
         {
             if (string.IsNullOrWhiteSpace(typed)) return "";
             var merge = AddExtensions(existing, typed);
-            if (merge.Added.Count == 0 && merge.AlreadyThere.Count == 0) return "That isn't a file extension.";
+            if (merge.Added.Count == 0 && merge.AlreadyThere.Count == 0) return Loc.T("Str_SettingsMgr_NotExtension", "That isn't a file extension.");
             var parts = new List<string>();
-            if (merge.Added.Count > 0) parts.Add("Adds " + string.Join(" ", merge.Added));
-            if (merge.AlreadyThere.Count > 0) parts.Add(string.Join(" ", merge.AlreadyThere) + " already here");
+            if (merge.Added.Count > 0) parts.Add(Loc.F("Str_SettingsMgr_Adds", "Adds {0}", string.Join(" ", merge.Added)));
+            if (merge.AlreadyThere.Count > 0) parts.Add(Loc.F("Str_SettingsMgr_AlreadyHere", "{0} already here", string.Join(" ", merge.AlreadyThere)));
             return string.Join(" · ", parts);
         }
 
@@ -122,9 +122,9 @@ namespace Smart_Tools.WPF.Controllers
                 if (list.Count == 0)
                     warnings.Add(string.Equals(name?.Trim(), "Other", StringComparison.OrdinalIgnoreCase)
                         ? ""
-                        : "No extensions yet - nothing will be sorted into this category.");
+                        : Loc.T("Str_SettingsMgr_NoExtensions", "No extensions yet - nothing will be sorted into this category."));
                 else if (lost.Count > 0)
-                    warnings.Add($"Already used by a category above, so never sorted here: {string.Join(", ", lost)}.");
+                    warnings.Add(Loc.F("Str_SettingsMgr_AlreadyUsed", "Already used by a category above, so never sorted here: {0}.", string.Join(", ", lost)));
                 else
                     warnings.Add("");
             }
@@ -135,10 +135,10 @@ namespace Smart_Tools.WPF.Controllers
         public static string? ValidateCategoryName(string? name, IEnumerable<string?> otherNames)
         {
             string trimmed = (name ?? "").Trim();
-            if (trimmed.Length == 0) return "Give the category a name.";
-            if (trimmed.Length > 60) return "Keep the name under 60 characters.";
+            if (trimmed.Length == 0) return Loc.T("Str_SettingsMgr_GiveName", "Give the category a name.");
+            if (trimmed.Length > 60) return Loc.T("Str_SettingsMgr_NameTooLong", "Keep the name under 60 characters.");
             if (otherNames.Any(n => string.Equals(n?.Trim(), trimmed, StringComparison.OrdinalIgnoreCase)))
-                return $"There's already a category called \"{trimmed}\".";
+                return Loc.F("Str_SettingsMgr_CategoryExists", "There's already a category called \"{0}\".", trimmed);
             return null;
         }
 
@@ -173,11 +173,11 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Null when the pattern is usable; otherwise a short reason.</summary>
         public static string? ValidatePattern(string? pattern, string? type)
         {
-            if (string.IsNullOrWhiteSpace(pattern)) return "Enter a pattern.";
+            if (string.IsNullOrWhiteSpace(pattern)) return Loc.T("Str_SettingsMgr_EnterPattern", "Enter a pattern.");
             if (NormalizePatternType(type) == PatternWildcard)
             {
                 char bad = pattern.FirstOrDefault(c => c is '<' or '>' or '|' or '"' || char.IsControl(c));
-                return bad != default ? $"'{bad}' can't be in a file name wildcard." : null;
+                return bad != default ? Loc.F("Str_SettingsMgr_BadWildcardChar", "'{0}' can't be in a file name wildcard.", bad) : null;
             }
             try
             {
@@ -194,7 +194,7 @@ namespace Smart_Tools.WPF.Controllers
         private static string ShortRegexError(string message)
         {
             var m = Regex.Match(message, @"^Invalid pattern '.*' at offset (\d+)\. (.*)$", RegexOptions.Singleline);
-            if (m.Success) return $"At character {m.Groups[1].Value}: {m.Groups[2].Value.Trim()}";
+            if (m.Success) return Loc.F("Str_SettingsMgr_AtCharacter", "At character {0}: {1}", m.Groups[1].Value, m.Groups[2].Value.Trim());
             int i = message.LastIndexOf(" - ", StringComparison.Ordinal);
             return (i >= 0 ? message[(i + 3)..] : message).Trim();
         }
@@ -228,10 +228,10 @@ namespace Smart_Tools.WPF.Controllers
             if (ValidatePattern(pattern, type) != null) return "";
             string summary = CountMatches(pattern, type, text) switch
             {
-                null => "Too slow to test",
-                0 => "No match",
-                1 => "1 match",
-                int n => $"{n:N0} matches",
+                null => Loc.T("Str_SettingsMgr_TooSlow", "Too slow to test"),
+                0 => Loc.T("Str_SettingsMgr_NoMatch", "No match"),
+                1 => Loc.T("Str_SettingsMgr_OneMatch", "1 match"),
+                int n => Loc.F("Str_SettingsMgr_Matches", "{0:N0} matches", n),
             };
             string parts = DescribeSegments(pattern, type, text);
             return parts.Length == 0 ? summary : $"{summary} · {parts}";

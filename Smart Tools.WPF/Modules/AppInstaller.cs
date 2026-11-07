@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
 
@@ -58,7 +58,7 @@ namespace Smart_Tools.WPF
             try
             {
                 if (checkRunning && IsAnotherCopyRunning() && !SameFolder(source, target))
-                    return new InstallResult(false, false, "Close Smart Tools first (another copy is running), then try again.", null);
+                    return new InstallResult(false, false, Loc.T("Str_Install_MsgCloseOtherCopy", "Close Smart Tools first (another copy is running), then try again."), null);
 
                 if (!SameFolder(source, target))
                     CopyTree(source, target, created, progress, token);
@@ -250,7 +250,7 @@ namespace Smart_Tools.WPF
                 try
                 {
                     if (existed && Directory.EnumerateFileSystemEntries(targetFolder).Any())
-                        return new InstallResult(false, false, "Choose an empty folder.", null);
+                        return new InstallResult(false, false, Loc.T("Str_Install_MsgEmptyFolder", "Choose an empty folder."), null);
                     Directory.CreateDirectory(targetFolder);
 
                     CopyTree(AppMode.ExeFolder, targetFolder, created, progress, token);
