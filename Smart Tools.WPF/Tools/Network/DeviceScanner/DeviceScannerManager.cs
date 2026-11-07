@@ -1,4 +1,4 @@
-﻿using Smart_Tools.WPF.Models;
+using Smart_Tools.WPF.Models;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
@@ -567,7 +567,7 @@ namespace Smart_Tools.WPF.Controllers
         // =================================================================
 
         public static void ExportToCsv(IEnumerable<DeviceScanResult> rows, string filePath) =>
-            File.WriteAllText(filePath, ToCsv(rows), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            AtomicFile.WriteAllText(filePath, ToCsv(rows), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
         public static string ToCsv(IEnumerable<DeviceScanResult> rows)
         {

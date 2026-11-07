@@ -164,7 +164,7 @@ namespace Smart_Tools.WPF.Controllers
             }
 
             var utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
-            for (int i = 0; i < formats.Count; i++) File.WriteAllText(paths[i], formats[i].Content, utf8);
+            for (int i = 0; i < formats.Count; i++) AtomicFile.WriteAllText(paths[i], formats[i].Content, utf8);
             return paths;
         }
 

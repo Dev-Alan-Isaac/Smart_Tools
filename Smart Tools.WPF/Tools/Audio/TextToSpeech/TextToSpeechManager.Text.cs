@@ -230,10 +230,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(TextToSpeechSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(Sanitize(settings), JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(Sanitize(settings), JsonOptions));
         }
 
         /// <summary>The remembered voice if still installed, else one matching the PC's language, else the first.</summary>

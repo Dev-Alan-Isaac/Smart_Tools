@@ -317,17 +317,25 @@ namespace Smart_Tools.WPF.Controllers
         public static int Export(IEnumerable<LogViewerLine> lines, string path)
         {
             int n = 0;
-            string temp = path + ".tmp";
-            using (var writer = new StreamWriter(temp, false, new UTF8Encoding(false)))
+            string temp = path + "." + Guid.NewGuid().ToString("N")[..8] + ".tmp";
+            try
             {
-                foreach (var line in lines)
+                using (var writer = new StreamWriter(temp, false, new UTF8Encoding(false)))
                 {
-                    if (line.IsSystem) continue;
-                    writer.WriteLine(line.RawText);
-                    n++;
+                    foreach (var line in lines)
+                    {
+                        if (line.IsSystem) continue;
+                        writer.WriteLine(line.RawText);
+                        n++;
+                    }
                 }
+                File.Move(temp, path, overwrite: true);
             }
-            File.Move(temp, path, overwrite: true);
+            catch
+            {
+                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                throw;
+            }
             return n;
         }
 
@@ -378,10 +386,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(LogViewerSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(Sanitize(settings), JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(Sanitize(settings), JsonOptions));
         }
     }
 }

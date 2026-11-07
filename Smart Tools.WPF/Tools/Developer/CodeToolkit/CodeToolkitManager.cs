@@ -179,8 +179,21 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         /// <summary>Writes UTF-8 (no BOM) - what browsers and bundlers expect.</summary>
-        public static Task SaveFileAsync(string path, string text, CancellationToken cancellationToken = default) =>
-            File.WriteAllTextAsync(path, text, new UTF8Encoding(false), cancellationToken);
+        public static async Task SaveFileAsync(string path, string text, CancellationToken cancellationToken = default)
+        {
+            // Temp file in the same folder, then move: a failed or cancelled save never leaves a half-written file.
+            string temp = path + "." + Guid.NewGuid().ToString("N")[..8] + ".tmp";
+            try
+            {
+                await File.WriteAllTextAsync(temp, text, new UTF8Encoding(false), cancellationToken);
+                File.Move(temp, path, overwrite: true);
+            }
+            catch
+            {
+                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                throw;
+            }
+        }
 
         // =================================================================
         //  Formatting helpers

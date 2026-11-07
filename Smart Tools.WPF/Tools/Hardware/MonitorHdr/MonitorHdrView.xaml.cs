@@ -409,7 +409,7 @@ namespace Smart_Tools.WPF.Views
             if (dialog.ShowDialog() != true) return;
             try
             {
-                File.WriteAllText(dialog.FileName, BuildReport());
+                AtomicFile.WriteAllText(dialog.FileName, BuildReport());
                 ShowStatus(Str("Str_MonitorHdr_Saved"), StatusKind.Success);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

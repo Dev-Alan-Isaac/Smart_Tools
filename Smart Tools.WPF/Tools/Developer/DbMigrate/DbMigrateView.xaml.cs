@@ -637,7 +637,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_log.Count == 0) return;
             var dlg = new SaveFileDialog { Filter = S("Str_DbMigrate_TextFilter"), FileName = "db-migrate-log.txt" };
-            if (dlg.ShowDialog() == true) File.WriteAllText(dlg.FileName, LogText(), new UTF8Encoding(true));
+            if (dlg.ShowDialog() == true) AtomicFile.WriteAllText(dlg.FileName, LogText(), new UTF8Encoding(true));
         }
 
         private void BtnClearLog_Click(object sender, RoutedEventArgs e) { _log.Clear(); _followLog = true; }
@@ -668,7 +668,7 @@ namespace Smart_Tools.WPF.Views
             if (_plan == null) return;
             var dlg = new SaveFileDialog { Filter = S("Str_DbMigrate_TextFilter"), FileName = "db-migrate-report.txt" };
             if (dlg.ShowDialog() == true)
-                File.WriteAllText(dlg.FileName, DbMigrateManager.BuildReport(_plan, ReadEndpoint(true), ReadEndpoint(false), _lastResult), new UTF8Encoding(true));
+                AtomicFile.WriteAllText(dlg.FileName, DbMigrateManager.BuildReport(_plan, ReadEndpoint(true), ReadEndpoint(false), _lastResult), new UTF8Encoding(true));
         }
 
         private void BtnSaveScript_Click(object sender, RoutedEventArgs e)
@@ -679,7 +679,7 @@ namespace Smart_Tools.WPF.Views
             var dlg = new SaveFileDialog { Filter = S("Str_DbMigrate_SqlFilter"), FileName = $"{name}-structure.sql" };
             if (dlg.ShowDialog() != true) return;
             // UTF-8 with a BOM so SQL Server Management Studio reads accented names correctly
-            File.WriteAllText(dlg.FileName, _manager.BuildSchemaScript(_plan, name, ReadOptions()), new UTF8Encoding(true));
+            AtomicFile.WriteAllText(dlg.FileName, _manager.BuildSchemaScript(_plan, name, ReadOptions()), new UTF8Encoding(true));
         }
     }
 }

@@ -531,7 +531,7 @@ namespace Smart_Tools.WPF.Views
             };
             try
             {
-                File.WriteAllText(dialog.FileName, content, new UTF8Encoding(true));
+                AtomicFile.WriteAllText(dialog.FileName, content, new UTF8Encoding(true));
                 TxtProgress.Text = string.Format(S("SavedAs", "Saved {0}"), Path.GetFileName(dialog.FileName));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

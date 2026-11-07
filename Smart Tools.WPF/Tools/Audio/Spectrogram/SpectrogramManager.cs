@@ -811,16 +811,13 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(SpectrogramSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            string temp = file + ".tmp";
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                TryDelete(temp);
+                // best effort: AtomicFile already removed its temp file
             }
         }
     }

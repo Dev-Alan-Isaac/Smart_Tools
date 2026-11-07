@@ -248,7 +248,7 @@ namespace Smart_Tools.WPF.Controllers
                 var list = JsonSerializer.Deserialize<List<SpeedTestResult>>(File.ReadAllText(file), JsonOptions) ?? new();
                 return list.Where(r => r != null && double.IsFinite(r.DownloadMbps)).OrderByDescending(r => r.Timestamp).Take(HistoryLimit).ToList();
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new List<SpeedTestResult>();
             }
@@ -281,7 +281,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.ServerId = ServerById(s.ServerId).Id;
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new SpeedTestSettings();
             }
@@ -293,16 +293,13 @@ namespace Smart_Tools.WPF.Controllers
         private static void WriteJson<T>(string file, T value)
         {
             // Losing a history entry is better than crashing the test (file locked, disk full, no rights).
-            string temp = file + ".tmp";
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(value, JsonOptions));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(value, JsonOptions));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                try { File.Delete(temp); } catch { }
+                // best effort: AtomicFile already removed its temp file
             }
         }
     }

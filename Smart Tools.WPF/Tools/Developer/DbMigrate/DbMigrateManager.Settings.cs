@@ -22,7 +22,10 @@ namespace Smart_Tools.WPF.Controllers
                 if (File.Exists(SettingsPath))
                     return JsonSerializer.Deserialize<DbMigrateSettings>(File.ReadAllText(SettingsPath)) ?? new DbMigrateSettings();
             }
-            catch { /* damaged file: start from defaults */ }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
+            {
+                if (ex is JsonException or NotSupportedException) JsonSettings.KeepBadCopy(SettingsPath);   // damaged file: keep it as .bad, start from defaults
+            }
             return new DbMigrateSettings();
         }
 
@@ -31,12 +34,9 @@ namespace Smart_Tools.WPF.Controllers
             try
             {
                 var path = SettingsPath;
-                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                var tmp = path + ".tmp";
-                File.WriteAllText(tmp, JsonSerializer.Serialize(settings, JsonOptions));
-                File.Move(tmp, path, overwrite: true);
+                AtomicFile.WriteAllText(path, JsonSerializer.Serialize(settings, JsonOptions));
             }
-            catch { /* settings are a convenience; never fail the tool over them */ }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* settings are a convenience; never fail the tool over them */ }
         }
     }
 }

@@ -282,7 +282,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.TriggerThresholdPercent = Math.Clamp(s.TriggerThresholdPercent, 0, 50);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new GameControllerSettings();
             }
@@ -291,10 +291,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(GameControllerSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }

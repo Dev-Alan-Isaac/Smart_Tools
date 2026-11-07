@@ -256,16 +256,13 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(SttSettings s, string? path = null)
         {
             string file = path ?? SettingsPath;
-            string temp = file + ".tmp";
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(Sanitize(s), SettingsJson));
-                File.Move(temp, file, overwrite: true);
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(Sanitize(s), SettingsJson));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                // best effort: AtomicFile already removed its temp file
             }
         }
     }

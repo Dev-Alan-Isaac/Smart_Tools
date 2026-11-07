@@ -292,7 +292,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.MaxHops = Math.Clamp(s.MaxHops, 5, 64);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new DnsToolsSettings();
             }
@@ -302,12 +302,9 @@ namespace Smart_Tools.WPF.Controllers
         {
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-                string temp = SettingsPath + ".tmp";
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-                File.Move(temp, SettingsPath, overwrite: true);
+                AtomicFile.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings, JsonOptions));
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // Remembering the setup is a convenience; losing it is not worth an error.
             }

@@ -474,7 +474,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.MotionRange = Math.Clamp(s.MotionRange, 500, 10000);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new KeyboardMouseTestSettings();
             }
@@ -483,10 +483,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(KeyboardMouseTestSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }

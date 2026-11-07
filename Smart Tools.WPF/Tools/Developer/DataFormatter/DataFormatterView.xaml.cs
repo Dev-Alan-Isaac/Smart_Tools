@@ -278,7 +278,7 @@ namespace Smart_Tools.WPF.Views
             if (save.ShowDialog() != true) return;
             try
             {
-                File.WriteAllText(save.FileName, TxtOutput.Text);
+                AtomicFile.WriteAllText(save.FileName, TxtOutput.Text);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

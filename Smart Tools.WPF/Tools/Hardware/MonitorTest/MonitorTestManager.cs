@@ -231,7 +231,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.SlideshowSeconds = Math.Clamp(s.SlideshowSeconds, 0, 60);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new MonitorTestSettings();
             }
@@ -240,10 +240,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(MonitorTestSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }

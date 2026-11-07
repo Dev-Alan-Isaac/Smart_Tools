@@ -305,7 +305,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!LiveChoices.Contains(s.LiveSeconds)) s.LiveSeconds = 0;
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new EventExplorerSettings();
             }

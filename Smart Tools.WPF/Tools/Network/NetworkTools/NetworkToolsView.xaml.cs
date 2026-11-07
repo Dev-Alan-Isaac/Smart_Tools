@@ -451,7 +451,7 @@ namespace Smart_Tools.WPF.Views
             if (dialog.ShowDialog() != true) return;
             try
             {
-                File.WriteAllText(dialog.FileName, ConsoleText(_console) + Environment.NewLine, Encoding.UTF8);
+                AtomicFile.WriteAllText(dialog.FileName, ConsoleText(_console) + Environment.NewLine, Encoding.UTF8);
             }
             catch (Exception ex)
             {

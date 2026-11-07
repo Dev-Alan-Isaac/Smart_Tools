@@ -685,14 +685,14 @@ namespace Smart_Tools.WPF.Controllers
             {
                 case ApiExportFormat.Json:
                     var list = rows.Select(r => columns.Zip(r).ToDictionary(p => p.First, p => p.Second)).ToList();
-                    File.WriteAllText(path, JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true }));
+                    AtomicFile.WriteAllText(path, JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true }));
                     break;
 
                 case ApiExportFormat.Xml:
                     var doc = new XDocument(new XElement(rootName,
                         rows.Select(r => new XElement(rowName,
                             columns.Zip(r).Select(p => new XElement(p.First, p.Second?.ToString() ?? ""))))));
-                    doc.Save(path);
+                    using (var xml = new MemoryStream()) { doc.Save(xml); AtomicFile.WriteAllBytes(path, xml.ToArray()); }
                     break;
 
                 default:
@@ -701,7 +701,7 @@ namespace Smart_Tools.WPF.Controllers
                     foreach (var r in rows)
                         sb.AppendLine(string.Join(",", r.Select(v => CsvEscape(v?.ToString()))));
                     // BOM so Excel opens non-ASCII (e.g. response text) correctly.
-                    File.WriteAllText(path, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+                    AtomicFile.WriteAllText(path, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
                     break;
             }
         }
