@@ -113,7 +113,7 @@ namespace Smart_Tools.WPF.Controllers
         /// scan) is cancelled. stderr is drained in parallel so its pipe
         /// can't fill up and deadlock the process.
         /// </summary>
-        private static async Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token, TimeSpan? limit = null)
+        internal static async Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token, TimeSpan? limit = null)
         {
             if (!File.Exists(exe)) return Array.Empty<byte>();
 

@@ -47,7 +47,7 @@ namespace Smart_Tools.WPF.Controllers
             for (int i = 0; i < signatures.Count; i++)
             {
                 if (signatures[i]?.AudioHashes is AVHashes hashes)
-                    model.Insert(new TrackInfo(i.ToString(), $"track {i}", ""), hashes);
+                    await model.InsertAsync(new TrackInfo(i.ToString(), $"track {i}", "", MediaType.Audio), hashes, token).ConfigureAwait(false);
             }
 
             var best = new Dictionary<(int, int), SimilarEdge>();
@@ -61,15 +61,14 @@ namespace Smart_Tools.WPF.Controllers
                     .BuildQueryCommand()
                     .From(query)
                     .UsingServices(model)
-                    .Query()
+                    .Query(token)
                     .ConfigureAwait(false);
 
-                if (result.ResultEntries != null)
+                if (result.Audio?.ResultEntries != null)
                 {
-                    foreach (var entry in result.ResultEntries)
+                    foreach (var match in result.Audio.ResultEntries)
                     {
-                        var match = entry.Audio;
-                        if (match?.Track?.Id == null || !int.TryParse(match.Track.Id, out int j) || j == i || j < 0 || j >= signatures.Count) continue;
+                        if (match.Track?.Id == null || !int.TryParse(match.Track.Id, out int j) || j == i || j < 0 || j >= signatures.Count) continue;
                         double confidence = match.Confidence;
                         if (confidence < minConfidence) continue;
 

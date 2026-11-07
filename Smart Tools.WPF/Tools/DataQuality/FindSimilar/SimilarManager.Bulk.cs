@@ -4,9 +4,8 @@ using System.IO;
 namespace Smart_Tools.WPF.Controllers
 {
     /// <summary>
-    /// Fingerprinting a list of files with the shared cache. Used by the Find Similar scan and by
-    /// Duplicate Finder's "same content, any format" stage, so both read the same cache and the
-    /// same decoders.
+    /// Helpers shared with Duplicate Finder's "same content, any format" stage: ffmpeg/ffprobe access and a
+    /// bulk fingerprint call that reads files with the same engines and cache as the Find Similar scan.
     /// </summary>
     public sealed partial class SimilarManager
     {
@@ -21,8 +20,9 @@ namespace Smart_Tools.WPF.Controllers
             (await ProbeAsync(path, video: false, token).ConfigureAwait(false)).Duration;
 
         /// <summary>
-        /// Fingerprints <paramref name="files"/> in parallel. A file that can't be read, or whose decoder times out,
-        /// gets a null entry; the scan goes on. Fingerprints already known to the cache are not recomputed.
+        /// Fingerprints <paramref name="files"/> in parallel (pictures and videos) as the older one-line
+        /// <see cref="FileFingerprint"/> that Duplicate Finder clusters. A file that can't be read, or whose decoder
+        /// times out, gets a null entry; the scan goes on. Signatures already in the cache are not recomputed.
         /// </summary>
         /// <param name="onFileDone">Called once per file, from worker threads.</param>
         /// <param name="onUnreadable">Called for each null result.</param>
@@ -31,8 +31,8 @@ namespace Smart_Tools.WPF.Controllers
             IReadOnlyList<FileInfo> files, SimilarDetectionMethod method, int parallelism,
             Action<string>? onFileDone, Action? onUnreadable, Func<int>? unreadableSoFar, CancellationToken token)
         {
-            var cache = Cache;
-            cache?.BeginScan();
+            var kind = KindOf(method);
+            var cache = kind is MediaKind.Image or MediaKind.Video && _usesMediaDecoders ? SimilarFingerprintCache.Load() : null;
             int fromCache = 0;
             var prints = new FileFingerprint?[files.Count];
 
@@ -44,16 +44,17 @@ namespace Smart_Tools.WPF.Controllers
             {
                 try
                 {
-                    if (cache != null && cache.TryGet(files[i], method, out var known))
+                    var sig = cache?.TryGet(files[i]);
+                    if (sig != null)
                     {
-                        prints[i] = known;
                         Interlocked.Increment(ref fromCache);
                     }
                     else
                     {
-                        prints[i] = await _fingerprinter(files[i].FullName, method, ct).ConfigureAwait(false);
-                        if (prints[i] != null) cache?.Put(files[i], method, prints[i]!);
+                        sig = await _signer(files[i].FullName, kind, ct).ConfigureAwait(false);
+                        if (sig != null) cache?.Put(files[i], sig);
                     }
+                    prints[i] = ToFileFingerprint(sig, kind);
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 {
@@ -72,6 +73,46 @@ namespace Smart_Tools.WPF.Controllers
 
             cache?.Save();
             return (prints, fromCache);
+        }
+
+        /// <summary>
+        /// The older fingerprint shape: one hash for a picture; for a video five frames at fixed fractions of its
+        /// length (so two videos of the same length line up frame for frame). Null when nothing usable was read.
+        /// </summary>
+        private static FileFingerprint? ToFileFingerprint(MediaSignature? sig, MediaKind kind)
+        {
+            if (sig == null) return null;
+
+            if (kind == MediaKind.Image)
+            {
+                if (sig.ImageHashes.Length == 0) return null;
+                return new FileFingerprint
+                {
+                    Fingerprint = new Fingerprint(sig.ImageHashes[0]),
+                    Variance = sig.Variance,
+                    Width = sig.Width,
+                    Height = sig.Height,
+                };
+            }
+
+            if (kind == MediaKind.Video)
+            {
+                var picked = new List<ulong>(5);
+                for (int k = 1; k <= 5; k++)
+                {
+                    int index = (int)((long)sig.Frames.Length * k / 6);
+                    if (index < sig.Frames.Length && sig.Frames[index] != MediaSignature.FlatFrame) picked.Add(sig.Frames[index]);
+                }
+                if (picked.Count == 0) return null;
+                return new FileFingerprint
+                {
+                    Fingerprint = new Fingerprint(picked.ToArray()),
+                    DurationSeconds = sig.DurationSeconds,
+                    Width = sig.Width,
+                    Height = sig.Height,
+                };
+            }
+            return null;
         }
     }
 }
