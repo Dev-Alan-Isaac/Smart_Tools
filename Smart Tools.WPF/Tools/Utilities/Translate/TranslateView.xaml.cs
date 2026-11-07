@@ -368,7 +368,7 @@ namespace Smart_Tools.WPF.Views
             }
 
             if (skipped > 0)
-                SetStatus(Loc.N(skipped, "Str_Translate_FilesSkipped_One", "{0} file skipped: only .txt, .md, .srt and .vtt files can be translated.", "Str_Translate_FilesSkipped_Many", "{0} files skipped: only .txt, .md, .srt and .vtt files can be translated.", skipped));
+                SetStatus(Loc.N(skipped, "Str_Translate_FilesSkipped_One", "{0} file skipped: only .txt, .md, .srt, .vtt and .json files can be translated.", "Str_Translate_FilesSkipped_Many", "{0} files skipped: only .txt, .md, .srt, .vtt and .json files can be translated.", skipped));
             else if (added > 0)
                 SetStatus(Loc.N(added, "Str_Translate_FilesAdded_One", "{0} file added.", "Str_Translate_FilesAdded_Many", "{0} files added.", added));
         }

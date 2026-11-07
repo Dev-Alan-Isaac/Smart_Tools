@@ -8680,7 +8680,7 @@
     <system:String x:Key="Str_Translate_ModeFiles">Archivos</system:String>
     <system:String x:Key="Str_Translate_FilesHeader">Archivos a traducir</system:String>
     <system:String x:Key="Str_Translate_ResultsHeader">Traducciones</system:String>
-    <system:String x:Key="Str_Translate_FilesHint">Añade archivos de texto, Markdown o subtítulos (.txt, .md, .srt, .vtt). Cada traducción se guarda junto a su original con el idioma añadido al nombre, como película.es.srt. Tus originales nunca se modifican.</system:String>
+    <system:String x:Key="Str_Translate_FilesHint">Añade archivos de texto, Markdown o subtítulos (.txt, .md, .srt, .vtt, .json). Cada traducción se guarda junto a su original con el idioma añadido al nombre, como película.es.srt. Tus originales nunca se modifican.</system:String>
     <system:String x:Key="Str_Translate_ShowInFolder">Mostrar en la carpeta</system:String>
     <system:String x:Key="Str_Translate_FileFilter">Texto y subtítulos</system:String>
     <system:String x:Key="Str_Translate_FileFilterAll">Todos los archivos</system:String>
@@ -8688,8 +8688,8 @@
     <system:String x:Key="Str_Translate_StatusFilesIdle">Añade archivos y pulsa Traducir archivos.</system:String>
     <system:String x:Key="Str_Translate_FilesAdded_One">{0} archivo añadido.</system:String>
     <system:String x:Key="Str_Translate_FilesAdded_Many">{0} archivos añadidos.</system:String>
-    <system:String x:Key="Str_Translate_FilesSkipped_One">{0} archivo omitido: solo se pueden traducir archivos .txt, .md, .srt y .vtt.</system:String>
-    <system:String x:Key="Str_Translate_FilesSkipped_Many">{0} archivos omitidos: solo se pueden traducir archivos .txt, .md, .srt y .vtt.</system:String>
+    <system:String x:Key="Str_Translate_FilesSkipped_One">{0} archivo omitido: solo se pueden traducir archivos .txt, .md, .srt, .vtt y .json.</system:String>
+    <system:String x:Key="Str_Translate_FilesSkipped_Many">{0} archivos omitidos: solo se pueden traducir archivos .txt, .md, .srt, .vtt y .json.</system:String>
     <system:String x:Key="Str_Translate_StatusNoFiles">Añade al menos un archivo primero.</system:String>
     <system:String x:Key="Str_Translate_StatusAllDone">Todos los archivos de la lista ya están traducidos. Añade más archivos, o quítalos y vuelve a añadirlos para traducirlos otra vez.</system:String>
     <system:String x:Key="Str_Translate_FileWaiting">En espera</system:String>
@@ -8700,6 +8700,7 @@
     <system:String x:Key="Str_Translate_FileError">No se pudo traducir este archivo</system:String>
     <system:String x:Key="Str_Translate_FileUnreadable">No se pudo leer este archivo</system:String>
     <system:String x:Key="Str_Translate_FileTooBig">Este archivo es demasiado grande (más de 8 MB)</system:String>
+    <system:String x:Key="Str_Translate_FileBadJson">No es un JSON válido (o hay una clave repetida), así que no se tocó</system:String>
     <system:String x:Key="Str_Translate_FileNothing">No hay nada que traducir en este archivo</system:String>
     <system:String x:Key="Str_Translate_FileCantSave">No se pudo guardar la traducción junto al archivo</system:String>
     <system:String x:Key="Str_Translate_StatusFiles">Traduciendo el archivo {0} de {1} · {2}</system:String>
