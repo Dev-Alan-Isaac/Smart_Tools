@@ -45,6 +45,8 @@ namespace Smart_Tools.WPF.Models
         VideoOpenCv,
         /// <summary>Audio: SoundFingerprinting landmark hashes, any format, trims and offsets.</summary>
         AudioFingerprint,
+        /// <summary>Every picture, video and song in the folders in one run: each file is compared only with files of its own kind, by that kind's method.</summary>
+        AutoAllTypes,
     }
 
     public enum MediaKind
@@ -93,7 +95,7 @@ namespace Smart_Tools.WPF.Models
     }
 
     /// <summary>Posted about ten times a second.</summary>
-    public readonly record struct SimilarScanProgress(SimilarScanPhase Phase, int Processed, int Total, string CurrentPath)
+    public readonly record struct SimilarScanProgress(SimilarScanPhase Phase, int Processed, int Total, string CurrentPath, MediaKind? Kind = null)
     {
         /// <summary>0-100 while fingerprinting; null while listing.</summary>
         public double? Percent => Phase switch
@@ -113,6 +115,9 @@ namespace Smart_Tools.WPF.Models
         public int InaccessibleFolders { get; init; }
         public int SkippedLinks { get; init; }
         public TimeSpan Elapsed { get; init; }
+
+        /// <summary>Auto scans only: songs were left out because ffmpeg.exe / ffprobe.exe were not found.</summary>
+        public bool SkippedAudioNoFfmpeg { get; init; }
 
         public int FileCount => Groups.Sum(g => g.ItemCount);
         public long ReclaimableBytes => Groups.Sum(g => g.PotentialBytes);
@@ -152,6 +157,9 @@ namespace Smart_Tools.WPF.Models
 
         /// <summary>"4032x3024 · 3.1 MB" / "0:42 · 1920x1080 · 12 MB" - the compare cards' detail line.</summary>
         public string Details => string.Join(" · ", new[] { Duration, Resolution, Size }.Where(s => s.Length > 0));
+
+        /// <summary>Resolution for a picture, length for a video or song (the one details column when a scan mixes kinds).</summary>
+        public string Shape => Kind == MediaKind.Image ? Resolution : Duration;
 
         public bool HasDuration => Duration.Length > 0;
         public bool HasResolution => Resolution.Length > 0;
@@ -284,6 +292,13 @@ namespace Smart_Tools.WPF.Models
 
     public static class SimilarText
     {
+        /// <summary>The longest length taken as real: 7 days. Anything beyond is a damaged header, not a recording.</summary>
+        public const double MaxSaneSeconds = 7 * 24 * 3600.0;
+
+        /// <summary>A length from a file header, or 0 ("unknown") when it is NaN, infinite, negative or absurd.</summary>
+        public static double SaneSeconds(double seconds) =>
+            double.IsFinite(seconds) && seconds > 0 && seconds <= MaxSaneSeconds ? seconds : 0;
+
         public static string FormatBytes(long bytes)
         {
             string[] units = { "B", "KB", "MB", "GB", "TB" };
@@ -300,6 +315,8 @@ namespace Smart_Tools.WPF.Models
         /// <summary>"m:ss", or "h:mm:ss" past an hour - like media players.</summary>
         public static string FormatDuration(double totalSeconds)
         {
+            // A damaged file can report a length of 9223372036854775807 or NaN; TimeSpan.FromSeconds would throw on it.
+            if (!double.IsFinite(totalSeconds) || totalSeconds > MaxSaneSeconds) return "?";
             var span = TimeSpan.FromSeconds(Math.Max(0, totalSeconds));
             return span.TotalHours >= 1
                 ? $"{(int)span.TotalHours}:{span.Minutes:00}:{span.Seconds:00}"

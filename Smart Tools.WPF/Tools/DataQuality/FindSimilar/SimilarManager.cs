@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
+using Microsoft.VisualBasic.FileIO;
 using Smart_Tools.WPF.Models;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -43,18 +43,23 @@ namespace Smart_Tools.WPF.Controllers
         // =================================================================
 
         public static bool IsImplemented(SimilarDetectionMethod method) => method is
-            SimilarDetectionMethod.ImageOpenCv or SimilarDetectionMethod.VideoOpenCv or SimilarDetectionMethod.AudioFingerprint;
+            SimilarDetectionMethod.ImageOpenCv or SimilarDetectionMethod.VideoOpenCv or SimilarDetectionMethod.AudioFingerprint
+            or SimilarDetectionMethod.AutoAllTypes;
+
+        public static bool IsAuto(SimilarDetectionMethod method) => method == SimilarDetectionMethod.AutoAllTypes;
 
         /// <summary>Older saved methods become the engine for their media kind.</summary>
-        public static SimilarDetectionMethod Normalize(SimilarDetectionMethod method) => KindOf(method) switch
+        public static SimilarDetectionMethod Normalize(SimilarDetectionMethod method) => method == SimilarDetectionMethod.AutoAllTypes ? method : KindOf(method) switch
         {
             MediaKind.Video => SimilarDetectionMethod.VideoOpenCv,
             MediaKind.Audio => SimilarDetectionMethod.AudioFingerprint,
             _ => SimilarDetectionMethod.ImageOpenCv,
         };
 
+        /// <summary>The media kind a method works on; <see cref="MediaKind.Unsupported"/> for Auto (it covers every kind).</summary>
         public static MediaKind KindOf(SimilarDetectionMethod method) => method switch
         {
+            SimilarDetectionMethod.AutoAllTypes => MediaKind.Unsupported,
             SimilarDetectionMethod.PHash or SimilarDetectionMethod.WHash or SimilarDetectionMethod.DHash
                 or SimilarDetectionMethod.Ssim or SimilarDetectionMethod.FeatureMatching
                 or SimilarDetectionMethod.ImageOpenCv => MediaKind.Image,
@@ -70,6 +75,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             SimilarDetectionMethod.ImageOpenCv => "Images (OpenCV)",
             SimilarDetectionMethod.VideoOpenCv => "Videos (OpenCV)",
+            SimilarDetectionMethod.AutoAllTypes => "All types",
             _ => "Audio (SoundFingerprinting)",
         };
 
@@ -85,6 +91,7 @@ namespace Smart_Tools.WPF.Controllers
             public int Inaccessible;
             public int Links;
             public SimilarScanPhase Phase;
+            public MediaKind? Kind;
             public long LastReport = long.MinValue;
             public readonly Stopwatch Watch = Stopwatch.StartNew();
             public IProgress<SimilarScanProgress>? Progress;
@@ -106,7 +113,7 @@ namespace Smart_Tools.WPF.Controllers
                     }
                     if (!force && now - LastReport < ReportIntervalMs) return;
                     LastReport = now;
-                    Progress.Report(new SimilarScanProgress(Phase, Volatile.Read(ref Processed), Total, path));
+                    Progress.Report(new SimilarScanProgress(Phase, Volatile.Read(ref Processed), Total, path, Kind));
                 }
             }
         }
@@ -119,6 +126,8 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public Task<SimilarScanResult> ScanAsync(SimilarScanOptions options, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token = default)
         {
+            if (IsAuto(options.Method)) return Task.Run(() => ScanAllTypesAsync(options, keepRule, progress, token), token);
+
             var kind = KindOf(options.Method);
             if (kind == MediaKind.Audio && _usesMediaDecoders && !FfmpegAvailable)
                 throw new InvalidOperationException(Loc.F("Str_FindSimilar_NeedsFfmpeg", "Needs ffmpeg.exe and ffprobe.exe in {0} - they weren't found.", FfmpegFolder));
@@ -126,9 +135,56 @@ namespace Smart_Tools.WPF.Controllers
             return Task.Run(() => ScanCoreAsync(options, kind, keepRule, progress, token), token);
         }
 
+        /// <summary>
+        /// Auto: pictures, then videos, then songs, each with its own method and compared only with files of its own
+        /// kind (a video is never matched against a picture). Groups from all three are returned together, biggest
+        /// savings first. Songs are skipped, and the result says so, if ffmpeg is missing.
+        /// </summary>
+        private async Task<SimilarScanResult> ScanAllTypesAsync(SimilarScanOptions options, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token)
+        {
+            var watch = Stopwatch.StartNew();
+            var groups = new List<SimilarGroup>();
+            int files = 0, unreadable = 0, inaccessible = 0, links = 0;
+            bool skippedAudio = false;
+
+            foreach (var kind in new[] { MediaKind.Image, MediaKind.Video, MediaKind.Audio })
+            {
+                token.ThrowIfCancellationRequested();
+                if (kind == MediaKind.Audio && _usesMediaDecoders && !FfmpegAvailable)
+                {
+                    skippedAudio = true;
+                    Log.Warn("Auto scan: ffmpeg not found, songs skipped.");
+                    continue;
+                }
+
+                var result = await ScanCoreAsync(options, kind, keepRule, progress, token).ConfigureAwait(false);
+                groups.AddRange(result.Groups);
+                files += result.FilesScanned;
+                unreadable += result.UnreadableFiles;
+                inaccessible = Math.Max(inaccessible, result.InaccessibleFolders);   // the same folders are walked once per kind
+                links = Math.Max(links, result.SkippedLinks);
+            }
+
+            groups.Sort((a, b) => b.PotentialBytes.CompareTo(a.PotentialBytes));
+            for (int i = 0; i < groups.Count; i++) groups[i].Id = i + 1;
+            Log.Info($"Auto scan done: {groups.Count} groups from {files} files in {watch.Elapsed.TotalSeconds:0.0}s");
+
+            return new SimilarScanResult
+            {
+                Groups = groups,
+                Kind = MediaKind.Unsupported,
+                FilesScanned = files,
+                UnreadableFiles = unreadable,
+                InaccessibleFolders = inaccessible,
+                SkippedLinks = links,
+                Elapsed = watch.Elapsed,
+                SkippedAudioNoFfmpeg = skippedAudio,
+            };
+        }
+
         private async Task<SimilarScanResult> ScanCoreAsync(SimilarScanOptions options, MediaKind kind, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token)
         {
-            var state = new ScanState { Progress = progress, Phase = SimilarScanPhase.Listing };
+            var state = new ScanState { Progress = progress, Phase = SimilarScanPhase.Listing, Kind = kind };
             Log.Info($"Scan start: {kind}, threshold {options.ThresholdPercent}%, crops {options.FindCroppedCopies}, {options.MaxDegreeOfParallelism} workers, {options.Folders.Count()} folder(s)");
             var files = EnumerateCandidateFiles(options, kind, state, token);
             Log.Info($"Scan listed {files.Count} candidate files in {state.Watch.Elapsed.TotalSeconds:0.0}s");
@@ -415,7 +471,7 @@ namespace Smart_Tools.WPF.Controllers
                 && Math.Abs(Math.Round(deg) % 180) == 90)
                 (width, height) = (height, width);
 
-            return new ProbeResult(double.IsFinite(duration) ? duration : 0, width, height);
+            return new ProbeResult(SimilarText.SaneSeconds(duration), width, height);
         }
 
         // =================================================================

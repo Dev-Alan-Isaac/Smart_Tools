@@ -187,7 +187,10 @@ namespace Smart_Tools.WPF.Views
             RadioKindVideos.IsChecked == true ? MediaKind.Video :
             RadioKindAudio.IsChecked == true ? MediaKind.Audio : MediaKind.Image;
 
-        private SimilarDetectionMethod SelectedMethod => SelectedKind switch
+        /// <summary>"Auto (all types)": pictures, videos and songs in one run, each compared only with its own kind.</summary>
+        private bool IsAuto => RadioKindAuto.IsChecked == true;
+
+        private SimilarDetectionMethod SelectedMethod => IsAuto ? SimilarDetectionMethod.AutoAllTypes : SelectedKind switch
         {
             MediaKind.Video => SimilarDetectionMethod.VideoOpenCv,
             MediaKind.Audio => SimilarDetectionMethod.AudioFingerprint,
@@ -214,14 +217,15 @@ namespace Smart_Tools.WPF.Views
         private void UpdateMethodUi(bool animate)
         {
             var kind = SelectedKind;
-            bool images = kind == MediaKind.Image;
+            bool auto = IsAuto;
+            bool images = kind == MediaKind.Image || auto;   // the crop option applies to the pictures of an Auto run too
             if (ImageMethodPanel.Visibility != (images ? Visibility.Visible : Visibility.Collapsed))
             {
                 ImageMethodPanel.Visibility = images ? Visibility.Visible : Visibility.Collapsed;
                 if (images && animate) UiMotion.FadeIn(ImageMethodPanel, 4);
             }
 
-            TxtMethodHint.Text = kind switch
+            TxtMethodHint.Text = auto ? Loc.T("Str_FindSimilar_HintAuto", "Compares pictures with pictures, videos with videos and songs with songs, each with its own method, in one run. A video is never matched against a picture.") : kind switch
             {
                 MediaKind.Video => Loc.T("Str_FindSimilar_HintVideos", "Compares the pictures of each video over time. Finds the same video in another format, size or quality, mirrored, or with the start or end cut off."),
                 MediaKind.Audio => Loc.T("Str_FindSimilar_HintAudio", "Compares the sound itself. Finds the same recording in another format or bitrate, even with the start or end cut off."),
@@ -229,7 +233,7 @@ namespace Smart_Tools.WPF.Views
             };
 
             // Only audio needs ffmpeg; for video it just backs up OpenCV on formats OpenCV can't read.
-            bool needsFfmpeg = kind == MediaKind.Audio && !SimilarManager.FfmpegAvailable;
+            bool needsFfmpeg = (kind == MediaKind.Audio || auto) && !SimilarManager.FfmpegAvailable;
             TxtFfmpegWarning.Text = Loc.F("Str_FindSimilar_NeedsFfmpeg", "Needs ffmpeg.exe and ffprobe.exe in {0} - they weren't found.", SimilarManager.FfmpegFolder);
             UiMotion.FadeVisibility(FfmpegWarning, needsFfmpeg);
         }
@@ -265,7 +269,8 @@ namespace Smart_Tools.WPF.Views
                 _folders.Clear();
                 foreach (string f in s.Folders.Where(Directory.Exists)) _folders.Add(new FolderListEntry { FullPath = f });
 
-                switch (SimilarManager.KindOf(s.Method))
+                if (SimilarManager.IsAuto(s.Method)) RadioKindAuto.IsChecked = true;
+                else switch (SimilarManager.KindOf(s.Method))
                 {
                     case MediaKind.Video: RadioKindVideos.IsChecked = true; break;
                     case MediaKind.Audio: RadioKindAudio.IsChecked = true; break;
@@ -432,7 +437,8 @@ namespace Smart_Tools.WPF.Views
                 TxtProgressPercent.Text = "";
             }
 
-            string noun = SimilarManager.KindOf(_lastOptions?.Method ?? SimilarDetectionMethod.ImageOpenCv) switch
+            // An Auto run reports which kind it is on right now; a single-kind run knows it from the method.
+            string noun = (p.Kind ?? SimilarManager.KindOf(_lastOptions?.Method ?? SimilarDetectionMethod.ImageOpenCv)) switch
             {
                 MediaKind.Video => Loc.T("Str_FindSimilar_NounVideos", "videos"),
                 MediaKind.Audio => Loc.T("Str_FindSimilar_NounAudio", "audio files"),
@@ -490,8 +496,20 @@ namespace Smart_Tools.WPF.Views
             string extra = notes.Count > 0 ? " · " + string.Join(" · ", notes) : "";
             TxtProgress.Text = $"Checked {result.FilesScanned:N0} files in {result.Elapsed.TotalSeconds:0.0} s{extra}";
 
-            ColDetails.Header = result.Kind == MediaKind.Image ? "Resolution" : "Length";
-            ColDetails.Binding = new Binding(result.Kind == MediaKind.Image ? nameof(SimilarFileItem.Resolution) : nameof(SimilarFileItem.Duration));
+            if (result.SkippedAudioNoFfmpeg)
+                TxtProgress.Text += " Â· " + Loc.T("Str_FindSimilar_SongsSkipped", "songs skipped (ffmpeg not found)");
+
+            if (result.Kind == MediaKind.Unsupported)
+            {
+                // Auto: pictures show a resolution, videos and songs a length.
+                ColDetails.Header = TryFindResource("Str_FindSimilar_ColHeaderShape") as string ?? "Size / length";
+                ColDetails.Binding = new Binding(nameof(SimilarFileItem.Shape));
+            }
+            else
+            {
+                ColDetails.Header = result.Kind == MediaKind.Image ? "Resolution" : "Length";
+                ColDetails.Binding = new Binding(result.Kind == MediaKind.Image ? nameof(SimilarFileItem.Resolution) : nameof(SimilarFileItem.Duration));
+            }
         }
 
         // =================================================================

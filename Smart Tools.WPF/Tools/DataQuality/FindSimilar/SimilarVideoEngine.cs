@@ -136,57 +136,113 @@ namespace Smart_Tools.WPF.Controllers
                 if (!capture.IsOpened()) return null;
 
                 double fps = capture.Get(VideoCaptureProperties.Fps);
+                if (!double.IsFinite(fps) || fps < 0.1 || fps > 1000) fps = 25;   // unknown frame rate: assume a common one
                 double count = capture.Get(VideoCaptureProperties.FrameCount);
-                if (fps < 0.1 || count < 1 || !double.IsFinite(fps) || !double.IsFinite(count)) return null;
-                double duration = count / fps;
-                if (duration <= 0) return null;
+
+                // A damaged header can claim 9223372036854775807 frames, or none. Such a length is not trusted:
+                // the frames are read in order instead and the real length is measured from them.
+                double duration = double.IsFinite(count) && count >= 1 ? SimilarText.SaneSeconds(count / fps) : 0;
+                if (duration <= 0) return SampleSequential(capture, fps, token);
 
                 int step = StepFor(duration);
                 var sets = new List<FrameSet>();
-                int failed = 0;
+                int consecutiveFailures = 0, lastGood = -1;
+                double lastGoodSecond = 0;
                 var watch = Stopwatch.StartNew();
 
                 using var frame = new Mat();
                 using var gray = new Mat();
-                for (int t = 0; t < duration; t += step)
+                for (int k = 0; k <= MaxSamples; k++)
                 {
+                    double t = (double)k * step;
+                    if (t >= duration) break;
                     token.ThrowIfCancellationRequested();
                     if (watch.Elapsed > SamplingBudget && sets.Count >= 10) break;   // very slow codec: use what we have
 
                     capture.Set(VideoCaptureProperties.PosMsec, t * 1000.0);
                     if (!capture.Read(frame) || frame.Empty())
                     {
-                        failed++;
+                        // Past what is really in the file (truncated copy, header longer than the data).
+                        if (++consecutiveFailures >= 3) break;
                         sets.Add(FrameSet.FlatSet);
                         continue;
                     }
 
+                    consecutiveFailures = 0;
                     if (frame.Channels() == 1) frame.CopyTo(gray);
                     else Cv2.CvtColor(frame, gray, ColorConversionCodes.BGR2GRAY);
                     sets.Add(DescribeFrame(gray));
+                    lastGood = sets.Count - 1;
+                    lastGoodSecond = t;
                 }
 
-                // Mostly unreadable: let ffmpeg try instead.
-                if (sets.Count == 0 || failed * 2 > sets.Count) return null;
+                // Too few readable frames: let ffmpeg try instead.
+                if (lastGood < 2) return null;
+                if (sets.Count > lastGood + 1) sets.RemoveRange(lastGood + 1, sets.Count - lastGood - 1);
+                if (consecutiveFailures >= 3) duration = Math.Min(duration, lastGoodSecond + step);   // the file ends before its header says
 
-                var sig = new MediaSignature
+                // Seeking that lands on the same picture every time means the timestamps are broken (a damaged header):
+                // that row would match nothing real. Read the video in order instead. (A genuinely still video takes
+                // this slower road too, and comes out the same.)
+                int nonFlat = sets.Count(s => !s.Flat);
+                if (nonFlat >= 4 && sets.Where(s => !s.Flat).Select(s => s.Full).Distinct().Count() <= Math.Max(1, nonFlat / 10))
                 {
-                    Kind = MediaKind.Video,
-                    DurationSeconds = duration,
-                    Width = (int)capture.Get(VideoCaptureProperties.FrameWidth),
-                    Height = (int)capture.Get(VideoCaptureProperties.FrameHeight),
-                    VideoStep = step,
-                    Frames = sets.Select(s => s.Full).ToArray(),
-                    FramesMirror = sets.Select(s => s.Flat ? MediaSignature.FlatFrame : s.Mirror).ToArray(),
-                    FrameZoom = sets.SelectMany(s => s.Zoom).ToArray(),
-                    FrameQuads = sets.SelectMany(s => s.Quads).ToArray(),
-                };
-                return sig;
+                    using var again = new VideoCapture(path, VideoCaptureAPIs.ANY);
+                    return again.IsOpened() ? SampleSequential(again, fps, token) : null;
+                }
+
+                return BuildSignature(sets, duration, step, capture);
             }
             catch (Exception ex) when (ex is OpenCVException or ArgumentException or InvalidOperationException)
             {
                 return null;
             }
+        }
+
+        private static MediaSignature BuildSignature(List<FrameSet> sets, double duration, int step, VideoCapture capture) => new()
+        {
+            Kind = MediaKind.Video,
+            DurationSeconds = duration,
+            Width = (int)capture.Get(VideoCaptureProperties.FrameWidth),
+            Height = (int)capture.Get(VideoCaptureProperties.FrameHeight),
+            VideoStep = step,
+            Frames = sets.Select(s => s.Full).ToArray(),
+            FramesMirror = sets.Select(s => s.Flat ? MediaSignature.FlatFrame : s.Mirror).ToArray(),
+            FrameZoom = sets.SelectMany(s => s.Zoom).ToArray(),
+            FrameQuads = sets.SelectMany(s => s.Quads).ToArray(),
+        };
+
+        /// <summary>
+        /// For a video whose header gives no usable length: reads the frames in order, keeps one per second (up to
+        /// <see cref="MaxSamples"/>) and takes the length from how many frames there really were. Slower than seeking,
+        /// so it is only used when the header can't be trusted.
+        /// </summary>
+        private static MediaSignature? SampleSequential(VideoCapture capture, double fps, CancellationToken token)
+        {
+            int every = Math.Max(1, (int)Math.Round(fps));
+            var sets = new List<FrameSet>();
+            long index = 0;
+            var watch = Stopwatch.StartNew();
+
+            using var frame = new Mat();
+            using var gray = new Mat();
+            while (sets.Count < MaxSamples)
+            {
+                token.ThrowIfCancellationRequested();
+                if (watch.Elapsed > SamplingBudget && sets.Count >= 10) break;
+                if (!capture.Grab()) break;
+                if (index++ % every != 0) continue;
+                if (!capture.Retrieve(frame) || frame.Empty()) continue;
+
+                if (frame.Channels() == 1) frame.CopyTo(gray);
+                else Cv2.CvtColor(frame, gray, ColorConversionCodes.BGR2GRAY);
+                sets.Add(DescribeFrame(gray));
+            }
+
+            if (sets.Count < 3) return null;
+            double duration = SimilarText.SaneSeconds(index / fps);
+            if (duration <= 0) duration = sets.Count;
+            return BuildSignature(sets, duration, 1, capture);
         }
 
         /// <summary>
