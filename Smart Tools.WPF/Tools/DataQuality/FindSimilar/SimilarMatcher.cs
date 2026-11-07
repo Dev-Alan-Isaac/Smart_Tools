@@ -151,7 +151,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 var s = sigs[i];
                 if (s == null) continue;
-                foreach (uint key in FrameKeys(s.Frames))
+                foreach (uint key in IndexKeys(s))
                 {
                     if (!index.TryGetValue(key, out var list)) index[key] = list = new List<int>();
                     if (list.Count < PostingCap && (list.Count == 0 || list[^1] != i)) list.Add(i);
@@ -164,8 +164,7 @@ namespace Smart_Tools.WPF.Controllers
                 var s = sigs[i];
                 if (s == null) return;
                 var votes = new Dictionary<int, int>();
-                CountVotes(index, FrameKeys(s.Frames), i, votes);
-                CountVotes(index, FrameKeys(s.FramesMirror), i, votes);
+                CountVotes(index, QueryKeys(s), i, votes);
                 foreach (var (j, count) in votes)
                     if (count >= 3) candidates[Pair(i, j)] = 0;
             });
@@ -183,6 +182,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     var tags = SimilarTag.None;
                     if (align.Mirrored) tags |= SimilarTag.Flipped;
+                    if (align.Cropped) tags |= SimilarTag.Cropped;
                     if (IsTrimmed(a, b, align.OffsetSeconds)) tags |= SimilarTag.Trimmed;
                     double similarity = Math.Clamp(align.Coverage * 100 - align.MeanDistance * 0.5, 0, 100);
                     edges.Add(new SimilarEdge(i, j, Math.Round(similarity), tags));
@@ -192,14 +192,50 @@ namespace Smart_Tools.WPF.Controllers
             return edges.ToList();
         }
 
-        private static IEnumerable<uint> FrameKeys(ulong[] frames)
+        private static IEnumerable<uint> SliceKeys(ulong h)
         {
-            foreach (ulong h in frames)
-            {
-                if (h == MediaSignature.FlatFrame) continue;
-                for (int slice = 0; slice < 4; slice++)
-                    yield return (uint)(slice << 16) | (uint)((h >> (slice * 16)) & 0xFFFF);
-            }
+            for (int slice = 0; slice < 4; slice++)
+                yield return (uint)(slice << 16) | (uint)((h >> (slice * 16)) & 0xFFFF);
+        }
+
+        /// <summary>A quadrant hash with real structure (flat quarters all hash alike and prove nothing).</summary>
+        private static bool UsableQuad(ulong h)
+        {
+            int ones = System.Numerics.BitOperations.PopCount(h);
+            return ones >= 12 && ones <= 52;
+        }
+
+        /// <summary>What a video is filed under: its plain frames and plain quadrants.</summary>
+        private static IEnumerable<uint> IndexKeys(MediaSignature s)
+        {
+            foreach (ulong h in s.Frames)
+                if (h != MediaSignature.FlatFrame)
+                    foreach (uint k in SliceKeys(h)) yield return k;
+
+            if (s.FrameQuads.Length == s.Frames.Length * 8)
+                for (int f = 0; f < s.Frames.Length; f++)
+                    for (int q = 0; q < 4; q++)
+                    {
+                        ulong h = s.FrameQuads[f * 8 + q];
+                        if (UsableQuad(h)) yield return (uint)((4 + q) << 16) | (uint)(h & 0xFFFF);
+                    }
+        }
+
+        /// <summary>What a video looks up: plain, mirrored and cropped frames, plain and mirrored quadrants.</summary>
+        private static IEnumerable<uint> QueryKeys(MediaSignature s)
+        {
+            foreach (var row in new[] { s.Frames, s.FramesMirror, s.FrameZoom })
+                foreach (ulong h in row)
+                    if (h != MediaSignature.FlatFrame)
+                        foreach (uint k in SliceKeys(h)) yield return k;
+
+            if (s.FrameQuads.Length == s.Frames.Length * 8)
+                for (int f = 0; f < s.Frames.Length; f++)
+                    for (int q = 0; q < 8; q++)
+                    {
+                        ulong h = s.FrameQuads[f * 8 + q];
+                        if (UsableQuad(h)) yield return (uint)((4 + (q & 3)) << 16) | (uint)(h & 0xFFFF);
+                    }
         }
 
         // =================================================================
@@ -237,6 +273,7 @@ namespace Smart_Tools.WPF.Controllers
                         var align = SimilarVideoEngine.Align(copy, original, FrameToleranceFor(threshold));
                         if (!align.Matched) return SimilarTag.None;
                         var tags = align.Mirrored ? SimilarTag.Flipped : SimilarTag.None;
+                        if (align.Cropped) tags |= SimilarTag.Cropped;
                         if (IsTrimmed(copy, original, align.OffsetSeconds)) tags |= SimilarTag.Trimmed;
                         return tags;
                     }

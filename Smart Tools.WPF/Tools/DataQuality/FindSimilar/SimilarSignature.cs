@@ -52,6 +52,10 @@ namespace Smart_Tools.WPF.Controllers
         public int VideoStep { get; set; }
         public ulong[] Frames { get; set; } = Array.Empty<ulong>();
         public ulong[] FramesMirror { get; set; } = Array.Empty<ulong>();
+        /// <summary>Per frame: pHash of crop windows of each frame, 12 per frame (see SimilarVideoEngine.ZoomSlots). For cropped copies.</summary>
+        public ulong[] FrameZoom { get; set; } = Array.Empty<ulong>();
+        /// <summary>Per frame: 4 quadrant hashes of the frame, then 4 of the mirrored frame (8 per frame). For logos and overlays.</summary>
+        public ulong[] FrameQuads { get; set; } = Array.Empty<ulong>();
 
         // ---- Audio (not cached) ----
         public object? AudioHashes { get; set; }
@@ -80,6 +84,8 @@ namespace Smart_Tools.WPF.Controllers
             w.Write(VideoStep);
             WriteUlongs(w, Frames);
             WriteUlongs(w, FramesMirror);
+            WriteUlongs(w, FrameZoom);
+            WriteUlongs(w, FrameQuads);
         }
 
         internal static MediaSignature Read(BinaryReader r)
@@ -97,6 +103,8 @@ namespace Smart_Tools.WPF.Controllers
             s.VideoStep = r.ReadInt32();
             s.Frames = ReadUlongs(r);
             s.FramesMirror = ReadUlongs(r);
+            s.FrameZoom = ReadUlongs(r);
+            s.FrameQuads = ReadUlongs(r);
             return s;
         }
 
