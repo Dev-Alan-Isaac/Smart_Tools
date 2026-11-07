@@ -276,13 +276,13 @@ namespace Smart_Tools.WPF.Controls
 
         private void BtnAddImages_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog { Title = "Choose images", Multiselect = true, Filter = ImageViewerManager.FileDialogFilter };
+            var dialog = new OpenFileDialog { Title = Loc.T("Str_ImageViewer_MsgChooseImages", "Choose images"), Multiselect = true, Filter = ImageViewerManager.FileDialogFilter };
             if (dialog.ShowDialog() == true) _ = AddPathsAsync(dialog.FileNames);
         }
 
         private void BtnAddFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Choose folders of images", Multiselect = true };
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Loc.T("Str_ImageViewer_MsgChooseFolders", "Choose folders of images"), Multiselect = true };
             if (dialog.ShowDialog() == true) _ = AddPathsAsync(dialog.FolderNames);
         }
 
@@ -650,7 +650,7 @@ namespace Smart_Tools.WPF.Controls
             _bitmap = null;
             _info = null;
             MainImage.Source = null;
-            TxtFileName.Text = "Nothing loaded";
+            TxtFileName.Text = Loc.T("Str_ImageViewer_MsgNothingLoaded", "Nothing loaded");
             TxtFileName.ToolTip = null;
             TxtImageInfo.Text = _queue.Count > 0 ? "Double-click an image in the list to view it." : "Add images on the left, then press Play.";
             TxtEmptyHint.Text = _queue.Count > 0 ? "Pick an image from the list." : "Add images on the left, or drop them here.";
@@ -707,7 +707,7 @@ namespace Smart_Tools.WPF.Controls
                 MainImage.Source = null;
                 BtnSaveImageAs.IsEnabled = false;
                 TxtImageInfo.Text = $"{item.SizeDisplay} · {ImageViewerManager.FormatName(item.FullPath)}";
-                TxtLoadError.Text = $"Couldn't open \"{item.Name}\" - the file is damaged, or it's in a format this viewer can't read.";
+                TxtLoadError.Text = Loc.F("Str_ImageViewer_MsgCantOpen", "Couldn't open \"{0}\" - the file is damaged, or it's in a format this viewer can't read.", item.Name);
                 UiMotion.FadeVisibility(LoadErrorPanel, true);
                 return;
             }
@@ -946,7 +946,7 @@ namespace Smart_Tools.WPF.Controls
             {
                 Title = angle == 0 ? "Save a copy" : $"Save a copy - turned {angle:0}°",
                 FileName = Path.GetFileNameWithoutExtension(item.FullPath) + (angle == 0 ? " copy" : " turned") + ext,
-                Filter = $"Same type (*{ext})|*{ext}|JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|All files (*.*)|*.*",
+                Filter = Loc.F("Str_ImageViewer_MsgSaveFilter", "Same type (*{0})|*{0}|JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|All files (*.*)|*.*", ext),
                 InitialDirectory = item.Folder,
             };
             if (dialog.ShowDialog() != true) return;
@@ -957,7 +957,7 @@ namespace Smart_Tools.WPF.Controls
             {
                 await Task.Run(() => ImageViewerManager.SaveCopy(item.FullPath, destination, angle));
                 UiMotion.Pop(BtnSaveImageAs, 0.9);
-                TxtImageInfo.Text = $"Saved {Path.GetFileName(destination)}" + (angle == 0 ? "" : $" (turned {angle:0}°)");
+                TxtImageInfo.Text = Loc.F("Str_ImageViewer_MsgSaved", "Saved {0}", Path.GetFileName(destination)) + (angle == 0 ? "" : " " + Loc.F("Str_ImageViewer_MsgTurned", "(turned {0:0}°)", angle));
             }
             catch (Exception ex)
             {

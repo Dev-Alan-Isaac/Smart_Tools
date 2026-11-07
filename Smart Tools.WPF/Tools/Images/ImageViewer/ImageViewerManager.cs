@@ -269,7 +269,7 @@ namespace Smart_Tools.WPF.Controllers
         private static DateTime ModifiedOf(string path)
         {
             try { return File.GetLastWriteTimeUtc(path); }
-            catch { return DateTime.MaxValue; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException) { return DateTime.MaxValue; }
         }
 
         /// <summary>After removing the image on screen: the one that took its place, else the one before, else none.</summary>
@@ -392,7 +392,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.SlideshowSeconds = ClampSlideshowSeconds(s.SlideshowSeconds);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
             {
                 return new ImageViewerSettings();
             }
@@ -401,10 +401,14 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(ImageViewerSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            try
+            {
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Settings are a convenience; never fail the tool over them.
+            }
         }
     }
 

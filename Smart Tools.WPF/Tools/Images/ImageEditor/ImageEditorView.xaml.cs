@@ -77,7 +77,7 @@ namespace Smart_Tools.WPF.Views
 
             // The Files card: one row per added folder (or set of loose files).
             InputCard.ItemsSource = _groups;
-            InputCard.FileFilter = "Images|" + string.Join(";", ImageEditingManager.ImageExtensions.Select(x => "*" + x)) + "|All files (*.*)|*.*";
+            InputCard.FileFilter = Loc.F("Str_ImageEditor_MsgFilter", "Images|{0}|All files (*.*)|*.*", string.Join(";", ImageEditingManager.ImageExtensions.Select(x => "*" + x)));
             _groups.CollectionChanged += (_, _) =>
                 InputCard.SetEmpty(_groups.Count == 0);
             _viewConstructed = true;
@@ -217,7 +217,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                TxtProgress.Text = $"Couldn't read the folders again: {ex.Message}";
+                TxtProgress.Text = Loc.F("Str_ImageEditor_MsgFoldersAgain", "Couldn't read the folders again: {0}", ex.Message);
             }
             finally
             {
@@ -237,7 +237,7 @@ namespace Smart_Tools.WPF.Views
             bool subfolders = InputCard.IncludeSubfolders;
             _adding++;
             UpdateQueueUi();
-            TxtProgress.Text = "Looking for images...";
+            TxtProgress.Text = Loc.T("Str_ImageEditor_MsgLooking", "Looking for images...");
             try
             {
                 var added = new List<ImageItem>();
@@ -272,7 +272,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                TxtProgress.Text = $"Couldn't read the folder: {ex.Message}";
+                TxtProgress.Text = Loc.F("Str_ImageEditor_MsgFolderFailed", "Couldn't read the folder: {0}", ex.Message);
             }
             finally
             {
@@ -308,7 +308,7 @@ namespace Smart_Tools.WPF.Views
             if (!_viewConstructed || _reordering) return;
             int ticked = _queue.Count(i => i.IsSelected);
             int unreadable = _queue.Count(i => i.Status == ImageItemStatus.Unreadable);
-            TxtSummaryCount.Text = $"{_queue.Count:N0} image{(_queue.Count == 1 ? "" : "s")} · {ticked:N0} ticked" + (unreadable > 0 ? $" · {unreadable:N0} unreadable" : "");
+            TxtSummaryCount.Text = Loc.N(_queue.Count, "Str_ImageEditor_MsgCount1", "{0:N0} image · {1:N0} ticked", "Str_ImageEditor_MsgCountN", "{0:N0} images · {1:N0} ticked", _queue.Count, ticked) + (unreadable > 0 ? " · " + Loc.F("Str_ImageEditor_MsgUnreadable", "{0:N0} unreadable", unreadable) : "");
             SummaryPill.Visibility = _queue.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             UiMotion.FadeVisibility(EmptyStatePanel, _queue.Count == 0);
             UiMotion.FadeVisibility(DataGridQueue, _queue.Count > 0);
@@ -527,7 +527,7 @@ namespace Smart_Tools.WPF.Views
             TxtNowShowing.ToolTip = item?.FullPath;
             if (item == null)
             {
-                TxtNowShowingMeta.Text = "Add Images on the left, Then start editing.";
+                TxtNowShowingMeta.Text = Loc.T("Str_ImageEditor_MsgAddImages", "Add images on the left, then start editing.");
             }
             else
             {
@@ -872,13 +872,13 @@ namespace Smart_Tools.WPF.Views
             var o = BuildOptions();
             if (o.ResizeWidth == null && o.ResizeHeight == null)
             {
-                TxtResizeHint.Text = "Leave empty to keep the size. One side is enough - the other follows.";
+                TxtResizeHint.Text = Loc.T("Str_ImageEditor_MsgResizeHint", "Leave empty to keep the size. One side is enough - the other follows.");
                 return;
             }
             if (_current is { PixelWidth: > 0 } item)
             {
                 var (w, h) = ImageEditingManager.PlannedSize(item.PixelWidth, item.PixelHeight, item.Orientation, item.Crop, o);
-                TxtResizeHint.Text = $"This image: {w} × {h}" + (o.KeepAspect ? " (fits inside, keeps its shape)" : " (stretched to fit exactly)");
+                TxtResizeHint.Text = Loc.F("Str_ImageEditor_MsgThisImage", "This image: {0} × {1}", w, h) + " " + (o.KeepAspect ? Loc.T("Str_ImageEditor_MsgFitsInside", "(fits inside, keeps its shape)") : Loc.T("Str_ImageEditor_MsgStretched", "(stretched to fit exactly)"));
             }
             else
             {
@@ -920,7 +920,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_viewConstructed) return;
             string stem = Path.GetFileNameWithoutExtension(_current?.Name ?? _queue.FirstOrDefault()?.Name ?? "holiday.jpg");
-            TxtNameExample.Text = $"e.g. {stem}{ImageEditingManager.CleanSuffix(TxtNameSuffix.Text)}{ImageEditingManager.ExtensionFor(SelectedFormat)}";
+            TxtNameExample.Text = Loc.F("Str_ImageEditor_MsgExample", "e.g. {0}", stem + ImageEditingManager.CleanSuffix(TxtNameSuffix.Text) + ImageEditingManager.ExtensionFor(SelectedFormat));
         }
 
         private void Setting_Changed(object sender, RoutedEventArgs e)
@@ -999,7 +999,7 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Stopping after the images in progress...";
+                TxtProgress.Text = Loc.T("Str_ImageEditor_MsgStopping", "Stopping after the images in progress...");
                 return;
             }
 
@@ -1039,7 +1039,7 @@ namespace Smart_Tools.WPF.Views
                     double pct = p.Total == 0 ? 0 : p.Processed * 100.0 / p.Total;
                     ProgressEdit.Value = pct;
                     TxtProgressPercent.Text = $"{pct:0}%";
-                    TxtProgress.Text = $"Saved {p.Processed:N0} of {p.Total:N0} · {p.CurrentFile}";
+                    TxtProgress.Text = Loc.F("Str_ImageEditor_MsgSavedOf", "Saved {0:N0} of {1:N0} · {2}", p.Processed, p.Total, p.CurrentFile);
                 });
                 var result = await _manager.RunAsync(_queue.ToList(), options, progress, _runCts.Token);
                 _lastOutputFolder = options.OutputFolder;
@@ -1051,10 +1051,10 @@ namespace Smart_Tools.WPF.Views
 
                 try
                 {
-                    ToastNotificationManager.ShowToast("Export Complete",
+                    ToastNotificationManager.ShowToast(Loc.T("Str_ImageEditor_MsgToastTitle", "Export Complete"),
                         result.Failed > 0
-                            ? $"Saved {result.Exported} image(s) - {result.Failed} failed."
-                            : $"{result.Exported} image(s) saved to {options.OutputFolder}.");
+                            ? Loc.F("Str_ImageEditor_MsgToastPartial", "Saved {0} image(s) - {1} failed.", result.Exported, result.Failed)
+                            : Loc.F("Str_ImageEditor_MsgToastDone", "{0} image(s) saved to {1}.", result.Exported, options.OutputFolder));
                 }
                 catch (Exception ex)
                 {
@@ -1064,7 +1064,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetRunning(false);
-                TxtProgress.Text = "Export failed.";
+                TxtProgress.Text = Loc.T("Str_ImageEditor_MsgExportFailed", "Export failed.");
                 MessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -1092,7 +1092,7 @@ namespace Smart_Tools.WPF.Views
             {
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "0%";
-                TxtProgress.Text = "Starting...";
+                TxtProgress.Text = Loc.T("Str_ImageEditor_MsgStarting", "Starting...");
             }
             UpdateQueueUi();
             UpdatePreviewUi();

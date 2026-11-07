@@ -168,7 +168,19 @@ namespace Smart_Tools.WPF.Controllers
                 if (!string.IsNullOrEmpty(dir))
                     Directory.CreateDirectory(dir);
 
-                result.Write(outputPath);
+                // Written beside the final name first (same extension, so Magick picks the same format), then moved in:
+                // a failure or a full disk never leaves half a picture, nor destroys the earlier result "overwrite" replaces.
+                string temp = Path.Combine(dir ?? "", ".part-" + Guid.NewGuid().ToString("N")[..8] + "-" + Path.GetFileName(outputPath));
+                try
+                {
+                    result.Write(temp);
+                    File.Move(temp, outputPath, overwrite: options.OverwriteExisting);
+                }
+                finally
+                {
+                    try { if (File.Exists(temp)) File.Delete(temp); }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* a leftover .part- file is harmless */ }
+                }
                 return (BackgroundRemoverStatus.Removed, "Removed");
             }
             finally
@@ -466,7 +478,7 @@ namespace Smart_Tools.WPF.Controllers
 
             if (asJson)
             {
-                File.WriteAllText(outputPath, JsonSerializer.Serialize(rows, new JsonSerializerOptions { WriteIndented = true }));
+                AtomicFile.WriteAllText(outputPath, JsonSerializer.Serialize(rows, new JsonSerializerOptions { WriteIndented = true }));
                 return;
             }
 
@@ -476,7 +488,7 @@ namespace Smart_Tools.WPF.Controllers
                 sb.AppendLine(string.Join(",", new[] { r.OriginalFile, r.OriginalPath, r.NewFile, r.NewPath, r.Result, r.Details }.Select(CsvEscape)));
 
             // BOM so Excel reads non-ASCII file names correctly.
-            File.WriteAllText(outputPath, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            AtomicFile.WriteAllText(outputPath, sb.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         }
 
         private static string CsvEscape(string? value)

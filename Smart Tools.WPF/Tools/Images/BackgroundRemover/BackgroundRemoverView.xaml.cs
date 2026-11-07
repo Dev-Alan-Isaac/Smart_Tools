@@ -222,7 +222,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                TxtProgress.Text = "Couldn't read the folders again: " + ex.Message;
+                TxtProgress.Text = Loc.F("Str_BackgroundRemover_MsgFoldersAgain", "Couldn't read the folders again: {0}", ex.Message);
             }
             finally
             {
@@ -496,7 +496,7 @@ namespace Smart_Tools.WPF.Views
         {
             var dlg = new OpenFileDialog
             {
-                Title = "Choose a replacement background image",
+                Title = Loc.T("Str_BackgroundRemover_MsgChooseBackground", "Choose a replacement background image"),
                 Filter = BackgroundRemoverManager.ImageFileFilter,
             };
             if (dlg.ShowDialog(Window.GetWindow(this)) != true) return;
@@ -763,7 +763,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_files.Count == 0)
             {
-                ShowMessage("Add at least one image first.", "Nothing to preview", MessageBoxImage.Information);
+                ShowMessage(Loc.T("Str_BackgroundRemover_MsgAddFirst", "Add at least one image first."), Loc.T("Str_BackgroundRemover_MsgNothingToPreview", "Nothing to preview"), MessageBoxImage.Information);
                 return;
             }
             _previewItem ??= _files[0];
@@ -782,7 +782,7 @@ namespace Smart_Tools.WPF.Views
             PreviewBusy.Visibility = Visibility.Visible;
             PreviewBusy.IsIndeterminate = true;
             PreviewErrorPanel.Visibility = Visibility.Collapsed;
-            TxtPreviewInfo.Text = $"{item.DisplayName}  ·  rendering…";
+            TxtPreviewInfo.Text = Loc.F("Str_BackgroundRemover_MsgRendering", "{0}  ·  rendering…", item.DisplayName);
 
             try
             {
@@ -824,7 +824,7 @@ namespace Smart_Tools.WPF.Views
             ImgBefore.Source = null;
             ImgAfter.Source = null;
             PreviewErrorPanel.Visibility = Visibility.Collapsed;
-            TxtPreviewInfo.Text = "Click a file to preview it";
+            TxtPreviewInfo.Text = Loc.T("Str_BackgroundRemover_MsgClickToPreview", "Click a file to preview it");
         }
 
         private static BitmapImage ToBitmap(byte[] png)
@@ -848,27 +848,27 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Cancelling - finishing the images already in progress…";
+                TxtProgress.Text = Loc.T("Str_BackgroundRemover_MsgCancellingFinishing", "Cancelling - finishing the images already in progress…");
                 return;
             }
 
             if (_files.Count == 0)
             {
-                ShowMessage("Add at least one image first.", "Nothing to process", MessageBoxImage.Information);
+                ShowMessage(Loc.T("Str_BackgroundRemover_MsgAddFirst", "Add at least one image first."), Loc.T("Str_BackgroundRemover_MsgNothingToProcess", "Nothing to process"), MessageBoxImage.Information);
                 return;
             }
 
             var toProcess = _files.Where(f => f.IsSelected).ToList();
             if (toProcess.Count == 0)
             {
-                ShowMessage("Nothing is checked in the queue - check at least one file to process it.", "Nothing to process", MessageBoxImage.Information);
+                ShowMessage(Loc.T("Str_BackgroundRemover_MsgNothingChecked", "Nothing is checked in the queue - check at least one file to process it."), Loc.T("Str_BackgroundRemover_MsgNothingToProcess", "Nothing to process"), MessageBoxImage.Information);
                 return;
             }
 
             var options = BuildOptions();
             if (options.Mode == BackgroundRemoverMode.ImageReplacement && string.IsNullOrWhiteSpace(options.ReplacementImagePath))
             {
-                ShowMessage("Choose a replacement image first.", "Missing replacement image", MessageBoxImage.Warning);
+                ShowMessage(Loc.T("Str_BackgroundRemover_MsgChooseReplacement", "Choose a replacement image first."), Loc.T("Str_BackgroundRemover_MsgMissingReplacement", "Missing replacement image"), MessageBoxImage.Warning);
                 return;
             }
 
@@ -876,7 +876,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (OutputCard.Status.IsError)
                 {
-                    ShowMessage("Can't save there: " + OutputCard.Status.Text + ". Choose another folder in Save to.", "Can't save", MessageBoxImage.Warning);
+                    ShowMessage(Loc.F("Str_BackgroundRemover_MsgCantSave", "Can't save there: {0}. Choose another folder in Save to.", OutputCard.Status.Text), Loc.T("Str_BackgroundRemover_MsgCantSaveTitle", "Can't save"), MessageBoxImage.Warning);
                     return;
                 }
                 try
@@ -885,7 +885,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
-                    ShowMessage("The folder couldn't be created: " + ex.Message, "Can't save", MessageBoxImage.Warning);
+                    ShowMessage(Loc.F("Str_BackgroundRemover_MsgFolderFailed", "The folder couldn't be created: {0}", ex.Message), Loc.T("Str_BackgroundRemover_MsgCantSaveTitle", "Can't save"), MessageBoxImage.Warning);
                     return;
                 }
             }
@@ -899,7 +899,7 @@ namespace Smart_Tools.WPF.Views
             ProgressRun.Value = 0;
             TxtProgressPercent.Text = "0%";
             SetStats(0, 0, 0);
-            TxtEta.Text = "estimating…";
+            TxtEta.Text = Loc.T("Str_BackgroundRemover_MsgEstimating", "estimating…");
             UiMotion.FadeVisibility(StatsPanel, true);
 
             var clock = Stopwatch.StartNew();
@@ -910,7 +910,7 @@ namespace Smart_Tools.WPF.Views
 
                 ProgressRun.Value = p.Percent;
                 TxtProgressPercent.Text = $"{p.Percent:0}%";
-                TxtProgress.Text = $"{p.Processed:N0} of {p.Total:N0} images processed";
+                TxtProgress.Text = Loc.F("Str_BackgroundRemover_MsgProcessed", "{0:N0} of {1:N0} images processed", p.Processed, p.Total);
                 SetStats(p.Succeeded, p.Skipped, p.Failed);
                 TxtEta.Text = EstimateRemaining(clock.Elapsed, p.Processed, p.Total);
             });
@@ -919,22 +919,22 @@ namespace Smart_Tools.WPF.Views
             {
                 var result = await _manager.RunAsync(toProcess, options, progress, _runCts.Token);
                 SetStats(result.SucceededCount, result.SkippedCount, result.FailedCount);
-                TxtEta.Text = $"took {FormatDuration(result.Elapsed)}";
-                TxtProgress.Text = $"Done - {result.SucceededCount:N0} removed, {result.SkippedCount:N0} skipped, {result.FailedCount:N0} failed.";
+                TxtEta.Text = Loc.F("Str_BackgroundRemover_MsgTook", "took {0}", FormatDuration(result.Elapsed));
+                TxtProgress.Text = Loc.F("Str_BackgroundRemover_MsgDone", "Done - {0:N0} removed, {1:N0} skipped, {2:N0} failed.", result.SucceededCount, result.SkippedCount, result.FailedCount);
                 ProgressRun.Value = 100;
                 TxtProgressPercent.Text = "100%";
                 UiMotion.Pop(TxtProgressPercent);
             }
             catch (OperationCanceledException)
             {
-                TxtProgress.Text = "Cancelled - files not started yet were left as Pending.";
-                TxtEta.Text = $"stopped after {FormatDuration(clock.Elapsed)}";
+                TxtProgress.Text = Loc.T("Str_BackgroundRemover_MsgCancelledPending", "Cancelled - files not started yet were left as Pending.");
+                TxtEta.Text = Loc.F("Str_BackgroundRemover_MsgStoppedAfter", "stopped after {0}", FormatDuration(clock.Elapsed));
                 foreach (var item in toProcess.Where(i => i.Status == BackgroundRemoverStatus.Processing))
                     item.ResetStatus();
             }
             catch (Exception ex)
             {
-                ShowMessage($"Batch failed: {ex.Message}", "Error", MessageBoxImage.Error);
+                ShowMessage(Loc.F("Str_BackgroundRemover_MsgBatchFailed", "Batch failed: {0}", ex.Message), Loc.T("Str_BackgroundRemover_MsgErrorTitle", "Error"), MessageBoxImage.Error);
             }
             finally
             {
@@ -947,9 +947,9 @@ namespace Smart_Tools.WPF.Views
 
         private void SetStats(int removed, int skipped, int failed)
         {
-            TxtStatRemoved.Text = $"{removed:N0} removed";
-            TxtStatSkipped.Text = $"{skipped:N0} skipped";
-            TxtStatFailed.Text = $"{failed:N0} failed";
+            TxtStatRemoved.Text = Loc.F("Str_BackgroundRemover_MsgStatRemoved", "{0:N0} removed", removed);
+            TxtStatSkipped.Text = Loc.F("Str_BackgroundRemover_MsgStatSkipped", "{0:N0} skipped", skipped);
+            TxtStatFailed.Text = Loc.F("Str_BackgroundRemover_MsgStatFailed", "{0:N0} failed", failed);
         }
 
         private static string EstimateRemaining(TimeSpan elapsed, int done, int total)
@@ -1002,13 +1002,13 @@ namespace Smart_Tools.WPF.Views
             bool asJson = ext == "json";
             if (_files.Count == 0)
             {
-                ShowMessage("There's nothing to export yet - add and process some images first.", "Nothing to export", MessageBoxImage.Information);
+                ShowMessage(Loc.T("Str_BackgroundRemover_MsgNothingToExport", "There's nothing to export yet - add and process some images first."), Loc.T("Str_BackgroundRemover_MsgNothingToExportTitle", "Nothing to export"), MessageBoxImage.Information);
                 return;
             }
 
             var dlg = new SaveFileDialog
             {
-                Filter = asJson ? "JSON file (*.json)|*.json" : "CSV file (*.csv)|*.csv",
+                Filter = asJson ? Loc.T("Str_BackgroundRemover_MsgJsonFilter", "JSON file (*.json)|*.json") : Loc.T("Str_BackgroundRemover_MsgCsvFilter", "CSV file (*.csv)|*.csv"),
                 FileName = $"background-removal-report-{DateTime.Now:yyyyMMdd-HHmmss}.{ext}",
                 DefaultExt = "." + ext,
                 AddExtension = true,
@@ -1018,11 +1018,11 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 _manager.ExportReport(_files, dlg.FileName, asJson);
-                ShowMessage("Report exported.", "Export complete", MessageBoxImage.Information);
+                ShowMessage(Loc.T("Str_BackgroundRemover_MsgExported", "Report exported."), Loc.T("Str_BackgroundRemover_MsgExportComplete", "Export complete"), MessageBoxImage.Information);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ShowMessage($"Export failed: {ex.Message}", "Error", MessageBoxImage.Error);
+                ShowMessage(Loc.F("Str_BackgroundRemover_MsgExportFailed", "Export failed: {0}", ex.Message), Loc.T("Str_BackgroundRemover_MsgErrorTitle", "Error"), MessageBoxImage.Error);
             }
         }
 

@@ -96,8 +96,8 @@ namespace Smart_Tools.WPF.Views
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Title = "Choose a picture",
-                Filter = "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.webp|All files|*.*",
+                Title = Loc.T("Str_IconMaker_MsgChoosePicture", "Choose a picture"),
+                Filter = Loc.T("Str_IconMaker_MsgPictureFilter", "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.webp|All files|*.*"),
             };
             if (dialog.ShowDialog(Window.GetWindow(this)) == true) LoadPicture(dialog.FileName);
         }
@@ -113,7 +113,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (e.Data.GetData(DataFormats.FileDrop) is not string[] { Length: > 0 } files) return;
             string? file = files.FirstOrDefault(f => File.Exists(f) && Extensions.Contains(Path.GetExtension(f).ToLowerInvariant()));
-            if (file == null) { ShowStatus("That isn't a picture I can open.", error: true); return; }
+            if (file == null) { ShowStatus(Loc.T("Str_IconMaker_MsgNotPicture", "That isn't a picture I can open."), error: true); return; }
             LoadPicture(file);
         }
 
@@ -134,7 +134,7 @@ namespace Smart_Tools.WPF.Views
             _height = result.h;
             _name = Path.GetFileNameWithoutExtension(path);
             TxtFileName.Text = Path.GetFileName(path);
-            TxtSourceInfo.Text = $"{_width} × {_height} px" + (Math.Min(_width, _height) < 256 ? " - a bigger picture gives sharper large icons." : "");
+            TxtSourceInfo.Text = Loc.F("Str_IconMaker_MsgSourceInfo", "{0} × {1} px", _width, _height) + (Math.Min(_width, _height) < 256 ? " - " + Loc.T("Str_IconMaker_MsgBiggerHint", "a bigger picture gives sharper large icons.") : "");
             StatusBanner.Visibility = Visibility.Collapsed;
             HeroImage.Source = SpritePackerManager.CreateBitmap(_bgra, _width, _height);
             HeroPlaceholder.Visibility = Visibility.Collapsed;
@@ -168,7 +168,7 @@ namespace Smart_Tools.WPF.Views
             PreviewEmpty.Visibility = sizes.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
             BtnIco.IsEnabled = sizes.Count > 0;
             BtnSet.IsEnabled = true;
-            if (sizes.Count == 0) ShowStatus("Tick at least one size for the .ico.", error: false);
+            if (sizes.Count == 0) ShowStatus(Loc.T("Str_IconMaker_MsgTickSize", "Tick at least one size for the .ico."), error: false);
             else StatusBanner.Visibility = Visibility.Collapsed;
         }
 
@@ -244,16 +244,16 @@ namespace Smart_Tools.WPF.Views
         private void BtnSavePng_Click(object sender, RoutedEventArgs e)
         {
             if (_bgra == null || (sender as FrameworkElement)?.Tag is not int size) return;
-            var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Save PNG", Filter = "PNG picture|*.png", FileName = $"{(_name.Length > 0 ? _name : "icon")}-{size}.png", OverwritePrompt = true };
+            var dialog = new Microsoft.Win32.SaveFileDialog { Title = Loc.T("Str_IconMaker_MsgSavePngTitle", "Save PNG"), Filter = Loc.T("Str_IconMaker_MsgPngFilter", "PNG picture|*.png"), FileName = $"{(_name.Length > 0 ? _name : "icon")}-{size}.png", OverwritePrompt = true };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try
             {
-                File.WriteAllBytes(dialog.FileName, IconMakerManager.ToPng(IconMakerManager.ToSquare(_bgra, _width, _height, size, Fit), size));
-                ShowDone($"Saved {Path.GetFileName(dialog.FileName)}");
+                AtomicFile.WriteAllBytes(dialog.FileName, IconMakerManager.ToPng(IconMakerManager.ToSquare(_bgra, _width, _height, size, Fit), size));
+                ShowDone(Loc.F("Str_IconMaker_MsgSaved", "Saved {0}", Path.GetFileName(dialog.FileName)));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ShowStatus("Couldn't save: " + ex.Message, error: true);
+                ShowStatus(Loc.F("Str_IconMaker_MsgCouldntSave", "Couldn't save: {0}", ex.Message), error: true);
             }
         }
 
@@ -262,36 +262,36 @@ namespace Smart_Tools.WPF.Views
             if (_bgra == null) return;
             var sizes = ChosenSizes();
             if (sizes.Count == 0) return;
-            var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Save icon", Filter = "Icon|*.ico", FileName = (_name.Length > 0 ? _name : "icon") + ".ico", OverwritePrompt = true };
+            var dialog = new Microsoft.Win32.SaveFileDialog { Title = Loc.T("Str_IconMaker_MsgSaveIconTitle", "Save icon"), Filter = Loc.T("Str_IconMaker_MsgIcoFilter", "Icon|*.ico"), FileName = (_name.Length > 0 ? _name : "icon") + ".ico", OverwritePrompt = true };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try
             {
                 var ico = IconMakerManager.BuildIcoFrom(_bgra, _width, _height, sizes, Fit);
-                File.WriteAllBytes(dialog.FileName, ico);
-                ShowDone($"Saved {Path.GetFileName(dialog.FileName)} · {sizes.Count} sizes");
+                AtomicFile.WriteAllBytes(dialog.FileName, ico);
+                ShowDone(Loc.F("Str_IconMaker_MsgSavedSizes", "Saved {0} · {1} sizes", Path.GetFileName(dialog.FileName), sizes.Count));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ShowStatus("Couldn't save: " + ex.Message, error: true);
+                ShowStatus(Loc.F("Str_IconMaker_MsgCouldntSave", "Couldn't save: {0}", ex.Message), error: true);
             }
         }
 
         private void BtnSet_Click(object sender, RoutedEventArgs e)
         {
             if (_bgra == null) return;
-            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Choose where to put the favicon folder" };
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Loc.T("Str_IconMaker_MsgFaviconTitle", "Choose where to put the favicon folder") };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
             try
             {
                 string folder = SpritePackerManager.UniqueFolder(Path.Combine(dialog.FolderName, "favicons"));
                 Directory.CreateDirectory(folder);
                 var files = IconMakerManager.BuildFaviconSet(_bgra, _width, _height, Fit, _name);
-                foreach (var (name, data) in files) File.WriteAllBytes(Path.Combine(folder, name), data);
-                ShowDone($"Saved {files.Count} files in {Path.GetFileName(folder)}");
+                foreach (var (name, data) in files) AtomicFile.WriteAllBytes(Path.Combine(folder, name), data);
+                ShowDone(Loc.F("Str_IconMaker_MsgSavedFiles", "Saved {0} files in {1}", files.Count, Path.GetFileName(folder)));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ShowStatus("Couldn't save: " + ex.Message, error: true);
+                ShowStatus(Loc.F("Str_IconMaker_MsgCouldntSave", "Couldn't save: {0}", ex.Message), error: true);
             }
         }
 

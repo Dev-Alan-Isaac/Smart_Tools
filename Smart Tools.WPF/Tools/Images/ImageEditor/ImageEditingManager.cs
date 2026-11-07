@@ -420,7 +420,7 @@ namespace Smart_Tools.WPF.Controllers
         private static DateTime ModifiedOf(string path)
         {
             try { return File.GetLastWriteTimeUtc(path); }
-            catch { return DateTime.MaxValue; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException) { return DateTime.MaxValue; }
         }
 
         /// <summary>Deletes the file from disk: to the Recycle Bin on a local fixed drive, otherwise permanently.</summary>
@@ -489,7 +489,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (AspectFor(s.CropAspect) == 0 && s.CropAspect != "Free") s.CropAspect = "Free";
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
             {
                 return new ImageEditorSettings();
             }
@@ -498,10 +498,14 @@ namespace Smart_Tools.WPF.Controllers
         public static void SaveSettings(ImageEditorSettings settings, string? path = null)
         {
             string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            try
+            {
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Settings are a convenience; never fail the tool over them.
+            }
         }
     }
 }

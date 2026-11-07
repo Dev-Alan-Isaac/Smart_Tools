@@ -651,11 +651,13 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 encoder.Frames.Add(BitmapFrame.Create(image));
-                using var stream = new FileStream(dialog.FileName, FileMode.Create, FileAccess.Write);
-                encoder.Save(stream);
+                // Encoded in memory and written through a temp file, so a failure never leaves a broken file over the one being replaced.
+                using var memory = new MemoryStream();
+                encoder.Save(memory);
+                AtomicFile.WriteAllBytes(dialog.FileName, memory.ToArray());
                 SetInfo(string.Format(CultureInfo.CurrentCulture, Str("Str_Screenshot_Saved"), System.IO.Path.GetFileName(dialog.FileName)), error: false);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
             {
                 SetInfo(string.Format(CultureInfo.CurrentCulture, Str("Str_Screenshot_SaveFailed"), ex.Message), error: true);
             }

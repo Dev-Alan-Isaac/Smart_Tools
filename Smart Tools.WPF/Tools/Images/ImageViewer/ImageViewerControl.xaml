@@ -572,7 +572,7 @@
                         <!--  Fixed-dark stage: image + viewer chrome  -->
                         <Border
                             x:Name="Stage"
-                            Background="#0E0F12"
+                            Background="{DynamicResource MediaStageBg}"
                             ClipToBounds="True"
                             CornerRadius="12">
                             <Grid>
@@ -617,14 +617,14 @@
                                         Width="64"
                                         Height="64"
                                         HorizontalAlignment="Center"
-                                        Background="#1AFFFFFF"
+                                        Background="{DynamicResource MediaChromeFill}"
                                         CornerRadius="32">
                                         <materialDesign:PackIcon
                                             Width="30"
                                             Height="30"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            Foreground="#C9CDD4"
+                                            Foreground="{DynamicResource MediaStageTextSoft}"
                                             Kind="ImageOutline" />
                                     </Border>
                                     <TextBlock
@@ -633,7 +633,7 @@
                                         Margin="0,12,0,0"
                                         HorizontalAlignment="Center"
                                         FontSize="13"
-                                        Foreground="#C9CDD4"
+                                        Foreground="{DynamicResource MediaStageTextSoft}"
                                         Text="{DynamicResource Str_ImageViewerControl_AddImagesOnThe}"
                                         TextAlignment="Center"
                                         TextWrapping="Wrap" />
@@ -645,7 +645,7 @@
                                     Padding="18,14"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Background="#CC16181D"
+                                    Background="{DynamicResource MediaChromeBg}"
                                     CornerRadius="12"
                                     Visibility="Collapsed">
                                     <StackPanel MaxWidth="320" Orientation="Horizontal">
@@ -654,13 +654,13 @@
                                             Height="18"
                                             Margin="0,0,10,0"
                                             VerticalAlignment="Top"
-                                            Foreground="#F87171"
+                                            Foreground="{DynamicResource MediaStageError}"
                                             Kind="ImageBrokenVariant" />
                                         <TextBlock
                                             x:Name="TxtLoadError"
                                             MaxWidth="290"
                                             FontSize="12"
-                                            Foreground="#E9EBEF"
+                                            Foreground="{DynamicResource MediaStageText}"
                                             TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
@@ -701,7 +701,7 @@
                                             VerticalAlignment="Center"
                                             FontFamily="Consolas"
                                             FontSize="11.5"
-                                            Foreground="#C9CDD4"
+                                            Foreground="{DynamicResource MediaStageTextSoft}"
                                             Text="100%"
                                             TextAlignment="Center" />
                                         <Button

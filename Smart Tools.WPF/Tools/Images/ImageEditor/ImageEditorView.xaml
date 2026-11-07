@@ -33,23 +33,23 @@
             <Setter Property="Width" Value="36" />
             <Setter Property="Height" Value="36" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="#E9EBEF" />
+            <Setter Property="Foreground" Value="{DynamicResource MediaStageText}" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border
                             x:Name="Bd"
-                            Background="#1AFFFFFF"
+                            Background="{DynamicResource MediaChromeFill}"
                             CornerRadius="18">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2EFFFFFF" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MediaChromeFillHover}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#40FFFFFF" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource MediaChromeFillPressed}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.35" />
@@ -125,7 +125,7 @@
             <Border
                 Width="42"
                 Height="42"
-                Background="#0E0F12"
+                Background="{DynamicResource MediaStageBg}"
                 CornerRadius="8">
                 <Grid>
                     <Image
@@ -139,7 +139,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="#8A8F99"
+                        Foreground="{DynamicResource MediaStageTextMuted}"
                         Kind="FileImageOutline"
                         Visibility="Collapsed" />
                 </Grid>
@@ -991,7 +991,7 @@
                             <Border
                                 x:Name="PreviewStage"
                                 Grid.Row="1"
-                                Background="#0E0F12"
+                                Background="{DynamicResource MediaStageBg}"
                                 ClipToBounds="True"
                                 CornerRadius="12"
                                 SizeChanged="PreviewStage_SizeChanged">
@@ -1029,7 +1029,7 @@
                                         <Border
                                             x:Name="CropSizeBadge"
                                             Padding="7,2"
-                                            Background="#CC0E0F12"
+                                            Background="{DynamicResource MediaChromeBg}"
                                             CornerRadius="8"
                                             IsHitTestVisible="False"
                                             Visibility="Collapsed">
@@ -1050,13 +1050,13 @@
                                             Width="40"
                                             Height="40"
                                             HorizontalAlignment="Center"
-                                            Foreground="#8A8F99"
+                                            Foreground="{DynamicResource MediaStageTextMuted}"
                                             Kind="ImageEditOutline" />
                                         <TextBlock
                                             Margin="0,10,0,0"
                                             HorizontalAlignment="Center"
                                             FontSize="12.5"
-                                            Foreground="#A9AEB8"
+                                            Foreground="{DynamicResource MediaStageTextSubtle}"
                                             Text="{DynamicResource Str_ImgEdit_PreviewEmptyHint}"
                                             TextAlignment="Center"
                                             TextWrapping="Wrap" />
@@ -1069,7 +1069,7 @@
                                         Padding="12,6"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Top"
-                                        Background="#E61B1E24"
+                                        Background="{DynamicResource MediaPanelBg}"
                                         CornerRadius="12"
                                         IsHitTestVisible="False"
                                         Visibility="Collapsed">
@@ -1095,7 +1095,7 @@
                                 Grid.Row="2"
                                 Margin="0,10,0,0"
                                 Padding="8"
-                                Background="#0E0F12"
+                                Background="{DynamicResource MediaStageBg}"
                                 CornerRadius="12">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -1134,7 +1134,7 @@
                                             VerticalAlignment="Center"
                                             FontSize="12"
                                             FontWeight="SemiBold"
-                                            Foreground="#E9EBEF"
+                                            Foreground="{DynamicResource MediaStageText}"
                                             TextAlignment="Center" />
                                         <Button
                                             Margin="6,0,0,0"

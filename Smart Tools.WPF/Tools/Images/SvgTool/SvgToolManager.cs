@@ -244,18 +244,14 @@ namespace Smart_Tools.WPF.Controllers
         {
             string? dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string temp = path + ".tmp";
-            File.WriteAllText(temp, text, new UTF8Encoding(false));
-            File.Move(temp, path, overwrite: true);
+            AtomicFile.WriteAllText(path, text, new UTF8Encoding(false));
         }
 
         public static void SaveBytes(string path, byte[] data)
         {
             string? dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string temp = path + ".tmp";
-            File.WriteAllBytes(temp, data);
-            File.Move(temp, path, overwrite: true);
+            AtomicFile.WriteAllBytes(path, data);
         }
 
         /// <summary>Suggested name for the optimized copy: "logo.svg" becomes "logo.min.svg" (or " (2)" if that exists). Never the source itself.</summary>
@@ -415,7 +411,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.ExportWidth = Math.Clamp(s.ExportWidth, MinExportSide, MaxExportSide);
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
             {
                 return new SvgToolSettings();
             }

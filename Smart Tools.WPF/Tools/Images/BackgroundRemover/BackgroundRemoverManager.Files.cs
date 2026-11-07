@@ -168,7 +168,7 @@ namespace Smart_Tools.WPF.Controllers
         private static DateTime ModifiedOf(string path)
         {
             try { return File.GetLastWriteTimeUtc(path); }
-            catch { return DateTime.MaxValue; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException) { return DateTime.MaxValue; }
         }
 
         /// <summary>Deletes the file from disk: to the Recycle Bin on a local fixed drive, otherwise permanently.</summary>
