@@ -891,3 +891,10 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 ## Level pictures (learned on Battery Health, Mic Test and Audio Output Test)
 - Show a level as a picture of the thing measured, filled from the bottom (or along a bar): the battery-shaped `ProgressBar` of Battery Health (green / amber / red by health) and `LevelGlyph` for sound (stand mic, handheld, headset, earbuds, headphones with separate left and right fill). Let the user pick the look that matches their gear in a `ModeToggleButtonStyle` card; it only changes the drawing, never the measurement.
 - One item fills the page; several items get small cards that stack and scroll (Battery Health switches between a full and a compact template).
+
+## Big batches: memory by budget, not by file count (learned on the large-batch pass, 2026-11-06)
+- Parallelism limits HOW MANY pictures are open, not how BIG they are. Any tool that decodes a picture in bulk opens it with `ImageLoad.Open(path, token, maxSide)` (`Modules/ImageLoad.cs`): header first, then it asks `MemoryBudget` (`Modules/MemoryBudget.cs`, about a quarter of RAM, 256 MB - 2 GB, strict order, a request bigger than the whole budget runs alone) for the bytes and gives them back on `Dispose`. Never call the GC to "free" memory.
+- JPEG is decoded already reduced when `maxSide` is given (`MagickReadSettings.Width/Height` do NOT shrink a real photo). `ImageLoad.ConfigureLimits()` (App startup) makes ImageMagick spill to disk past the budget.
+- Lists that can reach 10,000+ items: bulk collection, virtualized list, no per-row picture past a cap (Barcode/QR batch keep a preview for the first 5,000 rows), caches evict the oldest entries, never "clear all".
+- Find Similar remembers fingerprints (`similar_cache.bin`, path + size + modified time + method) so a rescan only reads new or changed files.
+- Theme tokens for pictures and stages: `MediaStageBg/Text/TextMuted` (fixed dark in both themes), `ScrimBg`, `SliderTrack`, `SelectionFill`, `HoverOverlayFill/Stroke`, `CheckerLight/Dark`.

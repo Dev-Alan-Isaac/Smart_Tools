@@ -167,7 +167,8 @@ namespace Smart_Tools.WPF.Controllers
         {
             try
             {
-                using var image = new MagickImage(path);
+                using var loaded = ImageLoad.Open(path, CancellationToken.None, MaxCompareImageSide);
+                var image = loaded.Image;
                 image.AutoOrient();
                 if (image.Width > MaxCompareImageSide || image.Height > MaxCompareImageSide)
                     image.Resize(new MagickGeometry(MaxCompareImageSide, MaxCompareImageSide));   // keeps aspect

@@ -139,9 +139,9 @@ namespace Smart_Tools.WPF.Views
             LapArea.Visibility = BtnLap.Visibility = mode == TimerMode.Stopwatch ? Visibility.Visible : Visibility.Collapsed;
             InfoCard.Visibility = mode == TimerMode.Stopwatch ? Visibility.Collapsed : Visibility.Visible;
             TxtInfoBody.Text = mode == TimerMode.Countdown
-                ? "Type a time such as 5:00, 90s or 1h30m in the sidebar (or click a preset), then press Start. When it reaches zero you get a sound and a message here."
-                : "Work for a set time, then take a short break; after every few work sessions you get a long break. The next phase starts by itself, so you only have to press Start once.";
-            TxtSessions.Text = mode == TimerMode.Pomodoro ? "Work sessions finished: 0" : "";
+                ? Loc.T("Str_Timer_MsgInfoCountdown", "Type a time such as 5:00, 90s or 1h30m in the sidebar (or click a preset), then press Start. When it reaches zero you get a sound and a message here.")
+                : Loc.T("Str_Timer_MsgInfoPomodoro", "Work for a set time, then take a short break; after every few work sessions you get a long break. The next phase starts by itself, so you only have to press Start once.");
+            TxtSessions.Text = mode == TimerMode.Pomodoro ? Loc.F("Str_Timer_MsgSessions", "Work sessions finished: {0}", 0) : "";
             BarProgress.Visibility = mode == TimerMode.Stopwatch ? Visibility.Collapsed : Visibility.Visible;
             _completedWork = 0;
             _phase = PomodoroPhase.Work;
@@ -159,7 +159,7 @@ namespace Smart_Tools.WPF.Views
             });
         }
 
-        private static string PhaseName(PomodoroPhase p) => p switch { PomodoroPhase.ShortBreak => "Short break", PomodoroPhase.LongBreak => "Long break", _ => "Work" };
+        private static string PhaseName(PomodoroPhase p) => p switch { PomodoroPhase.ShortBreak => Loc.T("Str_Timer_PhaseShort", "Short break"), PomodoroPhase.LongBreak => Loc.T("Str_Timer_PhaseLong", "Long break"), _ => Loc.T("Str_Timer_PhaseWork", "Work") };
 
         /// <summary>The clock as it looks before anything has started.</summary>
         private void ShowIdle()
@@ -177,14 +177,14 @@ namespace Smart_Tools.WPF.Views
                     TxtPhase.Text = "";
                     bool ok = TimerStopwatchManager.TryParseDuration(TxtCountdown.Text, out var d);
                     TxtTime.Text = ok ? TimerStopwatchManager.Format(d, false) : "--:--";
-                    TxtMessage.Text = ok || TxtCountdown.Text.Length == 0 ? "" : "I can't read that time. Try 5:00, 90s or 1h30m.";
+                    TxtMessage.Text = ok || TxtCountdown.Text.Length == 0 ? "" : Loc.T("Str_Timer_MsgBadTime", "I can't read that time. Try 5:00, 90s or 1h30m.");
                     TxtMessage.SetResourceReference(TextBlock.ForegroundProperty, ok ? "StatusSuccessFg" : "StatusErrorFg");
                     BtnStart.IsEnabled = ok;
                     break;
                 default:
                     TxtPhase.Text = PhaseName(_phase);
                     TxtTime.Text = TimerStopwatchManager.Format(PhaseLength(_phase), false);
-                    TxtSessions.Text = $"Work sessions finished: {_completedWork}";
+                    TxtSessions.Text = Loc.F("Str_Timer_MsgSessions", "Work sessions finished: {0}", _completedWork);
                     break;
             }
             if (_mode != TimerMode.Countdown) BtnStart.IsEnabled = true;
@@ -279,7 +279,7 @@ namespace Smart_Tools.WPF.Views
                 _state = RunState.Idle;
                 TxtTime.Text = TimerStopwatchManager.Format(TimeSpan.Zero, false);
                 BarProgress.Value = 1;
-                TxtMessage.Text = "Time's up!";
+                TxtMessage.Text = Loc.T("Str_Timer_MsgTimesUp", "Time's up!");
                 SetButtons();
                 return;
             }
@@ -291,10 +291,10 @@ namespace Smart_Tools.WPF.Views
             _total = PhaseLength(_phase);
             _clock.Restart();
             TxtPhase.Text = PhaseName(_phase);
-            TxtSessions.Text = $"Work sessions finished: {_completedWork}";
+            TxtSessions.Text = Loc.F("Str_Timer_MsgSessions", "Work sessions finished: {0}", _completedWork);
             TxtMessage.Text = finished == PomodoroPhase.Work
-                ? $"Work session {_completedWork} done - time for a {(_phase == PomodoroPhase.LongBreak ? "long" : "short")} break."
-                : "Break over - back to work.";
+                ? (_phase == PomodoroPhase.LongBreak ? Loc.F("Str_Timer_MsgWorkDoneLong", "Work session {0} done - time for a long break.", _completedWork) : Loc.F("Str_Timer_MsgWorkDoneShort", "Work session {0} done - time for a short break.", _completedWork))
+                : Loc.T("Str_Timer_MsgBreakOver", "Break over - back to work.");
             BarProgress.Value = 0;
             TxtTime.Text = TimerStopwatchManager.Format(_total, false);
         }
@@ -302,7 +302,7 @@ namespace Smart_Tools.WPF.Views
         private void SetButtons()
         {
             bool running = _state == RunState.Running;
-            TxtStart.Text = running ? "Pause" : _state == RunState.Paused ? "Resume" : "Start";
+            TxtStart.Text = running ? Loc.T("Str_Timer_BtnPause", "Pause") : _state == RunState.Paused ? Loc.T("Str_Timer_BtnResume", "Resume") : Loc.T("Str_Timer_BtnStart", "Start");
             IconStart.Kind = running ? PackIconKind.Pause : PackIconKind.Play;
             BtnLap.IsEnabled = running && _mode == TimerMode.Stopwatch;
             // The settings can't change under a run.

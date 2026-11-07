@@ -190,14 +190,28 @@ namespace Smart_Tools.WPF.Views
             ContentOptionsPanel.Visibility = content ? Visibility.Visible : Visibility.Collapsed;
             UiMotion.FadeVisibility(NameModeWarning, !content);
             if (content) UiMotion.FadeIn(ContentOptionsPanel, 4);
+            UpdateSameContentPanel();
             SaveSettings();
         }
 
         private void Option_Changed(object sender, RoutedEventArgs e)
         {
             if (!_viewConstructed) return;
+            UpdateSameContentPanel();
             SaveSettings();
         }
+
+        /// <summary>The tolerance choice only matters for "same content, any format".</summary>
+        private void UpdateSameContentPanel()
+        {
+            bool show = RadioMatchContent.IsChecked == true && SelectedMatchMode == DuplicateMatchMode.SameContent;
+            if (show == (SameContentPanel.Visibility == Visibility.Visible)) return;
+            if (_applyingSettings) SameContentPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            else UiMotion.FadeVisibility(SameContentPanel, show);
+        }
+
+        private SameContentLevel SelectedSameContentLevel =>
+            (CmbSameContentLevel.SelectedItem as ComboBoxItem)?.Tag is string tag && Enum.TryParse(tag, out SameContentLevel l) ? l : SameContentLevel.FormatOnly;
 
         private void TxtExcludeExtensions_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -241,6 +255,7 @@ namespace Smart_Tools.WPF.Views
             VerifyWithByteCompare = ChkCompareFileContents.IsChecked == true,
             FileTypes = SelectedFileTypes,
             ExcludedExtensions = DuplicateManager.ParseExtensionList(TxtExcludeExtensions.Text),
+            SameContentLevel = SelectedSameContentLevel,
         };
 
         // ---------------- Settings ----------------
@@ -279,10 +294,12 @@ namespace Smart_Tools.WPF.Views
                 minRadio.IsChecked = true;
 
                 SelectComboTag(CmbKeepRule, s.KeepRule.ToString());
+                SelectComboTag(CmbSameContentLevel, s.SameContentLevel.ToString());
 
                 bool content = RadioMatchContent.IsChecked == true;
                 ContentOptionsPanel.Visibility = content ? Visibility.Visible : Visibility.Collapsed;
                 NameModeWarning.Visibility = content ? Visibility.Collapsed : Visibility.Visible;
+                UpdateSameContentPanel();
             }
             finally
             {
@@ -311,6 +328,7 @@ namespace Smart_Tools.WPF.Views
             _settings.MinFileSizeBytes = SelectedMinSize;
             _settings.ExcludedExtensions = TxtExcludeExtensions.Text;
             _settings.KeepRule = SelectedKeepRule;
+            _settings.SameContentLevel = SelectedSameContentLevel;
 
             try
             {
@@ -372,17 +390,17 @@ namespace Smart_Tools.WPF.Views
                 var result = await _manager.ScanAsync(options, progress, token);
 
                 _lastScanVerified = result.IsContentVerified;
-                DuplicateManager.ApplyKeepRule(result.Groups, SelectedKeepRule, options.Folders, selectOthers: result.IsContentVerified);
+                DuplicateManager.ApplyKeepRule(result.Groups, SelectedKeepRule, options.Folders, selectOthers: result.IsContentVerified, selectApproximate: false);
                 ShowGroups(result.Groups);
                 ShowScanSummary(result);
                 StartThumbnailLoading(_results.Take(MaxBackgroundThumbnails).ToList());
 
                 try
                 {
-                    ToastNotificationManager.ShowToast("Duplicate Scan Complete",
+                    ToastNotificationManager.ShowToast(Loc.T("Str_Dup_MsgToastTitle", "Duplicate Scan Complete"),
                         result.Groups.Count > 0
-                            ? $"{result.DuplicateFileCount} files in {result.Groups.Count} groups · {DuplicateText.FormatBytes(result.ReclaimableBytes)} reclaimable."
-                            : "No duplicates found.");
+                            ? Loc.F("Str_Dup_MsgToastFound", "{0} files in {1} groups · {2} reclaimable.", result.DuplicateFileCount, result.Groups.Count, DuplicateText.FormatBytes(result.ReclaimableBytes))
+                            : Loc.T("Str_Dup_MsgNoneFound", "No duplicates found."));
                 }
                 catch (Exception ex)
                 {
@@ -391,12 +409,12 @@ namespace Smart_Tools.WPF.Views
             }
             catch (OperationCanceledException)
             {
-                TxtProgress.Text = "Scan cancelled.";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgScanCancelled", "Scan cancelled.");
                 ProgressDuplicates.IsIndeterminate = false;
             }
             catch (Exception ex)
             {
-                TxtProgress.Text = "Scan failed.";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgScanFailed", "Scan failed.");
                 MessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -433,6 +451,7 @@ namespace Smart_Tools.WPF.Views
                 DuplicateScanPhase.Listing => $"Finding files · {p.FilesFound:N0} so far",
                 DuplicateScanPhase.Comparing => $"Comparing {p.FilesFound:N0} files · {DuplicateText.FormatBytes(p.BytesProcessed)} of {DuplicateText.FormatBytes(p.BytesTotal)}",
                 DuplicateScanPhase.Verifying => $"Double-checking matches · {DuplicateText.FormatBytes(p.BytesProcessed)} of {DuplicateText.FormatBytes(p.BytesTotal)}",
+                DuplicateScanPhase.Fingerprinting => Loc.F("Str_Dup_MsgFingerprinting", "Comparing pictures, videos and songs by content · {0:N0} of {1:N0} files", p.BytesProcessed, p.BytesTotal),
                 _ => "Finishing...",
             };
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentPath) ? phase : $"{phase} · {p.CurrentPath}";
@@ -460,7 +479,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressDuplicates.IsIndeterminate = true;
                 ProgressDuplicates.Value = 0;
                 TxtProgressPercent.Text = "";
-                TxtProgress.Text = "Finding files...";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgFindingFiles", "Finding files...");
             }
             else
             {
@@ -473,11 +492,14 @@ namespace Smart_Tools.WPF.Views
         {
             ProgressDuplicates.Value = 100;
             var notes = new List<string>();
-            if (result.InaccessibleFolders > 0) notes.Add($"{result.InaccessibleFolders:N0} folders unreadable");
-            if (result.UnreadableFiles > 0) notes.Add($"{result.UnreadableFiles:N0} files unreadable");
-            if (result.SkippedLinks > 0) notes.Add($"{result.SkippedLinks:N0} links not followed");
+            if (result.InaccessibleFolders > 0) notes.Add(Loc.F("Str_DataQuality_MsgFoldersUnreadable", "{0:N0} folders unreadable", result.InaccessibleFolders));
+            if (result.UnreadableFiles > 0) notes.Add(Loc.F("Str_DataQuality_MsgFilesUnreadable", "{0:N0} files unreadable", result.UnreadableFiles));
+            if (result.SkippedLinks > 0) notes.Add(Loc.F("Str_DataQuality_MsgLinksSkipped", "{0:N0} links not followed", result.SkippedLinks));
+            if (result.MediaSkippedNoFfmpeg) notes.Add(Loc.T("Str_Dup_MsgNoFfmpeg", "videos and songs compared byte for byte only (ffmpeg not found)"));
+            if (result.AudioLimited) notes.Add(Loc.F("Str_Dup_MsgAudioLimited", "only the first {0:N0} songs were compared by sound", 6000));
+            if (result.HeavyLimited) notes.Add(Loc.F("Str_Dup_MsgHeavyLimited", "only the first {0:N0} pictures were compared for crops and rotations", 800));
             string extra = notes.Count > 0 ? " · " + string.Join(" · ", notes) : "";
-            TxtProgress.Text = $"Checked {result.FilesScanned:N0} files in {result.Elapsed.TotalSeconds:0.0} s{extra}";
+            TxtProgress.Text = Loc.F("Str_DataQuality_MsgChecked", "Checked {0:N0} files in {1:0.0} s{2}", result.FilesScanned, result.Elapsed.TotalSeconds, extra);
 
             NotVerifiedPill.Visibility = result.IsContentVerified ? Visibility.Collapsed : Visibility.Visible;
         }
@@ -559,7 +581,7 @@ namespace Smart_Tools.WPF.Views
         {
             bool empty = _results.Count == 0;
             if (empty && _lastOptions != null && !_isScanning)
-                EmptyStatePanel.Description = "No duplicates found. Try another match mode, more folders or fewer filters.";
+                EmptyStatePanel.Description = Loc.T("Str_Dup_MsgNoneTry", "No duplicates found. Try another match mode, more folders or fewer filters.");
             else if (empty)
                 EmptyStatePanel.SetResourceReference(Controls.EmptyStateCard.DescriptionProperty, "Str_Dup_ResultsHint");
 
@@ -578,10 +600,11 @@ namespace Smart_Tools.WPF.Views
                 item.Click += (_, _) => AutoSelect(rule);
                 menu.Items.Add(item);
             }
-            Add("Keep the oldest copy", PackIconKind.SortClockAscendingOutline, KeepRule.Oldest);
-            Add("Keep the newest copy", PackIconKind.SortClockDescendingOutline, KeepRule.Newest);
-            Add("Keep the shortest path", PackIconKind.FormatLetterCase, KeepRule.ShortestPath);
-            Add("Keep the copy in the first folder listed", PackIconKind.FolderStarOutline, KeepRule.FolderOrder);
+            Add(Loc.T("Str_Dup_KeepOldest", "Keep the oldest copy"), PackIconKind.SortClockAscendingOutline, KeepRule.Oldest);
+            Add(Loc.T("Str_Dup_KeepNewest", "Keep the newest copy"), PackIconKind.SortClockDescendingOutline, KeepRule.Newest);
+            Add(Loc.T("Str_Dup_KeepShortest", "Keep the shortest path"), PackIconKind.FormatLetterCase, KeepRule.ShortestPath);
+            Add(Loc.T("Str_Dup_KeepFirstFolder", "Keep the copy in the first folder listed"), PackIconKind.FolderStarOutline, KeepRule.FolderOrder);
+            Add(Loc.T("Str_Dup_KeepHighestQuality", "Keep the highest quality (most pixels, then largest file)"), PackIconKind.StarCircleOutline, KeepRule.HighestQuality);
             menu.IsOpen = true;
         }
 
@@ -699,11 +722,11 @@ namespace Smart_Tools.WPF.Views
                 return mi;
             }
 
-            Item("Compare this group", PackIconKind.FileCompare, (_, _) => { if (_contextItem?.GroupInfo is { } g) OpenCompareDrawer(g); });
-            Item("Keep this copy", PackIconKind.StarOutline, (_, _) => { if (_contextItem != null) MakeKeeper(_contextItem); });
+            Item(Loc.T("Str_Dup_MenuCompareGroup", "Compare this group"), PackIconKind.FileCompare, (_, _) => { if (_contextItem?.GroupInfo is { } g) OpenCompareDrawer(g); });
+            Item(Loc.T("Str_DataQuality_MenuKeepThis", "Keep this copy"), PackIconKind.StarOutline, (_, _) => { if (_contextItem != null) MakeKeeper(_contextItem); });
             menu.Items.Add(new Separator());
-            Item("Show in folder", PackIconKind.FolderOpenOutline, (_, _) => { if (_contextItem != null) ShowInFolder(_contextItem.FullPath); });
-            Item("Copy full path", PackIconKind.ContentCopy, (_, _) =>
+            Item(Loc.T("Str_DataQuality_MenuShowInFolder", "Show in folder"), PackIconKind.FolderOpenOutline, (_, _) => { if (_contextItem != null) ShowInFolder(_contextItem.FullPath); });
+            Item(Loc.T("Str_DataQuality_MenuCopyPath", "Copy full path"), PackIconKind.ContentCopy, (_, _) =>
             {
                 if (_contextItem == null) return;
                 try
@@ -807,10 +830,10 @@ namespace Smart_Tools.WPF.Views
         {
             if (_compareGroup == null) return;
             int index = _groups.IndexOf(_compareGroup);
-            TxtCompareGroupPosition.Text = index >= 0 ? $"Group {index + 1} of {_groups.Count}" : _compareGroup.Title;
+            TxtCompareGroupPosition.Text = index >= 0 ? Loc.F("Str_DataQuality_MsgGroupOf", "Group {0} of {1}", index + 1, _groups.Count) : _compareGroup.Title;
             TxtCompareGroupLabel.Text = $"{_compareGroup.Subtitle} · {_compareGroup.SelectionText}";
             BtnPrevCompareGroup.IsEnabled = BtnNextCompareGroup.IsEnabled = _groups.Count > 1;
-            TxtApplyLabel.Text = index >= 0 && index == _groups.Count - 1 ? "Done" : "Next group";
+            TxtApplyLabel.Text = index >= 0 && index == _groups.Count - 1 ? Loc.T("Str_DataQuality_MsgDone", "Done") : Loc.T("Str_DataQuality_MsgNextGroup", "Next group");
         }
 
         private void CloseCompareDrawer()
@@ -960,21 +983,21 @@ namespace Smart_Tools.WPF.Views
 
             string what = $"{selected.Count:N0} file(s) ({DuplicateText.FormatBytes(bytes)})";
             string message = recycle
-                ? $"Move {what} to the Recycle Bin?"
+                ? Loc.F("Str_DataQuality_MsgAskMoveToBin", "Move {0} to the Recycle Bin?", what)
                 : ChkRecycleBin.IsChecked == true
-                    ? $"Permanently delete {what}?\n\n{string.Join(", ", rootsWithoutBin)} has no Recycle Bin, so this can't be undone."
-                    : $"Permanently delete {what}?\n\nThis can't be undone.";
+                    ? Loc.F("Str_DataQuality_MsgAskDeleteNoBin", "Permanently delete {0}?\n\n{1} has no Recycle Bin, so this can't be undone.", what, string.Join(", ", rootsWithoutBin))
+                    : Loc.F("Str_DataQuality_MsgAskDelete", "Permanently delete {0}?\n\nThis can't be undone.", what);
 
             var answer = MessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
                 recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 
-            await RunActionAsync(recycle ? "Moving to the Recycle Bin..." : "Deleting...",
+            await RunActionAsync(recycle ? Loc.T("Str_DataQuality_MsgMovingToBin", "Moving to the Recycle Bin...") : Loc.T("Str_DataQuality_MsgDeleting", "Deleting..."),
                 () => _manager.DeleteAsync(selected, recycle),
                 r => recycle
-                    ? $"Moved {r.Succeeded.Count:N0} file(s) to the Recycle Bin · {DuplicateText.FormatBytes(r.Bytes)} freed"
-                    : $"Deleted {r.Succeeded.Count:N0} file(s) · {DuplicateText.FormatBytes(r.Bytes)} freed",
-                "Delete Complete");
+                    ? Loc.F("Str_DataQuality_MsgMovedToBin", "Moved {0:N0} file(s) to the Recycle Bin · {1} freed", r.Succeeded.Count, DuplicateText.FormatBytes(r.Bytes))
+                    : Loc.F("Str_DataQuality_MsgDeleted", "Deleted {0:N0} file(s) · {1} freed", r.Succeeded.Count, DuplicateText.FormatBytes(r.Bytes)),
+                Loc.T("Str_DataQuality_MsgDeleteComplete", "Delete Complete"));
         }
 
         private async void BtnMoveSelected_Click(object sender, RoutedEventArgs e)
@@ -983,7 +1006,7 @@ namespace Smart_Tools.WPF.Views
             if (selected.Count == 0 || _isBusy) return;
             if (!ConfirmNoGroupEmptied("moving them")) return;
 
-            var dialog = new OpenFolderDialog { Title = $"Choose where to move {selected.Count} selected file(s)" };
+            var dialog = new OpenFolderDialog { Title = Loc.F("Str_DataQuality_MsgChooseMoveFolder", "Choose where to move {0} selected file(s)", selected.Count) };
             if (dialog.ShowDialog() != true) return;
             string destination = dialog.FolderName;
 
@@ -995,10 +1018,10 @@ namespace Smart_Tools.WPF.Views
                 if (answer != MessageBoxResult.Yes) return;
             }
 
-            await RunActionAsync("Moving...",
+            await RunActionAsync(Loc.T("Str_DataQuality_MsgMoving", "Moving..."),
                 () => _manager.MoveAsync(selected, destination),
-                r => $"Moved {r.Succeeded.Count:N0} file(s) · {DuplicateText.FormatBytes(r.Bytes)} to {destination}",
-                "Move Complete");
+                r => Loc.F("Str_DataQuality_MsgMoved", "Moved {0:N0} file(s) · {1} to {2}", r.Succeeded.Count, DuplicateText.FormatBytes(r.Bytes), destination),
+                Loc.T("Str_DataQuality_MsgMoveComplete", "Move Complete"));
         }
 
         /// <summary>Runs a move/delete off the UI thread, then drops handled files and emptied groups.</summary>
@@ -1063,8 +1086,8 @@ namespace Smart_Tools.WPF.Views
 
             var dialog = new SaveFileDialog
             {
-                Title = "Export duplicate results",
-                Filter = "CSV file (*.csv)|*.csv",
+                Title = Loc.T("Str_Dup_MsgExportTitle", "Export duplicate results"),
+                Filter = Loc.T("Str_DataQuality_MsgCsvFilter", "CSV file (*.csv)|*.csv"),
                 FileName = $"duplicates-{DateTime.Now:yyyy-MM-dd}.csv",
             };
             if (dialog.ShowDialog() != true) return;
@@ -1072,7 +1095,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 File.WriteAllText(dialog.FileName, DuplicateManager.BuildCsv(_groups), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-                TxtProgress.Text = $"Exported {_results.Count:N0} rows to {dialog.FileName}";
+                TxtProgress.Text = Loc.F("Str_Dup_MsgExported", "Exported {0:N0} rows to {1}", _results.Count, dialog.FileName);
             }
             catch (Exception ex)
             {

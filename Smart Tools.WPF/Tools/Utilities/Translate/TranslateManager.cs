@@ -58,7 +58,7 @@ namespace Smart_Tools.WPF.Controllers
             // The Translate page and Settings can both offer the same download; only one may run.
             lock (Installing)
             {
-                if (!Installing.Add(pair.Id)) return "That model is already downloading.";
+                if (!Installing.Add(pair.Id)) return Loc.T("Str_Translate_ErrBusy", "That model is already downloading.");
             }
             try
             {
@@ -117,7 +117,7 @@ namespace Smart_Tools.WPF.Controllers
                     if (done == 0 || (total > 0 && done != total))
                     {
                         TryDeleteFolder(temp);
-                        return "The download was cut short. Check your connection and try again.";
+                        return Loc.T("Str_Translate_ErrCutShort", "The download was cut short. Check your connection and try again.");
                     }
                     finishedFiles += done;
                 }
@@ -136,8 +136,8 @@ namespace Smart_Tools.WPF.Controllers
             {
                 TryDeleteFolder(temp);
                 return ex is HttpRequestException
-                    ? "Couldn't reach the download server. Check your internet connection and try again."
-                    : "Couldn't save the model. Check that there is free disk space.";
+                    ? Loc.T("Str_Download_ErrServer", "Couldn't reach the download server. Check your internet connection and try again.")
+                    : Loc.T("Str_Translate_ErrSave", "Couldn't save the model. Check that there is free disk space.");
             }
         }
 

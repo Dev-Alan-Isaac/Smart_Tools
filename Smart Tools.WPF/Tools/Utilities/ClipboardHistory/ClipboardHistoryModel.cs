@@ -34,6 +34,10 @@ namespace Smart_Tools.WPF.Models
         [JsonIgnore]
         public bool IsImage => Kind == ClipboardItemKind.Image;
 
+        /// <summary>The list heading this item sits under (Pinned, Today, Yesterday, a date). Set by the view before it binds.</summary>
+        [JsonIgnore]
+        public string DayGroup { get; set; } = "";
+
         /// <summary>The text on one line, shortened, for the list. For a picture: its size.</summary>
         [JsonIgnore]
         public string Preview => IsImage ? $"{ImageWidth} × {ImageHeight}" : OneLine(Text, 200);

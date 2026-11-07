@@ -8,18 +8,24 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Button = System.Windows.Controls.Button;
+using Clipboard = System.Windows.Clipboard;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
 using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using TextBox = System.Windows.Controls.TextBox;
+using TextBoxBase = System.Windows.Controls.Primitives.TextBoxBase;
 using UserControl = System.Windows.Controls.UserControl;
+using FontStyle = System.Windows.FontStyle;
 
 namespace Smart_Tools.WPF.Views
 {
@@ -42,6 +48,7 @@ namespace Smart_Tools.WPF.Views
         private NoteItem? _selected;
         private bool _viewConstructed;   // search/selection handlers need _view, which exists only after InitializeComponent
         private bool _suppressEditorEvents;
+        private bool _selfEdit;   // this editor is the one changing the note right now
         private bool _dirty;
         private (NoteItem Note, int Index)? _lastDeleted;
 
@@ -61,6 +68,7 @@ namespace Smart_Tools.WPF.Views
             _undoTimer.Tick += (_, _) => HideUndo();
 
             BuildColorSwatches();
+            NoteRichText.AttachPaste(RtbBody);
 
             var load = NotesManager.EnsureLoaded();
             ListNotes.ItemsSource = NotesManager.Notes;
@@ -73,7 +81,7 @@ namespace Smart_Tools.WPF.Views
                 TxtLoadMessage.Text = load.Message;
                 LoadMessageBar.Visibility = Visibility.Visible;
             }
-            if (NotesManager.SavingPaused) ShowSaveState(false, "Saving paused - your notes file couldn't be opened.");
+            if (NotesManager.SavingPaused) ShowSaveState(false, Loc.T("Str_Notes_MsgSavingPaused", "Saving paused - your notes file couldn't be opened."));
 
             if (NotesManager.Notes.Count > 0) ListNotes.SelectedIndex = 0;
             else ShowEditor(null);
@@ -110,11 +118,28 @@ namespace Smart_Tools.WPF.Views
         {
             RefreshTimes();
             _clockTimer.Start();
+            NotesManager.SelectRequested += ApplyPendingSelect;
+            NoteWidgetManager.Changed += UpdateWidgetButton;
+            ApplyPendingSelect();
+            UpdateWidgetButton();
+        }
+
+        /// <summary>A pinned widget asked to show its note here.</summary>
+        private void ApplyPendingSelect()
+        {
+            if (NotesManager.PendingSelect is not { } id) return;
+            NotesManager.PendingSelect = null;
+            if (NotesManager.Notes.FirstOrDefault(n => n.Id == id) is not { } note) return;
+            if (TxtSearch.Text.Length > 0) TxtSearch.Clear();
+            ListNotes.SelectedItem = note;
+            ListNotes.ScrollIntoView(note);
         }
 
         /// <summary>Leaving the page (another tool opened): save now, drop untouched blank notes.</summary>
         private void Root_Unloaded(object sender, RoutedEventArgs e)
         {
+            NotesManager.SelectRequested -= ApplyPendingSelect;
+            NoteWidgetManager.Changed -= UpdateWidgetButton;
             _clockTimer.Stop();
             bool removed = NotesManager.RemoveBlankNotes() > 0;
             if (_dirty || _saveTimer.IsEnabled || removed)
@@ -139,7 +164,7 @@ namespace Smart_Tools.WPF.Views
         {
             // New note and Search are shortcut actions (see the constructor); Ctrl+Z stays here.
             var mods = Keyboard.Modifiers;
-            if (mods == ModifierKeys.Control && e.Key == Key.Z && _lastDeleted != null && e.OriginalSource is not TextBox)
+            if (mods == ModifierKeys.Control && e.Key == Key.Z && _lastDeleted != null && e.OriginalSource is not TextBoxBase)
             {
                 // Ctrl+Z inside the title/text keeps undoing typing; elsewhere it brings back a deleted note.
                 e.Handled = true;
@@ -203,10 +228,10 @@ namespace Smart_Tools.WPF.Views
         private void FocusBodyAtEnd()
         {
             if (_selected == null || EditorPanel.Visibility != Visibility.Visible) return;
-            TxtBody.Focus();
-            Keyboard.Focus(TxtBody);
-            TxtBody.CaretIndex = TxtBody.Text.Length;
-            TxtBody.ScrollToEnd();
+            RtbBody.Focus();
+            Keyboard.Focus(RtbBody);
+            RtbBody.CaretPosition = RtbBody.Document.ContentEnd;
+            RtbBody.ScrollToEnd();
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -257,6 +282,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_selected is not { } note) return;
             int shownIndex = ListNotes.SelectedIndex;
+            NoteWidgetManager.Close(note);
             int index = NotesManager.DeleteNote(note);
             _lastDeleted = (note, index);
             _saveTimer.Stop();
@@ -300,7 +326,9 @@ namespace Smart_Tools.WPF.Views
 
         private void ShowEditor(NoteItem? note)
         {
+            if (_selected != null) _selected.PropertyChanged -= Selected_PropertyChanged;
             _selected = note;
+            if (note != null) note.PropertyChanged += Selected_PropertyChanged;
             _suppressEditorEvents = true;
             try
             {
@@ -316,8 +344,10 @@ namespace Smart_Tools.WPF.Views
                 NoSelectionPanel.Visibility = Visibility.Collapsed;
 
                 TxtTitle.Text = note.Title.Trim() == NoteItem.UntitledLabel ? "" : note.Title;
-                TxtBody.Text = note.Text;
-                TxtBody.ScrollToHome();
+                LoadBody(note);
+                TxtSource.Text = note.Source;
+                UpdateSourceButton();
+                UpdateWidgetButton();
                 BtnPin.IsChecked = note.Pinned;
                 UpdatePinIcon(note.Pinned);
                 TxtModified.Text = note.ModifiedLabel;
@@ -341,12 +371,172 @@ namespace Smart_Tools.WPF.Views
             Touch();
         }
 
-        private void TxtBody_TextChanged(object sender, TextChangedEventArgs e)
+        private void LoadBody(NoteItem note)
+        {
+            RtbBody.Document = NoteRichText.Build(note.Rich, note.Text);
+            RtbBody.ScrollToHome();
+            TxtBodyHint.Visibility = note.Text.Length == 0 && !note.HasPicture ? Visibility.Visible : Visibility.Collapsed;
+            UpdateFormatButtons();
+        }
+
+        private void RtbBody_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_suppressEditorEvents || _selected == null) return;
-            _selected.Text = TxtBody.Text;
+            _selfEdit = true;
+            try
+            {
+                _selected.Rich = NoteRichText.Serialize(RtbBody.Document);
+                _selected.Text = NoteRichText.PlainText(RtbBody.Document);
+            }
+            finally
+            {
+                _selfEdit = false;
+            }
+            TxtBodyHint.Visibility = _selected.Text.Length == 0 && !_selected.HasPicture ? Visibility.Visible : Visibility.Collapsed;
             TxtStats.Text = NotesManager.Stats(_selected);
             Touch();
+        }
+
+        /// <summary>The note was changed by its desktop widget: show it here too, unless the user is typing in this editor.</summary>
+        private void Selected_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (_selfEdit || _suppressEditorEvents || sender != _selected || _selected == null) return;
+            if (e.PropertyName is nameof(NoteItem.Rich) or nameof(NoteItem.Text) && !RtbBody.IsKeyboardFocusWithin)
+            {
+                _suppressEditorEvents = true;
+                try { LoadBody(_selected); }
+                finally { _suppressEditorEvents = false; }
+                TxtStats.Text = NotesManager.Stats(_selected);
+                TxtModified.Text = _selected.ModifiedLabel;
+                _dirty = true;
+            }
+        }
+
+        // ---- formatting buttons ----
+
+        private void RtbBody_SelectionChanged(object sender, RoutedEventArgs e) => UpdateFormatButtons();
+
+        private void UpdateFormatButtons()
+        {
+            if (!IsLoaded && RtbBody.Document == null) return;
+            var selection = RtbBody.Selection;
+            bool bold = selection.GetPropertyValue(TextElement.FontWeightProperty) is FontWeight w && w == FontWeights.Bold;
+            bool italic = selection.GetPropertyValue(TextElement.FontStyleProperty) is FontStyle s && s == FontStyles.Italic;
+            var decorations = selection.GetPropertyValue(Inline.TextDecorationsProperty) as TextDecorationCollection;
+            bool underline = decorations != null && decorations.Any(d => d.Location == TextDecorationLocation.Underline);
+            bool strike = decorations != null && decorations.Any(d => d.Location == TextDecorationLocation.Strikethrough);
+            bool bullets = selection.Start.Paragraph?.Parent is ListItem;
+            Mark(BtnBold, bold);
+            Mark(BtnItalic, italic);
+            Mark(BtnUnderline, underline);
+            Mark(BtnStrike, strike);
+            Mark(BtnBullets, bullets);
+        }
+
+        private static void Mark(Button button, bool on)
+        {
+            if (on) button.SetResourceReference(BackgroundProperty, "AccentColorSubtle");
+            else button.ClearValue(BackgroundProperty);
+        }
+
+        private void BtnStrike_Click(object sender, RoutedEventArgs e)
+        {
+            NoteRichText.ToggleStrike(RtbBody);
+            RtbBody.Focus();
+        }
+
+        private void BtnAddPicture_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = Loc.T("Str_Notes_AddPictureTitle", "Add a picture to the note"),
+                Filter = Loc.T("Str_Notes_PictureFilter", "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|All files|*.*"),
+            };
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+            try
+            {
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                using (var stream = File.OpenRead(dialog.FileName))
+                {
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = stream;
+                    bitmap.EndInit();
+                }
+                bitmap.Freeze();
+                RtbBody.Focus();
+                if (!NoteRichText.InsertImage(RtbBody, bitmap, Path.GetFileName(dialog.FileName)))
+                    ShowSaveState(false, Loc.T("Str_Notes_PictureFailed", "Couldn't add that picture."));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or InvalidOperationException)
+            {
+                ShowSaveState(false, Loc.F("Str_Notes_PictureUnreadable", "Couldn't read that picture: {0}", NotesManager.PlainError(ex)));
+            }
+        }
+
+        private void BtnPastePicture_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (Clipboard.ContainsImage() && Clipboard.GetImage() is { } image)
+                {
+                    image.Freeze();
+                    RtbBody.Focus();
+                    NoteRichText.InsertImage(RtbBody, image, NoteSourceDetector.FromClipboard());
+                    return;
+                }
+                ShowSaveState(false, Loc.T("Str_Notes_NoPictureOnClipboard", "There is no picture on the clipboard. Copy a picture or press Win+Shift+S for a screenshot first."));
+            }
+            catch (System.Runtime.InteropServices.ExternalException)
+            {
+                ShowSaveState(false, Loc.T("Str_Notes_ClipboardBusy", "Another program has the clipboard open. Try again in a moment."));
+            }
+        }
+
+        // ---- source link ----
+
+        private void TxtSource_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateSourceButton();
+            if (_suppressEditorEvents || _selected == null) return;
+            _selected.Source = TxtSource.Text.Trim();
+            Touch();
+        }
+
+        private static bool IsWebAddress(string text, out Uri? uri) =>
+            Uri.TryCreate(text.Trim(), UriKind.Absolute, out uri) && uri.Scheme is "http" or "https";
+
+        private void UpdateSourceButton() =>
+            BtnOpenSource.Visibility = IsWebAddress(TxtSource.Text, out _) ? Visibility.Visible : Visibility.Collapsed;
+
+        private void BtnOpenSource_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsWebAddress(TxtSource.Text, out var uri) || uri == null) return;
+            try
+            {
+                Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+            }
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+            {
+                ShowSaveState(false, Loc.F("Str_Notes_SourceOpenFailed", "Couldn't open the link: {0}", ex.Message));
+            }
+        }
+
+        // ---- desktop widget ----
+
+        private void BtnWidget_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selected is not { } note) return;
+            NoteWidgetManager.Toggle(note);
+            UpdateWidgetButton();
+        }
+
+        private void UpdateWidgetButton()
+        {
+            bool open = _selected != null && NoteWidgetManager.IsOpen(_selected);
+            IconWidget.Kind = open ? PackIconKind.PictureInPictureBottomRightOutline : PackIconKind.PictureInPictureBottomRight;
+            BtnWidget.ToolTip = open ? Loc.T("Str_Notes_WidgetUnpin", "Close the desktop widget of this note") : Loc.T("Str_Notes_WidgetPin", "Pin this note to the desktop as a widget");
+            Mark(BtnWidget, open);
         }
 
         /// <summary>Marks the note edited now and saves half a second after typing stops.</summary>
@@ -361,7 +551,7 @@ namespace Smart_Tools.WPF.Views
         private void ScheduleSave()
         {
             _dirty = true;
-            if (!NotesManager.SavingPaused) ShowSaveState(null, "Saving…");
+            if (!NotesManager.SavingPaused) ShowSaveState(null, Loc.T("Str_Notes_MsgSaving", "Saving…"));
             _saveTimer.Stop();
             _saveTimer.Start();
         }
@@ -429,7 +619,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     GroupName = "NoteColor",
                     Background = BrushOf(color.Hex),
-                    ToolTip = color.Name,
+                    ToolTip = Loc.T("Str_Notes_Color" + color.Name, color.Name),
                     Tag = color.Hex,
                 };
                 swatch.SetResourceReference(StyleProperty, "SwatchStyle");
@@ -482,8 +672,8 @@ namespace Smart_Tools.WPF.Views
             if (sender is not MenuItem { Tag: string ext }) return;
             var dialog = new SaveFileDialog
             {
-                Title = "Save the note as a text file",
-                Filter = ext == "md" ? "Markdown (*.md)|*.md" : "Text file (*.txt)|*.txt",
+                Title = Loc.T("Str_Notes_MsgExportTitle", "Save the note as a text file"),
+                Filter = ext == "md" ? Loc.T("Str_Notes_MsgMdFilter", "Markdown (*.md)|*.md") : Loc.T("Str_Notes_MsgTxtFilter", "Text file (*.txt)|*.txt"),
                 DefaultExt = "." + ext,
                 FileName = Path.ChangeExtension(NotesManager.SuggestedFileName(note), ext),
                 AddExtension = true,

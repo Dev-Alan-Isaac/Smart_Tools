@@ -133,7 +133,9 @@ namespace Smart_Tools.WPF.Controllers
             if (MagickImageInfo.ReadCollection(input).Skip(1).Any())
                 throw new NotSupportedException("Animated and multi-page pictures can't be resized here.");
 
-            using var image = new MagickImage(input);
+            // The budget decides how many big pictures are open at once, whatever the worker count is.
+            using var loaded = ImageLoad.Open(input, token);
+            var image = loaded.Image;
             token.ThrowIfCancellationRequested();
 
             image.AutoOrient();   // bake the EXIF rotation in, so the result isn't sideways once the tag is stripped

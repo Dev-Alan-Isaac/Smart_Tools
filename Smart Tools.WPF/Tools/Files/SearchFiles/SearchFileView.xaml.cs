@@ -240,11 +240,11 @@ namespace Smart_Tools.WPF.Views
             bool several = _mode == FileSearchMode.Regex && SelectedPatterns().Count > 1;
             TxtFirstMatchHint.Text = unique
                 ? (several
-                    ? "Each file shows, for every ticked pattern, its first value that isn't listed yet. The whole file is still read, so no value is missed."
-                    : "Each file shows its first value that isn't listed yet. The whole file is still read, so no value is missed.")
+                    ? Loc.T("Str_SearchFiles_HintUniqueMany", "Each file shows, for every ticked pattern, its first value that isn't listed yet. The whole file is still read, so no value is missed.")
+                    : Loc.T("Str_SearchFiles_HintUniqueOne", "Each file shows its first value that isn't listed yet. The whole file is still read, so no value is missed."))
                 : (several
-                    ? "One row per ticked pattern: a file shows its first email AND its first phone, for example - then stops."
-                    : "Stops reading a file at its first match.");
+                    ? Loc.T("Str_SearchFiles_HintOneRowMany", "One row per ticked pattern: a file shows its first email AND its first phone, for example - then stops.")
+                    : Loc.T("Str_SearchFiles_HintFirstMatch", "Stops reading a file at its first match."));
             ChkWholeWordOnly.IsEnabled = _mode == FileSearchMode.Text;
         }
 
@@ -279,7 +279,7 @@ namespace Smart_Tools.WPF.Views
             PanelRegexInput.Visibility = regex ? Visibility.Visible : Visibility.Collapsed;
             PanelSearchText.Visibility = regex ? Visibility.Collapsed : Visibility.Visible;
             IconSearchText.Kind = mode == FileSearchMode.Wildcard ? PackIconKind.Asterisk : PackIconKind.Magnify;
-            TxtSearchText.Tag = mode == FileSearchMode.Wildcard ? "e.g. *.log or invoice-????.pdf" : "What are you looking for?";
+            TxtSearchText.Tag = mode == FileSearchMode.Wildcard ? Loc.T("Str_SearchFiles_PlaceholderWildcard", "e.g. *.log or invoice-????.pdf") : Loc.T("Str_SearchFiles_PlaceholderText", "What are you looking for?");
             TxtModeHint.Text = mode switch
             {
                 FileSearchMode.Wildcard => "* = any characters, ? = one character. Matches a whole file name (or a whole line).",
@@ -491,8 +491,8 @@ namespace Smart_Tools.WPF.Views
         {
             int ticked = _patterns.Count(p => p.IsChecked && !p.HasError);
             int broken = _patterns.Count(p => p.HasError);
-            TxtPatternCount.Text = (ticked == 0 ? "No pattern ticked" : $"{ticked} {FileSearchText.Plural(ticked, "pattern", "patterns")} ticked")
-                                 + (broken > 0 ? $" · {broken} can't be used (fix in Settings)" : "");
+            TxtPatternCount.Text = (ticked == 0 ? Loc.T("Str_SearchFiles_NoPattern", "No pattern ticked") : SearchCounts.Patterns(ticked))
+                                 + (broken > 0 ? Loc.F("Str_SearchFiles_PatternsBroken", " · {0} can't be used (fix in Settings)", broken) : "");
         }
 
         // =================================================================
@@ -614,7 +614,7 @@ namespace Smart_Tools.WPF.Views
             ProgressSearch.IsIndeterminate = true;
             ProgressSearch.Value = 0;
             TxtProgressPercent.Text = "";
-            TxtProgress.Text = "Finding files…";
+            TxtProgress.Text = Loc.T("Str_SearchFiles_MsgFinding", "Finding files…");
             UpdateResultState();
 
             try
@@ -651,7 +651,7 @@ namespace Smart_Tools.WPF.Views
             if (!_isSearching) return;
             if (p.StillListing)
             {
-                TxtProgress.Text = $"Finding files… {p.TotalFiles:N0} so far";
+                TxtProgress.Text = Loc.F("Str_SearchFiles_MsgFindingSoFar", "Finding files… {0:N0} so far", p.TotalFiles);
                 return;
             }
             ProgressSearch.IsIndeterminate = false;
@@ -660,16 +660,16 @@ namespace Smart_Tools.WPF.Views
             ProgressSearch.Value = p.Percent;
             TxtProgressPercent.Text = $"{p.Percent:0}%";
             string found = _lastWasUnique
-                ? $"{p.Results:N0} different {FileSearchText.Plural(p.Results, "value", "values")}"
-                : $"{p.Results:N0} {FileSearchText.Plural(p.Results, "match", "matches")}";
-            TxtProgress.Text = $"{p.FilesScanned:N0} of {p.TotalFiles:N0} files · {found}" + (p.CurrentFile.Length > 0 ? " · " + p.CurrentFile : "");
+                ? SearchCounts.DiffValues(p.Results)
+                : SearchCounts.Matches(p.Results);
+            TxtProgress.Text = Loc.F("Str_SearchFiles_Progress", "{0:N0} of {1:N0} files · {2}", p.FilesScanned, p.TotalFiles, found) + (p.CurrentFile.Length > 0 ? " · " + p.CurrentFile : "");
             if (p.NewResults.Count > 0) UpdateResultState();
         }
 
         private void SetSearchingUi(bool searching)
         {
             IconSearch.Kind = searching ? PackIconKind.Stop : PackIconKind.FileSearchOutline;
-            if (searching) TxtSearchLabel.Text = "Cancel";
+            if (searching) TxtSearchLabel.Text = Loc.T("Str_SearchFiles_Cancel", "Cancel");
             else TxtSearchLabel.SetResourceReference(TextBlock.TextProperty, "Str_Search_RunSearchButton");
             OptionsScrollViewer.IsEnabled = !searching;   // the search uses what was set when it started
             PanelSearchText.IsEnabled = !searching;
@@ -679,13 +679,13 @@ namespace Smart_Tools.WPF.Views
 
         private void ShowSummaryPills(FileSearchSummary s)
         {
-            TxtFilesCount.Text = $"{s.FilesWithMatches:N0} of {s.FilesScanned:N0} {FileSearchText.Plural(s.FilesScanned, "file", "files")}";
+            TxtFilesCount.Text = Loc.F("Str_SearchFiles_FilesPill", "{0:N0} of {1}", s.FilesWithMatches, SearchCounts.Files(s.FilesScanned));
             int skipped = s.Skipped.Count + s.InaccessibleFolders;
             PillSkipped.Visibility = skipped > 0 ? Visibility.Visible : Visibility.Collapsed;
-            TxtSkippedCount.Text = $"{skipped:N0} skipped";
+            TxtSkippedCount.Text = Loc.F("Str_CopyQueue_RunSkipped", "{0:N0} skipped", skipped);
             var lines = s.Skipped.Take(25).Select(x => $"{Path.GetFileName(x.Path)}: {x.Reason}").ToList();
-            if (s.Skipped.Count > 25) lines.Add($"… and {s.Skipped.Count - 25:N0} more");
-            if (s.InaccessibleFolders > 0) lines.Add($"{s.InaccessibleFolders:N0} {FileSearchText.Plural(s.InaccessibleFolders, "folder", "folders")} couldn't be opened (no permission)");
+            if (s.Skipped.Count > 25) lines.Add(Loc.F("Str_SearchFiles_AndMore", "… and {0:N0} more", s.Skipped.Count - 25));
+            if (s.InaccessibleFolders > 0) lines.Add(Loc.N(s.InaccessibleFolders, "Str_SearchFiles_NoPermOne", "{0:N0} folder couldn't be opened (no permission)", "Str_SearchFiles_NoPermMany", "{0:N0} folders couldn't be opened (no permission)", s.InaccessibleFolders));
             PillSkipped.ToolTip = lines.Count == 0 ? null : string.Join("\n", lines);
             UiMotion.Pop(PillResults, 0.9);
         }
@@ -701,16 +701,16 @@ namespace Smart_Tools.WPF.Views
             if (any == (EmptyStatePanel.Visibility == Visibility.Visible)) UiMotion.FadeVisibility(EmptyStatePanel, !any);
             if (!any && _lastSummary != null && !_isSearching)
             {
-                EmptyStatePanel.Title = _lastSummary.Cancelled ? "Stopped before anything was found" : "Nothing found";
+                EmptyStatePanel.Title = _lastSummary.Cancelled ? Loc.T("Str_SearchFiles_EmptyStopped", "Stopped before anything was found") : Loc.T("Str_SearchFiles_EmptyNothing", "Nothing found");
                 EmptyStatePanel.Description = _lastSummary.FilesScanned == 0
-                    ? "No files were searched - check that the folders still exist."
-                    : $"{_lastSummary.FilesScanned:N0} {FileSearchText.Plural(_lastSummary.FilesScanned, "file was", "files were")} searched. Try turning off Match case, or check the pattern.";
+                    ? Loc.T("Str_SearchFiles_EmptyNoFiles", "No files were searched - check that the folders still exist.")
+                    : Loc.N((int)Math.Min(int.MaxValue, _lastSummary.FilesScanned), "Str_SearchFiles_EmptySearchedOne", "{0:N0} file was searched. Try turning off Match case, or check the pattern.", "Str_SearchFiles_EmptySearchedMany", "{0:N0} files were searched. Try turning off Match case, or check the pattern.", _lastSummary.FilesScanned);
                 UiMotion.Pop(EmptyStatePanel, 0.9);
             }
 
             SummaryPanel.Visibility = any || _lastSummary != null ? Visibility.Visible : Visibility.Collapsed;
-            string noun = _lastWasUnique ? FileSearchText.Plural(total, "value", "values") : FileSearchText.Plural(total, "match", "matches");
-            TxtResultCount.Text = shown == total ? $"{total:N0} {noun}" : $"{shown:N0} of {total:N0} {noun}";
+            string noun = _lastWasUnique ? SearchCounts.Values(total) : SearchCounts.Matches(total);
+            TxtResultCount.Text = shown == total ? noun : Loc.F("Str_SearchFiles_ShownOf", "{0:N0} of {1}", shown, noun);
             PillFiles.Visibility = _lastSummary != null ? Visibility.Visible : Visibility.Collapsed;
             if (_lastSummary == null) PillSkipped.Visibility = Visibility.Collapsed;
 
@@ -762,7 +762,7 @@ namespace Smart_Tools.WPF.Views
             if (text.Length > 0 && TrySetClipboard(text))
             {
                 int count = text.Count(c => c == '\n');
-                TxtProgress.Text = $"Copied {count:N0} {FileSearchText.Plural(count, "value", "values")}.";
+                TxtProgress.Text = Loc.F("Str_SearchFiles_MsgCopiedValues", "Copied {0}.", SearchCounts.Values(count));
                 UiMotion.Pop(BtnCopyValues, 0.85);
             }
         }
@@ -796,7 +796,7 @@ namespace Smart_Tools.WPF.Views
             };
             var dialog = new SaveFileDialog
             {
-                Title = "Export search results",
+                Title = Loc.T("Str_SearchFiles_DlgExport", "Export search results"),
                 Filter = filter,
                 FileName = FileSearchManager.ExportFileName(format, DateTime.Now),   // dated, so each export is its own file
                 AddExtension = true,
@@ -809,11 +809,11 @@ namespace Smart_Tools.WPF.Views
             {
                 string saved = await FileSearchManager.ExportAsync(rows, dialog.FileName, _lastWasUnique, format);
                 string what = format == FileSearchExportFormat.TextValues
-                    ? "the values"
-                    : $"{rows.Count:N0} {FileSearchText.Plural(rows.Count, "row", "rows")}";
+                    ? Loc.T("Str_SearchFiles_ExportWhatValues", "the values")
+                    : SearchCounts.Rows(rows.Count);
                 bool renamed = !string.Equals(saved, dialog.FileName, StringComparison.OrdinalIgnoreCase);
-                TxtProgress.Text = $"Exported {what} to {Path.GetFileName(saved)}.";
-                string note = renamed ? $"\n\n{Path.GetFileName(dialog.FileName)} already exists, so it was kept and this export got its own name." : "";
+                TxtProgress.Text = Loc.F("Str_SearchFiles_MsgExported", "Exported {0} to {1}.", what, Path.GetFileName(saved));
+                string note = renamed ? Loc.F("Str_SearchFiles_NoteRenamedExport", "\n\n{0} already exists, so it was kept and this export got its own name.", Path.GetFileName(dialog.FileName)) : "";
                 var open = MessageBox.Show(Loc.F("Str_MB_ExportedToNN", "Exported {0} to:\n{1}{2}\n\nOpen the file now?", what, saved, note), Loc.T("Str_Dlg_ExportComplete", "Export complete"), MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (open == MessageBoxResult.Yes) OpenWithShell(saved);
             }

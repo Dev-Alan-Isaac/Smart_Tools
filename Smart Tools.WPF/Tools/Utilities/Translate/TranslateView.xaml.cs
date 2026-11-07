@@ -95,7 +95,7 @@ namespace Smart_Tools.WPF.Views
         private void ShowPair(string from, string to)
         {
             SelectByTag(CmbFrom, from);
-            FillCombo(CmbTo, TranslateManager.Pairs.Where(p => p.FromCode == TagOf(CmbFrom)).Select(p => p.ToCode));
+            FillCombo(CmbTo, TranslateManager.TargetsOf(TagOf(CmbFrom)));
             SelectByTag(CmbTo, to);
         }
 
@@ -117,7 +117,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnSwap_Click(object sender, RoutedEventArgs e)
         {
             string from = TagOf(CmbFrom), to = TagOf(CmbTo);
-            if (TranslateManager.Find(to, from) == null) return;
+            if (TranslateManager.Route(to, from) == null && TranslateManager.Find(to, from) == null) return;
             _applying = true;
             ShowPair(to, from);
             _applying = false;
@@ -129,6 +129,11 @@ namespace Smart_Tools.WPF.Views
                 TxtOutput.Clear();
             }
             UpdateModelPanel();
+
+            // Each direction is its own model: say so when the way back isn't installed yet.
+            var pair = SelectedPair();
+            if (pair != null && !TranslateManager.IsInstalled(pair))
+                SetStatus(string.Format(Str("Str_Translate_StatusSwapNeedsModel"), LanguageName(pair.FromCode), LanguageName(pair.ToCode), pair.ApproxMb));
         }
 
         // ---- Model ----------------------------------------------------------------------------
@@ -138,14 +143,18 @@ namespace Smart_Tools.WPF.Views
             var pair = SelectedPair();
             bool installed = pair != null && TranslateManager.IsInstalled(pair);
             bool downloading = _downloadCts != null;
+            var route = TranslateManager.Route(TagOf(CmbFrom), TagOf(CmbTo));
+            bool indirect = TranslateManager.IsIndirect(route);
 
             if (!downloading)
             {
-                TxtModelStatus.Text = pair == null
-                    ? Str("Str_Translate_StatusSamePair")
-                    : installed
-                        ? string.Format(Str("Str_Translate_ModelReady"), FormatSize(TranslateManager.SizeOf(pair)))
-                        : string.Format(Str("Str_Translate_ModelMissing"), pair.ApproxMb);
+                TxtModelStatus.Text = indirect
+                    ? string.Format(Str("Str_Translate_StatusIndirect"), LanguageName(TagOf(CmbFrom)), LanguageName(TagOf(CmbTo)))
+                    : pair == null
+                        ? Str("Str_Translate_StatusSamePair")
+                        : installed
+                            ? string.Format(Str("Str_Translate_ModelReady"), FormatSize(TranslateManager.SizeOf(pair)))
+                            : string.Format(Str("Str_Translate_ModelMissing"), pair.ApproxMb);
             }
 
             TxtModelPath.Text = pair != null ? TranslateManager.FolderOf(pair) : TranslateManager.ModelsRoot;
@@ -154,7 +163,7 @@ namespace Smart_Tools.WPF.Views
             BtnRun.IsEnabled = !downloading;
             bool idle = !downloading && _translateCts == null;
             CmbFrom.IsEnabled = CmbTo.IsEnabled = idle;
-            BtnSwap.IsEnabled = idle && TranslateManager.Find(TagOf(CmbTo), TagOf(CmbFrom)) != null;   // no model for the way back → nothing to swap to
+            BtnSwap.IsEnabled = idle && (TranslateManager.Find(TagOf(CmbTo), TagOf(CmbFrom)) != null || TranslateManager.Route(TagOf(CmbTo), TagOf(CmbFrom)) != null);   // no way back → nothing to swap to
         }
 
         private async void BtnDownload_Click(object sender, RoutedEventArgs e)
@@ -241,12 +250,13 @@ namespace Smart_Tools.WPF.Views
                 SetStatus(Str("Str_Translate_StatusEmpty"));
                 return;
             }
-            if (SelectedPair() is not { } pair)
+            var route = TranslateManager.Route(TagOf(CmbFrom), TagOf(CmbTo));
+            if (route == null)
             {
                 SetStatus(Str("Str_Translate_StatusSamePair"));
                 return;
             }
-            if (!TranslateManager.IsInstalled(pair))
+            if (!route.All(TranslateManager.IsInstalled))
             {
                 SetStatus(Str("Str_Translate_StatusNeedModel"));
                 return;
@@ -254,17 +264,29 @@ namespace Smart_Tools.WPF.Views
 
             _translateCts = new CancellationTokenSource();
             SetRunning(true);
-            var progress = new Progress<double>(ShowProgress);
 
             try
             {
-                var result = await _manager.TranslateAsync(text, pair, progress, _translateCts.Token);
-                TxtOutput.Text = result.Text;
-                SetStatus(result.Canceled
+                string current = text;
+                bool canceled = false;
+                int failed = 0, total = 0;
+                for (int step = 0; step < route.Count && !canceled; step++)
+                {
+                    int done = step, steps = route.Count;
+                    var progress = new Progress<double>(f => ShowProgress((done + f) / steps));   // the steps share the bar
+                    var result = await _manager.TranslateAsync(current, route[step], progress, _translateCts.Token);
+                    current = result.Text;
+                    canceled = result.Canceled;
+                    failed += result.FailedParts;
+                    total += result.TotalParts;
+                }
+                TxtOutput.Text = current;
+                bool indirect = TranslateManager.IsIndirect(route);
+                SetStatus(canceled
                     ? Str("Str_Translate_StatusCanceled")
-                    : result.FailedParts > 0
-                        ? string.Format(Str("Str_Translate_StatusPartial"), result.FailedParts, result.TotalParts)
-                        : Str("Str_Translate_StatusDone"));
+                    : failed > 0
+                        ? string.Format(Str("Str_Translate_StatusPartial"), failed, total)
+                        : indirect ? Str("Str_Translate_StatusDoneIndirect") : Str("Str_Translate_StatusDone"));
             }
             catch (Exception ex) when (ex is OnnxRuntimeException or IOException or InvalidDataException or JsonException or InvalidOperationException)
             {
@@ -327,5 +349,7 @@ namespace Smart_Tools.WPF.Views
         private string Str(string key) => TryFindResource(key) as string ?? key;
 
         private static string FormatSize(long bytes) => $"{bytes / 1048576.0:N0} MB";
+
+        private string LanguageName(string code) => TryFindResource($"Str_Translate_Lang_{code}") as string ?? code.ToUpperInvariant();
     }
 }

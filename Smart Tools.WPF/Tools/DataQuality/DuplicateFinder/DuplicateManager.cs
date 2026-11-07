@@ -22,7 +22,7 @@ namespace Smart_Tools.WPF.Controllers
     /// 3. full hash (or byte-by-byte clustering) - only for what's left;
     /// 4. optional byte compare to confirm each hash group.
     /// </summary>
-    public sealed class DuplicateManager
+    public sealed partial class DuplicateManager
     {
         private const int BufferSize = 1 << 20;                  // 1 MB
         private const int FingerprintBytes = 16 * 1024;          // head and tail each
@@ -51,6 +51,9 @@ namespace Smart_Tools.WPF.Controllers
             public int InaccessibleFolders;
             public int SkippedLinks;
             public int UnreadableFiles;
+            public bool MediaSkippedNoFfmpeg;
+            public bool HeavyLimited;
+            public bool AudioLimited;
             public DuplicateScanPhase Phase;
             public long LastReport = long.MinValue;
             public readonly Stopwatch Watch = Stopwatch.StartNew();
@@ -101,12 +104,17 @@ namespace Smart_Tools.WPF.Controllers
                 _ => await GroupByContentAsync(files, options, state, token).ConfigureAwait(false),
             };
 
+            var groups = options.MatchMode == DuplicateMatchMode.SameContent
+                ? await BuildSameContentGroupsAsync(files, raw, options, state, token).ConfigureAwait(false)
+                : BuildGroups(raw, options.IsContentMode);
+
             state.Phase = DuplicateScanPhase.Done;
             state.Report("", force: true);
-
-            var groups = BuildGroups(raw, options.IsContentMode);
             return new DuplicateScanResult
             {
+                MediaSkippedNoFfmpeg = state.MediaSkippedNoFfmpeg,
+                HeavyLimited = state.HeavyLimited,
+                AudioLimited = state.AudioLimited,
                 Groups = groups,
                 FilesScanned = files.Count,
                 InaccessibleFolders = state.InaccessibleFolders,
@@ -586,16 +594,19 @@ namespace Smart_Tools.WPF.Controllers
         /// files may differ, so nothing should be pre-selected for deletion
         /// (the old view pre-selected them anyway).
         /// </summary>
-        public static void ApplyKeepRule(IEnumerable<DuplicateGroup> groups, KeepRule rule, IReadOnlyList<string>? folderOrder, bool selectOthers)
+        public static void ApplyKeepRule(IEnumerable<DuplicateGroup> groups, KeepRule rule, IReadOnlyList<string>? folderOrder, bool selectOthers, bool selectApproximate = true)
         {
             foreach (var group in groups)
             {
                 var keeper = PickKeeper(group.Files, rule, folderOrder);
+                // "Same content, different format" groups are never pre-selected after a scan:
+                // the user looks at them first and picks a keep rule on purpose (selectApproximate).
+                bool select = selectOthers && (selectApproximate || group.Kind == DuplicateGroupKind.Exact);
                 foreach (var file in group.Files)
                 {
                     bool keep = ReferenceEquals(file, keeper);
                     file.IsKeep = keep;
-                    file.IsSelected = selectOthers && !keep;
+                    file.IsSelected = select && !keep;
                 }
                 group.Refresh();
             }
@@ -625,6 +636,7 @@ namespace Smart_Tools.WPF.Controllers
                 KeepRule.Newest => files.OrderByDescending(f => f.ModifiedTime),
                 KeepRule.ShortestPath => files.OrderBy(f => f.FullPath.Length),
                 KeepRule.FolderOrder => files.OrderBy(FolderRank).ThenBy(f => Known(f.ModifiedTime)),
+                KeepRule.HighestQuality => files.OrderByDescending(f => f.Pixels).ThenByDescending(f => f.SizeBytes),
                 _ => files.OrderBy(f => Known(f.ModifiedTime)),
             };
             return ordered.ThenBy(f => f.FullPath.Length).ThenBy(f => f.FullPath, StringComparer.OrdinalIgnoreCase).First();
@@ -679,7 +691,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         if (!File.Exists(item.FullPath))
                         {
-                            result.Failed.Add((item, "The file no longer exists."));
+                            result.Failed.Add((item, Loc.T("Str_DataQuality_MsgFileGone", "The file no longer exists.")));
                             continue;
                         }
                         string target = UniquePath(Path.Combine(destination, item.Name));
@@ -745,7 +757,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
                 return new DriveInfo(root).DriveType == DriveType.Fixed;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
                 return false;
             }
@@ -798,7 +810,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!File.Exists(file)) return new DuplicateFinderSettings();
                 return JsonSerializer.Deserialize<DuplicateFinderSettings>(File.ReadAllText(file), JsonOptions) ?? new DuplicateFinderSettings();
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new DuplicateFinderSettings();
             }

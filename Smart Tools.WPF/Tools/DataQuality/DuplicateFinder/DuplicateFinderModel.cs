@@ -27,6 +27,35 @@ namespace Smart_Tools.WPF.Models
         Md5,
         Sha1,
         Sha256,
+
+        /// <summary>
+        /// Exact copies first (SHA-256), then pictures, videos and songs whose bytes differ
+        /// (converted, re-encoded, resized) are matched by what they look or sound like.
+        /// </summary>
+        SameContent,
+    }
+
+    /// <summary>How much a copy may have been changed and still count as "the same content".</summary>
+    public enum SameContentLevel
+    {
+        /// <summary>Only a different file type / container / codec (mp4 to mkv, jpg to png, wav to flac).</summary>
+        FormatOnly,
+
+        /// <summary>Also resized, recompressed, colour or grayscale changes.</summary>
+        Small,
+
+        /// <summary>Also lightly cropped, watermarked, trimmed edges.</summary>
+        Medium,
+
+        /// <summary>Also heavily cropped or rotated pictures (feature matching, slow, capped).</summary>
+        Heavy,
+    }
+
+    /// <summary>Whether every file in a group is byte-identical or only the same content.</summary>
+    public enum DuplicateGroupKind
+    {
+        Exact,
+        SameContent,
     }
 
     /// <summary>Shortcut file-type filters for the sidebar chips.</summary>
@@ -51,6 +80,9 @@ namespace Smart_Tools.WPF.Models
 
         /// <summary>The copy in the folder listed first in the sidebar.</summary>
         FolderOrder,
+
+        /// <summary>The copy with the most pixels, then the largest file (usually the lossless one).</summary>
+        HighestQuality,
     }
 
     public enum DuplicateScanPhase
@@ -58,6 +90,7 @@ namespace Smart_Tools.WPF.Models
         Listing,
         Comparing,
         Verifying,
+        Fingerprinting,
         Done,
     }
 
@@ -86,6 +119,9 @@ namespace Smart_Tools.WPF.Models
 
         /// <summary>Files read at once. Keep low (2) for hard drives, where parallel reads make seeking thrash.</summary>
         public int MaxDegreeOfParallelism { get; set; } = Math.Max(2, Environment.ProcessorCount);
+
+        /// <summary>Only used by <see cref="DuplicateMatchMode.SameContent"/>.</summary>
+        public SameContentLevel SameContentLevel { get; set; } = SameContentLevel.FormatOnly;
 
         public bool IsContentMode => MatchMode is not (DuplicateMatchMode.FileName or DuplicateMatchMode.NameAndSize);
     }
@@ -117,6 +153,15 @@ namespace Smart_Tools.WPF.Models
         public TimeSpan Elapsed { get; init; }
         public DuplicateMatchMode MatchMode { get; init; }
 
+        /// <summary>Same-content mode: videos and songs were only compared byte for byte because ffmpeg is missing.</summary>
+        public bool MediaSkippedNoFfmpeg { get; init; }
+
+        /// <summary>Heavy-edits level: more pictures than the feature matcher can pair, so only the first ones took part.</summary>
+        public bool HeavyLimited { get; init; }
+
+        /// <summary>More songs than one scan can index; only the first ones (by path) were compared by sound.</summary>
+        public bool AudioLimited { get; init; }
+
         /// <summary>False for name-based modes: files in a group may not be identical.</summary>
         public bool IsContentVerified { get; init; }
 
@@ -134,6 +179,12 @@ namespace Smart_Tools.WPF.Models
         public string Hash { get; init; } = "";
         public bool IsContentVerified { get; init; }
 
+        /// <summary>Exact copies, or the same content in different formats / encodings.</summary>
+        public DuplicateGroupKind Kind { get; init; }
+
+        /// <summary>For <see cref="DuplicateGroupKind.SameContent"/>: how alike the files are, 0-100.</summary>
+        public int SimilarityPercent { get; init; }
+
         /// <summary>Alternating shading in the grid.</summary>
         public bool IsEven => Number % 2 == 0;
 
@@ -149,22 +200,25 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Every copy is selected - acting would leave none behind.</summary>
         public bool AllSelected => Files.Count > 0 && Files.All(f => f.IsSelected);
 
-        public string Title => $"Group {Number}";
+        public string Title => Loc.F("Str_DataQuality_MsgGroupN", "Group {0}", Number);
 
         public string Subtitle
         {
             get
             {
                 string sizes = Files.Select(f => f.SizeBytes).Distinct().Count() == 1
-                    ? $"{DuplicateText.FormatBytes(Files[0].SizeBytes)} each"
-                    : "different sizes";
-                return $"{FileCount} files · {sizes}";
+                    ? Loc.F("Str_Dup_MsgSizeEach", "{0} each", DuplicateText.FormatBytes(Files[0].SizeBytes))
+                    : Loc.T("Str_Dup_MsgSizesDiffer", "different sizes");
+                string text = Loc.F("Str_Dup_MsgGroupSubtitle", "{0} files · {1}", FileCount, sizes);
+                if (Kind == DuplicateGroupKind.SameContent)
+                    text += " · " + Loc.F("Str_Dup_MsgSameContentGroup", "same content, different format · {0}% alike", SimilarityPercent);
+                return text;
             }
         }
 
         public string SelectionText => SelectedCount == 0
-            ? "nothing selected"
-            : $"{SelectedCount} selected · {DuplicateText.FormatBytes(SelectedBytes)}";
+            ? Loc.T("Str_DataQuality_MsgNothingSelected", "nothing selected")
+            : Loc.F("Str_DataQuality_MsgSelectedBytes", "{0} selected · {1}", SelectedCount, DuplicateText.FormatBytes(SelectedBytes));
 
         public string ShortHash => Hash.Length > 12 ? Hash[..12] : Hash;
 
@@ -208,6 +262,10 @@ namespace Smart_Tools.WPF.Models
         public string Modified => ModifiedTime == default ? "" : ModifiedTime.ToString("yyyy-MM-dd HH:mm");
         public string Hash { get; init; } = "";
         public string ShortHash => Hash.Length > 12 ? Hash[..12] : Hash;
+
+        /// <summary>Width x height (pictures, video); 0 when unknown. Used by the "highest quality" keep rule.</summary>
+        public long Pixels { get; init; }
+
         public string Extension => Path.GetExtension(Name).ToLowerInvariant();
 
         /// <summary>Set once groups are numbered.</summary>
@@ -304,6 +362,7 @@ namespace Smart_Tools.WPF.Models
         public long MinFileSizeBytes { get; set; } = 1;
         public string ExcludedExtensions { get; set; } = "";
         public KeepRule KeepRule { get; set; } = KeepRule.Oldest;
+        public SameContentLevel SameContentLevel { get; set; } = SameContentLevel.FormatOnly;
         public bool SendToRecycleBin { get; set; } = true;
 
         [JsonIgnore] public bool IsEmpty => Folders.Count == 0;

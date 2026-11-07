@@ -172,7 +172,7 @@ namespace Smart_Tools.WPF.Controllers
                     BeforeMove?.Invoke(w.Current, to);
                     bool caseOnly = string.Equals(w.Current, to, StringComparison.OrdinalIgnoreCase);
                     if (!caseOnly && (File.Exists(to) || Directory.Exists(to)))
-                        throw new IOException($"A file named {Path.GetFileName(to)} appeared in the folder after the preview.");
+                        throw new IOException(Loc.F("Str_Rename_ErrAppeared", "A file named {0} appeared in the folder after the preview.", Path.GetFileName(to)));
                     File.Move(w.Current, to);
                     Record(w.Current, to);
                     w.Current = to;
@@ -181,7 +181,7 @@ namespace Smart_Tools.WPF.Controllers
                 void Succeed(Work w)
                 {
                     w.Item.Status = RenameStatus.Renamed;
-                    w.Item.Message = $"Renamed to {Path.GetFileName(w.Target)}";
+                    w.Item.Message = Loc.F("Str_Rename_MsgRenamedTo", "Renamed to {0}", Path.GetFileName(w.Target));
                     result.Renamed++;
                 }
 
@@ -207,7 +207,7 @@ namespace Smart_Tools.WPF.Controllers
                             w.Current = home;
                             return home;
                         }
-                        catch (Exception)
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                         {
                             // try the other name
                         }
@@ -216,7 +216,7 @@ namespace Smart_Tools.WPF.Controllers
                 }
 
                 string StillParked(Work w) => IsTempName(w.Current)
-                    ? $" It's still called {Path.GetFileName(w.Current)} - rename it back by hand."
+                    ? Loc.F("Str_Rename_NoteStillCalled", " It's still called {0} - rename it back by hand.", Path.GetFileName(w.Current))
                     : "";
 
                 void Complete(Work w, string from)
@@ -260,10 +260,10 @@ namespace Smart_Tools.WPF.Controllers
                     if (home != null && string.Equals(home, waiting.Target, StringComparison.OrdinalIgnoreCase))
                         Succeed(waiting);
                     else if (cause.Item.Status == RenameStatus.Cancelled)
-                        Settle(waiting, RenameStatus.Cancelled, "Not renamed - the run was cancelled." + StillParked(waiting));
+                        Settle(waiting, RenameStatus.Cancelled, Loc.T("Str_Rename_MsgNotRenamed", "Not renamed - the run was cancelled.") + StillParked(waiting));
                     else
                         Settle(waiting, RenameStatus.Failed,
-                            $"{Path.GetFileName(path)} is still taken, because {cause.Item.OriginalName} couldn't be renamed first." + StillParked(waiting));
+                            Loc.F("Str_Rename_ErrStillTaken", "{0} is still taken, because {1} couldn't be renamed first.", Path.GetFileName(path), cause.Item.OriginalName) + StillParked(waiting));
                     Complete(waiting, from);
                 }
 
@@ -272,7 +272,7 @@ namespace Smart_Tools.WPF.Controllers
                     string from = w.Current;
                     try
                     {
-                        if (!File.Exists(from)) throw new FileNotFoundException("The file is no longer there.");
+                        if (!File.Exists(from)) throw new FileNotFoundException(Loc.T("Str_Files_ErrGone", "The file is no longer there."));
                         Move(w, w.Target);
                         Succeed(w);
                     }
@@ -290,7 +290,7 @@ namespace Smart_Tools.WPF.Controllers
                     string from = w.Current;
                     string? home = Unpark(w);   // never leave a file under a temporary name
                     if (home != null && string.Equals(home, w.Target, StringComparison.OrdinalIgnoreCase)) Succeed(w);
-                    else Settle(w, RenameStatus.Cancelled, "Not renamed - the run was cancelled." + StillParked(w));
+                    else Settle(w, RenameStatus.Cancelled, Loc.T("Str_Rename_MsgNotRenamed", "Not renamed - the run was cancelled.") + StillParked(w));
                     Complete(w, from);
                 }
 

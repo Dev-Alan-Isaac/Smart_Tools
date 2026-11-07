@@ -68,7 +68,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!Enum.IsDefined(s.ViewMode)) s.ViewMode = FileDiffViewMode.SideBySide;
                 return s;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or NotSupportedException)
             {
                 return new TextDiffSettings();
             }
@@ -83,7 +83,7 @@ namespace Smart_Tools.WPF.Controllers
                 File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
                 File.Move(temp, SettingsPath, overwrite: true);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // Remembering the setup is a convenience; losing it is not worth an error.
             }

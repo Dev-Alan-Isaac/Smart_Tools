@@ -51,11 +51,11 @@
                                 <TextBox x:Name="TxtCountdown" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_TextChanged" />
                             </Border>
                             <WrapPanel Margin="0,8,0,0">
-                                <Button Margin="0,0,4,4" Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min}" Tag="1:00" Style="{StaticResource ListToolButtonStyle}" />
-                                <Button Margin="0,0,4,4" Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min2}" Tag="5:00" Style="{StaticResource ListToolButtonStyle}" />
-                                <Button Margin="0,0,4,4" Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min3}" Tag="10:00" Style="{StaticResource ListToolButtonStyle}" />
-                                <Button Margin="0,0,4,4" Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min4}" Tag="25:00" Style="{StaticResource ListToolButtonStyle}" />
-                                <Button Margin="0,0,4,4" Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Hour}" Tag="1:00:00" Style="{StaticResource ListToolButtonStyle}" />
+                                <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min}" Tag="1:00" Style="{StaticResource PillChipStyle}" />
+                                <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min2}" Tag="5:00" Style="{StaticResource PillChipStyle}" />
+                                <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min3}" Tag="10:00" Style="{StaticResource PillChipStyle}" />
+                                <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min4}" Tag="25:00" Style="{StaticResource PillChipStyle}" />
+                                <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Hour}" Tag="1:00:00" Style="{StaticResource PillChipStyle}" />
                             </WrapPanel>
                         </StackPanel>
                     </Border>

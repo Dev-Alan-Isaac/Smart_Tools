@@ -13,7 +13,7 @@ namespace Smart_Tools.WPF.Controllers
     //  the scanned folder, never follows links (no loops), lists folders it
     //  can't open instead of failing, and never replaces an earlier export.
     // =====================================================================
-    public static class FolderTreeManager
+    public static partial class FolderTreeManager
     {
         private static readonly TimeSpan ReportEvery = TimeSpan.FromMilliseconds(100);
 
@@ -69,7 +69,7 @@ namespace Smart_Tools.WPF.Controllers
                         {
                             attrs = entry.Attributes;
                         }
-                        catch (Exception)
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                         {
                             continue;
                         }
@@ -106,7 +106,7 @@ namespace Smart_Tools.WPF.Controllers
                             {
                                 length = ((FileInfo)entry).Length;
                             }
-                            catch (Exception)
+                            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                             {
                                 // listed with size 0; the file may be gone or locked
                             }
@@ -134,7 +134,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return info.LastWriteTime;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 return default;
             }
@@ -147,20 +147,29 @@ namespace Smart_Tools.WPF.Controllers
         public static string Render(FolderTreeResult r, FolderTreeOptions o) => o.Format switch
         {
             FolderTreeFormat.Markdown => RenderMarkdown(r, o),
+            FolderTreeFormat.Html => RenderHtml(r, o),
             FolderTreeFormat.Json => RenderJson(r, o),
+            FolderTreeFormat.Xml => RenderXml(r, o),
+            FolderTreeFormat.Yaml => RenderYaml(r, o),
             FolderTreeFormat.Csv => RenderCsv(r, o),
-            _ => RenderText(r, o),
+            FolderTreeFormat.Paths => RenderPaths(r),
+            _ => RenderText(r, o),   // Text, and the preview of the drawn formats (PDF, picture)
         };
 
         public static string FileExtension(FolderTreeFormat f) => f switch
         {
             FolderTreeFormat.Markdown => ".md",
+            FolderTreeFormat.Html => ".html",
             FolderTreeFormat.Json => ".json",
+            FolderTreeFormat.Xml => ".xml",
+            FolderTreeFormat.Yaml => ".yaml",
             FolderTreeFormat.Csv => ".csv",
+            FolderTreeFormat.Pdf => ".pdf",
+            FolderTreeFormat.Image => ".png",
             _ => ".txt",
         };
 
-        private static string Meta(FolderTreeNode n, FolderTreeOptions o)
+        internal static string Meta(FolderTreeNode n, FolderTreeOptions o)
         {
             var parts = new List<string>();
             if (o.ShowSize) parts.Add(CopyQueueManager.FormatSize(n.Size));
@@ -169,12 +178,12 @@ namespace Smart_Tools.WPF.Controllers
             return parts.Count == 0 ? "" : "  [" + string.Join(" · ", parts) + "]";
         }
 
-        private static IEnumerable<FolderTreeNode> Sorted(FolderTreeNode n) =>
+        internal static IEnumerable<FolderTreeNode> Sorted(FolderTreeNode n) =>
             n.Children.OrderByDescending(c => c.IsFolder).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase);
 
-        private static string Footer(FolderTreeResult r) =>
-            $"{r.Folders:N0} folder{(r.Folders == 1 ? "" : "s")}, {r.Files:N0} file{(r.Files == 1 ? "" : "s")}, {CopyQueueManager.FormatSize(r.Bytes)}"
-            + (r.Unreadable > 0 ? $" ({r.Unreadable:N0} folder{(r.Unreadable == 1 ? "" : "s")} could not be opened)" : "");
+        internal static string Footer(FolderTreeResult r) =>
+            $"{FilesText.Folders(r.Folders)}, {FilesText.Files(r.Files)}, {CopyQueueManager.FormatSize(r.Bytes)}"
+            + (r.Unreadable > 0 ? Loc.N(r.Unreadable, "Str_FolderTree_FooterUnreadableOne", " ({0:N0} folder could not be opened)", "Str_FolderTree_FooterUnreadableMany", " ({0:N0} folders could not be opened)", r.Unreadable) : "");
 
         private static string RenderText(FolderTreeResult r, FolderTreeOptions o)
         {
@@ -284,6 +293,13 @@ namespace Smart_Tools.WPF.Controllers
         /// (or taken meanwhile) the next free "name (2)" is used. Returns the file actually written.
         /// </summary>
         public static Task<string> SaveAsync(string content, string path) =>
+            SaveCoreAsync(temp => File.WriteAllText(temp, content, new UTF8Encoding(true)), path);   // BOM so Excel and Notepad read accents right
+
+        /// <summary>The same never-overwrite save for a binary result (PDF, picture).</summary>
+        public static Task<string> SaveBytesAsync(byte[] data, string path) =>
+            SaveCoreAsync(temp => File.WriteAllBytes(temp, data), path);
+
+        private static Task<string> SaveCoreAsync(Action<string> writeTemp, string path) =>
             Task.Run(() =>
             {
                 string folder = Path.GetDirectoryName(Path.GetFullPath(path))!;
@@ -291,7 +307,7 @@ namespace Smart_Tools.WPF.Controllers
                 string temp = Path.Combine(folder, $".{Guid.NewGuid():N}.tmp");
                 try
                 {
-                    File.WriteAllText(temp, content, new UTF8Encoding(true));   // BOM so Excel and Notepad read accents right
+                    writeTemp(temp);
                     for (int attempt = 0; ; attempt++)
                     {
                         string target = SafeFileOps.UniquePath(path);

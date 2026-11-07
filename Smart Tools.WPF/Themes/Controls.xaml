@@ -4332,7 +4332,7 @@
                                 Cursor="Hand"
                                 Focusable="False"
                                 IsChecked="{Binding Name.IsExpanded, Mode=TwoWay}"
-                                ToolTip="Fold or unfold this group">
+                                ToolTip="{DynamicResource Str_Common_FoldGroupTooltip}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border x:Name="Bd" Background="Transparent" CornerRadius="8">

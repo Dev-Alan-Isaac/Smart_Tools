@@ -26,6 +26,8 @@ namespace Smart_Tools.WPF.Controllers
     public sealed class BarcodeManager
     {
         private const string Code39Charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%";
+        /// <summary>Batch rows that keep a preview picture (about 40 KB each); export re-renders every code anyway.</summary>
+        internal const int BatchThumbnailRows = 5000;
         private const int ThumbnailWidth = 180;
         private const int ThumbnailHeight = 56;
 
@@ -311,7 +313,7 @@ namespace Smart_Tools.WPF.Controllers
                         Options = options,
                         Status = result.Success ? BarcodeRowStatus.Generated : BarcodeRowStatus.Failed,
                         Message = result.Success ? "Generated" : result.ErrorMessage,
-                        Thumbnail = result.Image,
+                        Thumbnail = i < BatchThumbnailRows ? result.Image : null,   // later rows keep no picture: 100,000 thumbnails would be gigabytes
                     });
 
                     if ((i + 1) % reportEvery == 0 || i == inputs.Count - 1)

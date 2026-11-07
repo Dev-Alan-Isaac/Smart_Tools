@@ -134,6 +134,18 @@
     <!--  Dim layer behind the guided-tour spotlight  -->
     <SolidColorBrush x:Key="TourScrim" Color="#99101828" />
 
+    <!--  Media stage (fixed dark in both themes), scrims, overlays on pictures, transparency checkerboard  -->
+    <SolidColorBrush x:Key="MediaStageBg" Color="#0E0F12" />
+    <SolidColorBrush x:Key="MediaStageText" Color="#E9EBEF" />
+    <SolidColorBrush x:Key="MediaStageTextMuted" Color="#8A8F99" />
+    <SolidColorBrush x:Key="ScrimBg" Color="#99000000" />
+    <SolidColorBrush x:Key="SliderTrack" Color="#33101828" />
+    <SolidColorBrush x:Key="SelectionFill" Color="#333D6FE0" />
+    <SolidColorBrush x:Key="HoverOverlayFill" Color="#33000000" />
+    <SolidColorBrush x:Key="HoverOverlayStroke" Color="#FF161E2C" />
+    <SolidColorBrush x:Key="CheckerLight" Color="#FFE8EAEE" />
+    <SolidColorBrush x:Key="CheckerDark" Color="#FFC9CDD4" />
+
     <!--
         ============ NEW: ACCENT STATE + GRADIENT TOKENS ============
         Additive only. Used by Controls.xaml for a

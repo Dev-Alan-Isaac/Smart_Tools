@@ -68,7 +68,7 @@ namespace Smart_Tools.WPF.Views
             ApplyModeCards(animate: false);
             if (Directory.Exists(job.DestinationFolder)) ActiveDestination.FolderPath = job.DestinationFolder;
             _restoring = false;
-            ShowStatus("Your last queue was interrupted. Press Start to continue - files that were already done are recognised and skipped.", StatusKind.Warning);
+            ShowStatus(Loc.T("Str_CopyQueue_MsgInterrupted", "Your last queue was interrupted. Press Start to continue - files that were already done are recognised and skipped."), StatusKind.Warning);
         }
 
         // =================================================================
@@ -178,14 +178,14 @@ namespace Smart_Tools.WPF.Views
             }
             if (_sources.Count == 0)
             {
-                ShowStatus("Add at least one file or folder.", StatusKind.Warning);
+                ShowStatus(Loc.T("Str_CopyQueue_MsgAddSome", "Add at least one file or folder."), StatusKind.Warning);
                 InputCard.PopDropArea();
                 return;
             }
             var o = ReadOptions();
             if (string.IsNullOrWhiteSpace(o.DestinationFolder) || !Directory.Exists(o.DestinationFolder))
             {
-                ShowStatus(o.Mode == CopyQueueMode.Move ? "Choose the folder to move to." : "Choose the folder to copy to.", StatusKind.Warning);
+                ShowStatus(o.Mode == CopyQueueMode.Move ? Loc.T("Str_CopyQueue_MsgChooseMoveTo", "Choose the folder to move to.") : Loc.T("Str_CopyQueue_MsgChooseCopyTo", "Choose the folder to copy to."), StatusKind.Warning);
                 ActiveDestination.PopDropArea();
                 return;
             }
@@ -198,7 +198,7 @@ namespace Smart_Tools.WPF.Views
             SetBusy(true);
             Bar.Value = 0;
             TxtProgressPercent.Text = "";
-            TxtProgress.Text = "Looking through the files...";
+            TxtProgress.Text = Loc.T("Str_CopyQueue_MsgLooking", "Looking through the files...");
             Bar.IsIndeterminate = true;
 
             CopyQueuePlan plan;
@@ -218,7 +218,7 @@ namespace Smart_Tools.WPF.Views
             if (plan.Items.Count == 0 && plan.Folders.Count == 0)
             {
                 FinishUi();
-                ShowStatus(plan.Notes.Count > 0 ? string.Join(" ", plan.Notes) : "There are no files to copy.", StatusKind.Warning);
+                ShowStatus(plan.Notes.Count > 0 ? string.Join(" ", plan.Notes) : Loc.T("Str_CopyQueue_MsgNoFiles", "There are no files to copy."), StatusKind.Warning);
                 return;
             }
 
@@ -268,7 +268,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 FinishUi();
-                ShowStatus($"The queue stopped: {ex.Message}", StatusKind.Error);
+                ShowStatus(Loc.F("Str_CopyQueue_MsgQueueStopped", "The queue stopped: {0}", ex.Message), StatusKind.Error);
                 return;
             }
 
@@ -283,7 +283,7 @@ namespace Smart_Tools.WPF.Views
                     {
                         CopyQueueManager.SaveJournal(journal);
                     }
-                    catch (Exception)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
                     {
                         // Undo still works until the app closes
                     }
@@ -336,7 +336,7 @@ namespace Smart_Tools.WPF.Views
                 CopyQueueManager.DeleteJournal();
                 _journal = null;
                 BtnUndo.Visibility = Visibility.Collapsed;
-                ShowStatus("Nothing left to put back - the moved files are gone from where they landed.", StatusKind.Warning);
+                ShowStatus(Loc.T("Str_CopyQueue_MsgNothingToPutBack", "Nothing left to put back - the moved files are gone from where they landed."), StatusKind.Warning);
                 return;
             }
             if (System.Windows.MessageBox.Show(
@@ -364,7 +364,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 FinishUi();
-                ShowStatus($"Undo stopped: {ex.Message}", StatusKind.Error);
+                ShowStatus(Loc.F("Str_CopyQueue_MsgUndoStopped", "Undo stopped: {0}", ex.Message), StatusKind.Error);
                 return;
             }
 
@@ -383,7 +383,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     CopyQueueManager.SaveJournal(_journal);
                 }
-                catch (Exception)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
                 {
                     // best effort
                 }
@@ -404,7 +404,7 @@ namespace Smart_Tools.WPF.Views
             Bar.Value = percent;
             TxtProgressPercent.Text = string.Format(CultureInfo.CurrentCulture, "{0:0}%", percent);
             string speed = p.BytesPerSecond > 0 ? $" · {CopyQueueManager.FormatSize((long)p.BytesPerSecond)}/s" : "";
-            TxtProgress.Text = $"{p.FilesDone:N0} of {p.FilesTotal:N0} · {CopyQueueManager.FormatSize(p.BytesDone)} of {CopyQueueManager.FormatSize(p.BytesTotal)}{speed} · {p.CurrentFile}";
+            TxtProgress.Text = Loc.F("Str_CopyQueue_Progress", "{0:N0} of {1:N0} · {2} of {3}{4} · {5}", p.FilesDone, p.FilesTotal, CopyQueueManager.FormatSize(p.BytesDone), CopyQueueManager.FormatSize(p.BytesTotal), speed, p.CurrentFile);
             UpdateSummary();
         }
 
@@ -420,13 +420,13 @@ namespace Smart_Tools.WPF.Views
             int verified = _items.Count(i => i.Status == CopyQueueStatus.Done && i.Verified);
 
             TxtSummaryFiles.Text = files > 0
-                ? $"{files:N0} file{(files == 1 ? "" : "s")} · {CopyQueueManager.FormatSize(bytes)}"
-                : $"{_sources.Count:N0} item{(_sources.Count == 1 ? "" : "s")} in the queue";
-            TxtSummaryDone.Text = $"{done:N0} {(Mode() == CopyQueueMode.Move ? "moved" : "copied")}";
-            TxtSummaryVerified.Text = $"{verified:N0} verified";
-            TxtSummaryAlready.Text = $"{already:N0} already there";
-            TxtSummarySkipped.Text = $"{skipped:N0} skipped";
-            TxtSummaryFailed.Text = $"{failed:N0} failed";
+                ? $"{FilesText.Files(files)} · {CopyQueueManager.FormatSize(bytes)}"
+                : Loc.N(_sources.Count, "Str_CopyQueue_ItemsOne", "{0:N0} item in the queue", "Str_CopyQueue_ItemsMany", "{0:N0} items in the queue", _sources.Count);
+            TxtSummaryDone.Text = (Mode() == CopyQueueMode.Move ? Loc.F("Str_Files_SumMoved", "{0:N0} moved", done) : Loc.F("Str_Files_SumCopied", "{0:N0} copied", done));
+            TxtSummaryVerified.Text = Loc.F("Str_CopyQueue_RunVerified", "{0:N0} verified", verified);
+            TxtSummaryAlready.Text = Loc.F("Str_CopyQueue_RunAlreadyThere", "{0:N0} already there", already);
+            TxtSummarySkipped.Text = Loc.F("Str_CopyQueue_RunSkipped", "{0:N0} skipped", skipped);
+            TxtSummaryFailed.Text = Loc.F("Str_CopyQueue_RunFailed", "{0:N0} failed", failed);
             PillDone.Visibility = done > 0 ? Visibility.Visible : Visibility.Collapsed;
             PillVerified.Visibility = verified > 0 ? Visibility.Visible : Visibility.Collapsed;
             PillAlready.Visibility = already > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -446,11 +446,11 @@ namespace Smart_Tools.WPF.Views
             _hasResult = true;
             Bar.Value = r.Cancelled > 0 ? Bar.Value : 100;
             TxtProgressPercent.Text = r.Cancelled > 0 ? TxtProgressPercent.Text : "100%";
-            TxtProgress.Text = undo ? CopyQueueManager.DescribeRun(r, CopyQueueMode.Move).Replace("Moved", "Put back") : CopyQueueManager.DescribeRun(r, mode);
+            TxtProgress.Text = CopyQueueManager.DescribeRun(r, undo ? CopyQueueMode.Move : mode, undo);
             UpdateSummary();
 
             var messages = new List<string>(notes);
-            if (r.Failed > 0) messages.Add($"{r.Failed:N0} file{(r.Failed == 1 ? "" : "s")} failed - the originals were not touched. Hover a row for details; press Start again to retry.");
+            if (r.Failed > 0) messages.Add(Loc.N(r.Failed, "Str_CopyQueue_FailedNoteOne", "{0:N0} file failed - the originals were not touched. Hover a row for details; press Start again to retry.", "Str_CopyQueue_FailedNoteMany", "{0:N0} files failed - the originals were not touched. Hover a row for details; press Start again to retry.", r.Failed));
             if (r.Cancelled > 0) messages.Add("Stopped. Press Start to carry on where it left off.");
             if (messages.Count > 0) ShowStatus(string.Join(" ", messages), r.Failed > 0 ? StatusKind.Error : StatusKind.Warning);
         }
@@ -480,15 +480,15 @@ namespace Smart_Tools.WPF.Views
             ListEmpty.Visibility = hasItems ? Visibility.Collapsed : Visibility.Visible;
             if (!hasItems)
             {
-                TxtEmptyTitle.Text = _sources.Count == 0 ? "Add files or folders" : "Ready to start";
+                TxtEmptyTitle.Text = _sources.Count == 0 ? Loc.T("Str_CopyQueue_EmptyAddTitle", "Add files or folders") : Loc.T("Str_CopyQueue_EmptyReadyTitle", "Ready to start");
                 TxtEmptyHint.Text = _sources.Count == 0
-                    ? "Drop them on the left, pick where they go, then press Start."
-                    : "Pick the destination if you haven't, then press Start.";
+                    ? Loc.T("Str_CopyQueue_EmptyAddHint", "Drop them on the left, pick where they go, then press Start.")
+                    : Loc.T("Str_CopyQueue_EmptyReadyHint", "Pick the destination if you haven't, then press Start.");
             }
 
             // The line under the bar says what to do next until a run has something to report.
             if (!_busy && !_hasResult)
-                TxtProgress.Text = _sources.Count == 0 ? "Add files or folders to start." : "Ready - press Start.";
+                TxtProgress.Text = _sources.Count == 0 ? Loc.T("Str_CopyQueue_MsgAddToStart", "Add files or folders to start.") : Loc.T("Str_CopyQueue_MsgReadyPress", "Ready - press Start.");
 
             UpdateSummary();
         }

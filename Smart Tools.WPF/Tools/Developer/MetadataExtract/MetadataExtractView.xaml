@@ -159,29 +159,29 @@
         <!--  Details grid: section headers (General, Video, Camera, Location…)  -->
         <DataTemplate x:Key="DetailsGroupHeaderTemplate">
             <Border
-                Margin="0,10,0,4"
-                Padding="8,5"
+                Margin="0,18,0,8"
+                Padding="12,8"
                 Background="{DynamicResource RowBg}"
-                CornerRadius="8">
+                CornerRadius="10">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon
                         x:Name="GroupIcon"
-                        Width="15"
-                        Height="15"
-                        Margin="0,0,8,0"
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,10,0"
                         VerticalAlignment="Center"
                         Foreground="{DynamicResource AccentColor}"
                         Kind="InformationOutline" />
                     <TextBlock
                         VerticalAlignment="Center"
-                        FontSize="12.5"
+                        FontSize="14"
                         FontWeight="Bold"
                         Foreground="{DynamicResource TextPrimary}"
                         Text="{Binding Name}" />
                     <TextBlock
-                        Margin="8,0,0,0"
+                        Margin="10,0,0,0"
                         VerticalAlignment="Center"
-                        FontSize="11"
+                        FontSize="12"
                         Foreground="{DynamicResource TextSecondary}"
                         Text="{Binding ItemCount}" />
                 </StackPanel>
@@ -556,12 +556,12 @@
                 <!--  Files + details (side by side; stacked on narrow windows)  -->
                 <Grid x:Name="ContentGrid" ctl:Tour.Key="Str_Tour_MetadataExtract_Results" ctl:Tour.Order="4" Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition MinWidth="300" Width="2*" />
                         <ColumnDefinition x:Name="DetailsGapColumn" Width="14" />
-                        <ColumnDefinition x:Name="DetailsColumn" Width="430" />
+                        <ColumnDefinition x:Name="DetailsColumn" MinWidth="460" Width="3*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="2*" />
                         <RowDefinition x:Name="DetailsGapRow" Height="0" />
                         <RowDefinition x:Name="DetailsRow" Height="0" />
                     </Grid.RowDefinitions>
@@ -968,23 +968,31 @@
                                 CanUserAddRows="False"
                                 CanUserSortColumns="False"
                                 ClipboardCopyMode="ExcludeHeader"
-                                FontSize="12"
+                                FontSize="13"
                                 HeadersVisibility="None"
                                 IsReadOnly="True"
+                                MinRowHeight="42"
                                 SelectionMode="Extended"
                                 ToolTip="{DynamicResource Str_Metadata_DetailsGridTooltip}"
                                 VirtualizingPanel.IsVirtualizingWhenGrouping="True">
                                 <DataGrid.GroupStyle>
                                     <GroupStyle HeaderTemplate="{StaticResource DetailsGroupHeaderTemplate}" />
                                 </DataGrid.GroupStyle>
+                                <DataGrid.CellStyle>
+                                    <Style BasedOn="{StaticResource {x:Type DataGridCell}}" TargetType="DataGridCell">
+                                        <Setter Property="Padding" Value="16,10" />
+                                    </Style>
+                                </DataGrid.CellStyle>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn
-                                        Width="150"
+                                        Width="210"
                                         Binding="{Binding Property, Mode=OneWay}"
                                         Header="{DynamicResource Str_Metadata_ColHeaderProperty}">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                                <Setter Property="FontSize" Value="12.5" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
                                                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                                                 <Setter Property="ToolTip" Value="{Binding Property}" />
                                                 <Setter Property="VerticalAlignment" Value="Center" />
@@ -1001,7 +1009,8 @@
                                                 <Setter Property="TextWrapping" Value="Wrap" />
                                                 <Setter Property="ToolTip" Value="{Binding Value}" />
                                                 <Setter Property="VerticalAlignment" Value="Center" />
-                                                <Setter Property="Margin" Value="0,3" />
+                                                <Setter Property="LineHeight" Value="20" />
+                                                <Setter Property="Margin" Value="0,2" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>

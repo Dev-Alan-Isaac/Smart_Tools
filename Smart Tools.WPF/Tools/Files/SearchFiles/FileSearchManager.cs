@@ -45,6 +45,8 @@ namespace Smart_Tools.WPF.Controllers
         public const int MaxOtherFilesListed = 1000;
         private const int BinarySniffBytes = 8192;
         private const int MaxLineTextChars = 300;
+        /// <summary>Longest piece of one line searched at once (a file with no line breaks is read in pieces, never whole).</summary>
+        private const int MaxLineChars = 2 * 1024 * 1024;
         private static readonly TimeSpan ReportEvery = TimeSpan.FromMilliseconds(100);
 
         // =================================================================
@@ -108,13 +110,13 @@ namespace Smart_Tools.WPF.Controllers
                                 }
                                 catch (ArgumentException ex)
                                 {
-                                    error = $"The pattern \"{p.Name}\" isn't valid: {ShortRegexError(ex)}";
+                                    error = Loc.F("Str_SearchFiles_ErrPatternInvalid", "The pattern \"{0}\" isn't valid: {1}", p.Name, ShortRegexError(ex));
                                     return null;
                                 }
                             }
                             if (list.Count == 0)
                             {
-                                error = "Tick at least one pattern, or type one.";
+                                error = Loc.T("Str_SearchFiles_ErrTickPattern", "Tick at least one pattern, or type one.");
                                 return null;
                             }
                             return new Matcher(list);
@@ -122,14 +124,14 @@ namespace Smart_Tools.WPF.Controllers
                         case FileSearchMode.Wildcard:
                             if (string.IsNullOrWhiteSpace(o.SearchText))
                             {
-                                error = "Type a wildcard, like *.log or report-??.txt.";
+                                error = Loc.T("Str_SearchFiles_ErrTypeWildcard", "Type a wildcard, like *.log or report-??.txt.");
                                 return null;
                             }
                             return new Matcher(new List<(string, Regex)> { ("", new Regex(WildcardToRegex(o.SearchText.Trim()), flags, MatchTimeout)) });
                         default:
                             if (string.IsNullOrEmpty(o.SearchText))
                             {
-                                error = "Type something to search for.";
+                                error = Loc.T("Str_SearchFiles_ErrTypeSomething", "Type something to search for.");
                                 return null;
                             }
                             if (o.WholeWord)
@@ -222,7 +224,7 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         private static string ShortRegexError(ArgumentException ex) =>
-            ex is RegexParseException p ? $"{p.Error} at character {p.Offset}" : ex.Message;
+            ex is RegexParseException p ? Loc.F("Str_SearchFiles_ErrAtChar", "{0} at character {1}", p.Error, p.Offset) : ex.Message;
 
         // =================================================================
         //  Finding files
@@ -295,6 +297,9 @@ namespace Smart_Tools.WPF.Controllers
             public List<RawMatch> Matches { get; } = new();
             public long MatchCount { get; set; }
             public string? Skip { get; set; }
+
+            /// <summary>A line was longer than the read limit and was searched in pieces.</summary>
+            public bool LongLine { get; set; }
         }
 
         /// <summary>
@@ -355,16 +360,18 @@ namespace Smart_Tools.WPF.Controllers
                 using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 64 * 1024, FileOptions.SequentialScan);
                 if (LooksBinary(stream))
                 {
-                    if (stream.Length > 0) scan.Skip = "Binary file - only its name was checked.";
+                    if (stream.Length > 0) scan.Skip = Loc.T("Str_SearchFiles_SkipBinary", "Binary file - only its name was checked.");
                     return scan;
                 }
                 stream.Position = 0;
                 using var reader = new StreamReader(stream, new UTF8Encoding(false), detectEncodingFromByteOrderMarks: true, 64 * 1024);
                 int lineNumber = 0;
                 string? line;
-                while ((line = reader.ReadLine()) != null)
+                var lines = new BoundedLineReader(reader, MaxLineChars);
+                while ((line = lines.ReadLine()) != null)
                 {
-                    lineNumber++;
+                    if (!lines.IsContinuation) lineNumber++;
+                    else scan.LongLine = true;
                     if ((lineNumber & 255) == 0) token.ThrowIfCancellationRequested();
                     List<Hit> hits;
                     try
@@ -373,33 +380,33 @@ namespace Smart_Tools.WPF.Controllers
                     }
                     catch (RegexMatchTimeoutException)
                     {
-                        scan.Skip = $"A pattern was too slow on line {lineNumber:N0}; the rest of this file was skipped (matches before it are kept).";
+                        scan.Skip = Loc.F("Str_SearchFiles_SkipSlow", "A pattern was too slow on line {0:N0}; the rest of this file was skipped (matches before it are kept).", lineNumber);
                         return scan;
                     }
                     if (hits.Count == 0) continue;
                     string lineText = ShortLine(line);
                     foreach (var h in hits)
                     {
-                        if (!Add(new RawMatch(line.Substring(h.Index, h.Length), lineNumber, h.Index + 1, h.PatternName, lineText, FileSearchMatchKind.Content, h.Segments)))
+                        if (!Add(new RawMatch(line.Substring(h.Index, h.Length), lineNumber, h.Index + 1 + lines.Offset, h.PatternName, lineText, FileSearchMatchKind.Content, h.Segments)))
                             return scan;
                     }
                 }
             }
             catch (RegexMatchTimeoutException)
             {
-                scan.Skip = "A pattern was too slow on the file name.";
+                scan.Skip = Loc.T("Str_SearchFiles_SkipSlowName", "A pattern was too slow on the file name.");
             }
             catch (UnauthorizedAccessException)
             {
-                scan.Skip = "Windows didn't allow reading it.";
+                scan.Skip = Loc.T("Str_SearchFiles_SkipDenied", "Windows didn't allow reading it.");
             }
             catch (IOException ex)
             {
-                scan.Skip = (ex.HResult & 0xFFFF) is 32 or 33 ? "Another program has it locked." : "It couldn't be read: " + ex.Message;
+                scan.Skip = (ex.HResult & 0xFFFF) is 32 or 33 ? Loc.T("Str_SearchFiles_SkipLocked", "Another program has it locked.") : Loc.F("Str_SearchFiles_SkipUnreadable", "It couldn't be read: {0}", ex.Message);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                scan.Skip = "It couldn't be read: " + ex.Message;   // one odd file never stops the search
+                scan.Skip = Loc.F("Str_SearchFiles_SkipUnreadable", "It couldn't be read: {0}", ex.Message);   // one odd file never stops the search
             }
             return scan;
         }
@@ -506,6 +513,7 @@ namespace Smart_Tools.WPF.Controllers
             var seen = new Dictionary<string, Seen>(o.IgnoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
             var dirty = new HashSet<Seen>();
             var skipped = new List<FileSearchSkip>();
+            int longLineFiles = 0;
             int next = 0, withMatches = 0;
             long matchesSeen = 0;
             bool truncated = false;
@@ -532,6 +540,7 @@ namespace Smart_Tools.WPF.Controllers
             void Merge(string path, FileScan scan)
             {
                 if (scan.Skip != null) skipped.Add(new FileSearchSkip(path, scan.Skip));
+                if (scan.LongLine) longLineFiles++;
                 if (scan.MatchCount == 0) return;
                 withMatches++;
                 matchesSeen += scan.MatchCount;
@@ -617,6 +626,7 @@ namespace Smart_Tools.WPF.Controllers
                 FilesWithMatches = withMatches,
                 MatchesSeen = matchesSeen,
                 Skipped = skipped,
+                LongLineFiles = longLineFiles,
                 InaccessibleFolders = inaccessible,
                 Truncated = truncated,
                 Cancelled = cancelled,
@@ -628,15 +638,16 @@ namespace Smart_Tools.WPF.Controllers
         {
             var parts = new List<string>();
             string rows = unique
-                ? $"{s.Results.Count:N0} different {FileSearchText.Plural(s.Results.Count, "value", "values")} ({s.MatchesSeen:N0} {FileSearchText.Plural(s.MatchesSeen, "match", "matches")} in total)"
-                : $"{s.Results.Count:N0} {FileSearchText.Plural(s.Results.Count, "match", "matches")}";
-            parts.Add($"{rows} in {s.FilesWithMatches:N0} of {s.FilesScanned:N0} {FileSearchText.Plural(s.FilesScanned, "file", "files")}");
-            if (s.Skipped.Count > 0) parts.Add($"{s.Skipped.Count:N0} skipped");
-            if (s.InaccessibleFolders > 0) parts.Add($"{s.InaccessibleFolders:N0} {FileSearchText.Plural(s.InaccessibleFolders, "folder", "folders")} couldn't be opened");
-            if (s.Truncated) parts.Add($"list stopped at {MaxResults:N0} rows");
+                ? Loc.F("Str_SearchFiles_SumUnique", "{0} ({1} in total)", SearchCounts.DiffValues(s.Results.Count), SearchCounts.Matches(s.MatchesSeen))
+                : SearchCounts.Matches(s.Results.Count);
+            parts.Add(Loc.F("Str_SearchFiles_SumIn", "{0} in {1:N0} of {2}", rows, s.FilesWithMatches, SearchCounts.Files(s.FilesScanned)));
+            if (s.Skipped.Count > 0) parts.Add(Loc.F("Str_CopyQueue_RunSkipped", "{0:N0} skipped", s.Skipped.Count));
+            if (s.InaccessibleFolders > 0) parts.Add(Loc.N(s.InaccessibleFolders, "Str_SearchFiles_SumFolderOne", "{0:N0} folder couldn't be opened", "Str_SearchFiles_SumFolderMany", "{0:N0} folders couldn't be opened", s.InaccessibleFolders));
+            if (s.LongLineFiles > 0) parts.Add(Loc.N(s.LongLineFiles, "Str_SearchFiles_SumLongLineOne", "{0:N0} file had a very long line, read in pieces", "Str_SearchFiles_SumLongLineMany", "{0:N0} files had a very long line, read in pieces", s.LongLineFiles));
+            if (s.Truncated) parts.Add(Loc.F("Str_SearchFiles_SumTruncated", "list stopped at {0:N0} rows", MaxResults));
             parts.Add(s.Elapsed.TotalSeconds < 1 ? $"{s.Elapsed.TotalMilliseconds:0} ms" : $"{s.Elapsed.TotalSeconds:0.0} s");
             string text = string.Join(" · ", parts) + ".";
-            return s.Cancelled ? "Stopped. " + text : text;
+            return s.Cancelled ? Loc.T("Str_SearchFiles_Stopped", "Stopped.") + " " + text : text;
         }
     }
 }

@@ -582,6 +582,7 @@
                                             SelectionChanged="Option_Changed"
                                             ToolTip="{DynamicResource Str_Dup_DetectionMethodTooltip}">
                                             <ComboBoxItem Tag="Sha256">SHA-256 (recommended)</ComboBoxItem>
+                                            <ComboBoxItem Content="{DynamicResource Str_Dup_ModeSameContent}" Tag="SameContent" />
                                             <ComboBoxItem Tag="Crc32">CRC32 (fastest)</ComboBoxItem>
                                             <ComboBoxItem Tag="Md5">MD5</ComboBoxItem>
                                             <ComboBoxItem Tag="Sha1">SHA-1</ComboBoxItem>
@@ -596,6 +597,31 @@
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Dup_CompareContentsTooltip}"
                                             Unchecked="Option_Changed" />
+
+                                        <!--  Same content, any format: how much a copy may differ  -->
+                                        <StackPanel x:Name="SameContentPanel" Margin="0,12,0,0" Visibility="Collapsed">
+                                            <TextBlock
+                                                Margin="0,0,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_Dup_SameContentLevelLabel}" />
+                                            <ComboBox
+                                                x:Name="CmbSameContentLevel"
+                                                SelectedIndex="0"
+                                                SelectionChanged="Option_Changed"
+                                                ToolTip="{DynamicResource Str_Dup_SameContentLevelTooltip}">
+                                                <ComboBoxItem Content="{DynamicResource Str_Dup_LevelFormatOnly}" Tag="FormatOnly" />
+                                                <ComboBoxItem Content="{DynamicResource Str_Dup_LevelSmall}" Tag="Small" />
+                                                <ComboBoxItem Content="{DynamicResource Str_Dup_LevelMedium}" Tag="Medium" />
+                                                <ComboBoxItem Content="{DynamicResource Str_Dup_LevelHeavy}" Tag="Heavy" />
+                                            </ComboBox>
+                                            <TextBlock
+                                                Margin="0,8,0,0"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource SidebarText}"
+                                                Opacity="0.75"
+                                                Text="{DynamicResource Str_Dup_SameContentHint}"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
                                     </StackPanel>
 
                                     <Border
@@ -812,6 +838,7 @@
                                         <ComboBoxItem Tag="Newest">Newest copy</ComboBoxItem>
                                         <ComboBoxItem Tag="ShortestPath">Shortest path</ComboBoxItem>
                                         <ComboBoxItem Tag="FolderOrder">Copy in the first folder listed</ComboBoxItem>
+                                        <ComboBoxItem Content="{DynamicResource Str_Dup_KeepHighestQuality}" Tag="HighestQuality" />
                                     </ComboBox>
                                     <CheckBox
                                         x:Name="ChkRecycleBin"

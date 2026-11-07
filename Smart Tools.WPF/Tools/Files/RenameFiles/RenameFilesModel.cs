@@ -231,12 +231,12 @@ namespace Smart_Tools.WPF.Models
 
         public string StatusText => _status switch
         {
-            RenameStatus.Ready => "Ready",
-            RenameStatus.NoChange => "No change",
-            RenameStatus.Invalid => "Can't use",
-            RenameStatus.Renamed => "Renamed",
-            RenameStatus.Failed => "Failed",
-            RenameStatus.Cancelled => "Cancelled",
+            RenameStatus.Ready => Loc.T("Str_Files_StatusReady", "Ready"),
+            RenameStatus.NoChange => Loc.T("Str_Files_StatusNoChange", "No change"),
+            RenameStatus.Invalid => Loc.T("Str_Files_StatusCanTUse", "Can't use"),
+            RenameStatus.Renamed => Loc.T("Str_Files_StatusRenamed", "Renamed"),
+            RenameStatus.Failed => Loc.T("Str_Files_StatusFailed", "Failed"),
+            RenameStatus.Cancelled => Loc.T("Str_Files_StatusCancelled", "Cancelled"),
             _ => "",
         };
 

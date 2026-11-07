@@ -25,6 +25,7 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             _history.Changed += RefreshList;
+            ClipboardWidgetManager.Changed += UpdateWidgetIcon;
             _viewConstructed = true;
         }
 
@@ -45,9 +46,16 @@ namespace Smart_Tools.WPF.Views
 
         private void RefreshList()
         {
-            var items = _history.Snapshot(TxtSearch.Text);
-            foreach (var item in items) item.MetaText = MetaOf(item);
-            ListItems.ItemsSource = items;
+            string day = (CmbDays.SelectedItem as ComboBoxItem)?.Tag as string ?? "all";
+            var items = _history.Snapshot(TxtSearch.Text).Where(i => InDayRange(i, day)).ToList();
+            foreach (var item in items)
+            {
+                item.MetaText = MetaOf(item);
+                item.DayGroup = DayGroupOf(item);
+            }
+            var view = new ListCollectionView(items);
+            view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ClipboardItem.DayGroup)));   // the list is already pinned first, then newest first
+            ListItems.ItemsSource = view;
 
             TxtCount.Text = string.Format(T("Str_Clipboard_Count", "{0} items"), _history.Count);
             PanelEmpty.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -56,6 +64,48 @@ namespace Smart_Tools.WPF.Views
             TxtEmptyHint.Text = searching
                 ? T("Str_Clipboard_NoMatchesHint", "Try another search. Pictures can't be searched.")
                 : T("Str_Clipboard_EmptyHint", "Copy some text or a picture and it appears here. History starts when you open this tool, stays in memory only, and is gone when Smart Tools closes. Copies marked private, like the Password Vault's, are never recorded.");
+        }
+
+        private static bool InDayRange(ClipboardItem item, string range)
+        {
+            var today = DateTime.Today;
+            var date = item.CopiedAt.Date;
+            return range switch
+            {
+                "today" => date == today,
+                "yesterday" => date == today.AddDays(-1),
+                "week" => date > today.AddDays(-7),
+                "month" => date > today.AddDays(-30),
+                "older" => date <= today.AddDays(-30),
+                _ => true,
+            };
+        }
+
+        /// <summary>Pinned items sit under their own heading; the rest under Today, Yesterday, or the day's name and date.</summary>
+        private static string DayGroupOf(ClipboardItem item)
+        {
+            if (item.IsPinned) return T("Str_Clipboard_GroupPinned", "Pinned");
+            var today = DateTime.Today;
+            var date = item.CopiedAt.Date;
+            if (date == today) return T("Str_Clipboard_GroupToday", "Today");
+            if (date == today.AddDays(-1)) return T("Str_Clipboard_GroupYesterday", "Yesterday");
+            return date > today.AddDays(-7)
+                ? date.ToString("dddd, d MMMM", CultureInfo.CurrentCulture)
+                : date.ToString("D", CultureInfo.CurrentCulture);
+        }
+
+        private void BtnWidget_Click(object sender, RoutedEventArgs e) => ClipboardWidgetManager.Toggle();
+
+        private void UpdateWidgetIcon()
+        {
+            IconWidget.Kind = ClipboardWidgetManager.IsOpen ? PackIconKind.PictureInPictureBottomRightOutline : PackIconKind.PictureInPictureBottomRight;
+            if (ClipboardWidgetManager.IsOpen) BtnWidget.SetResourceReference(BackgroundProperty, "AccentColorSubtle");
+            else BtnWidget.ClearValue(BackgroundProperty);
+        }
+
+        private void CmbDays_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_viewConstructed && _loadedOnce) RefreshList();
         }
 
         private static string MetaOf(ClipboardItem item)

@@ -108,6 +108,27 @@
 
     <StackPanel>
 
+        <!--  ============ Indirect translation ============  -->
+        <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <ContentControl
+                    Content="{DynamicResource Str_Settings_TranslateIndirectHeader}"
+                    Style="{StaticResource CardHeader}"
+                    Tag="{x:Static materialDesign:PackIconKind.SourceBranch}" />
+                <CheckBox
+                    x:Name="ChkIndirect"
+                    Margin="0,8,0,0"
+                    Click="ChkIndirect_Click"
+                    Content="{DynamicResource Str_Settings_TranslateIndirectCheck}" />
+                <TextBlock
+                    Margin="0,6,0,0"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{DynamicResource Str_Settings_TranslateIndirectHint}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
         <!--  ============ Models and where they are ============  -->
         <Border Style="{StaticResource CardStyle}">
             <StackPanel>

@@ -304,7 +304,7 @@ namespace Smart_Tools.WPF.Views
             if (_sources.Any(s => s.IsFolder))
             {
                 ProgressHash.IsIndeterminate = true;
-                TxtProgress.Text = "Reading folders...";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgReadingFolders", "Reading folders...");
             }
             try
             {
@@ -384,8 +384,8 @@ namespace Smart_Tools.WPF.Views
         {
             var dialog = new OpenFileDialog
             {
-                Title = "Open a checksum file",
-                Filter = "Checksum files (*.sha256;*.sha512;*.sha1;*.sha384;*.md5;*.sfv;*.txt;SHA*SUMS;MD5SUMS)|*.sha256;*.sha512;*.sha1;*.sha384;*.md5;*.sfv;*.txt;SHA*SUMS;MD5SUMS|All files (*.*)|*.*",
+                Title = Loc.T("Str_Hash_MsgOpenTitle", "Open a checksum file"),
+                Filter = Loc.T("Str_Hash_MsgOpenFilter", "Checksum files (*.sha256;*.sha512;*.sha1;*.sha384;*.md5;*.sfv;*.txt;SHA*SUMS;MD5SUMS)|*.sha256;*.sha512;*.sha1;*.sha384;*.md5;*.sfv;*.txt;SHA*SUMS;MD5SUMS|All files (*.*)|*.*"),
             };
             if (dialog.ShowDialog() != true) return;
 
@@ -421,7 +421,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnBaseFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog { Title = "Folder the checksum file refers to", InitialDirectory = _baseFolder };
+            var dialog = new OpenFolderDialog { Title = Loc.T("Str_Hash_MsgBaseFolderTitle", "Folder the checksum file refers to"), InitialDirectory = _baseFolder };
             if (dialog.ShowDialog() != true) return;
             _baseFolder = dialog.FolderName;
             TxtBaseFolder.Text = _baseFolder;
@@ -437,7 +437,7 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning)
             {
                 _runCts?.Cancel();
-                TxtProgress.Text = "Cancelling - finishing the file being hashed...";
+                TxtProgress.Text = Loc.T("Str_Hash_MsgCancelling", "Cancelling - finishing the file being hashed...");
                 return;
             }
 
@@ -497,10 +497,10 @@ namespace Smart_Tools.WPF.Views
                 try
                 {
                     int bad = result.Mismatched + result.Missing + result.Extra + result.Unreadable;
-                    ToastNotificationManager.ShowToast("Hashing Complete",
-                        mode == HashVerifyMode.Compute ? $"Hashed {result.Computed:N0} files."
-                        : bad == 0 ? $"All {result.Matched:N0} files match."
-                        : $"{result.Matched:N0} match - {bad:N0} need a look.");
+                    ToastNotificationManager.ShowToast(Loc.T("Str_Hash_MsgToastTitle", "Hashing Complete"),
+                        mode == HashVerifyMode.Compute ? Loc.F("Str_Hash_MsgToastHashed", "Hashed {0:N0} files.", result.Computed)
+                        : bad == 0 ? Loc.F("Str_Hash_MsgToastAllMatch", "All {0:N0} files match.", result.Matched)
+                        : Loc.F("Str_Hash_MsgToastSomeBad", "{0:N0} match - {1:N0} need a look.", result.Matched, bad));
                 }
                 catch (Exception ex)
                 {
@@ -510,7 +510,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetRunning(false);
-                TxtProgress.Text = "Stopped - something went wrong.";
+                TxtProgress.Text = Loc.T("Str_Hash_MsgStopped", "Stopped - something went wrong.");
                 MessageBox.Show(Loc.F("Str_MB_HashingFailed", "Hashing failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -556,7 +556,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressHash.IsIndeterminate = false;
                 ProgressHash.Value = 0;
                 TxtProgressPercent.Text = "0%";
-                TxtProgress.Text = "Starting...";
+                TxtProgress.Text = Loc.T("Str_DataQuality_MsgStarting", "Starting...");
             }
         }
 
@@ -779,8 +779,8 @@ namespace Smart_Tools.WPF.Views
 
             var dialog = new SaveFileDialog
             {
-                Title = "Save checksum file",
-                Filter = "Checksum file|*.*",
+                Title = Loc.T("Str_Hash_MsgSaveTitle", "Save checksum file"),
+                Filter = Loc.T("Str_Hash_MsgSaveFilter", "Checksum file|*.*"),
                 FileName = HashVerifierManager.DefaultChecksumFileName(kind),
                 OverwritePrompt = false,
             };
@@ -789,7 +789,7 @@ namespace Smart_Tools.WPF.Views
             {
                 string? root = _lastRunMode == HashVerifyMode.ChecksumList && _baseFolder.Length > 0 ? _baseFolder : null;
                 string saved = HashVerifierManager.SaveChecksumFile(rows, kind, dialog.FileName, root);
-                ToastNotificationManager.ShowToast("Export Complete", $"Saved {Path.GetFileName(saved)}");
+                ToastNotificationManager.ShowToast(Loc.T("Str_DataQuality_MsgExportComplete", "Export Complete"), Loc.F("Str_Generators_MsgSaved", "Saved {0}", Path.GetFileName(saved)));
             }
             catch (Exception ex)
             {
@@ -808,8 +808,8 @@ namespace Smart_Tools.WPF.Views
 
             var dialog = new SaveFileDialog
             {
-                Title = "Export results",
-                Filter = "CSV file (*.csv)|*.csv",
+                Title = Loc.T("Str_Hash_MsgExportTitle", "Export results"),
+                Filter = Loc.T("Str_DataQuality_MsgCsvFilter", "CSV file (*.csv)|*.csv"),
                 FileName = $"Hash results {DateTime.Now:yyyy-MM-dd HH-mm}.csv",
                 OverwritePrompt = false,
             };
@@ -817,7 +817,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 string saved = HashVerifierManager.SaveCsv(rows, dialog.FileName);
-                ToastNotificationManager.ShowToast("Export Complete", $"Saved {Path.GetFileName(saved)}");
+                ToastNotificationManager.ShowToast(Loc.T("Str_DataQuality_MsgExportComplete", "Export Complete"), Loc.F("Str_Generators_MsgSaved", "Saved {0}", Path.GetFileName(saved)));
             }
             catch (Exception ex)
             {

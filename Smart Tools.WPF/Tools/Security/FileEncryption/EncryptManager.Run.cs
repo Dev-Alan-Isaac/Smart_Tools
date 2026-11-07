@@ -392,9 +392,9 @@ namespace Smart_Tools.WPF.Controllers
             {
                 File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // cosmetic
+                // cosmetic: the hidden flag is only a convenience
             }
         }
 
@@ -405,9 +405,9 @@ namespace Smart_Tools.WPF.Controllers
             {
                 File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // cosmetic
+                // cosmetic: the hidden flag is only a convenience
             }
         }
 

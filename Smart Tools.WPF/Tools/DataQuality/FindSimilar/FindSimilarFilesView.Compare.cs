@@ -389,7 +389,7 @@ namespace Smart_Tools.WPF.Views
                     // VLC's first start reads its plugins - wait rather than convert a file VLC can play.
                     if (_compareVlcStart is { IsCompleted: false } starting)
                     {
-                        ShowCompareStatus("Starting VLC...");
+                        ShowCompareStatus(Loc.T("Str_Similar_MsgStartingVlc", "Starting VLC..."));
                         await starting;
                         if (token.IsCancellationRequested) return;
                         HideCompareStatus();
@@ -546,9 +546,9 @@ namespace Smart_Tools.WPF.Views
         private void UpdatePlayPauseIcon()
         {
             IconPlayPause.Kind = _comparePlaying ? PackIconKind.Pause : PackIconKind.Play;
-            BtnPlayPauseBoth.ToolTip = _comparePlaying ? "Pause both" : "Play both";
+            BtnPlayPauseBoth.ToolTip = _comparePlaying ? Loc.T("Str_Similar_PauseBoth", "Pause both") : Loc.T("Str_Similar_PlayBoth", "Play both");
             IconMute.Kind = _compareMuted ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
-            BtnMuteToggle.ToolTip = _compareMuted ? "Unmute" : "Mute both";
+            BtnMuteToggle.ToolTip = _compareMuted ? Loc.T("Str_Similar_Unmute", "Unmute") : Loc.T("Str_Similar_MuteBoth", "Mute both");
             TxtSpeed.Text = $"{_compareSpeed:0.##}x";
         }
 

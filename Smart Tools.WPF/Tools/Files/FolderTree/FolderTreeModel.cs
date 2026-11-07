@@ -1,6 +1,6 @@
 namespace Smart_Tools.WPF.Models
 {
-    public enum FolderTreeFormat { Text, Markdown, Json, Csv }
+    public enum FolderTreeFormat { Text, Markdown, Html, Json, Xml, Yaml, Csv, Paths, Pdf, Image }
 
     public sealed class FolderTreeOptions
     {

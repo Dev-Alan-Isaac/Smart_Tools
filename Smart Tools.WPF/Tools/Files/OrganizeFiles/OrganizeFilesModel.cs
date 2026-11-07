@@ -160,6 +160,29 @@ namespace Smart_Tools.WPF.Models
     public sealed record OrganizeImageFacts(int Width, int Height, string Format, int Depth);
 
     /// <summary>One row in the preview grid.</summary>
+    /// <summary>One destination folder in the preview grid. The group header folds its rows through <see cref="IsExpanded"/>.</summary>
+    public sealed class OrganizeFolderGroup : INotifyPropertyChanged
+    {
+        private bool _isExpanded = true;
+
+        public required string Name { get; init; }
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (_isExpanded == value) return;
+                _isExpanded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
+            }
+        }
+
+        public override string ToString() => Name;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
+
     public sealed class OrganizeFileItem : INotifyPropertyChanged
     {
         private OrganizeStatus _status = OrganizeStatus.Ready;
@@ -195,6 +218,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Destination folder relative to the destination root - the grid groups by this.</summary>
         public string DestinationFolderDisplay { get; set; } = "";
 
+        /// <summary>The preview group this file sits in (grouping key of the grid).</summary>
+        public OrganizeFolderGroup? FolderGroup { get; set; }
+
         public string DestinationName => Path.GetFileName(_destination);
         public bool IsRenamed => _destination.Length > 0 && !string.Equals(DestinationName, Name, StringComparison.OrdinalIgnoreCase);
 
@@ -223,13 +249,13 @@ namespace Smart_Tools.WPF.Models
 
         public string StatusText => _status switch
         {
-            OrganizeStatus.Ready => "Ready",
-            OrganizeStatus.InPlace => "In place",
-            OrganizeStatus.Moved => "Moved",
-            OrganizeStatus.Copied => "Copied",
-            OrganizeStatus.Duplicate => "Already there",
-            OrganizeStatus.Failed => "Failed",
-            OrganizeStatus.Cancelled => "Cancelled",
+            OrganizeStatus.Ready => Loc.T("Str_Files_StatusReady", "Ready"),
+            OrganizeStatus.InPlace => Loc.T("Str_Files_StatusInPlace", "In place"),
+            OrganizeStatus.Moved => Loc.T("Str_Files_StatusMoved", "Moved"),
+            OrganizeStatus.Copied => Loc.T("Str_Files_StatusCopied", "Copied"),
+            OrganizeStatus.Duplicate => Loc.T("Str_Files_StatusAlreadyThere", "Already there"),
+            OrganizeStatus.Failed => Loc.T("Str_Files_StatusFailed", "Failed"),
+            OrganizeStatus.Cancelled => Loc.T("Str_Files_StatusCancelled", "Cancelled"),
             _ => "",
         };
 
@@ -264,9 +290,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>What a video/audio/image rule does with other files - shown under the card.</summary>
         public string Hint => _criterion switch
         {
-            >= OrganizeCriterion.VideoResolution and <= OrganizeCriterion.VideoFrameRate => "Sorts videos only (read with ffprobe).",
-            >= OrganizeCriterion.AudioBitrate and <= OrganizeCriterion.AudioChannels => "Sorts audio files only (read with ffprobe).",
-            >= OrganizeCriterion.ImageResolution and <= OrganizeCriterion.ImageColorDepth => "Sorts images only.",
+            >= OrganizeCriterion.VideoResolution and <= OrganizeCriterion.VideoFrameRate => Loc.T("Str_Organize_HintVideoOnly", "Sorts videos only (read with ffprobe)."),
+            >= OrganizeCriterion.AudioBitrate and <= OrganizeCriterion.AudioChannels => Loc.T("Str_Organize_HintAudioOnly", "Sorts audio files only (read with ffprobe)."),
+            >= OrganizeCriterion.ImageResolution and <= OrganizeCriterion.ImageColorDepth => Loc.T("Str_Organize_HintImagesOnly", "Sorts images only."),
             _ => "",
         };
 

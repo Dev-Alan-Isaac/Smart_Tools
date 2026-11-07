@@ -170,6 +170,8 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (jpeg && mode == CleanMode.Everything && !NeedsRotationKept(input))
                 {
+                    // The whole JPEG is held (original + stripped copy) while it is rewritten: ask the budget first.
+                    using var bytesLease = MemoryBudget.Acquire(new FileInfo(input).Length * 2, token);
                     byte[] clean = JpegStripper.Strip(File.ReadAllBytes(input));
                     token.ThrowIfCancellationRequested();
                     File.WriteAllBytes(temp, clean);
@@ -179,7 +181,8 @@ namespace Smart_Tools.WPF.Controllers
                     if (MagickImageInfo.ReadCollection(input).Skip(1).Any())
                         throw new NotSupportedException("Animated and multi-page pictures can't be cleaned here.");
 
-                    using var image = new MagickImage(input);
+                    using var loaded = ImageLoad.Open(input, token);
+                    var image = loaded.Image;
                     token.ThrowIfCancellationRequested();
                     uint quality = image.Quality;
 

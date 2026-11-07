@@ -159,7 +159,7 @@ namespace Smart_Tools.WPF.Controllers
             if (toRead.Count > 0)
             {
                 if (needProbe && ProbeMedia == ProbeWithFfprobe && FfprobeExe == null && toRead.Any(f => FileTypeDetector.Detect(f.FullPath) != MediaKind.Image))
-                    throw new InvalidOperationException($"Video and audio rules need ffprobe.exe in {FfmpegFolder}. It wasn't found there.");
+                    throw new InvalidOperationException(Loc.F("Str_Organize_ErrNeedsFfprobe", "Video and audio rules need ffprobe.exe in {0}. It wasn't found there.", FfmpegFolder));
 
                 int done = 0;
                 var clock = Stopwatch.StartNew();
@@ -247,7 +247,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (token.IsCancellationRequested)
                 {
                     item.Status = OrganizeStatus.Cancelled;
-                    item.Message = "Not started - the run was cancelled.";
+                    item.Message = Loc.T("Str_Organize_MsgNotStarted", "Not started - the run was cancelled.");
                 }
                 else
                 {
@@ -317,7 +317,7 @@ namespace Smart_Tools.WPF.Controllers
             string? temp = null;
             try
             {
-                if (!File.Exists(item.FullPath)) throw new FileNotFoundException("The file is no longer there.");
+                if (!File.Exists(item.FullPath)) throw new FileNotFoundException(Loc.T("Str_Files_ErrGone", "The file is no longer there."));
 
                 string dest = item.Destination;
                 string dir = Path.GetDirectoryName(dest)!;
@@ -331,11 +331,11 @@ namespace Smart_Tools.WPF.Controllers
                     if (o.MoveFiles)
                     {
                         DeleteToRecycleBin(item.FullPath);
-                        item.Message = $"An identical file was already at {dest} - the original went to the Recycle Bin.";
+                        item.Message = Loc.F("Str_Organize_MsgIdenticalRecycled", "An identical file was already at {0} - the original went to the Recycle Bin.", dest);
                     }
                     else
                     {
-                        item.Message = $"An identical file is already at {dest}.";
+                        item.Message = Loc.F("Str_Organize_MsgIdentical", "An identical file is already at {0}.", dest);
                     }
                     return;
                 }
@@ -362,10 +362,10 @@ namespace Smart_Tools.WPF.Controllers
                     RetryIo(() => File.Copy(item.FullPath, temp, overwrite: true));
                     var source = new FileInfo(item.FullPath);
                     if (new FileInfo(temp).Length != source.Length)
-                        throw new IOException("The copy came out a different size - nothing was changed.");
+                        throw new IOException(Loc.T("Str_Files_ErrCopySize", "The copy came out a different size - nothing was changed."));
                     // A move deletes the original next, so prove the copy is identical first (size alone can't).
                     if (o.MoveFiles && !FilesAreIdentical(item.FullPath, temp))
-                        throw new IOException("The copy didn't match the original byte for byte - the original was left where it is.");
+                        throw new IOException(Loc.T("Str_Organize_ErrCopyMismatch", "The copy didn't match the original byte for byte - the original was left where it is."));
 
                     // A read-only original gives a read-only copy, and times can't be set on those.
                     var tempAttrs = File.GetAttributes(temp);
@@ -375,7 +375,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         File.SetCreationTimeUtc(temp, source.CreationTimeUtc);
                     }
-                    catch (Exception)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                     {
                         // not supported everywhere
                     }
@@ -394,7 +394,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         // Only remove the original once the verified copy is really at its final place.
                         if (!File.Exists(final) || new FileInfo(final).Length != source.Length)
-                            throw new IOException("The copy isn't where it should be - the original was left where it is.");
+                            throw new IOException(Loc.T("Str_Files_ErrCopyMissing", "The copy isn't where it should be - the original was left where it is."));
                         ClearReadOnly(item.FullPath);
                         RetryIo(() => File.Delete(item.FullPath));
                     }
@@ -403,8 +403,8 @@ namespace Smart_Tools.WPF.Controllers
                 item.Destination = final;
                 item.Status = o.MoveFiles ? OrganizeStatus.Moved : OrganizeStatus.Copied;
                 item.Message = SamePath(final, dest)
-                    ? $"{(o.MoveFiles ? "Moved" : "Copied")} to {final}"
-                    : $"A different file named {Path.GetFileName(dest)} was already there - saved as {Path.GetFileName(final)}.";
+                    ? (o.MoveFiles ? Loc.F("Str_Organize_MsgMovedTo", "Moved to {0}", final) : Loc.F("Str_Organize_MsgCopiedTo", "Copied to {0}", final))
+                    : Loc.F("Str_Files_MsgSavedAs", "A different file named {0} was already there - saved as {1}.", Path.GetFileName(dest), Path.GetFileName(final));
             }
             catch (Exception ex)
             {
@@ -419,7 +419,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         File.Delete(temp);
                     }
-                    catch (Exception)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                     {
                         // best effort
                     }
@@ -444,16 +444,16 @@ namespace Smart_Tools.WPF.Controllers
             {
                 case FileNotFoundException or DirectoryNotFoundException:
                     return parent.Length > 0 && !Directory.Exists(parent)
-                        ? $"{item.Name} is gone: its folder no longer exists."
-                        : $"{item.Name} is no longer there - it was moved, renamed or deleted after the scan.";
+                        ? Loc.F("Str_Organize_ErrFolderGone", "{0} is gone: its folder no longer exists.", item.Name)
+                        : Loc.F("Str_Organize_ErrGone", "{0} is no longer there - it was moved, renamed or deleted after the scan.", item.Name);
                 case PathTooLongException:
-                    return $"{item.Name}: the path is too long for Windows.";
+                    return Loc.F("Str_Files_ErrPathTooLong", "{0}: the path is too long for Windows.", item.Name);
                 case UnauthorizedAccessException:
-                    return $"{item.Name}: access denied - the file or folder is protected or read-only.";
+                    return Loc.F("Str_Files_ErrDenied", "{0}: access denied - the file or folder is protected or read-only.", item.Name);
                 case IOException when ex.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021):
-                    return $"{item.Name} is in use by another program (antivirus, Explorer, an unzip tool...). Close it and run again.";
+                    return Loc.F("Str_Organize_ErrInUse", "{0} is in use by another program (antivirus, Explorer, an unzip tool...). Close it and run again.", item.Name);
                 case IOException when ex.HResult is unchecked((int)0x80070070) or unchecked((int)0x80070027):
-                    return $"{item.Name}: the destination is full - the original was left where it is.";
+                    return Loc.F("Str_Files_ErrDiskFull", "{0}: the destination is full - the original was left where it is.", item.Name);
                 default:
                     return $"{item.Name}: {ex.Message}";
             }
@@ -480,7 +480,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return string.Equals(Path.GetPathRoot(Path.GetFullPath(a)), Path.GetPathRoot(Path.GetFullPath(b)), StringComparison.OrdinalIgnoreCase);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.Security.SecurityException)
             {
                 return false;
             }
@@ -515,7 +515,7 @@ namespace Smart_Tools.WPF.Controllers
                     DeleteFolderAndJunk(current);
                     removed++;
                 }
-                catch (Exception)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
                     break;
                 }
@@ -571,9 +571,10 @@ namespace Smart_Tools.WPF.Controllers
                     removed++;
                 }
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // locked or protected folder: leave it
+                // locked or protected folder: leave it, but say why in the log
+                Log.Info($"Organize: empty folder left in place ({ex.GetType().Name}: {ex.Message})");
             }
             return removed;
         }
@@ -624,9 +625,10 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
                     }
-                    catch (Exception)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                     {
-                        // still in use - leave it
+                        // in use or protected - leave it, but say why in the log
+                        Log.Info($"Organize undo: folder left in place ({ex.GetType().Name}): {folder}");
                     }
                 }
                 return result;
@@ -650,7 +652,7 @@ namespace Smart_Tools.WPF.Controllers
                 else
                 {
                     result.Failed++;
-                    result.Errors.Add($"{Path.GetFileName(entry.To)}: changed since it was copied (or the original is gone) - kept.");
+                    result.Errors.Add(Loc.F("Str_Organize_ErrChanged", "{0}: changed since it was copied (or the original is gone) - kept.", Path.GetFileName(entry.To)));
                 }
                 return;
             }

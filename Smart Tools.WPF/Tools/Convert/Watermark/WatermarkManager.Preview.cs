@@ -65,7 +65,8 @@ namespace Smart_Tools.WPF.Controllers
 
         private static BitmapSource ImagePreview(string path, int maxSide)
         {
-            using var image = new MagickImage(path);
+            using var loaded = ImageLoad.Open(path, CancellationToken.None, (uint)maxSide);
+            var image = loaded.Image;
             image.AutoOrient();
             if (image.Width > maxSide || image.Height > maxSide) image.Resize(new MagickGeometry((uint)maxSide, (uint)maxSide));
             image.ColorSpace = ColorSpace.sRGB;

@@ -44,7 +44,22 @@ namespace Smart_Tools.WPF.Controllers
         public static string NotesFile => Path.Combine(DataFolder, "notes.json");
         public static string BackupFile => NotesFile + ".bak";
 
+        /// <summary>The pictures pasted or added into notes (one PNG each); the note text refers to them by file name.</summary>
+        public static string ImagesFolder => Path.Combine(DataFolder, "note-images");
+
         public static bool IsLoaded { get; private set; }
+
+        /// <summary>A note another window (a pinned widget) wants the Notes page to show.</summary>
+        public static Guid? PendingSelect { get; set; }
+
+        /// <summary>Raised after <see cref="RequestSelect"/>, for a Notes page that is already open.</summary>
+        public static event Action? SelectRequested;
+
+        public static void RequestSelect(Guid id)
+        {
+            PendingSelect = id;
+            SelectRequested?.Invoke();
+        }
 
         /// <summary>True when the file couldn't be read - saving is refused so it isn't overwritten.</summary>
         public static bool SavingPaused { get; private set; }
@@ -96,7 +111,7 @@ namespace Smart_Tools.WPF.Controllers
                     result = new NotesLoadResult
                     {
                         ReadFailed = true,
-                        Message = "Your notes couldn't be opened (" + PlainError(mainError) + "). Nothing will be saved until Smart Tools is restarted, so they can't be overwritten.",
+                        Message = Loc.F("Str_Notes_MsgOpenFailed", "Your notes couldn't be opened ({0}). Nothing will be saved until Smart Tools is restarted, so they can't be overwritten.", PlainError(mainError)),
                     };
                 }
                 else
@@ -120,7 +135,7 @@ namespace Smart_Tools.WPF.Controllers
                         {
                             KeptAside = keptAside,
                             Message = keptAside != null
-                                ? $"Your notes file was damaged and couldn't be read. It was kept as {Path.GetFileName(keptAside)} in {DataFolder}, so nothing in it is lost."
+                                ? Loc.F("Str_Notes_MsgDamaged", "Your notes file was damaged and couldn't be read. It was kept as {0} in {1}, so nothing in it is lost.", Path.GetFileName(keptAside), DataFolder)
                                 : null,
                         };
                     }
@@ -153,6 +168,8 @@ namespace Smart_Tools.WPF.Controllers
             CreatedAt = r.CreatedAt == default ? DateTime.Now : r.CreatedAt,
             Title = r.Title ?? "",
             Text = r.Text ?? "",
+            Rich = r.Rich ?? "",
+            Source = r.Source ?? "",
             ColorHex = IsColor(r.ColorHex) ? r.ColorHex!.ToUpperInvariant() : DefaultColorHex,
             Pinned = r.Pinned,
             ModifiedAt = r.ModifiedAt == default ? (r.CreatedAt == default ? DateTime.Now : r.CreatedAt) : r.ModifiedAt,
@@ -164,6 +181,8 @@ namespace Smart_Tools.WPF.Controllers
             CreatedAt = n.CreatedAt,
             Title = n.Title,
             Text = n.Text,
+            Rich = string.IsNullOrEmpty(n.Rich) ? null : n.Rich,
+            Source = string.IsNullOrEmpty(n.Source) ? null : n.Source,
             ColorHex = n.ColorHex,
             Pinned = n.Pinned,
             ModifiedAt = n.ModifiedAt,
@@ -207,7 +226,7 @@ namespace Smart_Tools.WPF.Controllers
         public static string? Save()
         {
             if (!IsLoaded) EnsureLoaded();
-            if (SavingPaused) return "Saving is paused because your notes file couldn't be opened. Restart Smart Tools to try again.";
+            if (SavingPaused) return Loc.T("Str_Notes_MsgSavingPausedLong", "Saving is paused because your notes file couldn't be opened. Restart Smart Tools to try again.");
 
             string temp = NotesFile + ".tmp";
             try
@@ -223,16 +242,16 @@ namespace Smart_Tools.WPF.Controllers
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
             {
                 try { if (File.Exists(temp)) File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
-                return "Couldn't save: " + PlainError(ex);
+                return Loc.F("Str_Notes_MsgCantSave", "Couldn't save: {0}", PlainError(ex));
             }
         }
 
         public static string PlainError(Exception? ex) => ex switch
         {
-            UnauthorizedAccessException => "Windows didn't allow it",
-            IOException io when (io.HResult & 0xFFFF) is 32 or 33 => "the file is open in another program",
-            IOException io when (io.HResult & 0xFFFF) is 39 or 112 => "the disk is full",
-            null => "unknown error",
+            UnauthorizedAccessException => Loc.T("Str_Notes_ErrDenied", "Windows didn't allow it"),
+            IOException io when (io.HResult & 0xFFFF) is 32 or 33 => Loc.T("Str_Notes_ErrInUse", "the file is open in another program"),
+            IOException io when (io.HResult & 0xFFFF) is 39 or 112 => Loc.T("Str_Notes_ErrDiskFull", "the disk is full"),
+            null => Loc.T("Str_Notes_ErrUnknown", "unknown error"),
             _ => ex.Message,
         };
 
@@ -323,7 +342,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             var words = Fold(query ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length == 0) return true;
-            string hay = Fold(note.Title + " " + note.Text);
+            string hay = Fold(note.Title + " " + note.Text + " " + note.Source);
             return words.All(w => hay.Contains(w, StringComparison.Ordinal));
         }
 
@@ -350,7 +369,51 @@ namespace Smart_Tools.WPF.Controllers
         {
             string name = new string(note.DisplayTitle.Select(c => Path.GetInvalidFileNameChars().Contains(c) || c is ':' or '*' or '?' or '"' or '<' or '>' or '|' or '/' or '\\' ? ' ' : c).ToArray()).Trim().TrimEnd('.');
             if (name.Length > 60) name = name[..60].Trim();
-            return (name.Length == 0 ? "Note" : name) + ".txt";
+            return (name.Length == 0 ? Loc.T("Str_Notes_FileNameFallback", "Note") : name) + ".txt";
+        }
+
+        /// <summary>The rich text as Markdown: **bold**, *italic*, ~~strikethrough~~, "- " list items. Pictures become a short [picture] mark.</summary>
+        public static string ToMarkdown(string rich)
+        {
+            System.Xml.Linq.XElement root;
+            try
+            {
+                root = System.Xml.Linq.XElement.Parse("<n>" + rich + "</n>", System.Xml.Linq.LoadOptions.PreserveWhitespace);
+            }
+            catch (System.Xml.XmlException)
+            {
+                return rich;
+            }
+
+            var lines = new List<string>();
+            foreach (var block in root.Elements())
+            {
+                if (block.Name.LocalName == "ul") lines.AddRange(block.Elements("li").Select(li => "- " + Inline(li)));
+                else lines.Add(Inline(block));
+            }
+            return string.Join("\n", lines);
+
+            static string Inline(System.Xml.Linq.XElement parent)
+            {
+                var sb = new StringBuilder();
+                foreach (var node in parent.Nodes())
+                {
+                    if (node is System.Xml.Linq.XText t) { sb.Append(t.Value); continue; }
+                    if (node is not System.Xml.Linq.XElement e) continue;
+                    string inner = e.Name.LocalName == "img" ? "" : Inline(e);
+                    sb.Append(e.Name.LocalName switch
+                    {
+                        "b" => "**" + inner + "**",
+                        "i" => "*" + inner + "*",
+                        "s" => "~~" + inner + "~~",
+                        "u" => "<u>" + inner + "</u>",
+                        "br" => "  \n",
+                        "img" => "[" + Loc.T("Str_Notes_ExportPicture", "picture") + "]",
+                        _ => inner,
+                    });
+                }
+                return sb.ToString();
+            }
         }
 
         /// <summary>Saves one note as a text file (title, blank line, text), under a temporary name first.</summary>
@@ -360,8 +423,10 @@ namespace Smart_Tools.WPF.Controllers
                 string temp = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, $".{Guid.NewGuid():N}.tmp");
                 try
                 {
-                    string body = note.Text.Replace("\r\n", "\n").Replace("\n", "\r\n");
-                    File.WriteAllText(temp, note.DisplayTitle + "\r\n\r\n" + body, new UTF8Encoding(true));
+                    bool markdown = path.EndsWith(".md", StringComparison.OrdinalIgnoreCase);
+                    string body = (markdown && note.Rich.Length > 0 ? ToMarkdown(note.Rich) : note.Text).Replace("\r\n", "\n").Replace("\n", "\r\n");
+                    string source = note.Source.Length > 0 ? "\r\n\r\n" + Loc.F("Str_Notes_ExportSource", "Source: {0}", note.Source) : "";
+                    File.WriteAllText(temp, (markdown ? "# " : "") + note.DisplayTitle + "\r\n\r\n" + body + source, new UTF8Encoding(true));
                     File.Move(temp, path, overwrite: true);
                 }
                 finally

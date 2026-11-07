@@ -188,6 +188,34 @@
                         Margin="12,0,0,0"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
+                        <ComboBox
+                            x:Name="CmbDays"
+                            Width="160"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            SelectedIndex="0"
+                            SelectionChanged="CmbDays_SelectionChanged"
+                            ToolTip="{DynamicResource Str_Clipboard_DaysTip}">
+                            <ComboBoxItem Content="{DynamicResource Str_Clipboard_DaysAll}" Tag="all" />
+                            <ComboBoxItem Content="{DynamicResource Str_Clipboard_DaysToday}" Tag="today" />
+                            <ComboBoxItem Content="{DynamicResource Str_Clipboard_DaysYesterday}" Tag="yesterday" />
+                            <ComboBoxItem Content="{DynamicResource Str_Clipboard_DaysWeek}" Tag="week" />
+                            <ComboBoxItem Content="{DynamicResource Str_Clipboard_DaysMonth}" Tag="month" />
+                            <ComboBoxItem Content="{DynamicResource Str_Clipboard_DaysOlder}" Tag="older" />
+                        </ComboBox>
+                        <Button
+                            x:Name="BtnWidget"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Click="BtnWidget_Click"
+                            Style="{StaticResource ListToolButtonStyle}"
+                            ToolTip="{DynamicResource Str_Clipboard_WidgetPin}">
+                            <materialDesign:PackIcon
+                                x:Name="IconWidget"
+                                Width="16"
+                                Height="16"
+                                Kind="PictureInPictureBottomRight" />
+                        </Button>
                         <Border
                             Margin="0,0,8,0"
                             Background="{DynamicResource RowBg}"
@@ -268,7 +296,34 @@
                         BorderThickness="0"
                         MouseDoubleClick="ListItems_MouseDoubleClick"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                        ToolTip="{DynamicResource Str_Clipboard_DoubleClickTip}" />
+                        ToolTip="{DynamicResource Str_Clipboard_DoubleClickTip}">
+                        <ListBox.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="4,12,4,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                FontWeight="Bold"
+                                                Foreground="{DynamicResource TextSecondary}"
+                                                Text="{Binding Name}" />
+                                            <Border
+                                                Grid.Column="1"
+                                                Height="1"
+                                                Margin="10,1,0,0"
+                                                VerticalAlignment="Center"
+                                                Background="{DynamicResource CardBorder}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListBox.GroupStyle>
+                    </ListBox>
 
                     <StackPanel
                         x:Name="PanelEmpty"

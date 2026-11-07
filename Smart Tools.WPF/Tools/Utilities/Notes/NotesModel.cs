@@ -18,6 +18,8 @@ namespace Smart_Tools.WPF.Models
 
         private string _title = "";
         private string _text = "";
+        private string _rich = "";
+        private string _source = "";
         private string _colorHex = "#FFF59D";
         private bool _pinned;
         private DateTime _modifiedAt = DateTime.Now;
@@ -49,6 +51,35 @@ namespace Smart_Tools.WPF.Models
                 OnPropertyChanged(nameof(Snippet));
             }
         }
+
+        /// <summary>
+        /// The note with its formatting and pictures (see NoteRichText for the format). Empty for a note that was only ever
+        /// plain text - the editor then builds it from <see cref="Text"/>. <see cref="Text"/> always holds the plain version.
+        /// </summary>
+        public string Rich
+        {
+            get => _rich;
+            set
+            {
+                if (_rich == value) return;
+                _rich = value ?? "";
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>Where the note's content came from (a web address or a program/window name). Optional.</summary>
+        public string Source
+        {
+            get => _source;
+            set
+            {
+                if (_source == value) return;
+                _source = value ?? "";
+                OnPropertyChanged();
+            }
+        }
+
+        public bool HasPicture => _rich.Contains("<img ", StringComparison.Ordinal);
 
         /// <summary>Sticky-note colour, e.g. "#FFF59D".</summary>
         public string ColorHex
@@ -85,7 +116,7 @@ namespace Smart_Tools.WPF.Models
             }
         }
 
-        public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? UntitledLabel : Title.Trim();
+        public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? Loc.T("Str_Notes_Untitled", UntitledLabel) : Title.Trim();
 
         /// <summary>The first two non-empty lines of the text (for the card).</summary>
         public string Snippet
@@ -102,7 +133,7 @@ namespace Smart_Tools.WPF.Models
         public string ModifiedLabel => "Edited " + NoteText.Ago(ModifiedAt, DateTime.Now);
 
         /// <summary>Nothing typed yet (a fresh "New note" - reused instead of piling up empty notes).</summary>
-        public bool IsBlank => (string.IsNullOrWhiteSpace(Title) || Title.Trim() == UntitledLabel) && string.IsNullOrWhiteSpace(Text);
+        public bool IsBlank => (string.IsNullOrWhiteSpace(Title) || Title.Trim() == UntitledLabel) && string.IsNullOrWhiteSpace(Text) && !HasPicture && string.IsNullOrWhiteSpace(Source);
 
         /// <summary>Re-reads the clock for <see cref="ModifiedLabel"/>.</summary>
         public void RefreshTimeLabel() => OnPropertyChanged(nameof(ModifiedLabel));
@@ -120,6 +151,8 @@ namespace Smart_Tools.WPF.Models
         public DateTime CreatedAt { get; set; }
         public string? Title { get; set; }
         public string? Text { get; set; }
+        public string? Rich { get; set; }
+        public string? Source { get; set; }
         public string? ColorHex { get; set; }
         public bool Pinned { get; set; }
         public DateTime ModifiedAt { get; set; }

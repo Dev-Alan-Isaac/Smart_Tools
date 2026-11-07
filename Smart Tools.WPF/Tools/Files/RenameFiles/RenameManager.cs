@@ -248,10 +248,10 @@ namespace Smart_Tools.WPF.Controllers
             foreach (char c in fileName) sb.Append(InvalidChars.Contains(c) || char.IsControl(c) ? '_' : c);
             string safe = sb.ToString().TrimEnd('.', ' ');
 
-            if (safe.Trim().Length == 0 || safe.All(c => c == '.')) return (safe, "The new name would be empty.");
+            if (safe.Trim().Length == 0 || safe.All(c => c == '.')) return (safe, Loc.T("Str_Rename_ErrEmptyName", "The new name would be empty."));
             string stem = safe.Split('.')[0].Trim();
-            if (ReservedNames.Contains(stem)) return (safe, $"\"{stem}\" is a name Windows reserves for devices.");
-            if (safe.Length > MaxNameLength) return (safe, $"The new name is {safe.Length} characters - Windows allows {MaxNameLength}.");
+            if (ReservedNames.Contains(stem)) return (safe, Loc.F("Str_Rename_ErrReserved", "\"{0}\" is a name Windows reserves for devices.", stem));
+            if (safe.Length > MaxNameLength) return (safe, Loc.F("Str_Rename_ErrNameLong", "The new name is {0} characters - Windows allows {1}.", safe.Length, MaxNameLength));
             return (safe, null);
         }
 
@@ -274,10 +274,10 @@ namespace Smart_Tools.WPF.Controllers
         {
             regex = null;
             if (o.Method == RenameMethod.ReplaceName && string.IsNullOrWhiteSpace(o.NewName))
-                return "Type the new name for the files.";
+                return Loc.T("Str_Rename_ErrTypeName", "Type the new name for the files.");
             if (o.Method == RenameMethod.RegexReplace)
             {
-                if (string.IsNullOrEmpty(o.Pattern)) return "Type a pattern to search for.";
+                if (string.IsNullOrEmpty(o.Pattern)) return Loc.T("Str_Rename_ErrTypePattern", "Type a pattern to search for.");
                 try
                 {
                     regex = new Regex(o.Pattern,
@@ -286,15 +286,15 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 catch (ArgumentException ex)
                 {
-                    return "The pattern isn't valid: " + ex.Message;
+                    return Loc.F("Str_Rename_ErrPatternInvalid", "The pattern isn't valid: {0}", ex.Message);
                 }
             }
             if (o.ExtensionMode == RenameExtensionMode.Change)
             {
                 string e = NormalizeExtension(o.NewExtension);
-                if (e.Length == 0) return "Type the new extension (for example jpg).";
+                if (e.Length == 0) return Loc.T("Str_Rename_ErrTypeExtension", "Type the new extension (for example jpg).");
                 if (e.Skip(1).Any(c => InvalidChars.Contains(c) || c == '.' || char.IsWhiteSpace(c)))
-                    return $"\"{o.NewExtension.Trim()}\" can't be an extension - use letters and numbers only.";
+                    return Loc.F("Str_Rename_ErrBadExtension", "\"{0}\" can't be an extension - use letters and numbers only.", o.NewExtension.Trim());
             }
             return null;
         }
@@ -394,7 +394,7 @@ namespace Smart_Tools.WPF.Controllers
                 var (safe, problem) = MakeSafe(desired);
                 rows.Add((f, problem == null ? safe : desired, problem));
             }
-            if (regexTooSlow) error = "The pattern takes too long on these names - simplify it (for example avoid nested repeats like (a+)+).";
+            if (regexTooSlow) error = Loc.T("Str_Rename_ErrPatternSlow", "The pattern takes too long on these names - simplify it (for example avoid nested repeats like (a+)+).");
 
             // Sources that will move away free their names for others.
             var leaving = new HashSet<string>(
@@ -422,7 +422,7 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 if (!leaving.Contains(f.FullPath))
                 {
-                    items.Add(Row(f, f.FileName, RenameStatus.NoChange, "The rules don't change this name.", adjusted: false));
+                    items.Add(Row(f, f.FileName, RenameStatus.NoChange, Loc.T("Str_Rename_MsgNoChange", "The rules don't change this name."), adjusted: false));
                     continue;
                 }
 
@@ -441,11 +441,11 @@ namespace Smart_Tools.WPF.Controllers
                 bool adjusted = !string.Equals(final, desired, StringComparison.Ordinal);
                 if (string.Equals(final, f.FileName, StringComparison.Ordinal))
                 {
-                    items.Add(Row(f, f.FileName, RenameStatus.NoChange, "The rules don't change this name.", adjusted: false));
+                    items.Add(Row(f, f.FileName, RenameStatus.NoChange, Loc.T("Str_Rename_MsgNoChange", "The rules don't change this name."), adjusted: false));
                     continue;
                 }
                 items.Add(Row(f, final, RenameStatus.Ready,
-                    adjusted ? $"{desired} is already taken in this folder - this one becomes {final}." : $"Becomes {final}", adjusted));
+                    adjusted ? Loc.F("Str_Rename_MsgTakenBecomes", "{0} is already taken in this folder - this one becomes {1}.", desired, final) : Loc.F("Str_Rename_MsgBecomes", "Becomes {0}", final), adjusted));
                 example ??= $"{f.FileName}  →  {final}";
             }
 
@@ -466,23 +466,23 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>"120 files to rename · 3 unchanged · 2 get (2)".</summary>
         public static string DescribePlan(IReadOnlyCollection<RenamePreviewItem> items)
         {
-            if (items.Count == 0) return "No files in these folders.";
+            if (items.Count == 0) return Loc.T("Str_Rename_MsgNoFiles", "No files in these folders.");
             int ready = items.Count(i => i.Status == RenameStatus.Ready);
-            var parts = new List<string> { $"{ready:N0} {RenameText.Plural(ready, "file", "files")} to rename" };
+            var parts = new List<string> { Loc.N(ready, "Str_Rename_PlanOne", "{0:N0} file to rename", "Str_Rename_PlanMany", "{0:N0} files to rename", ready) };
             int same = items.Count(i => i.Status == RenameStatus.NoChange);
             int bad = items.Count(i => i.Status == RenameStatus.Invalid);
             int adjusted = items.Count(i => i.Status == RenameStatus.Ready && i.IsAdjusted);
-            if (same > 0) parts.Add($"{same:N0} unchanged");
-            if (adjusted > 0) parts.Add($"{adjusted:N0} get \" (2)\" (name taken)");
-            if (bad > 0) parts.Add($"{bad:N0} can't use the new name");
+            if (same > 0) parts.Add(Loc.F("Str_Rename_SumUnchanged", "{0:N0} unchanged", same));
+            if (adjusted > 0) parts.Add(Loc.F("Str_Rename_PlanTaken", "{0:N0} get \" (2)\" (name taken)", adjusted));
+            if (bad > 0) parts.Add(Loc.F("Str_Rename_PlanBad", "{0:N0} can't use the new name", bad));
             return string.Join(" · ", parts);
         }
 
         public static string DescribeRun(RenameRunResult r)
         {
-            var parts = new List<string> { $"Renamed {r.Renamed:N0} {RenameText.Plural(r.Renamed, "file", "files")} in {r.Elapsed.TotalSeconds:0.0} s" };
-            if (r.Failed > 0) parts.Add($"{r.Failed:N0} failed");
-            if (r.Cancelled > 0) parts.Add($"{r.Cancelled:N0} cancelled");
+            var parts = new List<string> { Loc.N(r.Renamed, "Str_Rename_RunOne", "Renamed {0:N0} file in {1:0.0} s", "Str_Rename_RunMany", "Renamed {0:N0} files in {1:0.0} s", r.Renamed, r.Elapsed.TotalSeconds) };
+            if (r.Failed > 0) parts.Add(Loc.F("Str_CopyQueue_RunFailed", "{0:N0} failed", r.Failed));
+            if (r.Cancelled > 0) parts.Add(Loc.F("Str_Files_RunCancelled", "{0:N0} cancelled", r.Cancelled));
             return string.Join(" · ", parts);
         }
 
@@ -501,19 +501,14 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return File.Exists(file) ? JsonSerializer.Deserialize<T>(File.ReadAllText(file), JsonOptions) : null;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
+                if (ex is JsonException or NotSupportedException) JsonSettings.KeepBadCopy(file);
                 return null;
             }
         }
 
-        private static void Save<T>(T value, string file)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(value, JsonOptions));
-            File.Move(temp, file, overwrite: true);
-        }
+        private static void Save<T>(T value, string file) => AtomicFile.WriteAllText(file, JsonSerializer.Serialize(value, JsonOptions));
 
         public static RenameSettings LoadSettings(string? path = null)
         {
@@ -558,7 +553,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 File.Delete(path ?? DefaultJournalPath);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // best effort
             }

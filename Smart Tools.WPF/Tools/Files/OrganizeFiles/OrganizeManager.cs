@@ -405,7 +405,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (taken.Add(dest))
                 {
                     if (File.Exists(dest) && !batchPaths.Contains(dest))
-                        item.Message = $"A file named {item.Name} is already in that folder. If it's identical, this one isn't copied again; otherwise it's saved with \" (2)\".";
+                        item.Message = Loc.F("Str_Organize_MsgExists", "A file named {0} is already in that folder. If it's identical, this one isn't copied again; otherwise it's saved with \" (2)\".", item.Name);
                     continue;
                 }
 
@@ -420,7 +420,7 @@ namespace Smart_Tools.WPF.Controllers
                 } while (taken.Contains(candidate) || (File.Exists(candidate) && !batchPaths.Contains(candidate)));
                 taken.Add(candidate);
                 item.Destination = candidate;
-                item.Message = $"Another file here has the same name - this one will be saved as {Path.GetFileName(candidate)}.";
+                item.Message = Loc.F("Str_Organize_MsgSameName", "Another file here has the same name - this one will be saved as {0}.", Path.GetFileName(candidate));
             }
 
             return items;
@@ -433,23 +433,23 @@ namespace Smart_Tools.WPF.Controllers
             int folders = items.Where(i => i.Status == OrganizeStatus.Ready).Select(i => i.DestinationFolderDisplay).Distinct(StringComparer.OrdinalIgnoreCase).Count();
             int inPlace = items.Count(i => i.Status == OrganizeStatus.InPlace);
             int renamed = items.Count(i => i.Status == OrganizeStatus.Ready && i.IsRenamed);
-            var parts = new List<string> { $"{ready:N0} file{(ready == 1 ? "" : "s")} into {folders:N0} folder{(folders == 1 ? "" : "s")}" };
-            if (inPlace > 0) parts.Add($"{inPlace:N0} already in place");
-            if (renamed > 0) parts.Add($"{renamed:N0} renamed to avoid a clash");
+            var parts = new List<string> { Loc.F("Str_Organize_SummaryInto", "{0} into {1}", FilesText.Files(ready), FilesText.Folders(folders)) };
+            if (inPlace > 0) parts.Add(Loc.F("Str_Organize_SumAlreadyInPlace", "{0:N0} already in place", inPlace));
+            if (renamed > 0) parts.Add(Loc.F("Str_Organize_SumRenamedClash", "{0:N0} renamed to avoid a clash", renamed));
             return string.Join(" · ", parts);
         }
 
         public static string DescribeRun(OrganizeRunResult r)
         {
             var parts = new List<string>();
-            if (r.Moved > 0) parts.Add($"Moved {r.Moved:N0}");
-            if (r.Copied > 0) parts.Add($"Copied {r.Copied:N0}");
-            if (parts.Count == 0) parts.Add("Nothing organized");
-            parts[0] += $" in {r.Elapsed.TotalSeconds:0.0} s";
-            if (r.Duplicates > 0) parts.Add($"{r.Duplicates:N0} already there");
-            if (r.FoldersRemoved > 0) parts.Add($"{r.FoldersRemoved:N0} empty folders removed");
-            if (r.Failed > 0) parts.Add($"{r.Failed:N0} failed");
-            if (r.Cancelled > 0) parts.Add($"{r.Cancelled:N0} cancelled");
+            if (r.Moved > 0) parts.Add(Loc.F("Str_Organize_RunMoved", "Moved {0:N0}", r.Moved));
+            if (r.Copied > 0) parts.Add(Loc.F("Str_Organize_RunCopied", "Copied {0:N0}", r.Copied));
+            if (parts.Count == 0) parts.Add(Loc.T("Str_Organize_RunNothing", "Nothing organized"));
+            parts[0] += Loc.F("Str_Organize_RunIn", " in {0:0.0} s", r.Elapsed.TotalSeconds);
+            if (r.Duplicates > 0) parts.Add(Loc.F("Str_CopyQueue_RunAlreadyThere", "{0:N0} already there", r.Duplicates));
+            if (r.FoldersRemoved > 0) parts.Add(Loc.F("Str_Organize_RunFoldersRemoved", "{0:N0} empty folders removed", r.FoldersRemoved));
+            if (r.Failed > 0) parts.Add(Loc.F("Str_CopyQueue_RunFailed", "{0:N0} failed", r.Failed));
+            if (r.Cancelled > 0) parts.Add(Loc.F("Str_Files_RunCancelled", "{0:N0} cancelled", r.Cancelled));
             return string.Join(" · ", parts);
         }
 
@@ -549,19 +549,14 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return File.Exists(file) ? JsonSerializer.Deserialize<T>(File.ReadAllText(file), JsonOptions) : null;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
+                if (ex is JsonException or NotSupportedException) JsonSettings.KeepBadCopy(file);
                 return null;
             }
         }
 
-        private static void Save<T>(T value, string file)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(value, JsonOptions));
-            File.Move(temp, file, overwrite: true);
-        }
+        private static void Save<T>(T value, string file) => AtomicFile.WriteAllText(file, JsonSerializer.Serialize(value, JsonOptions));
 
         public static OrganizeSettings LoadSettings(string? path = null)
         {
@@ -587,7 +582,7 @@ namespace Smart_Tools.WPF.Controllers
                     && (doc.RootElement.TryGetProperty("SourceFolder", out _) || doc.RootElement.TryGetProperty("DestinationFolder", out _)))
                     Save(loaded, file);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
                 // unreadable file: Load already fell back to defaults; the next save replaces it
             }
@@ -612,7 +607,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 File.Delete(path ?? DefaultJournalPath);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // best effort
             }

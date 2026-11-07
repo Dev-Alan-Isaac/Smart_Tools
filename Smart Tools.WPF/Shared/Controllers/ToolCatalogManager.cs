@@ -25,10 +25,12 @@ namespace Smart_Tools.WPF.Controllers
 
         public static readonly IReadOnlyList<ToolCategoryInfo> Categories = new[]
         {
-            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
             new ToolCategoryInfo { Id = "data-quality", Keywords = "datos calidad verificar", Title = "Data Quality", Icon = "ShieldCheckOutline", AccentHex = "#3B82F6", Blurb = "Check, de-duplicate and compare" },
             new ToolCategoryInfo { Id = "files", Keywords = "archivos carpetas", Title = "Files", Icon = "FolderOutline", AccentHex = "#F59E0B", Blurb = "Rename, sort and search" },
+            new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
+            new ToolCategoryInfo { Id = "utilities", Keywords = "utilidades", Title = "Utilities", Icon = "NotebookOutline", AccentHex = "#84CC16", Blurb = "Everyday helpers" },
             new ToolCategoryInfo { Id = "convert", Keywords = "convertir formato", Title = "Convert", Icon = "SwapHorizontal", AccentHex = "#0EA5E9", Blurb = "Change file formats" },
+            new ToolCategoryInfo { Id = "calculators", Keywords = "calculadora calcular convertir unidades fecha red", Title = "Calculators", Icon = "Calculator", AccentHex = "#EAB308", Blurb = "Work things out" },
             new ToolCategoryInfo { Id = "pdf", Keywords = "pdf documento documentos pdfs", Title = "PDF", Icon = "FilePdfBox", AccentHex = "#DC2626", Blurb = "Make, edit and protect PDFs" },
             new ToolCategoryInfo { Id = "video", Keywords = "videos pelicula", Title = "Video", Icon = "MovieOpenOutline", AccentHex = "#EF4444", Blurb = "Watch and edit" },
             new ToolCategoryInfo { Id = "audio", Keywords = "sonido sound", Title = "Audio", Icon = "VolumeHigh", AccentHex = "#8B5CF6", Blurb = "Play, record and transform sound" },
@@ -42,9 +44,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolCategoryInfo { Id = "security", Keywords = "seguridad privacidad", Title = "Security", Icon = "ShieldLockOutline", AccentHex = "#10B981", Blurb = "Protect, destroy, make passwords" },
             new ToolCategoryInfo { Id = "network", Keywords = "red internet wifi", Title = "Network", Icon = "Lan", AccentHex = "#06B6D4", Blurb = "Diagnose your connection" },
             new ToolCategoryInfo { Id = "developer", Keywords = "desarrollador programacion", Title = "Developer", Icon = "CodeBraces", AccentHex = "#64748B", Blurb = "Test, inspect and format" },
-            new ToolCategoryInfo { Id = "calculators", Keywords = "calculadora calcular convertir unidades fecha red", Title = "Calculators", Icon = "Calculator", AccentHex = "#EAB308", Blurb = "Work things out" },
             new ToolCategoryInfo { Id = "generators", Keywords = "generar crear", Title = "Generators", Icon = "Creation", AccentHex = "#F97316", Blurb = "Make files and codes" },
-            new ToolCategoryInfo { Id = "utilities", Keywords = "utilidades", Title = "Utilities", Icon = "NotebookOutline", AccentHex = "#84CC16", Blurb = "Everyday helpers" },
             new ToolCategoryInfo { Id = "art", Keywords = "arte art pixel sprite juegos game dibujo", Title = "Art", Icon = "GridLarge", AccentHex = "#A855F7", Blurb = "Draw pixel art, pack sprite sheets and build texture packs" },
         };
 
@@ -54,7 +54,7 @@ namespace Smart_Tools.WPF.Controllers
 
         public static readonly IReadOnlyList<ToolInfo> Tools = new[]
         {
-             // Media
+            // Media
             new ToolInfo { Id = "media-viewer", Name = "Media Viewer", Icon = "PlayBoxMultipleOutline", CategoryId = "media", Description = "Play videos and music and view pictures: one mixed queue, or full Photos, Videos and Music pages", Keywords = "media viewer player movies tv photos pictures images video audio music slideshow gallery widget mini player floating visor reproductor multimedia peliculas fotos musica minirreproductor flotante video replay image viewer audio replay player watch mp4 mkv movie listen mp3 wav flac visualizer vlc zoom reproductor de video visor de imagenes reproductor de audio" },
 
             // Data Quality
@@ -72,20 +72,36 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "copy-queue", Name = "Copy Queue", Icon = "FolderMoveOutline", CategoryId = "files", Description = "Copy or move big sets of files safely, with pause and verify", Keywords = "copy move batch queue backup transfer verify pause resume checksum copiar mover cola respaldo" },
             new ToolInfo { Id = "folder-tree", Name = "Folder Tree Exporter", Icon = "FileTreeOutline", CategoryId = "files", Description = "Export a folder's structure as a text tree, Markdown, JSON or CSV", Keywords = "folder tree structure export directory listing map tree command markdown json csv arbol carpetas estructura exportar" },
             new ToolInfo { Id = "metadata-extract", Name = "Metadata Extractor", Icon = "TagMultiple", CategoryId = "files", Description = "Read the hidden details in files", Keywords = "metadata exif tags properties" },
+              
+            // Utilities
+            new ToolInfo { Id = "notes", Name = "Notes", Icon = "Notebook", CategoryId = "utilities", Description = "Write quick notes", Keywords = "notes notepad text memo" },
+            new ToolInfo { Id = "clipboard-history", Name = "Clipboard History", Icon = "ClipboardTextOutline", CategoryId = "utilities", Description = "Everything you copied, searchable, with pins. Saved only if you turn it on", Keywords = "clipboard history paste copy pin portapapeles historial copiar" },
+            new ToolInfo { Id = "screen-ocr", Name = "Screen OCR", Title = "Screen Text Extractor", Icon = "TextRecognition", CategoryId = "utilities", Description = "Extract text from a screenshot or screen region", Keywords = "ocr text extract screenshot capture recognize image to text" },
+            new ToolInfo { Id = "translate", Name = "Translate", Icon = "Translate", CategoryId = "utilities", Description = "Translate text offline between English and Spanish", Keywords = "translate translator language english spanish offline traducir traductor idioma ingles espanol" },
+            new ToolInfo { Id = "timer-stopwatch", Name = "Timer & Stopwatch", Icon = "TimerOutline", CategoryId = "utilities", Description = "Stopwatch with laps, countdown timer and a Pomodoro cycle", Keywords = "timer stopwatch countdown pomodoro lap alarm focus clock cronometro temporizador cuenta atras" },
 
-            // Convert and PDF
+            // Convert
             new ToolInfo { Id = "convert-files", Name = "Convert Files", Icon = "SwapHorizontal", CategoryId = "convert", Description = "Convert files between formats", Keywords = "converter format mp3 mp4 docx png" },
+            new ToolInfo { Id = "csv-json", Name = "CSV / JSON Converter", Icon = "CodeJson", CategoryId = "convert", Description = "Turn CSV into JSON and JSON back into CSV, with quotes and separators handled", Keywords = "csv json convert converter table spreadsheet excel delimiter semicolon tab comma convertir tabla" },
+            new ToolInfo { Id = "watermark", Name = "Watermarker", Title = "Batch Watermarker", Icon = "Stamper", CategoryId = "convert", Description = "Stamp text or a logo on many pictures, videos and PDFs", Keywords = "watermark stamp logo copyright text draft confidential brand marca de agua sello pictures photos videos pdf batch" },
+
+            // Calculators
+            new ToolInfo { Id = "subnet-calc", Name = "Subnet Calculator", Title = "Subnet / CIDR Calculator", Icon = "Calculator", CategoryId = "calculators", Description = "Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets", Keywords = "subnet cidr mask netmask wildcard broadcast ip ipv4 ipv6 prefix range hosts calculadora subred mascara" },
+            new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "calculators", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
+            new ToolInfo { Id = "date-time", Name = "Date & Time Toolkit", Icon = "CalendarClock", CategoryId = "calculators", Description = "Timestamps, time zones and date maths in one place", Keywords = "unix timestamp epoch timezone time zone date difference duration add subtract days business utc iso fecha hora" },
+
+            // PDF
             new ToolInfo { Id = "images-to-pdf", Name = "Images to PDF", Icon = "FileSwap", CategoryId = "pdf", Description = "Turn images into a PDF", Keywords = "jpg png pdf combine scan" },
             new ToolInfo { Id = "pdf-reader", Name = "PDF Reader & Signer", Icon = "FileDocumentEditOutline", CategoryId = "pdf", Description = "Read a PDF, then add your signature, text, a date or a check mark and save a signed copy", Keywords = "pdf reader viewer sign signature fill form text date check mark annotate firmar firma rellenar leer visor" },
-            new ToolInfo { Id = "watermark", Name = "Watermarker", Title = "Batch Watermarker", Icon = "Stamper", CategoryId = "convert", Description = "Stamp text or a logo on many pictures, videos and PDFs", Keywords = "watermark stamp logo copyright text draft confidential brand marca de agua sello pictures photos videos pdf batch" },
             new ToolInfo { Id = "pdf-toolkit", Name = "PDF Merge & Split", Icon = "FileSync", CategoryId = "pdf", Description = "Join PDFs, cut one into parts, or make it smaller", Keywords = "pdf merge join combine split cut extract pages compress smaller reduce size unir dividir comprimir" },
             new ToolInfo { Id = "pdf-pages", Name = "PDF Pages & Protect", Icon = "FileCogOutline", CategoryId = "pdf", Description = "Rotate, remove or number pages; edit details; add or remove a password", Keywords = "pdf rotate pages remove delete extract crop page numbers password protect unlock encrypt metadata author title permissions girar paginas contraseña proteger numeros" },
-           
+
             // Video
             new ToolInfo { Id = "video-editor", Name = "Video Stitcher", Icon = "FilmstripBoxMultiple", CategoryId = "video", Description = "Join video clips into one, with optional trims and fades", Keywords = "stitch join merge combine concat clips edit cut trim fade unir juntar" },
             new ToolInfo { Id = "video-to-audio", Name = "Video to Audio", Title = "Video to Audio Extractor", Icon = "FileMusicOutline", CategoryId = "video", Description = "Pull the audio track out of videos, in bulk", Keywords = "extract audio video mp3 m4a wav flac sound track rip" },
             new ToolInfo { Id = "video-compressor", Name = "Video Compressor", Title = "Video Compressor & Trimmer", Icon = "VideoMinusOutline", CategoryId = "video", Description = "Make videos smaller, or cut out the part you want", Keywords = "compress compressor reduce shrink smaller size trim cut clip speed resize 720p 1080p mp4 comprimir reducir recortar cortar peso" },
             new ToolInfo { Id = "gif-maker", Name = "GIF Maker", Icon = "FileGifBox", CategoryId = "video", Description = "Create optimized GIFs from video or images", Keywords = "gif animation video images palette loop meme" },
+            new ToolInfo { Id = "frame-extractor", Name = "Video Frame Extractor", Icon = "ImageMultipleOutline", CategoryId = "video", Description = "Save still pictures from a video: one frame, one every few seconds, or an even spread", Keywords = "video frame extract screenshot still thumbnail capture image png jpg ffmpeg fotograma extraer captura" },
             new ToolInfo { Id = "screen-recorder", Name = "Screen Recorder", Icon = "RecordCircleOutline", CategoryId = "video", Description = "Record a screen, a window, or an area to an MP4, with your microphone if you like", Keywords = "screen recorder record capture video desktop window area mp4 microphone grabar pantalla captura" },
 
             // Audio
@@ -100,24 +116,29 @@ namespace Smart_Tools.WPF.Controllers
             // Images
             new ToolInfo { Id = "image-editor", Name = "Image Editor", Icon = "ImageEditOutline", CategoryId = "images", Description = "Crop, resize and adjust images", Keywords = "edit crop resize rotate photo" },
             new ToolInfo { Id = "bulk-image-resizer", Name = "Bulk Image Resizer", Icon = "ImageMultipleOutline", CategoryId = "images", Description = "Shrink and recompress many pictures at once, with a target file size", Keywords = "resize compress shrink batch bulk images photos jpg png webp quality size redimensionar comprimir imagenes" },
-            new ToolInfo { Id = "image-metadata-cleaner", Name = "Image Metadata Cleaner", Icon = "EyeOffOutline", CategoryId = "security", Description = "Remove location, camera and date details from many photos before you share them", Keywords = "metadata exif gps location privacy strip remove clean photos camera date iptc xmp share limpiar metadatos ubicacion privacidad fotos" },
             new ToolInfo { Id = "background-remover", Name = "Background Remover", Icon = "ImageMinusOutline", CategoryId = "images", Description = "Cut the background out of a picture", Keywords = "remove background transparent png cutout" },
-            new ToolInfo { Id = "color-picker", Name = "Color Picker", Title = "Color Picker & Converter", Icon = "Palette", CategoryId = "colors", Description = "Pick colors and convert color codes", Keywords = "colour hex rgb hsl eyedropper" },
-            new ToolInfo { Id = "screen-color-picker", Name = "Screen Color Picker", Title = "Screen Color Picker / Eyedropper", Icon = "Eyedropper", CategoryId = "colors", Description = "Pick any color from anywhere on screen with a magnifier", Keywords = "eyedropper screen colour color pixel hex rgb picker magnifier" },
-            new ToolInfo { Id = "color-wheel", Name = "Color Wheel", Title = "Color Wheel & Gradients", Icon = "PaletteOutline", CategoryId = "colors", Description = "Build palettes and gradients", Keywords = "colour palette gradient harmony" },
-            new ToolInfo { Id = "palette-extractor", Name = "Palette Extractor", Title = "Image Color Palette Extractor", Icon = "PaletteSwatchOutline", CategoryId = "colors", Description = "Pull the main colors out of a picture", Keywords = "colour color palette extract dominant image picture swatch kmeans median cut contrast wcag hex css paleta colores imagen" },
             new ToolInfo { Id = "svg-tool", Name = "SVG Viewer & Optimizer", Icon = "VectorSquare", CategoryId = "images", Description = "Preview SVG files, make them smaller and export PNGs", Keywords = "svg vector optimize minify png svgo viewer export" },
+            new ToolInfo { Id = "icon-maker", Name = "Icon Maker", Icon = "ImageSizeSelectActual", CategoryId = "images", Description = "Turn any picture into a Windows .ico or a full website favicon set", Keywords = "icon ico favicon app icon windows png sizes apple touch manifest web icono favicon crear" },
             new ToolInfo { Id = "screenshot", Name = "Screenshot", Title = "Screenshot & Markup", Icon = "Camera", CategoryId = "images", Description = "Capture an area, a window, or the whole screen, mark it up, then copy or save", Keywords = "screenshot screen capture snip snipping print screen grab region window annotate arrow blur pixelate highlight text copy captura pantalla recorte" },
 
             // Music
             new ToolInfo { Id = "instrument-tuner", Name = "Instrument Tuner", Icon = "MusicClefTreble", CategoryId = "music", Description = "Tune guitar, bass, violin and more", Keywords = "tuner guitar bass violin ukulele pitch note afinador" },
+            new ToolInfo { Id = "metronome", Name = "Metronome", Title = "Metronome & Tap Tempo", Icon = "Metronome", CategoryId = "music", Description = "A steady click at any tempo, with beats per bar and tap tempo", Keywords = "metronome tempo bpm beat click tap rhythm practice time signature metronomo ritmo compas" },
             new ToolInfo { Id = "synthesizer", Name = "Synthesizer", Icon = "Piano", CategoryId = "music", Description = "Play notes and shape sounds", Keywords = "synth piano keyboard notes oscillator" },
             new ToolInfo { Id = "midi-instruments", Name = "MIDI Instruments", Icon = "Midi", CategoryId = "music", Description = "Play 128 instruments and drum kits, record to .mid", Keywords = "midi instruments drums drum kit record mid general gm keyboard orchestra violin trumpet sax instrumentos bateria teclado musica grabar" },
+
+            // Colors
+            new ToolInfo { Id = "color-picker", Name = "Color Picker", Title = "Color Picker & Converter", Icon = "Palette", CategoryId = "colors", Description = "Pick colors and convert color codes", Keywords = "colour hex rgb hsl eyedropper" },
+            new ToolInfo { Id = "screen-color-picker", Name = "Screen Color Picker", Title = "Screen Color Picker / Eyedropper", Icon = "Eyedropper", CategoryId = "colors", Description = "Pick any color from anywhere on screen with a magnifier", Keywords = "eyedropper screen colour color pixel hex rgb picker magnifier" },
+            new ToolInfo { Id = "color-wheel", Name = "Color Wheel", Title = "Color Wheel & Gradients", Icon = "PaletteOutline", CategoryId = "colors", Description = "Build palettes and gradients", Keywords = "colour palette gradient harmony" },
+            new ToolInfo { Id = "palette-extractor", Name = "Palette Extractor", Title = "Image Color Palette Extractor", Icon = "PaletteSwatchOutline", CategoryId = "colors", Description = "Pull the main colors out of a picture", Keywords = "colour color palette extract dominant image picture swatch kmeans median cut contrast wcag hex css paleta colores imagen" },
+            new ToolInfo { Id = "contrast-checker", Name = "Contrast Checker", Title = "Text & Background Contrast Checker", Icon = "ContrastBox", CategoryId = "colors", Description = "Check WCAG contrast between two colors and find the closest passing text color", Keywords = "contrast wcag accessibility aa aaa text background readable ratio contraste accesibilidad legible" },
 
             // Storage
             new ToolInfo { Id = "drive-health", Name = "Drive Health", Title = "Drive Health Monitor", Icon = "Harddisk", CategoryId = "storage", Description = "Check the health of your drives and track it over time", Keywords = "smart ssd hdd health temperature" },
             new ToolInfo { Id = "disk-space", Name = "Disk Space Analyzer", Icon = "ChartDonut", CategoryId = "storage", Description = "See what's using your disk", Keywords = "space usage folders size" },
             new ToolInfo { Id = "large-files", Name = "Large File Finder", Icon = "FileFindOutline", CategoryId = "storage", Description = "Find the biggest files", Keywords = "big large size free space" },
+            new ToolInfo { Id = "empty-folders", Name = "Empty Folder Cleaner", Icon = "FolderRemoveOutline", CategoryId = "storage", Description = "Find folders with nothing in them and send them to the Recycle Bin", Keywords = "empty folders clean delete remove directories tidy unused carpetas vacias limpiar" },
             new ToolInfo { Id = "junk-cleaner", Name = "Junk File Cleaner", Icon = "DeleteSweep", CategoryId = "storage", Description = "Clear temporary files and caches", Keywords = "junk temp cache clean free space" },
             new ToolInfo { Id = "disk-speed", Name = "Disk Speed Test", Icon = "SpeedometerMedium", CategoryId = "storage", Description = "Measure read and write speed", Keywords = "benchmark ssd speed read write" },
 
@@ -141,12 +162,15 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "keyboard-mouse-test", Name = "Keyboard & Mouse Test", Title = "Keyboard & Mouse Event Tester", Icon = "Keyboard", CategoryId = "hardware", Description = "Key map, ghosting, rollover, mouse polling rate, chatter and reaction time", Keywords = "keyboard mouse test ghosting rollover nkro polling rate hz dpi chatter double click latency reaction wheel switch key" },
             new ToolInfo { Id = "mic-test", Name = "Microphone Test", Title = "Microphone Level Tester", Icon = "MicrophoneOutline", CategoryId = "hardware", Description = "Check your microphone: live level, peak, clipping, and hear yourself", Keywords = "microphone mic test level meter db peak clipping noise record input headset usb privacy micrófono prueba nivel" },
             new ToolInfo { Id = "webcam-test", Name = "Webcam Test", Title = "Webcam Tester", Icon = "Webcam", CategoryId = "hardware", Description = "See your camera live: resolution, frame rate, brightness, and a snapshot", Keywords = "webcam camera test preview resolution fps frame rate brightness snapshot usb privacy video cámara prueba" },
+            new ToolInfo { Id = "battery-health", Name = "Battery Health", Icon = "BatteryHeartVariant", CategoryId = "hardware", Description = "See how worn your laptop battery is: design vs. full-charge capacity and cycles", Keywords = "battery health wear capacity cycles laptop charge report powercfg bateria salud desgaste ciclos" },
 
             // Security
             new ToolInfo { Id = "file-shredder", Name = "Secure File Shredder", Icon = "Shredder", CategoryId = "security", Description = "Delete files so they can't be recovered", Keywords = "shred wipe erase secure delete" },
             new ToolInfo { Id = "file-encryption", Name = "File Encryption", Icon = "FileLock", CategoryId = "security", Description = "Lock files with a password", Keywords = "encrypt decrypt aes password protect" },
             new ToolInfo { Id = "password-generator", Name = "Password Generator", Icon = "Key", CategoryId = "security", Description = "Make strong passwords and passphrases", Keywords = "password passphrase random secure contraseña" },
             new ToolInfo { Id = "password-vault", Name = "Password Vault", Icon = "ShieldKeyOutline", CategoryId = "security", Description = "Encrypted password manager with 2FA codes, a health check and a quick-access widget", Keywords = "password manager vault passwords logins totp 2fa authenticator argon2 aes keepass bitwarden contraseñas gestor bóveda" },
+            new ToolInfo { Id = "totp-code", Name = "2FA Code Generator", Title = "2FA Code Generator (TOTP)", Icon = "ShieldKeyOutline", CategoryId = "security", Description = "Make the 6-digit two-factor codes from a secret key or otpauth link, without saving it", Keywords = "2fa totp otp authenticator two factor code google authenticator secret otpauth autenticador codigo verificacion" },
+            new ToolInfo { Id = "image-metadata-cleaner", Name = "Image Metadata Cleaner", Icon = "EyeOffOutline", CategoryId = "security", Description = "Remove location, camera and date details from many photos before you share them", Keywords = "metadata exif gps location privacy strip remove clean photos camera date iptc xmp share limpiar metadatos ubicacion privacidad fotos" },
 
             // Network
             new ToolInfo { Id = "network-adapters", Name = "My IP & Adapters", Icon = "IpNetworkOutline", CategoryId = "network", Description = "Your addresses, every adapter, edit IP, enable or disable", Keywords = "ip address adapter ethernet wifi usb dhcp static dns disable enable public ip network tools" },
@@ -172,40 +196,20 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "db-migrate", Name = "Database Migrator", Icon = "DatabaseSyncOutline", CategoryId = "developer", Description = "Copy a SQL Server database to a newer or older server version, no backup file needed", Keywords = "sql server database migrate migration copy move restore bak backup version upgrade downgrade downlevel schema data transfer base de datos migrar copiar mover versión" },
             new ToolInfo { Id = "encode-decode", Name = "Base64 & URL Encoder", Title = "Base64 & URL Encoder / Decoder", Icon = "SwapHorizontal", CategoryId = "developer", Description = "Encode and decode Base64, URLs, HTML entities and files", Keywords = "base64 url percent encode decode html entities data uri urlencode escape unescape codificar decodificar" },
 
-            // Calculators
-            new ToolInfo { Id = "subnet-calc", Name = "Subnet Calculator", Title = "Subnet / CIDR Calculator", Icon = "Calculator", CategoryId = "calculators", Description = "Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets", Keywords = "subnet cidr mask netmask wildcard broadcast ip ipv4 ipv6 prefix range hosts calculadora subred mascara" },
-            new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "calculators", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
-            new ToolInfo { Id = "date-time", Name = "Date & Time Toolkit", Icon = "CalendarClock", CategoryId = "calculators", Description = "Timestamps, time zones and date maths in one place", Keywords = "unix timestamp epoch timezone time zone date difference duration add subtract days business utc iso fecha hora" },
-
             // Generators
             new ToolInfo { Id = "file-generator", Name = "File Generator", Icon = "FilePlus", CategoryId = "generators", Description = "Make test files of any size", Keywords = "dummy test files size generate" },
             new ToolInfo { Id = "barcode-generator", Name = "Barcode Generator", Icon = "Barcode", CategoryId = "generators", Description = "Create barcodes", Keywords = "barcode ean code128 upc" },
             new ToolInfo { Id = "qr-generator", Name = "QR Code Generator", Icon = "Qrcode", CategoryId = "generators", Description = "Create QR codes", Keywords = "qr code link wifi" },
             new ToolInfo { Id = "mock-data", Name = "Mock Data Generator", Icon = "DatabaseCogOutline", CategoryId = "generators", Description = "Generate fake data for testing", Keywords = "fake data csv json sql names emails test dummy seed" },
+            new ToolInfo { Id = "id-generator", Name = "ID & Lorem Generator", Icon = "Identifier", CategoryId = "generators", Description = "Make UUIDs (v4, v7), ULIDs, random hex and lorem ipsum text", Keywords = "uuid guid ulid id unique random hex lorem ipsum placeholder text generator identificador aleatorio" },
 
-            // Utilities
-            new ToolInfo { Id = "notes", Name = "Notes", Icon = "Notebook", CategoryId = "utilities", Description = "Write quick notes", Keywords = "notes notepad text memo" },
-            new ToolInfo { Id = "clipboard-history", Name = "Clipboard History", Icon = "ClipboardTextOutline", CategoryId = "utilities", Description = "Everything you copied, searchable, with pins. Saved only if you turn it on", Keywords = "clipboard history paste copy pin portapapeles historial copiar" },
-            new ToolInfo { Id = "screen-ocr", Name = "Screen OCR", Title = "Screen Text Extractor", Icon = "TextRecognition", CategoryId = "utilities", Description = "Extract text from a screenshot or screen region", Keywords = "ocr text extract screenshot capture recognize image to text" },
-            new ToolInfo { Id = "translate", Name = "Translate", Icon = "Translate", CategoryId = "utilities", Description = "Translate text offline between English and Spanish", Keywords = "translate translator language english spanish offline traducir traductor idioma ingles espanol" },
-
-            // Pixel & Sprites
+            // Art
             new ToolInfo { Id = "pixel-art", Name = "Pixel Art Editor", Icon = "GridLarge", CategoryId = "art", Description = "Draw on a small grid, animate frames and export sharp PNGs", Keywords = "pixel art sprite draw png animation frames palette editor dibujar" },
+            new ToolInfo { Id = "image-to-pixel", Name = "Image to Pixel Art", Icon = "ImageFilterFrames", CategoryId = "art", Description = "Shrink a picture to a pixel grid with a limited palette and optional dithering", Keywords = "pixel art pixelate convert photo retro palette dither 8 bit sprite pixelar imagen" },
             new ToolInfo { Id = "sprite-packer", Name = "Sprite Sheet Packer", Title = "Image Sprite Sheet Packer", Icon = "ViewGridPlusOutline", CategoryId = "art", Description = "Pack images into a sprite sheet with coordinates, or slice a sheet back into frames", Keywords = "sprite sheet atlas pack slice frames texture json css xml trim padding power of two hoja sprites cortar" },
             new ToolInfo { Id = "texture-pack", Name = "Texture Pack Builder", Title = "Minecraft Texture Pack Builder", Icon = "PackageVariantClosed", CategoryId = "art", Description = "Turn your PNGs into a Minecraft Java resource pack (.zip) with pack.mcmeta", Keywords = "minecraft texture pack resource pack java mcmeta pack.png blocks items skin mod paquete texturas recursos" },
 
-            // Added tools (one per category)
-            new ToolInfo { Id = "contrast-checker", Name = "Contrast Checker", Title = "Text & Background Contrast Checker", Icon = "ContrastBox", CategoryId = "colors", Description = "Check WCAG contrast between two colors and find the closest passing text color", Keywords = "contrast wcag accessibility aa aaa text background readable ratio contraste accesibilidad legible" },
-            new ToolInfo { Id = "totp-code", Name = "2FA Code Generator", Title = "2FA Code Generator (TOTP)", Icon = "ShieldKeyOutline", CategoryId = "security", Description = "Make the 6-digit two-factor codes from a secret key or otpauth link, without saving it", Keywords = "2fa totp otp authenticator two factor code google authenticator secret otpauth autenticador codigo verificacion" },
-            new ToolInfo { Id = "id-generator", Name = "ID & Lorem Generator", Icon = "Identifier", CategoryId = "generators", Description = "Make UUIDs (v4, v7), ULIDs, random hex and lorem ipsum text", Keywords = "uuid guid ulid id unique random hex lorem ipsum placeholder text generator identificador aleatorio" },
-            new ToolInfo { Id = "timer-stopwatch", Name = "Timer & Stopwatch", Icon = "TimerOutline", CategoryId = "utilities", Description = "Stopwatch with laps, countdown timer and a Pomodoro cycle", Keywords = "timer stopwatch countdown pomodoro lap alarm focus clock cronometro temporizador cuenta atras" },
-            new ToolInfo { Id = "csv-json", Name = "CSV / JSON Converter", Icon = "CodeJson", CategoryId = "convert", Description = "Turn CSV into JSON and JSON back into CSV, with quotes and separators handled", Keywords = "csv json convert converter table spreadsheet excel delimiter semicolon tab comma convertir tabla" },
-            new ToolInfo { Id = "empty-folders", Name = "Empty Folder Cleaner", Icon = "FolderRemoveOutline", CategoryId = "storage", Description = "Find folders with nothing in them and send them to the Recycle Bin", Keywords = "empty folders clean delete remove directories tidy unused carpetas vacias limpiar" },
-            new ToolInfo { Id = "battery-health", Name = "Battery Health", Icon = "BatteryHeartVariant", CategoryId = "hardware", Description = "See how worn your laptop battery is: design vs. full-charge capacity and cycles", Keywords = "battery health wear capacity cycles laptop charge report powercfg bateria salud desgaste ciclos" },
-            new ToolInfo { Id = "icon-maker", Name = "Icon Maker", Icon = "ImageSizeSelectActual", CategoryId = "images", Description = "Turn any picture into a Windows .ico or a full website favicon set", Keywords = "icon ico favicon app icon windows png sizes apple touch manifest web icono favicon crear" },
-            new ToolInfo { Id = "image-to-pixel", Name = "Image to Pixel Art", Icon = "ImageFilterFrames", CategoryId = "art", Description = "Shrink a picture to a pixel grid with a limited palette and optional dithering", Keywords = "pixel art pixelate convert photo retro palette dither 8 bit sprite pixelar imagen" },
-            new ToolInfo { Id = "metronome", Name = "Metronome", Title = "Metronome & Tap Tempo", Icon = "Metronome", CategoryId = "music", Description = "A steady click at any tempo, with beats per bar and tap tempo", Keywords = "metronome tempo bpm beat click tap rhythm practice time signature metronomo ritmo compas" },
-            new ToolInfo { Id = "frame-extractor", Name = "Video Frame Extractor", Icon = "ImageMultipleOutline", CategoryId = "video", Description = "Save still pictures from a video: one frame, one every few seconds, or an even spread", Keywords = "video frame extract screenshot still thumbnail capture image png jpg ffmpeg fotograma extraer captura" },
+            // Options
         };
 
         /// <summary>Pinned at the bottom of the sidebar, not in a section.</summary>

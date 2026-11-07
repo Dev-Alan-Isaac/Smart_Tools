@@ -32,6 +32,56 @@ namespace Smart_Tools.WPF.Controllers
         public static TranslateLanguagePair? Find(string fromCode, string toCode) =>
             Pairs.FirstOrDefault(p => p.FromCode == fromCode && p.ToCode == toCode);
 
+        private sealed class TranslateOptions
+        {
+            public bool AllowIndirect { get; set; }
+        }
+
+        private const string OptionsName = "translate_options";
+        private static bool? _allowIndirect;
+
+        /// <summary>
+        /// Off by default. When on, a pair that has no model of its own is translated in two steps through English
+        /// (for example es to en, then en to fr), using models that are already installed. Less accurate than a direct model.
+        /// </summary>
+        public static bool AllowIndirect
+        {
+            get => _allowIndirect ??= JsonSettings.Load<TranslateOptions>(OptionsName).AllowIndirect;
+            set
+            {
+                if (_allowIndirect == value) return;
+                _allowIndirect = value;
+                JsonSettings.Save(OptionsName, new TranslateOptions { AllowIndirect = value });
+                PairsChanged?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// The models to run for this direction: the pair's own model, or - when indirect translation is allowed and both
+        /// halves are installed - the two steps through English. Null when there is no way to get there.
+        /// </summary>
+        public static IReadOnlyList<TranslateLanguagePair>? Route(string fromCode, string toCode)
+        {
+            if (fromCode.Length == 0 || fromCode == toCode) return null;
+            if (Find(fromCode, toCode) is { } direct) return new[] { direct };
+            if (!AllowIndirect || fromCode == "en" || toCode == "en") return null;
+            var first = Find(fromCode, "en");
+            var second = Find("en", toCode);
+            return first != null && second != null && IsInstalled(first) && IsInstalled(second) ? new[] { first, second } : null;
+        }
+
+        /// <summary>True when the route is the two-step one.</summary>
+        public static bool IsIndirect(IReadOnlyList<TranslateLanguagePair>? route) => route is { Count: > 1 };
+
+        /// <summary>Every language the given one can be translated into: its own pairs, plus (when allowed) whatever English models are installed.</summary>
+        public static IEnumerable<string> TargetsOf(string fromCode)
+        {
+            var targets = Pairs.Where(p => p.FromCode == fromCode).Select(p => p.ToCode).ToList();
+            if (AllowIndirect && fromCode != "en" && Find(fromCode, "en") is { } up && IsInstalled(up))
+                targets.AddRange(Pairs.Where(p => p.FromCode == "en" && p.ToCode != fromCode && IsInstalled(p)).Select(p => p.ToCode));
+            return targets.Distinct();
+        }
+
         public static bool IsCustom(TranslateLanguagePair pair) => !BuiltInPairs.Contains(pair);
 
         /// <summary>The folder every pair's model folder lives in.</summary>
@@ -138,9 +188,9 @@ namespace Smart_Tools.WPF.Controllers
             from = NormalizeLanguage(from);
             to = NormalizeLanguage(to);
             if (!LanguageCode.IsMatch(from) || !LanguageCode.IsMatch(to))
-                return (null, "Use the short language codes, like en, es, or zh (or the language name).");
-            if (from == to) return (null, "Pick two different languages.");
-            if (NameVariants(from, to).Any(v => Find(v.From, v.To) != null)) return (null, "That pair is already in the list.");
+                return (null, Loc.T("Str_Translate_ErrCodes", "Use the short language codes, like en, es, or zh (or the language name)."));
+            if (from == to) return (null, Loc.T("Str_Translate_ErrSame", "Pick two different languages."));
+            if (NameVariants(from, to).Any(v => Find(v.From, v.To) != null)) return (null, Loc.T("Str_Translate_ErrDuplicate", "That pair is already in the list."));
 
             foreach (var (f, t) in NameVariants(from, to))
             {
@@ -180,7 +230,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException)
             {
-                return (null, "Couldn't reach the download server. Check your internet connection and try again.", false);
+                return (null, Loc.T("Str_Download_ErrServer", "Couldn't reach the download server. Check your internet connection and try again."), false);
             }
         }
 

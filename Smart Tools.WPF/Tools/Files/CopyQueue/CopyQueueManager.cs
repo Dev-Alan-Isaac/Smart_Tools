@@ -56,7 +56,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     if (IsUnderOrSame(destRoot, source))
                     {
-                        plan.Notes.Add($"{Path.GetFileName(source)} was left out: the destination is inside it.");
+                        plan.Notes.Add(Loc.F("Str_CopyQueue_NoteLeftOut", "{0} was left out: the destination is inside it.", Path.GetFileName(source)));
                         continue;
                     }
                     string targetRoot = Path.Combine(destRoot, Path.GetFileName(source.TrimEnd('\\', '/')));
@@ -76,7 +76,7 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 else
                 {
-                    plan.Notes.Add($"{Path.GetFileName(source)} is no longer there.");
+                    plan.Notes.Add(Loc.F("Str_CopyQueue_NoteGone", "{0} is no longer there.", Path.GetFileName(source)));
                 }
             }
 
@@ -101,7 +101,7 @@ namespace Smart_Tools.WPF.Controllers
                 var target = new FileInfo(item.Destination);
                 return target.Exists && target.Length == item.Size && !SamePath(item.Destination, item.Source);
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
                 return false;
             }
@@ -114,7 +114,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 size = new FileInfo(file).Length;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
                 // listed anyway; the copy reports the real problem
             }
@@ -138,7 +138,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         Directory.CreateDirectory(folder);
                     }
-                    catch (Exception)
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                     {
                         // a file inside will report the real problem
                     }
@@ -216,7 +216,7 @@ namespace Smart_Tools.WPF.Controllers
             string? temp = null;
             try
             {
-                if (!File.Exists(item.Source)) throw new FileNotFoundException("The file is no longer there.");
+                if (!File.Exists(item.Source)) throw new FileNotFoundException(Loc.T("Str_Files_ErrGone", "The file is no longer there."));
 
                 string dest = item.Destination;
                 string dir = Path.GetDirectoryName(dest)!;
@@ -228,7 +228,7 @@ namespace Smart_Tools.WPF.Controllers
                     if (SamePath(dest, item.Source))
                     {
                         item.Status = CopyQueueStatus.Skipped;
-                        item.Message = "The source and the target are the same file.";
+                        item.Message = Loc.T("Str_CopyQueue_MsgSameFile", "The source and the target are the same file.");
                         result.Skipped++;
                         return;
                     }
@@ -240,11 +240,11 @@ namespace Smart_Tools.WPF.Controllers
                         if (move && SafeFileOps.HasRecycleBin(item.Source))
                         {
                             FileSystem.DeleteFile(item.Source, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
-                            item.Message = "An identical file was already there - the original went to the Recycle Bin.";
+                            item.Message = Loc.T("Str_CopyQueue_MsgIdenticalRecycled", "An identical file was already there (compared byte for byte) - the original went to the Recycle Bin.");
                         }
                         else
                         {
-                            item.Message = move ? "An identical file was already there - the original was kept." : "An identical file was already there.";
+                            item.Message = move ? Loc.T("Str_CopyQueue_MsgIdenticalKept", "An identical file was already there (compared byte for byte) - the original was kept.") : Loc.T("Str_CopyQueue_MsgIdentical", "An identical file was already there (compared byte for byte).");
                         }
                         return;
                     }
@@ -271,7 +271,7 @@ namespace Smart_Tools.WPF.Controllers
                         }
                     });
                     if (!File.Exists(final) || new FileInfo(final).Length != length)
-                        throw new IOException("The file isn't where it should be after the move - check the destination.");
+                        throw new IOException(Loc.T("Str_CopyQueue_ErrMoveMissing", "The file isn't where it should be after the move - check the destination."));
                 }
                 else
                 {
@@ -281,7 +281,7 @@ namespace Smart_Tools.WPF.Controllers
                     SafeFileOps.RetryIo(() => sourceHash = SafeFileOps.CopyToTemp(item.Source, temp, onBytes, gate, token));
 
                     if (new FileInfo(temp).Length != new FileInfo(item.Source).Length)
-                        throw new IOException("The copy came out a different size - nothing was changed.");
+                        throw new IOException(Loc.T("Str_Files_ErrCopySize", "The copy came out a different size - nothing was changed."));
                     SafeFileOps.CopyTimestamps(item.Source, temp);
 
                     // A move deletes the original next, so it is always compared first.
@@ -290,7 +290,7 @@ namespace Smart_Tools.WPF.Controllers
                         item.Status = CopyQueueStatus.Verifying;
                         string copyHash = SafeFileOps.HashFile(temp, onBytes, gate, token);
                         if (!string.Equals(sourceHash, copyHash, StringComparison.Ordinal))
-                            throw new IOException("The copy didn't match the original - the original was left where it is.");
+                            throw new IOException(Loc.T("Str_CopyQueue_ErrCopyMismatch", "The copy didn't match the original - the original was left where it is."));
                         item.Verified = true;
                         result.Verified++;
                     }
@@ -308,7 +308,7 @@ namespace Smart_Tools.WPF.Controllers
                     if (move)
                     {
                         if (!File.Exists(final) || new FileInfo(final).Length != new FileInfo(item.Source).Length)
-                            throw new IOException("The copy isn't where it should be - the original was left where it is.");
+                            throw new IOException(Loc.T("Str_Files_ErrCopyMissing", "The copy isn't where it should be - the original was left where it is."));
                         SafeFileOps.ClearReadOnly(item.Source);
                         SafeFileOps.RetryIo(() => File.Delete(item.Source));
                     }
@@ -319,7 +319,7 @@ namespace Smart_Tools.WPF.Controllers
                 item.Status = CopyQueueStatus.Done;
                 item.Message = SamePath(final, dest)
                     ? (move ? "Moved" : "Copied")
-                    : $"A different file named {Path.GetFileName(dest)} was already there - saved as {Path.GetFileName(final)}.";
+                    : Loc.F("Str_Files_MsgSavedAs", "A different file named {0} was already there - saved as {1}.", Path.GetFileName(dest), Path.GetFileName(final));
                 result.Done++;
             }
             finally
@@ -330,13 +330,13 @@ namespace Smart_Tools.WPF.Controllers
 
         private static string Describe(CopyQueueItem item, Exception ex) => ex switch
         {
-            FileNotFoundException or DirectoryNotFoundException => $"{item.Name} is no longer there - it was moved, renamed or deleted after the plan was made.",
-            PathTooLongException => $"{item.Name}: the path is too long for Windows.",
-            UnauthorizedAccessException => $"{item.Name}: access denied - the file or folder is protected or read-only.",
+            FileNotFoundException or DirectoryNotFoundException => Loc.F("Str_CopyQueue_ErrGone", "{0} is no longer there - it was moved, renamed or deleted after the plan was made.", item.Name),
+            PathTooLongException => Loc.F("Str_Files_ErrPathTooLong", "{0}: the path is too long for Windows.", item.Name),
+            UnauthorizedAccessException => Loc.F("Str_Files_ErrDenied", "{0}: access denied - the file or folder is protected or read-only.", item.Name),
             IOException when ex.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021) =>
-                $"{item.Name} is in use by another program. Find it with Process Killer's locked-file lookup, close it and run again.",
+                Loc.F("Str_CopyQueue_ErrInUse", "{0} is in use by another program. Find it with Process Killer's locked-file lookup, close it and run again.", item.Name),
             IOException when ex.HResult is unchecked((int)0x80070070) or unchecked((int)0x80070027) =>
-                $"{item.Name}: the destination is full - the original was left where it is.",
+                Loc.F("Str_Files_ErrDiskFull", "{0}: the destination is full - the original was left where it is.", item.Name),
             _ => $"{item.Name}: {ex.Message}",
         };
 
@@ -359,7 +359,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (!File.Exists(e.To))
                 {
-                    plan.Notes.Add($"{Path.GetFileName(e.To)} is no longer at {e.To}.");
+                    plan.Notes.Add(Loc.F("Str_CopyQueue_NoteNotAt", "{0} is no longer at {1}.", Path.GetFileName(e.To), e.To));
                     continue;
                 }
                 long size = new FileInfo(e.To).Length;
@@ -393,8 +393,9 @@ namespace Smart_Tools.WPF.Controllers
             {
                 return File.Exists(file) ? JsonSerializer.Deserialize<T>(File.ReadAllText(file), JsonOptions) : null;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
+                if (ex is JsonException or NotSupportedException) JsonSettings.KeepBadCopy(file);
                 return null;
             }
         }
@@ -415,14 +416,17 @@ namespace Smart_Tools.WPF.Controllers
             return p.Equals(r, StringComparison.OrdinalIgnoreCase) || p.StartsWith(r + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
         }
 
-        public static string DescribeRun(CopyQueueResult r, CopyQueueMode mode)
+        public static string DescribeRun(CopyQueueResult r, CopyQueueMode mode, bool undo = false)
         {
-            var parts = new List<string> { $"{(mode == CopyQueueMode.Move ? "Moved" : "Copied")} {r.Done:N0} in {r.Elapsed.TotalSeconds:0.0} s" };
-            if (r.Verified > 0) parts.Add($"{r.Verified:N0} verified");
-            if (r.AlreadyThere > 0) parts.Add($"{r.AlreadyThere:N0} already there");
-            if (r.Skipped > 0) parts.Add($"{r.Skipped:N0} skipped");
-            if (r.Failed > 0) parts.Add($"{r.Failed:N0} failed");
-            if (r.Cancelled > 0) parts.Add($"{r.Cancelled:N0} stopped");
+            string head = undo ? Loc.F("Str_CopyQueue_RunPutBack", "Put back {0:N0} in {1:0.0} s", r.Done, r.Elapsed.TotalSeconds)
+                : mode == CopyQueueMode.Move ? Loc.F("Str_CopyQueue_RunMoved", "Moved {0:N0} in {1:0.0} s", r.Done, r.Elapsed.TotalSeconds)
+                : Loc.F("Str_CopyQueue_RunCopied", "Copied {0:N0} in {1:0.0} s", r.Done, r.Elapsed.TotalSeconds);
+            var parts = new List<string> { head };
+            if (r.Verified > 0) parts.Add(Loc.F("Str_CopyQueue_RunVerified", "{0:N0} verified", r.Verified));
+            if (r.AlreadyThere > 0) parts.Add(Loc.F("Str_CopyQueue_RunAlreadyThere", "{0:N0} already there", r.AlreadyThere));
+            if (r.Skipped > 0) parts.Add(Loc.F("Str_CopyQueue_RunSkipped", "{0:N0} skipped", r.Skipped));
+            if (r.Failed > 0) parts.Add(Loc.F("Str_CopyQueue_RunFailed", "{0:N0} failed", r.Failed));
+            if (r.Cancelled > 0) parts.Add(Loc.F("Str_CopyQueue_RunStopped", "{0:N0} stopped", r.Cancelled));
             return string.Join(" · ", parts);
         }
 

@@ -56,7 +56,7 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public static async Task<string?> InstallAsync(string code, IProgress<double>? progress, CancellationToken token)
         {
-            if (TesseractData.Find(code) == null) return "That language isn't in the list.";
+            if (TesseractData.Find(code) == null) return Loc.T("Str_Tess_ErrNotListed", "That language isn't in the list.");
 
             ScreenOcrManager.EnsureTessdata();
             string target = Path.Combine(AppPaths.TesseractData, code + Extension);
@@ -94,7 +94,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!await ListsLanguageAsync(code, token).ConfigureAwait(false))
                 {
                     TryDelete(target);
-                    return "The file was downloaded but Tesseract can't use it. Try again.";
+                    return Loc.T("Str_Tess_ErrUnusable", "The file was downloaded but Tesseract can't use it. Try again.");
                 }
                 return null;
             }
@@ -107,8 +107,8 @@ namespace Smart_Tools.WPF.Controllers
             {
                 TryDelete(temp);
                 return ex is HttpRequestException
-                    ? "Couldn't reach the download server. Check your internet connection and try again."
-                    : "Couldn't save the language file. Check that there is free disk space.";
+                    ? Loc.T("Str_Download_ErrServer", "Couldn't reach the download server. Check your internet connection and try again.")
+                    : Loc.T("Str_Tess_ErrSave", "Couldn't save the language file. Check that there is free disk space.");
             }
         }
 

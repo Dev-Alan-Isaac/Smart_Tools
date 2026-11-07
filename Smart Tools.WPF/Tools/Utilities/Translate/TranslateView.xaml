@@ -29,45 +29,6 @@
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16,16,16,16">
 
-                        <!--  ============ LANGUAGES ============  -->
-                        <Border ctl:Tour.Key="Str_Tour_Translate_Languages" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
-                            <StackPanel>
-                                <ContentControl
-                                    Content="{DynamicResource Str_Translate_Languages}"
-                                    Style="{StaticResource SidebarGroupHeader}"
-                                    Tag="{x:Static materialDesign:PackIconKind.Translate}" />
-
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Text="{DynamicResource Str_Translate_From}" />
-                                <!--  Filled in code from TranslateManager.Pairs  -->
-                                <ComboBox x:Name="CmbFrom" SelectionChanged="Language_SelectionChanged" />
-
-                                <Button
-                                    x:Name="BtnSwap"
-                                    Width="40"
-                                    Margin="0,8"
-                                    HorizontalAlignment="Center"
-                                    Click="BtnSwap_Click"
-                                    Style="{StaticResource NeutralIconButtonStyle}"
-                                    ToolTip="{DynamicResource Str_Translate_SwapTooltip}">
-                                    <materialDesign:PackIcon
-                                        Width="18"
-                                        Height="18"
-                                        Kind="SwapVertical" />
-                                </Button>
-
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Text="{DynamicResource Str_Translate_To}" />
-                                <ComboBox x:Name="CmbTo" SelectionChanged="Language_SelectionChanged" />
-                            </StackPanel>
-                        </Border>
-
                         <!--  ============ OFFLINE MODEL ============  -->
                         <Border ctl:Tour.Key="Str_Tour_Translate_Model" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                             <StackPanel>
@@ -154,26 +115,28 @@
                                         <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_Remove}" />
                                     </StackPanel>
                                 </Button>
+
+                            <Button
+                                x:Name="BtnManage"
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Stretch"
+                                Click="BtnManage_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Translate_ManageTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="18"
+                                        Height="18"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Kind="CogOutline" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_Manage}" />
+                                </StackPanel>
+                            </Button>
+
                             </StackPanel>
                         </Border>
 
-                        <Button
-                            x:Name="BtnManage"
-                            Margin="0,0,0,12"
-                            HorizontalAlignment="Stretch"
-                            Click="BtnManage_Click"
-                            Style="{StaticResource NeutralIconButtonStyle}"
-                            ToolTip="{DynamicResource Str_Translate_ManageTooltip}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="18"
-                                    Height="18"
-                                    Margin="0,0,8,0"
-                                    VerticalAlignment="Center"
-                                    Kind="CogOutline" />
-                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_Manage}" />
-                            </StackPanel>
-                        </Button>
 
                         <TextBlock
                             Margin="4,0,4,0"
@@ -193,11 +156,53 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!--  Run bar  -->
+                <!--  Header (title + languages) and the run bar in one card  -->
                 <Border
                     Grid.Row="0"
                     Margin="0,0,0,12"
                     Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                    <Grid ctl:Tour.Key="Str_Tour_Translate_Languages" ctl:Tour.Order="1" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentControl
+                            Content="{DynamicResource Str_Translate_Languages}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.Translate}" />
+                        <!--  Filled in code from TranslateManager.Pairs  -->
+                        <ComboBox
+                            x:Name="CmbFrom"
+                            Grid.Column="1"
+                            Width="170"
+                            VerticalAlignment="Center"
+                            SelectionChanged="Language_SelectionChanged"
+                            ToolTip="{DynamicResource Str_Translate_From}" />
+                        <Button
+                            x:Name="BtnSwap"
+                            Grid.Column="2"
+                            Width="40"
+                            Margin="6,0"
+                            VerticalAlignment="Center"
+                            Click="BtnSwap_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Translate_SwapTooltip}">
+                            <materialDesign:PackIcon
+                                Width="18"
+                                Height="18"
+                                Kind="SwapHorizontal" />
+                        </Button>
+                        <ComboBox
+                            x:Name="CmbTo"
+                            Grid.Column="3"
+                            Width="170"
+                            VerticalAlignment="Center"
+                            SelectionChanged="Language_SelectionChanged"
+                            ToolTip="{DynamicResource Str_Translate_To}" />
+                    </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -261,6 +266,7 @@
                             TextAlignment="Right"
                             Visibility="Collapsed" />
                     </Grid>
+                    </StackPanel>
                 </Border>
 
                 <!--  Text panes  -->

@@ -57,13 +57,13 @@ namespace Smart_Tools.WPF.Controllers
                 var info = new FileInfo(row.FullPath);
                 if (!info.Exists)
                 {
-                    f.CantCheck.Add("the file no longer exists (moved or deleted since it was listed)");
+                    f.CantCheck.Add(Loc.T("Str_Validate_CantGone", "the file no longer exists (moved or deleted since it was listed)"));
                     f.Apply(row, "");
                     return;
                 }
                 if (info.Length == 0)
                 {
-                    f.Problems.Add("the file is empty (0 bytes)");
+                    f.Problems.Add(Loc.T("Str_Validate_ProbEmpty", "the file is empty (0 bytes)"));
                     f.Apply(row, "");
                     return;
                 }
@@ -75,19 +75,19 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    f.CantCheck.Add("access denied - Windows won't let this app read it");
+                    f.CantCheck.Add(Loc.T("Str_Validate_CantDenied", "access denied - Windows won't let this app read it"));
                     f.Apply(row, "");
                     return;
                 }
                 catch (IOException ex) when (IsInUse(ex))
                 {
-                    f.CantCheck.Add("it's open in another program - close it and check again");
+                    f.CantCheck.Add(Loc.T("Str_Validate_CantInUse", "it's open in another program - close it and check again"));
                     f.Apply(row, "");
                     return;
                 }
                 catch (IOException ex)
                 {
-                    f.Problems.Add("it can't be read from the disk (" + ex.Message.TrimEnd('.') + ")");
+                    f.Problems.Add(Loc.F("Str_Validate_ProbDiskRead", "it can't be read from the disk ({0})", ex.Message.TrimEnd('.')));
                     f.Apply(row, "");
                     return;
                 }
@@ -95,8 +95,8 @@ namespace Smart_Tools.WPF.Controllers
                 if (!WantsFormatChecks(row.Category, o))
                 {
                     f.Apply(row, row.Category == ValidationKind.Other
-                        ? "Readable. There are no format checks for this kind of file"
-                        : $"Readable. {row.Category} checks are turned off");
+                        ? Loc.T("Str_Validate_DetReadableNoChecks", "Readable. There are no format checks for this kind of file")
+                        : Loc.F("Str_Validate_DetReadableOff", "Readable. {0} checks are turned off", row.Category));
                     return;
                 }
 
@@ -111,9 +111,9 @@ namespace Smart_Tools.WPF.Controllers
                 if (checkHeader && !HeaderMatches(row.FullPath, header))
                 {
                     if (WrongExtensionNote(row.FullPath, header) is string note)
-                        f.Warnings.Add(note + " - rename it so programs open it correctly");
+                        f.Warnings.Add(note + Loc.T("Str_Validate_WarnRename", " - rename it so programs open it correctly"));
                     else
-                        f.Problems.Add($"the start of the file isn't a valid {ExtLabel(row.FullPath)} header - it's damaged or not really a {ExtLabel(row.FullPath)} file");
+                        f.Problems.Add(Loc.F("Str_Validate_ProbBadHeader", "the start of the file isn't a valid {0} header - it's damaged or not really a {0} file", ExtLabel(row.FullPath)));
                     f.Apply(row, "");
                     return;
                 }
@@ -135,17 +135,17 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                f.CantCheck.Add("access denied part-way through");
+                f.CantCheck.Add(Loc.T("Str_Validate_CantDeniedMid", "access denied part-way through"));
                 f.Apply(row, "");
             }
             catch (IOException ex) when (IsInUse(ex))
             {
-                f.CantCheck.Add("it was opened by another program during the check");
+                f.CantCheck.Add(Loc.T("Str_Validate_CantOpenedMid", "it was opened by another program during the check"));
                 f.Apply(row, "");
             }
             catch (Exception ex)
             {
-                f.CantCheck.Add("the check itself failed: " + ex.Message.TrimEnd('.'));
+                f.CantCheck.Add(Loc.F("Str_Validate_CantCheckFailed", "the check itself failed: {0}", ex.Message.TrimEnd('.')));
                 f.Apply(row, "");
             }
         }
@@ -210,33 +210,33 @@ namespace Smart_Tools.WPF.Controllers
                     "GIF" => tail.Length > 0 && tail[^1] == 0x3B,
                     _ => true,
                 };
-                if (!ended) f.Problems.Add("the file is cut short (the end-of-image marker is missing), so part of the picture is lost");
+                if (!ended) f.Problems.Add(Loc.T("Str_Validate_ProbImgCut", "the file is cut short (the end-of-image marker is missing), so part of the picture is lost"));
             }
 
             token.ThrowIfCancellationRequested();
-            if (!(o.ImageFullDecode || o.ImageFlagSmall || o.ImageCheckExif)) return "Header OK";
+            if (!(o.ImageFullDecode || o.ImageFlagSmall || o.ImageCheckExif)) return Loc.T("Str_Validate_DetHeaderOk", "Header OK");
 
             bool exif = o.ImageCheckExif && kind is "JPEG" or "TIFF";
             var probe = ImageDecoderOverride != null ? ImageDecoderOverride(path, o.ImageFullDecode, exif) : DecodeImageCore(path, o.ImageFullDecode, exif);
 
             if (probe.Unsupported)
             {
-                f.CantCheck.Add($"Windows has no decoder for this {ExtLabel(path)} picture, so the pixels couldn't be checked (the header is fine)");
+                f.CantCheck.Add(Loc.F("Str_Validate_CantNoDecoder", "Windows has no decoder for this {0} picture, so the pixels couldn't be checked (the header is fine)", ExtLabel(path)));
                 return "";
             }
             if (probe.Error != null)
             {
-                f.Problems.Add("the picture data is damaged: " + probe.Error.TrimEnd('.'));
+                f.Problems.Add(Loc.F("Str_Validate_ProbImgDamaged", "the picture data is damaged: {0}", probe.Error.TrimEnd('.')));
                 return "";
             }
             if (o.ImageFlagSmall && probe.Width > 0 && (probe.Width < 50 || probe.Height < 50))
-                f.Warnings.Add($"it's unusually small ({probe.Width} x {probe.Height}) - maybe a thumbnail or placeholder");
+                f.Warnings.Add(Loc.F("Str_Validate_WarnSmall", "it's unusually small ({0} x {1}) - maybe a thumbnail or placeholder", probe.Width, probe.Height));
             if (probe.ExifError != null)
-                f.Warnings.Add("the photo information (EXIF) is damaged: " + probe.ExifError.TrimEnd('.'));
+                f.Warnings.Add(Loc.F("Str_Validate_WarnExif", "the photo information (EXIF) is damaged: {0}", probe.ExifError.TrimEnd('.')));
 
             return probe.Width > 0
-                ? $"{probe.Width} x {probe.Height}, {(o.ImageFullDecode ? "every pixel decoded" : "header read")}"
-                : "Header OK";
+                ? Loc.F("Str_Validate_DetImageOk", "{0} x {1}, {2}", probe.Width, probe.Height, o.ImageFullDecode ? Loc.T("Str_Validate_DetEveryPixel", "every pixel decoded") : Loc.T("Str_Validate_DetHeaderRead", "header read"))
+                : Loc.T("Str_Validate_DetHeaderOk", "Header OK");
         }
 
         private static partial ImageProbe DecodeImageCore(string path, bool fullDecode, bool readExif);
@@ -248,7 +248,7 @@ namespace Smart_Tools.WPF.Controllers
         private static string CheckAudio(string path, byte[] header, long length, ValidationOptions o, Findings f, CancellationToken token)
         {
             if (o.AudioCheckTruncated && Sniff(header) == "WAV" && WavExpectedLength(path) is long expected && expected > length)
-                f.Problems.Add($"the file is cut short: it should be {ValidateText.FormatBytes(expected)} but is {ValidateText.FormatBytes(length)}");
+                f.Problems.Add(Loc.F("Str_Validate_ProbCutSize", "the file is cut short: it should be {0} but is {1}", ValidateText.FormatBytes(expected), ValidateText.FormatBytes(length)));
 
             return CheckAudioStreams(path, o, f, token);
         }
@@ -290,24 +290,24 @@ namespace Smart_Tools.WPF.Controllers
                 case ".pdf":
                     return CheckPdf(path, header, length, o, f);
                 case ".txt":
-                    return "Readable text";
+                    return Loc.T("Str_Validate_DetReadableText", "Readable text");
                 case ".rtf":
                     if (o.DocCheckStructure)
                     {
                         var end = TrimPadding(ReadTail(path, 256));
-                        if (end.Length == 0 || end[^1] != (byte)'}') f.Problems.Add("the file is cut short (the closing } is missing)");
+                        if (end.Length == 0 || end[^1] != (byte)'}') f.Problems.Add(Loc.T("Str_Validate_ProbJsonCut", "the file is cut short (the closing } is missing)"));
                     }
-                    return "RTF structure OK";
+                    return Loc.T("Str_Validate_DetRtfOk", "RTF structure OK");
                 case ".doc" or ".xls" or ".ppt":
-                    return "Header OK. Older Office files can only be checked this far";
+                    return Loc.T("Str_Validate_DetOldOffice", "Header OK. Older Office files can only be checked this far");
             }
 
             // Zip-based: Office Open XML and OpenDocument.
             if (kind == "OLE")
             {
                 // An encrypted .docx is an OLE file, not a zip - the old version said "package is corrupt".
-                if (o.DocFlagPassword) f.Warnings.Add("it's password-protected, so its contents can't be checked");
-                else f.CantCheck.Add("it's password-protected, so its contents can't be checked");
+                if (o.DocFlagPassword) f.Warnings.Add(Loc.T("Str_Validate_PasswordNoCheck", "it's password-protected, so its contents can't be checked"));
+                else f.CantCheck.Add(Loc.T("Str_Validate_PasswordNoCheck", "it's password-protected, so its contents can't be checked"));
                 return "";
             }
 
@@ -318,7 +318,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (InvalidDataException)
             {
-                f.Problems.Add("the document package is damaged (its file list can't be read) - usually the file was cut short");
+                f.Problems.Add(Loc.T("Str_Validate_ProbDocPackage", "the document package is damaged (its file list can't be read) - usually the file was cut short"));
                 return "";
             }
 
@@ -329,9 +329,9 @@ namespace Smart_Tools.WPF.Controllers
                 if (o.DocCheckStructure)
                 {
                     if (odf ? !names.Contains("mimetype") : !names.Contains("[Content_Types].xml"))
-                        f.Problems.Add(odf ? "the OpenDocument 'mimetype' part is missing" : "the [Content_Types].xml part is missing - it isn't a valid Office file");
+                        f.Problems.Add(odf ? Loc.T("Str_Validate_ProbOdfMime", "the OpenDocument 'mimetype' part is missing") : Loc.T("Str_Validate_ProbOoxmlTypes", "the [Content_Types].xml part is missing - it isn't a valid Office file"));
                     else if (odf ? !names.Contains("content.xml") : !OoxmlMainParts.Any(names.Contains))
-                        f.Problems.Add("the main document part is missing");
+                        f.Problems.Add(Loc.T("Str_Validate_ProbMainPart", "the main document part is missing"));
                 }
 
                 var damaged = new List<string>();
@@ -380,7 +380,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (!tail.Contains("%%EOF", StringComparison.Ordinal))
                 {
-                    f.Problems.Add("the file is cut short (the %%EOF end marker is missing)");
+                    f.Problems.Add(Loc.T("Str_Validate_ProbPdfCut", "the file is cut short (the %%EOF end marker is missing)"));
                     return "";
                 }
             }
@@ -398,11 +398,11 @@ namespace Smart_Tools.WPF.Controllers
                     string s = Encoding.Latin1.GetString(buf, 0, n).TrimStart();
                     ok = s.StartsWith("xref", StringComparison.Ordinal) || System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d+\s+\d+\s+obj");
                 }
-                if (!ok) f.Warnings.Add("the cross-reference table is damaged - most viewers can repair it, but re-saving the PDF is a good idea");
+                if (!ok) f.Warnings.Add(Loc.T("Str_Validate_WarnPdfXref", "the cross-reference table is damaged - most viewers can repair it, but re-saving the PDF is a good idea"));
             }
 
             if (o.DocFlagPassword && PdfTrailerDeclaresEncrypt(tail))
-                f.Warnings.Add("it's encrypted (it may need a password to open)");   // the old version called this "corrupted"
+                f.Warnings.Add(Loc.T("Str_Validate_WarnEncrypted", "it's encrypted (it may need a password to open)"));   // the old version called this "corrupted"
 
             return "PDF structure OK";
         }
@@ -425,12 +425,12 @@ namespace Smart_Tools.WPF.Controllers
             if (ext is ".gz" or ".tgz") return CheckGzip(path, length, isTar: ext == ".tgz" || name.EndsWith(".tar.gz", StringComparison.Ordinal), o, test, f, token);
             if (ext == ".tar")
             {
-                if (!test) return "Header OK";
+                if (!test) return Loc.T("Str_Validate_DetHeaderOk", "Header OK");
                 using var fs = OpenShared(path);
                 int entries = ReadTar(fs, f, token);
                 return $"{entries:N0} entr{(entries == 1 ? "y" : "ies")} read";
             }
-            return "Header OK. The contents of this kind of archive need 7-Zip to test";
+            return Loc.T("Str_Validate_DetArchive7z", "Header OK. The contents of this kind of archive need 7-Zip to test");
         }
 
         private static string CheckZip(string path, ValidationOptions o, bool test, Findings f, CancellationToken token)
@@ -442,7 +442,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (InvalidDataException)
             {
-                f.Problems.Add("the archive's file list can't be read - usually the file was cut short");
+                f.Problems.Add(Loc.T("Str_Validate_ProbArchiveList", "the archive's file list can't be read - usually the file was cut short"));
                 return "";
             }
 
@@ -456,7 +456,7 @@ namespace Smart_Tools.WPF.Controllers
                 // Checked BEFORE extracting - the old version decompressed a bomb fully first.
                 if (o.ArchiveCheckBomb && LooksLikeBomb(compressed, uncompressed))
                 {
-                    f.Warnings.Add($"possible zip bomb: {ValidateText.FormatBytes(compressed)} expands to {ValidateText.FormatBytes(uncompressed)} ({uncompressed / Math.Max(1, compressed):N0}x) - not extracted");
+                    f.Warnings.Add(Loc.F("Str_Validate_WarnZipBomb", "possible zip bomb: {0} expands to {1} ({2:N0}x) - not extracted", ValidateText.FormatBytes(compressed), ValidateText.FormatBytes(uncompressed), uncompressed / Math.Max(1, compressed)));
                     return "";
                 }
 
@@ -478,16 +478,16 @@ namespace Smart_Tools.WPF.Controllers
                     }
                 }
 
-                if (damaged.Count > 0) f.Problems.Add($"{damaged.Count} of {files.Count} entries are damaged ({Join(damaged)})");
+                if (damaged.Count > 0) f.Problems.Add(Loc.F("Str_Validate_ProbEntriesDamaged", "{0} of {1} entries are damaged ({2})", damaged.Count, files.Count, Join(damaged)));
                 if (encrypted > 0)
                 {
-                    string text = $"{encrypted} entr{(encrypted == 1 ? "y is" : "ies are")} password-protected and couldn't be tested";
+                    string text = Loc.N(encrypted, "Str_Validate_NoteEncOne", "{0} entry is password-protected and couldn't be tested", "Str_Validate_NoteEncMany", "{0} entries are password-protected and couldn't be tested", encrypted);
                     if (o.ArchiveFlagPassword) f.Warnings.Add(text);   // the old version called these "corrupted"
                     else f.Notes.Add(text);
                 }
 
                 int nested = files.Count(e => ArchiveExts.Contains(Path.GetExtension(e.Name)));
-                if (o.ArchiveCheckBomb && nested > 0) f.Notes.Add($"contains {nested} archive{(nested == 1 ? "" : "s")} (not opened)");
+                if (o.ArchiveCheckBomb && nested > 0) f.Notes.Add(Loc.N(nested, "Str_Validate_NoteNestedOne", "contains {0} archive (not opened)", "Str_Validate_NoteNestedMany", "contains {0} archives (not opened)", nested));
                 return test ? $"{files.Count - encrypted:N0} entr{(files.Count - encrypted == 1 ? "y" : "ies")} extracted and CRC-checked" : $"{files.Count:N0} entries listed";
             }
         }
@@ -498,10 +498,10 @@ namespace Smart_Tools.WPF.Controllers
             uint declared = BinaryPrimitives.ReadUInt32LittleEndian(ReadTail(path, 4));
             if (o.ArchiveCheckBomb && LooksLikeBomb(length, declared))
             {
-                f.Warnings.Add($"possible decompression bomb: expands to {ValidateText.FormatBytes(declared)} - not extracted");
+                f.Warnings.Add(Loc.F("Str_Validate_WarnDecompBomb", "possible decompression bomb: expands to {0} - not extracted", ValidateText.FormatBytes(declared)));
                 return "";
             }
-            if (!test) return "Header OK";
+            if (!test) return Loc.T("Str_Validate_DetHeaderOk", "Header OK");
 
             using var fs = OpenShared(path);
             using var gz = new GZipStream(fs, CompressionMode.Decompress);
@@ -514,15 +514,15 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (InvalidDataException ex)
             {
-                f.Problems.Add("the compressed data is damaged (" + ex.Message.TrimEnd('.') + ")");
+                f.Problems.Add(Loc.F("Str_Validate_ProbCompressed", "the compressed data is damaged ({0})", ex.Message.TrimEnd('.')));
                 return "";
             }
 
             // .NET doesn't report a gzip that simply stops early; the stored size does.
             if (counter.Total < uint.MaxValue && counter.Total < declared)
-                f.Problems.Add($"the file is cut short: it should expand to {ValidateText.FormatBytes(declared)} but only {ValidateText.FormatBytes(counter.Total)} is there");
+                f.Problems.Add(Loc.F("Str_Validate_ProbCutExpand", "the file is cut short: it should expand to {0} but only {1} is there", ValidateText.FormatBytes(declared), ValidateText.FormatBytes(counter.Total)));
 
-            return isTar ? $"{entries:N0} entries decompressed and read" : $"Decompressed OK ({ValidateText.FormatBytes(counter.Total)})";
+            return isTar ? Loc.F("Str_Validate_DetTarOk", "{0:N0} entries decompressed and read", entries) : Loc.F("Str_Validate_DetGzipOk", "Decompressed OK ({0})", ValidateText.FormatBytes(counter.Total));
         }
 
         private static int ReadTar(Stream stream, Findings f, CancellationToken token)
@@ -540,7 +540,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is InvalidDataException or EndOfStreamException or FormatException)
             {
-                f.Problems.Add($"the archive is damaged after {count} entr{(count == 1 ? "y" : "ies")} ({ex.Message.TrimEnd('.')})");
+                f.Problems.Add(Loc.N(count, "Str_Validate_ProbArchiveAfterOne", "the archive is damaged after {0} entry ({1})", "Str_Validate_ProbArchiveAfterMany", "the archive is damaged after {0} entries ({1})", count, ex.Message.TrimEnd('.')));
             }
             return count;
         }

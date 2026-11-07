@@ -25,7 +25,22 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
             {
+                // A file that cannot be parsed would be overwritten by the next save: keep a copy first.
+                if (ex is JsonException or NotSupportedException) KeepBadCopy(path ?? PathFor(name));
                 return new T();
+            }
+        }
+
+        /// <summary>Copies a file that could not be parsed to "name.bad" before defaults (and the next save) replace it.</summary>
+        public static void KeepBadCopy(string file)
+        {
+            try
+            {
+                if (File.Exists(file)) File.Copy(file, file + ".bad", overwrite: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Log.Info("Could not keep a copy of the unreadable file " + file + ": " + ex.Message);
             }
         }
 
