@@ -23,15 +23,30 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>One hung ffmpeg/ffprobe must not hold a scan slot forever.</summary>
         private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(15);
         private static readonly TimeSpan DecodeTimeout = TimeSpan.FromMinutes(4);
+        private static readonly TimeSpan ImageDecodeTimeout = TimeSpan.FromSeconds(60);
 
         private static async Task<MediaSignature?> ComputeSignatureAsync(string path, MediaKind kind, CancellationToken token)
         {
             switch (kind)
             {
                 case MediaKind.Image:
-                    return await Task.Run(() => SimilarImageEngine.Compute(path), token).ConfigureAwait(false);
+                {
+                    // OpenCV / Magick cannot be cancelled: if one decode hangs, give up on that file after a
+                    // while (the stuck thread is abandoned) so the scan keeps moving instead of freezing.
+                    var work = Task.Run(() => SimilarImageEngine.Compute(path));
+                    var done = await Task.WhenAny(work, Task.Delay(ImageDecodeTimeout, token)).ConfigureAwait(false);
+                    token.ThrowIfCancellationRequested();
+                    if (done == work) return await work.ConfigureAwait(false);
+                    Log.Warn($"Picture decode took over {ImageDecodeTimeout.TotalSeconds:0}s, skipped: {path}");
+                    _ = work.ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                    return null;
+                }
                 case MediaKind.Video:
-                    return await VideoSignatureAsync(path, token).ConfigureAwait(false);
+                {
+                    using var limit = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    limit.CancelAfter(DecodeTimeout);
+                    return await VideoSignatureAsync(path, limit.Token).ConfigureAwait(false);
+                }
                 default:
                     return await AudioSignatureAsync(path, token).ConfigureAwait(false);
             }

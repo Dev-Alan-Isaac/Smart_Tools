@@ -97,6 +97,18 @@ namespace Smart_Tools.WPF.Controllers
             public IProgress<SimilarScanProgress>? Progress;
             public readonly object Lock = new();
 
+            /// <summary>Files being read right now (index -> path, start ms), so a stall can name the file.</summary>
+            public readonly ConcurrentDictionary<int, (string Path, long Start)> InFlight = new();
+
+            public (string Path, long Seconds)? Oldest()
+            {
+                long now = Watch.ElapsedMilliseconds;
+                (string Path, long Start)? oldest = null;
+                foreach (var v in InFlight.Values)
+                    if (oldest == null || v.Start < oldest.Value.Start) oldest = v;
+                return oldest is { } o ? (o.Path, (now - o.Start) / 1000) : null;
+            }
+
             private long _lastLog = -LogIntervalMs;
             private const long LogIntervalMs = 5000;
 
@@ -201,12 +213,36 @@ namespace Smart_Tools.WPF.Controllers
             // A cancelled scan keeps what it has read: the journal is flushed and closed the moment Cancel is pressed.
             using var closeJournalOnCancel = token.Register(() => cache?.Close());
             var sigs = new MediaSignature?[files.Count];
+
+            // Heartbeat: progress is otherwise only reported when a file finishes, so if every worker is stuck on
+            // a bad file the screen would freeze. Every 2 s show (and log) the file that has been running longest.
+            using var heartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            var heartbeat = Task.Run(async () =>
+            {
+                try
+                {
+                    while (!heartbeatCts.IsCancellationRequested)
+                    {
+                        await Task.Delay(2000, heartbeatCts.Token).ConfigureAwait(false);
+                        if (state.Oldest() is { } slow && slow.Seconds >= 10)
+                        {
+                            Log.Warn($"Scan slow: {slow.Path} has been reading for {slow.Seconds}s ({state.InFlight.Count} in progress, {Volatile.Read(ref state.Processed)}/{state.Total} done)");
+                            state.Report(slow.Path, force: true);
+                        }
+                    }
+                }
+                catch (OperationCanceledException) { }
+            });
+
+            try
+            {
             await Parallel.ForEachAsync(Enumerable.Range(0, files.Count), new ParallelOptions
             {
                 MaxDegreeOfParallelism = Math.Max(1, options.MaxDegreeOfParallelism),
                 CancellationToken = token,
             }, async (i, ct) =>
             {
+                state.InFlight[i] = (files[i].FullName, state.Watch.ElapsedMilliseconds);
                 try
                 {
                     var hit = cache?.TryGet(files[i]);
@@ -231,11 +267,21 @@ namespace Smart_Tools.WPF.Controllers
                     // Capped: a bad drive could fail thousands of files.
                     if (Volatile.Read(ref state.Unreadable) < 50) Log.Info($"Fingerprint failed, skipped: {files[i].FullName} ({ex.GetType().Name}: {ex.Message})");
                 }
+                finally
+                {
+                    state.InFlight.TryRemove(i, out _);
+                }
 
                 if (sigs[i] == null) Interlocked.Increment(ref state.Unreadable);
                 Interlocked.Increment(ref state.Processed);
                 state.Report(files[i].FullName);
             }).ConfigureAwait(false);
+            }
+            finally
+            {
+                heartbeatCts.Cancel();
+                await heartbeat.ConfigureAwait(false);
+            }
 
             cache?.Save();
             Log.Info($"Scan fingerprinting finished in {state.Watch.Elapsed.TotalSeconds:0.0}s ({cached} from the cache), matching");
