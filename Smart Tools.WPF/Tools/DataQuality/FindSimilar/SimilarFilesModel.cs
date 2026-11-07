@@ -37,6 +37,14 @@ namespace Smart_Tools.WPF.Models
         AudioMfcc,
         AudioSpectrogramSsim,
         AudioShazam,
+
+        // Current engines (the values above are older ones, kept so saved settings still parse and mapped to these)
+        /// <summary>Images: perceptual hash in every rotation/mirror, plus ORB + RANSAC for crops and edits (OpenCV).</summary>
+        ImageOpenCv,
+        /// <summary>Video: frame hashes aligned over time, so trims, other codecs/resolutions and mirrored copies match (OpenCV).</summary>
+        VideoOpenCv,
+        /// <summary>Audio: SoundFingerprinting landmark hashes, any format, trims and offsets.</summary>
+        AudioFingerprint,
     }
 
     public enum MediaKind
@@ -61,6 +69,8 @@ namespace Smart_Tools.WPF.Models
     {
         Listing,
         Fingerprinting,
+        /// <summary>Comparing every file with the others (hash pass, crop check, frame alignment, audio queries).</summary>
+        Matching,
         Grouping,
         Done,
     }
@@ -70,7 +80,10 @@ namespace Smart_Tools.WPF.Models
         public List<string> Folders { get; init; } = new();
         public bool IncludeSubfolders { get; init; } = true;
         public bool IgnoreSystemFiles { get; init; } = true;
-        public SimilarDetectionMethod Method { get; init; } = SimilarDetectionMethod.PHash;
+        public SimilarDetectionMethod Method { get; init; } = SimilarDetectionMethod.ImageOpenCv;
+
+        /// <summary>Images: also look for cropped/edited copies (slower, uses ORB feature matching).</summary>
+        public bool FindCroppedCopies { get; init; } = true;
 
         /// <summary>50-100: how alike files must be to be grouped.</summary>
         public double ThresholdPercent { get; init; } = 85;
@@ -86,7 +99,7 @@ namespace Smart_Tools.WPF.Models
         public double? Percent => Phase switch
         {
             SimilarScanPhase.Listing => null,
-            SimilarScanPhase.Fingerprinting => Total > 0 ? Processed * 100.0 / Total : 100,
+            SimilarScanPhase.Fingerprinting or SimilarScanPhase.Matching => Total > 0 ? Processed * 100.0 / Total : 100,
             _ => 100,
         };
     }
@@ -123,6 +136,10 @@ namespace Smart_Tools.WPF.Models
 
         /// <summary>Fingerprint as hex (shown in the Hash column).</summary>
         public string Hash { get; init; } = "";
+
+        /// <summary>How this copy differs from the rest of its group: "Flipped · Cropped · Different format". Empty for the original.</summary>
+        public string Why { get; set; } = "";
+        public bool HasWhy => Why.Length > 0;
 
         /// <summary>Seconds, for video and audio (0 = unknown).</summary>
         public double DurationSeconds { get; init; }
@@ -256,7 +273,8 @@ namespace Smart_Tools.WPF.Models
     public sealed class SimilarFinderSettings
     {
         public List<string> Folders { get; set; } = new();
-        public SimilarDetectionMethod Method { get; set; } = SimilarDetectionMethod.PHash;
+        public SimilarDetectionMethod Method { get; set; } = SimilarDetectionMethod.ImageOpenCv;
+        public bool FindCroppedCopies { get; set; } = true;
         public double ThresholdPercent { get; set; } = 85;
         public bool IncludeSubfolders { get; set; } = true;
         public bool IgnoreSystemFiles { get; set; } = true;

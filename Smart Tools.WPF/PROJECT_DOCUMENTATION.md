@@ -26,7 +26,7 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **Validate Data** | `validate-data` | Check files for broken or invalid data |
 | **Duplicate Data** | `duplicate-data` | Find and remove duplicate files |
-| **Find Similar Files** | `find-similar` | Spot near-identical files and images |
+| **Find Similar Files** | `find-similar` | Find the same picture, video or recording in another format, size or quality, and flipped, cropped, trimmed or edited copies (OpenCV for images/video, SoundFingerprinting for audio; `Tools/DataQuality/FindSimilar/`) |
 | **File Differences** | `file-differences` | Compare two files side by side |
 | **Text Diff** | `text-diff` | Paste two texts and see what changed, line by line |
 | **Hash & Checksum Verifier** | `hash-verifier` | Check a file is what it claims to be |
@@ -342,6 +342,8 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 - **LibreHardwareMonitorLib 0.9.6** - Hardware Sensors tool
 - **Microsoft.Web.WebView2 1.0.4258.31** - MD & HTML Editor preview (needs the Evergreen WebView2 runtime; the tool detects its absence and explains what to install)
 - **Magick.NET-Q16-AnyCPU 15.0.0**, **PDFsharp 6.2.4**, **ZXing.Net 0.16.11** - Images, PDF, barcodes/QR
+- **OpenCvSharp4 + OpenCvSharp4.runtime.win 4.13** and **SoundFingerprinting 15.2 (MIT, in-memory model service only)** - Find Similar Files. OpenCV's native runtime is Windows x64 only, so the app is built `PlatformTarget` x64 (no longer AnyCPU).
+- Find Similar Files' image/video signatures are cached in `similar_cache.bin` (AppPaths.DataRoot, keyed by path + size + modified time); safe to delete.
 - **System.Management**, **System.Drawing.Common**, **System.IO.Hashing**, **Newtonsoft.Json**, **log4net**, **Microsoft.Toolkit.Uwp.Notifications**
 - **FFmpeg** and **LibVLC** are bundled native engines (not NuGet)
 

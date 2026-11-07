@@ -189,10 +189,9 @@ namespace Smart_Tools.WPF.Views
 
         private SimilarDetectionMethod SelectedMethod => SelectedKind switch
         {
-            MediaKind.Video => SimilarDetectionMethod.VideoFrameHash,
-            MediaKind.Audio => SimilarDetectionMethod.AudioChromaprint,
-            _ => new[] { RadioPHash, RadioDHash, RadioWHash }.FirstOrDefault(r => r.IsChecked == true)?.Tag is string tag
-                 && Enum.TryParse(tag, out SimilarDetectionMethod m) ? m : SimilarDetectionMethod.PHash,
+            MediaKind.Video => SimilarDetectionMethod.VideoOpenCv,
+            MediaKind.Audio => SimilarDetectionMethod.AudioFingerprint,
+            _ => SimilarDetectionMethod.ImageOpenCv,
         };
 
         private SimilarKeepRule SelectedKeepRule =>
@@ -224,18 +223,14 @@ namespace Smart_Tools.WPF.Views
 
             TxtMethodHint.Text = kind switch
             {
-                MediaKind.Video => "Samples 5 frames from each video and compares them. Finds the same clip re-encoded, resized or trimmed a little.",
-                MediaKind.Audio => "Compares the sound of the first minute, section by section. Finds the same recording in another format or bitrate.",
-                _ => SelectedMethod switch
-                {
-                    SimilarDetectionMethod.DHash => "Fastest. Good for resized or re-saved copies.",
-                    SimilarDetectionMethod.WHash => "Most tolerant of small edits and colour changes.",
-                    _ => "Best all-rounder: survives resizing, recompression and small edits.",
-                },
+                MediaKind.Video => Loc.T("Str_FindSimilar_HintVideos", "Compares the pictures of each video over time. Finds the same video in another format, size or quality, mirrored, or with the start or end cut off."),
+                MediaKind.Audio => Loc.T("Str_FindSimilar_HintAudio", "Compares the sound itself. Finds the same recording in another format or bitrate, even with the start or end cut off."),
+                _ => Loc.T("Str_FindSimilar_HintImages", "Finds the same picture in another format or size, flipped or turned. With the option below, also cropped or edited copies."),
             };
 
-            bool needsFfmpeg = kind != MediaKind.Image && !SimilarManager.FfmpegAvailable;
-            TxtFfmpegWarning.Text = $"Needs ffmpeg.exe and ffprobe.exe in {SimilarManager.FfmpegFolder} - they weren't found.";
+            // Only audio needs ffmpeg; for video it just backs up OpenCV on formats OpenCV can't read.
+            bool needsFfmpeg = kind == MediaKind.Audio && !SimilarManager.FfmpegAvailable;
+            TxtFfmpegWarning.Text = Loc.F("Str_FindSimilar_NeedsFfmpeg", "Needs ffmpeg.exe and ffprobe.exe in {0} - they weren't found.", SimilarManager.FfmpegFolder);
             UiMotion.FadeVisibility(FfmpegWarning, needsFfmpeg);
         }
 
@@ -253,10 +248,10 @@ namespace Smart_Tools.WPF.Views
             if (TxtThresholdValue == null || TxtThresholdHint == null) return;
             int value = (int)Math.Round(rawValue);
             TxtThresholdValue.Text = $"{value}%";
-            TxtThresholdHint.Text = value >= 95 ? "Only near-identical copies (resized or re-saved)."
-                : value >= 85 ? "Copies and lightly edited versions. A good default."
-                : value >= 70 ? "Also finds crops, filters and bigger edits - expect some look-alikes."
-                : "Very loose - finds things that merely look alike. Review before deleting.";
+            TxtThresholdHint.Text = value >= 95 ? Loc.T("Str_FindSimilar_ThresholdHint95", "Only near-identical copies (resized or re-saved).")
+                : value >= 85 ? Loc.T("Str_FindSimilar_ThresholdHint85", "Copies and lightly edited versions. A good default.")
+                : value >= 70 ? Loc.T("Str_FindSimilar_ThresholdHint70", "Also finds bigger edits and shorter clips - expect some look-alikes.")
+                : Loc.T("Str_FindSimilar_ThresholdHintLow", "Very loose - finds things that merely look alike. Review before deleting.");
         }
 
         // ---------------- Settings ----------------
@@ -274,12 +269,9 @@ namespace Smart_Tools.WPF.Views
                 {
                     case MediaKind.Video: RadioKindVideos.IsChecked = true; break;
                     case MediaKind.Audio: RadioKindAudio.IsChecked = true; break;
-                    default:
-                        RadioKindImages.IsChecked = true;
-                        var radio = new[] { RadioPHash, RadioDHash, RadioWHash }.FirstOrDefault(r => (string)r.Tag == s.Method.ToString()) ?? RadioPHash;
-                        radio.IsChecked = true;
-                        break;
+                    default: RadioKindImages.IsChecked = true; break;
                 }
+                ChkFindCrops.IsChecked = s.FindCroppedCopies;
 
                 SliderThreshold.Value = s.ThresholdPercent;
                 UpdateThresholdUi(SliderThreshold.Value);
@@ -303,6 +295,7 @@ namespace Smart_Tools.WPF.Views
 
             _settings.Folders = _folders.Select(f => f.FullPath).ToList();
             _settings.Method = SelectedMethod;
+            _settings.FindCroppedCopies = ChkFindCrops.IsChecked == true;
             _settings.ThresholdPercent = SliderThreshold.Value;
             _settings.IncludeSubfolders = ChkIncludeSubfolders.IsChecked == true;
             _settings.IgnoreSystemFiles = ChkIgnoreSystemFiles.IsChecked == true;
@@ -344,6 +337,7 @@ namespace Smart_Tools.WPF.Views
                 IncludeSubfolders = ChkIncludeSubfolders.IsChecked == true,
                 IgnoreSystemFiles = ChkIgnoreSystemFiles.IsChecked == true,
                 Method = SelectedMethod,
+                FindCroppedCopies = ChkFindCrops.IsChecked == true,
                 ThresholdPercent = SliderThreshold.Value,
             });
         }
@@ -438,18 +432,19 @@ namespace Smart_Tools.WPF.Views
                 TxtProgressPercent.Text = "";
             }
 
-            string noun = SimilarManager.KindOf(_lastOptions?.Method ?? SimilarDetectionMethod.PHash) switch
+            string noun = SimilarManager.KindOf(_lastOptions?.Method ?? SimilarDetectionMethod.ImageOpenCv) switch
             {
-                MediaKind.Video => "videos",
-                MediaKind.Audio => "audio files",
-                _ => "images",
+                MediaKind.Video => Loc.T("Str_FindSimilar_NounVideos", "videos"),
+                MediaKind.Audio => Loc.T("Str_FindSimilar_NounAudio", "audio files"),
+                _ => Loc.T("Str_FindSimilar_NounImages", "images"),
             };
             string phase = p.Phase switch
             {
-                SimilarScanPhase.Listing => $"Finding {noun} · {p.Total:N0} so far",
-                SimilarScanPhase.Fingerprinting => $"Fingerprinting {p.Processed:N0} of {p.Total:N0} {noun}",
-                SimilarScanPhase.Grouping => "Grouping look-alikes...",
-                _ => "Finishing...",
+                SimilarScanPhase.Listing => Loc.F("Str_FindSimilar_ProgListing", "Finding {0} · {1:N0} so far", noun, p.Total),
+                SimilarScanPhase.Fingerprinting => Loc.F("Str_FindSimilar_ProgFingerprinting", "Reading {0:N0} of {1:N0} {2}", p.Processed, p.Total, noun),
+                SimilarScanPhase.Matching => Loc.T("Str_FindSimilar_ProgMatching", "Comparing files with each other..."),
+                SimilarScanPhase.Grouping => Loc.T("Str_FindSimilar_ProgGrouping", "Grouping look-alikes..."),
+                _ => Loc.T("Str_FindSimilar_ProgFinishing", "Finishing..."),
             };
             TxtProgress.Text = string.IsNullOrEmpty(p.CurrentPath) ? phase : $"{phase} · {Path.GetFileName(p.CurrentPath)}";
         }

@@ -698,42 +698,16 @@
                                         </RadioButton>
                                     </Grid>
 
-                                    <!--  Image hash family  -->
+                                    <!--  Images: also look for crops and edits (feature matching)  -->
                                     <StackPanel x:Name="ImageMethodPanel" Margin="0,12,0,0">
-                                        <TextBlock
-                                            Margin="0,0,0,6"
-                                            Style="{StaticResource FieldLabel}"
-                                            Text="{DynamicResource Str_FindSimilarFiles_Method}" />
-                                        <UniformGrid Columns="3" ToolTip="{DynamicResource Str_FindSimilar_DetectionMethodTooltip}">
-                                            <RadioButton
-                                                x:Name="RadioPHash"
-                                                Margin="0,0,2,0"
-                                                Checked="Option_Changed"
-                                                Content="{DynamicResource Str_FindSimilarFiles_Phash}"
-                                                GroupName="ImageMethod"
-                                                IsChecked="True"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="PHash"
-                                                ToolTip="{DynamicResource Str_FindSimilarFiles_PerceptualHashBestAll}" />
-                                            <RadioButton
-                                                x:Name="RadioDHash"
-                                                Margin="2,0"
-                                                Checked="Option_Changed"
-                                                Content="{DynamicResource Str_FindSimilarFiles_Dhash}"
-                                                GroupName="ImageMethod"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="DHash"
-                                                ToolTip="{DynamicResource Str_FindSimilarFiles_DifferenceHashFastestGood}" />
-                                            <RadioButton
-                                                x:Name="RadioWHash"
-                                                Margin="2,0,0,0"
-                                                Checked="Option_Changed"
-                                                Content="{DynamicResource Str_FindSimilarFiles_Whash}"
-                                                GroupName="ImageMethod"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="WHash"
-                                                ToolTip="{DynamicResource Str_FindSimilarFiles_WaveletHashTolerantOf}" />
-                                        </UniformGrid>
+                                        <CheckBox
+                                            x:Name="ChkFindCrops"
+                                            Checked="Option_Changed"
+                                            Content="{DynamicResource Str_FindSimilar_FindCrops}"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_FindSimilar_FindCropsTooltip}"
+                                            Unchecked="Option_Changed" />
                                     </StackPanel>
 
                                     <TextBlock
@@ -1251,6 +1225,13 @@
                                     Binding="{Binding Resolution}"
                                     ElementStyle="{StaticResource EllipsisCellTextStyle}"
                                     Header="{DynamicResource Str_Spectrogram_ResolutionHeader}" />
+                                <DataGridTextColumn
+                                    x:Name="ColWhy"
+                                    Width="*"
+                                    MinWidth="80"
+                                    Binding="{Binding Why}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_FindSimilar_ColHeaderWhy}" />
                                 <DataGridTextColumn
                                     Width="80"
                                     Binding="{Binding Size}"

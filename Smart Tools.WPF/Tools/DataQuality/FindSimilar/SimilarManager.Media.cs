@@ -1,4 +1,3 @@
-using ImageMagick;
 using Smart_Tools.WPF.Models;
 using System.Diagnostics;
 using System.Globalization;
@@ -7,10 +6,10 @@ using System.IO;
 namespace Smart_Tools.WPF.Controllers
 {
     /// <summary>
-    /// Decoding for fingerprints: Magick.NET for images, ffmpeg/ffprobe
-    /// (Engines\FFMPEG) for video frames and audio PCM. Every call returns
-    /// null for a file it can't read instead of failing the scan, and every
-    /// external process is time-limited and killed on the way out.
+    /// Per-file signatures: OpenCV for images and video (<see cref="SimilarImageEngine"/>, <see cref="SimilarVideoEngine"/>),
+    /// ffmpeg + SoundFingerprinting for audio (<see cref="SimilarAudioEngine"/>). ffmpeg/ffprobe (Engines\FFMPEG) also
+    /// back up OpenCV for video codecs it can't open. Every call returns null for a file it can't read instead of failing
+    /// the scan, and every external process is time-limited and killed on the way out.
     /// </summary>
     public sealed partial class SimilarManager
     {
@@ -18,178 +17,78 @@ namespace Smart_Tools.WPF.Controllers
         private static string FfmpegExe => Path.Combine(FfmpegFolder, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg");
         private static string FfprobeExe => Path.Combine(FfmpegFolder, OperatingSystem.IsWindows() ? "ffprobe.exe" : "ffprobe");
 
-        /// <summary>Video and audio comparison need both tools.</summary>
+        /// <summary>Audio comparison and the video fallback need both tools.</summary>
         public static bool FfmpegAvailable => File.Exists(FfmpegExe) && File.Exists(FfprobeExe);
-
-        private const int VideoSampleCount = 5;
-        private const int VideoFrameWidth = 64;
-        private const int AudioAnalyzeSeconds = 60;
-        private const int ImageDecodeHint = 512;
 
         /// <summary>One hung ffmpeg/ffprobe must not hold a scan slot forever.</summary>
         private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan DecodeTimeout = TimeSpan.FromMinutes(4);
 
-        private static async Task<FileFingerprint?> ComputeFingerprintAsync(string path, SimilarDetectionMethod method, CancellationToken token)
+        private static async Task<MediaSignature?> ComputeSignatureAsync(string path, MediaKind kind, CancellationToken token)
         {
-            switch (KindOf(method))
+            switch (kind)
             {
                 case MediaKind.Image:
-                    return await Task.Run(() => ImageFingerprint(path, method), token).ConfigureAwait(false);
+                    return await Task.Run(() => SimilarImageEngine.Compute(path), token).ConfigureAwait(false);
                 case MediaKind.Video:
-                    return await VideoFingerprintAsync(path, token).ConfigureAwait(false);
+                    return await VideoSignatureAsync(path, token).ConfigureAwait(false);
                 default:
-                    return await AudioFingerprintAsync(path, token).ConfigureAwait(false);
+                    return await AudioSignatureAsync(path, token).ConfigureAwait(false);
             }
-        }
-
-        // =================================================================
-        //  Images
-        // =================================================================
-
-        /// <summary>
-        /// Decodes once, small: the old code decoded every photo at full
-        /// resolution (a 40 MP RAW is hundreds of MB, times the number of
-        /// files in flight) and then cloned it three times. Now the size
-        /// comes from a header read and the pixels from a reduced decode.
-        /// </summary>
-        private static FileFingerprint? ImageFingerprint(string path, SimilarDetectionMethod method)
-        {
-            try
-            {
-                var info = new MagickImageInfo(path);
-                var settings = new MagickReadSettings { Width = ImageDecodeHint, Height = ImageDecodeHint };
-
-                using var image = new MagickImage(path, settings);
-                image.AutoOrient();
-
-                // Header size is before rotation; follow the decoded orientation.
-                int width = (int)info.Width, height = (int)info.Height;
-                if ((image.Width > image.Height) != (width > height) && image.Width != image.Height) (width, height) = (height, width);
-
-                using var small = (MagickImage)image.Clone();
-                small.Resize(new MagickGeometry(128, 128) { IgnoreAspectRatio = true });
-                small.ColorSpace = ColorSpace.Gray;
-
-                var grid32 = Grid(small, SimilarHashing.PHashSize, SimilarHashing.PHashSize);
-                var grid9x8 = Grid(small, 9, 8);
-                var grid16 = Grid(small, SimilarHashing.VarianceGridSize, SimilarHashing.VarianceGridSize);
-
-                ulong primary = method switch
-                {
-                    SimilarDetectionMethod.DHash => SimilarHashing.DHash(grid9x8),
-                    SimilarDetectionMethod.WHash => SimilarHashing.WHash(grid32),
-                    _ => SimilarHashing.PHash(grid32),
-                };
-                // The other family as a cross-check (pHash and dHash fail on different images).
-                ulong secondary = method == SimilarDetectionMethod.DHash ? SimilarHashing.PHash(grid32) : SimilarHashing.DHash(grid9x8);
-
-                return new FileFingerprint
-                {
-                    Fingerprint = new Fingerprint(primary),
-                    SecondaryHash = secondary,
-                    Variance = SimilarHashing.Variance(grid16),
-                    Width = width,
-                    Height = height,
-                };
-            }
-            catch (Exception ex) when (ex is MagickException or IOException or UnauthorizedAccessException or ArgumentException)
-            {
-                return null;
-            }
-        }
-
-        /// <summary>Grayscale grid 0-255 at the given size (aspect ignored, like every perceptual hash).</summary>
-        private static double[,] Grid(MagickImage gray, int width, int height)
-        {
-            using var work = (MagickImage)gray.Clone();
-            work.Resize(new MagickGeometry((uint)width, (uint)height) { IgnoreAspectRatio = true });
-
-            var grid = new double[height, width];
-            using var pixels = work.GetPixels();
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                    grid[y, x] = pixels.GetPixel(x, y).GetChannel(0) / (double)Quantum.Max * 255.0;
-            return grid;
         }
 
         // =================================================================
         //  Video
         // =================================================================
 
-        private static async Task<FileFingerprint?> VideoFingerprintAsync(string path, CancellationToken token)
+        private static async Task<MediaSignature?> VideoSignatureAsync(string path, CancellationToken token)
         {
+            var sig = await Task.Run(() => SimilarVideoEngine.Sample(path, token), token).ConfigureAwait(false);
+            if (sig != null || !FfmpegAvailable) return sig;
+
+            // OpenCV couldn't read it: let ffmpeg decode one tiny gray frame every few seconds instead.
             var probe = await ProbeAsync(path, video: true, token).ConfigureAwait(false);
             if (probe.Duration <= 0) return null;
 
-            var hashes = new List<ulong>(VideoSampleCount);
-            for (int i = 1; i <= VideoSampleCount; i++)
+            int step = SimilarVideoEngine.StepFor(probe.Duration);
+            byte[] raw = await RunForBytesAsync(FfmpegExe, new[]
             {
-                double t = probe.Duration * i / (VideoSampleCount + 1);
-                string seek = t.ToString("0.###", CultureInfo.InvariantCulture);
+                "-threads", "2", "-i", path, "-an", "-sn", "-dn",
+                "-vf", $"fps=1/{step},scale={SimilarHashing.PHashSize}:{SimilarHashing.PHashSize}:flags=area,format=gray",
+                "-frames:v", SimilarVideoEngine.MaxSamples.ToString(CultureInfo.InvariantCulture),
+                "-f", "rawvideo", "-pix_fmt", "gray", "-",
+            }, token, DecodeTimeout).ConfigureAwait(false);
 
-                // Keyframe-only, single-threaded decode keeps memory per process small
-                // (4K/HEVC with one decoder thread per core is what ate RAM on big scans).
-                byte[] png = await RunForBytesAsync(FfmpegExe, new[]
-                {
-                    "-threads", "1", "-skip_frame", "nokey", "-ss", seek, "-i", path,
-                    "-an", "-sn", "-dn", "-threads", "1",
-                    "-frames:v", "1", "-vf", $"scale={VideoFrameWidth}:-2", "-f", "image2pipe", "-vcodec", "png", "-",
-                }, token).ConfigureAwait(false);
-
-                if (png.Length == 0)
-                {
-                    // Some containers flag no keyframes; retry with a normal (still single-threaded) decode.
-                    png = await RunForBytesAsync(FfmpegExe, new[]
-                    {
-                        "-threads", "1", "-ss", seek, "-i", path,
-                        "-an", "-sn", "-dn", "-threads", "1",
-                        "-frames:v", "1", "-vf", $"scale={VideoFrameWidth}:-2", "-f", "image2pipe", "-vcodec", "png", "-",
-                    }, token).ConfigureAwait(false);
-                }
-                if (png.Length == 0) continue;
-
-                try
-                {
-                    using var frame = new MagickImage(png);
-                    frame.ColorSpace = ColorSpace.Gray;
-                    hashes.Add(SimilarHashing.DHash(Grid(frame, 9, 8)));
-                }
-                catch (MagickException)
-                {
-                    // unreadable frame - keep the others
-                }
-            }
-
-            if (hashes.Count == 0) return null;
-            return new FileFingerprint
-            {
-                Fingerprint = new Fingerprint(hashes.ToArray()),
-                DurationSeconds = probe.Duration,
-                Width = probe.Width,
-                Height = probe.Height,
-            };
+            return SimilarVideoEngine.FromRawFrames(raw, probe.Duration, probe.Width, probe.Height, step);
         }
 
         // =================================================================
         //  Audio
         // =================================================================
 
-        private static async Task<FileFingerprint?> AudioFingerprintAsync(string path, CancellationToken token)
+        private static async Task<MediaSignature?> AudioSignatureAsync(string path, CancellationToken token)
         {
-            byte[] pcmBytes = await RunForBytesAsync(FfmpegExe, new[]
+            byte[] pcm = await RunForBytesAsync(FfmpegExe, new[]
             {
-                "-i", path, "-t", AudioAnalyzeSeconds.ToString(CultureInfo.InvariantCulture),
-                "-ac", "1", "-ar", SimilarHashing.AudioSampleRate.ToString(CultureInfo.InvariantCulture), "-f", "s16le", "-",
-            }, token).ConfigureAwait(false);
+                "-i", path, "-vn", "-sn", "-dn",
+                "-t", SimilarAudioEngine.MaxSeconds.ToString(CultureInfo.InvariantCulture),
+                "-ac", "1", "-ar", SimilarAudioEngine.SampleRate.ToString(CultureInfo.InvariantCulture), "-f", "f32le", "-",
+            }, token, DecodeTimeout).ConfigureAwait(false);
 
-            var pcm = new short[pcmBytes.Length / 2];
-            Buffer.BlockCopy(pcmBytes, 0, pcm, 0, pcm.Length * 2);
-            var hashes = SimilarHashing.AudioFingerprint(pcm);
+            var samples = new float[pcm.Length / sizeof(float)];
+            Buffer.BlockCopy(pcm, 0, samples, 0, samples.Length * sizeof(float));
+
+            var hashes = await SimilarAudioEngine.HashAsync(samples, path).ConfigureAwait(false);
             if (hashes == null) return null;
 
-            // Only the first minute is decoded, so the real length needs ffprobe.
+            // The decode is capped, so the real length comes from ffprobe.
             var probe = await ProbeAsync(path, video: false, token).ConfigureAwait(false);
-            return new FileFingerprint { Fingerprint = new Fingerprint(hashes), DurationSeconds = probe.Duration };
+            return new MediaSignature
+            {
+                Kind = MediaKind.Audio,
+                DurationSeconds = probe.Duration > 0 ? probe.Duration : (double)samples.Length / SimilarAudioEngine.SampleRate,
+                AudioHashes = hashes,
+            };
         }
 
         // =================================================================
@@ -214,7 +113,7 @@ namespace Smart_Tools.WPF.Controllers
         /// scan) is cancelled. stderr is drained in parallel so its pipe
         /// can't fill up and deadlock the process.
         /// </summary>
-        private static async Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token)
+        private static async Task<byte[]> RunForBytesAsync(string exe, IEnumerable<string> args, CancellationToken token, TimeSpan? limit = null)
         {
             if (!File.Exists(exe)) return Array.Empty<byte>();
 
@@ -233,9 +132,10 @@ namespace Smart_Tools.WPF.Controllers
             }
             foreach (string a in args) psi.ArgumentList.Add(a);
 
+            var allowed = limit ?? ProcessTimeout;
             using var process = new Process { StartInfo = psi };
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-            timeout.CancelAfter(ProcessTimeout);
+            timeout.CancelAfter(allowed);
 
             try
             {
@@ -254,7 +154,7 @@ namespace Smart_Tools.WPF.Controllers
             catch (OperationCanceledException) when (!token.IsCancellationRequested)
             {
                 // Not logged per successful run (28k files), only the ones that go wrong.
-                Log.Warn($"{Path.GetFileName(exe)} timed out after {ProcessTimeout.TotalSeconds:0}s and was killed: {string.Join(' ', args.TakeLast(1))}");
+                Log.Warn($"{Path.GetFileName(exe)} timed out after {allowed.TotalSeconds:0}s and was killed: {string.Join(' ', args.TakeLast(1))}");
                 return Array.Empty<byte>();   // this file timed out - skip it
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)

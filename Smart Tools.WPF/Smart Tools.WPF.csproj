@@ -16,6 +16,8 @@
 		<!-- The one version number: Settings, the Apps &amp; features entry and the zip name all read it. -->
 		<Version>2.1.0</Version>
 		<Company>Sheep</Company>
+		<!-- OpenCvSharp's native runtime is Windows x64 only. -->
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<!-- ================= Native engines (no NuGet) ================= -->
@@ -104,6 +106,10 @@
 		<PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
 		<PackageReference Include="NAudio" Version="3.3.0" />
+		<!-- Find Similar Files: images/video (OpenCV) and audio (SoundFingerprinting, MIT, in-memory model service only). -->
+		<PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />
+		<PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20260627" />
+		<PackageReference Include="SoundFingerprinting" Version="15.2.0" />
 		<!--  Stay on 6.2.4 (MIT). 6.5.0 is AGPL with a license check: saving any PDF throws "The loaded license is not valid".  -->
 		<PackageReference Include="PDFsharp" Version="6.2.4" />
 		<PackageReference Include="System.IO.Hashing" Version="10.0.14" />

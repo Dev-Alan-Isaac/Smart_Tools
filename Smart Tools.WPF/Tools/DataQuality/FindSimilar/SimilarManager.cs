@@ -1,4 +1,4 @@
-using Microsoft.VisualBasic.FileIO;
+﻿using Microsoft.VisualBasic.FileIO;
 using Smart_Tools.WPF.Models;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -10,61 +10,67 @@ namespace Smart_Tools.WPF.Controllers
 {
     /// <summary>
     /// Find Similar Files backend. This file: scanning (off the UI thread),
-    /// grouping, keep rules, move/delete and settings. Hashing maths is in
-    /// <see cref="SimilarHashing"/>; decoding images/video/audio (Magick.NET,
-    /// ffmpeg) is in SimilarManager.Media.cs.
+    /// grouping, keep rules, move/delete and settings. The engines are
+    /// <see cref="SimilarImageEngine"/> and <see cref="SimilarVideoEngine"/> (OpenCV) and
+    /// <see cref="SimilarAudioEngine"/> (SoundFingerprinting); <see cref="SimilarMatcher"/> turns their
+    /// signatures into groups; SimilarManager.Media.cs reads the files (OpenCV, ffmpeg).
     ///
-    /// Implemented methods: pHash / dHash / wHash for images, frame
-    /// sampling + dHash for video, and a simplified acoustic fingerprint for
-    /// audio. The other SimilarDetectionMethod values aren't offered in the
-    /// sidebar any more.
+    /// A scan handles one media kind. Within it, files match across file formats, resolutions and
+    /// encodings; flipped/rotated images, cropped/edited images, trimmed or mirrored videos and
+    /// trimmed or re-encoded audio are found too. Signatures of images and videos are cached on disk
+    /// (<see cref="SimilarFingerprintCache"/>) so a rescan only reads what changed.
     /// </summary>
     public sealed partial class SimilarManager
     {
         private const long ReportIntervalMs = 100;
 
-        /// <summary>Computes a file's fingerprint; null when it can't be read. Swappable for tests.</summary>
-        public delegate Task<FileFingerprint?> Fingerprinter(string path, SimilarDetectionMethod method, CancellationToken token);
+        /// <summary>Computes a file's signature; null when it can't be read. Swappable for tests.</summary>
+        public delegate Task<MediaSignature?> Signer(string path, MediaKind kind, CancellationToken token);
 
-        private readonly Fingerprinter _fingerprinter;
+        private readonly Signer _signer;
         private readonly bool _usesMediaDecoders;
 
         public SimilarManager()
         {
-            _fingerprinter = ComputeFingerprintAsync;
+            _signer = ComputeSignatureAsync;
             _usesMediaDecoders = true;
         }
 
-        public SimilarManager(Fingerprinter fingerprinter) => _fingerprinter = fingerprinter;
+        public SimilarManager(Signer signer) => _signer = signer;
 
         // =================================================================
         //  Methods
         // =================================================================
 
         public static bool IsImplemented(SimilarDetectionMethod method) => method is
-            SimilarDetectionMethod.PHash or SimilarDetectionMethod.DHash or SimilarDetectionMethod.WHash or
-            SimilarDetectionMethod.VideoFrameHash or SimilarDetectionMethod.AudioChromaprint;
+            SimilarDetectionMethod.ImageOpenCv or SimilarDetectionMethod.VideoOpenCv or SimilarDetectionMethod.AudioFingerprint;
+
+        /// <summary>Older saved methods become the engine for their media kind.</summary>
+        public static SimilarDetectionMethod Normalize(SimilarDetectionMethod method) => KindOf(method) switch
+        {
+            MediaKind.Video => SimilarDetectionMethod.VideoOpenCv,
+            MediaKind.Audio => SimilarDetectionMethod.AudioFingerprint,
+            _ => SimilarDetectionMethod.ImageOpenCv,
+        };
 
         public static MediaKind KindOf(SimilarDetectionMethod method) => method switch
         {
             SimilarDetectionMethod.PHash or SimilarDetectionMethod.WHash or SimilarDetectionMethod.DHash
-                or SimilarDetectionMethod.Ssim or SimilarDetectionMethod.FeatureMatching => MediaKind.Image,
+                or SimilarDetectionMethod.Ssim or SimilarDetectionMethod.FeatureMatching
+                or SimilarDetectionMethod.ImageOpenCv => MediaKind.Image,
 
             SimilarDetectionMethod.VideoFrameHash or SimilarDetectionMethod.VideoFrameSsim
                 or SimilarDetectionMethod.VideoPerceptualHash or SimilarDetectionMethod.VideoSceneDetection
-                or SimilarDetectionMethod.VideoMotionFlow => MediaKind.Video,
+                or SimilarDetectionMethod.VideoMotionFlow or SimilarDetectionMethod.VideoOpenCv => MediaKind.Video,
 
             _ => MediaKind.Audio,
         };
 
-        public static string DisplayName(SimilarDetectionMethod method) => method switch
+        public static string DisplayName(SimilarDetectionMethod method) => Normalize(method) switch
         {
-            SimilarDetectionMethod.PHash => "Perceptual hash (pHash)",
-            SimilarDetectionMethod.WHash => "Wavelet hash (wHash)",
-            SimilarDetectionMethod.DHash => "Difference hash (dHash)",
-            SimilarDetectionMethod.VideoFrameHash => "Frame sampling + hashing",
-            SimilarDetectionMethod.AudioChromaprint => "Acoustic fingerprint",
-            _ => method.ToString(),
+            SimilarDetectionMethod.ImageOpenCv => "Images (OpenCV)",
+            SimilarDetectionMethod.VideoOpenCv => "Videos (OpenCV)",
+            _ => "Audio (SoundFingerprinting)",
         };
 
         // =================================================================
@@ -113,12 +119,9 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public Task<SimilarScanResult> ScanAsync(SimilarScanOptions options, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token = default)
         {
-            if (!IsImplemented(options.Method))
-                throw new NotSupportedException($"{DisplayName(options.Method)} isn't available. Use pHash, dHash or wHash for images, frame sampling for video, or the acoustic fingerprint for audio.");
-
             var kind = KindOf(options.Method);
-            if (kind != MediaKind.Image && _usesMediaDecoders && !FfmpegAvailable)
-                throw new InvalidOperationException($"Comparing {(kind == MediaKind.Video ? "videos" : "audio")} needs ffmpeg.exe and ffprobe.exe in {FfmpegFolder}. They weren't found there.");
+            if (kind == MediaKind.Audio && _usesMediaDecoders && !FfmpegAvailable)
+                throw new InvalidOperationException(Loc.F("Str_FindSimilar_NeedsFfmpeg", "Needs ffmpeg.exe and ffprobe.exe in {0} - they weren't found.", FfmpegFolder));
 
             return Task.Run(() => ScanCoreAsync(options, kind, keepRule, progress, token), token);
         }
@@ -126,15 +129,18 @@ namespace Smart_Tools.WPF.Controllers
         private async Task<SimilarScanResult> ScanCoreAsync(SimilarScanOptions options, MediaKind kind, SimilarKeepRule keepRule, IProgress<SimilarScanProgress>? progress, CancellationToken token)
         {
             var state = new ScanState { Progress = progress, Phase = SimilarScanPhase.Listing };
-            Log.Info($"Scan start: {kind}, method {options.Method}, threshold {options.ThresholdPercent}%, {options.MaxDegreeOfParallelism} workers, {options.Folders.Count()} folder(s)");
+            Log.Info($"Scan start: {kind}, threshold {options.ThresholdPercent}%, crops {options.FindCroppedCopies}, {options.MaxDegreeOfParallelism} workers, {options.Folders.Count()} folder(s)");
             var files = EnumerateCandidateFiles(options, kind, state, token);
             Log.Info($"Scan listed {files.Count} candidate files in {state.Watch.Elapsed.TotalSeconds:0.0}s");
 
+            // ---- 1. A signature per file (cached for images and videos) ----
             state.Phase = SimilarScanPhase.Fingerprinting;
             state.Total = files.Count;
             state.Report("", force: true);
 
-            var prints = new FileFingerprint?[files.Count];
+            var cache = kind is MediaKind.Image or MediaKind.Video && _usesMediaDecoders ? SimilarFingerprintCache.Load() : null;
+            int cached = 0;
+            var sigs = new MediaSignature?[files.Count];
             await Parallel.ForEachAsync(Enumerable.Range(0, files.Count), new ParallelOptions
             {
                 MaxDegreeOfParallelism = Math.Max(1, options.MaxDegreeOfParallelism),
@@ -143,7 +149,17 @@ namespace Smart_Tools.WPF.Controllers
             {
                 try
                 {
-                    prints[i] = await _fingerprinter(files[i].FullName, options.Method, ct).ConfigureAwait(false);
+                    var hit = cache?.TryGet(files[i]);
+                    if (hit != null)
+                    {
+                        sigs[i] = hit;
+                        Interlocked.Increment(ref cached);
+                    }
+                    else
+                    {
+                        sigs[i] = await _signer(files[i].FullName, kind, ct).ConfigureAwait(false);
+                        if (sigs[i] != null) cache?.Put(files[i], sigs[i]!);
+                    }
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 {
@@ -156,35 +172,50 @@ namespace Smart_Tools.WPF.Controllers
                     if (Volatile.Read(ref state.Unreadable) < 50) Log.Info($"Fingerprint failed, skipped: {files[i].FullName} ({ex.GetType().Name}: {ex.Message})");
                 }
 
-                if (prints[i] == null) Interlocked.Increment(ref state.Unreadable);
+                if (sigs[i] == null) Interlocked.Increment(ref state.Unreadable);
                 Interlocked.Increment(ref state.Processed);
                 state.Report(files[i].FullName);
             }).ConfigureAwait(false);
 
-            Log.Info($"Scan fingerprinting finished in {state.Watch.Elapsed.TotalSeconds:0.0}s, grouping");
+            cache?.Save();
+            Log.Info($"Scan fingerprinting finished in {state.Watch.Elapsed.TotalSeconds:0.0}s ({cached} from the cache), matching");
+
+            // ---- 2. Which files are the same content ----
+            state.Phase = SimilarScanPhase.Matching;
+            state.Processed = 0;
+            state.Total = 1;
+            state.Report("", force: true);
+            void OnMatching(int done, int total)
+            {
+                state.Total = Math.Max(1, total);
+                Volatile.Write(ref state.Processed, Math.Min(done, state.Total));
+                state.Report("");
+            }
+
+            List<SimilarEdge> edges = await Task.Run(async () => kind switch
+            {
+                MediaKind.Image => SimilarMatcher.ImageEdges(sigs, options.ThresholdPercent, options.FindCroppedCopies, OnMatching, token),
+                MediaKind.Video => SimilarMatcher.VideoEdges(sigs, options.ThresholdPercent, OnMatching, token),
+                _ => await SimilarAudioEngine.FindEdgesAsync(sigs, SimilarMatcher.AudioConfidenceFor(options.ThresholdPercent),
+                    new Progress<int>(done => OnMatching(done, sigs.Count(s => s != null))), token).ConfigureAwait(false),
+            }, token).ConfigureAwait(false);
+
+            Log.Info($"Scan matching finished in {state.Watch.Elapsed.TotalSeconds:0.0}s: {edges.Count} matching pairs, grouping");
             state.Phase = SimilarScanPhase.Grouping;
             state.Report("", force: true);
 
-            // Path order keeps greedy clustering reproducible across rescans.
-            var readable = Enumerable.Range(0, files.Count).Where(i => prints[i] != null)
-                .OrderBy(i => files[i].FullName, StringComparer.OrdinalIgnoreCase).ToList();
-            var items = readable.Select(i => prints[i]!).ToList();
-
-            var clusters = SimilarHashing.Cluster(items, SimilarHashing.MaxDistanceFor(options.ThresholdPercent), token);
-
+            // ---- 3. Groups ----
             var groups = new List<SimilarGroup>();
-            foreach (var cluster in clusters.Where(c => c.Count > 1))
+            foreach (var component in SimilarMatcher.Group(files.Count, edges))
             {
-                var group = new SimilarGroup
+                token.ThrowIfCancellationRequested();
+                var group = new SimilarGroup { Kind = kind, SimilarityPercent = (int)Math.Round(component.MeanSimilarity) };
+                var fileIndex = new Dictionary<SimilarFileItem, int>();
+                foreach (int index in component.Members.OrderBy(i => files[i].FullName, StringComparer.OrdinalIgnoreCase))
                 {
-                    Kind = kind,
-                    SimilarityPercent = SimilarHashing.SimilarityPercent(cluster.Select(c => items[c].Fingerprint).ToList()),
-                };
-                foreach (int c in cluster)
-                {
-                    var file = files[readable[c]];
-                    var fp = items[c];
-                    group.Items.Add(new SimilarFileItem
+                    var file = files[index];
+                    var sig = sigs[index]!;
+                    var item = new SimilarFileItem
                     {
                         FullPath = file.FullName,
                         Name = file.Name,
@@ -192,14 +223,17 @@ namespace Smart_Tools.WPF.Controllers
                         SizeBytes = file.Length,
                         Kind = kind,
                         ModifiedTime = SafeLastWrite(file),
-                        Hash = fp.Fingerprint.ToString(),
-                        DurationSeconds = fp.DurationSeconds,
-                        Width = fp.Width,
-                        Height = fp.Height,
+                        Hash = sig.ImageHashes.Length > 0 ? sig.ImageHashes[0].ToString("X16") : "",
+                        DurationSeconds = sig.DurationSeconds,
+                        Width = sig.Width,
+                        Height = sig.Height,
                         GroupInfo = group,
-                    });
+                    };
+                    group.Items.Add(item);
+                    fileIndex[item] = index;
                 }
                 ApplyKeepRule(group, keepRule);
+                DescribeDifferences(group, fileIndex, sigs, kind, options.ThresholdPercent);
                 groups.Add(group);
             }
 
@@ -220,6 +254,45 @@ namespace Smart_Tools.WPF.Controllers
                 SkippedLinks = state.Links,
                 Elapsed = state.Watch.Elapsed,
             };
+        }
+
+        /// <summary>
+        /// Fills each copy's "Why" line: what makes it differ from the rest (flipped, cropped, trimmed from the pairs
+        /// that matched it; other size or other format from comparing it with the keeper). The keeper itself stays blank.
+        /// </summary>
+        private static void DescribeDifferences(SimilarGroup group, Dictionary<SimilarFileItem, int> fileIndex, MediaSignature?[] sigs, MediaKind kind, double threshold)
+        {
+            var keeper = group.Items.FirstOrDefault(i => i.IsKeep);
+            var keeperSig = keeper != null && fileIndex.TryGetValue(keeper, out int keeperIndex) ? sigs[keeperIndex] : null;
+            foreach (var item in group.Items)
+            {
+                if (ReferenceEquals(item, keeper)) continue;
+
+                var tags = SimilarTag.None;
+                if (keeperSig != null && fileIndex.TryGetValue(item, out int index) && sigs[index] is { } itemSig)
+                    tags = SimilarMatcher.Describe(kind, itemSig, keeperSig, threshold);
+
+                if (keeper != null)
+                {
+                    if (item.Width > 0 && keeper.Width > 0 && (item.Width != keeper.Width || item.Height != keeper.Height))
+                        tags |= SimilarTag.DifferentResolution;
+                    if (!string.Equals(Path.GetExtension(item.Name), Path.GetExtension(keeper.Name), StringComparison.OrdinalIgnoreCase))
+                        tags |= SimilarTag.DifferentFormat;
+                }
+                item.Why = DescribeTags(tags);
+            }
+        }
+
+        public static string DescribeTags(SimilarTag tags)
+        {
+            var parts = new List<string>();
+            if (tags.HasFlag(SimilarTag.Flipped)) parts.Add(Loc.T("Str_FindSimilar_Tag_Flipped", "Flipped"));
+            if (tags.HasFlag(SimilarTag.Rotated)) parts.Add(Loc.T("Str_FindSimilar_Tag_Rotated", "Rotated"));
+            if (tags.HasFlag(SimilarTag.Cropped)) parts.Add(Loc.T("Str_FindSimilar_Tag_Cropped", "Cropped or edited"));
+            if (tags.HasFlag(SimilarTag.Trimmed)) parts.Add(Loc.T("Str_FindSimilar_Tag_Trimmed", "Trimmed or different length"));
+            if (tags.HasFlag(SimilarTag.DifferentResolution)) parts.Add(Loc.T("Str_FindSimilar_Tag_Resolution", "Different size"));
+            if (tags.HasFlag(SimilarTag.DifferentFormat)) parts.Add(Loc.T("Str_FindSimilar_Tag_Format", "Different format"));
+            return string.Join(" · ", parts);
         }
 
         private static DateTime SafeLastWrite(FileInfo f)
@@ -433,7 +506,7 @@ namespace Smart_Tools.WPF.Controllers
                             result.Failed.Add((item, "The file no longer exists."));
                             continue;
                         }
-                        File.Move(item.FullPath, UniquePath(Path.Combine(destination, item.Name)));
+                        MoveFile(item.FullPath, Path.Combine(destination, item.Name));
                         result.Succeeded.Add(item);
                         result.Bytes += item.SizeBytes;
                     }
@@ -470,30 +543,41 @@ namespace Smart_Tools.WPF.Controllers
             return remaining;
         }
 
-        public static string UniquePath(string path)
-        {
-            if (!File.Exists(path) && !Directory.Exists(path)) return path;
-            string dir = Path.GetDirectoryName(path) ?? "";
-            string name = Path.GetFileNameWithoutExtension(path);
-            string ext = Path.GetExtension(path);
-            for (int i = 2; ; i++)
-            {
-                string candidate = Path.Combine(dir, $"{name} ({i}){ext}");
-                if (!File.Exists(candidate) && !Directory.Exists(candidate)) return candidate;
-            }
-        }
+        public static string UniquePath(string path) => SafeFileOps.UniquePath(path);
 
-        public static bool HasRecycleBin(string path)
+        public static bool HasRecycleBin(string path) => SafeFileOps.HasRecycleBin(path);
+
+        /// <summary>
+        /// Moves without ever overwriting. On the same drive that is a rename; across drives the file is copied
+        /// to a temp name, its hash checked against the source, and only then is the original removed.
+        /// </summary>
+        private static void MoveFile(string source, string destination)
         {
+            string target = SafeFileOps.UniquePath(destination);
+            if (SafeFileOps.SameVolume(source, target))
+            {
+                File.Move(source, target);
+                return;
+            }
+
+            string temp = target + "." + Guid.NewGuid().ToString("N")[..8] + ".part";
             try
             {
-                string? root = Path.GetPathRoot(Path.GetFullPath(path));
-                if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
-                return new DriveInfo(root).DriveType == DriveType.Fixed;
+                string sourceHash = SafeFileOps.CopyToTemp(source, temp);
+                string copyHash;
+                using (var copy = File.OpenRead(temp)) copyHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(copy));
+                if (!string.Equals(sourceHash, copyHash, StringComparison.Ordinal))
+                    throw new IOException(Loc.T("Str_FindSimilar_MoveVerifyFailed", "The copy did not match the original, so nothing was moved."));
+
+                SafeFileOps.CopyTimestamps(source, temp);
+                File.Move(temp, target);
+                SafeFileOps.ClearReadOnly(source);
+                File.Delete(source);
             }
-            catch (Exception)
+            catch
             {
-                return false;
+                SafeFileOps.DeleteQuietly(temp);
+                throw;
             }
         }
 
@@ -513,7 +597,7 @@ namespace Smart_Tools.WPF.Controllers
                 string file = path ?? SettingsPath;
                 if (!File.Exists(file)) return new SimilarFinderSettings();
                 var s = JsonSerializer.Deserialize<SimilarFinderSettings>(File.ReadAllText(file), JsonOptions) ?? new SimilarFinderSettings();
-                if (!IsImplemented(s.Method)) s.Method = SimilarDetectionMethod.PHash;
+                s.Method = Normalize(s.Method);   // older hash/frame/chromaprint choices become the current engines
                 s.ThresholdPercent = Math.Clamp(s.ThresholdPercent, 50, 100);
                 return s;
             }
@@ -527,9 +611,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string file = path ?? SettingsPath;
             Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
         }
     }
 }
