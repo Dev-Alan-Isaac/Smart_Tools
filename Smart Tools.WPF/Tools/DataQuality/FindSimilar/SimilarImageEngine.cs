@@ -19,6 +19,7 @@ namespace Smart_Tools.WPF.Controllers
         private const int OrbFeatures = 300;
         private const long OpenCvDecodeLimit = 256L * 1024 * 1024;
         private const double RatioTest = 0.75;
+        private const double MinInlierShare = 0.5;
 
         // =================================================================
         //  Signature
@@ -264,14 +265,19 @@ namespace Smart_Tools.WPF.Controllers
             if (src.Count < 10) return 0;
 
             using var mask = new Mat();
-            using var h = Cv2.FindHomography(src, dst, HomographyMethods.Ransac, 4.0, mask);
+            using var h = Cv2.FindHomography(src, dst, HomographyMethods.Ransac, 3.0, mask);
             if (h == null || h.Empty() || mask.Empty()) return 0;
 
-            // A believable photo-to-photo fit: no collapse to a line or a huge stretch.
-            double det = h.At<double>(0, 0) * h.At<double>(1, 1) - h.At<double>(0, 1) * h.At<double>(1, 0);
-            if (!double.IsFinite(det) || Math.Abs(det) < 0.04 || Math.Abs(det) > 25) return 0;
+            // A believable photo-to-photo fit: a plain scale/shift (crop, resize), not a collapse to a line,
+            // a huge stretch or strong perspective, which is what unrelated look-alike patterns produce.
+            double a = h.At<double>(0, 0), b = h.At<double>(0, 1), c = h.At<double>(1, 0), d = h.At<double>(1, 1);
+            double det = a * d - b * c;
+            if (!double.IsFinite(det) || Math.Abs(det) < 0.1 || Math.Abs(det) > 10) return 0;
+            if (Math.Abs(h.At<double>(2, 0)) > 0.001 || Math.Abs(h.At<double>(2, 1)) > 0.001) return 0;
 
-            return Cv2.CountNonZero(mask);
+            int inliers = Cv2.CountNonZero(mask);
+            // Most of the matches must agree on the one fit; a handful of lucky ones among noise is not a copy.
+            return inliers >= MinInlierShare * src.Count ? inliers : 0;
         }
 
         private static Mat ToMat(byte[] data, int rows)

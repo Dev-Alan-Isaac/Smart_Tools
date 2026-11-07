@@ -18,8 +18,8 @@ namespace Smart_Tools.WPF.Controllers
         public static double AudioConfidenceFor(double thresholdPercent) => 0.3 + Math.Clamp((thresholdPercent - 50) / 50.0, 0, 1) * 0.5;
 
         private const double FlatVariance = 10.0;
-        private const int OrbMinVotes = 6;
-        private const int OrbVerifyPerImage = 8;
+        private const int OrbMinVotes = 15;
+        private const int OrbVerifyPerImage = 4;
         private const int PostingCap = 64;
 
         // =================================================================
