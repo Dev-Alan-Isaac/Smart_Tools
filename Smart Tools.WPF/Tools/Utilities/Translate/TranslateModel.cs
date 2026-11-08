@@ -10,6 +10,15 @@ namespace Smart_Tools.WPF.Models
         public string Repo => $"Xenova/opus-mt-{FromCode}-{ToCode}";
     }
 
+    /// <summary>What Translate remembers: the starred language pairs as ids like "en-es". Never any text.</summary>
+    public sealed class TranslateSettings
+    {
+        public List<string> Favorites { get; set; } = new();
+    }
+
+    /// <summary>One chip of the Favorites card: the pair id, the text on it, and whether it is the pair in use / still needs its model.</summary>
+    public sealed record TranslateFavoriteChip(string Id, string Label, string Tip, bool IsCurrent, bool NeedsModel);
+
     /// <summary>One row of the Translation languages list in Settings (a pair, its state, and where its files are).</summary>
     public sealed class TranslateModelItem : System.ComponentModel.INotifyPropertyChanged
     {

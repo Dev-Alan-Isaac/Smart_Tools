@@ -65,6 +65,7 @@ namespace Smart_Tools.WPF.Views
         private void RefreshLanguages()
         {
             LoadLanguages(TagOf(CmbFrom), TagOf(CmbTo));
+            if (TranslateManager.PruneFavorites(_settings.Favorites)) SaveFavorites();   // a custom pair was removed in Settings
             UpdateModelPanel();
         }
 
@@ -161,22 +162,108 @@ namespace Smart_Tools.WPF.Views
 
             if (!downloading)
             {
-                TxtModelStatus.Text = indirect
-                    ? string.Format(Str("Str_Translate_StatusIndirect"), LanguageName(TagOf(CmbFrom)), LanguageName(TagOf(CmbTo)))
-                    : pair == null
-                        ? Str("Str_Translate_StatusSamePair")
-                        : installed
-                            ? string.Format(Str("Str_Translate_ModelReady"), FormatSize(TranslateManager.SizeOf(pair)))
-                            : string.Format(Str("Str_Translate_ModelMissing"), pair.ApproxMb);
+                if (indirect)
+                    ShowModelState(Str("Str_Translate_PillIndirect"), string.Format(Str("Str_Translate_StatusIndirect"), LanguageName(TagOf(CmbFrom)), LanguageName(TagOf(CmbTo))),
+                        MaterialDesignThemes.Wpf.PackIconKind.SourceBranch, "Info");
+                else if (pair == null)
+                    ShowModelState(Str("Str_Translate_PillSame"), Str("Str_Translate_StatusSamePair"), MaterialDesignThemes.Wpf.PackIconKind.AlertCircleOutline, "Warning");
+                else if (installed)
+                    ShowModelState(Str("Str_Translate_PillReady"), string.Format(Str("Str_Translate_ModelReady"), FormatSize(TranslateManager.SizeOf(pair))),
+                        MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline, "Success");
+                else
+                    ShowModelState(Str("Str_Translate_PillMissing"), string.Format(Str("Str_Translate_ModelMissing"), pair.ApproxMb),
+                        MaterialDesignThemes.Wpf.PackIconKind.DownloadCircleOutline, "Warning");
             }
 
-            TxtModelPath.Text = pair != null ? TranslateManager.FolderOf(pair) : TranslateManager.ModelsRoot;
+            string folder = pair != null ? TranslateManager.FolderOf(pair) : TranslateManager.ModelsRoot;
+            BtnOpenFolder.ToolTip = Str("Str_Translate_OpenFolder") + Environment.NewLine + folder;
+            RefreshFavorites();
+            ListFavorites.IsEnabled = !downloading && (_translateCts == null || !FilesMode);
             BtnDownload.Visibility = downloading || (pair != null && !installed) ? Visibility.Visible : Visibility.Collapsed;
             BtnRemove.Visibility = !downloading && installed ? Visibility.Visible : Visibility.Collapsed;
             BtnRun.IsEnabled = !downloading;
             bool idle = !downloading && (_translateCts == null || !FilesMode);   // text mode: changing language restarts the translation
             CmbFrom.IsEnabled = CmbTo.IsEnabled = idle;
             BtnSwap.IsEnabled = idle && (TranslateManager.Find(TagOf(CmbTo), TagOf(CmbFrom)) != null || TranslateManager.Route(TagOf(CmbTo), TagOf(CmbFrom)) != null);   // no way back → nothing to swap to
+        }
+
+        private void ShowDownloadState(int percent) =>
+            ShowModelState(string.Format(Str("Str_Translate_PillDownloading"), percent), string.Format(Str("Str_Translate_Downloading"), percent),
+                MaterialDesignThemes.Wpf.PackIconKind.Download, "Info");
+
+        /// <summary>The state pill of the model card (tone = Success / Warning / Info, the theme's status colours) and the explanation under it.</summary>
+        private void ShowModelState(string label, string detail, MaterialDesignThemes.Wpf.PackIconKind icon, string tone)
+        {
+            TxtModelState.Text = label;
+            TxtModelStatus.Text = detail;
+            IconModelState.Kind = icon;
+            PillModel.SetResourceReference(Border.BackgroundProperty, $"Status{tone}Bg");
+            IconModelState.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, $"Status{tone}Fg");
+            TxtModelState.SetResourceReference(TextBlock.ForegroundProperty, $"Status{tone}Fg");
+        }
+
+        // ---- Favorites (starred language pairs) ------------------------------------------------
+
+        private readonly TranslateSettings _settings = LoadFavorites();
+
+        private static TranslateSettings LoadFavorites()
+        {
+            var s = TranslateManager.LoadSettings();
+            TranslateManager.PruneFavorites(s.Favorites);
+            return s;
+        }
+
+        private string CurrentPairId() => TranslateManager.PairId(TagOf(CmbFrom), TagOf(CmbTo));
+
+        private void SaveFavorites() => TranslateManager.SaveSettings(_settings);
+
+        /// <summary>Rebuilds the chips (the pair in use is marked, a pair whose model isn't downloaded gets a hint) and the star next to the languages.</summary>
+        private void RefreshFavorites()
+        {
+            string current = CurrentPairId();
+            var chips = new List<TranslateFavoriteChip>();
+            foreach (string id in _settings.Favorites)
+            {
+                if (!TranslateManager.TrySplitPairId(id, out string from, out string to)) continue;
+                var route = TranslateManager.Route(from, to);
+                bool needsModel = route != null && !route.All(TranslateManager.IsInstalled);
+                string label = $"{LanguageName(from)} → {LanguageName(to)}";
+                string tip = needsModel ? string.Format(Str("Str_Translate_FavoriteNeedsModel"), label, route!.Where(p => !TranslateManager.IsInstalled(p)).Sum(p => p.ApproxMb)) : string.Format(Str("Str_Translate_FavoriteUse"), label);
+                chips.Add(new TranslateFavoriteChip(id, label, tip, id == current, needsModel));
+            }
+            ListFavorites.ItemsSource = chips;
+            TxtNoFavorites.Visibility = chips.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            bool starred = TranslateManager.IsFavorite(_settings.Favorites, current);
+            IconFavorite.Kind = starred ? MaterialDesignThemes.Wpf.PackIconKind.Star : MaterialDesignThemes.Wpf.PackIconKind.StarOutline;
+            BtnFavorite.ToolTip = Str(starred ? "Str_Translate_RemoveFavorite" : "Str_Translate_AddFavorite");
+            BtnFavorite.IsEnabled = TranslateManager.Route(TagOf(CmbFrom), TagOf(CmbTo)) != null;
+        }
+
+        private void BtnFavorite_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TranslateManager.ToggleFavorite(_settings.Favorites, CurrentPairId()))
+                SetStatus(string.Format(Str("Str_Translate_FavoritesFull"), TranslateManager.MaxFavorites));
+            SaveFavorites();
+            RefreshFavorites();
+        }
+
+        private void Favorite_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not string id || !TranslateManager.TrySplitPairId(id, out string from, out string to)) return;
+            _applying = true;
+            ShowPair(from, to);
+            _applying = false;
+            UpdateModelPanel();
+            ScheduleAutoTranslate();
+        }
+
+        private void FavoriteRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.Tag is not string id) return;
+            _settings.Favorites.Remove(id);
+            SaveFavorites();
+            RefreshFavorites();
         }
 
         private async void BtnDownload_Click(object sender, RoutedEventArgs e)
@@ -193,13 +280,13 @@ namespace Smart_Tools.WPF.Views
             TxtDownloadLabel.Text = Str("Str_Common_Cancel");
             ProgressDownload.Value = 0;
             ProgressDownload.Visibility = Visibility.Visible;
-            TxtModelStatus.Text = string.Format(Str("Str_Translate_Downloading"), 0);
+            ShowDownloadState(0);
             UpdateModelPanel();
 
             var progress = new Progress<double>(v =>
             {
                 ProgressDownload.Value = v * 100;
-                TxtModelStatus.Text = string.Format(Str("Str_Translate_Downloading"), (int)(v * 100));
+                ShowDownloadState((int)(v * 100));
             });
 
             string? error = null;
@@ -385,6 +472,7 @@ namespace Smart_Tools.WPF.Views
             InputCard.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
             BtnRun.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
             _autoTimer.Stop();
+            TxtModeHint.SetResourceReference(TextBlock.TextProperty, files ? "Str_Translate_ModeFilesHint" : "Str_Translate_ModeTextHint");
             TxtRunLabel.Text = _translateCts != null ? Str("Str_Common_Cancel") : files ? Loc.T("Str_Translate_RunFiles", "Translate files") : Str("Str_Translate_Run");
             SetStatus(files ? Loc.T("Str_Translate_StatusFilesIdle", "Add files, then press Translate files.") : Str("Str_Translate_StatusIdle"));
             UpdateFilesState();

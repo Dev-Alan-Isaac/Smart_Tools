@@ -17,6 +17,92 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
+        <!--  Flat button inside a favorite chip: tinted on hover, the chip draws the outline  -->
+        <Style x:Key="FavoriteChipButtonStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="13">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  One starred language pair: click uses it, the small x takes it off  -->
+        <DataTemplate x:Key="FavoriteChipTemplate" DataType="{x:Type models:TranslateFavoriteChip}">
+            <Border
+                x:Name="Chip"
+                Margin="0,0,6,6"
+                Background="{DynamicResource SidebarInputBg}"
+                BorderBrush="{DynamicResource SidebarInputBorder}"
+                BorderThickness="1"
+                CornerRadius="14">
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        Padding="11,4,6,4"
+                        Click="Favorite_Click"
+                        Style="{StaticResource FavoriteChipButtonStyle}"
+                        Tag="{Binding Id}"
+                        ToolTip="{Binding Tip}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock
+                                x:Name="TxtLabel"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource SidebarText}"
+                                Text="{Binding Label}" />
+                            <materialDesign:PackIcon
+                                x:Name="IconNeedsModel"
+                                Width="12"
+                                Height="12"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource SidebarTextMuted}"
+                                Kind="DownloadOutline"
+                                Visibility="{Binding NeedsModel, Converter={StaticResource BoolToVis}}" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Padding="4,4,8,4"
+                        Click="FavoriteRemove_Click"
+                        Style="{StaticResource FavoriteChipButtonStyle}"
+                        Tag="{Binding Id}"
+                        ToolTip="{DynamicResource Str_Translate_RemoveFavorite}">
+                        <materialDesign:PackIcon
+                            Width="12"
+                            Height="12"
+                            Foreground="{DynamicResource SidebarTextMuted}"
+                            Kind="Close" />
+                    </Button>
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter TargetName="Chip" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                    <Setter TargetName="TxtLabel" Property="Foreground" Value="{DynamicResource AccentColor}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
         <!--  One file in the sidebar card (same look as the other file lists)  -->
         <DataTemplate x:Key="FileRowTemplate" DataType="{x:Type models:TranslateFileItem}">
             <Grid>
@@ -165,20 +251,46 @@
                                 <UniformGrid Columns="2">
                                     <RadioButton
                                         x:Name="RadioModeText"
-                                        Margin="0,0,2,0"
+                                        Margin="0,0,3,0"
                                         Click="RadioMode_Click"
-                                        Content="{DynamicResource Str_Translate_ModeText}"
                                         GroupName="TranslateMode"
                                         IsChecked="True"
-                                        Style="{StaticResource ModeToggleButtonStyle}" />
+                                        Style="{StaticResource SidebarChoiceTileStyle}">
+                                        <StackPanel>
+                                            <materialDesign:PackIcon
+                                                Width="22"
+                                                Height="22"
+                                                HorizontalAlignment="Center"
+                                                Kind="TextBoxOutline" />
+                                            <TextBlock
+                                                Margin="0,4,0,0"
+                                                HorizontalAlignment="Center"
+                                                Text="{DynamicResource Str_Translate_ModeText}" />
+                                        </StackPanel>
+                                    </RadioButton>
                                     <RadioButton
                                         x:Name="RadioModeFiles"
-                                        Margin="2,0,0,0"
+                                        Margin="3,0,0,0"
                                         Click="RadioMode_Click"
-                                        Content="{DynamicResource Str_Translate_ModeFiles}"
                                         GroupName="TranslateMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}" />
+                                        Style="{StaticResource SidebarChoiceTileStyle}">
+                                        <StackPanel>
+                                            <materialDesign:PackIcon
+                                                Width="22"
+                                                Height="22"
+                                                HorizontalAlignment="Center"
+                                                Kind="FileDocumentMultipleOutline" />
+                                            <TextBlock
+                                                Margin="0,4,0,0"
+                                                HorizontalAlignment="Center"
+                                                Text="{DynamicResource Str_Translate_ModeFiles}" />
+                                        </StackPanel>
+                                    </RadioButton>
                                 </UniformGrid>
+                                <TextBlock
+                                    x:Name="TxtModeHint"
+                                    Style="{StaticResource SidebarHint}"
+                                    Text="{DynamicResource Str_Translate_ModeTextHint}" />
                             </StackPanel>
                         </Border>
 
@@ -193,47 +305,59 @@
                             PathsAdded="InputCard_PathsAdded"
                             Visibility="Collapsed" />
 
+                        <!--  ============ FAVORITES (starred language pairs) ============  -->
+                        <Border ctl:Tour.Key="Str_Tour_Translate_Favorites" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Translate_Favorites}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.StarOutline}" />
+                                <TextBlock
+                                    x:Name="TxtNoFavorites"
+                                    Style="{StaticResource SidebarHint}"
+                                    Text="{DynamicResource Str_Translate_NoFavorites}" />
+                                <ItemsControl x:Name="ListFavorites" ItemTemplate="{StaticResource FavoriteChipTemplate}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
                         <!--  ============ OFFLINE MODEL ============  -->
-                        <Border ctl:Tour.Key="Str_Tour_Translate_Model" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                        <Border ctl:Tour.Key="Str_Tour_Translate_Model" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                             <StackPanel>
                                 <ContentControl
                                     Content="{DynamicResource Str_Translate_ModelHeader}"
                                     Style="{StaticResource SidebarGroupHeader}"
                                     Tag="{x:Static materialDesign:PackIconKind.DownloadCircleOutline}" />
 
+                                <!--  State pill (colour and icon set in code), then the longer explanation  -->
+                                <Border
+                                    x:Name="PillModel"
+                                    HorizontalAlignment="Left"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconModelState"
+                                            Width="14"
+                                            Height="14"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="CheckCircleOutline" />
+                                        <TextBlock
+                                            x:Name="TxtModelState"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Border>
                                 <TextBlock
                                     x:Name="TxtModelStatus"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    TextWrapping="Wrap" />
-
-                                <Grid Margin="0,8,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        x:Name="TxtModelPath"
-                                        VerticalAlignment="Center"
-                                        FontFamily="Consolas"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource TextSecondary}"
-                                        TextTrimming="CharacterEllipsis"
-                                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
-                                    <Button
-                                        x:Name="BtnOpenFolder"
-                                        Grid.Column="1"
-                                        Width="40"
-                                        Margin="6,0,0,0"
-                                        Click="BtnOpenFolder_Click"
-                                        Style="{StaticResource NeutralIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_Translate_OpenFolder}">
-                                        <materialDesign:PackIcon
-                                            Width="18"
-                                            Height="18"
-                                            Kind="FolderOpenOutline" />
-                                    </Button>
-                                </Grid>
+                                    Style="{StaticResource SidebarHint}"
+                                    Margin="0,8,0,0" />
 
                                 <ProgressBar
                                     x:Name="ProgressDownload"
@@ -280,23 +404,41 @@
                                     </StackPanel>
                                 </Button>
 
-                            <Button
-                                x:Name="BtnManage"
-                                Margin="0,10,0,0"
-                                HorizontalAlignment="Stretch"
-                                Click="BtnManage_Click"
-                                Style="{StaticResource NeutralIconButtonStyle}"
-                                ToolTip="{DynamicResource Str_Translate_ManageTooltip}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon
-                                        Width="18"
-                                        Height="18"
-                                        Margin="0,0,8,0"
-                                        VerticalAlignment="Center"
-                                        Kind="CogOutline" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_Manage}" />
-                                </StackPanel>
-                            </Button>
+                                <!--  Two small buttons side by side instead of two more full-width ones  -->
+                                <UniformGrid Margin="0,10,0,0" Columns="2">
+                                    <Button
+                                        x:Name="BtnOpenFolder"
+                                        Margin="0,0,3,0"
+                                        Click="BtnOpenFolder_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Translate_OpenFolder}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="FolderOpenOutline" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_FolderShort}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnManage"
+                                        Margin="3,0,0,0"
+                                        Click="BtnManage_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Translate_ManageTooltip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="CogOutline" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Translate_ManageShort}" />
+                                        </StackPanel>
+                                    </Button>
+                                </UniformGrid>
 
                             </StackPanel>
                         </Border>
@@ -304,10 +446,8 @@
 
                         <TextBlock
                             Margin="4,0,4,0"
-                            FontSize="11.5"
-                            Foreground="{DynamicResource TextSecondary}"
-                            Text="{DynamicResource Str_Translate_Credit}"
-                            TextWrapping="Wrap" />
+                            Style="{StaticResource SidebarHint}"
+                            Text="{DynamicResource Str_Translate_Credit}" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -329,6 +469,7 @@
                     <Grid ctl:Tour.Key="Str_Tour_Translate_Languages" ctl:Tour.Order="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
@@ -366,6 +507,21 @@
                             VerticalAlignment="Center"
                             SelectionChanged="Language_SelectionChanged"
                             ToolTip="{DynamicResource Str_Translate_To}" />
+                        <Button
+                            x:Name="BtnFavorite"
+                            Grid.Column="4"
+                            Width="40"
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="BtnFavorite_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_Translate_AddFavorite}">
+                            <materialDesign:PackIcon
+                                x:Name="IconFavorite"
+                                Width="18"
+                                Height="18"
+                                Kind="StarOutline" />
+                        </Button>
                     </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -508,7 +664,7 @@
                                         Kind="Close" />
                                 </Button>
                             </Grid>
-                            <TextBox ctl:Tour.Key="Str_Tour_Translate_Run" ctl:Tour.Order="3"
+                            <TextBox ctl:Tour.Key="Str_Tour_Translate_Run" ctl:Tour.Order="4"
                                 x:Name="TxtInput"
                                 Grid.Row="1"
                                 TextChanged="TxtInput_TextChanged"
@@ -535,7 +691,7 @@
                                     Content="{DynamicResource Str_Translate_OutputHeader}"
                                     Style="{StaticResource CardHeader}"
                                     Tag="{x:Static materialDesign:PackIconKind.TranslateVariant}" />
-                                <Button ctl:Tour.Key="Str_Tour_Translate_Copy" ctl:Tour.Order="4"
+                                <Button ctl:Tour.Key="Str_Tour_Translate_Copy" ctl:Tour.Order="5"
                                     x:Name="BtnCopy"
                                     Width="40"
                                     HorizontalAlignment="Right"

@@ -162,31 +162,149 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        private static NoteItem ToItem(NoteRecord r) => new()
+        private static NoteItem ToItem(NoteRecord r)
         {
-            Id = r.Id == Guid.Empty ? Guid.NewGuid() : r.Id,
-            CreatedAt = r.CreatedAt == default ? DateTime.Now : r.CreatedAt,
-            Title = r.Title ?? "",
-            Text = r.Text ?? "",
-            Rich = r.Rich ?? "",
-            Source = r.Source ?? "",
-            ColorHex = IsColor(r.ColorHex) ? r.ColorHex!.ToUpperInvariant() : DefaultColorHex,
-            Pinned = r.Pinned,
-            ModifiedAt = r.ModifiedAt == default ? (r.CreatedAt == default ? DateTime.Now : r.CreatedAt) : r.ModifiedAt,
-        };
+            // A protected note comes in locked: only the title is readable until the password is given.
+            bool locked = r.Locked && !string.IsNullOrEmpty(r.Sealed) && !string.IsNullOrEmpty(r.Salt);
+            byte[]? salt = null;
+            if (locked)
+            {
+                try { salt = Convert.FromBase64String(r.Salt!); }
+                catch (FormatException) { locked = false; }
+            }
+            return new NoteItem
+            {
+                Id = r.Id == Guid.Empty ? Guid.NewGuid() : r.Id,
+                CreatedAt = r.CreatedAt == default ? DateTime.Now : r.CreatedAt,
+                Title = r.Title ?? "",
+                Text = locked ? "" : r.Text ?? "",
+                Rich = locked ? "" : r.Rich ?? "",
+                Source = locked ? "" : r.Source ?? "",
+                ColorHex = IsColor(r.ColorHex) ? r.ColorHex!.ToUpperInvariant() : DefaultColorHex,
+                Pinned = r.Pinned,
+                ModifiedAt = r.ModifiedAt == default ? (r.CreatedAt == default ? DateTime.Now : r.CreatedAt) : r.ModifiedAt,
+                IsProtected = locked,
+                SealedData = locked ? r.Sealed : null,
+                LockSalt = salt,
+            };
+        }
 
-        private static NoteRecord ToRecord(NoteItem n) => new()
+        private static NoteRecord ToRecord(NoteItem n)
         {
-            Id = n.Id,
-            CreatedAt = n.CreatedAt,
-            Title = n.Title,
-            Text = n.Text,
-            Rich = string.IsNullOrEmpty(n.Rich) ? null : n.Rich,
-            Source = string.IsNullOrEmpty(n.Source) ? null : n.Source,
-            ColorHex = n.ColorHex,
-            Pinned = n.Pinned,
-            ModifiedAt = n.ModifiedAt,
-        };
+            var record = new NoteRecord
+            {
+                Id = n.Id,
+                CreatedAt = n.CreatedAt,
+                Title = n.Title,
+                ColorHex = n.ColorHex,
+                Pinned = n.Pinned,
+                ModifiedAt = n.ModifiedAt,
+            };
+            if (n.IsProtected && n.LockSalt != null)
+            {
+                // Nothing readable goes to disk: the content is written encrypted, from the session key while unlocked, unchanged while locked.
+                if (n.IsUnlocked && n.SessionKey != null)
+                    n.SealedData = NoteLock.Encrypt(new NotePayload { Text = n.Text, Rich = n.Rich, Source = n.Source }, n.SessionKey);
+                record.Locked = true;
+                record.Salt = Convert.ToBase64String(n.LockSalt);
+                record.Sealed = n.SealedData;
+                return record;
+            }
+            record.Text = n.Text;
+            record.Rich = string.IsNullOrEmpty(n.Rich) ? null : n.Rich;
+            record.Source = string.IsNullOrEmpty(n.Source) ? null : n.Source;
+            return record;
+        }
+
+        // =================================================================
+        //  Password lock (per note; the crypto is NoteLock)
+        // =================================================================
+
+        public enum LockResult { Ok, HasPictures, SaveFailed }
+
+        /// <summary>Gives the note a password (or a new one). The note stays open; the old password is not needed here, the view asks for it first.</summary>
+        public static LockResult SetPassword(NoteItem note, ReadOnlySpan<char> password)
+        {
+            if (note.IsLocked) return LockResult.SaveFailed;
+            if (note.HasPicture) return LockResult.HasPictures;   // pictures are separate files and would stay readable
+
+            byte[] salt = NoteLock.NewSalt();
+            byte[] key = NoteLock.DeriveKey(password, salt);
+            if (note.SessionKey != null) System.Security.Cryptography.CryptographicOperations.ZeroMemory(note.SessionKey);
+            note.LockSalt = salt;
+            note.SessionKey = key;
+            note.IsProtected = true;
+            note.IsUnlocked = true;
+            return SaveAndForgetPlainBackup();
+        }
+
+        /// <summary>Takes the password off an unlocked note: the content is stored plainly again.</summary>
+        public static LockResult RemovePassword(NoteItem note)
+        {
+            if (!note.IsProtected || note.IsLocked) return LockResult.SaveFailed;
+            WipeKey(note);
+            note.IsProtected = false;
+            note.IsUnlocked = false;
+            note.SealedData = null;
+            note.LockSalt = null;
+            return SaveAndForgetPlainBackup();
+        }
+
+        /// <summary>True and the note's content is back when the password is right.</summary>
+        public static bool TryUnlock(NoteItem note, ReadOnlySpan<char> password)
+        {
+            if (!note.IsLocked || note.LockSalt == null) return false;
+            byte[] key = NoteLock.DeriveKey(password, note.LockSalt);
+            var payload = NoteLock.TryDecrypt(note.SealedData, key);
+            if (payload == null)
+            {
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(key);
+                return false;
+            }
+            note.SessionKey = key;
+            note.Text = payload.Text;
+            note.Rich = payload.Rich;
+            note.Source = payload.Source;
+            note.IsUnlocked = true;
+            return true;
+        }
+
+        /// <summary>Hides the content again and forgets the key (the encrypted copy is brought up to date first).</summary>
+        public static void LockNow(NoteItem note)
+        {
+            if (!note.IsProtected || note.IsLocked) return;
+            if (note.SessionKey != null && note.LockSalt != null)
+                note.SealedData = NoteLock.Encrypt(new NotePayload { Text = note.Text, Rich = note.Rich, Source = note.Source }, note.SessionKey);
+            WipeKey(note);
+            note.IsUnlocked = false;
+            note.Text = "";
+            note.Rich = "";
+            note.Source = "";
+        }
+
+        /// <summary>Locks every unlocked note (leaving the page, closing the app).</summary>
+        public static void LockAll()
+        {
+            foreach (var note in Notes.Where(n => n.IsProtected && !n.IsLocked).ToList()) LockNow(note);
+        }
+
+        private static void WipeKey(NoteItem note)
+        {
+            if (note.SessionKey != null) System.Security.Cryptography.CryptographicOperations.ZeroMemory(note.SessionKey);
+            note.SessionKey = null;
+        }
+
+        /// <summary>
+        /// Saves, then deletes notes.json.bak (it still holds the version from before the change, which may be readable) and
+        /// saves again so the backup is the new, protected version.
+        /// </summary>
+        private static LockResult SaveAndForgetPlainBackup()
+        {
+            if (Save() != null) return LockResult.SaveFailed;
+            try { if (File.Exists(BackupFile)) File.Delete(BackupFile); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return LockResult.SaveFailed; }
+            return Save() == null ? LockResult.Ok : LockResult.SaveFailed;
+        }
 
         /// <summary>"#RRGGBB" or "#AARRGGBB".</summary>
         public static bool IsColor(string? hex) =>
@@ -342,8 +460,82 @@ namespace Smart_Tools.WPF.Controllers
         {
             var words = Fold(query ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length == 0) return true;
-            string hay = Fold(note.Title + " " + note.Text + " " + note.Source);
+            string hay = Fold(note.IsLocked ? note.Title : note.Title + " " + note.Text + " " + note.Source);   // a locked note is found by its title only
             return words.All(w => hay.Contains(w, StringComparison.Ordinal));
+        }
+
+        /// <summary>Same folding as <see cref="Fold"/> but exactly one character per character, so positions in the result are positions in <paramref name="text"/>.</summary>
+        private static string FoldSameLength(string text)
+        {
+            var chars = new char[text.Length];
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                char r = ' ';
+                if (c < 128) r = char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : ' ';
+                else if (char.IsLetterOrDigit(c))
+                {
+                    char b = c.ToString().Normalize(NormalizationForm.FormD)[0];   // "é" → "e"
+                    r = char.IsLetterOrDigit(b) ? char.ToLowerInvariant(b) : ' ';
+                }
+                chars[i] = r;
+            }
+            return new string(chars);
+        }
+
+        /// <summary>Where the search words are in a text (case and accents ignored), sorted and without overlaps.</summary>
+        public static List<(int Start, int Length)> FindMatches(string? text, string? query)
+        {
+            var found = new List<(int Start, int Length)>();
+            var words = Fold(query ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray();
+            if (words.Length == 0 || string.IsNullOrEmpty(text)) return found;
+
+            string folded = FoldSameLength(text);
+            foreach (string word in words)
+            {
+                for (int at = folded.IndexOf(word, StringComparison.Ordinal); at >= 0; at = folded.IndexOf(word, at + word.Length, StringComparison.Ordinal))
+                    found.Add((at, word.Length));
+            }
+            found.Sort((a, b) => a.Start.CompareTo(b.Start));
+
+            var merged = new List<(int Start, int Length)>();
+            foreach (var m in found)
+            {
+                if (merged.Count > 0 && m.Start <= merged[^1].Start + merged[^1].Length)
+                {
+                    var last = merged[^1];
+                    merged[^1] = (last.Start, Math.Max(last.Length, m.Start + m.Length - last.Start));
+                }
+                else merged.Add(m);
+            }
+            return merged;
+        }
+
+        /// <summary>
+        /// The passage of a note's text to show on its card while searching: the start of the text when the word is near it,
+        /// otherwise a piece around the first match ("…" at the cut ends). Null when the text doesn't contain the words.
+        /// </summary>
+        public static string? ContextSnippet(string text, string? query)
+        {
+            string flat = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+            var hits = FindMatches(flat, query);
+            if (hits.Count == 0) return null;
+
+            int start = Math.Max(0, hits[0].Start - 40);
+            if (start > 0)
+            {
+                int space = flat.IndexOf(' ', start);   // begin at a word
+                if (space >= 0 && space < hits[0].Start) start = space + 1;
+            }
+            string piece = flat.Substring(start, Math.Min(140, flat.Length - start));
+            return (start > 0 ? "…" : "") + piece + (start + piece.Length < flat.Length ? "…" : "");
+        }
+
+        /// <summary>Tells every note what is being searched (cards show the matching passage and highlight the words).</summary>
+        public static void ApplyQuery(string? query)
+        {
+            string q = (query ?? "").Trim();
+            foreach (var note in Notes) note.Query = q;
         }
 
         public static string Fold(string text)

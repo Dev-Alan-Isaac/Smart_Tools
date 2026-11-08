@@ -109,6 +109,7 @@ namespace Smart_Tools.WPF.Views
                 _saveTimer.Stop();
                 SaveNow();
             }
+            NotesManager.LockAll();
         }
 
         // =================================================================
@@ -148,6 +149,7 @@ namespace Smart_Tools.WPF.Views
                 _saveTimer.Stop();
                 SaveNow();
             }
+            NotesManager.LockAll();   // leaving the page locks every protected note again
             if (removed)
             {
                 if (_selected != null && !NotesManager.Notes.Contains(_selected)) ListNotes.SelectedIndex = NotesManager.Notes.Count > 0 ? 0 : -1;
@@ -239,10 +241,12 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_viewConstructed) return;
             BtnClearSearch.Visibility = TxtSearch.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            NotesManager.ApplyQuery(TxtSearch.Text);   // cards show the matching passage and highlight the words
             _view.Refresh();
             if (_selected == null || !_view.Contains(_selected))
                 ListNotes.SelectedItem = _view.Cast<NoteItem>().FirstOrDefault();
             UpdateListState();
+            UpdateBodyHighlight();
         }
 
         private void TxtSearch_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -357,12 +361,140 @@ namespace Smart_Tools.WPF.Views
                 if (_swatches.TryGetValue(note.ColorHex, out var swatch)) swatch.IsChecked = true;
                 else foreach (var s in _swatches.Values) s.IsChecked = false;
 
+                ApplyLockState(note);
+                UpdateBodyHighlight();
+
                 if (wasHidden) UiMotion.FadeIn(EditorPanel, 4);
             }
             finally
             {
                 _suppressEditorEvents = false;
             }
+        }
+
+        // =================================================================
+        //  Password lock
+        // =================================================================
+
+        /// <summary>Shows the unlock panel over a locked note, and the lock button / picture rules for a protected one.</summary>
+        private void ApplyLockState(NoteItem note)
+        {
+            bool locked = note.IsLocked;
+            LockedPanel.Visibility = locked ? Visibility.Visible : Visibility.Collapsed;
+            if (locked)
+            {
+                PwdUnlock.Clear();
+                TxtUnlockError.Visibility = Visibility.Collapsed;
+                TxtStats.Text = "";
+                Dispatcher.BeginInvoke(() => PwdUnlock.Focus(), DispatcherPriority.Input);
+            }
+            RtbBody.Tag = note.IsProtected ? NoteRichText.NoPicturesTag : null;
+            IconLock.Kind = note.IsProtected ? PackIconKind.Lock : PackIconKind.LockOutline;
+            BtnLock.ToolTip = note.IsProtected ? Loc.T("Str_Notes_LockMenuTip", "Password options for this note") : Loc.T("Str_Notes_LockTip", "Lock this note with a password");
+            Mark(BtnLock, note.IsProtected);
+            BtnWidget.IsEnabled = !note.IsProtected;
+        }
+
+        private void BtnLock_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selected is not { } note || note.IsLocked) return;
+            if (!note.IsProtected) { AskPasswordAndLock(note, Loc.T("Str_Notes_LockDlgTitle", "Lock note")); return; }
+            BtnLock.ContextMenu.PlacementTarget = BtnLock;
+            BtnLock.ContextMenu.IsOpen = true;
+        }
+
+        /// <summary>Asks for a new password twice and applies it (first lock, or a change of password).</summary>
+        private void AskPasswordAndLock(NoteItem note, string title)
+        {
+            if (note.HasPicture)
+            {
+                ShowSaveState(false, Loc.T("Str_Notes_LockHasPictures", "This note has pictures. They are saved as separate files that a password can't cover, so take them out first."));
+                return;
+            }
+            var dialog = new VaultPasswordDialog(title,
+                Loc.T("Str_Notes_LockDlgIntro", "Choose a password for this note. Without it the note can't be read, and it can't be recovered if you forget it. The title stays visible in the list."),
+                new[] { Loc.T("Str_Notes_LockPassword", "Password"), Loc.T("Str_Notes_LockRepeat", "Repeat the password") }, lastTwoMustMatch: true);
+            dialog.ShowDialog();
+            if (dialog.Result is not { } fields) return;
+
+            _saveTimer.Stop();
+            var result = NotesManager.LockResult.SaveFailed;
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;   // the key takes a moment to make on purpose
+            try
+            {
+                NoteWidgetManager.Close(note);
+                result = NotesManager.SetPassword(note, fields[0]);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                foreach (var f in fields) VaultPasswordDialog.Wipe(f);
+            }
+
+            if (result == NotesManager.LockResult.HasPictures) ShowSaveState(false, Loc.T("Str_Notes_LockHasPictures", "This note has pictures. They are saved as separate files that a password can't cover, so take them out first."));
+            else if (result == NotesManager.LockResult.SaveFailed) ShowSaveState(false, Loc.T("Str_Notes_LockSaveFailed", "The notes file couldn't be saved, so the password may not be on disk yet. Try again."));
+            else ShowSaveState(true, null);
+            ApplyLockState(note);
+            UpdateWidgetButton();
+        }
+
+        private void MenuLockNow_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selected is not { IsProtected: true, IsLocked: false } note) return;
+            _saveTimer.Stop();
+            SaveNow();   // the last edit goes to disk (encrypted) before the content is hidden
+            NotesManager.LockNow(note);
+            ShowEditor(note);
+        }
+
+        private void MenuChangePassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selected is { IsProtected: true, IsLocked: false } note) AskPasswordAndLock(note, Loc.T("Str_Notes_ChangePasswordTitle", "Change password"));
+        }
+
+        private void MenuRemovePassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selected is not { IsProtected: true, IsLocked: false } note) return;
+            if (MessageBox.Show(Window.GetWindow(this), Loc.T("Str_Notes_RemovePwConfirm", "Remove the password from this note? Its content will be saved without protection."),
+                    DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            _saveTimer.Stop();
+            var result = NotesManager.RemovePassword(note);
+            ShowSaveState(result == NotesManager.LockResult.Ok, result == NotesManager.LockResult.Ok ? null : Loc.T("Str_Notes_LockSaveFailed", "The notes file couldn't be saved, so the change may not be on disk yet. Try again."));
+            ApplyLockState(note);
+            UpdateWidgetButton();
+        }
+
+        private void PwdUnlock_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter) return;
+            e.Handled = true;
+            TryUnlockSelected();
+        }
+
+        private void BtnUnlock_Click(object sender, RoutedEventArgs e) => TryUnlockSelected();
+
+        private void TryUnlockSelected()
+        {
+            if (_selected is not { IsLocked: true } note) return;
+            char[] password = VaultPasswordDialog.ReadSecure(PwdUnlock);
+            bool ok;
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            try { ok = NotesManager.TryUnlock(note, password); }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                VaultPasswordDialog.Wipe(password);
+            }
+            PwdUnlock.Clear();
+            if (!ok)
+            {
+                TxtUnlockError.Text = Loc.T("Str_Notes_WrongPassword", "That password is not right.");
+                TxtUnlockError.Visibility = Visibility.Visible;
+                PwdUnlock.Focus();
+                return;
+            }
+            ShowEditor(note);
+            FocusBodyAtEnd();
         }
 
         private void TxtTitle_TextChanged(object sender, TextChangedEventArgs e)
@@ -378,6 +510,58 @@ namespace Smart_Tools.WPF.Views
             RtbBody.ScrollToHome();
             TxtBodyHint.Visibility = note.Text.Length == 0 && !note.HasPicture ? Visibility.Visible : Visibility.Collapsed;
             UpdateFormatButtons();
+        }
+
+        // ---- search highlight in the open note ----
+
+        /// <summary>
+        /// Marks the search words in the open note's text (shown only while the search box has words and the text isn't being
+        /// edited: clicking into the text clears the marks, so they never end up in what is typed). Marks are never saved.
+        /// </summary>
+        private void UpdateBodyHighlight()
+        {
+            if (!_viewConstructed || RtbBody.Document == null) return;
+            bool wasSuppressed = _suppressEditorEvents;
+            _suppressEditorEvents = true;
+            RtbBody.IsUndoEnabled = false;   // the marks are not something to undo (this also empties the undo list)
+            try
+            {
+                var whole = new TextRange(RtbBody.Document.ContentStart, RtbBody.Document.ContentEnd);
+                whole.ApplyPropertyValue(TextElement.BackgroundProperty, null);
+
+                string query = TxtSearch.Text.Trim();
+                if (query.Length == 0 || _selected is not { IsLocked: false } || RtbBody.IsKeyboardFocusWithin) return;
+
+                // The theme's amber, see-through, so the text keeps its own colour and stays readable in Light and Dark.
+                System.Windows.Media.Brush brush = System.Windows.Media.Brushes.Gold;
+                if (TryFindResource("StatusWarningFg") is SolidColorBrush amber)
+                {
+                    var color = amber.Color;
+                    color.A = 0x70;
+                    brush = new SolidColorBrush(color);
+                    brush.Freeze();
+                }
+                for (var p = RtbBody.Document.ContentStart; p != null && p.CompareTo(RtbBody.Document.ContentEnd) < 0; p = p.GetNextContextPosition(LogicalDirection.Forward))
+                {
+                    if (p.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.Text) continue;
+                    string text = p.GetTextInRun(LogicalDirection.Forward);
+                    foreach (var (start, length) in NotesManager.FindMatches(text, query))
+                    {
+                        var range = new TextRange(p.GetPositionAtOffset(start), p.GetPositionAtOffset(start + length));
+                        range.ApplyPropertyValue(TextElement.BackgroundProperty, brush);
+                    }
+                }
+            }
+            finally
+            {
+                RtbBody.IsUndoEnabled = true;
+                _suppressEditorEvents = wasSuppressed;
+            }
+        }
+
+        private void RtbBody_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (TxtSearch.Text.Trim().Length > 0) Dispatcher.BeginInvoke(UpdateBodyHighlight, DispatcherPriority.Input);   // the focus is in by then, so the marks come off
         }
 
         private void RtbBody_TextChanged(object sender, TextChangedEventArgs e)
@@ -446,8 +630,16 @@ namespace Smart_Tools.WPF.Views
             RtbBody.Focus();
         }
 
+        private bool RefusePicturesWhenProtected()
+        {
+            if (_selected is not { IsProtected: true }) return false;
+            ShowSaveState(false, Loc.T("Str_Notes_LockNoPictures", "A note with a password can't hold pictures: they are saved as separate files that the password can't cover."));
+            return true;
+        }
+
         private void BtnAddPicture_Click(object sender, RoutedEventArgs e)
         {
+            if (RefusePicturesWhenProtected()) return;
             var dialog = new OpenFileDialog
             {
                 Title = Loc.T("Str_Notes_AddPictureTitle", "Add a picture to the note"),
@@ -477,6 +669,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnPastePicture_Click(object sender, RoutedEventArgs e)
         {
+            if (RefusePicturesWhenProtected()) return;
             try
             {
                 if (Clipboard.ContainsImage() && Clipboard.GetImage() is { } image)
@@ -528,6 +721,11 @@ namespace Smart_Tools.WPF.Views
         private void BtnWidget_Click(object sender, RoutedEventArgs e)
         {
             if (_selected is not { } note) return;
+            if (note.IsProtected)
+            {
+                ShowSaveState(false, Loc.T("Str_Notes_NoWidgetLocked", "A note with a password can't be pinned to the desktop."));
+                return;
+            }
             NoteWidgetManager.Toggle(note);
             UpdateWidgetButton();
         }
@@ -669,7 +867,7 @@ namespace Smart_Tools.WPF.Views
 
         private async void MenuExport_Click(object sender, RoutedEventArgs e)
         {
-            if (_selected is not { } note) return;
+            if (_selected is not { IsLocked: false } note) return;   // a locked note has nothing to export
             if (sender is not MenuItem { Tag: string ext }) return;
             var dialog = new SaveFileDialog
             {

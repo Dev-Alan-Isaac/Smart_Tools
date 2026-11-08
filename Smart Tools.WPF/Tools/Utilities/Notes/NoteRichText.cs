@@ -389,8 +389,12 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>Saves the picture as a PNG in the notes pictures folder and inserts it at the caret.</summary>
+        /// <summary>Set on a box's Tag to refuse pictures: they are saved as separate files, which a password lock cannot cover.</summary>
+        public const string NoPicturesTag = "no-pictures";
+
         public static bool InsertImage(RichTextBox box, BitmapSource source, string sourceText)
         {
+            if (box.Tag as string == NoPicturesTag) return false;
             try
             {
                 string file = Guid.NewGuid().ToString("N") + ".png";

@@ -81,6 +81,51 @@ namespace Smart_Tools.WPF.Models
 
         public bool HasPicture => _rich.Contains("<img ", StringComparison.Ordinal);
 
+        private string _query = "";
+
+        /// <summary>What the search box holds: the card shows the passage that matches and highlights the words.</summary>
+        public string Query
+        {
+            get => _query;
+            set
+            {
+                value ??= "";
+                if (_query == value) return;
+                _query = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Snippet));
+            }
+        }
+
+        // ---- password lock (see NoteLock). Text/Rich/Source are empty while a protected note is locked. ----
+
+        private bool _isProtected, _isUnlocked;
+
+        /// <summary>The note has a password: its content is encrypted on disk.</summary>
+        public bool IsProtected
+        {
+            get => _isProtected;
+            set { if (_isProtected == value) return; _isProtected = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsLocked)); OnPropertyChanged(nameof(Snippet)); }
+        }
+
+        /// <summary>Protected and the password was given this session, so the content is readable (and kept in memory).</summary>
+        public bool IsUnlocked
+        {
+            get => _isUnlocked;
+            set { if (_isUnlocked == value) return; _isUnlocked = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsLocked)); OnPropertyChanged(nameof(Snippet)); }
+        }
+
+        /// <summary>Protected and not unlocked: nothing of the content is available.</summary>
+        public bool IsLocked => _isProtected && !_isUnlocked;
+
+        /// <summary>The encrypted content as stored (kept so a locked note is written back unchanged).</summary>
+        public string? SealedData { get; set; }
+
+        public byte[]? LockSalt { get; set; }
+
+        /// <summary>The key made from the password, while unlocked. Wiped when the note is locked again.</summary>
+        public byte[]? SessionKey { get; set; }
+
         /// <summary>Sticky-note colour, e.g. "#FFF59D".</summary>
         public string ColorHex
         {
@@ -123,6 +168,8 @@ namespace Smart_Tools.WPF.Models
         {
             get
             {
+                if (IsLocked) return Loc.T("Str_Notes_LockedSnippet", "Locked note");
+                if (_query.Length > 0 && Controllers.NotesManager.ContextSnippet(Text, _query) is { } context) return context;
                 var lines = Text.Replace("\r\n", "\n").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).Take(2);
                 string s = string.Join(" · ", lines);
                 return s.Length > 140 ? s[..140] + "…" : s;
@@ -133,7 +180,7 @@ namespace Smart_Tools.WPF.Models
         public string ModifiedLabel => "Edited " + NoteText.Ago(ModifiedAt, DateTime.Now);
 
         /// <summary>Nothing typed yet (a fresh "New note" - reused instead of piling up empty notes).</summary>
-        public bool IsBlank => (string.IsNullOrWhiteSpace(Title) || Title.Trim() == UntitledLabel) && string.IsNullOrWhiteSpace(Text) && !HasPicture && string.IsNullOrWhiteSpace(Source);
+        public bool IsBlank => !IsProtected && (string.IsNullOrWhiteSpace(Title) || Title.Trim() == UntitledLabel) && string.IsNullOrWhiteSpace(Text) && !HasPicture && string.IsNullOrWhiteSpace(Source);
 
         /// <summary>Re-reads the clock for <see cref="ModifiedLabel"/>.</summary>
         public void RefreshTimeLabel() => OnPropertyChanged(nameof(ModifiedLabel));
@@ -156,6 +203,11 @@ namespace Smart_Tools.WPF.Models
         public string? ColorHex { get; set; }
         public bool Pinned { get; set; }
         public DateTime ModifiedAt { get; set; }
+
+        /// <summary>A protected note: Text, Rich and Source are left out and <see cref="Sealed"/> holds them encrypted (see NoteLock).</summary>
+        public bool Locked { get; set; }
+        public string? Salt { get; set; }
+        public string? Sealed { get; set; }
     }
 
     /// <summary>What happened when the notes were loaded.</summary>

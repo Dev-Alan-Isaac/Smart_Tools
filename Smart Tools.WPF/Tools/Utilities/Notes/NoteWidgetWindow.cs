@@ -294,6 +294,7 @@ namespace Smart_Tools.WPF.Views
 
         public static void Show(NoteItem note)
         {
+            if (note.IsProtected) return;   // a desktop widget would show the content with no password
             if (Open.TryGetValue(note.Id, out var existing))
             {
                 existing.Activate();

@@ -218,7 +218,8 @@
                             FontSize="13.5"
                             FontWeight="SemiBold"
                             Foreground="#DE000000"
-                            Text="{Binding DisplayTitle}"
+                            ctl:NoteHighlight.Query="{Binding Query}"
+                            ctl:NoteHighlight.Text="{Binding DisplayTitle}"
                             TextTrimming="CharacterEllipsis" />
                     </DockPanel>
                     <TextBlock
@@ -227,7 +228,8 @@
                         Margin="0,4,0,0"
                         FontSize="12"
                         Foreground="#99000000"
-                        Text="{Binding Snippet}"
+                        ctl:NoteHighlight.Query="{Binding Query}"
+                        ctl:NoteHighlight.Text="{Binding Snippet}"
                         TextTrimming="CharacterEllipsis"
                         TextWrapping="Wrap" />
                     <TextBlock
@@ -649,9 +651,33 @@
                                         <materialDesign:PackIcon Width="16" Height="16" Kind="ContentPaste" />
                                     </Button>
                                 </StackPanel>
-                                <Button x:Name="BtnWidget" Grid.Column="1" Click="BtnWidget_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_WidgetPin}">
-                                    <materialDesign:PackIcon x:Name="IconWidget" Width="16" Height="16" Kind="PictureInPictureBottomRight" />
-                                </Button>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button x:Name="BtnLock" Margin="0,0,4,0" Click="BtnLock_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_LockTip}">
+                                        <Button.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Click="MenuLockNow_Click" Header="{DynamicResource Str_Notes_LockNow}">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="LockOutline" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Click="MenuChangePassword_Click" Header="{DynamicResource Str_Notes_ChangePassword}">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="KeyChange" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Click="MenuRemovePassword_Click" Header="{DynamicResource Str_Notes_RemovePassword}">
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </Button.ContextMenu>
+                                        <materialDesign:PackIcon x:Name="IconLock" Width="16" Height="16" Kind="LockOutline" />
+                                    </Button>
+                                    <Button x:Name="BtnWidget" Click="BtnWidget_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Notes_WidgetPin}">
+                                        <materialDesign:PackIcon x:Name="IconWidget" Width="16" Height="16" Kind="PictureInPictureBottomRight" />
+                                    </Button>
+                                </StackPanel>
                             </Grid>
 
                             <Grid Grid.Row="4">
@@ -669,6 +695,7 @@
                                     FontSize="14.5"
                                     Foreground="{DynamicResource TextPrimary}"
                                     HorizontalScrollBarVisibility="Disabled"
+                                    GotKeyboardFocus="RtbBody_GotKeyboardFocus"
                                     SelectionChanged="RtbBody_SelectionChanged"
                                     SpellCheck.IsEnabled="True"
                                     TextChanged="RtbBody_TextChanged"
@@ -738,6 +765,50 @@
                                     FontSize="11.5"
                                     Foreground="{DynamicResource TextSecondary}" />
                             </StackPanel>
+
+                            <!--  A protected note that isn't unlocked: covers the toolbar, the text and the source until the password is typed  -->
+                            <Border
+                                x:Name="LockedPanel"
+                                Grid.Row="3"
+                                Grid.RowSpan="4"
+                                Background="{DynamicResource CardBg}"
+                                Visibility="Collapsed">
+                                <StackPanel
+                                    Width="300"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.LockOutline}" />
+                                    <TextBlock
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="15"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        Text="{DynamicResource Str_Notes_LockedTitle}" />
+                                    <TextBlock
+                                        Margin="0,4,0,12"
+                                        HorizontalAlignment="Center"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_Notes_LockedHint}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                    <PasswordBox x:Name="PwdUnlock" KeyDown="PwdUnlock_KeyDown" />
+                                    <TextBlock
+                                        x:Name="TxtUnlockError"
+                                        Margin="0,8,0,0"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource StatusErrorFg}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                    <Button
+                                        x:Name="BtnUnlock"
+                                        Margin="0,12,0,0"
+                                        Click="BtnUnlock_Click"
+                                        Content="{DynamicResource Str_Notes_UnlockButton}"
+                                        Style="{StaticResource PrimaryButtonStyle}" />
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </Grid>
                 </Border>
