@@ -46,7 +46,7 @@ namespace Smart_Tools.WPF.Views
         private static readonly Regex HexPattern = new("^#?[0-9A-Fa-f]{6}$", RegexOptions.Compiled);
 
         private readonly BarcodeManager _barcode = new();
-        private readonly ObservableCollection<string> _batchEntries = new();
+        private readonly Smart_Tools.WPF.Models.BulkObservableCollection<string> _batchEntries = new();
         private readonly ObservableCollection<BatchEntrySource> _sources = new();
         private readonly Dictionary<BatchEntrySource, List<string>> _sourceEntries = new();
 
@@ -608,7 +608,7 @@ InputCard.ItemsSource = _sources;
             {
                 _batchEntries.CollectionChanged -= BatchEntries_CollectionChanged;
                 ListBoxBatchEntries.ItemsSource = null;
-                foreach (string entry in entries) _batchEntries.Remove(entry);
+                _batchEntries.RemoveOccurrences(entries);
                 ListBoxBatchEntries.ItemsSource = _batchEntries;
                 _batchEntries.CollectionChanged += BatchEntries_CollectionChanged;
                 UpdateBatchEntriesState(animate: false);
@@ -651,8 +651,7 @@ InputCard.ItemsSource = _sources;
             if (selected.Count == 0) return;
 
             int firstIndex = ListBoxBatchEntries.SelectedIndex;
-            foreach (string item in selected)
-                _batchEntries.Remove(item);
+            _batchEntries.RemoveOccurrences(selected);
 
             // Keep keyboard flow: select the row that slid into place.
             if (_batchEntries.Count > 0)

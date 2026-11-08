@@ -60,6 +60,40 @@ namespace Smart_Tools.WPF.Models
             return toRemove.Count;
         }
 
+        /// <summary>
+        /// Removes ONE occurrence of each given value (like calling Remove for each, but in one pass and one notification).
+        /// For lists that may hold the same value twice (e.g. barcode texts).
+        /// </summary>
+        public int RemoveOccurrences(IEnumerable<T> values)
+        {
+            var counts = new Dictionary<T, int>();
+            foreach (var v in values)
+            {
+                if (v == null) continue;
+                counts[v] = counts.GetValueOrDefault(v) + 1;
+            }
+            if (counts.Count == 0) return 0;
+
+            var keep = new List<T>(Items.Count);
+            int removed = 0;
+            foreach (var item in Items)
+            {
+                if (item != null && counts.TryGetValue(item, out int left) && left > 0)
+                {
+                    counts[item] = left - 1;
+                    removed++;
+                }
+                else keep.Add(item);
+            }
+            if (removed == 0) return 0;
+
+            CheckReentrancy();
+            Items.Clear();
+            foreach (var item in keep) Items.Add(item);
+            RaiseReset();
+            return removed;
+        }
+
         private void RaiseReset()
         {
             OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));

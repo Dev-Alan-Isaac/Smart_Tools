@@ -28,7 +28,8 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Crop -> rotate -> mirror -> resize -> save, the same order as <see cref="PlannedSize"/>.</summary>
         private static void RenderWithMagick(ImageItem item, ImageEditOptions o, string output, CancellationToken token)
         {
-            using var image = new MagickImage(item.FullPath);
+            using var loaded = ImageLoad.Open(item.FullPath, token);   // full size (it is the output) but waits for the memory budget
+            var image = loaded.Image;
             image.AutoOrient();   // camera rotation first - the preview shows it this way too
             token.ThrowIfCancellationRequested();
 

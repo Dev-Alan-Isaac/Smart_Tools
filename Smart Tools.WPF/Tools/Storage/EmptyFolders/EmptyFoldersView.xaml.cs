@@ -32,7 +32,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private readonly ObservableCollection<EmptyFolder> _roots = new();
-        private readonly ObservableCollection<FoundFolder> _found = new();
+        private readonly Smart_Tools.WPF.Models.BulkObservableCollection<FoundFolder> _found = new();
         private readonly DispatcherTimer _doneTimer;
         private CancellationTokenSource? _cts;
         private bool _busy;
@@ -125,7 +125,7 @@ namespace Smart_Tools.WPF.Views
                 ShowStatus("Stopped.", StatusKind.Warning);
                 return;
             }
-            foreach (var f in scan.Folders) _found.Add(new FoundFolder { Folder = f });
+            _found.AddRange(scan.Folders.Select(f => new FoundFolder { Folder = f }).ToList());   // one change, one UpdateState
 
             TxtEmptyTitle.Text = "No empty folders found";
             TxtEmptyHint.Text = $"Looked through {scan.FoldersLooked:N0} folder{(scan.FoldersLooked == 1 ? "" : "s")}.";
@@ -180,8 +180,7 @@ namespace Smart_Tools.WPF.Views
 
             // Take away what is gone; keep what could not be deleted so it can be tried again.
             var keep = new HashSet<string>(result.Failed, StringComparer.OrdinalIgnoreCase);
-            for (int i = _found.Count - 1; i >= 0; i--)
-                if (_found[i].IsChecked && !keep.Contains(_found[i].Folder.Path) && !Directory.Exists(_found[i].Folder.Path)) _found.RemoveAt(i);
+            _found.RemoveWhere(f => f.IsChecked && !keep.Contains(f.Folder.Path) && !Directory.Exists(f.Folder.Path));
 
             TxtDonePill.Text = $"Moved {result.Deleted:N0} to the Recycle Bin";
             DonePill.Visibility = Visibility.Visible;

@@ -100,7 +100,10 @@ namespace Smart_Tools.WPF.Controllers
                     return new ImagePdfPrepared(File.ReadAllBytes(path), (int)header.Width, (int)header.Height, dpiX, dpiY);
             }
 
-            using var image = new MagickImage(path);   // first frame of a GIF or multi-page TIFF
+            // Under the memory budget; a JPEG is decoded already reduced to the quality's size (a 48 MP photo costs a fraction).
+            using var loaded = ImageLoad.Open(path, CancellationToken.None, (uint)maxSide);
+            var image = loaded.Image;   // first frame of a GIF or multi-page TIFF
+            uint sourceLongest = Math.Max(loaded.SourceWidth, loaded.SourceHeight);
             var (dx, dy) = DpiOf(image.Density);
             bool turned = IsQuarterTurn(image.Orientation);   // read before AutoOrient resets it
             image.AutoOrient();
@@ -116,10 +119,12 @@ namespace Smart_Tools.WPF.Controllers
 
             uint longest = Math.Max(image.Width, image.Height);
             if (maxSide > 0 && longest > maxSide)
-            {
-                double scale = (double)maxSide / longest;
                 image.Resize(new MagickGeometry((uint)maxSide, (uint)maxSide) { Greater = true });
-                // Keep the print size: fewer pixels over the same inches.
+            // Keep the print size: fewer pixels over the same inches (measured against the file, not the reduced decode).
+            uint finalLongest = Math.Max(image.Width, image.Height);
+            if (sourceLongest > 0 && finalLongest < sourceLongest)
+            {
+                double scale = (double)finalLongest / sourceLongest;
                 dx *= scale;
                 dy *= scale;
             }

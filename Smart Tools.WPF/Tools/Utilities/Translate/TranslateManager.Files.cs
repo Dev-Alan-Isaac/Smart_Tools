@@ -136,28 +136,29 @@ namespace Smart_Tools.WPF.Controllers
             if (root == null) return false;
 
             // Every translatable string, with the lines it will be sent as.
-            var values = new List<(System.Text.Json.Nodes.JsonValue Node, string[] Lines, int First)>();
+            // Each value remembers where it sits (parent + key or index) so putting it back is O(1), not a search.
+            var values = new List<(System.Text.Json.Nodes.JsonNode Parent, string? Key, int Index, string[] Lines, int First)>();
             var found = new List<string>();
-            void Walk(System.Text.Json.Nodes.JsonNode? node)
+            void Walk(System.Text.Json.Nodes.JsonNode? node, System.Text.Json.Nodes.JsonNode? parent, string? key, int index)
             {
                 switch (node)
                 {
                     case System.Text.Json.Nodes.JsonObject obj:
-                        foreach (var pair in obj) Walk(pair.Value);
+                        foreach (var pair in obj) Walk(pair.Value, obj, pair.Key, -1);
                         break;
                     case System.Text.Json.Nodes.JsonArray array:
-                        foreach (var item in array) Walk(item);
+                        for (int n = 0; n < array.Count; n++) Walk(array[n], array, null, n);
                         break;
-                    case System.Text.Json.Nodes.JsonValue value when value.TryGetValue<string>(out string? s) && IsWords(s):
+                    case System.Text.Json.Nodes.JsonValue value when parent != null && value.TryGetValue<string>(out string? s) && IsWords(s):
                         string[] parts = s.Replace("\r\n", "\n").Split('\n');
-                        values.Add((value, parts, found.Count));
+                        values.Add((parent, key, index, parts, found.Count));
                         foreach (string part in parts) if (part.Trim().Length > 0) found.Add(part.Trim());
                         break;
                 }
             }
             try
             {
-                Walk(root);
+                Walk(root, null, null, -1);
             }
             catch (ArgumentException)
             {
@@ -168,7 +169,7 @@ namespace Smart_Tools.WPF.Controllers
             bool indented = text.Contains('\n');
             rebuild = translatedLines =>
             {
-                foreach (var (node, parts, first) in values)
+                foreach (var (parent, key, index, parts, first) in values)
                 {
                     int next = first;
                     var rebuilt = new string[parts.Length];
@@ -181,16 +182,8 @@ namespace Smart_Tools.WPF.Controllers
                     }
                     // Replace the value in its parent.
                     string joined = string.Join("\n", rebuilt);
-                    var parent = node.Parent;
-                    if (parent is System.Text.Json.Nodes.JsonObject o)
-                    {
-                        foreach (var pair in o.ToList()) if (ReferenceEquals(pair.Value, node)) { o[pair.Key] = joined; break; }
-                    }
-                    else if (parent is System.Text.Json.Nodes.JsonArray a)
-                    {
-                        int at = a.IndexOf(node);
-                        if (at >= 0) a[at] = joined;
-                    }
+                    if (parent is System.Text.Json.Nodes.JsonObject o && key != null) o[key] = joined;
+                    else if (parent is System.Text.Json.Nodes.JsonArray a && index >= 0) a[index] = joined;
                 }
                 return root.ToJsonString(new System.Text.Json.JsonSerializerOptions
                 {

@@ -70,9 +70,16 @@ namespace Smart_Tools.WPF.Controllers
 
             try
             {
-                using var image = new MagickImage(path);
+                using var loaded = ImageLoad.Open(path, CancellationToken.None, (uint)MaxDisplaySide);   // budgeted; JPEG decoded reduced
+                var image = loaded.Image;
+                bool turned = image.Orientation is ImageMagick.Orientation.LeftTop or ImageMagick.Orientation.RightTop or ImageMagick.Orientation.RightBottom or ImageMagick.Orientation.LeftBottom;
                 image.AutoOrient();
                 int ow = (int)image.Width, oh = (int)image.Height;
+                if (loaded.SourceWidth > 0 && loaded.SourceHeight > 0 && Math.Max(ow, oh) < Math.Max(loaded.SourceWidth, loaded.SourceHeight))
+                {
+                    ow = (int)(turned ? loaded.SourceHeight : loaded.SourceWidth);
+                    oh = (int)(turned ? loaded.SourceWidth : loaded.SourceHeight);
+                }
                 bool reduced = Math.Max(ow, oh) > MaxDisplaySide;
                 if (reduced) image.Resize(new MagickGeometry((uint)MaxDisplaySide, (uint)MaxDisplaySide));
                 var bitmap = ToBitmap(image);
@@ -100,7 +107,8 @@ namespace Smart_Tools.WPF.Controllers
             }
             try
             {
-                using var image = new MagickImage(path);
+                using var loaded = ImageLoad.Open(path, CancellationToken.None, (uint)longSide * 2);
+                var image = loaded.Image;
                 image.AutoOrient();
                 image.Thumbnail(new MagickGeometry((uint)longSide, (uint)longSide));
                 return ToBitmap(image);

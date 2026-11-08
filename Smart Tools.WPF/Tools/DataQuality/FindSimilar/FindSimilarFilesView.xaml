@@ -1717,9 +1717,10 @@
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimary}"
                                         TextTrimming="CharacterEllipsis" />
+                                    <WrapPanel x:Name="StatsLeft" Margin="0,6,0,0" />
                                     <TextBlock
                                         x:Name="TxtLeftDetails"
-                                        Margin="0,2,0,0"
+                                        Margin="0,6,0,0"
                                         FontSize="11.5"
                                         Foreground="{DynamicResource TextSecondary}"
                                         TextTrimming="CharacterEllipsis" />
@@ -1808,9 +1809,9 @@
                                             </Button>
                                             <TextBlock
                                                 x:Name="TxtDuplicateIndex"
-                                                Margin="8,0"
+                                                Margin="10,0"
                                                 VerticalAlignment="Center"
-                                                FontSize="11.5"
+                                                FontSize="13.5"
                                                 FontWeight="SemiBold"
                                                 Foreground="{DynamicResource MediaStageText}" />
                                             <Button
@@ -1848,12 +1849,20 @@
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimary}"
                                         TextTrimming="CharacterEllipsis" />
+                                    <WrapPanel x:Name="StatsRight" Margin="0,6,0,0" />
                                     <TextBlock
                                         x:Name="TxtRightDetails"
-                                        Margin="0,2,0,0"
+                                        Margin="0,6,0,0"
                                         FontSize="11.5"
                                         Foreground="{DynamicResource TextSecondary}"
                                         TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        x:Name="TxtRightWhy"
+                                        Margin="0,4,0,0"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusWarningFg}"
+                                        TextWrapping="Wrap" />
                                 </StackPanel>
                                 <TextBlock
                                     x:Name="TxtRightTime"
@@ -1959,18 +1968,31 @@
                                         FontWeight="SemiBold"
                                         Text="1x" />
                                 </Button>
-                                <Button
-                                    x:Name="BtnMuteToggle"
-                                    Margin="10,0,0,0"
-                                    Click="BtnMuteToggle_Click"
-                                    Style="{StaticResource PlayerIconButtonStyle}"
-                                    ToolTip="{DynamicResource Str_Common_Unmute}">
+                                <StackPanel
+                                    x:Name="VolumePanel"
+                                    Margin="14,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal">
                                     <materialDesign:PackIcon
                                         x:Name="IconMute"
-                                        Width="17"
-                                        Height="17"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource MediaStageText}"
                                         Kind="VolumeOff" />
-                                </Button>
+                                    <Slider
+                                        x:Name="SliderCompareVolume"
+                                        Width="96"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        LargeChange="0.1"
+                                        Maximum="1"
+                                        Minimum="0"
+                                        SmallChange="0.05"
+                                        Style="{StaticResource PlayerSliderStyle}"
+                                        ToolTip="{DynamicResource Str_VideoReplay_VolumeTooltip}"
+                                        ValueChanged="SliderCompareVolume_ValueChanged" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Grid>

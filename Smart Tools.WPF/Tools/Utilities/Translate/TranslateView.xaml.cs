@@ -29,7 +29,7 @@ namespace Smart_Tools.WPF.Views
         private bool _viewConstructed;
         private bool _applying;
         private bool _closing;
-        private readonly System.Collections.ObjectModel.ObservableCollection<TranslateFileItem> _files = new();
+        private readonly BulkObservableCollection<TranslateFileItem> _files = new();
 
         public TranslateView()
         {
@@ -339,33 +339,39 @@ namespace Smart_Tools.WPF.Views
             InputCard.SetEmpty(_files.Count == 0);   // the card keeps its "drop files here" hint on top of the list until told
         }
 
-        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
+        private async void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
         {
             if (_translateCts != null) return;
 
-            int added = 0, skipped = 0;
-            foreach (string path in e.Paths)
+            // The folder walk runs off the UI thread and keeps only supported files (a big tree is never held whole).
+            var paths = e.Paths.ToList();
+            var known = new HashSet<string>(_files.Select(f => f.Path), StringComparer.OrdinalIgnoreCase);
+            var (found, skipped) = await Task.Run(() =>
             {
-                IEnumerable<string> candidates;
-                try
+                var list = new List<string>();
+                int skip = 0;
+                foreach (string path in paths)
                 {
-                    candidates = Directory.Exists(path)
-                        ? Directory.EnumerateFiles(path, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).ToList()
-                        : new[] { path };
+                    try
+                    {
+                        if (Directory.Exists(path))
+                        {
+                            foreach (string file in Directory.EnumerateFiles(path, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }))
+                                if (TranslateManager.IsSupportedFile(file) && known.Add(file)) list.Add(file);
+                        }
+                        else if (!TranslateManager.IsSupportedFile(path)) skip++;
+                        else if (known.Add(path)) list.Add(path);
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                    }
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    continue;
-                }
+                return (list, skip);
+            });
 
-                foreach (string file in candidates)
-                {
-                    if (!TranslateManager.IsSupportedFile(file)) { if (!Directory.Exists(path)) skipped++; continue; }
-                    if (_files.Any(f => string.Equals(f.Path, file, StringComparison.OrdinalIgnoreCase))) continue;
-                    _files.Add(new TranslateFileItem(file) { Status = Loc.T("Str_Translate_FileWaiting", "Waiting") });
-                    added++;
-                }
-            }
+            string waiting = Loc.T("Str_Translate_FileWaiting", "Waiting");
+            _files.AddRange(found.Select(f => new TranslateFileItem(f) { Status = waiting }).ToList());   // one list change
+            int added = found.Count;
 
             if (skipped > 0)
                 SetStatus(Loc.N(skipped, "Str_Translate_FilesSkipped_One", "{0} file skipped: only .txt, .md, .srt, .vtt and .json files can be translated.", "Str_Translate_FilesSkipped_Many", "{0} files skipped: only .txt, .md, .srt, .vtt and .json files can be translated.", skipped));

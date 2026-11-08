@@ -50,7 +50,7 @@ namespace Smart_Tools.WPF.Views
         private static readonly Regex HexPattern = new("^#?[0-9A-Fa-f]{6}$", RegexOptions.Compiled);
 
         private readonly QrCodeManager _qr = new();
-        private readonly ObservableCollection<string> _batchEntries = new();
+        private readonly Smart_Tools.WPF.Models.BulkObservableCollection<string> _batchEntries = new();
         private readonly ObservableCollection<BatchEntrySource> _sources = new();
         private readonly Dictionary<BatchEntrySource, List<string>> _sourceEntries = new();
         private readonly DispatcherTimer _regenTimer;
@@ -785,7 +785,7 @@ namespace Smart_Tools.WPF.Views
             {
                 _batchEntries.CollectionChanged -= BatchEntries_CollectionChanged;
                 ListBoxBatchEntries.ItemsSource = null;
-                foreach (string entry in entries) _batchEntries.Remove(entry);
+                _batchEntries.RemoveOccurrences(entries);
                 ListBoxBatchEntries.ItemsSource = _batchEntries;
                 _batchEntries.CollectionChanged += BatchEntries_CollectionChanged;
                 UpdateBatchEntriesState(animate: false);
@@ -828,8 +828,7 @@ namespace Smart_Tools.WPF.Views
             if (selected.Count == 0) return;
 
             int firstIndex = ListBoxBatchEntries.SelectedIndex;
-            foreach (string item in selected)
-                _batchEntries.Remove(item);
+            _batchEntries.RemoveOccurrences(selected);
 
             // Keep keyboard flow: select the row that slid into place.
             if (_batchEntries.Count > 0)

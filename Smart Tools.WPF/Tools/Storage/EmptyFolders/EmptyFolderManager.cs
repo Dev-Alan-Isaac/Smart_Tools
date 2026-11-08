@@ -102,8 +102,19 @@ namespace Smart_Tools.WPF.Controllers
             if (!thisEmpty)
             {
                 // Keep the outermost empty branches under this folder, drop the ones nested in another candidate.
+                // Walk up each candidate's parents and look them up in a set (was every candidate against every other).
+                var paths = new HashSet<string>(candidates.Select(c => c.Path.TrimEnd('\\', '/')), StringComparer.OrdinalIgnoreCase);
                 foreach (var c in candidates)
-                    if (!candidates.Any(o => o != c && IsInside(c.Path, o.Path))) found.Add(c);
+                {
+                    bool nestedInOther = false;
+                    string? up = Path.GetDirectoryName(c.Path.TrimEnd('\\', '/'));
+                    while (!string.IsNullOrEmpty(up) && up.Length > dir.TrimEnd('\\', '/').Length)
+                    {
+                        if (paths.Contains(up)) { nestedInOther = true; break; }
+                        up = Path.GetDirectoryName(up);
+                    }
+                    if (!nestedInOther) found.Add(c);
+                }
             }
             return thisEmpty ? (true, nested) : (false, 0);
         }

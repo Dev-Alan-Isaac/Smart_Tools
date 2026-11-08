@@ -25,7 +25,7 @@ namespace Smart_Tools.WPF.Views
     {
         private static string DialogTitle => Loc.T("Str_Tool_loudness-meter_Name", "Loudness Meter & Normalizer");
 
-        private readonly ObservableCollection<LoudnessItem> _items = new();
+        private readonly BulkObservableCollection<LoudnessItem> _items = new();
         private CancellationTokenSource? _cts;
         private bool _busy;
         private bool _loadedOnce;
@@ -62,12 +62,12 @@ namespace Smart_Tools.WPF.Views
             if (_busy) return;
             var paths = e.Paths.ToList();
             var files = await Task.Run(() => LoudnessManager.ExpandPaths(paths));
-            int skipped = 0;
+            // One set lookup per file (was a list search per file: 10,000 files = 50 million compares) and ONE list change.
+            var known = new HashSet<string>(_items.Select(i => i.Path), StringComparer.OrdinalIgnoreCase);
+            var fresh = new List<LoudnessItem>();
             foreach (string f in files)
-            {
-                if (_items.Any(i => string.Equals(i.Path, f, StringComparison.OrdinalIgnoreCase))) { skipped++; continue; }
-                _items.Add(new LoudnessItem(f));
-            }
+                if (known.Add(f)) fresh.Add(new LoudnessItem(f));
+            _items.AddRange(fresh);
             if (files.Count == 0) ShowStatus("No audio files found there (mp3, wav, flac, m4a, aac, ogg, opus, wma, aiff).", StatusKind.Warning);
             else HideStatus();
             _hasResult = false;

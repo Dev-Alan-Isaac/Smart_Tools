@@ -38,7 +38,7 @@ namespace Smart_Tools.WPF.Views
         private List<SimilarFileItem> _compareOthers = new();
         private int _compareIndex;
         private bool _comparePlaying = true;
-        private bool _compareMuted = true;
+        private double _compareVolume;   // 0..1, both sides; videos start at 0 (two soundtracks at once is noise)
         private double _compareSpeed = 1.0;
         private bool _draggingLeft;
         private bool _draggingRight;
@@ -222,7 +222,8 @@ namespace Smart_Tools.WPF.Views
             {
                 _comparePlaying = true;
                 // Two videos start muted (two soundtracks at once is noise); audio compare is for listening.
-                _compareMuted = group.Kind == MediaKind.Video;
+                _compareVolume = group.Kind == MediaKind.Video ? 0 : 1;
+                SliderCompareVolume.Value = _compareVolume;
                 CompareScrim.Visibility = Visibility.Visible;
                 ComparePanel.Visibility = Visibility.Visible;
                 UiMotion.Pop(ComparePanel, 0.96);
@@ -253,7 +254,7 @@ namespace Smart_Tools.WPF.Views
             AudioArtLeft.Visibility = AudioArtRight.Visibility = audio ? Visibility.Visible : Visibility.Collapsed;
             SliderLeft.Visibility = SliderRight.Visibility = media;
             TransportBar.Visibility = media;
-            BtnMuteToggle.Visibility = kind == MediaKind.Video ? Visibility.Visible : Visibility.Collapsed;
+            VolumePanel.Visibility = kind == MediaKind.Video ? Visibility.Visible : Visibility.Collapsed;
             TxtLeftTime.Text = TxtRightTime.Text = "";
 
             (string key, PackIconKind icon) = kind switch
@@ -277,6 +278,56 @@ namespace Smart_Tools.WPF.Views
             TxtCompareSubtitle.Text = $"{_compareGroup.SimilarityPercent}% alike · {n} other cop{(n == 1 ? "y" : "ies")} to check";
             TxtDuplicateIndex.Text = $"{_compareIndex + 1} of {n}";
             BtnPrevDuplicate.IsEnabled = BtnNextDuplicate.IsEnabled = n > 1;
+        }
+
+        /// <summary>
+        /// Resolution, size and length of both files as big chips, so the difference is the first thing seen:
+        /// green with an up arrow where a file has more than the other, amber with a down arrow where it has less,
+        /// plain blue when they match.
+        /// </summary>
+        private void RefreshCompareStats()
+        {
+            var left = _compareLeft;
+            var right = CompareRight;
+            if (left == null || right == null) return;
+
+            FillStats(StatsLeft, left, right);
+            FillStats(StatsRight, right, left);
+        }
+
+        private static void FillStats(System.Windows.Controls.Panel host, SimilarFileItem item, SimilarFileItem other)
+        {
+            host.Children.Clear();
+            if (item.HasResolution)
+                host.Children.Add(StatChip(PackIconKind.ImageSizeSelectActual, item.Resolution, other.HasResolution ? item.PixelCount.CompareTo(other.PixelCount) : 0, "Str_FindSimilar_StatResolution", "Resolution"));
+            host.Children.Add(StatChip(PackIconKind.Harddisk, item.Size, item.SizeBytes.CompareTo(other.SizeBytes), "Str_FindSimilar_StatSize", "File size"));
+            if (item.HasDuration)
+                host.Children.Add(StatChip(PackIconKind.TimerOutline, item.Duration, other.HasDuration ? item.DurationSeconds.CompareTo(other.DurationSeconds) : 0, "Str_FindSimilar_StatDuration", "Length"));
+        }
+
+        private static Border StatChip(PackIconKind icon, string text, int versusOther, string tipKey, string tipFallback)
+        {
+            // Equal (or the other side has no value to compare): info colours; more: success; less: warning.
+            string bg = versusOther > 0 ? "StatusSuccessBg" : versusOther < 0 ? "StatusWarningBg" : "StatusInfoBg";
+            string fg = versusOther > 0 ? "StatusSuccessFg" : versusOther < 0 ? "StatusWarningFg" : "StatusInfoFg";
+
+            var row = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            var glyph = new PackIcon { Kind = icon, Width = 15, Height = 15, Margin = new Thickness(0, 0, 5, 0), VerticalAlignment = VerticalAlignment.Center };
+            glyph.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, fg);
+            row.Children.Add(glyph);
+            var value = new TextBlock { Text = text, FontSize = 14, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center };
+            value.SetResourceReference(TextBlock.ForegroundProperty, fg);
+            row.Children.Add(value);
+            if (versusOther != 0)
+            {
+                var arrow = new PackIcon { Kind = versusOther > 0 ? PackIconKind.ArrowUp : PackIconKind.ArrowDown, Width = 14, Height = 14, Margin = new Thickness(3, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+                arrow.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, fg);
+                row.Children.Add(arrow);
+            }
+
+            var chip = new Border { Padding = new Thickness(9, 4, 9, 4), Margin = new Thickness(0, 0, 8, 4), CornerRadius = new CornerRadius(9), Child = row, ToolTip = Loc.T(tipKey, tipFallback) };
+            chip.SetResourceReference(Border.BackgroundProperty, bg);
+            return chip;
         }
 
         /// <summary>Keeps the right-hand "Remove" box and outline in step with the model.</summary>
@@ -364,9 +415,15 @@ namespace Smart_Tools.WPF.Views
 
             (isLeft ? TxtLeftName : TxtRightName).Text = item.Name;
             (isLeft ? TxtLeftName : TxtRightName).ToolTip = item.FullPath;
-            (isLeft ? TxtLeftDetails : TxtRightDetails).Text = $"{item.Details} · {item.Modified}";
+            (isLeft ? TxtLeftDetails : TxtRightDetails).Text = item.Modified;   // resolution, size and length are the chips above
             (isLeft ? SliderLeft : SliderRight).Value = 0;
-            if (!isLeft) RefreshCompareHeader();
+            if (!isLeft)
+            {
+                TxtRightWhy.Text = item.Why;
+                TxtRightWhy.Visibility = item.HasWhy ? Visibility.Visible : Visibility.Collapsed;
+                RefreshCompareHeader();
+            }
+            RefreshCompareStats();
 
             try
             {
@@ -426,7 +483,8 @@ namespace Smart_Tools.WPF.Views
 
         private void StartPlayer(IReplayBackend player, string path)
         {
-            player.SetMute(_compareMuted);
+            player.SetMute(false);
+            player.SetVolume(_compareVolume);
             player.SetSpeed(_compareSpeed);
             try
             {
@@ -547,8 +605,7 @@ namespace Smart_Tools.WPF.Views
         {
             IconPlayPause.Kind = _comparePlaying ? PackIconKind.Pause : PackIconKind.Play;
             BtnPlayPauseBoth.ToolTip = _comparePlaying ? Loc.T("Str_Similar_PauseBoth", "Pause both") : Loc.T("Str_Similar_PlayBoth", "Play both");
-            IconMute.Kind = _compareMuted ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
-            BtnMuteToggle.ToolTip = _compareMuted ? Loc.T("Str_Similar_Unmute", "Unmute") : Loc.T("Str_Similar_MuteBoth", "Mute both");
+            IconMute.Kind = _compareVolume <= 0 ? PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
             TxtSpeed.Text = $"{_compareSpeed:0.##}x";
         }
 
@@ -572,10 +629,15 @@ namespace Smart_Tools.WPF.Views
             UpdatePlayPauseIcon();
         }
 
-        private void BtnMuteToggle_Click(object sender, RoutedEventArgs e)
+        /// <summary>One volume for both sides; the slider at 0 is silence.</summary>
+        private void SliderCompareVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            _compareMuted = !_compareMuted;
-            foreach (var player in ActiveComparePlayers()) player.SetMute(_compareMuted);
+            _compareVolume = e.NewValue;
+            foreach (var player in ActiveComparePlayers())
+            {
+                player.SetMute(false);
+                player.SetVolume(_compareVolume);
+            }
             UpdatePlayPauseIcon();
         }
 

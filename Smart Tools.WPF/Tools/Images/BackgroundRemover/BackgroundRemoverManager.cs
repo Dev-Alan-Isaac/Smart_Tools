@@ -32,9 +32,17 @@ namespace Smart_Tools.WPF.Controllers
         public Task<BackgroundRemoverPreview> RenderPreviewAsync(
             string path, BackgroundRemoverOptions options, int maxSize, CancellationToken token) => Task.Run(() =>
         {
-            using var image = new MagickImage(path);
+            // JPEGs are decoded already reduced (libjpeg scales while reading), under the memory budget.
+            using var loaded = ImageLoad.Open(path, token, (uint)maxSize);
+            var image = loaded.Image;
+            bool quarterTurn = image.Orientation is ImageMagick.Orientation.LeftTop or ImageMagick.Orientation.RightTop or ImageMagick.Orientation.RightBottom or ImageMagick.Orientation.LeftBottom;
             image.AutoOrient();
             int sourceWidth = (int)image.Width, sourceHeight = (int)image.Height;
+            if (loaded.SourceWidth > 0 && loaded.SourceHeight > 0)   // the size in the file, not the reduced decode
+            {
+                sourceWidth = (int)(quarterTurn ? loaded.SourceHeight : loaded.SourceWidth);
+                sourceHeight = (int)(quarterTurn ? loaded.SourceWidth : loaded.SourceHeight);
+            }
 
             // Shrink first: keying a 24MP photo just to show a 700px preview is wasted work.
             image.Resize(new MagickGeometry((uint)maxSize, (uint)maxSize) { Greater = true });
@@ -103,9 +111,13 @@ namespace Smart_Tools.WPF.Controllers
                     Failed = Volatile.Read(ref failed),
                 });
 
+            // "Processing" lines are cosmetic: at most ~10 a second, so a 100,000-file batch doesn't flood the UI thread.
+            long lastBusyReport = 0;
             await Task.Run(() => Parallel.ForEach(items, parallel, item =>
             {
-                Report(item, BackgroundRemoverStatus.Processing, "Processing…", "", Volatile.Read(ref processed));
+                long now = Environment.TickCount64, last = Interlocked.Read(ref lastBusyReport);
+                if (now - last >= 100 && Interlocked.CompareExchange(ref lastBusyReport, now, last) == last)
+                    Report(item, BackgroundRemoverStatus.Processing, "Processing…", "", Volatile.Read(ref processed));
 
                 string outputPath = outputPaths[item];
                 BackgroundRemoverStatus status;
@@ -158,7 +170,10 @@ namespace Smart_Tools.WPF.Controllers
             if (!options.OverwriteExisting && File.Exists(outputPath))
                 return (BackgroundRemoverStatus.Skipped, "Skipped (exists)");
 
-            using var image = new MagickImage(sourcePath);
+            // Full size is the output, so no reduction here, but the decode waits for the memory budget
+            // (six huge photos at once used to be able to run the machine out of RAM).
+            using var loaded = ImageLoad.Open(sourcePath, CancellationToken.None);
+            var image = loaded.Image;
             MagickImage result = Render(image, options, background, backgroundLock);
             try
             {
