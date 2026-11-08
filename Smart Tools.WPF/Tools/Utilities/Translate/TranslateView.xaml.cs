@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
@@ -44,6 +45,8 @@ namespace Smart_Tools.WPF.Views
             UpdateFilesState();
             LoadLanguages("en", "es");
             _viewConstructed = true;
+            InitAutoTranslate();
+            BtnRun.Visibility = FilesMode ? Visibility.Visible : Visibility.Collapsed;   // text mode has no button: it translates as you type
 
             UpdateModelPanel();
             TranslateManager.PairsChanged += RefreshLanguages;   // a pair was added or removed in Settings
@@ -121,6 +124,7 @@ namespace Smart_Tools.WPF.Views
                 _applying = false;
             }
             UpdateModelPanel();
+            ScheduleAutoTranslate();
         }
 
         private void BtnSwap_Click(object sender, RoutedEventArgs e)
@@ -170,7 +174,7 @@ namespace Smart_Tools.WPF.Views
             BtnDownload.Visibility = downloading || (pair != null && !installed) ? Visibility.Visible : Visibility.Collapsed;
             BtnRemove.Visibility = !downloading && installed ? Visibility.Visible : Visibility.Collapsed;
             BtnRun.IsEnabled = !downloading;
-            bool idle = !downloading && _translateCts == null;
+            bool idle = !downloading && (_translateCts == null || !FilesMode);   // text mode: changing language restarts the translation
             CmbFrom.IsEnabled = CmbTo.IsEnabled = idle;
             BtnSwap.IsEnabled = idle && (TranslateManager.Find(TagOf(CmbTo), TagOf(CmbFrom)) != null || TranslateManager.Route(TagOf(CmbTo), TagOf(CmbFrom)) != null);   // no way back → nothing to swap to
         }
@@ -220,7 +224,11 @@ namespace Smart_Tools.WPF.Views
 
             if (canceled) SetStatus(Str("Str_Translate_StatusDownloadCanceled"));
             else if (error != null) SetStatus(error);
-            else SetStatus(Str("Str_Translate_StatusIdle"));
+            else
+            {
+                SetStatus(Str("Str_Translate_StatusIdle"));
+                ScheduleAutoTranslate();   // text already waiting for this model
+            }
         }
 
         private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
@@ -258,13 +266,47 @@ namespace Smart_Tools.WPF.Views
                 await RunFilesAsync();
                 return;
             }
+            await RunTextAsync();
+        }
 
-            string text = TxtInput.Text;
-            if (string.IsNullOrWhiteSpace(text))
+        // ---- Text mode translates by itself ----------------------------------------------------
+
+        private readonly DispatcherTimer _autoTimer = new() { Interval = TimeSpan.FromMilliseconds(700) };
+        private bool _rerunText;   // the text or languages changed while a translation was running
+
+        private void InitAutoTranslate()
+        {
+            _autoTimer.Tick += (_, _) =>
             {
-                SetStatus(Str("Str_Translate_StatusEmpty"));
+                _autoTimer.Stop();
+                if (!FilesMode && !_closing) _ = RunTextAsync();
+            };
+        }
+
+        /// <summary>Called when the input text or a language changes: waits for a short pause in typing, then translates.</summary>
+        private void ScheduleAutoTranslate()
+        {
+            if (!_viewConstructed || _applying || FilesMode || _closing) return;
+            _autoTimer.Stop();
+            if (string.IsNullOrWhiteSpace(TxtInput.Text))
+            {
+                // Nothing to translate: stop a running one and empty the result.
+                _rerunText = false;
+                _translateCts?.Cancel();
+                TxtOutput.Clear();
+                SetStatus(Str("Str_Translate_StatusIdle"));
                 return;
             }
+            _autoTimer.Start();
+        }
+
+        private void TxtInput_TextChanged(object sender, TextChangedEventArgs e) => ScheduleAutoTranslate();
+
+        private async Task RunTextAsync()
+        {
+            string text = TxtInput.Text;
+            if (string.IsNullOrWhiteSpace(text)) return;
+
             var route = TranslateManager.Route(TagOf(CmbFrom), TagOf(CmbTo));
             if (route == null)
             {
@@ -274,6 +316,13 @@ namespace Smart_Tools.WPF.Views
             if (!route.All(TranslateManager.IsInstalled))
             {
                 SetStatus(Str("Str_Translate_StatusNeedModel"));
+                return;
+            }
+            if (_translateCts != null)
+            {
+                // Still busy with the previous text: stop it, it starts again with the new text when it ends.
+                _rerunText = true;
+                _translateCts.Cancel();
                 return;
             }
 
@@ -295,6 +344,7 @@ namespace Smart_Tools.WPF.Views
                     failed += result.FailedParts;
                     total += result.TotalParts;
                 }
+                if (canceled && (_rerunText || string.IsNullOrWhiteSpace(TxtInput.Text))) return;   // superseded or cleared: don't write a stale half result
                 TxtOutput.Text = current;
                 bool indirect = TranslateManager.IsIndirect(route);
                 SetStatus(canceled
@@ -313,6 +363,11 @@ namespace Smart_Tools.WPF.Views
                 _translateCts = null;
                 SetRunning(false);
                 if (_closing) _manager.Dispose();
+                else if (_rerunText)
+                {
+                    _rerunText = false;
+                    if (!FilesMode) _ = RunTextAsync();
+                }
             }
         }
 
@@ -328,6 +383,8 @@ namespace Smart_Tools.WPF.Views
             TextPanes.Visibility = files ? Visibility.Collapsed : Visibility.Visible;
             FilesPanel.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
             InputCard.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
+            BtnRun.Visibility = files ? Visibility.Visible : Visibility.Collapsed;
+            _autoTimer.Stop();
             TxtRunLabel.Text = _translateCts != null ? Str("Str_Common_Cancel") : files ? Loc.T("Str_Translate_RunFiles", "Translate files") : Str("Str_Translate_Run");
             SetStatus(files ? Loc.T("Str_Translate_StatusFilesIdle", "Add files, then press Translate files.") : Str("Str_Translate_StatusIdle"));
             UpdateFilesState();
@@ -502,8 +559,9 @@ namespace Smart_Tools.WPF.Views
             ProgressTranslate.Value = 0;
             ProgressTranslate.Visibility = TxtPercent.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
             TxtPercent.Text = "0%";
-            TxtInput.IsReadOnly = running;
-            BtnClear.IsEnabled = !running;
+            // Text mode keeps the box open: typing during a translation just restarts it.
+            TxtInput.IsReadOnly = running && FilesMode;
+            BtnClear.IsEnabled = !running || !FilesMode;
             InputCard.IsLocked = running;
             RadioModeText.IsEnabled = RadioModeFiles.IsEnabled = !running;
             if (running && !FilesMode) SetStatus(Str("Str_Translate_StatusTranslating"));

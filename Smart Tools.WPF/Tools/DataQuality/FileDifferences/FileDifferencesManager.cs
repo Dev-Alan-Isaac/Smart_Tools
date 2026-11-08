@@ -228,37 +228,105 @@ namespace Smart_Tools.WPF.Controllers
             int[] kb = TokenIds(tokensB, options, ids);
             var (modA, modB) = Match(ka, kb);
 
+            // Letter level: inside a changed word, only the letters that differ are marked, so
+            // "example" with a Latin "a" against "example" with a Cyrillic "а" shows that one letter.
+            var charA = new bool[lineA.Length];
+            var charB = new bool[lineB.Length];
+            RefineByLetters(lineA, tokensA, modA, charA, lineB, tokensB, modB, charB, options);
+
             int sharedA = 0, sharedB = 0;
-            for (int i = 0; i < tokensA.Count; i++) if (!modA[i]) sharedA += tokensA[i].Length;
-            for (int j = 0; j < tokensB.Count; j++) if (!modB[j]) sharedB += tokensB[j].Length;
+            for (int i = 0; i < charA.Length; i++) if (!charA[i]) sharedA++;
+            for (int j = 0; j < charB.Length; j++) if (!charB[j]) sharedB++;
 
             // Only spaces in common, or too little in common: highlight the whole line instead.
-            bool meaningful = tokensA.Where((t, i) => !modA[i]).Any(t => !string.IsNullOrWhiteSpace(t));
+            bool meaningful = false;
+            for (int i = 0; i < charA.Length && !meaningful; i++) meaningful = charA[i] && !char.IsWhiteSpace(lineA[i]);
+            for (int j = 0; j < charB.Length && !meaningful; j++) meaningful = charB[j] && !char.IsWhiteSpace(lineB[j]);
             if (!meaningful ||
                 sharedA < lineA.Length * MinSharedForIntraline ||
                 sharedB < lineB.Length * MinSharedForIntraline)
                 return (null, null);
 
-            return (Segments(tokensA, modA), Segments(tokensB, modB));
+            return (Segments(lineA, charA), Segments(lineB, charB));
         }
 
-        private static List<FileDiffSegment> Segments(List<string> tokens, bool[] modified)
+        /// <summary>Changed stretches longer than this are marked whole (no letter-by-letter pass).</summary>
+        private const int MaxLetterGap = 400;
+
+        /// <summary>
+        /// Turns the word-level marks into letter-level marks. Between two matched words, the changed
+        /// words of both lines are compared letter by letter when they are alike enough (at least half
+        /// of the letters in common); otherwise the whole stretch stays marked.
+        /// </summary>
+        private static void RefineByLetters(
+            string lineA, List<string> tokensA, bool[] modA, bool[] charA,
+            string lineB, List<string> tokensB, bool[] modB, bool[] charB,
+            FileDiffOptions options)
+        {
+            int[] offA = Offsets(tokensA, lineA.Length), offB = Offsets(tokensB, lineB.Length);
+            int i = 0, j = 0;
+            while (i < tokensA.Count || j < tokensB.Count)
+            {
+                int gi = i, gj = j;
+                while (i < tokensA.Count && modA[i]) i++;
+                while (j < tokensB.Count && modB[j]) j++;
+
+                if (i > gi || j > gj)
+                {
+                    int sa = offA[gi], ea = offA[i], sb = offB[gj], eb = offB[j];
+                    for (int k = sa; k < ea; k++) charA[k] = true;
+                    for (int k = sb; k < eb; k++) charB[k] = true;
+
+                    int la = ea - sa, lb = eb - sb;
+                    if (la > 0 && lb > 0 && la <= MaxLetterGap && lb <= MaxLetterGap)
+                    {
+                        int[] ia = new int[la], ib = new int[lb];
+                        for (int k = 0; k < la; k++) ia[k] = Key(lineA[sa + k], options);
+                        for (int k = 0; k < lb; k++) ib[k] = Key(lineB[sb + k], options);
+                        var (ma, mb) = Match(ia, ib);
+
+                        int shared = 0;
+                        for (int k = 0; k < la; k++) if (!ma[k]) shared++;
+                        if (shared * 2 >= Math.Max(la, lb))
+                        {
+                            for (int k = 0; k < la; k++) charA[sa + k] = ma[k];
+                            for (int k = 0; k < lb; k++) charB[sb + k] = mb[k];
+                        }
+                    }
+                }
+
+                if (i < tokensA.Count && j < tokensB.Count) { i++; j++; }
+                else break;
+            }
+        }
+
+        private static int Key(char c, FileDiffOptions options)
+        {
+            if (options.IgnoreWhitespace && char.IsWhiteSpace(c)) return ' ';
+            return options.IgnoreCase ? char.ToLowerInvariant(c) : c;
+        }
+
+        private static int[] Offsets(List<string> tokens, int total)
+        {
+            var offsets = new int[tokens.Count + 1];
+            int at = 0;
+            for (int k = 0; k < tokens.Count; k++) { offsets[k] = at; at += tokens[k].Length; }
+            offsets[tokens.Count] = total;
+            return offsets;
+        }
+
+        private static List<FileDiffSegment> Segments(string line, bool[] changed)
         {
             var segments = new List<FileDiffSegment>();
-            var sb = new StringBuilder();
-            bool current = modified.Length > 0 && modified[0];
-
-            for (int i = 0; i < tokens.Count; i++)
+            int start = 0;
+            for (int k = 1; k <= line.Length; k++)
             {
-                if (modified[i] != current && sb.Length > 0)
+                if (k == line.Length || changed[k] != changed[start])
                 {
-                    segments.Add(new FileDiffSegment(sb.ToString(), current));
-                    sb.Clear();
+                    segments.Add(new FileDiffSegment(line[start..k], changed[start]));
+                    start = k;
                 }
-                current = modified[i];
-                sb.Append(tokens[i]);
             }
-            if (sb.Length > 0) segments.Add(new FileDiffSegment(sb.ToString(), current));
             return segments;
         }
 

@@ -62,7 +62,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "duplicate-data", Name = "Duplicate Data", Icon = "Broom", CategoryId = "data-quality", Description = "Find and remove duplicate files", Keywords = "duplicates clean same copies hash" },
             new ToolInfo { Id = "find-similar", Name = "Find Similar Files", Icon = "ImageMultipleOutline", CategoryId = "data-quality", Description = "Spot near-identical files and images", Keywords = "similar look alike photos compare" },
             new ToolInfo { Id = "file-differences", Name = "File Differences", Icon = "FileCompare", CategoryId = "data-quality", Description = "Compare two files side by side", Keywords = "diff compare changes text" },
-            new ToolInfo { Id = "text-diff", Name = "Text Diff", Icon = "CompareHorizontal", CategoryId = "data-quality", Description = "Paste two texts and see what changed, line by line", Keywords = "text diff compare paste difference changes lines words side by side patch unified comparar textos diferencias" },
+            new ToolInfo { Id = "text-diff", Name = "Text Difference", Icon = "CompareHorizontal", CategoryId = "data-quality", Description = "Paste two texts and see what changed, line by line", Keywords = "text diff compare paste difference changes lines words side by side patch unified comparar textos diferencias" },
             new ToolInfo { Id = "hash-verifier", Name = "Hash & Checksum Verifier", Icon = "Pound", CategoryId = "data-quality", Description = "Check a file is what it claims to be", Keywords = "hash checksum md5 sha1 sha256 sha512 crc32 verify integrity sha256sums sfv" },
 
             // Files
