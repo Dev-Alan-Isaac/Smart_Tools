@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
+<title>Smart Tools</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="title">Send to Phone</h1>
+    <p id="status" class="status"></p>
+  </header>
+
+  <section id="pane-main" hidden>
+    <div class="card">
+      <h2 id="h-pc"></h2>
+      <p id="no-offers" class="muted"></p>
+      <ul id="offers" class="list"></ul>
+    </div>
+
+    <div class="card">
+      <h2 id="h-send"></h2>
+      <label class="btn primary" for="pick"><span id="t-pick"></span></label>
+      <input type="file" id="pick" multiple hidden>
+      <textarea id="text" rows="3" maxlength="60000"></textarea>
+      <button type="button" id="send-text" class="btn"></button>
+      <ul id="uploads" class="list"></ul>
+    </div>
+
+    <p id="note" class="muted small"></p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

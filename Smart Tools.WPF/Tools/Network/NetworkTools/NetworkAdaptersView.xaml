@@ -383,6 +383,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <WrapPanel>
                                 <Border Style="{StaticResource StatTileStyle}">
@@ -772,13 +773,127 @@
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>
+
+                            <!--  Other adapters: Bluetooth first (read-only)  -->
+                            <Border
+                                x:Name="OtherAdaptersCard"
+                                Grid.Row="2"
+                                ctl:Tour.Key="Str_Tour_NetworkAdapters_Bluetooth"
+                                ctl:Tour.Order="4"
+                                Margin="0,14,0,0"
+                                Padding="14,12"
+                                Background="{DynamicResource RowBg}"
+                                CornerRadius="12">
+                                <Border.Resources>
+                                    <Style x:Key="BtPillBorder" TargetType="Border" BasedOn="{StaticResource IconStatusPillStyle}">
+                                        <Setter Property="Background" Value="{DynamicResource CardBg}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Tone}" Value="Good">
+                                                <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Tone}" Value="Warn">
+                                                <Setter Property="Background" Value="{DynamicResource StatusWarningBg}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <Style x:Key="BtPillText" TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="11" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Tone}" Value="Good">
+                                                <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Tone}" Value="Warn">
+                                                <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <DataTemplate x:Key="BtRowTemplate">
+                                        <Grid Margin="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="12.5"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    Text="{Binding Title}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding Detail}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <Border
+                                                Grid.Column="1"
+                                                Margin="12,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Style="{StaticResource BtPillBorder}">
+                                                <TextBlock Style="{StaticResource BtPillText}" Text="{Binding Pill}" />
+                                            </Border>
+                                        </Grid>
+                                    </DataTemplate>
+                                </Border.Resources>
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="18"
+                                            Height="18"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource AccentColor}"
+                                            Kind="Bluetooth" />
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="13.5"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="{DynamicResource Str_NetworkAdapters_BtTitle}" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Margin="0,2,0,6"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_NetworkAdapters_BtHint}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Name="TxtBtMessage"
+                                        Margin="0,4"
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_NetworkAdapters_BtReading}"
+                                        TextWrapping="Wrap" />
+                                    <ItemsControl
+                                        x:Name="BtRadios"
+                                        Focusable="False"
+                                        ItemTemplate="{StaticResource BtRowTemplate}" />
+                                    <TextBlock
+                                        x:Name="TxtBtPairedLabel"
+                                        Margin="0,10,0,2"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_NetworkAdapters_BtPaired}"
+                                        Visibility="Collapsed" />
+                                    <ScrollViewer MaxHeight="170" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl
+                                            x:Name="BtDevices"
+                                            Focusable="False"
+                                            ItemTemplate="{StaticResource BtRowTemplate}" />
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </Grid>
                 </Border>
 
                 <controls:NetworkConsole
                     ctl:Tour.Key="Str_Tour_NetworkAdapters_Log"
-                    ctl:Tour.Order="4"
+                    ctl:Tour.Order="5"
                     x:Name="Results"
                     Title="{DynamicResource Str_NetworkAdapters_Activity}"
                     Grid.Row="1"

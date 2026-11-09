@@ -1,0 +1,653 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.SendToPhoneView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: PhoneSession (server, approval, transfers), PhoneCrypto (end-to-end encryption), PhoneCertificate. UI only here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="StpLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Margin" Value="2,10,0,4" />
+        </Style>
+        <Style x:Key="StpHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,6,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!--  A file or text offered to the phone  -->
+        <DataTemplate x:Key="OfferTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="OfferIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Name}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="10.5"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Detail}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveOffer_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_SendToPhone_RemoveOffer}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsText}" Value="True">
+                    <Setter TargetName="OfferIcon" Property="Kind" Value="TextBoxOutline" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  One transfer, either way  -->
+        <DataTemplate x:Key="TransferTemplate">
+            <Border
+                Margin="0,0,0,8"
+                Padding="12,10"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="32"
+                        Height="32"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Top"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="9">
+                        <materialDesign:PackIcon
+                            x:Name="DirIcon"
+                            Width="18"
+                            Height="18"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentColor}"
+                            Kind="ArrowDown" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding Name}" />
+                        <TextBlock
+                            x:Name="Sub"
+                            Margin="0,2,0,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding StatusText}"
+                            TextWrapping="Wrap" />
+                        <ProgressBar
+                            x:Name="Bar"
+                            Height="5"
+                            Margin="0,6,0,0"
+                            Maximum="100"
+                            Value="{Binding Percent, Mode=OneWay}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding SizeText}" />
+                        <Button
+                            x:Name="BtnCopyText"
+                            Click="BtnCopyTransferText_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            Tag="{Binding}"
+                            ToolTip="{DynamicResource Str_SendToPhone_CopyText}"
+                            Visibility="Collapsed">
+                            <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
+                        </Button>
+                        <Button
+                            x:Name="BtnShow"
+                            Click="BtnShowInFolder_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            Tag="{Binding}"
+                            ToolTip="{DynamicResource Str_SendToPhone_ShowInFolder}"
+                            Visibility="Collapsed">
+                            <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsToPhone}" Value="True">
+                    <Setter TargetName="DirIcon" Property="Kind" Value="ArrowUp" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                    <Setter TargetName="Bar" Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                    <Setter TargetName="Sub" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CanCopyText}" Value="True">
+                    <Setter TargetName="BtnCopyText" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CanShowFolder}" Value="True">
+                    <Setter TargetName="BtnShow" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+
+                    <!--  Network  -->
+                    <Border
+                        Margin="0,0,0,10"
+                        ctl:Tour.Key="Str_Tour_SendToPhone_Network"
+                        ctl:Tour.Order="1"
+                        Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_SendToPhone_NetworkHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.Wifi}" />
+                            <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}">
+                                <ComboBox
+                                    x:Name="CmbNetwork"
+                                    VerticalContentAlignment="Center"
+                                    SelectionChanged="Option_Changed"
+                                    Style="{StaticResource BareComboBox}" />
+                            </Border>
+                            <TextBlock x:Name="TxtNetworkHint" Style="{StaticResource StpHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Protection  -->
+                    <Border
+                        Margin="0,0,0,10"
+                        ctl:Tour.Key="Str_Tour_SendToPhone_Protection"
+                        ctl:Tour.Order="2"
+                        Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_SendToPhone_ProtectionHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ShieldLockOutline}" />
+                            <UniformGrid Margin="0,6,0,0" Columns="2">
+                                <RadioButton
+                                    x:Name="RadioEncrypted"
+                                    Margin="0,0,3,0"
+                                    Click="Option_Click"
+                                    GroupName="StpSecurity"
+                                    IsChecked="True"
+                                    Style="{StaticResource SidebarChoiceTileStyle}">
+                                    <StackPanel>
+                                        <materialDesign:PackIcon
+                                            Width="22"
+                                            Height="22"
+                                            HorizontalAlignment="Center"
+                                            Kind="LockCheckOutline" />
+                                        <TextBlock
+                                            Margin="0,4,0,0"
+                                            HorizontalAlignment="Center"
+                                            Text="{DynamicResource Str_SendToPhone_Encrypted}" />
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton
+                                    x:Name="RadioTls"
+                                    Margin="3,0,0,0"
+                                    Click="Option_Click"
+                                    GroupName="StpSecurity"
+                                    Style="{StaticResource SidebarChoiceTileStyle}">
+                                    <StackPanel>
+                                        <materialDesign:PackIcon
+                                            Width="22"
+                                            Height="22"
+                                            HorizontalAlignment="Center"
+                                            Kind="Lock" />
+                                        <TextBlock
+                                            Margin="0,4,0,0"
+                                            HorizontalAlignment="Center"
+                                            Text="{DynamicResource Str_SendToPhone_TlsOnly}" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </UniformGrid>
+                            <TextBlock x:Name="TxtSecurityHint" Style="{StaticResource StpHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  What to send  -->
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
+                        ctl:Tour.Key="Str_Tour_SendToPhone_Send"
+                        ctl:Tour.Order="3"
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="{DynamicResource Str_SendToPhone_SendHeader}"
+                        HeaderIcon="CellphoneArrowDown"
+                        ItemTemplate="{StaticResource OfferTemplate}"
+                        Mode="Files"
+                        PathsAdded="InputCard_PathsAdded"
+                        ShowSubfolders="False" />
+
+                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_SendToPhone_TextHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
+                            <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}">
+                                <TextBox
+                                    x:Name="TxtOfferText"
+                                    MinHeight="60"
+                                    VerticalContentAlignment="Top"
+                                    AcceptsReturn="True"
+                                    MaxLength="20000"
+                                    Style="{StaticResource BareTextBox}"
+                                    TextWrapping="Wrap" />
+                            </Border>
+                            <Button
+                                Margin="0,8,0,0"
+                                Click="BtnAddText_Click"
+                                Content="{DynamicResource Str_SendToPhone_AddText}"
+                                Style="{StaticResource NeutralIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Receiving  -->
+                    <controls:OutputFolderCard
+                        x:Name="OutputCard"
+                        ctl:Tour.Key="Str_Tour_SendToPhone_Receive"
+                        ctl:Tour.Order="4"
+                        Header="{DynamicResource Str_SendToPhone_ReceiveHeader}"
+                        HeaderIcon="FolderDownloadOutline"
+                        ToolName="Send to Phone" />
+
+                    <Border
+                        Margin="0,0,0,10"
+                        ctl:Tour.Key="Str_Tour_SendToPhone_Limits"
+                        ctl:Tour.Order="5"
+                        Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_SendToPhone_LimitsHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
+                            <TextBlock Style="{StaticResource StpLabel}" Text="{DynamicResource Str_SendToPhone_MaxSize}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox
+                                    x:Name="CmbMaxSize"
+                                    VerticalContentAlignment="Center"
+                                    SelectionChanged="Option_Changed"
+                                    Style="{StaticResource BareComboBox}">
+                                    <ComboBoxItem Content="100 MB" Tag="100" />
+                                    <ComboBoxItem Content="500 MB" Tag="500" />
+                                    <ComboBoxItem Content="2 GB" Tag="2048" />
+                                    <ComboBoxItem Content="10 GB" Tag="10240" />
+                                    <ComboBoxItem Content="{DynamicResource Str_SendToPhone_NoLimit}" Tag="0" />
+                                </ComboBox>
+                            </Border>
+                            <TextBlock Style="{StaticResource StpLabel}" Text="{DynamicResource Str_SendToPhone_IdleClose}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox
+                                    x:Name="CmbIdle"
+                                    VerticalContentAlignment="Center"
+                                    SelectionChanged="Option_Changed"
+                                    Style="{StaticResource BareComboBox}">
+                                    <ComboBoxItem Content="{DynamicResource Str_SendToPhone_Idle5}" Tag="5" />
+                                    <ComboBoxItem Content="{DynamicResource Str_SendToPhone_Idle15}" Tag="15" />
+                                    <ComboBoxItem Content="{DynamicResource Str_SendToPhone_Idle60}" Tag="60" />
+                                </ComboBox>
+                            </Border>
+                            <CheckBox
+                                x:Name="ChkBlock"
+                                Margin="0,10,0,0"
+                                Click="Option_Click"
+                                Content="{DynamicResource Str_SendToPhone_BlockPrograms}"
+                                ToolTip="{DynamicResource Str_SendToPhone_BlockProgramsTip}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="320" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="1.2*" MinWidth="320" />
+                </Grid.ColumnDefinitions>
+
+                <!--  Top bar: start / stop and what is going on  -->
+                <Border
+                    Grid.ColumnSpan="3"
+                    Padding="16,12"
+                    Background="{DynamicResource CardBg}"
+                    CornerRadius="14">
+                    <StackPanel>
+                        <DockPanel LastChildFill="True">
+                            <Button
+                                x:Name="BtnStart"
+                                MinWidth="150"
+                                MinHeight="36"
+                                Margin="0,0,14,0"
+                                ctl:Tour.Key="Str_Tour_SendToPhone_Start"
+                                ctl:Tour.Order="6"
+                                Click="BtnStart_Click"
+                                DockPanel.Dock="Left"
+                                Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconStart"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Cellphone" />
+                                    <TextBlock
+                                        x:Name="TxtStart"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_SendToPhone_Start}" />
+                                </StackPanel>
+                            </Button>
+                            <WrapPanel VerticalAlignment="Center">
+                                <Border
+                                    x:Name="PillState"
+                                    Margin="0,0,6,0"
+                                    Background="{DynamicResource RowBg}"
+                                    Style="{StaticResource IconStatusPillStyle}">
+                                    <TextBlock
+                                        x:Name="TxtPillState"
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </Border>
+                                <TextBlock
+                                    x:Name="TxtHeroHint"
+                                    VerticalAlignment="Center"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_SendToPhone_HeroHint}"
+                                    TextWrapping="Wrap" />
+                            </WrapPanel>
+                        </DockPanel>
+                        <Border
+                            x:Name="StatusBanner"
+                            Margin="0,10,0,0"
+                            Padding="12,9"
+                            HorizontalAlignment="Left"
+                            CornerRadius="10"
+                            Visibility="Collapsed">
+                            <TextBlock
+                                x:Name="TxtStatus"
+                                MaxWidth="900"
+                                FontSize="12.5"
+                                FontWeight="SemiBold"
+                                TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!--  Left: approval, QR and the link  -->
+                <ScrollViewer
+                    Grid.Row="2"
+                    VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border
+                            x:Name="ApprovalCard"
+                            Margin="0,0,0,12"
+                            Padding="14"
+                            Background="{DynamicResource StatusWarningBg}"
+                            CornerRadius="12"
+                            Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="13"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource StatusWarningFg}"
+                                    Text="{DynamicResource Str_SendToPhone_ApprovalTitle}" />
+                                <TextBlock
+                                    x:Name="TxtApproval"
+                                    Margin="0,4,0,10"
+                                    FontSize="12.5"
+                                    Foreground="{DynamicResource StatusWarningFg}"
+                                    TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button
+                                        MinWidth="100"
+                                        Margin="0,0,8,0"
+                                        Click="BtnAllow_Click"
+                                        Content="{DynamicResource Str_SendToPhone_Allow}"
+                                        Style="{StaticResource AccentPrimaryButtonStyle}" />
+                                    <Button
+                                        MinWidth="100"
+                                        Click="BtnDeny_Click"
+                                        Content="{DynamicResource Str_SendToPhone_Deny}"
+                                        Style="{StaticResource NeutralIconButtonStyle}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border
+                            x:Name="QrCard"
+                            Padding="16"
+                            ctl:Tour.Key="Str_Tour_SendToPhone_Qr"
+                            ctl:Tour.Order="7"
+                            Background="{DynamicResource CardBg}"
+                            CornerRadius="14">
+                            <StackPanel>
+                                <TextBlock
+                                    FontSize="14"
+                                    FontWeight="Bold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_SendToPhone_QrTitle}" />
+                                <TextBlock
+                                    x:Name="TxtQrHint"
+                                    Margin="0,4,0,12"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap" />
+                                <Border
+                                    x:Name="QrFrame"
+                                    HorizontalAlignment="Center"
+                                    Background="White"
+                                    CornerRadius="10"
+                                    Visibility="Collapsed">
+                                    <Image
+                                        x:Name="ImgQr"
+                                        Width="260"
+                                        Height="260"
+                                        Margin="6"
+                                        RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                </Border>
+                                <TextBlock
+                                    x:Name="TxtLink"
+                                    Margin="0,12,0,0"
+                                    FontFamily="Consolas"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    IsHitTestVisible="True"
+                                    TextWrapping="Wrap" />
+                                <StackPanel
+                                    x:Name="LinkButtons"
+                                    Margin="0,10,0,0"
+                                    Orientation="Horizontal"
+                                    Visibility="Collapsed">
+                                    <Button
+                                        MinHeight="34"
+                                        Margin="0,0,8,0"
+                                        Padding="12,0"
+                                        Click="BtnCopyLink_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_SendToPhone_CopyLinkTip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="LinkVariant" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_SendToPhone_CopyLink}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnDisconnect"
+                                        MinHeight="34"
+                                        Padding="12,0"
+                                        Click="BtnDisconnect_Click"
+                                        Content="{DynamicResource Str_SendToPhone_Disconnect}"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_SendToPhone_DisconnectTip}"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                                <TextBlock
+                                    x:Name="TxtKeyWarning"
+                                    Margin="0,12,0,0"
+                                    FontSize="11.5"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap"
+                                    Visibility="Collapsed" />
+                                <StackPanel x:Name="FingerprintPanel" Margin="0,12,0,0" Visibility="Collapsed">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_SendToPhone_Fingerprint}" />
+                                    <TextBlock
+                                        x:Name="TxtFingerprint"
+                                        Margin="0,2,0,0"
+                                        FontFamily="Consolas"
+                                        FontSize="10.5"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        Margin="0,4,0,0"
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_SendToPhone_FingerprintHint}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!--  Right: what is moving  -->
+                <Border
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Padding="14"
+                    ctl:Tour.Key="Str_Tour_SendToPhone_Transfers"
+                    ctl:Tour.Order="8"
+                    Background="{DynamicResource CardBg}"
+                    CornerRadius="14">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,10">
+                            <Button
+                                MinHeight="34"
+                                Padding="12,0"
+                                Click="BtnClearDone_Click"
+                                Content="{DynamicResource Str_SendToPhone_ClearDone}"
+                                DockPanel.Dock="Right"
+                                Style="{StaticResource NeutralIconButtonStyle}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                Text="{DynamicResource Str_SendToPhone_TransfersTitle}" />
+                        </DockPanel>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl
+                                x:Name="TransferList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource TransferTemplate}" />
+                        </ScrollViewer>
+                        <TextBlock
+                            x:Name="TxtNoTransfers"
+                            Grid.Row="1"
+                            MaxWidth="320"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="12.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            IsHitTestVisible="False"
+                            Text="{DynamicResource Str_SendToPhone_NoTransfers}"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

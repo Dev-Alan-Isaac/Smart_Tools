@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 112 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 115 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **115 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -158,6 +158,7 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 | **Environment Variables** | `environment-variables` | Edit user and system variables, and clean up the PATH folder by folder |
 | **Event Log Explorer** | `event-log-explorer` | Browse, filter and export Windows event logs |
 | **System Snapshot** | `system-snapshot` | Scan everything about this PC (system, network, listening ports, firewall rules, services and their dependencies, startup items, scheduled tasks, installed programs and runtimes, hosts, environment variables) and export it as HTML, JSON, text or CSV to rebuild the same setup on another PC. Read-only; secrets are never read. "Scan another PC" saves the stand-alone **System Snapshot Collector** (project `SystemSnapshot.Collector`, shipped inside the app as `Engines\SystemSnapshot\SystemSnapshot-Collector.zip` when its `dist` folder has been built) to a USB drive or folder; a portable copy of the whole app is in Settings > Installation |
+| **My IP & Adapters** | `network-adapters` | Your addresses, every adapter (network and Bluetooth: radio state and paired devices, read-only), edit IP, enable or disable (`Tools/Network/NetworkTools`; moved here from Network, id unchanged) |
 
 ### Hardware Tests
 *Test keyboards, mice, screens, controllers and sound*
@@ -190,7 +191,6 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **My IP & Adapters** | `network-adapters` | Your addresses, every adapter, edit IP, enable or disable |
 | **Wi-Fi Analyzer** | `wifi-analyzer` | See nearby networks, signal and channels, and which channel is least crowded |
 | **Ping** | `ping` | Is a host reachable, and how fast - from the adapter you choose |
 | **Port Scanner** | `port-scanner` | Find which TCP ports are open on a host |
@@ -247,9 +247,10 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 | **Screen OCR** | `screen-ocr` | Extract text from a screenshot or screen region |
 | **Translate** | `translate` | Translate text offline between English and Spanish |
 | **Timer & Stopwatch** | `timer-stopwatch` | Stopwatch with laps, countdown timer and a Pomodoro cycle |
+| **Send to Phone** | `send-to-phone` | Move files and text between this PC and a phone over your own network: scan a QR code, no app, no cloud, encrypted end to end (`Tools/Utilities/SendToPhone`) |
 
-### Pixel & Sprites
-*Draw pixel art and pack sprite sheets*
+### Art
+*Draw pixel art, pack sprite sheets and build texture packs*
 
 | Tool | Id | What it does |
 |---|---|---|
@@ -257,6 +258,7 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 | **Sprite Sheet Packer** | `sprite-packer` | Pack images into a sprite sheet with coordinates, or slice a sheet back into frames |
 | **Texture Pack Builder** | `texture-pack` | Turn your PNGs into a Minecraft Java resource pack (.zip) with pack.mcmeta |
 | **Image to Pixel Art** | `image-to-pixel` | Shrink a picture to a pixel grid with a limited palette and optional dithering |
+| **ASCII Art Maker** | `ascii-art` | Turn a picture into text art (classic, letters or symbols; black and white or coloured; saves .txt .rtf .html .png .ansi) or draw it by hand (`Tools/PixelSprites/AsciiArt`) |
 
 ### Notes on some tools
 
@@ -264,8 +266,11 @@ Smart Tools has **112 tools** in 21 sidebar categories. Every tool opens inside 
 - **Video Stitcher** (`video-editor`) - Join video clips into one, with optional trims and fades (FFmpeg); copies the streams when the clips match, otherwise re-encodes them to one format. It is not a timeline editor
 - **Video Compressor & Trimmer** (`video-compressor`) - Make videos smaller by quality or to a target size (two-pass), cap resolution and frame rate, change speed, remove or shrink the sound, or cut a part out with or without re-encoding (FFmpeg); pick the part to keep per video with a timeline and frame preview
 - **Base64 & URL Encoder / Decoder** (`encode-decode`) - Base64 (standard and URL-safe, padding and 76-column wrapping options), URL / percent encoding (a component or a whole URL, space as + for form data), HTML entities, and files to and from Base64 with data: URIs. UTF-8, UTF-16 and Latin-1; live conversion, swap direction, hex view of the bytes, exact error positions, binary results offered as a file to save
-- **Pixel Art Editor** (`pixel-art`, sidebar category: *Pixel & Sprites*) - Draw on a 1-256 px canvas with pencil, eraser, fill, picker, line, rectangle and ellipse, brush sizes, mirror drawing, a colour mixer with opacity, palettes, the Color Picker's Favorites and "My colors", undo / redo, flip and turn, frames with onion skin and an animated preview, and sharp PNG export (one frame or a sprite sheet, enlarged 1x-16x, or copied to the clipboard)
-- **Sprite Sheet Packer** (`sprite-packer`, sidebar category: *Pixel & Sprites*) - Pack many pictures into one sprite sheet (padding, biggest sheet size, power of two, trim, several sheets when needed) with a live preview of the real sheet and a JSON, CSS or XML coordinates file; or slice a sheet into a grid of separate frames (by count or by cell size, margin and spacing, skip empty cells)
+- **ASCII Art Maker** (`ascii-art`, sidebar category: *Art*) - The size is set in characters, not pixels, so a 640 px and a 6000 px copy of a picture give the same layout (measured: 0.6 % of cells differ). The picture is read at the size it needs (`ImageLoad.Open`, JPEGs reduced while decoding), shrunk with a Lanczos filter, sampled four times per character cell, and each character is the one whose measured shape in the chosen monospace font best matches those four samples (`AsciiGlyphs.Measure` draws every character once), so edges and lines stay sharp. Sets: classic (10), classic detailed (70), letters, special characters, mixed, your own. Black and white, or each character takes the colour of its cell. Copy as plain text or with colours (RTF + HTML on the clipboard); save .txt, .rtf (colour table, opens in Word/WordPad), .html, .png (sized like the original picture, capped at 40 MP) and .ansi. Draw mode paints characters on the same grid (pencil, eraser, fill, line, rectangle, text, picker, mirror, undo), also to touch up a converted picture. Files are written through `AtomicFile` and never replace an existing one.
+- **Send to Phone** (`send-to-phone`, sidebar category: *Utilities*) - A small HTTPS server (Kestrel, via `<FrameworkReference Include="Microsoft.AspNetCore.App"/>`) that listens only on the private address you pick, a random port and a one-time token in the path. The page the phone opens is three embedded files (`Tools/Utilities/SendToPhone/Web`), with a strict Content-Security-Policy and nothing loaded from the internet. Certificate: ECDSA P-256, self-signed, valid 24 hours, made in memory for each session and never installed anywhere; its SHA-256 fingerprint is shown on the PC. Encrypted mode adds end-to-end encryption: a 256-bit key travels only in the QR code's `#` part (a browser never sends it), HKDF-SHA256 gives one AES-256-GCM key per file and direction, files go in 1 MiB chunks whose nonce is the chunk number and whose authenticated header holds the file id, chunk number, last-chunk flag and total size (so chunks cannot be swapped, repeated or cut short), and the file list with names is sealed too (`PhoneCrypto.cs`; `Web/app.js` implements the same layout with WebCrypto). TLS-only mode streams plain files (with Range) over HTTPS. Each phone must be approved on the PC; only one is bound at a time; wrong tokens or hosts are refused and an address is blocked for 5 minutes after 10 failures; the session closes by itself after the idle time you choose. Received files go to a hidden `.part` file, are checked, then moved in under a safe name (no folders, no reserved names, never over an existing file); programs and scripts can be refused; a size limit and a free-space check apply. The link with the key can be copied but is kept out of Windows clipboard history and cleared after a minute. The Windows Firewall may ask once to allow the app on private networks.
+- **My IP & Adapters** (`network-adapters`, sidebar category: *System*, moved from Network; the id did not change) - also has an "Other adapters" card: the Bluetooth radio(s) (on/off) and the devices paired with this PC (classic or Low Energy, connected or not), read-only, through the Windows Runtime APIs (`NetworkToolsManager.Bluetooth.cs`).
+- **Pixel Art Editor** (`pixel-art`, sidebar category: *Art*) - Draw on a 1-256 px canvas with pencil, eraser, fill, picker, line, rectangle and ellipse, brush sizes, mirror drawing, a colour mixer with opacity, palettes, the Color Picker's Favorites and "My colors", undo / redo, flip and turn, frames with onion skin and an animated preview, and sharp PNG export (one frame or a sprite sheet, enlarged 1x-16x, or copied to the clipboard)
+- **Sprite Sheet Packer** (`sprite-packer`, sidebar category: *Art*) - Pack many pictures into one sprite sheet (padding, biggest sheet size, power of two, trim, several sheets when needed) with a live preview of the real sheet and a JSON, CSS or XML coordinates file; or slice a sheet into a grid of separate frames (by count or by cell size, margin and spacing, skip empty cells)
 - **Speech to Text** (`speech-to-text`) - Transcribe audio or video offline with the bundled whisper.cpp; models are downloaded on demand; saves TXT, SRT, and VTT, can translate to English
 - **Hardware Sensors** - Temperatures, fans, voltages and clocks (LibreHardwareMonitor; most CPU/board sensors need administrator rights), plus a "This PC" overview part with at-a-glance tiles
 - **Batch Watermarker** (`watermark`, sidebar category: *Convert*) - Stamp text or a logo on many pictures, videos and PDFs at once: 3x3 position grid or tiled, size as a share of each file, opacity, rotation, margin, built-in and saved presets, a live preview of the first file, results written next to the originals or into a chosen folder without ever overwriting
@@ -444,7 +449,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 112 tools have one. The tour only covers the page that is open.
+All 115 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -599,7 +604,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 112 tools*
+*Currently exploring unified testing approach across all 115 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

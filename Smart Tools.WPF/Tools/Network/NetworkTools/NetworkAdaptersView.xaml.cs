@@ -27,6 +27,7 @@ namespace Smart_Tools.WPF.Views
         private const double OptionsCollapsedWidth = 56;
 
         private CancellationTokenSource? _ipCts;
+        private CancellationTokenSource? _btCts;
         private bool _ipLoadedOnce;
         private List<AdapterInfo> _adapters = new();
         private string? _selectedAdapterId;
@@ -60,6 +61,7 @@ namespace Smart_Tools.WPF.Views
             HookNetworkEvents(false);
             _networkChangedTimer.Stop();
             _ipCts?.Cancel();
+            _btCts?.Cancel();
         }
 
         private async void View_Loaded(object sender, RoutedEventArgs e)
@@ -184,6 +186,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 TxtHostname.Text = Dns.GetHostName();
+                _ = RefreshBluetoothAsync();   // independent of the adapter list: its own token and error handling
                 bool includeVirtual = ChkShowVirtual.IsChecked == true;
                 var adapters = await Task.Run(() => NetworkToolsManager.GetAdapters(includeVirtual), cts.Token);
                 if (cts.IsCancellationRequested || _closed) return;
@@ -249,6 +252,67 @@ namespace Smart_Tools.WPF.Views
             AdapterList.SelectedItem = keep;
             if (keep == null) AdapterDetail.Visibility = Visibility.Collapsed;
             else ShowAdapter(keep, animate: false);
+        }
+
+        // ---------------- Bluetooth (read-only) ----------------
+
+        /// <summary>One line of the Bluetooth card (a radio or a paired device); Tone is Good / Warn / Neutral.</summary>
+        private sealed record BtRow(string Title, string Detail, string Pill, string Tone);
+
+        private async Task RefreshBluetoothAsync()
+        {
+            _btCts?.Cancel();
+            var cts = _btCts = new CancellationTokenSource();
+            var ct = cts.Token;
+            try
+            {
+                var info = await NetworkToolsManager.GetBluetoothAsync(ct);
+                if (ct.IsCancellationRequested || _closed) return;
+
+                BtRadios.ItemsSource = info.Radios.Select(r => new BtRow(
+                    r.Name,
+                    Loc.T("Str_NetworkAdapters_BtRadio", "Bluetooth adapter"),
+                    r.State switch
+                    {
+                        BluetoothRadioState.On => Loc.T("Str_NetworkAdapters_BtOn", "On"),
+                        BluetoothRadioState.Off => Loc.T("Str_NetworkAdapters_BtOff", "Off"),
+                        BluetoothRadioState.Disabled => Loc.T("Str_NetworkAdapters_BtDisabled", "Disabled"),
+                        _ => Loc.T("Str_NetworkAdapters_BtUnknown", "Unknown"),
+                    },
+                    r.State == BluetoothRadioState.On ? "Good" : "Warn")).ToList();
+
+                BtDevices.ItemsSource = info.Devices.Select(d => new BtRow(
+                    d.Name,
+                    (d.LowEnergy ? Loc.T("Str_NetworkAdapters_BtLowEnergy", "Low Energy") : Loc.T("Str_NetworkAdapters_BtClassic", "Classic"))
+                        + (d.Address.Length > 0 ? " · " + d.Address : ""),
+                    d.Connected ? Loc.T("Str_NetworkAdapters_BtConnected", "Connected") : Loc.T("Str_NetworkAdapters_BtNotConnected", "Not connected"),
+                    d.Connected ? "Good" : "Neutral")).ToList();
+
+                TxtBtPairedLabel.Visibility = info.Devices.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                TxtBtMessage.Text = info.Problem switch
+                {
+                    BluetoothProblem.NoAdapter => Loc.T("Str_NetworkAdapters_BtNone", "No Bluetooth adapter was found on this computer."),
+                    BluetoothProblem.Unavailable => Loc.T("Str_NetworkAdapters_BtUnavailable", "Windows did not answer about Bluetooth (the Bluetooth service may be stopped)."),
+                    _ when info.Devices.Count == 0 => Loc.T("Str_NetworkAdapters_BtNoPaired", "No paired devices."),
+                    _ => "",
+                };
+                TxtBtMessage.Visibility = TxtBtMessage.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+            }
+            catch (OperationCanceledException)
+            {
+                // superseded or the page closed
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+            {
+                Log.Info($"Bluetooth section: {ex.Message}");
+                TxtBtMessage.Text = Loc.T("Str_NetworkAdapters_BtUnavailable", "Windows did not answer about Bluetooth (the Bluetooth service may be stopped).");
+                TxtBtMessage.Visibility = Visibility.Visible;
+            }
+            finally
+            {
+                if (ReferenceEquals(_btCts, cts)) _btCts = null;
+                cts.Dispose();
+            }
         }
 
         private AdapterInfo? SelectedAdapter => AdapterList.SelectedItem as AdapterInfo;

@@ -1,6 +1,6 @@
 # Smart Tools
 
-A Windows desktop app with **112 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
+A Windows desktop app with **115 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
 
 ## Highlights
 
@@ -24,15 +24,15 @@ A Windows desktop app with **112 everyday tools** in one place: manage and clean
 - **Colors** (5): Color Picker, Screen Color Picker, Color Wheel, Palette Extractor, Contrast Checker
 - **Storage** (6): Drive Health, Disk Space Analyzer, Large File Finder, Junk File Cleaner, Disk Speed Test, Empty Folder Cleaner
 - **Performance** (3): System Monitor, Hardware Sensors, Process Killer
-- **System** (5): Startup Apps, Services, Environment Variables, Event Log Explorer, System Snapshot
+- **System** (6): Startup Apps, Services, Environment Variables, Event Log Explorer, System Snapshot, My IP & Adapters
 - **Hardware Tests** (8): Audio Output Test, Game Controller Test, Monitor Test, Monitor HDR & Color Depth, Keyboard & Mouse Test, Microphone Test, Webcam Test, Battery Health
 - **Security** (6): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator, Image Metadata Cleaner
-- **Network** (11): My IP & Adapters, Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed
+- **Network** (10): Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed
 - **Developer** (9): API Tester, Regex Tester, JWT Decoder, JSON / YAML / XML Formatter, Log Viewer, Code Toolkit, MD & HTML Editor, Database Migrator, Base64 & URL Encoder
 - **Calculators** (3): Subnet Calculator, Unit & Currency Converter, Date & Time Toolkit
 - **Generators** (5): File Generator, Barcode Generator, QR Code Generator, Mock Data Generator, ID & Lorem Generator
-- **Utilities** (5): Notes, Clipboard History, Screen OCR, Translate, Timer & Stopwatch
-- **Pixel & Sprites** (4): Pixel Art Editor, Sprite Sheet Packer, Texture Pack Builder, Image to Pixel Art
+- **Utilities** (6): Notes, Clipboard History, Screen OCR, Translate, Timer & Stopwatch, Send to Phone
+- **Art** (5): Pixel Art Editor, Sprite Sheet Packer, Texture Pack Builder, Image to Pixel Art, ASCII Art Maker
 
 The full list, with what each tool does and its id, is in [`Smart Tools.WPF/PROJECT_DOCUMENTATION.md`](Smart%20Tools.WPF/PROJECT_DOCUMENTATION.md).
 
