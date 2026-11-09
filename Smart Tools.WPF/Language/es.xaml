@@ -139,7 +139,7 @@
         Archivos/Carpeta). Todo lo que realmente se reutiliza en tres o
         más vistas debería vivir aquí en su lugar.
     -->
-    <system:String x:Key="Str_Common_OptionsHeader">OPCIONES</system:String>
+    <system:String x:Key="Str_Common_OptionsHeader">Opciones</system:String>
     <system:String x:Key="Str_Common_ScopeFiles">Archivos</system:String>
     <system:String x:Key="Str_Common_ScopeFolder">Carpeta</system:String>
     <system:String x:Key="Str_Common_AddFolderEllipsis">Agregar Carpeta...</system:String>
@@ -829,17 +829,17 @@
     <!--  ============ NETWORK TOOLS ============  -->
     <system:String x:Key="Str_Network_Title">Herramientas de Red</system:String>
     <system:String x:Key="Str_Network_Subtitle">Haz ping a hosts, escanea puertos, abre sockets TCP/UDP sin procesar y revisa información de IP.</system:String>
-    <system:String x:Key="Str_Network_PingHeader">PING</system:String>
+    <system:String x:Key="Str_Network_PingHeader">Ping</system:String>
     <system:String x:Key="Str_Network_PingHostTooltip">Host o dirección IP a la cual hacer ping</system:String>
     <system:String x:Key="Str_Network_PingButton">Ping</system:String>
     <system:String x:Key="Str_Network_PingButtonTooltip">Envía 4 pings y muestra los tiempos de ida y vuelta</system:String>
-    <system:String x:Key="Str_Network_PortScannerHeader">ESCÁNER DE PUERTOS</system:String>
+    <system:String x:Key="Str_Network_PortScannerHeader">Escáner de puertos</system:String>
     <system:String x:Key="Str_Network_ScanHostTooltip">Host o dirección IP a escanear</system:String>
     <system:String x:Key="Str_Network_FirstPortTooltip">Primer puerto</system:String>
     <system:String x:Key="Str_Network_LastPortTooltip">Último puerto</system:String>
     <system:String x:Key="Str_Network_ScanButton">Escanear</system:String>
     <system:String x:Key="Str_Network_ScanButtonTooltip">Escanea el rango de puertos dado (máx. 1000 puertos por escaneo)</system:String>
-    <system:String x:Key="Str_Network_SocketClientHeader">CLIENTE TCP / UDP</system:String>
+    <system:String x:Key="Str_Network_SocketClientHeader">Cliente TCP / UDP</system:String>
     <system:String x:Key="Str_Network_TcpTooltip">Orientado a conexión - úsalo para la mayoría de servicios (HTTP, servidores, etc.)</system:String>
     <system:String x:Key="Str_Network_UdpTooltip">Sin conexión - envía datagramas sin negociación previa</system:String>
     <system:String x:Key="Str_Network_TargetHostTooltip">Host de destino</system:String>
@@ -855,20 +855,20 @@
     <system:String x:Key="Str_Network_AppendCrlfTooltip">Agrega un retorno de carro/salto de línea al final de lo que envías</system:String>
     <system:String x:Key="Str_Network_SendAsHex">Enviar como HEX</system:String>
     <system:String x:Key="Str_Network_SendAsHexTooltip">Escribe pares de bytes separados por espacios, p. ej. 41 42 0D 0A</system:String>
-    <system:String x:Key="Str_Network_IpInfoHeader">INFO DE IP</system:String>
+    <system:String x:Key="Str_Network_IpInfoHeader">Info de IP</system:String>
     <system:String x:Key="Str_Network_Refresh">Actualizar</system:String>
     <system:String x:Key="Str_Common_Refresh">Actualizar</system:String>
     <system:String x:Key="Str_Network_RefreshTooltip">Consulta tu nombre de host, IP(s) local(es) e IP pública</system:String>
     <system:String x:Key="Str_Network_HostnameLabel">Nombre de Host</system:String>
     <system:String x:Key="Str_Network_LocalIpsLabel">IP(s) Local(es)</system:String>
     <system:String x:Key="Str_Network_PublicIpLabel">IP Pública</system:String>
-    <system:String x:Key="Str_Network_ConnectionStatusHeader">ESTADO DE CONEXIÓN</system:String>
+    <system:String x:Key="Str_Network_ConnectionStatusHeader">Estado de conexión</system:String>
     <system:String x:Key="Str_Network_Disconnected">Desconectado</system:String>
     <system:String x:Key="Str_Network_ConsoleTitle">Consola de Red</system:String>
     <system:String x:Key="Str_Network_ClearConsoleTooltip">Borra la salida de la consola</system:String>
     <system:String x:Key="Str_Network_ClearConsole">Vaciar</system:String>
     <system:String x:Key="Str_Network_ConsoleReady">Listo.</system:String>
-    <system:String x:Key="Str_Network_ConsoleLabel">CONSOLA</system:String>
+    <system:String x:Key="Str_Network_ConsoleLabel">Consola</system:String>
     <system:String x:Key="Str_Network_ConsoleStateTooltip">Estado actual de la conexión TCP/UDP</system:String>
     <system:String x:Key="Str_Network_LastActivityTooltip">Hora de la entrada más reciente de la consola</system:String>
     <system:String x:Key="Str_Network_NoActivityYet">Aún sin actividad</system:String>
@@ -1529,12 +1529,12 @@
     <!--  ============ DEVICE SCANNER ============  -->
     <system:String x:Key="Str_DeviceScan_Title">Escáner de Dispositivos de Red</system:String>
     <system:String x:Key="Str_DeviceScan_Subtitle">Descubre dispositivos en tu red local con un barrido de ping y búsqueda ARP.</system:String>
-    <system:String x:Key="Str_DeviceScan_SettingsHeader">CONFIGURACIÓN DE ESCANEO</system:String>
+    <system:String x:Key="Str_DeviceScan_SettingsHeader">Configuración de escaneo</system:String>
     <system:String x:Key="Str_DeviceScan_TimeoutLabel">Tiempo de Espera (ms)</system:String>
     <system:String x:Key="Str_DeviceScan_TimeoutTooltip">Cuánto esperar una respuesta de cada dirección antes de darse por vencido</system:String>
     <system:String x:Key="Str_DeviceScan_ConcurrencyLabel">Concurrencia Máxima</system:String>
     <system:String x:Key="Str_DeviceScan_ConcurrencyTooltip">Cuántas direcciones hacer ping al mismo tiempo - más alto es más rápido pero más ruidoso</system:String>
-    <system:String x:Key="Str_DeviceScan_SubnetHeader">SUBRED</system:String>
+    <system:String x:Key="Str_DeviceScan_SubnetHeader">Subred</system:String>
     <system:String x:Key="Str_DeviceScan_OverrideSubnet">Anular subred detectada</system:String>
     <system:String x:Key="Str_DeviceScan_OverrideSubnetTooltip">Por defecto el escáner detecta automáticamente tu subred desde el adaptador de red activo</system:String>
     <system:String x:Key="Str_DeviceScan_SubnetPrefixLabel">Prefijo de Subred</system:String>
@@ -2020,14 +2020,14 @@
     <system:String x:Key="Str_NetSpeed_StatusComplete">Prueba completada</system:String>
     <system:String x:Key="Str_NetSpeed_StatusErrorFormat">La prueba falló: {0}</system:String>
     <system:String x:Key="Str_NetSpeed_ErrorMessageFormat">No se pudo completar la prueba de velocidad: {0}</system:String>
-    <system:String x:Key="Str_NetSpeed_ServerHeader">SERVIDOR DE PRUEBA</system:String>
+    <system:String x:Key="Str_NetSpeed_ServerHeader">Servidor de prueba</system:String>
     <system:String x:Key="Str_NetSpeed_ServerTooltip">Servidor usado para la prueba de ping, descarga y subida</system:String>
-    <system:String x:Key="Str_NetSpeed_TestSizeHeader">TAMAÑO DE PRUEBA</system:String>
+    <system:String x:Key="Str_NetSpeed_TestSizeHeader">Tamaño de prueba</system:String>
     <system:String x:Key="Str_NetSpeed_DownloadSizeLabel">Descarga</system:String>
     <system:String x:Key="Str_NetSpeed_DownloadSizeTooltip">Cantidad de datos descargados durante la prueba de descarga - un tamaño mayor da una lectura más precisa en conexiones rápidas</system:String>
     <system:String x:Key="Str_NetSpeed_UploadSizeLabel">Subida</system:String>
     <system:String x:Key="Str_NetSpeed_UploadSizeTooltip">Cantidad de datos subidos durante la prueba de subida</system:String>
-    <system:String x:Key="Str_NetSpeed_HistoryHeader">HISTORIAL</system:String>
+    <system:String x:Key="Str_NetSpeed_HistoryHeader">Historial</system:String>
     <system:String x:Key="Str_NetSpeed_HistoryTooltip">Resultados de pruebas anteriores ejecutadas en esta sesión</system:String>
     <system:String x:Key="Str_NetSpeed_HistoryEmptyState">Aún no se han ejecutado pruebas</system:String>
     <system:String x:Key="Str_NetSpeed_ClearHistoryTooltip">Borra el historial de pruebas</system:String>
@@ -7571,14 +7571,14 @@
     <system:String x:Key="Str_Conv_CategoryHeader">CATEGORÍA</system:String>
     <system:String x:Key="Str_Conv_CategoryNote">Elige qué quieres convertir.</system:String>
     <system:String x:Key="Str_Conv_RatesHeader">TIPOS DE CAMBIO</system:String>
-    <system:String x:Key="Str_Dns_ToolHeader">HERRAMIENTA</system:String>
+    <system:String x:Key="Str_Dns_ToolHeader">Herramienta</system:String>
     <system:String x:Key="Str_Dns_Hint_Dns">Pide a un servidor DNS los registros de un nombre: direcciones, servidores de correo y más.</system:String>
     <system:String x:Key="Str_Dns_Hint_Whois">Mira quién registró un dominio o es dueño de una dirección IP, y cuándo vence.</system:String>
     <system:String x:Key="Str_Dns_Hint_Trace">Sigue el camino hasta un host, un router a la vez.</system:String>
-    <system:String x:Key="Str_Dns_DnsOptions">AJUSTES DE DNS</system:String>
+    <system:String x:Key="Str_Dns_DnsOptions">Ajustes de DNS</system:String>
     <system:String x:Key="Str_Dns_RecordType">Tipo de registro</system:String>
     <system:String x:Key="Str_Dns_ServerNote">La consulta va directo a este servidor, así que puedes comparar respuestas entre servidores.</system:String>
-    <system:String x:Key="Str_Dns_TraceOptions">AJUSTES DEL RASTREO</system:String>
+    <system:String x:Key="Str_Dns_TraceOptions">Ajustes del rastreo</system:String>
     <system:String x:Key="Str_Dns_TraceNote">Cada salto se prueba tres veces. Un * significa que un router no respondió, algo común y que no es un problema.</system:String>
     <system:String x:Key="Str_TextDiff_ShortcutsHint">F8 / Mayús+F8 cambio siguiente / anterior</system:String>
     <system:String x:Key="Str_Conv_UpdateNow">Actualizar ahora</system:String>
@@ -8660,6 +8660,19 @@
     <system:String x:Key="Str_Connections_ScopeOutside">Exterior</system:String>
     <system:String x:Key="Str_Connections_ScopeLocal">Local</system:String>
     <system:String x:Key="Str_Connections_ScopeAll">Todas</system:String>
+    <system:String x:Key="Str_Connections_DetailsHeader">Detalles</system:String>
+    <system:String x:Key="Str_Connections_ExportHeader">Exportar</system:String>
+    <system:String x:Key="Str_NetWidget_WidgetHeader">Widget</system:String>
+    <system:String x:Key="Str_NetWidget_DataHeader">Datos</system:String>
+    <system:String x:Key="Str_NetWidget_LookHeader">Aspecto</system:String>
+    <system:String x:Key="Str_IconMaker_PicturesHeader">Imágenes</system:String>
+    <system:String x:Key="Str_IconMaker_RemovePicture">Quitar de la lista</system:String>
+    <system:String x:Key="Str_IconMaker_PrevPicture">Imagen anterior</system:String>
+    <system:String x:Key="Str_IconMaker_NextPicture">Imagen siguiente</system:String>
+    <system:String x:Key="Str_IconMaker_SaveAll">Guardar todos .ico</system:String>
+    <system:String x:Key="Str_IconMaker_SaveAllTip">Guarda un .ico por cada imagen de la lista, en una carpeta que elijas. Nunca sobrescribe archivos existentes.</system:String>
+    <system:String x:Key="Str_IconMaker_MsgSavedAll">Se guardaron {0} iconos en {1}</system:String>
+    <system:String x:Key="Str_IconMaker_MsgChooseAllFolder">Elige dónde guardar los iconos</system:String>
     <system:String x:Key="Str_Connections_Show">Mostrar</system:String>
     <system:String x:Key="Str_Connections_HideListening">Ocultar puertos en escucha</system:String>
     <system:String x:Key="Str_Connections_HideListeningTip">Oculta los puertos que una app ha abierto y espera, sin nadie conectado.</system:String>

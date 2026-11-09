@@ -223,9 +223,11 @@
 
         <!--  Options (shared ToolSidebar: on the left and collapsible like the other tools)  -->
         <controls:ToolSidebar Grid.Column="0">
-            <StackPanel>
-                    <TextBlock Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Connections_Show}" />
-                    <UniformGrid ctl:Tour.Key="Str_Tour_Connections_Show" ctl:Tour.Order="4" Margin="0,4,0,0" Columns="3">
+<StackPanel>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_Connections_Show}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FilterVariant}" />
+<UniformGrid ctl:Tour.Key="Str_Tour_Connections_Show" ctl:Tour.Order="4" Margin="0,0,0,0" Columns="3">
                         <RadioButton
                             x:Name="RadioOutside"
                             Margin="0,0,3,0"
@@ -251,27 +253,37 @@
                             Style="{StaticResource ModeToggleButtonStyle}"
                             Tag="All" />
                     </UniformGrid>
-
-                    <CheckBox
+<CheckBox
                         x:Name="ChkHideListening"
-                        Margin="0,14,0,0"
+                        Margin="0,12,0,0"
                         Click="ChkHideListening_Click"
                         Content="{DynamicResource Str_Connections_HideListening}"
                         ToolTip="{DynamicResource Str_Connections_HideListeningTip}" />
-
-                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Connections_Refresh}" />
-                    <ComboBox x:Name="CmbRefresh" SelectionChanged="CmbRefresh_SelectionChanged" />
-
-                    <CheckBox
+</StackPanel>
+</Border>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_Connections_Refresh}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Refresh}" />
+<ComboBox x:Name="CmbRefresh" SelectionChanged="CmbRefresh_SelectionChanged" />
+</StackPanel>
+</Border>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_Connections_DetailsHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Magnify}" />
+<CheckBox
                         ctl:Tour.Key="Str_Tour_Connections_LookUp" ctl:Tour.Order="5" 
                         x:Name="ChkLookUp"
-                        Margin="0,14,0,0"
+                        Margin="0,0,0,0"
                         Click="ChkLookUp_Click"
                         Content="{DynamicResource Str_Connections_LookUp}"
                         ToolTip="{DynamicResource Str_Connections_LookUpTip}" />
-
-                    <Button
-                        Margin="0,16,0,0"
+</StackPanel>
+</Border>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_Connections_ExportHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FileExportOutline}" />
+<Button
+                        Margin="0,0,0,0"
                         HorizontalAlignment="Left"
                         ctl:Tour.Key="Str_Tour_Connections_Export" ctl:Tour.Order="6" 
                         Click="BtnExport_Click"
@@ -296,13 +308,14 @@
                                 Text="{DynamicResource Str_Connections_Export}" />
                         </Grid>
                     </Button>
-
-                    <TextBlock
-                        Margin="0,16,0,0"
+</StackPanel>
+</Border>
+<TextBlock
+                        Margin="2,2,2,0"
                         Foreground="{DynamicResource TextSecondary}"
                         Text="{DynamicResource Str_Connections_Hint}"
                         TextWrapping="Wrap" />
-            </StackPanel>
-        </controls:ToolSidebar>
+</StackPanel>
+</controls:ToolSidebar>
     </Grid>
 </UserControl>

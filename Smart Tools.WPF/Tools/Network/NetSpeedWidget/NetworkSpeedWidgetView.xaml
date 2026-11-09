@@ -105,8 +105,11 @@
 
         <!--  Options (shared ToolSidebar: on the left, collapsible)  -->
         <controls:ToolSidebar Grid.Column="0">
-                <StackPanel>
-                    <Button
+<StackPanel>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_NetWidget_WidgetHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Widgets}" />
+<Button
                         ctl:Tour.Key="Str_Tour_NetWidget_Show"
                         ctl:Tour.Order="3"
                         x:Name="BtnToggleWidget"
@@ -114,28 +117,38 @@
                         Click="BtnToggleWidget_Click"
                         Content="{DynamicResource Str_NetWidget_Show}"
                         Style="{StaticResource PrimaryButtonStyle}" />
-
-                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Adapter}" />
-                    <ComboBox ctl:Tour.Key="Str_Tour_NetWidget_Adapter" ctl:Tour.Order="2" x:Name="CmbAdapter" SelectionChanged="CmbAdapter_SelectionChanged" />
-
-                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Units}" />
-                    <UniformGrid Columns="2">
+</StackPanel>
+</Border>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_NetWidget_Adapter}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LanConnect}" />
+<ComboBox ctl:Tour.Key="Str_Tour_NetWidget_Adapter" ctl:Tour.Order="2" x:Name="CmbAdapter" SelectionChanged="CmbAdapter_SelectionChanged" />
+</StackPanel>
+</Border>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_NetWidget_DataHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SpeedometerMedium}" />
+<TextBlock Margin="0,0,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Units}" />
+<UniformGrid Columns="2">
                         <RadioButton x:Name="RadioBytes" Margin="0,0,3,0" Checked="Option_Changed" Content="{DynamicResource Str_NetWidget_Bytes}" GroupName="NetWidgetUnits" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
                         <RadioButton x:Name="RadioBits" Margin="3,0,0,0" Checked="Option_Changed" Content="{DynamicResource Str_NetWidget_Bits}" GroupName="NetWidgetUnits" Style="{StaticResource ModeToggleButtonStyle}" />
                     </UniformGrid>
-
-                    <TextBlock Margin="0,14,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Refresh}" />
-                    <ComboBox x:Name="CmbRefresh" SelectionChanged="Option_Changed" />
-
-                    <TextBlock Margin="0,14,0,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Opacity}" />
-                    <Slider x:Name="SliderOpacity" Margin="0,4,0,0" Maximum="1" Minimum="0.3" SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05" ValueChanged="SliderOpacity_ValueChanged" Value="0.9" />
-
-                    <CheckBox x:Name="ChkMini" Margin="0,14,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_Mini}" />
-                    <CheckBox x:Name="ChkMaker" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ShowMaker}" IsChecked="True" />
-                    <CheckBox x:Name="ChkClickThrough" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ClickThrough}" />
-
-                    <TextBlock Margin="0,16,0,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Hint}" TextWrapping="Wrap" />
-                </StackPanel>
-        </controls:ToolSidebar>
+<TextBlock Margin="0,12,0,4" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Refresh}" />
+<ComboBox x:Name="CmbRefresh" SelectionChanged="Option_Changed" />
+</StackPanel>
+</Border>
+<Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+<StackPanel>
+<ContentControl Content="{DynamicResource Str_NetWidget_LookHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
+<TextBlock Margin="0,0,0,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Opacity}" />
+<Slider x:Name="SliderOpacity" Margin="0,8,0,0" Maximum="1" Minimum="0.3" SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05" ValueChanged="SliderOpacity_ValueChanged" Value="0.9" />
+<CheckBox x:Name="ChkMini" Margin="0,0,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_Mini}" />
+<CheckBox x:Name="ChkMaker" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ShowMaker}" IsChecked="True" />
+<CheckBox x:Name="ChkClickThrough" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ClickThrough}" />
+</StackPanel>
+</Border>
+<TextBlock Margin="2,2,2,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Hint}" TextWrapping="Wrap" />
+</StackPanel>
+</controls:ToolSidebar>
     </Grid>
 </UserControl>

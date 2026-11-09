@@ -1,4 +1,7 @@
 using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controls;
+using Smart_Tools.WPF.Models;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -22,6 +25,23 @@ namespace Smart_Tools.WPF.Views
         /// <summary>One size in the real-size column. <c>Box</c> is the picture's frame (the size plus a 4 px margin each side).</summary>
         public sealed record IconPreview(int Size, int Box, string Label, string Note, BitmapSource Picture, bool IsSelected);
 
+        /// <summary>One picture in the list. Only the open one is decoded.</summary>
+        public sealed class IconSource : INotifyPropertyChanged
+        {
+            private bool _isCurrent;
+            public event PropertyChangedEventHandler? PropertyChanged;
+            public string Path { get; init; } = "";
+            public string Name => System.IO.Path.GetFileName(Path);
+            public bool IsCurrent
+            {
+                get => _isCurrent;
+                set { if (_isCurrent == value) return; _isCurrent = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCurrent))); }
+            }
+        }
+
+        private readonly BulkObservableCollection<IconSource> _files = new();
+        private int _loadToken;
+
         private readonly List<(int Size, BitmapSource Picture)> _pictures = new();
         private int _selectedSize;
 
@@ -43,6 +63,8 @@ namespace Smart_Tools.WPF.Views
             _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SaveSettings(); };
             _doneTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _doneTimer.Tick += (_, _) => { _doneTimer.Stop(); DonePill.Visibility = Visibility.Collapsed; };
+            InputCard.ItemsSource = _files;
+            InputCard.FileFilterProvider = () => Loc.T("Str_IconMaker_MsgPictureFilter", "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.webp|All files|*.*");
             _viewConstructed = true;
         }
 
@@ -85,6 +107,7 @@ namespace Smart_Tools.WPF.Views
             if (!_viewConstructed || _applying) return;
             UpdateHint();
             BuildPreview();
+            UpdateNav();
             _saveTimer.Stop();
             _saveTimer.Start();
         }
@@ -93,15 +116,7 @@ namespace Smart_Tools.WPF.Views
         //  Picture in
         // =================================================================
 
-        private void BtnOpen_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Title = Loc.T("Str_IconMaker_MsgChoosePicture", "Choose a picture"),
-                Filter = Loc.T("Str_IconMaker_MsgPictureFilter", "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.webp|All files|*.*"),
-            };
-            if (dialog.ShowDialog(Window.GetWindow(this)) == true) LoadPicture(dialog.FileName);
-        }
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e) => AddPaths(e.Paths);
 
         private void Root_DragOver(object sender, DragEventArgs e)
         {
@@ -113,35 +128,164 @@ namespace Smart_Tools.WPF.Views
         private void Root_Drop(object sender, DragEventArgs e)
         {
             if (e.Data.GetData(DataFormats.FileDrop) is not string[] { Length: > 0 } files) return;
-            string? file = files.FirstOrDefault(f => File.Exists(f) && Extensions.Contains(Path.GetExtension(f).ToLowerInvariant()));
-            if (file == null) { ShowStatus(Loc.T("Str_IconMaker_MsgNotPicture", "That isn't a picture I can open."), error: true); return; }
-            LoadPicture(file);
+            AddPaths(files);
         }
 
-        private async void LoadPicture(string path)
+        /// <summary>Pictures and folders (top level) join the list; the first picture added opens when nothing is open yet.</summary>
+        private void AddPaths(IEnumerable<string> paths)
         {
+            var found = new List<string>();
+            foreach (string path in paths)
+            {
+                try
+                {
+                    if (File.Exists(path)) { if (Extensions.Contains(Path.GetExtension(path).ToLowerInvariant())) found.Add(path); }
+                    else if (Directory.Exists(path))
+                    {
+                        var here = Directory.EnumerateFiles(path).Where(f => Extensions.Contains(Path.GetExtension(f).ToLowerInvariant())).ToList();
+                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        found.AddRange(here);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            }
+            if (found.Count == 0) { ShowStatus(Loc.T("Str_IconMaker_MsgNotPicture", "That isn't a picture I can open."), error: true); return; }
+
+            var known = new HashSet<string>(_files.Select(f => f.Path), StringComparer.OrdinalIgnoreCase);
+            var added = found.Where(known.Add).Select(f => new IconSource { Path = f }).ToList();
+            _files.AddRange(added);
+            InputCard.SetEmpty(_files.Count == 0);
+            bool single = found.Count == 1;
+            var target = single ? _files.First(f => string.Equals(f.Path, found[0], StringComparison.OrdinalIgnoreCase))
+                : _bgra == null ? added.FirstOrDefault() : null;
+            UpdateNav();
+            if (target != null) LoadPicture(target);
+        }
+
+        private void PictureRow_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: IconSource file }) LoadPicture(file);
+        }
+
+        private void BtnRemovePicture_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if ((sender as FrameworkElement)?.Tag is not IconSource file) return;
+            int index = _files.IndexOf(file);
+            bool wasCurrent = file.IsCurrent;
+            _files.Remove(file);
+            InputCard.SetEmpty(_files.Count == 0);
+            if (wasCurrent)
+            {
+                if (_files.Count > 0) LoadPicture(_files[Math.Min(index, _files.Count - 1)]);
+                else ClearPicture();
+            }
+            UpdateNav();
+        }
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            _files.Clear();
+            InputCard.SetEmpty(true);
+            ClearPicture();
+            UpdateNav();
+        }
+
+        private void BtnPrev_Click(object sender, RoutedEventArgs e) => Step(-1);
+
+        private void BtnNext_Click(object sender, RoutedEventArgs e) => Step(1);
+
+        private void Step(int delta)
+        {
+            if (_files.Count < 2) return;
+            int index = _files.ToList().FindIndex(f => f.IsCurrent);
+            int next = ((index < 0 ? 0 : index) + delta + _files.Count) % _files.Count;
+            LoadPicture(_files[next]);
+        }
+
+        private void UpdateNav()
+        {
+            int index = _files.ToList().FindIndex(f => f.IsCurrent);
+            PictureNav.Visibility = _files.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+            BtnAll.Visibility = _files.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+            BtnAll.IsEnabled = _files.Count > 1 && ChosenSizes().Count > 0;
+            TxtPictureCount.Text = $"{index + 1} / {_files.Count}";
+        }
+
+        private void ClearPicture()
+        {
+            _loadToken++;
+            _bgra = null;
+            HeroImage.Source = null;
+            HeroPlaceholder.Visibility = Visibility.Visible;
+            HeroName.Text = Loc.T("Str_IconMaker_NoPictureYet", "No picture yet");
+            HeroInfo.Text = Loc.T("Str_IconMaker_ChooseOrDropA", "Choose or drop a picture");
+            BuildPreview();
+        }
+
+        private async void LoadPicture(IconSource file)
+        {
+            int token = ++_loadToken;
+            string path = file.Path;
             var result = await Task.Run(() =>
             {
                 var bgra = SpritePackerManager.LoadBgra(path, out int w, out int h, out string problem);
                 return (bgra, w, h, problem);
             });
+            if (token != _loadToken) return;
             if (result.bgra == null)
             {
                 ShowStatus(result.problem == "ImageTooBig" ? Loc.T("Str_IconMaker_MsgTooBig", "That picture is too big to open.") : Loc.T("Str_IconMaker_MsgCantOpen", "That picture couldn't be opened."), error: true);
                 return;
             }
+            foreach (var f in _files) f.IsCurrent = ReferenceEquals(f, file);
             _bgra = result.bgra;
             _width = result.w;
             _height = result.h;
             _name = Path.GetFileNameWithoutExtension(path);
-            TxtFileName.Text = Path.GetFileName(path);
-            TxtSourceInfo.Text = Loc.F("Str_IconMaker_MsgSourceInfo", "{0} × {1} px", _width, _height) + (Math.Min(_width, _height) < 256 ? " - " + Loc.T("Str_IconMaker_MsgBiggerHint", "a bigger picture gives sharper large icons.") : "");
+            string info = Loc.F("Str_IconMaker_MsgSourceInfo", "{0} × {1} px", _width, _height) + (Math.Min(_width, _height) < 256 ? " - " + Loc.T("Str_IconMaker_MsgBiggerHint", "a bigger picture gives sharper large icons.") : "");
             StatusBanner.Visibility = Visibility.Collapsed;
             HeroImage.Source = SpritePackerManager.CreateBitmap(_bgra, _width, _height);
             HeroPlaceholder.Visibility = Visibility.Collapsed;
             HeroName.Text = Path.GetFileName(path);
-            HeroInfo.Text = TxtSourceInfo.Text;
+            HeroInfo.Text = info;
+            UpdateNav();
             BuildPreview();
+        }
+
+        /// <summary>One .ico per picture in the list, into a folder the user picks; each is loaded, written and released in turn.</summary>
+        private async void BtnAll_Click(object sender, RoutedEventArgs e)
+        {
+            var sizes = ChosenSizes();
+            if (_files.Count == 0 || sizes.Count == 0) return;
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Loc.T("Str_IconMaker_MsgChooseAllFolder", "Choose where to save the icons") };
+            if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+            string folder = dialog.FolderName;
+            var fit = Fit;
+            var paths = _files.Select(f => f.Path).ToList();
+            BtnAll.IsEnabled = false;
+            try
+            {
+                int saved = await Task.Run(() =>
+                {
+                    int n = 0;
+                    foreach (string path in paths)
+                    {
+                        var bgra = SpritePackerManager.LoadBgra(path, out int w, out int h, out _);
+                        if (bgra == null) continue;
+                        string target = SafeFileOps.UniquePath(Path.Combine(folder, Path.GetFileNameWithoutExtension(path) + ".ico"));
+                        AtomicFile.WriteAllBytes(target, IconMakerManager.BuildIcoFrom(bgra, w, h, sizes, fit));
+                        n++;
+                    }
+                    return n;
+                });
+                ShowDone(Loc.F("Str_IconMaker_MsgSavedAll", "Saved {0} icons in {1}", saved, Path.GetFileName(Path.TrimEndingDirectorySeparator(folder))));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                ShowStatus(Loc.F("Str_IconMaker_MsgCouldntSave", "Couldn't save: {0}", ex.Message), error: true);
+            }
+            finally { UpdateNav(); }
         }
 
         // =================================================================

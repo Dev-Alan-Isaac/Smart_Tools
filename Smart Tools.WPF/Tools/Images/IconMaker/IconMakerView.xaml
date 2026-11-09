@@ -22,6 +22,28 @@
             <Setter Property="Margin" Value="2,6,0,0" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+        <DataTemplate x:Key="PictureItemTemplate">
+            <Border x:Name="Row" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Cursor="Hand" MouseLeftButtonUp="PictureRow_MouseLeftButtonUp" ToolTip="{Binding Path}">
+                <Grid MinWidth="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="0" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Width="18" Height="18" Margin="4,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SidebarTextMuted}" Kind="ImageOutline" />
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemovePicture_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_IconMaker_RemovePicture}">
+                        <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
+                    </Button>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="Row" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
@@ -35,18 +57,16 @@
             <!--  ================= OPTIONS SIDEBAR =================  -->
             <controls:ToolSidebar>
                 <StackPanel x:Name="SidebarStack">
-                    <Border ctl:Tour.Key="Str_Tour_IconMaker_Picture" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
-                        <StackPanel>
-                            <ContentControl Content="{DynamicResource Str_BulkResize_ColName}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
-                            <Button Margin="0,8,0,0" MinHeight="36" HorizontalContentAlignment="Left" Click="BtnOpen_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="FolderOpenOutline" />
-                                    <TextBlock x:Name="TxtFileName" MaxWidth="170" Text="{DynamicResource Str_IconMaker_ChooseAPicture}" TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </Button>
-                            <TextBlock x:Name="TxtSourceInfo" Style="{StaticResource ImHint}" Text="{DynamicResource Str_IconMaker_OrDropAPicture}" />
-                        </StackPanel>
-                    </Border>
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
+                        ctl:Tour.Key="Str_Tour_IconMaker_Picture"
+                        ctl:Tour.Order="1"
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="{DynamicResource Str_IconMaker_PicturesHeader}"
+                        HeaderIcon="ImageMultipleOutline"
+                        ItemTemplate="{StaticResource PictureItemTemplate}"
+                        PathsAdded="InputCard_PathsAdded"
+                        ShowSubfolders="False" />
 
                     <Border ctl:Tour.Key="Str_Tour_IconMaker_Shape" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
@@ -92,6 +112,21 @@
                             <Border x:Name="DonePill" Margin="0,0,10,0" VerticalAlignment="Center" Background="{DynamicResource StatusSuccessBg}" Style="{StaticResource IconStatusPillStyle}" Visibility="Collapsed">
                                 <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                             </Border>
+                            <StackPanel x:Name="PictureNav" Margin="0,0,12,0" VerticalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
+                                <Button x:Name="BtnPrev" Width="32" Height="32" Click="BtnPrev_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_PrevPicture}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ChevronLeft" />
+                                </Button>
+                                <TextBlock x:Name="TxtPictureCount" MinWidth="44" Margin="4,0" VerticalAlignment="Center" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextAlignment="Center" />
+                                <Button x:Name="BtnNext" Width="32" Height="32" Click="BtnNext_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_NextPicture}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ChevronRight" />
+                                </Button>
+                            </StackPanel>
+                            <Button x:Name="BtnAll" MinHeight="36" Margin="0,0,8,0" Click="BtnAll_Click" IsEnabled="False" Visibility="Collapsed" ToolTip="{DynamicResource Str_IconMaker_SaveAllTip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="ContentSaveAllOutline" />
+                                    <TextBlock Text="{DynamicResource Str_IconMaker_SaveAll}" />
+                                </StackPanel>
+                            </Button>
                             <Button x:Name="BtnSet" MinHeight="36" Margin="0,0,8,0" Click="BtnSet_Click" IsEnabled="False" ToolTip="{DynamicResource Str_IconMaker_SaveFaviconIcoThe}">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="Web" />
