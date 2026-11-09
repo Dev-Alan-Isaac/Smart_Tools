@@ -1,0 +1,238 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.MidiPlayAlongView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded"
+    PreviewKeyDown="Root_PreviewKeyDown"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/MidiPlayAlongManager.cs (reads the .mid per track, plays it with a click, mutes, tempo, loop). UI only here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="PaLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Margin" Value="0,10,0,4" />
+        </Style>
+        <Style x:Key="PaHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,6,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <DataTemplate x:Key="SongFileTemplate">
+            <Border x:Name="Row" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="6" Cursor="Hand" MouseLeftButtonUp="SongRow_MouseLeftButtonUp" ToolTip="{Binding Path}">
+                <Grid MinWidth="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="0" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Width="18" Height="18" Margin="4,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource SidebarTextMuted}" Kind="MusicNote" />
+                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource SidebarText}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <Button Grid.Column="2" Width="24" Height="24" Margin="6,0,0,0" VerticalAlignment="Center" Click="BtnRemoveSong_Click" Style="{StaticResource IconButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_PlayAlong_RemoveFile}">
+                        <materialDesign:PackIcon Width="13" Height="13" Kind="Close" />
+                    </Button>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                    <Setter TargetName="Row" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TrackTemplate">
+            <Border x:Name="Row" Margin="0,0,0,8" Padding="14,10" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="0" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="36" Height="36" Margin="0,0,12,0" Background="{DynamicResource AccentGradient}" CornerRadius="10">
+                        <materialDesign:PackIcon Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="MusicClefTreble" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Margin="0,2,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Instrument}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <TextBlock x:Name="Counts" Grid.Column="2" Margin="12,0" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding NoteCount, StringFormat={}{0:N0} ♪}" />
+                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Orientation="Horizontal">
+                        <CheckBox Margin="0,0,6,0" Click="Mute_Click" Content="{DynamicResource Str_PlayAlong_Mute}" IsChecked="{Binding IsMuted, Mode=TwoWay}" Style="{StaticResource ToggleChipCheckBoxStyle}" ToolTip="{DynamicResource Str_PlayAlong_MuteTip}" />
+                        <CheckBox Click="Mute_Click" Content="{DynamicResource Str_PlayAlong_Solo}" IsChecked="{Binding IsSolo, Mode=TwoWay}" Style="{StaticResource ToggleChipCheckBoxStyle}" ToolTip="{DynamicResource Str_PlayAlong_SoloTip}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsMuted}" Value="True">
+                    <Setter TargetName="Row" Property="Opacity" Value="0.5" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
+                        ctl:Tour.Key="Str_Tour_PlayAlong_Files"
+                        ctl:Tour.Order="1"
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="{DynamicResource Str_PlayAlong_FilesHeader}"
+                        HeaderIcon="FileMusicOutline"
+                        ItemTemplate="{StaticResource SongFileTemplate}"
+                        PathsAdded="InputCard_PathsAdded"
+                        ShowSubfolders="False" />
+
+                    <Border ctl:Tour.Key="Str_Tour_PlayAlong_Output" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_PlayAlong_OutputHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Speaker}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox x:Name="CmbOutput" VerticalContentAlignment="Center" SelectionChanged="CmbOutput_SelectionChanged" Style="{StaticResource BareComboBox}" />
+                            </Border>
+                            <TextBlock x:Name="TxtOutputHint" Style="{StaticResource PaHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_PlayAlong_Click" ctl:Tour.Order="3" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_PlayAlong_ClickHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Metronome}" />
+                            <CheckBox x:Name="ChkClick" Click="Click_Changed" Content="{DynamicResource Str_PlayAlong_ClickOn}" IsChecked="True" />
+                            <TextBlock Style="{StaticResource PaLabel}" Text="{DynamicResource Str_TTS_Volume}" />
+                            <Slider x:Name="SliderClick" Maximum="127" Minimum="10" SmallChange="5" LargeChange="10" Value="100" ValueChanged="ClickVolume_Changed" />
+                            <TextBlock Style="{StaticResource PaLabel}" Text="{DynamicResource Str_PlayAlong_CountIn}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <ComboBox x:Name="CmbCountIn" VerticalContentAlignment="Center" SelectionChanged="CountIn_Changed" Style="{StaticResource BareComboBox}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_PlayAlong_Tempo" ctl:Tour.Order="4" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_PlayAlong_TempoHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SpeedometerSlow}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Slider x:Name="SliderTempo" IsMoveToPointEnabled="True" LargeChange="10" Maximum="150" Minimum="40" SmallChange="1" TickFrequency="10" Value="100" ValueChanged="Tempo_Changed" />
+                                <TextBlock x:Name="TxtTempo" Grid.Column="1" Width="48" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource SidebarText}" TextAlignment="Right" />
+                            </Grid>
+                            <TextBlock x:Name="TxtBpm" Style="{StaticResource PaHint}" />
+                            <Button Margin="0,8,0,0" HorizontalAlignment="Left" Click="BtnTempoReset_Click" Content="{DynamicResource Str_PlayAlong_TempoReset}" Style="{StaticResource NeutralIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_PlayAlong_Loop" ctl:Tour.Order="5" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_PlayAlong_LoopHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Repeat}" />
+                            <CheckBox x:Name="ChkLoop" Click="Loop_Changed" Content="{DynamicResource Str_PlayAlong_LoopOn}" />
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource PaLabel}" Margin="0,0,0,4" Text="{DynamicResource Str_PlayAlong_FromBar}" />
+                                    <TextBox x:Name="TxtFromBar" TextChanged="LoopBars_Changed" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Style="{StaticResource PaLabel}" Margin="0,0,0,4" Text="{DynamicResource Str_PlayAlong_ToBar}" />
+                                    <TextBox x:Name="TxtToBar" TextChanged="LoopBars_Changed" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Style="{StaticResource PaHint}" Text="{DynamicResource Str_PlayAlong_LoopHint}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Transport  -->
+                <Border ctl:Tour.Key="Str_Tour_PlayAlong_Transport" ctl:Tour.Order="6" Padding="16,14" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Left" Margin="0,0,16,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                <Button x:Name="BtnPlay" MinWidth="120" MinHeight="44" Margin="0,0,8,0" Click="BtnPlay_Click" IsEnabled="False" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon x:Name="IconPlay" Width="20" Height="20" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Play" />
+                                        <TextBlock x:Name="TxtPlay" VerticalAlignment="Center" Text="{DynamicResource Str_AudioReplayControl_Play}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnStop" MinHeight="44" Click="BtnStop_Click" IsEnabled="False" ToolTip="{DynamicResource Str_PlayAlong_Stop}">
+                                    <materialDesign:PackIcon Width="20" Height="20" Kind="Stop" />
+                                </Button>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtTime" DockPanel.Dock="Right" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0:00 / 0:00" />
+                            <Slider x:Name="SliderPosition" VerticalAlignment="Center" IsEnabled="False" IsMoveToPointEnabled="True" Maximum="1" Minimum="0" PreviewMouseLeftButtonDown="Position_Down" PreviewMouseLeftButtonUp="Position_Up" ValueChanged="Position_ValueChanged" />
+                        </DockPanel>
+                        <WrapPanel Margin="0,10,0,0">
+                            <Border x:Name="PillSong" Margin="0,0,8,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}">
+                                <TextBlock x:Name="TxtSongPill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                            </Border>
+                            <Border Margin="0,0,8,0" Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}">
+                                <TextBlock x:Name="TxtBarPill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="" />
+                            </Border>
+                            <Border Background="{DynamicResource RowBg}" Style="{StaticResource IconStatusPillStyle}">
+                                <TextBlock x:Name="TxtBpmPill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+                            </Border>
+                        </WrapPanel>
+                        <TextBlock x:Name="TxtStatus" Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <!--  Tracks  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel ctl:Tour.Key="Str_Tour_PlayAlong_Tracks" ctl:Tour.Order="7">
+                            <StackPanel x:Name="TrackTools" DockPanel.Dock="Right" Orientation="Horizontal" Visibility="Collapsed">
+                                <Button Margin="0,0,6,0" Click="BtnMuteAll_Click" Content="{DynamicResource Str_PlayAlong_MuteAll}" Style="{StaticResource NeutralIconButtonStyle}" />
+                                <Button Click="BtnUnmuteAll_Click" Content="{DynamicResource Str_PlayAlong_UnmuteAll}" Style="{StaticResource NeutralIconButtonStyle}" />
+                            </StackPanel>
+                            <ContentControl Content="{DynamicResource Str_PlayAlong_TracksHeader}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.MusicClefTreble}" />
+                        </DockPanel>
+                        <ScrollViewer Grid.Row="1" Margin="0,12,0,0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="TrackList" ItemTemplate="{StaticResource TrackTemplate}" />
+                        </ScrollViewer>
+                        <StackPanel x:Name="EmptyState" Grid.Row="1" MaxWidth="420" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MusicClefTreble}" />
+                            <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_PlayAlong_EmptyTitle}" />
+                            <TextBlock Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_PlayAlong_EmptyHint}" TextAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,6 +1,7 @@
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Brush = System.Windows.Media.Brush;
@@ -38,6 +39,52 @@ namespace Smart_Tools.WPF.Controls
         private Brush _pageBrush = Brushes.Black;
         private int _hoverX = -1, _hoverY = -1;
         private bool _dragging;
+        private ScrollViewer? _scroller;
+        private int _drawnFirst = -1, _drawnLast = -1;
+        private const int RowMargin = 30;
+
+        public AsciiGridControl()
+        {
+            Loaded += (_, _) =>
+            {
+                _scroller = FindScroller();
+                if (_scroller != null) _scroller.ScrollChanged += Scroller_ScrollChanged;
+            };
+            Unloaded += (_, _) =>
+            {
+                if (_scroller != null) _scroller.ScrollChanged -= Scroller_ScrollChanged;
+                _scroller = null;
+            };
+        }
+
+        private ScrollViewer? FindScroller()
+        {
+            DependencyObject? d = this;
+            while (d != null && d is not ScrollViewer) d = VisualTreeHelper.GetParent(d);
+            return d as ScrollViewer;
+        }
+
+        /// <summary>Rows that can be seen right now (control coordinates), so a huge grid draws only what is on screen.</summary>
+        private (int First, int Last) VisibleRows()
+        {
+            if (_grid == null) return (0, -1);
+            if (_scroller == null || CellHeight <= 0) return (0, _grid.Rows - 1);
+            try
+            {
+                var view = _scroller.TransformToDescendant(this).TransformBounds(new Rect(0, 0, _scroller.ViewportWidth, _scroller.ViewportHeight));
+                int first = Math.Max(0, (int)Math.Floor(view.Top / CellHeight));
+                int last = Math.Min(_grid.Rows - 1, (int)Math.Ceiling(view.Bottom / CellHeight));
+                return (first, last);
+            }
+            catch (InvalidOperationException) { return (0, _grid.Rows - 1); }
+        }
+
+        private void Scroller_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (_grid == null || (e.VerticalChange == 0 && e.ViewportHeightChange == 0 && e.ExtentHeightChange == 0)) return;
+            var (first, last) = VisibleRows();
+            if (first < _drawnFirst || last > _drawnLast) InvalidateVisual();
+        }
 
         /// <summary>When true the mouse reports cells (draw mode) and a cell outline follows it.</summary>
         public bool IsInteractive { get; set; }
@@ -82,7 +129,10 @@ namespace Smart_Tools.WPF.Controls
             if (_grid == null || _glyphs == null) return;
             double w = _grid.Cols * CellWidth, h = _grid.Rows * CellHeight;
             dc.DrawRectangle(_pageBrush, null, new Rect(0, 0, w, h));
-            for (int y = 0; y < _grid.Rows && y < _rows.Length; y++)
+            var (vFirst, vLast) = VisibleRows();
+            _drawnFirst = Math.Max(0, vFirst - RowMargin);
+            _drawnLast = Math.Min(_grid.Rows - 1, vLast + RowMargin);
+            for (int y = _drawnFirst; y <= _drawnLast && y < _rows.Length; y++)
             {
                 var row = _rows[y] ??= AsciiRender.RowDrawing(_grid, _glyphs, y, BaseEm, _defaultBrush, _brushes);
                 dc.DrawDrawing(row);

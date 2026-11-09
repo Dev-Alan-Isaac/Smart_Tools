@@ -250,6 +250,7 @@ namespace Smart_Tools.WPF.Views
                         string key = HistoryKey(p.Id, h);
                         if (!_history.TryGetValue(key, out var hist)) _history[key] = hist = new HardwareSensorsManager.History();
                         hist.Add(h.Raw ?? 0);
+                        _rec.Add(key, h.Raw ?? 0);
                     }
             }
 
@@ -317,6 +318,8 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
 
         /// <summary>Two headlines of one part can share a kind (the PC page has a CPU and a GPU load), so the label is part of the key.</summary>
+        private readonly PerfRecorder _rec = new();
+
         private static string HistoryKey(string partId, HardwareHeadline h) => partId + "|" + h.Kind + "|" + h.Label;
 
         // Tiles share the row width evenly: as many columns as fit at ~260px each.
@@ -477,15 +480,44 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
-        /// <summary>Dated name, and a taken name gets " (2)": a saved report never replaces another.</summary>
+        /// <summary>Every part with the readings kept since the page opened: one chart per kind of headline (temperatures together, loads together...).</summary>
+        private PerfReportData BuildPerfReport()
+        {
+            string[] palette = { PerfReportBuilder.Blue, PerfReportBuilder.Orange, PerfReportBuilder.Green, PerfReportBuilder.Red, "#8b5cf6", "#14b8a6" };
+            bool f = _settings.Fahrenheit;
+            var sections = new List<PerfSection>();
+            foreach (var part in _lastParts)
+            {
+                var rows = new List<PerfRow>();
+                foreach (var h in part.Headlines) rows.Add(new PerfRow(h.Label, h.ValueText));
+                foreach (var g in part.Groups)
+                    foreach (var r in g.Rows)
+                        rows.Add(new PerfRow(g.Title + " - " + r.Name, r.ValueText + (r.MinText != "–" || r.MaxText != "–" ? $"   ({r.MinText} - {r.MaxText})" : "")));
+
+                var charts = new List<PerfChart>();
+                foreach (var group in part.Headlines.Where(h => h.Raw.HasValue).GroupBy(h => h.Kind))
+                {
+                    var kind = group.Key;
+                    var series = group.Select((h, i) => new PerfSeries(h.Label, _rec.Get(HistoryKey(part.Id, h)).Select(v => kind == HardwareSensorKind.Temperature && f ? v * 9 / 5 + 32 : v).ToList(), palette[i % palette.Length])).ToList();
+                    charts.Add(new PerfChart(HardwareSensorsManager.PartTitle(part.Part) + " - " + group.First().Label,
+                        series, v => HardwareSensorsManager.FormatValue(kind, (float)(kind == HardwareSensorKind.Temperature && f ? (v - 32) * 5 / 9 : v), f),
+                        kind == HardwareSensorKind.Load ? 100 : null));
+                }
+                string name = part.Part == HardwarePartKind.Pc ? Loc.T("Str_HardwareSensors_ThisPc", part.Name) : part.Name;
+                sections.Add(new PerfSection(name, HardwareSensorsManager.PartTitle(part.Part), rows, charts));
+            }
+            return new PerfReportData(Loc.T("Str_HardwareSensors_ReportTitle", "Hardware sensors"), DateTime.Now, Math.Max(0.25, _settings.RefreshMs / 1000.0),
+                Loc.T("Str_HardwareSensors_ReportNote", "Charts show the readings taken while this page was open."), sections);
+        }
+
+        /// <summary>Dated name, and a taken name gets " (2)": a saved report never replaces another. HTML and PDF carry the charts; text is the plain list.</summary>
         private void BtnSaveReport_Click(object sender, RoutedEventArgs e)
         {
-            string text = Report();
             var dialog = new SaveFileDialog
             {
                 Title = Loc.T("Str_HardwareSensors_SaveReportTitle", "Save hardware sensors report"),
-                Filter = Loc.T("Str_Ocr_FilterTxt", "Text file (*.txt)") + "|*.txt",
-                FileName = HardwareSensorsManager.ReportFileName(DateTime.Now),
+                Filter = Loc.T("Str_SystemMonitor_ReportFilterHtml", "Web page with charts (*.html)|*.html") + "|" + Loc.T("Str_SystemMonitor_ReportFilterPdf", "PDF with charts (*.pdf)|*.pdf") + "|" + Loc.T("Str_SystemMonitor_ReportFilterTxt", "Text file (*.txt)|*.txt"),
+                FileName = Path.ChangeExtension(HardwareSensorsManager.ReportFileName(DateTime.Now), "html"),
                 AddExtension = true,
                 OverwritePrompt = false,
             };
@@ -493,7 +525,10 @@ namespace Smart_Tools.WPF.Views
             string path = OutputFolderManager.UniquePath(dialog.FileName);
             try
             {
-                AtomicFile.WriteAllText(path, text, new System.Text.UTF8Encoding(false));
+                string ext = Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".pdf") AtomicFile.WriteAllBytes(path, PerfReportBuilder.ToPdf(BuildPerfReport()));
+                else if (ext == ".html" || ext == ".htm") AtomicFile.WriteAllText(path, PerfReportBuilder.ToHtml(BuildPerfReport()), new System.Text.UTF8Encoding(false));
+                else AtomicFile.WriteAllText(path, Report(), new System.Text.UTF8Encoding(false));
                 string note = path != dialog.FileName ? "\n\n" + Loc.F("Str_HardwareSensors_KeptExisting", "{0} already exists, so it was kept and this report got its own name.", Path.GetFileName(dialog.FileName)) : "";
                 if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, note), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });

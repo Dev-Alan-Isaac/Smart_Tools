@@ -242,6 +242,7 @@ namespace Smart_Tools.WPF
             // Music
             Add<InstrumentTunerView>("instrument-tuner", v => v.CancelActiveRun());   // lets go of the microphone, stops a reference tone
             Add<SynthesizerView>("synthesizer", v => v.CancelActiveRun());   // releases the audio device
+            Add<MidiPlayAlongView>("midi-playalong", v => v.CancelActiveRun());   // stops the song and closes the synth
             Add<MidiInstrumentsView>("midi-instruments", v => v.CancelActiveRun());   // silences notes, closes the synth and keyboard
 
             // Images & Color

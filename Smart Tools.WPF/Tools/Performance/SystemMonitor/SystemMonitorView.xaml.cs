@@ -48,6 +48,7 @@ namespace Smart_Tools.WPF.Views
 
         private Dictionary<string, SystemMonitorSectionData> _data = new();
         private List<SystemMonitorSectionData> _lastSections = new();
+        private readonly PerfRecorder _rec = new();
         private SystemMonitorSettings _settings = new();
         private SystemMonitorSpecs _specs = SystemMonitorSpecs.Empty;
         private SystemMonitorSnapshot? _last;
@@ -220,6 +221,13 @@ namespace Smart_Tools.WPF.Views
             foreach (var d in sections)
             {
                 if (!_history.TryGetValue(d.Id, out var h)) _history[d.Id] = h = (new SystemMonitorManager.History(), new SystemMonitorManager.History());
+                if (countHistory)
+                {
+                    if (d.Graph != SystemMonitorGraphKind.None) _rec.Add(d.Id, d.Value);
+                    if (d.Graph == SystemMonitorGraphKind.Rate) _rec.Add(d.Id + "|2", d.Value2 ?? 0);
+                    if (d.TransferRead.HasValue) { _rec.Add(d.Id + "|read", d.TransferRead.Value); _rec.Add(d.Id + "|write", d.TransferWrite ?? 0); }
+                    if (d.TemperatureC.HasValue) _rec.Add(d.Id + "|temp", d.TemperatureC.Value);
+                }
                 if (countHistory && d.Graph != SystemMonitorGraphKind.None)
                 {
                     h.Main.Add(d.Value);
@@ -243,6 +251,7 @@ namespace Smart_Tools.WPF.Views
             foreach (string gone in _history.Keys.Where(k => !_data.ContainsKey(k)).ToList())
             {
                 _history.Remove(gone);
+                _rec.RemoveWithPrefix(gone);
                 _transfer.Remove(gone);
                 _temps.Remove(gone);
             }
@@ -447,14 +456,59 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>Dated name, and a taken name gets " (2)": a saved report never replaces another.</summary>
+        private static string Rate(double bytesPerSec)
+        {
+            string[] units = { "B/s", "KB/s", "MB/s", "GB/s" };
+            int i = 0;
+            while (bytesPerSec >= 1024 && i < units.Length - 1) { bytesPerSec /= 1024; i++; }
+            return bytesPerSec.ToString(i == 0 ? "0" : "0.#", System.Globalization.CultureInfo.InvariantCulture) + " " + units[i];
+        }
+
+        /// <summary>Every section with the readings kept since the page opened, as charts, for the HTML and PDF report.</summary>
+        private PerfReportData BuildPerfReport()
+        {
+            string Pct(double v) => v.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " %";
+            string Deg(double v) => v.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " °C";
+            var sections = new List<PerfSection>();
+            var hidden = new[] { "IPv4 address", "IPv6 address", "DNS suffix" };
+            foreach (var d in _lastSections)
+            {
+                var rows = d.Live.Concat(d.Info).Where(r => !hidden.Contains(r.Label)).Select(r => new PerfRow(r.Label, r.Value)).ToList();
+                var charts = new List<PerfChart>();
+                if (d.Graph == SystemMonitorGraphKind.Percent)
+                    charts.Add(new PerfChart(string.IsNullOrWhiteSpace(d.GraphCaption) ? d.Title : d.GraphCaption,
+                        new[] { new PerfSeries(d.Title, _rec.Get(d.Id), PerfReportBuilder.Blue) }, Pct, 100));
+                else if (d.Graph == SystemMonitorGraphKind.Rate)
+                    charts.Add(new PerfChart(string.IsNullOrWhiteSpace(d.GraphCaption) ? d.Title : d.GraphCaption,
+                        new[]
+                        {
+                            new PerfSeries(Loc.T("Str_SystemMonitor_ReportReceive", "Receive"), _rec.Get(d.Id), PerfReportBuilder.Blue),
+                            new PerfSeries(Loc.T("Str_SystemMonitor_ReportSend", "Send"), _rec.Get(d.Id + "|2"), PerfReportBuilder.Orange),
+                        }, Rate));
+                if (d.TransferRead.HasValue)
+                    charts.Add(new PerfChart(Loc.T("Str_SystemMonitor_ReportTransfer", "Read and write"),
+                        new[]
+                        {
+                            new PerfSeries(Loc.T("Str_SystemMonitor_ReportRead", "Read"), _rec.Get(d.Id + "|read"), PerfReportBuilder.Green),
+                            new PerfSeries(Loc.T("Str_SystemMonitor_ReportWrite", "Write"), _rec.Get(d.Id + "|write"), PerfReportBuilder.Orange),
+                        }, Rate));
+                if (d.TemperatureC.HasValue)
+                    charts.Add(new PerfChart(Loc.T("Str_SystemMonitor_ReportTemperature", "Temperature"),
+                        new[] { new PerfSeries(Loc.T("Str_SystemMonitor_ReportTemperature", "Temperature"), _rec.Get(d.Id + "|temp"), PerfReportBuilder.Red) }, Deg));
+                sections.Add(new PerfSection(d.Title, d.Device, rows, charts));
+            }
+            return new PerfReportData(Loc.T("Str_SystemMonitor_ReportTitle", "System report"), DateTime.Now, Math.Max(0.25, _settings.RefreshMs / 1000.0),
+                Loc.T("Str_SystemMonitor_ReportNote", "Addresses are left out so the report can be shared."), sections);
+        }
+
+        /// <summary>Dated name, and a taken name gets " (2)": a saved report never replaces another. HTML and PDF carry the charts; text is the plain list.</summary>
         private void BtnSaveReport_Click(object sender, RoutedEventArgs e)
         {
-            string text = Report();
             var dialog = new SaveFileDialog
             {
-                Title = "Save system report",
-                Filter = "Text file (*.txt)|*.txt",
-                FileName = SystemMonitorManager.ReportFileName(DateTime.Now),
+                Title = Loc.T("Str_SystemMonitor_SaveReportTitle", "Save system report"),
+                Filter = Loc.T("Str_SystemMonitor_ReportFilterHtml", "Web page with charts (*.html)|*.html") + "|" + Loc.T("Str_SystemMonitor_ReportFilterPdf", "PDF with charts (*.pdf)|*.pdf") + "|" + Loc.T("Str_SystemMonitor_ReportFilterTxt", "Text file (*.txt)|*.txt"),
+                FileName = Path.ChangeExtension(SystemMonitorManager.ReportFileName(DateTime.Now), "html"),
                 AddExtension = true,
                 OverwritePrompt = false,
             };
@@ -462,9 +516,10 @@ namespace Smart_Tools.WPF.Views
             string path = OutputFolderManager.UniquePath(dialog.FileName);
             try
             {
-                using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write))
-                using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false)))
-                    writer.Write(text);
+                string ext = Path.GetExtension(path).ToLowerInvariant();
+                if (ext == ".pdf") AtomicFile.WriteAllBytes(path, PerfReportBuilder.ToPdf(BuildPerfReport()));
+                else if (ext == ".html" || ext == ".htm") AtomicFile.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(PerfReportBuilder.ToHtml(BuildPerfReport())));
+                else AtomicFile.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(Report()));
                 string note = path != dialog.FileName ? $"\n\n{Path.GetFileName(dialog.FileName)} already exists, so it was kept and this report got its own name." : "";
                 if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, note), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });

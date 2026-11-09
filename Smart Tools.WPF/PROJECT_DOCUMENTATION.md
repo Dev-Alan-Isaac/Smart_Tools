@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 115 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 116 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **115 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **116 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -101,7 +101,8 @@ Smart Tools has **115 tools** in 21 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **Instrument Tuner** | `instrument-tuner` | Tune guitar, bass, violin and more |
 | **Synthesizer** | `synthesizer` | Play notes and shape sounds |
-| **MIDI Instruments** | `midi-instruments` | Play 128 instruments and drum kits, record to .mid |
+| **MIDI Instruments** | `midi-instruments` | Play 128 instruments and drum kits, record to .mid; open and play .mid files |
+| **MIDI Play-Along** | `midi-playalong` | Play a .mid with a click and a count-in, mute or solo any part, slow it down, loop bars |
 | **Metronome** | `metronome` | A steady click at any tempo, with beats per bar and tap tempo |
 
 ### Images
@@ -449,7 +450,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 115 tools have one. The tour only covers the page that is open.
+All 116 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -604,7 +605,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 115 tools*
+*Currently exploring unified testing approach across all 116 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

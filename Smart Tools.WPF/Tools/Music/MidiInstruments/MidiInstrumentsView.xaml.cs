@@ -54,6 +54,8 @@ namespace Smart_Tools.WPF.Views
         private Window? _window;
 
         private MidiRecording? _take;
+        private readonly BulkObservableCollection<MidiFileItem> _files = new();
+        private int _fileToken;
         private bool _takeSaved = true;
         private string? _lastSaveFolder;   // this session only - never saved
         private int _pulse;
@@ -63,6 +65,8 @@ namespace Smart_Tools.WPF.Views
             InitializeComponent();
 
             CmbFamily.ItemsSource = MidiInstrumentCatalog.Families;
+            InputCard.ItemsSource = _files;
+            InputCard.FileFilterProvider = () => Loc.T("Str_MidiInstruments_MidiFilter", "MIDI file (*.mid)|*.mid") + ";*.midi|" + Loc.T("Str_MidiInstruments_AllFiles", "All files") + "|*.*";
 
             // The manager raises these on whatever thread played the note (the
             // MIDI keyboard has its own); the screen is only touched on ours.
@@ -810,6 +814,94 @@ namespace Smart_Tools.WPF.Views
             {
                 MessageBox.Show(Window.GetWindow(this)!, Loc.F("Str_MidiInstruments_MsgSaveFailed", "Couldn't save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        // =================================================================
+        //  Open .mid files (the input card)
+        // =================================================================
+
+        private static bool IsMidiPath(string path) => Path.GetExtension(path).ToLowerInvariant() is ".mid" or ".midi" or ".rmi";
+
+        private void InputCard_PathsAdded(object? sender, InputPathsEventArgs e)
+        {
+            var found = new List<string>();
+            foreach (string path in e.Paths)
+            {
+                try
+                {
+                    if (File.Exists(path)) { if (IsMidiPath(path)) found.Add(path); }
+                    else if (Directory.Exists(path))
+                    {
+                        var here = Directory.EnumerateFiles(path).Where(IsMidiPath).ToList();
+                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        found.AddRange(here);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            }
+            if (found.Count == 0)
+            {
+                TxtRecorderStatus.Text = Loc.T("Str_MidiInstruments_MsgNotMidi", "That is not a MIDI file (.mid).");
+                return;
+            }
+            var known = new HashSet<string>(_files.Select(f => f.Path), StringComparer.OrdinalIgnoreCase);
+            var added = found.Where(known.Add).Select(f => new MidiFileItem { Path = f }).ToList();
+            _files.AddRange(added);
+            InputCard.SetEmpty(_files.Count == 0);
+            var target = found.Count == 1 ? _files.First(f => string.Equals(f.Path, found[0], StringComparison.OrdinalIgnoreCase)) : null;
+            if (target != null) _ = OpenMidiFileAsync(target);
+            else TxtRecorderStatus.Text = Loc.N(added.Count, "Str_MidiInstruments_MsgFilesOne", "{0} file added. Click one to play it.", "Str_MidiInstruments_MsgFilesMany", "{0} files added. Click one to play it.", added.Count);
+        }
+
+        private void MidiFileRow_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: MidiFileItem file }) _ = OpenMidiFileAsync(file);
+        }
+
+        private void BtnRemoveMidiFile_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if ((sender as FrameworkElement)?.Tag is not MidiFileItem file) return;
+            _files.Remove(file);
+            InputCard.SetEmpty(_files.Count == 0);
+        }
+
+        private void InputCard_ClearRequested(object? sender, EventArgs e)
+        {
+            _files.Clear();
+            InputCard.SetEmpty(true);
+        }
+
+        /// <summary>Reads the file off the UI thread and makes it the current take, so Play, Stop and the time display work as for a recording.</summary>
+        private async Task OpenMidiFileAsync(MidiFileItem file)
+        {
+            if (_manager.IsRecording || _manager.IsPlaying) return;
+            if (_take is { IsEmpty: false } && !_takeSaved &&
+                MessageBox.Show(Window.GetWindow(this)!, Loc.T("Str_MidiInstruments_MsgOpenOver", "Open this file and drop the last take? It hasn't been saved."), DialogTitle,
+                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+                return;
+
+            int token = ++_fileToken;
+            TxtRecorderStatus.Text = Loc.T("Str_MidiInstruments_MsgReadingFile", "Reading the file…");
+            MidiRecording take;
+            try
+            {
+                take = await Task.Run(() => MidiInstrumentsManager.ReadMidiFile(file.Path));
+            }
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException)
+            {
+                if (token == _fileToken && !_closed) TxtRecorderStatus.Text = Loc.F("Str_MidiInstruments_MsgCantRead", "Couldn't open {0}: {1}", file.Name, ex.Message);
+                return;
+            }
+            if (token != _fileToken || _closed) return;
+
+            foreach (var f in _files) f.IsCurrent = ReferenceEquals(f, file);
+            _take = take;
+            _takeSaved = true;
+            TxtRecorderTime.Text = MidiInstrumentsManager.FormatDuration(take.DurationMs);
+            TxtRecorderStatus.Text = Loc.N(take.NoteCount, "Str_MidiInstruments_MsgFileOne", "{0:N0} note · {1} · {2}", "Str_MidiInstruments_MsgFileMany", "{0:N0} notes · {1} · {2}", take.NoteCount, MidiInstrumentsManager.FormatDuration(take.DurationMs), file.Name);
+            UiMotion.Pop(TxtRecorderTime, 0.9);
+            UpdateRecorderButtons();
         }
 
         private void UpdateRecorderButtons(bool playing = false)

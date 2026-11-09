@@ -189,4 +189,18 @@ namespace Smart_Tools.WPF.Models
         public string OutputDevice { get; set; } = "";
         public string InputDevice { get; set; } = "";
     }
+
+    /// <summary>One .mid file in the list. Only the open one is read into memory as a take.</summary>
+    public sealed class MidiFileItem : INotifyPropertyChanged
+    {
+        private bool _isCurrent;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public string Path { get; init; } = "";
+        public string Name => System.IO.Path.GetFileName(Path);
+        public bool IsCurrent
+        {
+            get => _isCurrent;
+            set { if (_isCurrent == value) return; _isCurrent = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCurrent))); }
+        }
+    }
 }
