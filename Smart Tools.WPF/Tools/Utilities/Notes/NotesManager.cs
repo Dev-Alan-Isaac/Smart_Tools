@@ -273,6 +273,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void LockNow(NoteItem note)
         {
             if (!note.IsProtected || note.IsLocked) return;
+            Smart_Tools.WPF.Views.NoteWidgetManager.Close(note);   // a widget would keep showing the text, and its edits would be lost
             if (note.SessionKey != null && note.LockSalt != null)
                 note.SealedData = NoteLock.Encrypt(new NotePayload { Text = note.Text, Rich = note.Rich, Source = note.Source }, note.SessionKey);
             WipeKey(note);
@@ -283,9 +284,10 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         /// <summary>Locks every unlocked note (leaving the page, closing the app).</summary>
-        public static void LockAll()
+        public static void LockAll(bool keepWidgets = false)
         {
-            foreach (var note in Notes.Where(n => n.IsProtected && !n.IsLocked).ToList()) LockNow(note);
+            // Leaving the page keeps a note unlocked while its desktop widget is open; closing the app locks everything.
+            foreach (var note in Notes.Where(n => n.IsProtected && !n.IsLocked && !(keepWidgets && Smart_Tools.WPF.Views.NoteWidgetManager.IsOpen(n))).ToList()) LockNow(note);
         }
 
         private static void WipeKey(NoteItem note)

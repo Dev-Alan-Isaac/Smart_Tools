@@ -149,7 +149,7 @@ namespace Smart_Tools.WPF.Views
                 _saveTimer.Stop();
                 SaveNow();
             }
-            NotesManager.LockAll();   // leaving the page locks every protected note again
+            NotesManager.LockAll(keepWidgets: true);   // leaving the page locks every protected note again, except those pinned as a widget
             if (removed)
             {
                 if (_selected != null && !NotesManager.Notes.Contains(_selected)) ListNotes.SelectedIndex = NotesManager.Notes.Count > 0 ? 0 : -1;
@@ -392,7 +392,7 @@ namespace Smart_Tools.WPF.Views
             IconLock.Kind = note.IsProtected ? PackIconKind.Lock : PackIconKind.LockOutline;
             BtnLock.ToolTip = note.IsProtected ? Loc.T("Str_Notes_LockMenuTip", "Password options for this note") : Loc.T("Str_Notes_LockTip", "Lock this note with a password");
             Mark(BtnLock, note.IsProtected);
-            BtnWidget.IsEnabled = !note.IsProtected;
+            BtnWidget.IsEnabled = !note.IsLocked;
         }
 
         private void BtnLock_Click(object sender, RoutedEventArgs e)
@@ -721,9 +721,9 @@ namespace Smart_Tools.WPF.Views
         private void BtnWidget_Click(object sender, RoutedEventArgs e)
         {
             if (_selected is not { } note) return;
-            if (note.IsProtected)
+            if (note.IsLocked)
             {
-                ShowSaveState(false, Loc.T("Str_Notes_NoWidgetLocked", "A note with a password can't be pinned to the desktop."));
+                ShowSaveState(false, Loc.T("Str_Notes_NoWidgetLocked", "Unlock the note first to pin it to the desktop."));
                 return;
             }
             NoteWidgetManager.Toggle(note);
