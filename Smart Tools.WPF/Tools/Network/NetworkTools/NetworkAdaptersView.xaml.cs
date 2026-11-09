@@ -102,6 +102,14 @@ namespace Smart_Tools.WPF.Views
             _adaptersStale = true;   // something may change while away
         }
 
+        /// <summary>Folded: the Activity card is only its header (the adapters get the room); open: a quarter of the page.</summary>
+        private void Results_CollapsedChanged(object? sender, bool collapsed)
+        {
+            if (ConsoleRow == null) return;
+            ConsoleRow.Height = collapsed ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
+            ConsoleRow.MinHeight = collapsed ? 0 : 130;
+        }
+
         private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
         {
             _optionsCollapsed = !_optionsCollapsed;

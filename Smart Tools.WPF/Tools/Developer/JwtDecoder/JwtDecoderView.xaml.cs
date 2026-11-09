@@ -36,6 +36,7 @@ namespace Smart_Tools.WPF.Views
         {
             _clock.Stop();
             TxtToken.Clear();
+            TxtKey.Clear();   // a secret is never kept
         }
 
         private static string T(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
@@ -68,6 +69,15 @@ namespace Smart_Tools.WPF.Views
         }
 
         private void BtnClear_Click(object sender, RoutedEventArgs e) => TxtToken.Clear();
+
+        private void TxtKey_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_viewConstructed) ShowVerification();
+        }
+
+        private void ChkBase64_Click(object sender, RoutedEventArgs e) => ShowVerification();
+
+        private void BtnClearKey_Click(object sender, RoutedEventArgs e) => TxtKey.Clear();
 
         // =================================================================
         //  Output
@@ -105,14 +115,77 @@ namespace Smart_Tools.WPF.Views
             else
             {
                 TxtSignature.Text = d.Signature;
-                TxtSignatureNote.Text = string.Format(T("Str_Jwt_SigNote", "{0} bytes. It can only be checked with the key that signed the token, which this tool doesn't have."), d.SignatureBytes);
             }
 
             ShowAlgorithm(d);
+            ShowVerification();
             ShowTimeState();
             if (!_clock.IsEnabled && (d.Expires != null || d.NotBefore != null)) _clock.Start();
             else if (d.Expires == null && d.NotBefore == null) _clock.Stop();
         }
+
+        /// <summary>Checks the signature with the key box and shows the result in the pill and under the signature.</summary>
+        private void ShowVerification()
+        {
+            if (_decoded is not { Ok: true } d) return;
+            var v = JwtDecoderManager.Verify(TxtToken.Text, TxtKey.Text, ChkBase64.IsChecked == true);
+
+            string text, tip, kind = "Info";
+            PackIconKind icon = PackIconKind.ShieldOffOutline;
+            switch (v.State)
+            {
+                case JwtVerifyState.Valid:
+                    text = T("Str_Jwt_VerifyValid", "Signature valid");
+                    tip = T("Str_Jwt_VerifyValidTip", "The signature matches the key you gave: the token was not changed and was signed with it.");
+                    kind = "Success"; icon = PackIconKind.ShieldCheckOutline;
+                    break;
+                case JwtVerifyState.Invalid:
+                    text = T("Str_Jwt_VerifyInvalid", "Signature does NOT match");
+                    tip = T("Str_Jwt_VerifyInvalidTip", "The key is usable but the signature does not match it: the token was changed, or it was signed with another key. Do not trust it.");
+                    kind = "Error"; icon = PackIconKind.ShieldAlertOutline;
+                    break;
+                case JwtVerifyState.Unsecured:
+                    text = T("Str_Jwt_VerifyNone", "Unsigned - nothing to check");
+                    tip = T("Str_Jwt_SigNone", "This token has no signature (alg \"none\"). Anyone can create a token like this, so it proves nothing.");
+                    kind = "Error"; icon = PackIconKind.ShieldOffOutline;
+                    break;
+                case JwtVerifyState.KeyProblem:
+                    text = T("Str_Jwt_VerifyKeyProblem", "The key can't be used");
+                    tip = KeyProblemText(v.Problem, v.Algorithm);
+                    kind = "Warning"; icon = PackIconKind.ShieldAlertOutline;
+                    break;
+                case JwtVerifyState.Unsupported:
+                    text = string.Format(T("Str_Jwt_VerifyUnsupported", "Can't check {0} here"), v.Algorithm);
+                    tip = T("Str_Jwt_VerifyUnsupportedTip", "This tool checks HS256/384/512, RS256/384/512, PS256/384/512 and ES256/384/512.");
+                    kind = "Warning"; icon = PackIconKind.ShieldOffOutline;
+                    break;
+                default:
+                    text = T("Str_Jwt_NotVerified", "Not verified");
+                    tip = T("Str_Jwt_NotVerifiedTip", "Add the key above to check the signature.");
+                    break;
+            }
+
+            TxtVerify.Text = text;
+            PillVerify.ToolTip = tip;
+            IconVerify.Kind = icon;
+            SetPill(PillVerify, IconVerify, TxtVerify, kind);
+
+            TxtSignatureNote.Text = d.IsUnsecured ? T("Str_Jwt_SigNone", "This token has no signature (alg \"none\"). Anyone can create a token like this, so it proves nothing.")
+                : v.State == JwtVerifyState.NoKey ? string.Format(T("Str_Jwt_SigNote", "{0} bytes. Add the key above to check it."), d.SignatureBytes)
+                : $"{string.Format(T("Str_Jwt_SigBytes", "{0} bytes."), d.SignatureBytes)} {tip}";
+        }
+
+        private static string KeyProblemText(JwtKeyProblem problem, string alg) => problem switch
+        {
+            JwtKeyProblem.PublicKeyForHmac => T("Str_Jwt_KeyPublicForHmac", "This token uses an HMAC algorithm, which needs a secret. A public key or certificate is refused on purpose: using one as a secret is a known attack."),
+            JwtKeyProblem.SecretForPublicKey => T("Str_Jwt_KeySecretForPublic", "This algorithm needs a public key: paste a PEM public key, a certificate or a JWK, not a secret."),
+            JwtKeyProblem.WrongKeyType => string.Format(T("Str_Jwt_KeyWrongType", "This key is of another kind than {0} needs (RSA for RS and PS, EC for ES)."), alg),
+            JwtKeyProblem.WrongCurve => string.Format(T("Str_Jwt_KeyWrongCurve", "{0} needs an EC key on its own curve (ES256: P-256, ES384: P-384, ES512: P-521)."), alg),
+            JwtKeyProblem.BadBase64 => T("Str_Jwt_KeyBadBase64", "The secret is not valid Base64. Untick \"Secret is Base64\" to use the text as it is."),
+            JwtKeyProblem.KidNotFound => T("Str_Jwt_KeyKidNotFound", "The key set has no key with the kid of this token."),
+            JwtKeyProblem.BadJwk => T("Str_Jwt_KeyBadJwk", "The JWK is missing fields or they are not valid."),
+            _ => T("Str_Jwt_KeyNotRecognized", "The key was not recognised. Use a secret (HS), or a PEM public key, a certificate or a JWK (RS, PS, ES)."),
+        };
 
         private void ShowProblem(JwtProblem problem)
         {

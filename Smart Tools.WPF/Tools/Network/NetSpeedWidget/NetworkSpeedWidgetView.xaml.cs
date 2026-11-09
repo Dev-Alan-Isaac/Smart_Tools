@@ -200,11 +200,24 @@ namespace Smart_Tools.WPF.Views
             Graph.Values = down.ToArray();
             Graph.Values2 = up.ToArray();
 
-            string session = TryFindResource("Str_NetWidget_Session") as string ?? "This session";
-            TxtSession.Text = $"{session}:  ↓ {NetworkSpeedWidgetManager.FormatTotal(r.SessionDownBytes)}   ↑ {NetworkSpeedWidgetManager.FormatTotal(r.SessionUpBytes)}";
+            TxtSession.Text = $"↓ {NetworkSpeedWidgetManager.FormatTotal(r.SessionDownBytes)}   ↑ {NetworkSpeedWidgetManager.FormatTotal(r.SessionUpBytes)}";
+
+            string peak = Text("Str_NetWidget_Peak", "Peak"), avg = Text("Str_NetWidget_Average", "Average");
+            TxtDownStats.Text = StatsLine(down, units, peak, avg);
+            TxtUpStats.Text = StatsLine(up, units, peak, avg);
 
             RenderAdapterCard(r);
-            _widget?.Update(r, down, up, units, AdapterLine(r));
+            int keep = NetworkSpeedWidgetManager.HistoryCapacity;   // the floating widget draws the last minute only
+            _widget?.Update(r, down.Count > keep ? down.Skip(down.Count - keep).ToList() : down, up.Count > keep ? up.Skip(up.Count - keep).ToList() : up, units, AdapterLine(r));
+        }
+
+        /// <summary>"Peak 12.4 MB/s  -  Average 3.1 MB/s" over what the graph holds.</summary>
+        private static string StatsLine(IReadOnlyList<double> values, NetWidgetUnits units, string peakWord, string avgWord)
+        {
+            if (values.Count == 0) return "";
+            var p = NetworkSpeedWidgetManager.FormatRate(values.Max(), units);
+            var a = NetworkSpeedWidgetManager.FormatRate(values.Average(), units);
+            return $"{peakWord} {p.Value} {p.Unit}  ·  {avgWord} {a.Value} {a.Unit}";
         }
 
         private string Text(string key, string fallback) => TryFindResource(key) as string ?? fallback;

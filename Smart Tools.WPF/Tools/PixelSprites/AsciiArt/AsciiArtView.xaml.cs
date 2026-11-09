@@ -73,7 +73,7 @@ namespace Smart_Tools.WPF.Views
             Stage.CellPressed += Stage_CellPressed;
             Stage.CellMoved += Stage_CellMoved;
             Stage.CellReleased += Stage_CellReleased;
-            FileDrop.Attach(this, path => LoadPicture(path));
+            InitPictures();
         }
 
         /// <summary>Called from MainWindow.Window_Closing: stops a conversion and keeps the setup.</summary>
@@ -215,24 +215,11 @@ namespace Smart_Tools.WPF.Views
         //  Picture and conversion
         // =================================================================
 
-        private void BtnOpen_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new OpenFileDialog
-            {
-                Title = Loc.T("Str_AsciiArt_OpenPicture", "Open picture"),
-                Filter = Loc.T("Str_AsciiArt_FilterImages", "Pictures") + "|*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.webp;*.tif;*.tiff;*.ico;*.heic;*.avif|" +
-                         Loc.T("Str_AsciiArt_FilterAll", "All files") + "|*.*",
-            };
-            if (dlg.ShowDialog() == true) LoadPicture(dlg.FileName);
-        }
-
         private void LoadPicture(string path)
         {
             if (_closed || !File.Exists(path)) return;
-            if (_editor.IsDirty && !Confirm(Loc.T("Str_AsciiArt_AskReplaceDrawing", "Replace your drawing with this picture?"))) return;
+            if (_editor.IsDirty && !Confirm(Loc.T("Str_AsciiArt_AskReplaceDrawing", "Replace your drawing with this picture?"))) { RestoreSelection(); return; }
             _sourcePath = path;
-            TxtPicture.Text = Path.GetFileName(path);
-            TxtPicture.ToolTip = path;
             _autoFit = true;
             if (_mode == AsciiMode.Draw)
             {

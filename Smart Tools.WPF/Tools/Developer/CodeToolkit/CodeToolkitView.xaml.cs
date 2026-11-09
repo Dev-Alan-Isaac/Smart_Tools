@@ -62,6 +62,7 @@ namespace Smart_Tools.WPF.Views
         public CodeToolkitView()
         {
             InitializeComponent();
+            EnsureFilesCard();
 
             _liveTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher)
             {
@@ -144,6 +145,7 @@ namespace Smart_Tools.WPF.Views
                 else el.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
             }
 
+            Show(PanelFiles, !diff);
             Show(PanelTransform, !diff);
             Show(PanelDiff, diff);
             Show(LanguageSection, !diff);
@@ -730,7 +732,7 @@ namespace Smart_Tools.WPF.Views
         private void Root_PreviewDragOver(object sender, DragEventArgs e)
         {
             // Only take over file drags; dragging selected text inside an editor still works.
-            if (!HasFiles(e)) return;
+            if (!HasFiles(e) || IsOverFilesCard(e.OriginalSource)) return;
             e.Effects = DragDropEffects.Copy;
             e.Handled = true;
         }
@@ -746,6 +748,7 @@ namespace Smart_Tools.WPF.Views
         private void Root_PreviewDrop(object sender, DragEventArgs e)
         {
             UiMotion.FadeVisibility(DropOverlay, false);
+            if (IsOverFilesCard(e.OriginalSource)) return;   // the Files card takes its own drops
             if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
                 return;
 

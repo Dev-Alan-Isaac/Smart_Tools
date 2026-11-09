@@ -502,18 +502,6 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_ImgEdit_ApplyToAllCheckedTooltip}"
                                         Unchecked="Setting_Changed" />
-                                    <Button
-                                        x:Name="BtnResetTransform"
-                                        Margin="0,10,0,0"
-                                        HorizontalAlignment="Center"
-                                        Click="BtnResetTransform_Click"
-                                        ToolTip="{DynamicResource Str_ImageEditor_UndoTheRotationMirroring}"
-                                        Style="{StaticResource ListToolButtonStyle}">
-                                        <materialDesign:PackIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Restore" />
-                                    </Button>
                                 </StackPanel>
                             </Border>
 
@@ -963,9 +951,14 @@
                                         Foreground="{DynamicResource TextSecondary}"
                                         TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
+                                <StackPanel
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal">
                                 <Border
                                     x:Name="EditSummaryPill"
-                                    Grid.Column="1"
+                                    Margin="0,0,10,0"
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource AccentColorSubtle}"
                                     Style="{StaticResource IconStatusPillStyle}"
@@ -985,6 +978,32 @@
                                             Foreground="{DynamicResource AccentColor}" />
                                     </StackPanel>
                                 </Border>
+                                    <Button
+                                        x:Name="BtnUndo"
+                                        Margin="0,0,4,0"
+                                        Click="BtnUndo_Click"
+                                        IsEnabled="False"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_ImageEditor_Undo}">
+                                        <materialDesign:PackIcon Width="17" Height="17" Kind="UndoVariant" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnRedo"
+                                        Margin="0,0,10,0"
+                                        Click="BtnRedo_Click"
+                                        IsEnabled="False"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_ImageEditor_Redo}">
+                                        <materialDesign:PackIcon Width="17" Height="17" Kind="RedoVariant" />
+                                    </Button>
+                                    <Button
+                                        x:Name="BtnResetTransform"
+                                        Click="BtnResetTransform_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_ImageEditor_UndoTheRotationMirroring}">
+                                        <materialDesign:PackIcon Width="17" Height="17" Kind="Restore" />
+                                    </Button>
+                                </StackPanel>
                             </Grid>
 
                             <!--  Fixed-dark stage: the picture should look the same in both themes.  -->

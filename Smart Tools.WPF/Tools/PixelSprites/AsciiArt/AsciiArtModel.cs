@@ -1,3 +1,7 @@
+using System.ComponentModel;
+using System.IO;
+using System.Windows.Media.Imaging;
+
 namespace Smart_Tools.WPF.Models
 {
     /// <summary>Which characters the picture is drawn with.</summary>
@@ -117,6 +121,55 @@ namespace Smart_Tools.WPF.Models
                 return true;
             }
         }
+    }
+
+    public enum AsciiItemStatus
+    {
+        Waiting,
+        Working,
+        Done,
+        Failed
+    }
+
+    /// <summary>One picture in the list on the right: its name, a small thumbnail and how saving it went.</summary>
+    public sealed class AsciiItem : INotifyPropertyChanged
+    {
+        private AsciiItemStatus _status;
+        private string _message = "";
+        private BitmapSource? _thumbnail;
+
+        public required string FullPath { get; init; }
+        public string Name => Path.GetFileName(FullPath);
+
+        public AsciiItemStatus Status
+        {
+            get => _status;
+            set { if (_status != value) { _status = value; OnChanged(); OnChanged(nameof(StatusText)); } }
+        }
+
+        public string Message
+        {
+            get => _message;
+            set { if (_message != value) { _message = value; OnChanged(); OnChanged(nameof(StatusText)); } }
+        }
+
+        public BitmapSource? Thumbnail
+        {
+            get => _thumbnail;
+            set { _thumbnail = value; OnChanged(); }
+        }
+
+        /// <summary>The second line of the row (the folder it came from until it is saved).</summary>
+        public string StatusText => _status switch
+        {
+            AsciiItemStatus.Working => Loc.T("Str_AsciiArt_ItemWorking", "Working..."),
+            AsciiItemStatus.Done => _message.Length > 0 ? _message : Loc.T("Str_AsciiArt_ItemSaved", "Saved"),
+            AsciiItemStatus.Failed => _message.Length > 0 ? _message : Loc.T("Str_AsciiArt_ItemFailed", "Could not be made"),
+            _ => Path.GetDirectoryName(FullPath) ?? "",
+        };
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnChanged(string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name ?? string.Empty));
     }
 
     /// <summary>What the user sees in the "how it was made" line after a conversion.</summary>

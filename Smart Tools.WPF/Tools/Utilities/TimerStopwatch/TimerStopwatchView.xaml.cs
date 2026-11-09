@@ -136,16 +136,45 @@ namespace Smart_Tools.WPF.Views
             _mode = mode;
             CardCountdown.Visibility = mode == TimerMode.Countdown ? Visibility.Visible : Visibility.Collapsed;
             CardPomodoro.Visibility = mode == TimerMode.Pomodoro ? Visibility.Visible : Visibility.Collapsed;
-            LapArea.Visibility = BtnLap.Visibility = mode == TimerMode.Stopwatch ? Visibility.Visible : Visibility.Collapsed;
+            LapArea.Visibility = mode == TimerMode.Stopwatch ? Visibility.Visible : Visibility.Collapsed;
+            BtnLap.Visibility = mode == TimerMode.Stopwatch ? Visibility.Visible : Visibility.Hidden;   // keeps its room: Start stays centred under the ring
             InfoCard.Visibility = mode == TimerMode.Stopwatch ? Visibility.Collapsed : Visibility.Visible;
             TxtInfoBody.Text = mode == TimerMode.Countdown
                 ? Loc.T("Str_Timer_MsgInfoCountdown", "Type a time such as 5:00, 90s or 1h30m in the sidebar (or click a preset), then press Start. When it reaches zero you get a sound and a message here.")
                 : Loc.T("Str_Timer_MsgInfoPomodoro", "Work for a set time, then take a short break; after every few work sessions you get a long break. The next phase starts by itself, so you only have to press Start once.");
             TxtSessions.Text = mode == TimerMode.Pomodoro ? Loc.F("Str_Timer_MsgSessions", "Work sessions finished: {0}", 0) : "";
-            BarProgress.Visibility = mode == TimerMode.Stopwatch ? Visibility.Collapsed : Visibility.Visible;
             _completedWork = 0;
             _phase = PomodoroPhase.Work;
             ShowIdle();
+        }
+
+        /// <summary>The ring's colour: the accent for the stopwatch, a countdown and work; green and blue for the two breaks.</summary>
+        private void RingColor(string resourceKey) => BarProgress.SetResourceReference(Controls.RingProgress.StrokeProperty, resourceKey);
+
+        private static string PhaseKey(PomodoroPhase phase) => phase switch
+        {
+            PomodoroPhase.ShortBreak => "StatusSuccessFg",
+            PomodoroPhase.LongBreak => "StatusInfoFg",
+            _ => "AccentColor",
+        };
+
+        /// <summary>Pomodoro: one dot per work session before the long break, filled as sessions are finished.</summary>
+        private void UpdateDots()
+        {
+            bool show = _mode == TimerMode.Pomodoro;
+            DotsPanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            if (!show) return;
+
+            int every = Math.Clamp(ReadSettings().LongBreakEvery, 1, 12);
+            int filled = _completedWork % every;
+            if (filled == 0 && _completedWork > 0 && _phase == PomodoroPhase.LongBreak) filled = every;
+            DotsPanel.Children.Clear();
+            for (int i = 0; i < every; i++)
+            {
+                var dot = new System.Windows.Shapes.Ellipse { Width = 11, Height = 11, Margin = new Thickness(4, 0, 4, 0) };
+                dot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, i < filled ? "AccentColor" : "RowBg");
+                DotsPanel.Children.Add(dot);
+            }
         }
 
         private TimeSpan PhaseLength(PomodoroPhase phase)
@@ -166,7 +195,9 @@ namespace Smart_Tools.WPF.Views
         {
             TxtMessage.Text = "";
             TxtMessage.SetResourceReference(TextBlock.ForegroundProperty, "StatusSuccessFg");
-            BarProgress.Value = 0;
+            BarProgress.Value = _mode == TimerMode.Stopwatch ? 0 : 1;   // a timer starts with a full ring that empties
+            RingColor(_mode == TimerMode.Pomodoro ? PhaseKey(_phase) : "AccentColor");
+            UpdateDots();
             switch (_mode)
             {
                 case TimerMode.Stopwatch:
@@ -255,6 +286,7 @@ namespace Smart_Tools.WPF.Views
             if (_mode == TimerMode.Stopwatch)
             {
                 TxtTime.Text = TimerStopwatchManager.Format(_clock.Elapsed, true);
+                BarProgress.Value = _clock.Elapsed.TotalSeconds % 60 / 60;   // one turn per minute
                 return;
             }
 
@@ -265,7 +297,7 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
             TxtTime.Text = TimerStopwatchManager.Format(TimerStopwatchManager.RoundUpToSecond(left), false);
-            BarProgress.Value = 1 - left.TotalSeconds / _total.TotalSeconds;
+            BarProgress.Value = left.TotalSeconds / _total.TotalSeconds;   // what is left
         }
 
         private void Finished()
@@ -278,7 +310,9 @@ namespace Smart_Tools.WPF.Views
                 _clock.Reset();
                 _state = RunState.Idle;
                 TxtTime.Text = TimerStopwatchManager.Format(TimeSpan.Zero, false);
-                BarProgress.Value = 1;
+                BarProgress.Value = 1;   // at zero the whole ring turns red
+                RingColor("StatusErrorFg");
+                TxtMessage.SetResourceReference(TextBlock.ForegroundProperty, "StatusErrorFg");
                 TxtMessage.Text = Loc.T("Str_Timer_MsgTimesUp", "Time's up!");
                 SetButtons();
                 return;
@@ -295,7 +329,9 @@ namespace Smart_Tools.WPF.Views
             TxtMessage.Text = finished == PomodoroPhase.Work
                 ? (_phase == PomodoroPhase.LongBreak ? Loc.F("Str_Timer_MsgWorkDoneLong", "Work session {0} done - time for a long break.", _completedWork) : Loc.F("Str_Timer_MsgWorkDoneShort", "Work session {0} done - time for a short break.", _completedWork))
                 : Loc.T("Str_Timer_MsgBreakOver", "Break over - back to work.");
-            BarProgress.Value = 0;
+            BarProgress.Value = 1;   // the next phase starts with a full ring
+            RingColor(PhaseKey(_phase));
+            UpdateDots();
             TxtTime.Text = TimerStopwatchManager.Format(_total, false);
         }
 
@@ -308,6 +344,7 @@ namespace Smart_Tools.WPF.Views
             // The settings can't change under a run.
             SidebarStack.IsEnabled = _state == RunState.Idle;
             if (_mode == TimerMode.Pomodoro && _state != RunState.Idle) TxtPhase.Text = PhaseName(_phase);
+            if (_mode == TimerMode.Pomodoro && _state != RunState.Idle) RingColor(PhaseKey(_phase));
         }
 
         /// <summary>Called when the window closes: stops the clock and keeps the setup.</summary>

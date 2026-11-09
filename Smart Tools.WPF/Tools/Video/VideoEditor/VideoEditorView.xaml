@@ -1414,7 +1414,7 @@
                                 VirtualizingPanel.ScrollUnit="Pixel"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Width="34" CellStyle="{StaticResource CheckBoxCellStyle}">
+                                    <DataGridTemplateColumn Width="34" CellStyle="{StaticResource CheckBoxCellStyle}" HeaderStyle="{StaticResource CheckBoxHeaderStyle}">
                                         <DataGridTemplateColumn.Header>
                                             <CheckBox
                                                 x:Name="ChkIncludeAll"

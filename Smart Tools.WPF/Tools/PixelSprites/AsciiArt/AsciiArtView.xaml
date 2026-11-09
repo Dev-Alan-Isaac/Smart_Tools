@@ -5,7 +5,11 @@
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
     x:Name="Root"
+    AllowDrop="True"
+    DragOver="Root_DragOver"
+    Drop="Root_Drop"
     Focusable="True"
     Loaded="Root_Loaded"
     PreviewKeyDown="Root_PreviewKeyDown"
@@ -27,6 +31,114 @@
             <Setter Property="Margin" Value="2,6,0,0" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
+
+        <!--  A file or folder on the Pictures card  -->
+        <DataTemplate x:Key="SourceTemplate" DataType="{x:Type models:PixelSource}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="26"
+                    Height="26"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7">
+                    <materialDesign:PackIcon
+                        x:Name="SourceIcon"
+                        Width="14"
+                        Height="14"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="FileImageOutline" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SidebarText}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                    <TextBlock
+                        Margin="0,1,0,0"
+                        FontSize="10.5"
+                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Text="{Binding Subtitle}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Button
+                    Grid.Column="2"
+                    Width="24"
+                    Height="24"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Click="BtnRemoveSource_Click"
+                    Style="{StaticResource IconButtonStyle}"
+                    Tag="{Binding}"
+                    ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
+                    <materialDesign:PackIcon
+                        Width="13"
+                        Height="13"
+                        Kind="Close" />
+                </Button>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="SourceIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  One picture in the list on the right  -->
+        <DataTemplate x:Key="PictureTemplate" DataType="{x:Type models:AsciiItem}">
+            <Grid Margin="0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="38"
+                    Height="38"
+                    Margin="0,0,10,0"
+                    Background="{DynamicResource InputBg}"
+                    BorderBrush="{DynamicResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                    <Image
+                        Margin="2"
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="{Binding Thumbnail}"
+                        Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding FullPath}" />
+                    <TextBlock
+                        x:Name="Sub"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding StatusText}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                    <Setter TargetName="Sub" Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Done">
+                    <Setter TargetName="Sub" Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
@@ -41,39 +153,18 @@
             <controls:ToolSidebar>
                 <StackPanel>
 
-                    <!--  Picture  -->
-                    <Border
-                        Margin="0,0,0,10"
+                    <!--  Pictures: one or many, files or folders  -->
+                    <controls:InputFolderCard
+                        x:Name="InputCard"
                         ctl:Tour.Key="Str_Tour_AsciiArt_Picture"
                         ctl:Tour.Order="1"
-                        Style="{StaticResource SidebarGroupCardStyle}">
-                        <StackPanel>
-                            <ContentControl
-                                Content="{DynamicResource Str_AsciiArt_Picture}"
-                                Style="{StaticResource SidebarGroupHeader}"
-                                Tag="{x:Static materialDesign:PackIconKind.ImageOutline}" />
-                            <Button
-                                x:Name="BtnOpen"
-                                MinHeight="36"
-                                Margin="0,6,0,0"
-                                Click="BtnOpen_Click"
-                                Style="{StaticResource AccentPrimaryButtonStyle}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon
-                                        Width="16"
-                                        Height="16"
-                                        Margin="0,0,6,0"
-                                        VerticalAlignment="Center"
-                                        Kind="FolderOpenOutline" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_AsciiArt_OpenPicture}" />
-                                </StackPanel>
-                            </Button>
-                            <TextBlock
-                                x:Name="TxtPicture"
-                                Style="{StaticResource AaHint}"
-                                Text="{DynamicResource Str_AsciiArt_DropHint}" />
-                        </StackPanel>
-                    </Border>
+                        ClearRequested="InputCard_ClearRequested"
+                        Header="{DynamicResource Str_AsciiArt_Pictures}"
+                        HeaderIcon="FileMultipleOutline"
+                        IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                        ItemTemplate="{StaticResource SourceTemplate}"
+                        Mode="Files"
+                        PathsAdded="InputCard_PathsAdded" />
 
                     <!--  Convert / Draw  -->
                     <Border
@@ -497,6 +588,61 @@
                             <TextBlock Style="{StaticResource AaHint}" Text="{DynamicResource Str_AsciiArt_SaveHint}" />
                         </StackPanel>
                     </Border>
+
+                    <!--  Save every picture of the list in one go (shown when the list has two or more)  -->
+                    <StackPanel x:Name="PanelBatch" Visibility="Collapsed">
+                        <Border
+                            Margin="0,0,0,10"
+                            ctl:Tour.Key="Str_Tour_AsciiArt_SaveAll"
+                            ctl:Tour.Order="8"
+                            Style="{StaticResource SidebarGroupCardStyle}">
+                            <StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_AsciiArt_SaveAllHeader}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.ContentSaveAllOutline}" />
+                                <TextBlock Style="{StaticResource AaLabel}" Text="{DynamicResource Str_AsciiArt_SaveAllFormat}" />
+                                <Border Style="{StaticResource InputBarStyle}">
+                                    <ComboBox
+                                        x:Name="CmbBatchFormat"
+                                        VerticalContentAlignment="Center"
+                                        Style="{StaticResource BareComboBox}">
+                                        <ComboBoxItem Content="{DynamicResource Str_AsciiArt_FormatTxt}" Tag="txt" />
+                                        <ComboBoxItem Content="{DynamicResource Str_AsciiArt_FormatRtf}" Tag="rtf" />
+                                        <ComboBoxItem Content="{DynamicResource Str_AsciiArt_FormatHtml}" Tag="html" />
+                                        <ComboBoxItem Content="{DynamicResource Str_AsciiArt_FormatPng}" Tag="png" />
+                                        <ComboBoxItem Content="{DynamicResource Str_AsciiArt_FormatAnsi}" Tag="ansi" />
+                                    </ComboBox>
+                                </Border>
+                                <Button
+                                    x:Name="BtnSaveAll"
+                                    MinHeight="36"
+                                    Margin="0,10,0,0"
+                                    Click="BtnSaveAll_Click"
+                                    Style="{StaticResource AccentPrimaryButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            x:Name="IconSaveAll"
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Kind="ContentSaveAll" />
+                                        <TextBlock
+                                            x:Name="TxtSaveAll"
+                                            VerticalAlignment="Center"
+                                            Text="{DynamicResource Str_AsciiArt_SaveAll}" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Style="{StaticResource AaHint}" Text="{DynamicResource Str_AsciiArt_SaveAllHint}" />
+                            </StackPanel>
+                        </Border>
+                        <controls:OutputFolderCard
+                            x:Name="OutputCard"
+                            Header="{DynamicResource Str_AsciiArt_SaveAllTo}"
+                            HeaderIcon="FolderOutline"
+                            ToolName="ASCII Art Maker" />
+                    </StackPanel>
                 </StackPanel>
             </controls:ToolSidebar>
 
@@ -506,9 +652,14 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="ListColumn" Width="Auto" />
+                </Grid.ColumnDefinitions>
 
                 <!--  Summary bar  -->
                 <Border
+                    Grid.ColumnSpan="2"
                     Padding="16,12"
                     Background="{DynamicResource CardBg}"
                     CornerRadius="14">
@@ -645,6 +796,40 @@
                                 TextAlignment="Center"
                                 TextWrapping="Wrap" />
                         </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  The pictures (shown when there are two or more)  -->
+                <Border
+                    x:Name="PictureListCard"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Width="250"
+                    Margin="14,14,0,0"
+                    Padding="10"
+                    Background="{DynamicResource CardBg}"
+                    CornerRadius="14"
+                    Visibility="Collapsed">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            x:Name="TxtListTitle"
+                            Margin="4,2,0,8"
+                            FontSize="13"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource TextPrimary}" />
+                        <ListBox
+                            x:Name="PictureList"
+                            Grid.Row="1"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemTemplate="{StaticResource PictureTemplate}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            SelectionChanged="PictureList_SelectionChanged"
+                            SelectionMode="Single" />
                     </Grid>
                 </Border>
             </Grid>

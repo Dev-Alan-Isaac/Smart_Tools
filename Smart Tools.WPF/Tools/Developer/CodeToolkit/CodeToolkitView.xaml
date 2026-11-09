@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     x:Name="Root"
     AllowDrop="True"
@@ -21,6 +22,79 @@
     -->
 
     <UserControl.Resources>
+
+        <!--  A file or folder on the Files card: click a file to open it in Input  -->
+        <DataTemplate x:Key="SourceTemplate" DataType="{x:Type ctl:BatchSource}">
+            <Border
+                x:Name="Row"
+                Padding="4,3"
+                Background="Transparent"
+                Cursor="Hand"
+                CornerRadius="7"
+                MouseLeftButtonUp="SourceRow_Click"
+                Tag="{Binding}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Width="26"
+                        Height="26"
+                        Margin="0,0,8,0"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="7">
+                        <materialDesign:PackIcon
+                            x:Name="SourceIcon"
+                            Width="14"
+                            Height="14"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentColor}"
+                            Kind="FileCodeOutline" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource SidebarText}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip="{Binding FullPath}" />
+                        <TextBlock
+                            Margin="0,1,0,0"
+                            FontSize="10.5"
+                            Foreground="{DynamicResource SidebarTextMuted}"
+                            Text="{Binding Subtitle}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button
+                        Grid.Column="2"
+                        Width="24"
+                        Height="24"
+                        Margin="6,0,0,0"
+                        VerticalAlignment="Center"
+                        Click="BtnRemoveSource_Click"
+                        Style="{StaticResource IconButtonStyle}"
+                        Tag="{Binding}"
+                        ToolTip="{DynamicResource Str_LoudnessMeter_TakeThisOffThe}">
+                        <materialDesign:PackIcon
+                            Width="13"
+                            Height="13"
+                            Kind="Close" />
+                    </Button>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="SourceIcon" Property="Kind" Value="Folder" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter TargetName="Row" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
 
         <!--  Small icon button in a card header toolbar  -->
         <Style
@@ -234,6 +308,54 @@
                         VerticalScrollBarVisibility="Auto">
 
                         <StackPanel Margin="16,4,16,16">
+
+                            <!--  ============ FILES (Minify and Beautify: open one, or run on many) ============  -->
+                            <StackPanel x:Name="PanelFiles">
+                                <controls:InputFolderCard
+                                    x:Name="InputCard"
+                                    ctl:Tour.Key="Str_Tour_CodeToolkit_Files"
+                                    ctl:Tour.Order="0"
+                                    ClearRequested="InputCard_ClearRequested"
+                                    Header="{DynamicResource Str_CodeToolkit_FilesHeader}"
+                                    HeaderIcon="FileMultipleOutline"
+                                    IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                                    ItemTemplate="{StaticResource SourceTemplate}"
+                                    Mode="Files"
+                                    PathsAdded="InputCard_PathsAdded" />
+
+                                <StackPanel x:Name="PanelBatch" Visibility="Collapsed">
+                                    <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                                        <StackPanel>
+                                            <Button
+                                                x:Name="BtnRunAll"
+                                                MinHeight="38"
+                                                Click="BtnRunAll_Click"
+                                                Style="{StaticResource AccentPrimaryButtonStyle}"
+                                                ToolTip="{DynamicResource Str_CodeToolkit_RunAllTip}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon
+                                                        x:Name="IconRunAll"
+                                                        Width="16"
+                                                        Height="16"
+                                                        Margin="0,0,6,0"
+                                                        VerticalAlignment="Center"
+                                                        Kind="PlaylistPlay" />
+                                                    <TextBlock
+                                                        x:Name="TxtRunAll"
+                                                        VerticalAlignment="Center"
+                                                        Text="{DynamicResource Str_CodeToolkit_RunAll}" />
+                                                </StackPanel>
+                                            </Button>
+                                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_CodeToolkit_RunAllHint}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <controls:OutputFolderCard
+                                        x:Name="OutputCard"
+                                        Header="{DynamicResource Str_CodeToolkit_SaveFilesTo}"
+                                        HeaderIcon="FolderOutline"
+                                        ToolName="Code Toolkit" />
+                                </StackPanel>
+                            </StackPanel>
 
                             <!--  ============ TOOL ============  -->
                             <Border ctl:Tour.Key="Str_Tour_CodeToolkit_Tool" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">

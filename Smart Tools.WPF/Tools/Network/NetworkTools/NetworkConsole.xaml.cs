@@ -46,6 +46,48 @@ namespace Smart_Tools.WPF.Controls
             set => SetValue(TitleProperty, value);
         }
 
+        /// <summary>
+        /// The console can be folded to just its header. A page that wants it out of the way until something happens
+        /// sets <see cref="CollapseUntilFirstLog"/>; a new line always opens it again, and the user can fold it back.
+        /// </summary>
+        public static readonly DependencyProperty IsCollapsedProperty = DependencyProperty.Register(
+            nameof(IsCollapsed), typeof(bool), typeof(NetworkConsole),
+            new PropertyMetadata(false, (d, e) => ((NetworkConsole)d).ApplyCollapsed((bool)e.NewValue)));
+
+        public bool IsCollapsed
+        {
+            get => (bool)GetValue(IsCollapsedProperty);
+            set => SetValue(IsCollapsedProperty, value);
+        }
+
+        /// <summary>Starts folded when nothing was logged yet (set in XAML); the first line opens it.</summary>
+        public bool CollapseUntilFirstLog
+        {
+            get => _collapseUntilFirstLog;
+            set
+            {
+                _collapseUntilFirstLog = value;
+                if (value && _lines.Count == 0) IsCollapsed = true;
+            }
+        }
+
+        /// <summary>Raised when the console is folded or opened (the page changes the row height that holds it).</summary>
+        public event EventHandler<bool>? CollapsedChanged;
+
+        private bool _collapseUntilFirstLog;
+
+        private void ApplyCollapsed(bool collapsed)
+        {
+            if (BodyBorder == null) return;
+            BodyBorder.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+            HeaderGrid.Margin = new Thickness(0, 0, 0, collapsed ? 0 : 10);
+            IconToggle.Kind = collapsed ? MaterialDesignThemes.Wpf.PackIconKind.ChevronUp : MaterialDesignThemes.Wpf.PackIconKind.ChevronDown;
+            BtnToggle.SetResourceReference(ToolTipProperty, collapsed ? "Str_NetworkConsole_Expand" : "Str_NetworkConsole_Collapse");
+            CollapsedChanged?.Invoke(this, collapsed);
+        }
+
+        private void BtnToggle_Click(object sender, RoutedEventArgs e) => IsCollapsed = !IsCollapsed;
+
         /// <summary>What the empty console says ("Each ping appears here").</summary>
         public string EmptyText
         {
@@ -71,6 +113,7 @@ namespace Smart_Tools.WPF.Controls
 
             TxtLastActivity.Text = $"Last activity {line.TimeText}";
             ConsoleEmpty.Visibility = Visibility.Collapsed;
+            if (IsCollapsed) IsCollapsed = false;   // something new to read: open it
             if (atBottom) ConsoleList.ScrollIntoView(line);
         }
 

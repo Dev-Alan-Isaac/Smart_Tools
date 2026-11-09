@@ -253,7 +253,7 @@
                                 ElementStyle="{StaticResource EllipsisCellTextStyle}"
                                 Header="{DynamicResource Str_Services_ColAccount}" />
 
-                            <DataGridTemplateColumn Width="156" Header="">
+                            <DataGridTemplateColumn Width="150" CellStyle="{StaticResource CompactCellStyle}" Header="">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate DataType="{x:Type models:WinService}">
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">

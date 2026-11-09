@@ -14,8 +14,11 @@ namespace Smart_Tools.WPF.Controllers
     // =====================================================================
     public static class SmartHistoryManager
     {
-        /// <summary>Opening the tool adds a reading only when the last one is older than this.</summary>
-        public static readonly TimeSpan AutoGap = TimeSpan.FromHours(6);
+        /// <summary>
+        /// Every time the tool is opened (or Refresh is pressed) a reading is added for each drive, unless the last one is
+        /// younger than this: a short guard so opening and closing the page quickly does not fill the history with copies.
+        /// </summary>
+        public static readonly TimeSpan AutoGap = TimeSpan.FromMinutes(5);
 
         private const int MaxReadingsPerDrive = 4000;
         private const int TrimTo = 3000;

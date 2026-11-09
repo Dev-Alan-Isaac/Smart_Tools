@@ -314,7 +314,7 @@
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="3*" />
-                    <RowDefinition Height="1*" MinHeight="130" />
+                    <RowDefinition x:Name="ConsoleRow" Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!--  Tool card: refresh, tiles, adapters  -->
@@ -895,6 +895,8 @@
                     ctl:Tour.Key="Str_Tour_NetworkAdapters_Log"
                     ctl:Tour.Order="5"
                     x:Name="Results"
+                    CollapseUntilFirstLog="True"
+                    CollapsedChanged="Results_CollapsedChanged"
                     Title="{DynamicResource Str_NetworkAdapters_Activity}"
                     Grid.Row="1"
                     EmptyText="Changes you make to adapters, and what Windows answered, are listed here."

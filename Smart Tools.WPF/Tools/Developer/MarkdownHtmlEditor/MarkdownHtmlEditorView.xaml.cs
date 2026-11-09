@@ -85,10 +85,15 @@ namespace Smart_Tools.WPF.Views
             RadioThemeDark.IsChecked = _settings.PreviewTheme == MdHtmlPreviewTheme.Dark;
             ChkSyncScroll.IsChecked = _settings.SyncScroll;
             ChkWordWrap.IsChecked = _settings.WordWrap;
+            ChkHtmlParts.IsChecked = _settings.HtmlParts;
+            ChkRunScripts.IsChecked = _settings.RunScripts;
+            TxtCss.SetResourceReference(TagProperty, "Str_MdHtml_CssPlaceholder");
+            TxtJs.SetResourceReference(TagProperty, "Str_MdHtml_JsPlaceholder");
 
             ApplyLayout(_settings.Layout, animate: false);
             ApplyWordWrap();
             if (_settings.SidebarCollapsed) SetSidebarCollapsed(true);
+            UpdateHtmlControls();
 
             _viewConstructed = true;
             UpdateTitle();
@@ -295,6 +300,23 @@ namespace Smart_Tools.WPF.Views
             _renderTimer.Start();
         }
 
+        /// <summary>Loads the empty shell page again (a clean page: no timers, listeners or variables left over) and waits for it.</summary>
+        private static async Task ReloadShellAsync(CoreWebView2 core)
+        {
+            var done = new TaskCompletionSource();
+            void Handler(object? s, CoreWebView2NavigationCompletedEventArgs e) => done.TrySetResult();
+            core.NavigationCompleted += Handler;
+            try
+            {
+                core.Navigate(MarkdownHtmlEditorManager.PreviewShellUrl);
+                await Task.WhenAny(done.Task, Task.Delay(4000));
+            }
+            finally
+            {
+                core.NavigationCompleted -= Handler;
+            }
+        }
+
         /// <summary>Builds the page off the UI thread, then writes it into the shell page, keeping the scroll place.</summary>
         private async Task RenderNowAsync()
         {
@@ -308,8 +330,30 @@ namespace Smart_Tools.WPF.Views
             var colors = CurrentPreviewColors();
             string title = DisplayName;
 
-            string page = await Task.Run(() => MarkdownHtmlEditorManager.BuildPreviewPage(source, format, colors, title));
+            bool parts = PartsOn;
+            string css = TxtCss.Text, js = TxtJs.Text;
+            bool runScripts = format == MdHtmlFormat.Html && ChkRunScripts.IsChecked == true;
+            string page = await Task.Run(() => parts && format == MdHtmlFormat.Html
+                ? MarkdownHtmlEditorManager.ComposeHtmlPage(source, css, js, title)
+                : MarkdownHtmlEditorManager.BuildPreviewPage(source, format, colors, title));
             if (version != _renderVersion || _webView?.CoreWebView2 == null) return;
+
+            // Scripts: switched on only for an HTML page the user asked to run, and the page is loaded fresh each time, so
+            // timers and listeners from the previous version cannot go on running next to the new one.
+            double keepY = 0;
+            var core = _webView.CoreWebView2;
+            if (runScripts || core.Settings.IsScriptEnabled)
+            {
+                try
+                {
+                    if (double.TryParse(await _webView.ExecuteScriptAsync("window.scrollY"), NumberStyles.Float, CultureInfo.InvariantCulture, out double y)) keepY = y;
+                }
+                catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException) { }
+                core.Settings.IsScriptEnabled = runScripts;
+                core.Settings.AreDevToolsEnabled = runScripts;   // right-click > Inspect, to see console messages and errors
+                await ReloadShellAsync(core);
+                if (version != _renderVersion || _webView?.CoreWebView2 == null) return;
+            }
 
             // An HTML page with no background of its own shows this colour; browsers default to white.
             _webView.DefaultBackgroundColor = ToDrawingColor(format == MdHtmlFormat.Html ? MdHtmlPreviewColors.Light.Background : colors.Background);
@@ -317,9 +361,9 @@ namespace Smart_Tools.WPF.Views
             string ratio = (ChkSyncScroll.IsChecked == true && EditorPane.Visibility == Visibility.Visible ? _editorScrollRatio : -1)
                 .ToString("0.####", CultureInfo.InvariantCulture);
             string script =
-                "(function(h,r){var y=window.scrollY;document.open();document.write(h);document.close();" +
+                "(function(h,r,y0){var y=y0>0?y0:window.scrollY;document.open();document.write(h);document.close();" +
                 "var m=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);window.scrollTo(0,r>=0?r*m:y);})(" +
-                JsonSerializer.Serialize(page) + "," + ratio + ");";
+                JsonSerializer.Serialize(page) + "," + ratio + "," + keepY.ToString("0.##", CultureInfo.InvariantCulture) + ");";
 
             try
             {
@@ -398,7 +442,18 @@ namespace Smart_Tools.WPF.Views
             ? Path.GetFileName(_filePath)
             : Str("Str_MdHtml_Untitled") + MarkdownHtmlEditorManager.DefaultExtension(_format);
 
-        private bool IsDirty => !string.Equals(TxtSource.Text, _savedText, StringComparison.Ordinal);
+        /// <summary>True when the page is written as HTML + CSS + JavaScript.</summary>
+        private bool PartsOn => _format == MdHtmlFormat.Html && ChkHtmlParts.IsChecked == true;
+
+        /// <summary>What Save and Export write: the typed text, or with three parts the finished page.</summary>
+        private string SaveText() => PartsOn
+            ? MarkdownHtmlEditorManager.ComposeHtmlPage(TxtSource.Text, TxtCss.Text, TxtJs.Text, Path.GetFileNameWithoutExtension(DisplayName))
+            : TxtSource.Text;
+
+        private bool IsDirty => !string.Equals(SaveText(), _savedText, StringComparison.Ordinal);
+
+        /// <summary>The editor that has the keyboard (undo, redo, formatting buttons).</summary>
+        private System.Windows.Controls.TextBox ActiveBox => PartsOn && TabCss.IsChecked == true ? TxtCss : PartsOn && TabJs.IsChecked == true ? TxtJs : TxtSource;
 
         private async void BtnNew_Click(object sender, RoutedEventArgs e) => await NewDocumentAsync();
 
@@ -455,8 +510,12 @@ namespace Smart_Tools.WPF.Views
             }
 
             LoadDocument(text, path, MarkdownHtmlEditorManager.FormatFromPath(path));
+            bool scriptsHeldBack = _format == MdHtmlFormat.Html && ChkRunScripts.IsChecked == true && text.Contains("<script", StringComparison.OrdinalIgnoreCase);
+            if (scriptsHeldBack) ChkRunScripts.IsChecked = false;   // not saved: only for this file. A page you did not write does not run until you say so.
             await RenderNowAsync();
-            ShowStatus(string.Format(Str("Str_MdHtml_Opened"), Path.GetFileName(path)), StatusKind.Success);
+            ShowStatus(scriptsHeldBack
+                ? string.Format(Str("Str_MdHtml_OpenedScriptsOff"), Path.GetFileName(path))
+                : string.Format(Str("Str_MdHtml_Opened"), Path.GetFileName(path)), StatusKind.Success);
             TxtSource.Focus();
         }
 
@@ -472,7 +531,15 @@ namespace Smart_Tools.WPF.Views
             TxtSource.IsUndoEnabled = true;
             TxtSource.CaretIndex = 0;
             TxtSource.ScrollToHome();
+            foreach (var part in new[] { TxtCss, TxtJs })
+            {
+                part.IsUndoEnabled = false;
+                part.Clear();
+                part.IsUndoEnabled = true;
+            }
+            TabHtml.IsChecked = true;
             _editorScrollRatio = 0;
+            UpdateHtmlControls();
 
             UpdateTitle();
             UpdateDirty();
@@ -503,7 +570,7 @@ namespace Smart_Tools.WPF.Views
                 path = dialog.FileName;
             }
 
-            string text = TxtSource.Text;
+            string text = SaveText();
             try
             {
                 MarkdownHtmlEditorManager.SaveDocument(path, text);
@@ -562,7 +629,7 @@ namespace Smart_Tools.WPF.Views
             if (DocumentFolder is { } folder) dialog.InitialDirectory = folder;
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
 
-            string source = TxtSource.Text;
+            string source = SaveText();
             try
             {
                 string page = MarkdownHtmlEditorManager.BuildExportPage(source, _format, Path.GetFileNameWithoutExtension(DisplayName));
@@ -626,6 +693,50 @@ namespace Smart_Tools.WPF.Views
         //  Editing
         // =================================================================
 
+        // =================================================================
+        //  HTML: three parts, and scripts
+        // =================================================================
+
+        /// <summary>Shows the HTML-only options, the HTML / CSS / JavaScript tabs and the box that belongs to the chosen tab.</summary>
+        private void UpdateHtmlControls()
+        {
+            if (!_viewConstructed && TabHtml == null) return;
+            bool html = _format == MdHtmlFormat.Html;
+            PanelHtmlOptions.Visibility = html ? Visibility.Visible : Visibility.Collapsed;
+            TxtHtmlOptionsNote.Visibility = html ? Visibility.Visible : Visibility.Collapsed;
+            PartTabs.Visibility = PartsOn ? Visibility.Visible : Visibility.Collapsed;
+
+            var shown = ActiveBox;
+            TxtSource.Visibility = shown == TxtSource ? Visibility.Visible : Visibility.Collapsed;
+            TxtCss.Visibility = shown == TxtCss ? Visibility.Visible : Visibility.Collapsed;
+            TxtJs.Visibility = shown == TxtJs ? Visibility.Visible : Visibility.Collapsed;
+            if (_viewConstructed) UpdateUndoRedo();
+        }
+
+        private void PartTab_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!_viewConstructed) return;
+            UpdateHtmlControls();
+            ActiveBox.Focus();
+        }
+
+        private void ChkHtmlParts_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.HtmlParts = ChkHtmlParts.IsChecked == true;
+            if (!PartsOn) TabHtml.IsChecked = true;
+            UpdateHtmlControls();
+            UpdateDirty();
+            SaveSettings();
+            ScheduleRender();
+        }
+
+        private void ChkRunScripts_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.RunScripts = ChkRunScripts.IsChecked == true;
+            SaveSettings();
+            ScheduleRender();
+        }
+
         private void TxtSource_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (!_viewConstructed) return;
@@ -641,14 +752,14 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnUndo_Click(object sender, RoutedEventArgs e)
         {
-            TxtSource.Undo();
-            TxtSource.Focus();
+            ActiveBox.Undo();
+            ActiveBox.Focus();
         }
 
         private void BtnRedo_Click(object sender, RoutedEventArgs e)
         {
-            TxtSource.Redo();
-            TxtSource.Focus();
+            ActiveBox.Redo();
+            ActiveBox.Focus();
         }
 
         private void BtnCommand_Click(object sender, RoutedEventArgs e)
@@ -718,6 +829,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_viewConstructed || _settingFormat) return;
             _format = RadioFormatHtml.IsChecked == true ? MdHtmlFormat.Html : MdHtmlFormat.Markdown;
+            UpdateHtmlControls();
             UpdateTitle();
             UpdateStats();
             ScheduleRender();
@@ -730,6 +842,7 @@ namespace Smart_Tools.WPF.Views
             RadioFormatHtml.IsChecked = format == MdHtmlFormat.Html;
             _settingFormat = false;
             _format = format;
+            UpdateHtmlControls();
         }
 
         private async void RadioTheme_Checked(object sender, RoutedEventArgs e)
@@ -760,8 +873,11 @@ namespace Smart_Tools.WPF.Views
         private void ApplyWordWrap()
         {
             bool wrap = ChkWordWrap.IsChecked == true;
-            TxtSource.TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap;
-            TxtSource.HorizontalScrollBarVisibility = wrap ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
+            foreach (var box in new[] { TxtSource, TxtCss, TxtJs })
+            {
+                box.TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap;
+                box.HorizontalScrollBarVisibility = wrap ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
+            }
         }
 
         private void RadioLayout_Checked(object sender, RoutedEventArgs e)
@@ -878,8 +994,8 @@ namespace Smart_Tools.WPF.Views
 
         private void UpdateUndoRedo()
         {
-            BtnUndo.IsEnabled = TxtSource.CanUndo;
-            BtnRedo.IsEnabled = TxtSource.CanRedo;
+            BtnUndo.IsEnabled = ActiveBox.CanUndo;
+            BtnRedo.IsEnabled = ActiveBox.CanRedo;
         }
 
         private void UpdateCaret()

@@ -100,6 +100,49 @@ namespace Smart_Tools.WPF.Controllers
         public static string BuildPreviewPage(string source, MdHtmlFormat format, MdHtmlPreviewColors colors, string title) =>
             format == MdHtmlFormat.Html ? source : BuildMarkdownPage(MarkdownToHtml(source), colors, title);
 
+        /// <summary>
+        /// Puts an HTML part, a CSS part and a JavaScript part together into one page. With no CSS and no script the HTML is
+        /// returned untouched (so a plain document stays byte for byte what was typed). A fragment (no html/head tag) gets a
+        /// document around it; a full document gets the style before its closing head tag and the script before its closing
+        /// body tag. "&lt;/script" inside the script is escaped so the script cannot end its own tag early.
+        /// </summary>
+        public static string ComposeHtmlPage(string html, string css, string js, string title)
+        {
+            bool hasCss = !string.IsNullOrWhiteSpace(css), hasJs = !string.IsNullOrWhiteSpace(js);
+            if (!hasCss && !hasJs) return html;
+
+            string style = hasCss ? "<style>\n" + css.Replace("</style", "<\\/style", StringComparison.OrdinalIgnoreCase).TrimEnd() + "\n</style>\n" : "";
+            string script = hasJs ? "<script>\n" + js.Replace("</script", "<\\/script", StringComparison.OrdinalIgnoreCase).TrimEnd() + "\n</script>\n" : "";
+
+            bool full = html.Contains("<html", StringComparison.OrdinalIgnoreCase)
+                        || html.Contains("<head", StringComparison.OrdinalIgnoreCase)
+                        || html.TrimStart().StartsWith("<!doctype", StringComparison.OrdinalIgnoreCase);
+            if (!full)
+            {
+                return "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+                       + "<title>" + Escape(title) + "</title>\n" + style + "</head>\n<body>\n" + html + "\n" + script + "</body>\n</html>\n";
+            }
+
+            string page = html;
+            if (style.Length > 0)
+            {
+                int head = page.LastIndexOf("</head>", StringComparison.OrdinalIgnoreCase);
+                int body = page.IndexOf("<body", StringComparison.OrdinalIgnoreCase);
+                if (head >= 0) page = page.Insert(head, style);
+                else if (body >= 0) page = page.Insert(body, style);
+                else page = style + page;
+            }
+            if (script.Length > 0)
+            {
+                int body = page.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+                int root = page.LastIndexOf("</html>", StringComparison.OrdinalIgnoreCase);
+                if (body >= 0) page = page.Insert(body, script);
+                else if (root >= 0) page = page.Insert(root, script);
+                else page += "\n" + script;
+            }
+            return page;
+        }
+
         /// <summary>A standalone file: Markdown becomes a light page with its styles inlined; HTML is kept as is.</summary>
         public static string BuildExportPage(string source, MdHtmlFormat format, string title) =>
             format == MdHtmlFormat.Html ? source : BuildMarkdownPage(MarkdownToHtml(source), MdHtmlPreviewColors.Light, title);

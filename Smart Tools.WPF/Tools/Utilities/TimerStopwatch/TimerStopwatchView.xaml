@@ -13,6 +13,49 @@
     <!--  Backend: Controllers/TimerStopwatchManager.cs (typed times, formatting, Pomodoro cycle). UI only here.  -->
 
     <UserControl.Resources>
+        <!--  The big round Start / Pause button under the ring  -->
+        <Style x:Key="RoundMainButtonStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Background="{DynamicResource AccentFill}"
+                            CornerRadius="40"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColor}" />
+                                <Setter TargetName="Bd" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.96" ScaleY="0.96" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="TsLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -91,33 +134,111 @@
                     <RowDefinition Height="*" MinHeight="150" />
                 </Grid.RowDefinitions>
 
-                <!--  ========== The clock ==========  -->
+                <!--  ========== The clock: the time inside a round progress bar ==========  -->
                 <Border Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock x:Name="TxtPhase" HorizontalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
-                        <Viewbox Grid.Row="1" Margin="20,4" MaxHeight="260" Stretch="Uniform">
-                            <TextBlock ctl:Tour.Key="Str_Tour_TimerStopwatch_Clock" ctl:Tour.Order="4" x:Name="TxtTime" FontFamily="Cascadia Mono, Consolas" FontSize="96" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="00:00.00" />
-                        </Viewbox>
-                        <ProgressBar x:Name="BarProgress" Grid.Row="2" Height="8" Margin="40,6,40,0" Maximum="1" Visibility="Collapsed" />
-                        <TextBlock x:Name="TxtMessage" Grid.Row="3" Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
-
-                        <StackPanel Grid.Row="4" Margin="0,14,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
-                            <Button ctl:Tour.Key="Str_Tour_TimerStopwatch_Start" ctl:Tour.Order="5" x:Name="BtnStart" MinWidth="140" MinHeight="40" Margin="0,0,8,0" Click="BtnStart_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon x:Name="IconStart" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Play" />
-                                    <TextBlock x:Name="TxtStart" VerticalAlignment="Center" Text="{DynamicResource Str_RenameFiles_Start}" />
+                        <Viewbox Margin="8,4" MaxHeight="460" Stretch="Uniform">
+                            <Grid Width="380" Height="380">
+                                <controls:RingProgress
+                                    x:Name="BarProgress"
+                                    Stroke="{DynamicResource AccentColor}"
+                                    Thickness="16"
+                                    Track="{DynamicResource RowBg}" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock
+                                        x:Name="TxtPhase"
+                                        MaxWidth="260"
+                                        HorizontalAlignment="Center"
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource AccentColor}"
+                                        TextAlignment="Center"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <Viewbox MaxWidth="270" StretchDirection="DownOnly">
+                                        <TextBlock
+                                            ctl:Tour.Key="Str_Tour_TimerStopwatch_Clock"
+                                            ctl:Tour.Order="4"
+                                            x:Name="TxtTime"
+                                            FontFamily="Cascadia Mono, Consolas"
+                                            FontSize="62"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            Text="00:00.00" />
+                                    </Viewbox>
+                                    <TextBlock
+                                        x:Name="TxtMessage"
+                                        MaxWidth="250"
+                                        Margin="0,6,0,0"
+                                        HorizontalAlignment="Center"
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap" />
+                                    <StackPanel
+                                        x:Name="DotsPanel"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Center"
+                                        Orientation="Horizontal"
+                                        Visibility="Collapsed" />
                                 </StackPanel>
-                            </Button>
-                            <Button ctl:Tour.Key="Str_Tour_TimerStopwatch_Lap" ctl:Tour.Order="6" x:Name="BtnLap" MinWidth="90" MinHeight="40" Margin="0,0,8,0" Click="BtnLap_Click" Content="{DynamicResource Str_TimerStopwatch_Lap}" IsEnabled="False" />
-                            <Button ctl:Tour.Key="Str_Tour_TimerStopwatch_Reset" ctl:Tour.Order="7" x:Name="BtnReset" MinWidth="90" MinHeight="40" Click="BtnReset_Click" Content="{DynamicResource Str_Common_Reset}" />
+                            </Grid>
+                        </Viewbox>
+
+                        <StackPanel Grid.Row="1" Margin="0,4,0,6" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
+                            <Button
+                                ctl:Tour.Key="Str_Tour_TimerStopwatch_Lap"
+                                ctl:Tour.Order="6"
+                                x:Name="BtnLap"
+                                MinWidth="84"
+                                MinHeight="38"
+                                Margin="0,0,22,0"
+                                VerticalAlignment="Center"
+                                Click="BtnLap_Click"
+                                Content="{DynamicResource Str_TimerStopwatch_Lap}"
+                                IsEnabled="False"
+                                Style="{StaticResource PillChipStyle}" />
+                            <StackPanel>
+                                <Button
+                                    ctl:Tour.Key="Str_Tour_TimerStopwatch_Start"
+                                    ctl:Tour.Order="5"
+                                    x:Name="BtnStart"
+                                    Width="80"
+                                    Height="80"
+                                    HorizontalAlignment="Center"
+                                    Click="BtnStart_Click"
+                                    Style="{StaticResource RoundMainButtonStyle}">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconStart"
+                                        Width="36"
+                                        Height="36"
+                                        Kind="Play" />
+                                </Button>
+                                <TextBlock
+                                    x:Name="TxtStart"
+                                    Margin="0,6,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_RenameFiles_Start}" />
+                            </StackPanel>
+                            <Button
+                                ctl:Tour.Key="Str_Tour_TimerStopwatch_Reset"
+                                ctl:Tour.Order="7"
+                                x:Name="BtnReset"
+                                MinWidth="84"
+                                MinHeight="38"
+                                Margin="22,0,0,0"
+                                VerticalAlignment="Center"
+                                Click="BtnReset_Click"
+                                Content="{DynamicResource Str_Common_Reset}"
+                                Style="{StaticResource PillChipStyle}" />
                         </StackPanel>
                     </Grid>
                 </Border>

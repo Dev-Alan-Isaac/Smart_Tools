@@ -1313,6 +1313,72 @@
     </Style>
 
     <!--
+        A CheckBox drawn as a toggle chip, the multi-choice twin of ModeToggleButtonStyle (which is for one-of-many
+        RadioButtons): same pill, same colours, same hover. Checked = AccentFill with white text and a small tick.
+        The tick's space is always reserved, so a chip does not change width when it is switched.
+    -->
+    <Style x:Key="ToggleChipCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="MinWidth" Value="64" />
+        <Setter Property="Margin" Value="0,0,6,6" />
+        <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Border
+                        x:Name="Bd"
+                        Background="{DynamicResource SidebarInputBg}"
+                        CornerRadius="8"
+                        RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform x:Name="BdScale" ScaleX="1" ScaleY="1" />
+                        </Border.RenderTransform>
+                        <StackPanel Margin="10,4,12,4" HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path
+                                x:Name="Tick"
+                                Width="11"
+                                Height="9"
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center"
+                                Data="M1,4.5 L4.2,7.7 L10,1.2"
+                                Opacity="0"
+                                Stretch="Fill"
+                                Stroke="White"
+                                StrokeEndLineCap="Round"
+                                StrokeStartLineCap="Round"
+                                StrokeThickness="2" />
+                            <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True">
+                                <ContentPresenter.Resources>
+                                    <Style BasedOn="{StaticResource ButtonLabelTextStyle}" TargetType="TextBlock" />
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Tick" Property="Opacity" Value="1" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
         Same rounded-pill visual language as ModeToggleButtonStyle (34px
         tall, same corner radius/background/hover-scale animation), but for
         plain Buttons that fire a one-off action (e.g. Rotate Left/Right,
@@ -1469,12 +1535,19 @@
                             </Grid>
                         </Border>
 
+                        <!--  A label longer than the sidebar wraps onto a second line instead of being cut off  -->
                         <ContentPresenter
                             x:Name="Label"
                             Grid.Column="1"
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
-                            RecognizesAccessKey="True" />
+                            RecognizesAccessKey="True">
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
                     </Grid>
 
                     <ControlTemplate.Triggers>
@@ -1915,6 +1988,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
                                         </Style>
+
                                     </ContentPresenter.Resources>
                                 </ContentPresenter>
                                 <Path
@@ -1968,6 +2042,18 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!--
+        For a column whose header is a lone CheckBox ("select all"): the default header padding (12,8) takes 24 px
+        off a 34-44 px column and clips the 18 px box, so this one has none and centres the box.
+    -->
+    <Style
+        x:Key="CheckBoxHeaderStyle"
+        BasedOn="{StaticResource {x:Type DataGridColumnHeader}}"
+        TargetType="DataGridColumnHeader">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
     </Style>
 
     <Style TargetType="DataGridRow">
@@ -2099,7 +2185,7 @@
     <!--
         Opt-in: for any other narrow column - icon glyphs, row-action button
         clusters (Move Up/Down/Remove, "✕", etc). Same problem as the
-        checkbox column above: the default 10,6 padding eats 20px off a
+        checkbox column above: the default 12,6 padding eats 24px off a
         column's declared Width before its content ever gets to lay out, so
         a "Width=80" three-button action column only has ~60px to actually
         work with. Use this on any DataGridTemplateColumn under ~100px wide.

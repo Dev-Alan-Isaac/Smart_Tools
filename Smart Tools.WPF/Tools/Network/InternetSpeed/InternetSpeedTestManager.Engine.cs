@@ -128,7 +128,7 @@ namespace Smart_Tools.WPF.Controllers
             var sw = Stopwatch.StartNew();
             try
             {
-                using var response = await _http.GetAsync(InternetSpeedTestManager.CacheBust(server.LatencyUrl), HttpCompletionOption.ResponseHeadersRead, limit.Token).ConfigureAwait(false);
+                using var response = await _http.GetAsync(InternetSpeedTestManager.RequestUrl(server, server.LatencyUrl), HttpCompletionOption.ResponseHeadersRead, limit.Token).ConfigureAwait(false);
                 double ms = sw.Elapsed.TotalMilliseconds;
                 return response.IsSuccessStatusCode ? ms : null;
             }

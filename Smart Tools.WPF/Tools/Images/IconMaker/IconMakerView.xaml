@@ -63,13 +63,13 @@
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_Rest_IcoSizes}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ResizeBottomRight}" />
                             <WrapPanel Margin="0,8,0,0">
-                                <CheckBox x:Name="Size16" Margin="0,0,14,6" Click="Option_Click" Content="16" Tag="16" />
-                                <CheckBox x:Name="Size24" Margin="0,0,14,6" Click="Option_Click" Content="24" Tag="24" />
-                                <CheckBox x:Name="Size32" Margin="0,0,14,6" Click="Option_Click" Content="32" Tag="32" />
-                                <CheckBox x:Name="Size48" Margin="0,0,14,6" Click="Option_Click" Content="48" Tag="48" />
-                                <CheckBox x:Name="Size64" Margin="0,0,14,6" Click="Option_Click" Content="64" Tag="64" />
-                                <CheckBox x:Name="Size128" Margin="0,0,14,6" Click="Option_Click" Content="128" Tag="128" />
-                                <CheckBox x:Name="Size256" Margin="0,0,14,6" Click="Option_Click" Content="256" Tag="256" />
+                                <CheckBox x:Name="Size16" Click="Option_Click" Content="16" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="16" />
+                                <CheckBox x:Name="Size24" Click="Option_Click" Content="24" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="24" />
+                                <CheckBox x:Name="Size32" Click="Option_Click" Content="32" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="32" />
+                                <CheckBox x:Name="Size48" Click="Option_Click" Content="48" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="48" />
+                                <CheckBox x:Name="Size64" Click="Option_Click" Content="64" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="64" />
+                                <CheckBox x:Name="Size128" Click="Option_Click" Content="128" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="128" />
+                                <CheckBox x:Name="Size256" Click="Option_Click" Content="256" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="256" />
                             </WrapPanel>
                             <TextBlock Style="{StaticResource ImHint}" Text="{DynamicResource Str_IconMaker_WindowsPicksTheBest}" />
                         </StackPanel>

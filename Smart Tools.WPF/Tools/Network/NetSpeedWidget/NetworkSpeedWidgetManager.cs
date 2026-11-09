@@ -15,7 +15,11 @@ namespace Smart_Tools.WPF.Controllers
     /// </summary>
     public sealed class NetworkSpeedWidgetManager : IDisposable
     {
+        /// <summary>What the floating widget draws (60 readings).</summary>
         public const int HistoryCapacity = 60;
+
+        /// <summary>What the page's big graph keeps (5 minutes at the 1 s refresh).</summary>
+        public const int PageHistoryCapacity = 300;
 
         private readonly SynchronizationContext? _ui;
         private readonly object _gate = new();
@@ -175,7 +179,7 @@ namespace Smart_Tools.WPF.Controllers
         private static void Push(List<double> list, double value)
         {
             list.Add(value);
-            if (list.Count > HistoryCapacity) list.RemoveRange(0, list.Count - HistoryCapacity);
+            if (list.Count > PageHistoryCapacity) list.RemoveRange(0, list.Count - PageHistoryCapacity);
         }
 
         // =================================================================

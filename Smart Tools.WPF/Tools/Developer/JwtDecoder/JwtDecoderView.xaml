@@ -80,6 +80,49 @@
                         VerticalScrollBarVisibility="Auto"
                         Tag="{DynamicResource Str_Jwt_TokenHint}" />
 
+                    <!--  The key that checks the signature: a secret (HS), or a PEM public key / certificate / JWK (RS, PS, ES)  -->
+                    <Grid Margin="0,14,0,0" ctl:Tour.Key="Str_Tour_JwtDecoder_Key" ctl:Tour.Order="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentControl
+                            Content="{DynamicResource Str_Jwt_KeyHeader}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.KeyOutline}" />
+                        <CheckBox
+                            x:Name="ChkBase64"
+                            Grid.Column="1"
+                            Margin="0,0,8,0"
+                            Click="ChkBase64_Click"
+                            Content="{DynamicResource Str_Jwt_SecretBase64}"
+                            Style="{StaticResource ToggleChipCheckBoxStyle}"
+                            ToolTip="{DynamicResource Str_Jwt_SecretBase64Tip}" />
+                        <Button
+                            Grid.Column="2"
+                            Click="BtnClearKey_Click"
+                            Style="{StaticResource ListToolDangerButtonStyle}"
+                            ToolTip="{DynamicResource Str_Jwt_ClearKey}">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                Kind="DeleteSweepOutline" />
+                        </Button>
+                    </Grid>
+                    <TextBox
+                        x:Name="TxtKey"
+                        Height="72"
+                        Margin="0,10,0,0"
+                        VerticalContentAlignment="Top"
+                        AcceptsReturn="True"
+                        FontFamily="{StaticResource JwtMono}"
+                        FontSize="12"
+                        TextChanged="TxtKey_TextChanged"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto"
+                        Tag="{DynamicResource Str_Jwt_KeyHint}" />
+
                     <WrapPanel x:Name="PillRow" Margin="0,10,0,0" Visibility="Collapsed">
                         <Border x:Name="PillTime" Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
                             <StackPanel Orientation="Horizontal">
@@ -114,11 +157,13 @@
                             </StackPanel>
                         </Border>
                         <Border
+                            x:Name="PillVerify"
                             Background="{DynamicResource StatusInfoBg}"
                             Style="{StaticResource IconStatusPillStyle}"
                             ToolTip="{DynamicResource Str_Jwt_NotVerifiedTip}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon
+                                    x:Name="IconVerify"
                                     Width="13"
                                     Height="13"
                                     Margin="0,0,5,0"
@@ -126,6 +171,7 @@
                                     Foreground="{DynamicResource StatusInfoFg}"
                                     Kind="ShieldOffOutline" />
                                 <TextBlock
+                                    x:Name="TxtVerify"
                                     VerticalAlignment="Center"
                                     FontSize="11"
                                     FontWeight="SemiBold"
@@ -154,7 +200,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <Border ctl:Tour.Key="Str_Tour_JwtDecoder_Header" ctl:Tour.Order="2" Style="{StaticResource CardStyle}">
+                        <Border ctl:Tour.Key="Str_Tour_JwtDecoder_Header" ctl:Tour.Order="3" Style="{StaticResource CardStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -227,7 +273,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <Border ctl:Tour.Key="Str_Tour_JwtDecoder_Payload" ctl:Tour.Order="3" Style="{StaticResource CardStyle}">
+                        <Border ctl:Tour.Key="Str_Tour_JwtDecoder_Payload" ctl:Tour.Order="4" Style="{StaticResource CardStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -267,7 +313,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Grid.Row="2" ctl:Tour.Key="Str_Tour_JwtDecoder_Claims" ctl:Tour.Order="4" Style="{StaticResource CardStyle}">
+                        <Border Grid.Row="2" ctl:Tour.Key="Str_Tour_JwtDecoder_Claims" ctl:Tour.Order="5" Style="{StaticResource CardStyle}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />

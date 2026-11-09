@@ -16,8 +16,9 @@ namespace Smart_Tools.WPF.Engines
     /// </summary>
     public static class ThumbnailService
     {
-        private static string FfmpegExe => Smart_Tools.WPF.Controllers.FfmpegLocator.FfmpegExe;
-        private static string FfprobeExe => Smart_Tools.WPF.Controllers.FfmpegLocator.FfprobeExe;
+        // The bundled copy first, then one on PATH (a copy of the app without Engines\FFMPEG still gets video thumbnails).
+        private static string FfmpegExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffmpeg") ?? Smart_Tools.WPF.Controllers.FfmpegLocator.FfmpegExe;
+        private static string FfprobeExe => Smart_Tools.WPF.Controllers.FfmpegLocator.Resolve("ffprobe") ?? Smart_Tools.WPF.Controllers.FfmpegLocator.FfprobeExe;
 
         private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -27,7 +28,8 @@ namespace Smart_Tools.WPF.Engines
         private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
         {
             ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff",
-            ".webp", ".heic", ".heif", ".ico", ".psd", ".cr2", ".nef", ".arw", ".dng"
+            ".webp", ".heic", ".heif", ".ico", ".psd", ".cr2", ".nef", ".arw", ".dng",
+            ".jfif", ".avif", ".jxl", ".tga", ".dds"
         };
 
         private static readonly SemaphoreSlim VideoGate = new(Math.Clamp(Environment.ProcessorCount / 2, 2, 6));

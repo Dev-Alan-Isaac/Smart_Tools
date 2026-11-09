@@ -558,6 +558,7 @@ namespace Smart_Tools.WPF.Views
             BtnClearCrop.IsEnabled = !_isRunning && (_cropMode ? _draft != null : item?.Crop != null);
             BtnApplyCrop.IsEnabled = _cropMode && _draft is { IsMeaningful: true };
             BtnToggleCrop.IsEnabled = !_isRunning && has;
+            UpdateUndoButtons();
             UpdateResizeHint();
             Dispatcher.BeginInvoke(DispatcherPriority.Loaded, DrawOverlay);
         }
@@ -579,7 +580,7 @@ namespace Smart_Tools.WPF.Views
             ExitCropMode();
             var targets = Targets();
             if (targets.Count == 0) return;
-            foreach (var item in targets) item.Orientation = change(item.Orientation);
+            RecordEdit(targets, () => { foreach (var item in targets) item.Orientation = change(item.Orientation); });
             UpdatePreviewUi();
         }
 
@@ -596,11 +597,15 @@ namespace Smart_Tools.WPF.Views
         {
             if (_isRunning) return;
             ExitCropMode();
-            foreach (var item in Targets())
+            var targets = Targets();
+            RecordEdit(targets, () =>
             {
-                item.Orientation = ImageOrientation.Identity;
-                item.Crop = null;
-            }
+                foreach (var item in targets)
+                {
+                    item.Orientation = ImageOrientation.Identity;
+                    item.Crop = null;
+                }
+            });
             UpdatePreviewUi();
         }
 
@@ -714,7 +719,8 @@ namespace Smart_Tools.WPF.Views
         private void ApplyCrop()
         {
             if (!_cropMode || _draft is not CropRect display || !display.IsMeaningful) return;
-            foreach (var item in Targets()) item.Crop = ImageEditingManager.DisplayToSourceRect(display, item.Orientation);
+            var targets = Targets();
+            RecordEdit(targets, () => { foreach (var item in targets) item.Crop = ImageEditingManager.DisplayToSourceRect(display, item.Orientation); });
             ExitCropMode();
             UpdatePreviewUi();
         }
@@ -727,7 +733,8 @@ namespace Smart_Tools.WPF.Views
                 UpdatePreviewUi();
                 return;
             }
-            foreach (var item in Targets()) item.Crop = null;
+            var targets = Targets();
+            RecordEdit(targets, () => { foreach (var item in targets) item.Crop = null; });
             UpdatePreviewUi();
         }
 
@@ -790,6 +797,11 @@ namespace Smart_Tools.WPF.Views
             if (_isRunning) return;
 
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+            {
+                if (e.Key == Key.Z && !shift) { UndoEdit(); e.Handled = true; return; }
+                if (e.Key == Key.Y || (e.Key == Key.Z && shift)) { RedoEdit(); e.Handled = true; return; }
+            }
             switch (e.Key)
             {
                 case Key.Escape when _cropMode:

@@ -41,7 +41,7 @@ namespace Smart_Tools.WPF.Views
         public DataFormatterView()
         {
             InitializeComponent();
-            FileDrop.Attach(this, LoadFile);
+            InitFiles();
             _debounce.Tick += (_, _) =>
             {
                 _debounce.Stop();
@@ -127,7 +127,11 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e) => TxtInput.Clear();
+        private void BtnClear_Click(object sender, RoutedEventArgs e)
+        {
+            TxtInput.Clear();
+            MarkCurrent(null);
+        }
 
         private void BtnOpen_Click(object sender, RoutedEventArgs e)
         {
@@ -140,7 +144,7 @@ namespace Smart_Tools.WPF.Views
             LoadFile(open.FileName);
         }
 
-        /// <summary>Reads a file into the input box (from the Open button or a drop).</summary>
+        /// <summary>Reads a file into the input box (from the Open button, the Files card or a drop).</summary>
         private void LoadFile(string path)
         {
             try
@@ -151,6 +155,7 @@ namespace Smart_Tools.WPF.Views
                     return;
                 }
                 TxtInput.Text = File.ReadAllText(path);
+                MarkCurrent(path);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

@@ -30,6 +30,12 @@ namespace Smart_Tools.WPF.Models
         public bool SyncScroll { get; set; } = true;
         public bool WordWrap { get; set; } = true;
         public bool SidebarCollapsed { get; set; }
+
+        /// <summary>HTML format: write the page as three parts (HTML, CSS, JavaScript) that are put together for the preview.</summary>
+        public bool HtmlParts { get; set; }
+
+        /// <summary>HTML format: let the page's scripts run in the preview.</summary>
+        public bool RunScripts { get; set; } = true;
     }
 
     /// <summary>CSS colours (#RRGGBB) for the rendered page.</summary>

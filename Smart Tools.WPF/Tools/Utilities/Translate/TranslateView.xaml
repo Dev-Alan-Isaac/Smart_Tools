@@ -230,16 +230,15 @@
         <Grid Margin="16,8,16,16">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <!--  ================= OPTIONS SIDEBAR (shared ToolSidebar: collapses like the other tools) =================  -->
 
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
-                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16,16,16,16">
+            <controls:ToolSidebar>
+                <StackPanel>
 
                         <!--  ============ WHAT TO TRANSLATE ============  -->
                         <Border Style="{StaticResource SidebarGroupCardStyle}">
@@ -448,9 +447,8 @@
                             Margin="4,0,4,0"
                             Style="{StaticResource SidebarHint}"
                             Text="{DynamicResource Str_Translate_Credit}" />
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
 
             <!--  ================= MAIN =================  -->
 

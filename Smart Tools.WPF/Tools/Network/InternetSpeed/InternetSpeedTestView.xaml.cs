@@ -238,7 +238,38 @@ namespace Smart_Tools.WPF.Views
             var progress = new Progress<NetSpeedSample>(OnProgress);
             try
             {
-                var result = await _engine.RunAsync(options, progress, cts.Token);
+                // A server that does not answer is not the end of the test: the next one is tried (at most three in all).
+                SpeedTestResult? result = null;
+                Exception? failure = null;
+                var order = new List<SpeedTestServer> { options.Server };
+                order.AddRange(InternetSpeedTestManager.Servers.Where(s => s.Id != options.Server.Id));
+                for (int i = 0; i < Math.Min(3, order.Count) && result == null; i++)
+                {
+                    var server = order[i];
+                    var attempt = new SpeedTestOptions
+                    {
+                        Server = server,
+                        Duration = options.Duration,
+                        DataLimitBytes = options.DataLimitBytes,
+                        MeasureUpload = options.MeasureUpload,
+                    };
+                    try
+                    {
+                        result = await _engine.RunAsync(attempt, progress, cts.Token);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException && !cts.IsCancellationRequested)
+                    {
+                        failure = ex;
+                        options = attempt;   // the error text names the server that failed last
+                        Log.Warn($"Speed test: {server.Display} failed: {ex.Message}");
+                        if (i + 1 < Math.Min(3, order.Count))
+                        {
+                            ResetResults(attempt);
+                            TxtStatus.Text = Loc.F("Str_NetSpeed_TryingNext", "{0} didn't answer - trying {1}…", server.Name, order[i + 1].Name);
+                        }
+                    }
+                }
+                if (result == null) throw failure ?? new System.IO.IOException("No test server answered.");
                 ShowResult(result);
 
                 _history.Insert(0, result);

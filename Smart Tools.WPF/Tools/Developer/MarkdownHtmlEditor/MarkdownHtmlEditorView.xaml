@@ -328,6 +328,28 @@
                                             </StackPanel>
                                         </RadioButton>
                                     </Grid>
+
+                                    <!--  HTML only: write the page as three parts, and let its scripts run  -->
+                                    <WrapPanel x:Name="PanelHtmlOptions" Margin="0,10,0,0" Visibility="Collapsed">
+                                        <CheckBox
+                                            x:Name="ChkHtmlParts"
+                                            Click="ChkHtmlParts_Click"
+                                            Content="{DynamicResource Str_MdHtml_HtmlParts}"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                            ToolTip="{DynamicResource Str_MdHtml_HtmlPartsTip}" />
+                                        <CheckBox
+                                            x:Name="ChkRunScripts"
+                                            Click="ChkRunScripts_Click"
+                                            Content="{DynamicResource Str_MdHtml_RunScripts}"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                            ToolTip="{DynamicResource Str_MdHtml_RunScriptsTip}" />
+                                    </WrapPanel>
+                                    <TextBlock
+                                        x:Name="TxtHtmlOptionsNote"
+                                        Margin="2,2,0,0"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_MdHtml_HtmlOptionsNote}"
+                                        Visibility="Collapsed" />
                                 </StackPanel>
                             </Border>
 
@@ -712,12 +734,45 @@
                         <Grid x:Name="EditorPane">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <TextBlock Style="{StaticResource PaneLabel}" Text="{DynamicResource Str_MdHtml_SourceLabel}" />
+
+                            <!--  HTML / CSS / JavaScript tabs (HTML with "three parts" on)  -->
+                            <UniformGrid
+                                x:Name="PartTabs"
+                                Grid.Row="1"
+                                Margin="0,0,0,8"
+                                Columns="3"
+                                Visibility="Collapsed">
+                                <RadioButton
+                                    x:Name="TabHtml"
+                                    Margin="0,0,3,0"
+                                    Checked="PartTab_Checked"
+                                    Content="HTML"
+                                    GroupName="MdHtmlPart"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton
+                                    x:Name="TabCss"
+                                    Margin="3,0"
+                                    Checked="PartTab_Checked"
+                                    Content="CSS"
+                                    GroupName="MdHtmlPart"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton
+                                    x:Name="TabJs"
+                                    Margin="3,0,0,0"
+                                    Checked="PartTab_Checked"
+                                    Content="JavaScript"
+                                    GroupName="MdHtmlPart"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                            </UniformGrid>
+
                             <TextBox
                                 x:Name="TxtSource"
-                                Grid.Row="1"
+                                Grid.Row="2"
                                 Padding="14,12"
                                 AcceptsTab="True"
                                 FontSize="13"
@@ -726,6 +781,30 @@
                                 Style="{StaticResource CodeTextBox}"
                                 TextChanged="TxtSource_TextChanged"
                                 UndoLimit="500" />
+                            <TextBox
+                                x:Name="TxtCss"
+                                Grid.Row="2"
+                                Padding="14,12"
+                                AcceptsTab="True"
+                                FontSize="13"
+                                SelectionChanged="TxtSource_SelectionChanged"
+                                SpellCheck.IsEnabled="False"
+                                Style="{StaticResource CodeTextBox}"
+                                TextChanged="TxtSource_TextChanged"
+                                UndoLimit="500"
+                                Visibility="Collapsed" />
+                            <TextBox
+                                x:Name="TxtJs"
+                                Grid.Row="2"
+                                Padding="14,12"
+                                AcceptsTab="True"
+                                FontSize="13"
+                                SelectionChanged="TxtSource_SelectionChanged"
+                                SpellCheck.IsEnabled="False"
+                                Style="{StaticResource CodeTextBox}"
+                                TextChanged="TxtSource_TextChanged"
+                                UndoLimit="500"
+                                Visibility="Collapsed" />
                         </Grid>
 
                         <GridSplitter

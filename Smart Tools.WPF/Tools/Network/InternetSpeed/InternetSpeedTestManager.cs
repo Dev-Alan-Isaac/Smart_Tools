@@ -23,10 +23,10 @@ namespace Smart_Tools.WPF.Controllers
         // =================================================================
 
         /// <summary>
-        /// Cloudflare picks its nearest data centre and does download and
-        /// upload. Hetzner's file hosts are download-only fallbacks. The old
-        /// list used speed.hetzner.de; Hetzner's test files now live on
-        /// fsn1-speed / hel1-speed.hetzner.com.
+        /// Cloudflare picks its nearest data centre and does download and upload. OVH and ThinkBroadband host large public
+        /// test files (download only), as fallbacks. Hetzner's speed-test hosts were dropped: they reset any request that has a
+        /// query string, which is what the random cache-buster adds (see <see cref="SpeedTestServer.CacheBust"/>), and the
+        /// test then said "the connection was interrupted".
         /// </summary>
         public static readonly IReadOnlyList<SpeedTestServer> Servers = new[]
         {
@@ -42,21 +42,21 @@ namespace Smart_Tools.WPF.Controllers
             },
             new SpeedTestServer
             {
-                Id = "hetzner-fsn",
-                Name = "Hetzner",
-                Location = "Falkenstein, Germany · download only",
-                DownloadUrl = "https://fsn1-speed.hetzner.com/1GB.bin",
-                LatencyUrl = "https://fsn1-speed.hetzner.com/",
-                PingHost = "fsn1-speed.hetzner.com",
+                Id = "ovh",
+                Name = "OVHcloud",
+                Location = "Gravelines, France · download only",
+                DownloadUrl = "https://proof.ovh.net/files/1Gb.dat",
+                LatencyUrl = "https://proof.ovh.net/files/1Mb.dat",
+                PingHost = "proof.ovh.net",
             },
             new SpeedTestServer
             {
-                Id = "hetzner-hel",
-                Name = "Hetzner",
-                Location = "Helsinki, Finland · download only",
-                DownloadUrl = "https://hel1-speed.hetzner.com/1GB.bin",
-                LatencyUrl = "https://hel1-speed.hetzner.com/",
-                PingHost = "hel1-speed.hetzner.com",
+                Id = "thinkbroadband",
+                Name = "ThinkBroadband",
+                Location = "United Kingdom · download only",
+                DownloadUrl = "https://download.thinkbroadband.com/1GB.zip",
+                LatencyUrl = "https://download.thinkbroadband.com/5MB.zip",
+                PingHost = "download.thinkbroadband.com",
             },
         };
 
@@ -95,7 +95,10 @@ namespace Smart_Tools.WPF.Controllers
 
         /// <summary>The URL for one download request: the size filled in, plus a random part so no proxy serves it from a cache.</summary>
         public static string DownloadRequestUrl(SpeedTestServer server, long bytes) =>
-            CacheBust(server.DownloadUrl.Contains("{0}") ? string.Format(server.DownloadUrl, bytes) : server.DownloadUrl);
+            RequestUrl(server, server.DownloadUrl.Contains("{0}") ? string.Format(server.DownloadUrl, bytes) : server.DownloadUrl);
+
+        /// <summary>The URL to request: with the random cache-buster, unless this server cannot take a query string.</summary>
+        public static string RequestUrl(SpeedTestServer server, string url) => server.CacheBust ? CacheBust(url) : url;
 
         public static string CacheBust(string url) => url + (url.Contains('?') ? "&" : "?") + "r=" + Guid.NewGuid().ToString("N")[..12];
 

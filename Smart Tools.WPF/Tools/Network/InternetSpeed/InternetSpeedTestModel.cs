@@ -24,6 +24,13 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Host for ping (ICMP).</summary>
         public required string PingHost { get; init; }
 
+        /// <summary>
+        /// Add a random "?r=..." to every request so nothing along the way can answer from a cache. A few file hosts
+        /// (Hetzner's speed-test servers) reset any request that has a query string, which showed up as "the connection
+        /// was interrupted" - for those it is off, and the no-cache headers do the job.
+        /// </summary>
+        public bool CacheBust { get; init; } = true;
+
         public bool CanUpload => !string.IsNullOrEmpty(UploadUrl);
         public string Display => string.IsNullOrEmpty(Location) ? Name : $"{Name} · {Location}";
         public override string ToString() => Display;

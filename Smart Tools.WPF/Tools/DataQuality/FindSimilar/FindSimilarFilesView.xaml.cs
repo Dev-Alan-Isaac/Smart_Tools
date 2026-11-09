@@ -48,7 +48,7 @@ namespace Smart_Tools.WPF.Views
         private const double SidebarCollapsedWidth = 56;
         private const double NarrowColumnThreshold = 1100;
         private static string DialogTitle => Loc.T("Str_Tool_find-similar_Name", "Find Similar Files");
-        private const int ThumbnailSize = 240;
+        private const int ThumbnailSize = 320;
         private const int MaxBackgroundThumbnails = 600;
 
         private readonly SimilarManager _manager = new();

@@ -234,7 +234,12 @@
                         <Button
                             Width="26"
                             Height="26"
+                            MinWidth="26"
+                            MinHeight="26"
                             Margin="0,0,6,0"
+                            Padding="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
                             Click="BtnPickColor_Click"
                             Cursor="Hand"
                             Tag="{Binding}"
@@ -243,6 +248,10 @@
                                 <ControlTemplate TargetType="Button">
                                     <Grid>
                                         <Ellipse
+                                            Width="24"
+                                            Height="24"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
                                             Fill="{Binding ColorHex}"
                                             Stroke="{DynamicResource SidebarBorder}"
                                             StrokeThickness="1.5" />
@@ -314,19 +323,20 @@
                             ToolTip="{DynamicResource Str_LogViewer_LinesContainingThisGet}" />
                     </Border>
 
-                    <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                    <WrapPanel Margin="0,8,0,0">
                         <CheckBox
+                            Margin="0,0,14,6"
                             Content="{DynamicResource Str_LogViewer_RegularExpression}"
                             FontSize="11"
                             IsChecked="{Binding IsRegex}"
                             ToolTip="{DynamicResource Str_LogViewer_TreatTheTextAs}" />
                         <CheckBox
-                            Margin="12,0,0,0"
+                            Margin="0,0,0,6"
                             Content="{DynamicResource Str_Rename_MatchCase}"
                             FontSize="11"
                             IsChecked="{Binding CaseSensitive}"
                             ToolTip="{DynamicResource Str_LogViewer_ErrorAndErrorAre}" />
-                    </StackPanel>
+                    </WrapPanel>
 
                     <TextBlock
                         Margin="0,6,0,0"

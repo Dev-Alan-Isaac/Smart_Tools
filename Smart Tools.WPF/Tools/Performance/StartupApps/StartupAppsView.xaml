@@ -256,7 +256,7 @@
                                 ElementStyle="{StaticResource EllipsisCellTextStyle}"
                                 Header="{DynamicResource Str_Startup_ColSource}" />
 
-                            <DataGridTemplateColumn Width="84" Header="">
+                            <DataGridTemplateColumn Width="88" CellStyle="{StaticResource CompactCellStyle}" Header="">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate DataType="{x:Type models:StartupApp}">
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">

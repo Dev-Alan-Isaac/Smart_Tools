@@ -86,7 +86,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Margin="0,0,0,10">
+            <Grid x:Name="HeaderGrid" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -149,6 +149,7 @@
                     </Button>
                     <Button
                         Click="BtnClear_Click"
+                        Margin="0,0,6,0"
                         Style="{StaticResource DangerButtonStyle}"
                         ToolTip="{DynamicResource Str_Network_ClearConsoleTooltip}">
                         <Grid HorizontalAlignment="Center">
@@ -166,10 +167,24 @@
                             <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Network_ClearConsole}" TextWrapping="Wrap" />
                         </Grid>
                     </Button>
+                    <Button
+                        x:Name="BtnToggle"
+                        Width="32"
+                        Height="32"
+                        Click="BtnToggle_Click"
+                        Style="{StaticResource NeutralIconButtonStyle}"
+                        ToolTip="{DynamicResource Str_NetworkConsole_Collapse}">
+                        <materialDesign:PackIcon
+                            x:Name="IconToggle"
+                            Width="18"
+                            Height="18"
+                            Kind="ChevronDown" />
+                    </Button>
                 </StackPanel>
             </Grid>
 
             <Border
+                x:Name="BodyBorder"
                 Grid.Row="1"
                 Background="{DynamicResource InputBg}"
                 BorderBrush="{DynamicResource CardBorder}"
