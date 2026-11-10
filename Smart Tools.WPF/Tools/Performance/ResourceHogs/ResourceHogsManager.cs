@@ -47,12 +47,11 @@ namespace Smart_Tools.WPF.Controllers
             lock (_gate)
             {
                 if (_cts != null) return;
-                if (!_loaded) { Store.Load(); _loaded = true; }
                 _cts = new CancellationTokenSource();
                 var token = _cts.Token;
                 _previous.Clear();
                 _lastReading = DateTime.UtcNow;
-                new Thread(() => Loop(token)) { IsBackground = true, Name = "Resource hogs recorder", Priority = ThreadPriority.BelowNormal }.Start();
+                new Thread(() => { EnsureLoaded(); Loop(token); }) { IsBackground = true, Name = "Resource hogs recorder", Priority = ThreadPriority.BelowNormal }.Start();
             }
         }
 
@@ -63,7 +62,7 @@ namespace Smart_Tools.WPF.Controllers
                 _cts?.Cancel();
                 _cts = null;
             }
-            Store.Save();
+            Task.Run(Store.Save);   // the file can be several MB: never on the screen's thread
         }
 
         /// <summary>Loads the saved history once (so a page can show it before recording starts).</summary>
@@ -71,6 +70,9 @@ namespace Smart_Tools.WPF.Controllers
         {
             lock (_gate) { if (_loaded) return; Store.Load(); _loaded = true; }
         }
+
+        /// <summary>Same, without holding up the caller (reading a day of history takes about half a second).</summary>
+        public Task EnsureLoadedAsync() => _loaded ? Task.CompletedTask : Task.Run(EnsureLoaded);
 
         private void Loop(CancellationToken token)
         {
@@ -260,10 +262,13 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>At exit: stops both (and the network trace session) and writes the history before the process ends.</summary>
         public static void StopAll()
         {
             if (ResourceHogRecorder.Instance.IsRunning) ResourceHogRecorder.Instance.Stop();
             if (BandwidthRecorder.Instance.IsRunning) BandwidthRecorder.Instance.Stop();
+            ResourceHogRecorder.Instance.Store.Save();
+            BandwidthRecorder.Instance.Store.Save();
         }
     }
 }

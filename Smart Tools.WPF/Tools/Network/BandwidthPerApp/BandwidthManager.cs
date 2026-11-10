@@ -52,6 +52,8 @@ namespace Smart_Tools.WPF.Controllers
             lock (_gate) { if (_loaded) return; Store.Load(); _loaded = true; }
         }
 
+        public Task EnsureLoadedAsync() => _loaded ? Task.CompletedTask : Task.Run(EnsureLoaded);
+
         /// <summary>Starts counting. Returns null, or why it couldn't (not administrator, the trace is busy...).</summary>
         public string? Start()
         {
@@ -59,7 +61,6 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (_session != null) return null;
                 if (!HardwareSensorsManager.IsAdministrator()) return "NotAdministrator";
-                if (!_loaded) { Store.Load(); _loaded = true; }
                 try
                 {
                     var session = new TraceEventSession(SessionName);
@@ -72,7 +73,7 @@ namespace Smart_Tools.WPF.Controllers
                     var token = _cts.Token;
                     new Thread(() => { try { session.Source.Process(); } catch (Exception ex) when (ex is not OutOfMemoryException) { Log.Warn("Bandwidth trace ended: " + ex.Message); } })
                         { IsBackground = true, Name = "Bandwidth trace" }.Start();
-                    new Thread(() => FlushLoop(token)) { IsBackground = true, Name = "Bandwidth recorder", Priority = ThreadPriority.BelowNormal }.Start();
+                    new Thread(() => { EnsureLoaded(); FlushLoop(token); }) { IsBackground = true, Name = "Bandwidth recorder", Priority = ThreadPriority.BelowNormal }.Start();
                 }
                 catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException or Win32Exception or System.Runtime.InteropServices.COMException or NotSupportedException)
                 {
@@ -86,8 +87,7 @@ namespace Smart_Tools.WPF.Controllers
         public void Stop()
         {
             lock (_gate) StopLocked();
-            Flush();
-            Store.Save();
+            Task.Run(() => { Flush(); Store.Save(); });   // the file can be several MB: never on the screen's thread
         }
 
         private void StopLocked()

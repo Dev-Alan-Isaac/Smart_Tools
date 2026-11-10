@@ -1,4 +1,6 @@
 using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controls;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -34,7 +36,6 @@ namespace Smart_Tools.WPF.Views
             _applying = false;
             _loaded = true;
 
-            ResourceHogRecorder.Instance.EnsureLoaded();
             if (_settings.Recording) ResourceHogRecorder.Instance.Start();
             UpdateTexts();
             Refresh();
@@ -47,7 +48,7 @@ namespace Smart_Tools.WPF.Views
         {
             _refresh.Stop();
             if (_loaded) SaveSettings();
-            ResourceHogRecorder.Instance.Store.Save();   // recording itself goes on in the background
+            Task.Run(ResourceHogRecorder.Instance.Store.Save);   // recording itself goes on in the background; the file is written off the screen thread
             _loaded = false;
         }
 
@@ -97,10 +98,27 @@ namespace Smart_Tools.WPF.Views
                 : Loc.T("Str_ResourceHogs_RecordingOff", "Not recording. Start it and come back in an hour to see which programs used the most.");
         }
 
-        private void Refresh()
+        private int _refreshId;
+
+        /// <summary>Reads the history and builds the ranking on a worker thread (a full day is a few MB), then shows it. A newer request makes an older one stand down.</summary>
+        private async void Refresh()
         {
+            int id = ++_refreshId;
             var rec = ResourceHogRecorder.Instance;
-            var data = ResourceHogsManager.Build(rec.Store, Metric(), TimeSpan.FromHours(Period()));
+            var metric = Metric();
+            var period = TimeSpan.FromHours(Period());
+            UsageBoardData data;
+            try
+            {
+                await rec.EnsureLoadedAsync();
+                data = await Task.Run(() => ResourceHogsManager.Build(rec.Store, metric, period));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            {
+                Log.Warn("History could not be read: " + ex.Message);
+                return;
+            }
+            if (id != _refreshId || !_loaded) return;
             bool recording = rec.IsRunning;
             Board.SetEmptyKeys(recording ? "Str_ResourceHogs_WaitTitle" : "Str_ResourceHogs_EmptyTitle", recording ? "Str_ResourceHogs_WaitHint" : "Str_ResourceHogs_EmptyHint");
             Board.SetData(data);

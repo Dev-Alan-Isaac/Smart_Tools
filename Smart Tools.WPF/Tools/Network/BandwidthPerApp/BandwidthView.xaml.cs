@@ -1,4 +1,6 @@
 using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controls;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -35,7 +37,6 @@ namespace Smart_Tools.WPF.Views
             _applying = false;
             _loaded = true;
 
-            BandwidthRecorder.Instance.EnsureLoaded();
             AdminBanner.ShowIfNotElevated();
             if (_settings.Recording) _startError = BandwidthRecorder.Instance.Start();
             UpdateTexts();
@@ -49,7 +50,7 @@ namespace Smart_Tools.WPF.Views
         {
             _refresh.Stop();
             if (_loaded) SaveSettings();
-            BandwidthRecorder.Instance.Store.Save();   // recording itself goes on in the background
+            Task.Run(BandwidthRecorder.Instance.Store.Save);   // recording itself goes on in the background; the file is written off the screen thread
             _loaded = false;
         }
 
@@ -108,10 +109,27 @@ namespace Smart_Tools.WPF.Views
                         : Loc.T("Str_Bandwidth_RecordingOff", "Not recording. Start it and come back later to see which programs used the most data.");
         }
 
-        private void Refresh()
+        private int _refreshId;
+
+        /// <summary>Reads the history and builds the ranking on a worker thread (a full day is a few MB), then shows it. A newer request makes an older one stand down.</summary>
+        private async void Refresh()
         {
+            int id = ++_refreshId;
             var rec = BandwidthRecorder.Instance;
-            var data = BandwidthManager.Build(rec.Store, Metric(), TimeSpan.FromHours(Period()));
+            var metric = Metric();
+            var period = TimeSpan.FromHours(Period());
+            UsageBoardData data;
+            try
+            {
+                await rec.EnsureLoadedAsync();
+                data = await Task.Run(() => BandwidthManager.Build(rec.Store, metric, period));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            {
+                Log.Warn("History could not be read: " + ex.Message);
+                return;
+            }
+            if (id != _refreshId || !_loaded) return;
             bool recording = rec.IsRunning;
             Board.SetEmptyKeys(recording ? "Str_Bandwidth_WaitTitle" : "Str_Bandwidth_EmptyTitle", recording ? "Str_Bandwidth_WaitHint" : "Str_Bandwidth_EmptyHint");
             Board.SetData(data);

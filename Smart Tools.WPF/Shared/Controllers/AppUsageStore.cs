@@ -61,16 +61,17 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (!_dirty) return;
                 PruneLocked(DateTime.UtcNow);
-                file = new AppUsageFile { Buckets = _buckets.Select(Clone).ToList() };
+                file = new AppUsageFile { Buckets = _buckets.Select(Rounded).ToList() };
                 _dirty = false;
             }
             JsonSettings.Save(_name, file);
         }
 
+        /// <summary>Empties the history now; the (small) empty file is written in the background.</summary>
         public void Clear()
         {
             lock (_gate) { _buckets.Clear(); _dirty = true; }
-            Save();
+            Task.Run(Save);
         }
 
         private static long MinuteOf(DateTime utc) => (long)Math.Floor((utc - DateTime.UnixEpoch).TotalMinutes);
@@ -137,6 +138,14 @@ namespace Smart_Tools.WPF.Controllers
             Minute = b.Minute,
             Samples = b.Samples,
             Apps = b.Apps.ToDictionary(kv => kv.Key, kv => (double[])kv.Value.Clone()),
+        };
+
+        /// <summary>The copy that goes to the file: one decimal is plenty for percentages, megabytes and bytes, and cuts the file to under half.</summary>
+        private static UsageBucket Rounded(UsageBucket b) => new()
+        {
+            Minute = b.Minute,
+            Samples = b.Samples,
+            Apps = b.Apps.ToDictionary(kv => kv.Key, kv => kv.Value.Select(v => Math.Round(v, 1)).ToArray()),
         };
     }
 
