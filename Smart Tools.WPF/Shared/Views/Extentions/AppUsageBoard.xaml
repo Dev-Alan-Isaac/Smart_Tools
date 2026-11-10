@@ -1,0 +1,114 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Controls.AppUsageBoard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--  Ranking of programs on the left, the chosen program's chart on the right. Shared by Resource Hogs History and Bandwidth per App.  -->
+
+    <Grid>
+        <Grid x:Name="Body">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.15*" MinWidth="320" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <ContentControl x:Name="ListHeader" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
+                    <Grid Grid.Row="1" Margin="12,12,12,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="96" />
+                            <ColumnDefinition Width="96" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="HeadName" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                        <TextBlock x:Name="HeadValue" Grid.Column="1" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right" />
+                        <TextBlock x:Name="HeadPeak" Grid.Column="2" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right" />
+                    </Grid>
+                    <ListBox
+                        x:Name="List"
+                        Grid.Row="2"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        HorizontalContentAlignment="Stretch"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        SelectionChanged="List_SelectionChanged">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,2" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="8">
+                                                <ContentPresenter />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlay}" />
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="10,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="26" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="96" />
+                                        <ColumnDefinition Width="96" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding Rank}" />
+                                    <StackPanel Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <ProgressBar Height="5" Margin="0,5,0,0" Maximum="100" Value="{Binding Share, Mode=OneWay}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding ValueText}" TextAlignment="Right" />
+                                    <TextBlock Grid.Column="3" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding PeakText}" TextAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="ChartTitle" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="ChartSubtitle" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <controls:TrendChart x:Name="Chart" Grid.Row="1" Margin="0,14,0,0" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <StackPanel x:Name="EmptyState" MaxWidth="460" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+            <ContentControl x:Name="EmptyBadge" Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.ChartTimelineVariant}" />
+            <TextBlock x:Name="EmptyTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" />
+            <TextBlock x:Name="EmptyHint" Margin="0,4,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>

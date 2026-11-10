@@ -1,0 +1,89 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.BandwidthView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--  Backend: Controllers/BandwidthManager.cs (ETW network trace + ranking), Controllers/AppUsageStore.cs (the per-minute history). UI only here.  -->
+
+    <UserControl.Resources>
+        <Style x:Key="BwHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,8,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border ctl:Tour.Key="Str_Tour_Bandwidth_Record" ctl:Tour.Order="1" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bandwidth_RecordHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.RecordCircleOutline}" />
+                            <Button x:Name="BtnRecord" MinHeight="38" Click="BtnRecord_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon x:Name="IconRecord" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Record" />
+                                    <TextBlock x:Name="TxtRecord" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock x:Name="TxtRecordState" Style="{StaticResource BwHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_Bandwidth_Period" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bandwidth_PeriodHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ClockOutline}" />
+                            <UniformGrid Columns="2">
+                                <RadioButton x:Name="Period1" Margin="0,0,2,4" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Hour1}" GroupName="BwPeriod" Style="{StaticResource ModeToggleButtonStyle}" Tag="1" />
+                                <RadioButton x:Name="Period3" Margin="2,0,0,4" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Hours3}" GroupName="BwPeriod" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="3" />
+                                <RadioButton x:Name="Period6" Margin="0,0,2,0" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Hours6}" GroupName="BwPeriod" Style="{StaticResource ModeToggleButtonStyle}" Tag="6" />
+                                <RadioButton x:Name="Period24" Margin="2,0,0,0" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Hours24}" GroupName="BwPeriod" Style="{StaticResource ModeToggleButtonStyle}" Tag="24" />
+                            </UniformGrid>
+                            <TextBlock x:Name="TxtHistory" Style="{StaticResource BwHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_Bandwidth_Metric" ctl:Tour.Order="3" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bandwidth_ShowHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ChartBar}" />
+                            <RadioButton x:Name="MetricTotal" Margin="0,0,0,4" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Total}" GroupName="BwMetric" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
+                            <RadioButton x:Name="MetricDown" Margin="0,0,0,4" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Download}" GroupName="BwMetric" Style="{StaticResource ModeToggleButtonStyle}" />
+                            <RadioButton x:Name="MetricUp" Checked="Option_Changed" Content="{DynamicResource Str_Bandwidth_Upload}" GroupName="BwMetric" Style="{StaticResource ModeToggleButtonStyle}" />
+                            <TextBlock x:Name="TxtMetricHint" Style="{StaticResource BwHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_Bandwidth_Data" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bandwidth_DataHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.DatabaseOutline}" />
+                            <TextBlock Margin="2,0,0,8" FontSize="11" Foreground="{DynamicResource SidebarText}" Text="{DynamicResource Str_Bandwidth_DataNote}" TextWrapping="Wrap" />
+                            <Button HorizontalAlignment="Left" Click="BtnClear_Click" Content="{DynamicResource Str_Bandwidth_Clear}" Style="{StaticResource NeutralIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <controls:ElevationBannerCard x:Name="AdminBanner" Margin="0,0,0,12" MessageKey="Str_Bandwidth_AdminWarning" TitleKey="Str_Bandwidth_AdminTitle" />
+                <controls:AppUsageBoard x:Name="Board" Grid.Row="1" ctl:Tour.Key="Str_Tour_Bandwidth_Board" ctl:Tour.Order="5" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

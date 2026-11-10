@@ -32,6 +32,9 @@ namespace Smart_Tools.WPF.Controls
         private Func<double, string> _format = v => v.ToString("0.##", CultureInfo.CurrentCulture);
         private bool _higherIsWorse;
 
+        /// <summary>How the first and last time are written (a date for months of history, hours and minutes for a day).</summary>
+        public string DateFormat { get; set; } = "d MMM yyyy";
+
         public TrendChart()
         {
             SetResourceReference(LineBrushProperty, "AccentColor");
@@ -88,8 +91,8 @@ namespace Smart_Tools.WPF.Controls
 
             Text(dc, _format(hi), new Point(left - 8, plot.Top), 10.5, TextBrush, right: true);
             Text(dc, _format(lo), new Point(left - 8, plot.Bottom), 10.5, TextBrush, right: true, bottom: true);
-            Text(dc, t0.ToString("d MMM yyyy", CultureInfo.CurrentCulture), new Point(plot.Left, plot.Bottom + 6), 10.5, TextBrush);
-            if (_points.Count > 1) Text(dc, t1.ToString("d MMM yyyy", CultureInfo.CurrentCulture), new Point(plot.Right, plot.Bottom + 6), 10.5, TextBrush, right: true);
+            Text(dc, t0.ToString(DateFormat, CultureInfo.CurrentCulture), new Point(plot.Left, plot.Bottom + 6), 10.5, TextBrush);
+            if (_points.Count > 1) Text(dc, t1.ToString(DateFormat, CultureInfo.CurrentCulture), new Point(plot.Right, plot.Bottom + 6), 10.5, TextBrush, right: true);
 
             if (_points.Count > 1)
             {

@@ -323,6 +323,8 @@ namespace Smart_Tools.WPF
             Add<ScreenOcrView>("screen-ocr", v => v.CancelActiveRun());
 
             // Planned tools with a real husk view (layout + disabled controls, no logic yet; see FUTURE_IDEAS.md)
+            Add<ResourceHogsView>("resource-hogs", v => v.CancelActiveRun());   // keeps recording in the background, saves the history
+            Add<BandwidthView>("bandwidth-per-app", v => v.CancelActiveRun());
             Add<ProcessKillerView>("process-killer", v => v.CancelActiveRun());   // stops reading processes
             Add<StartupAppsView>("startup-apps", v => v.CancelActiveRun());
             Add<ServicesView>("services", v => v.CancelActiveRun());

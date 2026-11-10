@@ -148,6 +148,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "system-monitor", Name = "System Monitor", Icon = "MonitorDashboard", CategoryId = "performance", Description = "Live CPU, memory, disks, network and GPU, like Task Manager", Keywords = "cpu gpu ram memory disk network usage specs task manager performance rendimiento" },
             new ToolInfo { Id = "hardware-sensors", Name = "Hardware Sensors", Icon = "Thermometer", CategoryId = "performance", Description = "Temperatures, fans, clocks, voltages and power, part by part", Keywords = "temperature sensors fans voltage clock power hardware monitor librehardwaremonitor temperatura sensores ventiladores" },
             new ToolInfo { Id = "process-killer", Name = "Process Killer", Icon = "SkullCrossbonesOutline", CategoryId = "performance", Description = "See every running process and end the stuck ones safely", Keywords = "process kill task manager end pid port lock file locked cpu memory proceso finalizar tarea" },
+            new ToolInfo { Id = "resource-hogs", Name = "Resource Hogs History", Icon = "ChartTimelineVariant", CategoryId = "performance", Description = "Which programs used the most CPU, memory and disk over the last hours", Keywords = "resource hogs history cpu memory ram disk usage programs apps heavy slow top consumers rendimiento historial programas consumo" },
 
             // System
             new ToolInfo { Id = "startup-apps", Name = "Startup Apps", Icon = "RocketLaunchOutline", CategoryId = "system", Description = "See what starts with Windows and switch each app on or off", Keywords = "startup apps boot login run programs autostart task manager disable arranque inicio programas aplicaciones" },
@@ -186,6 +187,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "device-scanner", Name = "Device Scanner", Icon = "Radar", CategoryId = "network", Description = "Find devices on your network", Keywords = "lan scan ip devices" },
             new ToolInfo { Id = "internet-speed", Name = "Internet Speed Test", Icon = "Speedometer", CategoryId = "network", Description = "Measure download and upload speed", Keywords = "speed test bandwidth ping wifi" },
             new ToolInfo { Id = "net-speed", Name = "Network Speed", Icon = "SpeedometerMedium", CategoryId = "network", Description = "A live download and upload meter that can float on your screen, with the adapter's manufacturer", Keywords = "network speed widget floating upload download bandwidth monitor mac manufacturer oui adapter overlay" },
+            new ToolInfo { Id = "bandwidth-per-app", Name = "Bandwidth per App", Icon = "LanConnect", CategoryId = "network", Description = "How much data each program sent and received over the last hours", Keywords = "bandwidth data usage per app program upload download network traffic who is using internet consumo datos programa red trafico" },
 
             // Developer
             new ToolInfo { Id = "api-tester", Name = "API Tester", Icon = "Webhook", CategoryId = "developer", Description = "Send web requests and read the replies", Keywords = "http rest request json postman" },

@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 116 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 118 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **116 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -147,6 +147,7 @@ Smart Tools has **116 tools** in 21 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **System Monitor** | `system-monitor` | Live CPU, memory, disks, network and GPU, like Task Manager |
 | **Hardware Sensors** | `hardware-sensors` | Temperatures, fans, clocks, voltages and power, part by part |
+| **Resource Hogs History** | `resource-hogs` | Which programs used the most CPU, memory and disk over the last 24 hours (recorded every 5 s while the app is open, per program name and minute, stored locally) |
 | **Process Killer** | `process-killer` | See every running process and end the stuck ones safely |
 
 ### System
@@ -202,6 +203,7 @@ Smart Tools has **116 tools** in 21 sidebar categories. Every tool opens inside 
 | **Device Scanner** | `device-scanner` | Find devices on your network |
 | **Internet Speed Test** | `internet-speed` | Measure download and upload speed |
 | **Network Speed** | `net-speed` | A live download and upload meter that can float on your screen, with the adapter's manufacturer |
+| **Bandwidth per App** | `bandwidth-per-app` | Data each program sent and received over the last 24 hours, from the Windows network trace (needs administrator); totals per program name only |
 
 ### Developer
 *Test, inspect and format*
@@ -450,7 +452,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 116 tools have one. The tour only covers the page that is open.
+All 118 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -605,7 +607,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 116 tools*
+*Currently exploring unified testing approach across all 118 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

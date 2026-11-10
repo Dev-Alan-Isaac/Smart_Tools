@@ -80,6 +80,7 @@ namespace Smart_Tools.WPF
             ImageLoad.ConfigureLimits();
             base.OnStartup(e);
             ResourceMonitor.Start(Dispatcher);
+            UsageRecorders.StartIfEnabled();
 
             // "Start with Windows" stores this exe's path: write it again from where the app really is now, so moving the
             // app (or switching between portable and installed) never leaves an entry that points at a folder that is gone.
@@ -193,6 +194,7 @@ namespace Smart_Tools.WPF
                 _activateEvent?.Dispose();
                 _instanceMutex.Dispose();
                 ResourceMonitor.Stop();
+                UsageRecorders.StopAll();
                 try { System.IO.File.Delete(MarkerPath); } catch (System.IO.IOException) { }
             }
             base.OnExit(e);
