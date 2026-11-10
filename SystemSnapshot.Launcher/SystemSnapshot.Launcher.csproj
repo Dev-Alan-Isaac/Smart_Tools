@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Starter for the Windows 7+ System Snapshot Collector. It targets .NET Framework 3.5, which Windows 7 already has,
+		so it can start on a PC that has no .NET 4.5 yet: if 4.5 is missing it installs the bundled offline installer
+		(prerequisites\NDP452-KB2901907-x86-x64-AllOS-ENU.exe) and then starts app\SystemSnapshot.exe.
+	-->
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net35</TargetFramework>
+		<LangVersion>7.3</LangVersion>
+		<AssemblyName>SystemSnapshot</AssemblyName>
+		<RootNamespace>SystemSnapshotLauncher</RootNamespace>
+		<Product>System Snapshot Collector</Product>
+		<Version>1.0.0</Version>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<Prefer32Bit>false</Prefer32Bit>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+
+</Project>
