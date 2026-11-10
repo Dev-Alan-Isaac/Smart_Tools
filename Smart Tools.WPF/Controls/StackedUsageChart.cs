@@ -89,7 +89,7 @@ namespace Smart_Tools.WPF.Controls
             if (max <= 0) return 1;
             double exp = Math.Pow(10, Math.Floor(Math.Log10(max)));
             double f = max / exp;
-            double n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+            double n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;   // fifths of 1, 2, 5 or 10 are round numbers
             return n * exp;
         }
 
@@ -106,11 +106,11 @@ namespace Smart_Tools.WPF.Controls
             double top = Nice(Math.Max(1e-9, totals.DefaultIfEmpty(0).Max()) * 1.05);
 
             var gridPen = new Pen(GridBrush, 1);
-            for (int i = 0; i <= 4; i++)
+            for (int i = 0; i <= 5; i++)
             {
-                double y = plot.Bottom - plot.Height * i / 4;
+                double y = plot.Bottom - plot.Height * i / 5;
                 dc.DrawLine(gridPen, new Point(plot.Left, y), new Point(plot.Right, y));
-                if (i > 0) Text(dc, _data.Format(top * i / 4), new Point(plot.Left - 8, y), 10.5, right: true, middle: true);
+                if (i > 0) Text(dc, _data.Format(top * i / 5), new Point(plot.Left - 8, y), 10.5, right: true, middle: true);
             }
             Text(dc, _data.Format(0), new Point(plot.Left - 8, plot.Bottom), 10.5, right: true, middle: true);
 

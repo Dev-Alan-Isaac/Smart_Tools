@@ -8,7 +8,7 @@
     <!--  Three figures on top, programs stacked over time, then the ranking. Shared by Resource Hogs History and Bandwidth per App.  -->
 
     <Grid>
-        <Grid x:Name="Body">
+        <Grid x:Name="Body" Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="14" />
