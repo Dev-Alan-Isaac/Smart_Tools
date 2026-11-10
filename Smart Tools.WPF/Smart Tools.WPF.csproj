@@ -2,6 +2,9 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
+		<!-- Always self-contained: every build carries .NET, so Settings > Installation can make a portable copy for a USB from any build. -->
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
 		<TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
 		<RootNamespace>Smart_Tools.WPF</RootNamespace>
 		<Nullable>enable</Nullable>
