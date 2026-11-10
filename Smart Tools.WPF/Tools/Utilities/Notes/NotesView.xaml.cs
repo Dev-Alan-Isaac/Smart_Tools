@@ -124,6 +124,10 @@ namespace Smart_Tools.WPF.Views
             NoteWidgetManager.Changed += UpdateWidgetButton;
             ApplyPendingSelect();
             UpdateWidgetButton();
+
+            // The page is reused: leaving it locked the open note, but the editor still shows the old state.
+            // Redraw it so the password box comes back (no new note needed).
+            if (_selected is { IsProtected: true } open) ShowEditor(open);
         }
 
         /// <summary>A pinned widget asked to show its note here.</summary>

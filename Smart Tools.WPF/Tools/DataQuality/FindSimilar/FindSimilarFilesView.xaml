@@ -394,11 +394,14 @@
                             Text="{Binding Folder}"
                             TextTrimming="CharacterEllipsis"
                             ToolTip="{Binding Folder}" />
+                        <WrapPanel
+                            Margin="0,8,0,0"
+                            Loaded="ReviewStats_Loaded"
+                            Orientation="Horizontal" />
                         <TextBlock
                             Margin="0,2,0,0"
                             FontSize="11"
                             Foreground="{DynamicResource TextSecondary}">
-                            <Run Text="{Binding Details, Mode=OneWay}" />
                             <Run Text="{DynamicResource Str_DuplicateFinder_Modified}" />
                             <Run Text="{Binding Modified, Mode=OneWay}" />
                         </TextBlock>
@@ -1237,7 +1240,8 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 <DataGridTemplateColumn
-                                    Width="52"
+                                    Width="84"
+                                    MinWidth="84"
                                     CellStyle="{StaticResource CompactCellStyle}"
                                     CellTemplate="{StaticResource ThumbCellTemplate}"
                                     Header="{DynamicResource Str_FindSimilar_ColHeaderPreview}" />

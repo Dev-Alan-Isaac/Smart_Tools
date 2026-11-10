@@ -305,6 +305,33 @@ namespace Smart_Tools.WPF.Views
                 host.Children.Add(StatChip(PackIconKind.TimerOutline, item.Duration, other.HasDuration ? item.DurationSeconds.CompareTo(other.DurationSeconds) : 0, "Str_FindSimilar_StatDuration", "Length"));
         }
 
+        /// <summary>
+        /// Review drawer cards: same chips as the compare view. A file is "more" when it beats every other copy in
+        /// the group, "less" when every other copy beats it, otherwise neutral.
+        /// </summary>
+        private void ReviewStats_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.WrapPanel host || host.DataContext is not SimilarFileItem item) return;
+            var others = _reviewGroup?.Items.Where(i => !ReferenceEquals(i, item)).ToList();
+            host.Children.Clear();
+
+            static int Rank(IEnumerable<long> others, long mine) =>
+                !others.Any() ? 0 : mine > others.Max() ? 1 : mine < others.Min() ? -1 : 0;
+
+            var rest = others ?? new List<SimilarFileItem>();
+            if (item.HasResolution)
+            {
+                var px = rest.Where(o => o.HasResolution).Select(o => (long)o.PixelCount);
+                host.Children.Add(StatChip(PackIconKind.ImageSizeSelectActual, item.Resolution, Rank(px, (long)item.PixelCount), "Str_FindSimilar_StatResolution", "Resolution"));
+            }
+            host.Children.Add(StatChip(PackIconKind.Harddisk, item.Size, Rank(rest.Select(o => (long)o.SizeBytes), (long)item.SizeBytes), "Str_FindSimilar_StatSize", "File size"));
+            if (item.HasDuration)
+            {
+                var secs = rest.Where(o => o.HasDuration).Select(o => (long)(o.DurationSeconds * 1000));
+                host.Children.Add(StatChip(PackIconKind.TimerOutline, item.Duration, Rank(secs, (long)(item.DurationSeconds * 1000)), "Str_FindSimilar_StatDuration", "Length"));
+            }
+        }
+
         private static Border StatChip(PackIconKind icon, string text, int versusOther, string tipKey, string tipFallback)
         {
             // Equal (or the other side has no value to compare): info colours; more: success; less: warning.
