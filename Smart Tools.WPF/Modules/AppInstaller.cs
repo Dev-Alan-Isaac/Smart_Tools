@@ -249,6 +249,9 @@ namespace Smart_Tools.WPF
                 bool existed = Directory.Exists(targetFolder);
                 try
                 {
+                    // A folder that relies on an installed .NET would not start on the PC the copy is made for.
+                    if (!File.Exists(Path.Combine(AppMode.ExeFolder, "coreclr.dll")))
+                        return new InstallResult(false, false, Loc.T("Str_Install_MsgNeedsRuntime", "This copy of Smart Tools does not carry .NET with it, so a portable copy would not start on a PC without .NET 10. Make the portable copy from the self-contained release (publish with the win-x64 profile) instead."), null);
                     if (existed && Directory.EnumerateFileSystemEntries(targetFolder).Any())
                         return new InstallResult(false, false, Loc.T("Str_Install_MsgEmptyFolder", "Choose an empty folder."), null);
                     Directory.CreateDirectory(targetFolder);
