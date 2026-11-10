@@ -22,7 +22,7 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             _refresh.Tick += (_, _) => Refresh();
-            Board.SetTexts("Str_Bandwidth_ListHeader", "Str_Bandwidth_ColProgram", "Str_Bandwidth_EmptyTitle", "Str_Bandwidth_EmptyHint");
+            Board.SetTexts("Str_Bandwidth_ChartHeader", "Str_Bandwidth_ListHeader", "Str_Bandwidth_ColProgram", "Str_Bandwidth_EmptyTitle", "Str_Bandwidth_EmptyHint");
         }
 
         private void Root_Loaded(object sender, RoutedEventArgs e)
@@ -79,7 +79,7 @@ namespace Smart_Tools.WPF.Views
             else
             {
                 _startError = rec.Start();
-                _settings.Recording = _startError == null;
+                _settings.Recording = true;   // the wish: it starts by itself next time it can (administrator)
                 if (_startError == "NotAdministrator") AdminBanner.ShowIfNotElevated();
             }
             SaveSettings();
@@ -106,12 +106,6 @@ namespace Smart_Tools.WPF.Views
                     : on
                         ? Loc.F("Str_Bandwidth_RecordingOn", "Recording while Smart Tools is open, even when you leave this page. {0:N0} transfers seen so far.", BandwidthRecorder.Instance.EventsSeen)
                         : Loc.T("Str_Bandwidth_RecordingOff", "Not recording. Start it and come back later to see which programs used the most data.");
-            TxtMetricHint.Text = Metric() switch
-            {
-                BandwidthMetric.Total => Loc.T("Str_Bandwidth_HintTotal", "Data sent plus received, in total."),
-                BandwidthMetric.Download => Loc.T("Str_Bandwidth_HintDownload", "Data each program received from the internet or your network."),
-                _ => Loc.T("Str_Bandwidth_HintUpload", "Data each program sent."),
-            };
         }
 
         private void Refresh()
@@ -120,7 +114,7 @@ namespace Smart_Tools.WPF.Views
             var data = BandwidthManager.Build(rec.Store, Metric(), TimeSpan.FromHours(Period()));
             bool recording = rec.IsRunning;
             Board.SetEmptyKeys(recording ? "Str_Bandwidth_WaitTitle" : "Str_Bandwidth_EmptyTitle", recording ? "Str_Bandwidth_WaitHint" : "Str_Bandwidth_EmptyHint");
-            Board.SetData(data, Period() <= 24 ? "HH:mm" : "d MMM HH:mm");
+            Board.SetData(data);
             var first = rec.Store.FirstUtc;
             TxtHistory.Text = first == null
                 ? Loc.T("Str_Bandwidth_NoHistory", "No history yet.")

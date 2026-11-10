@@ -1,36 +1,44 @@
+using MaterialDesignThemes.Wpf;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Controls
 {
-    /// <summary>One program in the ranking.</summary>
+    /// <summary>One program in the ranking. <see cref="ColorBrush"/> is its colour in the chart (grey beyond the heaviest few).</summary>
     public sealed class UsageRow
     {
         public int Rank { get; init; }
         public string Name { get; init; } = "";
         public string ValueText { get; init; } = "";
         public string PeakText { get; init; } = "";
-        public string Detail { get; init; } = "";
 
         /// <summary>0-100, relative to the first row (the bar under the name).</summary>
         public double Share { get; init; }
+
+        public Brush ColorBrush { get; set; } = Brushes.Gray;
     }
 
-    /// <summary>What a page hands the board: the ranking, a chart line per program, and how to write a chart value.</summary>
+    /// <summary>One of the three figures above the chart.</summary>
+    public sealed record UsageHighlight(PackIconKind Icon, string Label, string Value, string Sub);
+
+    /// <summary>What a page hands the board.</summary>
     public sealed class UsageBoardData
     {
         public IReadOnlyList<UsageRow> Rows { get; init; } = Array.Empty<UsageRow>();
-        public Func<string?, List<(DateTime When, double Value)>> Series { get; init; } = _ => new();
-        public Func<double, string> ChartFormat { get; init; } = v => v.ToString("0.##");
+        public IReadOnlyList<UsageHighlight> Highlights { get; init; } = Array.Empty<UsageHighlight>();
+        public StackedData Stack { get; init; } = new();
         public string ValueHeaderKey { get; init; } = "";
         public string PeakHeaderKey { get; init; } = "";
     }
 
-    /// <summary>Ranking of programs plus a chart of the chosen one. The page refreshes it; the chosen program is kept by name.</summary>
+    /// <summary>Figures, stacked chart and ranking. The page refreshes it; the chosen program is kept by name and stays strong in the chart.</summary>
     public partial class AppUsageBoard : UserControl
     {
-        private UsageBoardData? _data;
         private string? _selected;
         private bool _updating;
 
@@ -39,25 +47,22 @@ namespace Smart_Tools.WPF.Controls
             InitializeComponent();
         }
 
-        public void SetTexts(string listHeaderKey, string nameHeaderKey, string emptyTitleKey, string emptyHintKey)
+        public void SetTexts(string chartHeaderKey, string listHeaderKey, string nameHeaderKey, string emptyTitleKey, string emptyHintKey)
         {
+            ChartHeader.SetResourceReference(ContentControl.ContentProperty, chartHeaderKey);
             ListHeader.SetResourceReference(ContentControl.ContentProperty, listHeaderKey);
             HeadName.SetResourceReference(TextBlock.TextProperty, nameHeaderKey);
-            EmptyTitle.SetResourceReference(TextBlock.TextProperty, emptyTitleKey);
-            EmptyHint.SetResourceReference(TextBlock.TextProperty, emptyHintKey);
+            SetEmptyKeys(emptyTitleKey, emptyHintKey);
         }
 
-        /// <summary>Overrides the empty-state wording (for example "needs administrator" instead of "nothing recorded yet").</summary>
         public void SetEmptyKeys(string titleKey, string hintKey)
         {
             EmptyTitle.SetResourceReference(TextBlock.TextProperty, titleKey);
             EmptyHint.SetResourceReference(TextBlock.TextProperty, hintKey);
         }
 
-        public void SetData(UsageBoardData data, string chartTimeFormat)
+        public void SetData(UsageBoardData data)
         {
-            _data = data;
-            Chart.DateFormat = chartTimeFormat;
             HeadValue.SetResourceReference(TextBlock.TextProperty, data.ValueHeaderKey);
             HeadPeak.SetResourceReference(TextBlock.TextProperty, data.PeakHeaderKey);
 
@@ -66,32 +71,37 @@ namespace Smart_Tools.WPF.Controls
             EmptyState.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
             if (!any) return;
 
+            Highlights.ItemsSource = data.Highlights;
+            Legend.ItemsSource = data.Stack.Series.Select(s => new UsageRow { Name = s.Name, ColorBrush = s.Brush }).ToList();
+            Chart.SetData(data.Stack);
+
             _updating = true;
             try
             {
                 List.ItemsSource = data.Rows;
-                var keep = data.Rows.FirstOrDefault(r => string.Equals(r.Name, _selected, StringComparison.OrdinalIgnoreCase)) ?? data.Rows[0];
+                var keep = data.Rows.FirstOrDefault(r => string.Equals(r.Name, _selected, StringComparison.OrdinalIgnoreCase));
                 List.SelectedItem = keep;
-                _selected = keep.Name;
+                _selected = keep?.Name;
             }
             finally { _updating = false; }
-            ShowChart();
+            Chart.Highlight = _selected;
         }
 
         private void List_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_updating || List.SelectedItem is not UsageRow row) return;
-            _selected = row.Name;
-            ShowChart();
+            if (_updating) return;
+            _selected = (List.SelectedItem as UsageRow)?.Name;
+            Chart.Highlight = _selected;
         }
 
-        private void ShowChart()
+        /// <summary>Click a legend name to pick that program (click again to show all).</summary>
+        private void LegendItem_Click(object sender, MouseButtonEventArgs e)
         {
-            if (_data == null || _selected == null) return;
-            var row = _data.Rows.FirstOrDefault(r => string.Equals(r.Name, _selected, StringComparison.OrdinalIgnoreCase));
-            ChartTitle.Text = _selected;
-            ChartSubtitle.Text = row == null ? "" : row.Detail.Length > 0 ? row.ValueText + "   " + row.Detail : row.ValueText;
-            Chart.SetData(_data.Series(_selected), _data.ChartFormat, higherIsWorse: false);
+            if ((sender as FrameworkElement)?.Tag is not string name) return;
+            var row = List.Items.OfType<UsageRow>().FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (row == null) return;   // "Other programs" is not in the list
+            if (ReferenceEquals(List.SelectedItem, row)) List.SelectedItem = null;
+            else { List.SelectedItem = row; List.ScrollIntoView(row); }
         }
     }
 }

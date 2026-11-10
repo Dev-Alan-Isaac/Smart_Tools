@@ -189,30 +189,24 @@ namespace Smart_Tools.WPF.Controllers
                     totals[app] = (t.Sum + slots[sumSlot], peak);
                 }
 
-            // Value to rank by: an average over the whole period for CPU and memory, the total for disk.
+            // Ranked by an average over the whole period for CPU and memory, by the total for disk.
             double Value(double sum) => metric == HogMetric.Disk ? sum : samples > 0 ? sum / samples : 0;
-            var ranked = totals.Select(kv => (Name: kv.Key, Value: Value(kv.Value.Sum), kv.Value.Peak))
-                .Where(r => r.Value > 0)
-                .OrderByDescending(r => r.Value)
-                .Take(40)
-                .ToList();
+            var all = totals.Select(kv => (Name: kv.Key, Value: Value(kv.Value.Sum), kv.Value.Peak)).Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
+            var ranked = all.Take(40).ToList();
             double top = ranked.Count > 0 ? ranked[0].Value : 1;
 
+            Func<double, string> format = metric switch { HogMetric.Cpu => UsageMath.Percent, HogMetric.Memory => UsageMath.Megabytes, _ => UsageMath.Rate };
             string Text(double v) => metric switch { HogMetric.Cpu => UsageMath.Percent(v), HogMetric.Memory => UsageMath.Megabytes(v), _ => UsageMath.Bytes(v) };
-            string PeakText(double v, double total) => metric switch
-            {
-                HogMetric.Cpu => UsageMath.Percent(v),
-                HogMetric.Memory => UsageMath.Megabytes(v),
-                _ => UsageMath.Rate(total / seconds),
-            };
+            string Second(double peak, double total) => metric switch { HogMetric.Disk => UsageMath.Rate(total / seconds), HogMetric.Cpu => UsageMath.Percent(peak), _ => UsageMath.Megabytes(peak) };
 
             var rows = ranked.Select((r, i) => new UsageRow
             {
                 Rank = i + 1,
                 Name = r.Name,
                 ValueText = Text(r.Value),
-                PeakText = PeakText(r.Peak, r.Value),
+                PeakText = Second(r.Peak, r.Value),
                 Share = top > 0 ? r.Value / top * 100.0 : 0,
+                ColorBrush = UsageMath.BrushOf(i < UsageMath.StackedPrograms ? UsageMath.Palette[i] : UsageMath.OtherColor),
             }).ToList();
 
             Func<double[], double> num = metric switch
@@ -222,11 +216,25 @@ namespace Smart_Tools.WPF.Controllers
                 _ => s => s[ResourceHogRecorder.SlotDiskBytes],
             };
             Func<UsageBucket, double> den = metric == HogMetric.Disk ? b => b.Samples * 5.0 : b => b.Samples;
+            var slices = UsageMath.Cut(buckets, since, period, num, den);
+            var stack = UsageMath.Stack(slices, ranked.Select(r => r.Name).ToList(), format, "HH:mm");
+
+            var highlights = new List<UsageHighlight>();
+            if (ranked.Count > 0)
+                highlights.Add(new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.TrendingUp, Loc.T("Str_ResourceHogs_StatHeaviest", "Heaviest program"), ranked[0].Name, Text(ranked[0].Value)));
+            highlights.Add(metric == HogMetric.Disk
+                ? new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.Harddisk, Loc.T("Str_ResourceHogs_StatMoved", "Read and written"), UsageMath.Bytes(all.Sum(r => r.Value)), Loc.T("Str_ResourceHogs_StatMovedSub", "by all programs"))
+                : new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.FormatListNumbered, Loc.T("Str_ResourceHogs_StatPrograms", "Programs counted"), all.Count.ToString("N0"), Loc.T("Str_ResourceHogs_StatProgramsSub", "that used something")));
+            var busiest = UsageMath.Busiest(slices);
+            highlights.Add(busiest == null
+                ? new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_ResourceHogs_StatBusiest", "Busiest moment"), "-", "")
+                : new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_ResourceHogs_StatBusiest", "Busiest moment"), busiest.Value.When.ToString("HH:mm"), format(busiest.Value.Value) + " " + Loc.T("Str_ResourceHogs_StatBusiestSub", "all programs together")));
+
             return new UsageBoardData
             {
                 Rows = rows,
-                Series = name => UsageMath.Series(buckets, since, period, name, num, den),
-                ChartFormat = metric switch { HogMetric.Cpu => UsageMath.Percent, HogMetric.Memory => UsageMath.Megabytes, _ => UsageMath.Rate },
+                Highlights = highlights,
+                Stack = stack,
                 ValueHeaderKey = metric == HogMetric.Disk ? "Str_ResourceHogs_ColTotal" : "Str_ResourceHogs_ColAverage",
                 PeakHeaderKey = metric == HogMetric.Disk ? "Str_ResourceHogs_ColRate" : "Str_ResourceHogs_ColHighest",
             };

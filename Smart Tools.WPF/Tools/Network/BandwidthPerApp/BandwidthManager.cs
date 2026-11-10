@@ -183,7 +183,8 @@ namespace Smart_Tools.WPF.Controllers
                     totals.TryGetValue(app, out var t);
                     totals[app] = (t.Sum + Of(slots), Math.Max(t.Peak, Of(slots) / Math.Max(5.0, b.Samples * 5.0)), t.Down + slots[BandwidthRecorder.SlotDown], t.Up + slots[BandwidthRecorder.SlotUp]);
                 }
-            var ranked = totals.Where(kv => kv.Value.Sum > 0).OrderByDescending(kv => kv.Value.Sum).Take(40).ToList();
+            var all = totals.Where(kv => kv.Value.Sum > 0).OrderByDescending(kv => kv.Value.Sum).ToList();
+            var ranked = all.Take(40).ToList();
             double top = ranked.Count > 0 ? ranked[0].Value.Sum : 1;
             var rows = ranked.Select((kv, i) => new UsageRow
             {
@@ -191,15 +192,28 @@ namespace Smart_Tools.WPF.Controllers
                 Name = kv.Key,
                 ValueText = UsageMath.Bytes(kv.Value.Sum),
                 PeakText = UsageMath.Rate(kv.Value.Peak),
-                Detail = $"↓ {UsageMath.Bytes(kv.Value.Down)}   ↑ {UsageMath.Bytes(kv.Value.Up)}",
                 Share = top > 0 ? kv.Value.Sum / top * 100.0 : 0,
+                ColorBrush = UsageMath.BrushOf(i < UsageMath.StackedPrograms ? UsageMath.Palette[i] : UsageMath.OtherColor),
             }).ToList();
+
+            var slices = UsageMath.Cut(buckets, since, period, Of, b => b.Samples * 5.0);
+            var stack = UsageMath.Stack(slices, ranked.Select(kv => kv.Key).ToList(), UsageMath.Rate, "HH:mm");
+
+            double down = all.Sum(kv => kv.Value.Down), up = all.Sum(kv => kv.Value.Up);
+            var highlights = new List<UsageHighlight>();
+            if (ranked.Count > 0)
+                highlights.Add(new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.TrendingUp, Loc.T("Str_Bandwidth_StatHeaviest", "Most data used by"), ranked[0].Key, UsageMath.Bytes(ranked[0].Value.Sum)));
+            highlights.Add(new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.SwapVertical, Loc.T("Str_Bandwidth_StatSplit", "Received and sent"), "↓ " + UsageMath.Bytes(down), "↑ " + UsageMath.Bytes(up)));
+            var busiest = UsageMath.Busiest(slices);
+            highlights.Add(busiest == null
+                ? new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_Bandwidth_StatBusiest", "Busiest moment"), "-", "")
+                : new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_Bandwidth_StatBusiest", "Busiest moment"), busiest.Value.When.ToString("HH:mm"), UsageMath.Rate(busiest.Value.Value) + " " + Loc.T("Str_Bandwidth_StatBusiestSub", "all programs together")));
 
             return new UsageBoardData
             {
                 Rows = rows,
-                Series = name => UsageMath.Series(buckets, since, period, name, Of, b => b.Samples * 5.0),
-                ChartFormat = UsageMath.Rate,
+                Highlights = highlights,
+                Stack = stack,
                 ValueHeaderKey = "Str_Bandwidth_ColTotal",
                 PeakHeaderKey = "Str_Bandwidth_ColFastest",
             };

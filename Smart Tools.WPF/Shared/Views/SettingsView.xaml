@@ -1068,6 +1068,33 @@
                                 </Grid>
                             </RadioButton>
                             <RadioButton
+                                x:Name="BtnNavUsageHistory"
+                                Click="Nav_Click"
+                                GroupName="SettingsNav"
+                                Style="{StaticResource NavButtonStyle}"
+                                Tag="UsageHistory"
+                                ToolTip="{DynamicResource Str_Settings_NavUsageHistory}">
+                                <Grid HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon
+                                        Grid.Column="0"
+                                        Width="18"
+                                        Height="18"
+                                        VerticalAlignment="Center"
+                                        Kind="ChartTimelineVariant" />
+                                    <TextBlock
+                                        x:Name="LblNavUsageHistory"
+                                        Grid.Column="1"
+                                        Margin="10,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Settings_NavUsageHistory}"
+                                        TextWrapping="Wrap" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton
                                 x:Name="BtnNavClipboard"
                                 Click="Nav_Click"
                                 GroupName="SettingsNav"
@@ -1880,6 +1907,7 @@
 
                     <!--  ============ Minecraft versions (Texture Pack Builder) ============  -->
                     <views:TexturePackSettingsPanel x:Name="PanelTexturePack" Visibility="Collapsed" />
+                    <views:UsageHistorySettingsPanel x:Name="PanelUsageHistory" Visibility="Collapsed" />
 
                     <!--  ============ Keyboard shortcuts ============  -->
                     <Border

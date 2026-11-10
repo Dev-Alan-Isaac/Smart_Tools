@@ -1,0 +1,60 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.UsageHistorySettingsPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--  The "History recording" section of Settings - UI only. The recorders and their on/off flags are Resource Hogs History's and Bandwidth per App's own settings.  -->
+    <StackPanel>
+        <Border Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <ContentControl
+                    Content="{DynamicResource Str_Settings_UhHeader}"
+                    Style="{StaticResource CardHeader}"
+                    Tag="{x:Static materialDesign:PackIconKind.ChartTimelineVariant}" />
+                <TextBlock
+                    Margin="0,4,0,16"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{DynamicResource Str_Settings_UhIntro}"
+                    TextWrapping="Wrap" />
+
+                <CheckBox
+                    x:Name="ChkAll"
+                    Click="ChkAll_Click"
+                    Content="{DynamicResource Str_Settings_UhAll}"
+                    FontWeight="SemiBold"
+                    IsThreeState="True" />
+
+                <Border
+                    Margin="0,12,0,0"
+                    Padding="14,12"
+                    Background="{DynamicResource InputBg}"
+                    BorderBrush="{DynamicResource CardBorder}"
+                    BorderThickness="1"
+                    CornerRadius="10">
+                    <StackPanel>
+                        <CheckBox x:Name="ChkHogs" Click="Tool_Click" Content="{DynamicResource Str_Tool_resource-hogs_Name}" />
+                        <TextBlock Margin="28,2,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Settings_UhHogsNote}" TextWrapping="Wrap" />
+                        <CheckBox x:Name="ChkBandwidth" Margin="0,14,0,0" Click="Tool_Click" Content="{DynamicResource Str_Tool_bandwidth-per-app_Name}" />
+                        <TextBlock Margin="28,2,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Settings_UhBandwidthNote}" TextWrapping="Wrap" />
+                        <TextBlock
+                            x:Name="TxtStatus"
+                            Margin="28,8,0,0"
+                            FontSize="11.5"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock
+                    Margin="2,14,0,0"
+                    FontSize="11.5"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{DynamicResource Str_Settings_UhFootnote}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

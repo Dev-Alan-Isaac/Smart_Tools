@@ -145,29 +145,74 @@ namespace Smart_Tools.WPF.Controllers
     {
         public const int ChartPoints = 60;
 
-        /// <summary>
-        /// One chart line for a program: the period cut into <see cref="ChartPoints"/> slices, each the sum of <paramref name="numerator"/>
-        /// over the sum of <paramref name="denominator"/> of the minutes inside it (so an average, or a rate per second).
-        /// </summary>
-        public static List<(DateTime When, double Value)> Series(IReadOnlyList<UsageBucket> buckets, DateTime sinceUtc, TimeSpan period, string? app,
-            Func<double[], double> numerator, Func<UsageBucket, double> denominator)
+        /// <summary>The period cut into slices: for each, how long it covered (<see cref="Den"/>) and what each program did (<see cref="Num"/>).</summary>
+        public sealed class Slices
         {
-            var num = new double[ChartPoints];
+            public DateTime[] Times { get; init; } = Array.Empty<DateTime>();
+            public double[] Den { get; init; } = Array.Empty<double>();
+            public Dictionary<string, double[]> Num { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static Slices Cut(IReadOnlyList<UsageBucket> buckets, DateTime sinceUtc, TimeSpan period, Func<double[], double> numerator, Func<UsageBucket, double> denominator)
+        {
             var den = new double[ChartPoints];
+            var num = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
             double sliceMinutes = period.TotalMinutes / ChartPoints;
             foreach (var b in buckets)
             {
                 int i = (int)Math.Clamp(Math.Floor((b.StartUtc - sinceUtc).TotalMinutes / sliceMinutes), 0, ChartPoints - 1);
                 den[i] += denominator(b);
-                if (app == null)
-                    foreach (var slots in b.Apps.Values) num[i] += numerator(slots);
-                else if (b.Apps.TryGetValue(app, out var mine)) num[i] += numerator(mine);
+                foreach (var (app, slots) in b.Apps)
+                {
+                    if (!num.TryGetValue(app, out var arr)) num[app] = arr = new double[ChartPoints];
+                    arr[i] += numerator(slots);
+                }
             }
-            var points = new List<(DateTime, double)>();
-            for (int i = 0; i < ChartPoints; i++)
-                if (den[i] > 0)
-                    points.Add((sinceUtc.AddMinutes(sliceMinutes * (i + 0.5)).ToLocalTime(), num[i] / den[i]));
-            return points;
+            var times = Enumerable.Range(0, ChartPoints).Select(i => sinceUtc.AddMinutes(sliceMinutes * i).ToLocalTime()).ToArray();
+            return new Slices { Times = times, Den = den, Num = num };
+        }
+
+        /// <summary>Colours of the heaviest programs, then grey for all the others together.</summary>
+        public static readonly string[] Palette = { "#3b82f6", "#f59e0b", "#22a06b", "#e5484d", "#8b5cf6", "#14b8a6" };
+        public const string OtherColor = "#94a3b8";
+        public const int StackedPrograms = 6;
+
+        public static System.Windows.Media.Brush BrushOf(string hex)
+        {
+            var brush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+            brush.Freeze();
+            return brush;
+        }
+
+        /// <summary>The stacked columns: the top programs (first = bottom) and everything else as "Other".</summary>
+        public static Controls.StackedData Stack(Slices s, IReadOnlyList<string> topNames, Func<double, string> format, string timeFormat)
+        {
+            var series = new List<Controls.StackSeries>();
+            double[] Per(double[] num) => num.Select((v, i) => s.Den[i] > 0 ? v / s.Den[i] : 0).ToArray();
+            for (int k = 0; k < Math.Min(StackedPrograms, topNames.Count); k++)
+                if (s.Num.TryGetValue(topNames[k], out var arr))
+                    series.Add(new Controls.StackSeries { Name = topNames[k], Brush = BrushOf(Palette[k]), Values = Per(arr) });
+            var others = s.Num.Where(kv => !topNames.Take(StackedPrograms).Contains(kv.Key, StringComparer.OrdinalIgnoreCase)).ToList();
+            if (others.Count > 0)
+            {
+                var sum = new double[ChartPoints];
+                foreach (var kv in others) for (int i = 0; i < ChartPoints; i++) sum[i] += kv.Value[i];
+                series.Add(new Controls.StackSeries { Name = Loc.T("Str_AppUsage_Other", "Other programs"), Brush = BrushOf(OtherColor), Values = Per(sum) });
+            }
+            return new Controls.StackedData { Times = s.Times, HasData = s.Den, Series = series, Format = format, TimeFormat = timeFormat };
+        }
+
+        /// <summary>The slice where all programs together were highest: its time and value.</summary>
+        public static (DateTime When, double Value)? Busiest(Slices s)
+        {
+            (DateTime, double)? best = null;
+            for (int i = 0; i < s.Den.Length; i++)
+            {
+                if (s.Den[i] <= 0) continue;
+                double total = s.Num.Values.Sum(a => a[i]) / s.Den[i];
+                if (best == null || total > best.Value.Item2) best = (s.Times[i], total);
+            }
+            return best;
         }
 
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;

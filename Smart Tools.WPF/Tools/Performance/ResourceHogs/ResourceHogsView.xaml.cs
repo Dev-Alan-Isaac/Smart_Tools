@@ -21,7 +21,7 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             _refresh.Tick += (_, _) => Refresh();
-            Board.SetTexts("Str_ResourceHogs_ListHeader", "Str_ResourceHogs_ColProgram", "Str_ResourceHogs_EmptyTitle", "Str_ResourceHogs_EmptyHint");
+            Board.SetTexts("Str_ResourceHogs_ChartHeader", "Str_ResourceHogs_ListHeader", "Str_ResourceHogs_ColProgram", "Str_ResourceHogs_EmptyTitle", "Str_ResourceHogs_EmptyHint");
         }
 
         private void Root_Loaded(object sender, RoutedEventArgs e)
@@ -95,12 +95,6 @@ namespace Smart_Tools.WPF.Views
             TxtRecordState.Text = on
                 ? Loc.T("Str_ResourceHogs_RecordingOn", "Recording every 5 seconds while Smart Tools is open, even when you leave this page.")
                 : Loc.T("Str_ResourceHogs_RecordingOff", "Not recording. Start it and come back in an hour to see which programs used the most.");
-            TxtMetricHint.Text = Metric() switch
-            {
-                HogMetric.Cpu => Loc.T("Str_ResourceHogs_HintCpu", "Share of the whole processor, averaged over the period."),
-                HogMetric.Memory => Loc.T("Str_ResourceHogs_HintMemory", "Memory each program held, averaged over the period."),
-                _ => Loc.T("Str_ResourceHogs_HintDisk", "Bytes each program read and wrote, in total."),
-            };
         }
 
         private void Refresh()
@@ -109,7 +103,7 @@ namespace Smart_Tools.WPF.Views
             var data = ResourceHogsManager.Build(rec.Store, Metric(), TimeSpan.FromHours(Period()));
             bool recording = rec.IsRunning;
             Board.SetEmptyKeys(recording ? "Str_ResourceHogs_WaitTitle" : "Str_ResourceHogs_EmptyTitle", recording ? "Str_ResourceHogs_WaitHint" : "Str_ResourceHogs_EmptyHint");
-            Board.SetData(data, Period() <= 24 ? "HH:mm" : "d MMM HH:mm");
+            Board.SetData(data);
             var first = rec.Store.FirstUtc;
             TxtHistory.Text = first == null
                 ? Loc.T("Str_ResourceHogs_NoHistory", "No history yet.")

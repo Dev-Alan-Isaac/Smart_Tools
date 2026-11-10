@@ -5,17 +5,76 @@
     xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
-    <!--  Ranking of programs on the left, the chosen program's chart on the right. Shared by Resource Hogs History and Bandwidth per App.  -->
+    <!--  Three figures on top, programs stacked over time, then the ranking. Shared by Resource Hogs History and Bandwidth per App.  -->
 
     <Grid>
         <Grid x:Name="Body">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.15*" MinWidth="320" />
-                <ColumnDefinition Width="14" />
-                <ColumnDefinition Width="*" MinWidth="300" />
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="14" />
+                <RowDefinition Height="2*" MinHeight="190" />
+                <RowDefinition Height="14" />
+                <RowDefinition Height="3*" MinHeight="150" />
+            </Grid.RowDefinitions>
 
-            <Border Style="{StaticResource CardStyle}">
+            <!--  The figures that matter  -->
+            <ItemsControl x:Name="Highlights">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,10,0" Padding="16,14" Style="{StaticResource CardStyle}">
+                            <DockPanel>
+                                <Border Width="44" Height="44" Margin="0,0,14,0" VerticalAlignment="Center" Background="{DynamicResource AccentGradient}" CornerRadius="12" DockPanel.Dock="Left">
+                                    <materialDesign:PackIcon Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="{Binding Icon}" />
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Margin="0,1,0,0" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Value}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Margin="0,1,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Sub}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!--  Programs stacked over time  -->
+            <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <DockPanel>
+                        <ContentControl x:Name="ChartHeader" DockPanel.Dock="Left" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ChartTimelineVariant}" />
+                        <ItemsControl x:Name="Legend" Margin="16,0,0,0" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel HorizontalAlignment="Right" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="8,2,0,2" Padding="8,3" Background="Transparent" Cursor="Hand" CornerRadius="10" MouseLeftButtonUp="LegendItem_Click" Tag="{Binding Name}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="9" Height="9" Margin="0,0,6,0" VerticalAlignment="Center" Fill="{Binding ColorBrush}" />
+                                            <TextBlock MaxWidth="130" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                    <controls:StackedUsageChart x:Name="Chart" Grid.Row="1" Margin="0,10,0,0" />
+                </Grid>
+            </Border>
+
+            <!--  Ranking  -->
+            <Border Grid.Row="4" Style="{StaticResource CardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -23,21 +82,22 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <ContentControl x:Name="ListHeader" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FormatListNumbered}" />
-                    <Grid Grid.Row="1" Margin="12,12,12,4">
+                    <Grid Grid.Row="1" Margin="12,10,12,4">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="96" />
-                            <ColumnDefinition Width="96" />
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="110" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock x:Name="HeadName" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                        <TextBlock x:Name="HeadValue" Grid.Column="1" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right" />
-                        <TextBlock x:Name="HeadPeak" Grid.Column="2" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right" />
+                        <TextBlock x:Name="HeadName" Grid.Column="1" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                        <TextBlock x:Name="HeadValue" Grid.Column="2" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right" />
+                        <TextBlock x:Name="HeadPeak" Grid.Column="3" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" TextAlignment="Right" />
                     </Grid>
                     <ListBox
                         x:Name="List"
                         Grid.Row="2"
-                        BorderThickness="0"
                         Background="Transparent"
+                        BorderThickness="0"
                         HorizontalContentAlignment="Stretch"
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         SelectionChanged="List_SelectionChanged">
@@ -69,17 +129,17 @@
                         </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="10,8">
+                                <Grid Margin="10,7">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="26" />
+                                        <ColumnDefinition Width="30" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="96" />
-                                        <ColumnDefinition Width="96" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="110" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding Rank}" />
-                                    <StackPanel Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
+                                    <Ellipse Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="{Binding ColorBrush}" />
+                                    <StackPanel Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center">
                                         <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                        <ProgressBar Height="5" Margin="0,5,0,0" Maximum="100" Value="{Binding Share, Mode=OneWay}" />
+                                        <ProgressBar Height="4" Margin="0,5,0,0" Maximum="100" Value="{Binding Share, Mode=OneWay}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="2" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding ValueText}" TextAlignment="Right" />
                                     <TextBlock Grid.Column="3" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{Binding PeakText}" TextAlignment="Right" />
@@ -87,20 +147,6 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </Grid>
-            </Border>
-
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <StackPanel>
-                        <TextBlock x:Name="ChartTitle" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis" />
-                        <TextBlock x:Name="ChartSubtitle" Margin="0,2,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <controls:TrendChart x:Name="Chart" Grid.Row="1" Margin="0,14,0,0" />
                 </Grid>
             </Border>
         </Grid>
