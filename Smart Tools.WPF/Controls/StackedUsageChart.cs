@@ -16,7 +16,10 @@ namespace Smart_Tools.WPF.Controls
     public sealed class StackSeries
     {
         public string Name { get; init; } = "";
-        public Brush Brush { get; init; } = Brushes.Gray;
+
+        /// <summary>0-5: the heaviest programs; <see cref="ChartPalette.OtherIndex"/>: everything else. Resolved to a theme brush when drawn.</summary>
+        public int ColorIndex { get; init; }
+
         public double[] Values { get; init; } = Array.Empty<double>();
     }
 
@@ -28,6 +31,21 @@ namespace Smart_Tools.WPF.Controls
         public IReadOnlyList<StackSeries> Series { get; init; } = Array.Empty<StackSeries>();
         public Func<double, string> Format { get; init; } = v => v.ToString("0.##", CultureInfo.CurrentCulture);
         public string TimeFormat { get; init; } = "HH:mm";
+    }
+
+    /// <summary>The series colours, as theme brushes (ChartSeries1..6 and ChartSeriesOther in Light/Dark.xaml).</summary>
+    public static class ChartPalette
+    {
+        public const int Colors = 6;
+        public const int OtherIndex = Colors;
+
+        public static int IndexFor(int rank) => rank < Colors ? rank : OtherIndex;
+
+        public static Brush Brush(int index)
+        {
+            string key = index >= Colors || index < 0 ? "ChartSeriesOther" : "ChartSeries" + (index + 1);
+            return System.Windows.Application.Current?.TryFindResource(key) as Brush ?? Brushes.Gray;
+        }
     }
 
     /// <summary>
@@ -42,6 +60,12 @@ namespace Smart_Tools.WPF.Controls
         public static readonly DependencyProperty GridBrushProperty = DependencyProperty.Register(nameof(GridBrush), typeof(Brush), typeof(StackedUsageChart),
             new FrameworkPropertyMetadata(Brushes.LightGray, FrameworkPropertyMetadataOptions.AffectsRender));
 
+        // Follows the first series colour so the chart redraws when the theme changes (the series brushes are looked up while drawing).
+        public static readonly DependencyProperty ThemeStampProperty = DependencyProperty.Register(nameof(ThemeStamp), typeof(Brush), typeof(StackedUsageChart),
+            new FrameworkPropertyMetadata(Brushes.Transparent, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush ThemeStamp { get => (Brush)GetValue(ThemeStampProperty); set => SetValue(ThemeStampProperty, value); }
+
         public static readonly DependencyProperty HoverBrushProperty = DependencyProperty.Register(nameof(HoverBrush), typeof(Brush), typeof(StackedUsageChart),
             new FrameworkPropertyMetadata(Brushes.Transparent, FrameworkPropertyMetadataOptions.AffectsRender));
 
@@ -53,7 +77,8 @@ namespace Smart_Tools.WPF.Controls
         {
             SetResourceReference(TextBrushProperty, "TextSecondary");
             SetResourceReference(GridBrushProperty, "CardBorder");
-            SetResourceReference(HoverBrushProperty, "HoverOverlay");
+            SetResourceReference(HoverBrushProperty, "HoverOverlayFill");
+            SetResourceReference(ThemeStampProperty, "ChartSeries1");
             ToolTipService.SetInitialShowDelay(this, 0);
             ToolTipService.SetShowDuration(this, 60000);
             ToolTipService.SetPlacement(this, System.Windows.Controls.Primitives.PlacementMode.Mouse);
@@ -135,7 +160,7 @@ namespace Smart_Tools.WPF.Controls
                     var rect = new Rect(x, y - hh, barW, hh);
                     bool strong = _highlight == null || string.Equals(_highlight, s.Name, StringComparison.OrdinalIgnoreCase);
                     dc.PushOpacity(strong ? 1.0 : 0.22);
-                    dc.DrawRectangle(s.Brush, null, rect);
+                    dc.DrawRectangle(ChartPalette.Brush(s.ColorIndex), null, rect);
                     dc.Pop();
                     y -= hh;
                 }

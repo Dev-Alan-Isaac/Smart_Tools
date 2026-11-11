@@ -27,12 +27,17 @@ namespace Smart_Tools.WPF.Controllers
     /// </summary>
     public sealed class AppUsageStore
     {
+        /// <summary>Seconds between two readings, for every recorder; speeds are computed from it, so there is one value.</summary>
+        public const double SampleSeconds = 5;
+
         private readonly object _gate = new();
+        private readonly object _saveGate = new();
         private readonly string _name;
         private readonly int _width;
         private readonly TimeSpan _keep;
         private List<UsageBucket> _buckets = new();
         private bool _dirty;
+        private bool _cleared;   // the user deleted the history: a load that is still running must not bring it back
 
         public AppUsageStore(string settingsName, int width, TimeSpan keep)
         {
@@ -46,31 +51,52 @@ namespace Smart_Tools.WPF.Controllers
             var file = JsonSettings.Load<AppUsageFile>(_name);
             lock (_gate)
             {
-                _buckets = file.Buckets.Where(b => b.Apps != null).OrderBy(b => b.Minute).ToList();
-                foreach (var b in _buckets)
-                    foreach (string key in b.Apps.Keys.ToList())
-                        if (b.Apps[key].Length != _width) { var fixedLength = new double[_width]; Array.Copy(b.Apps[key], fixedLength, Math.Min(_width, b.Apps[key].Length)); b.Apps[key] = fixedLength; }
+                if (_cleared) { _cleared = false; return; }
+                // Keep what was recorded since the page was opened (a recorder may have added readings before the file was read).
+                var loaded = (file.Buckets ?? new List<UsageBucket>()).Where(b => b?.Apps != null).ToList();
+                foreach (var b in loaded) FixWidths(b);
+                var fresh = _buckets.Where(b => loaded.All(l => l.Minute != b.Minute)).ToList();
+                _buckets = loaded.Concat(fresh).OrderBy(b => b.Minute).ToList();
                 PruneLocked(DateTime.UtcNow);
+            }
+        }
+
+        /// <summary>Slots of an older file may be fewer or more than now: pad or cut, and drop empty/null rows.</summary>
+        private void FixWidths(UsageBucket bucket)
+        {
+            foreach (string key in bucket.Apps.Keys.ToList())
+            {
+                double[]? slots = bucket.Apps[key];
+                if (slots == null) { bucket.Apps.Remove(key); continue; }
+                if (slots.Length == _width) continue;
+                var fixedLength = new double[_width];
+                Array.Copy(slots, fixedLength, Math.Min(_width, slots.Length));
+                bucket.Apps[key] = fixedLength;
             }
         }
 
         public void Save()
         {
-            AppUsageFile file;
-            lock (_gate)
+            // One save at a time: a save at exit waits for a background one instead of returning while its file is half-written.
+            lock (_saveGate)
             {
-                if (!_dirty) return;
-                PruneLocked(DateTime.UtcNow);
-                file = new AppUsageFile { Buckets = _buckets.Select(Rounded).ToList() };
-                _dirty = false;
+                AppUsageFile file;
+                lock (_gate)
+                {
+                    if (!_dirty) return;
+                    PruneLocked(DateTime.UtcNow);
+                    file = new AppUsageFile { Buckets = _buckets.Select(Rounded).ToList() };
+                    _dirty = false;
+                }
+                // The flag only stays cleared when the file really was written, so a failed write is retried at the next save.
+                if (!JsonSettings.TrySave(_name, file)) lock (_gate) _dirty = true;
             }
-            JsonSettings.Save(_name, file);
         }
 
         /// <summary>Empties the history now; the (small) empty file is written in the background.</summary>
         public void Clear()
         {
-            lock (_gate) { _buckets.Clear(); _dirty = true; }
+            lock (_gate) { _buckets.Clear(); _dirty = true; _cleared = true; }
             Task.Run(Save);
         }
 
@@ -147,97 +173,5 @@ namespace Smart_Tools.WPF.Controllers
             Samples = b.Samples,
             Apps = b.Apps.ToDictionary(kv => kv.Key, kv => kv.Value.Select(v => Math.Round(v, 1)).ToArray()),
         };
-    }
-
-    /// <summary>Shared maths and wording for the per-program history pages.</summary>
-    public static class UsageMath
-    {
-        public const int ChartPoints = 60;
-
-        /// <summary>The period cut into slices: for each, how long it covered (<see cref="Den"/>) and what each program did (<see cref="Num"/>).</summary>
-        public sealed class Slices
-        {
-            public DateTime[] Times { get; init; } = Array.Empty<DateTime>();
-            public double[] Den { get; init; } = Array.Empty<double>();
-            public Dictionary<string, double[]> Num { get; init; } = new(StringComparer.OrdinalIgnoreCase);
-        }
-
-        public static Slices Cut(IReadOnlyList<UsageBucket> buckets, DateTime sinceUtc, TimeSpan period, Func<double[], double> numerator, Func<UsageBucket, double> denominator)
-        {
-            var den = new double[ChartPoints];
-            var num = new Dictionary<string, double[]>(StringComparer.OrdinalIgnoreCase);
-            double sliceMinutes = period.TotalMinutes / ChartPoints;
-            foreach (var b in buckets)
-            {
-                int i = (int)Math.Clamp(Math.Floor((b.StartUtc - sinceUtc).TotalMinutes / sliceMinutes), 0, ChartPoints - 1);
-                den[i] += denominator(b);
-                foreach (var (app, slots) in b.Apps)
-                {
-                    if (!num.TryGetValue(app, out var arr)) num[app] = arr = new double[ChartPoints];
-                    arr[i] += numerator(slots);
-                }
-            }
-            var times = Enumerable.Range(0, ChartPoints).Select(i => sinceUtc.AddMinutes(sliceMinutes * i).ToLocalTime()).ToArray();
-            return new Slices { Times = times, Den = den, Num = num };
-        }
-
-        /// <summary>Colours of the heaviest programs, then grey for all the others together.</summary>
-        public static readonly string[] Palette = { "#3b82f6", "#f59e0b", "#22a06b", "#e5484d", "#8b5cf6", "#14b8a6" };
-        public const string OtherColor = "#94a3b8";
-        public const int StackedPrograms = 6;
-
-        public static System.Windows.Media.Brush BrushOf(string hex)
-        {
-            var brush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
-            brush.Freeze();
-            return brush;
-        }
-
-        /// <summary>The stacked columns: the top programs (first = bottom) and everything else as "Other".</summary>
-        public static Controls.StackedData Stack(Slices s, IReadOnlyList<string> topNames, Func<double, string> format, string timeFormat)
-        {
-            var series = new List<Controls.StackSeries>();
-            double[] Per(double[] num) => num.Select((v, i) => s.Den[i] > 0 ? v / s.Den[i] : 0).ToArray();
-            for (int k = 0; k < Math.Min(StackedPrograms, topNames.Count); k++)
-                if (s.Num.TryGetValue(topNames[k], out var arr))
-                    series.Add(new Controls.StackSeries { Name = topNames[k], Brush = BrushOf(Palette[k]), Values = Per(arr) });
-            var others = s.Num.Where(kv => !topNames.Take(StackedPrograms).Contains(kv.Key, StringComparer.OrdinalIgnoreCase)).ToList();
-            if (others.Count > 0)
-            {
-                var sum = new double[ChartPoints];
-                foreach (var kv in others) for (int i = 0; i < ChartPoints; i++) sum[i] += kv.Value[i];
-                series.Add(new Controls.StackSeries { Name = Loc.T("Str_AppUsage_Other", "Other programs"), Brush = BrushOf(OtherColor), Values = Per(sum) });
-            }
-            return new Controls.StackedData { Times = s.Times, HasData = s.Den, Series = series, Format = format, TimeFormat = timeFormat };
-        }
-
-        /// <summary>The slice where all programs together were highest: its time and value.</summary>
-        public static (DateTime When, double Value)? Busiest(Slices s)
-        {
-            (DateTime, double)? best = null;
-            for (int i = 0; i < s.Den.Length; i++)
-            {
-                if (s.Den[i] <= 0) continue;
-                double total = s.Num.Values.Sum(a => a[i]) / s.Den[i];
-                if (best == null || total > best.Value.Item2) best = (s.Times[i], total);
-            }
-            return best;
-        }
-
-        private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
-
-        public static string Bytes(double bytes)
-        {
-            string[] units = { "B", "KB", "MB", "GB", "TB" };
-            int i = 0;
-            while (bytes >= 1024 && i < units.Length - 1) { bytes /= 1024; i++; }
-            return bytes.ToString(i == 0 ? "0" : bytes >= 100 ? "0" : "0.0", Inv) + " " + units[i];
-        }
-
-        public static string Rate(double bytesPerSecond) => Bytes(bytesPerSecond) + "/s";
-
-        public static string Megabytes(double mb) => mb >= 1024 ? (mb / 1024).ToString("0.0", Inv) + " GB" : mb.ToString("0", Inv) + " MB";
-
-        public static string Percent(double v) => v.ToString(v >= 10 ? "0" : "0.0", Inv) + " %";
     }
 }

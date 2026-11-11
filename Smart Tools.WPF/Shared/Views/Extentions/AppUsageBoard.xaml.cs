@@ -9,7 +9,7 @@ using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Controls
 {
-    /// <summary>One program in the ranking. <see cref="ColorBrush"/> is its colour in the chart (grey beyond the heaviest few).</summary>
+    /// <summary>One program in the ranking. <see cref="ColorIndex"/> is its colour in the chart (see <see cref="ChartPalette"/>; grey beyond the heaviest few).</summary>
     public sealed class UsageRow
     {
         public int Rank { get; init; }
@@ -20,6 +20,9 @@ namespace Smart_Tools.WPF.Controls
         /// <summary>0-100, relative to the first row (the bar under the name).</summary>
         public double Share { get; init; }
 
+        public int ColorIndex { get; init; }
+
+        /// <summary>The dot's brush, taken from the theme by the board when it shows the row.</summary>
         public Brush ColorBrush { get; set; } = Brushes.Gray;
     }
 
@@ -72,7 +75,8 @@ namespace Smart_Tools.WPF.Controls
             if (!any) return;
 
             Highlights.ItemsSource = data.Highlights;
-            Legend.ItemsSource = data.Stack.Series.Select(s => new UsageRow { Name = s.Name, ColorBrush = s.Brush }).ToList();
+            foreach (var row in data.Rows) row.ColorBrush = ChartPalette.Brush(row.ColorIndex);
+            Legend.ItemsSource = data.Stack.Series.Select(s => new UsageRow { Name = s.Name, ColorBrush = ChartPalette.Brush(s.ColorIndex) }).ToList();
             Chart.SetData(data.Stack);
 
             _updating = true;

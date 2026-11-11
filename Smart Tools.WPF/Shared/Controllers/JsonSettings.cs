@@ -44,16 +44,20 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void Save<T>(string name, T settings, string? path = null)
+        public static void Save<T>(string name, T settings, string? path = null) => TrySave(name, settings, path);
+
+        /// <summary>Saves; false when the file could not be written (best effort: AtomicFile already removed its temp file).</summary>
+        public static bool TrySave<T>(string name, T settings, string? path = null)
         {
             string file = path ?? PathFor(name);
             try
             {
                 AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, Options));
+                return true;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // best effort: AtomicFile already removed its temp file
+                return false;
             }
         }
 

@@ -1,69 +1,55 @@
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Session;
 using Smart_Tools.WPF.Controls;
-using System.ComponentModel;
 using System.Diagnostics;
+using System.ComponentModel;
 
 namespace Smart_Tools.WPF.Controllers
 {
-    public enum BandwidthMetric { Total, Download, Upload }
-
-    public sealed class BandwidthSettings
-    {
-        public bool Recording { get; set; }
-        public int PeriodHours { get; set; } = 3;
-        public BandwidthMetric Metric { get; set; } = BandwidthMetric.Total;
-    }
-
     /// <summary>
     /// Counts the bytes each program sends and receives, from Windows' own network trace (the "Microsoft-Windows-Kernel-Network" event
     /// provider: TCP and UDP, IPv4 and IPv6, one event per data transfer with the program's id and the size). Windows only allows
     /// reading that trace to an administrator. Only totals per program name are kept (per minute, for a day), never addresses or content.
     /// </summary>
-    public sealed class BandwidthRecorder
+    public sealed class BandwidthRecorder : UsageRecorder
     {
         public static BandwidthRecorder Instance { get; } = new();
 
-        public const string SettingsName = "bandwidth_per_app";
-        public const string HistoryName = "bandwidth_per_app_history";
         public const int SlotDown = 0, SlotUp = 1, SlotCount = 2;
 
         private static readonly Guid KernelNetwork = new("7dd42a49-5329-4832-8dfd-43d979153a88");
         private const string SessionName = "SmartToolsBandwidth";
+        private const string EndedName = "(ended program)";   // one row for every program that was gone before we could ask its name
+        private static readonly TimeSpan NameLife = TimeSpan.FromMinutes(10);
 
-        public AppUsageStore Store { get; } = new(HistoryName, SlotCount, TimeSpan.FromHours(24));
-
-        private readonly object _gate = new();
-        private readonly Dictionary<int, (long Down, long Up)> _pending = new();
-        private readonly Dictionary<int, string> _names = new();
+        private readonly Dictionary<string, (long Down, long Up)> _pending = new();
+        private readonly Dictionary<int, (string Name, DateTime At)> _names = new();
         private TraceEventSession? _session;
         private CancellationTokenSource? _cts;
-        private bool _loaded;
-        private DateTime _lastSave = DateTime.UtcNow;
         private long _events;
 
-        public bool IsRunning { get { lock (_gate) return _session != null; } }
+        private BandwidthRecorder() : base("bandwidth_per_app", "bandwidth_per_app_history", SlotCount) { }
+
+        public override string ToolId => "bandwidth-per-app";
+
+        public override string SettingsNoteKey => "Str_Settings_UhBandwidthNote";
+
+        public override bool IsRunning { get { lock (Gate) return _session != null; } }
 
         /// <summary>How many transfers were seen since recording started (0 for a while after starting: nothing may be moving).</summary>
         public long EventsSeen => Interlocked.Read(ref _events);
 
-        public void EnsureLoaded()
-        {
-            lock (_gate) { if (_loaded) return; Store.Load(); _loaded = true; }
-        }
-
-        public Task EnsureLoadedAsync() => _loaded ? Task.CompletedTask : Task.Run(EnsureLoaded);
-
         /// <summary>Starts counting. Returns null, or why it couldn't (not administrator, the trace is busy...).</summary>
-        public string? Start()
+        public override string? Start()
         {
-            lock (_gate)
+            lock (Gate)
             {
                 if (_session != null) return null;
-                if (!HardwareSensorsManager.IsAdministrator()) return "NotAdministrator";
+                if (!HardwareSensorsManager.IsAdministrator()) return NotAdministrator;
+                TraceEventSession? session = null;
                 try
                 {
-                    var session = new TraceEventSession(SessionName);
+                    session = new TraceEventSession(SessionName);
                     session.EnableProvider(KernelNetwork);
                     session.Source.Dynamic.All += OnEvent;
                     _session = session;
@@ -71,23 +57,30 @@ namespace Smart_Tools.WPF.Controllers
                     _pending.Clear();
                     _cts = new CancellationTokenSource();
                     var token = _cts.Token;
-                    new Thread(() => { try { session.Source.Process(); } catch (Exception ex) when (ex is not OutOfMemoryException) { Log.Warn("Bandwidth trace ended: " + ex.Message); } })
-                        { IsBackground = true, Name = "Bandwidth trace" }.Start();
+                    var live = session;
+                    new Thread(() =>
+                    {
+                        try { live.Source.Process(); }
+                        catch (Exception ex) when (ex is not OutOfMemoryException) { Log.Warn("Bandwidth trace ended: " + ex.Message); }
+                        finally { Task.Run(() => TraceEnded(live)); }
+                    }) { IsBackground = true, Name = "Bandwidth trace" }.Start();
                     new Thread(() => { EnsureLoaded(); FlushLoop(token); }) { IsBackground = true, Name = "Bandwidth recorder", Priority = ThreadPriority.BelowNormal }.Start();
                 }
-                catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException or Win32Exception or System.Runtime.InteropServices.COMException or NotSupportedException)
+                catch (Exception ex) when (ex is not OutOfMemoryException)
                 {
+                    // The session may not be stored yet: dispose the local one too, or Windows keeps the trace running.
+                    try { session?.Dispose(); } catch (Exception inner) when (inner is not OutOfMemoryException) { }
                     StopLocked();
+                    Log.Warn("Bandwidth recording could not start: " + ex.Message);
                     return ex.Message;
                 }
             }
             return null;
         }
 
-        public void Stop()
+        protected override void StopCore()
         {
-            lock (_gate) StopLocked();
-            Task.Run(() => { Flush(); Store.Save(); });   // the file can be several MB: never on the screen's thread
+            lock (Gate) StopLocked();
         }
 
         private void StopLocked()
@@ -96,6 +89,17 @@ namespace Smart_Tools.WPF.Controllers
             _cts = null;
             try { _session?.Dispose(); } catch (Exception ex) when (ex is InvalidOperationException or Win32Exception) { }
             _session = null;
+        }
+
+        /// <summary>The trace ended by itself (Windows closed it, an error): the recorder is no longer recording.</summary>
+        private void TraceEnded(TraceEventSession ended)
+        {
+            lock (Gate)
+            {
+                if (!ReferenceEquals(_session, ended)) return;   // a normal Stop already handled it
+                StopLocked();
+            }
+            FinishStop();
         }
 
         private void OnEvent(TraceEvent e)
@@ -109,13 +113,16 @@ namespace Smart_Tools.WPF.Controllers
                 long size = Convert.ToInt64(e.PayloadByName("size") ?? 0);
                 int pid = Convert.ToInt32(e.PayloadByName("PID") ?? e.ProcessID);
                 if (size <= 0) return;
-                // Traffic to this PC itself (127.x) is not internet use.
-                if (e.PayloadByName("daddr") is uint dest && (dest & 0xFF) == 127) return;
+                // Traffic to this PC itself (127.x, ::1) is not internet use.
+                object? to = e.PayloadByName("daddr");
+                if (to is uint dest && (dest & 0xFF) == 127) return;
+                if (to is byte[] v6 && IsLoopbackV6(v6)) return;
+                string name = NameOf(pid);   // now, not at the next flush: short-lived programs are gone by then
                 Interlocked.Increment(ref _events);
                 lock (_pending)
                 {
-                    _pending.TryGetValue(pid, out var p);
-                    _pending[pid] = sent.Value ? (p.Down, p.Up + size) : (p.Down + size, p.Up);
+                    _pending.TryGetValue(name, out var p);
+                    _pending[name] = sent.Value ? (p.Down, p.Up + size) : (p.Down + size, p.Up);
                 }
             }
             catch (Exception ex) when (ex is InvalidCastException or FormatException or OverflowException) { }
@@ -123,22 +130,21 @@ namespace Smart_Tools.WPF.Controllers
 
         private void FlushLoop(CancellationToken token)
         {
-            while (!token.WaitHandle.WaitOne(TimeSpan.FromSeconds(5)))
+            while (!token.WaitHandle.WaitOne(TimeSpan.FromSeconds(AppUsageStore.SampleSeconds)))
             {
                 Flush();
-                if (DateTime.UtcNow - _lastSave > TimeSpan.FromMinutes(2)) { _lastSave = DateTime.UtcNow; Store.Save(); }
+                SaveIfDue();
             }
         }
 
-        private void Flush()
+        protected override void Flush()
         {
-            Dictionary<int, (long Down, long Up)> take;
-            lock (_pending) { take = new Dictionary<int, (long, long)>(_pending); _pending.Clear(); }
+            Dictionary<string, (long Down, long Up)> take;
+            lock (_pending) { take = new Dictionary<string, (long, long)>(_pending); _pending.Clear(); }
             var now = DateTime.UtcNow;
             Store.Tick(now);
-            foreach (var (pid, v) in take)
+            foreach (var (name, v) in take)
             {
-                string name = NameOf(pid);
                 Store.Add(now, name, SlotDown, v.Down);
                 Store.Add(now, name, SlotUp, v.Up);
             }
@@ -152,71 +158,49 @@ namespace Smart_Tools.WPF.Controllers
 
         private string NameOfLocked(int pid)
         {
-            if (_names.TryGetValue(pid, out string? known)) return known;
+            var now = DateTime.UtcNow;
+            // A number can be given to another program later: a remembered name is only trusted for a few minutes.
+            if (_names.TryGetValue(pid, out var known) && now - known.At < NameLife) return known.Name;
             string name;
-            try { using var p = Process.GetProcessById(pid); name = p.ProcessName; }
-            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or Win32Exception) { name = "(ended) #" + pid; }
+            try { using var p = Process.GetProcessById(pid); name = p.ProcessName; _names[pid] = (name, now); }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or Win32Exception) { name = EndedName; }
             if (_names.Count > 4000) _names.Clear();
-            if (!name.StartsWith("(ended)")) _names[pid] = name;
             return name;
         }
+
+        private static bool IsLoopbackV6(byte[] a) => a.Length == 16 && a[15] == 1 && a.Take(15).All(x => x == 0);
     }
 
+    /// <summary>What Bandwidth per App can measure. The page, ranking and chart come from <see cref="UsageBoardBuilder"/>.</summary>
     public static class BandwidthManager
     {
-        public static UsageBoardData Build(AppUsageStore store, BandwidthMetric metric, TimeSpan period)
+        private const double Step = AppUsageStore.SampleSeconds;
+
+        public static IReadOnlyList<UsageMetric> Metrics { get; } = new[]
         {
-            var since = DateTime.UtcNow - period;
-            var buckets = store.Since(since);
+            Of("Total", "Str_Bandwidth_Total", s => s[BandwidthRecorder.SlotDown] + s[BandwidthRecorder.SlotUp]),
+            Of("Download", "Str_Bandwidth_Download", s => s[BandwidthRecorder.SlotDown]),
+            Of("Upload", "Str_Bandwidth_Upload", s => s[BandwidthRecorder.SlotUp]),
+        };
 
-            double Of(double[] s) => metric switch
-            {
-                BandwidthMetric.Download => s[BandwidthRecorder.SlotDown],
-                BandwidthMetric.Upload => s[BandwidthRecorder.SlotUp],
-                _ => s[BandwidthRecorder.SlotDown] + s[BandwidthRecorder.SlotUp],
-            };
-
-            var totals = new Dictionary<string, (double Sum, double Peak, double Down, double Up)>(StringComparer.OrdinalIgnoreCase);
-            foreach (var b in buckets)
-                foreach (var (app, slots) in b.Apps)
-                {
-                    totals.TryGetValue(app, out var t);
-                    totals[app] = (t.Sum + Of(slots), Math.Max(t.Peak, Of(slots) / Math.Max(5.0, b.Samples * 5.0)), t.Down + slots[BandwidthRecorder.SlotDown], t.Up + slots[BandwidthRecorder.SlotUp]);
-                }
-            var all = totals.Where(kv => kv.Value.Sum > 0).OrderByDescending(kv => kv.Value.Sum).ToList();
-            var ranked = all.Take(40).ToList();
-            double top = ranked.Count > 0 ? ranked[0].Value.Sum : 1;
-            var rows = ranked.Select((kv, i) => new UsageRow
-            {
-                Rank = i + 1,
-                Name = kv.Key,
-                ValueText = UsageMath.Bytes(kv.Value.Sum),
-                PeakText = UsageMath.Rate(kv.Value.Peak),
-                Share = top > 0 ? kv.Value.Sum / top * 100.0 : 0,
-                ColorBrush = UsageMath.BrushOf(i < UsageMath.StackedPrograms ? UsageMath.Palette[i] : UsageMath.OtherColor),
-            }).ToList();
-
-            var slices = UsageMath.Cut(buckets, since, period, Of, b => b.Samples * 5.0);
-            var stack = UsageMath.Stack(slices, ranked.Select(kv => kv.Key).ToList(), UsageMath.Rate, "HH:mm");
-
-            double down = all.Sum(kv => kv.Value.Down), up = all.Sum(kv => kv.Value.Up);
-            var highlights = new List<UsageHighlight>();
-            if (ranked.Count > 0)
-                highlights.Add(new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.TrendingUp, Loc.T("Str_Bandwidth_StatHeaviest", "Most data used by"), ranked[0].Key, UsageMath.Bytes(ranked[0].Value.Sum)));
-            highlights.Add(new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.SwapVertical, Loc.T("Str_Bandwidth_StatSplit", "Received and sent"), "↓ " + UsageMath.Bytes(down), "↑ " + UsageMath.Bytes(up)));
-            var busiest = UsageMath.Busiest(slices);
-            highlights.Add(busiest == null
-                ? new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_Bandwidth_StatBusiest", "Busiest moment"), "-", "")
-                : new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_Bandwidth_StatBusiest", "Busiest moment"), busiest.Value.When.ToString("HH:mm"), UsageMath.Rate(busiest.Value.Value) + " " + Loc.T("Str_Bandwidth_StatBusiestSub", "all programs together")));
-
-            return new UsageBoardData
-            {
-                Rows = rows,
-                Highlights = highlights,
-                Stack = stack,
-                ValueHeaderKey = "Str_Bandwidth_ColTotal",
-                PeakHeaderKey = "Str_Bandwidth_ColFastest",
-            };
-        }
+        private static UsageMetric Of(string name, string labelKey, Func<double[], double> sum) => new()
+        {
+            Name = name,
+            LabelKey = labelKey,
+            Sum = sum,
+            Den = b => b.Samples * Step,
+            PeakOf = (s, b) => sum(s) / Math.Max(Step, b.Samples * Step),
+            Rank = (total, _) => total,
+            ValueText = UsageFormat.Bytes,
+            ChartFormat = UsageFormat.Rate,
+            SecondText = (peak, _, _) => UsageFormat.Rate(peak),
+            ValueHeaderKey = "Str_Bandwidth_ColTotal",
+            PeakHeaderKey = "Str_Bandwidth_ColFastest",
+            Middle = (buckets, _) => new UsageHighlight(
+                MaterialDesignThemes.Wpf.PackIconKind.SwapVertical,
+                Loc.T("Str_Bandwidth_StatSplit", "Received and sent"),
+                "↓ " + UsageFormat.Bytes(buckets.Sum(b => b.Apps.Values.Sum(s => s[BandwidthRecorder.SlotDown]))),
+                "↑ " + UsageFormat.Bytes(buckets.Sum(b => b.Apps.Values.Sum(s => s[BandwidthRecorder.SlotUp])))),
+        };
     }
 }

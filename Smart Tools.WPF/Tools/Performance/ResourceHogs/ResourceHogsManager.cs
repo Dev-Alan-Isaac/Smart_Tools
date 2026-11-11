@@ -5,94 +5,80 @@ using System.Runtime.InteropServices;
 
 namespace Smart_Tools.WPF.Controllers
 {
-    public enum HogMetric { Cpu, Memory, Disk }
-
-    /// <summary>Remembered between sessions (resource_hogs.json): only whether the history is being recorded.</summary>
-    public sealed class ResourceHogsSettings
-    {
-        public bool Recording { get; set; }
-        public int PeriodHours { get; set; } = 3;
-        public HogMetric Metric { get; set; } = HogMetric.Cpu;
-    }
-
     /// <summary>
     /// Takes a reading of every program every few seconds (CPU share, memory, disk bytes) and keeps one summary per minute for a day.
     /// Programs are grouped by name, so twenty browser processes are one "chrome". Runs on its own thread while Smart Tools is open.
     /// </summary>
-    public sealed class ResourceHogRecorder
+    public sealed class ResourceHogRecorder : UsageRecorder
     {
         public static ResourceHogRecorder Instance { get; } = new();
-
-        public const string SettingsName = "resource_hogs";
-        public const string HistoryName = "resource_hogs_history";
 
         // Slots of a minute: sums over the readings, and the highest reading.
         public const int SlotCpuSum = 0, SlotMemSum = 1, SlotDiskBytes = 2, SlotCpuPeak = 3, SlotMemPeak = 4, SlotCount = 5;
 
-        private static readonly TimeSpan Interval = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan Interval = TimeSpan.FromSeconds(AppUsageStore.SampleSeconds);
 
-        public AppUsageStore Store { get; } = new(HistoryName, SlotCount, TimeSpan.FromHours(24));
+        private Run? _run;
 
-        private readonly object _gate = new();
-        private CancellationTokenSource? _cts;
-        private readonly Dictionary<int, (double CpuMs, ulong IoBytes)> _previous = new();
-        private DateTime _lastReading;
-        private DateTime _lastSave = DateTime.UtcNow;
-        private bool _loaded;
+        private ResourceHogRecorder() : base("resource_hogs", "resource_hogs_history", SlotCount) { }
 
-        public bool IsRunning { get { lock (_gate) return _cts != null; } }
+        public override string ToolId => "resource-hogs";
 
-        public void Start()
+        public override string SettingsNoteKey => "Str_Settings_UhHogsNote";
+
+        /// <summary>
+        /// State of one recording. Every Start gets its own, so a sampler thread that is still finishing a reading after
+        /// Stop cannot mix its numbers with the next recording.
+        /// </summary>
+        private sealed class Run
         {
-            lock (_gate)
+            public readonly CancellationTokenSource Cts = new();
+            public readonly Dictionary<int, (double CpuMs, ulong IoBytes)> Previous = new();
+            public DateTime LastReading = DateTime.UtcNow;
+        }
+
+        public override bool IsRunning { get { lock (Gate) return _run != null; } }
+
+        public override string? Start()
+        {
+            lock (Gate)
             {
-                if (_cts != null) return;
-                _cts = new CancellationTokenSource();
-                var token = _cts.Token;
-                _previous.Clear();
-                _lastReading = DateTime.UtcNow;
-                new Thread(() => { EnsureLoaded(); Loop(token); }) { IsBackground = true, Name = "Resource hogs recorder", Priority = ThreadPriority.BelowNormal }.Start();
+                if (_run != null) return null;
+                var run = _run = new Run();
+                new Thread(() => { EnsureLoaded(); Loop(run); }) { IsBackground = true, Name = "Resource hogs recorder", Priority = ThreadPriority.BelowNormal }.Start();
+            }
+            return null;
+        }
+
+        protected override void StopCore()
+        {
+            lock (Gate)
+            {
+                _run?.Cts.Cancel();
+                _run = null;
             }
         }
 
-        public void Stop()
+        private void Loop(Run run)
         {
-            lock (_gate)
-            {
-                _cts?.Cancel();
-                _cts = null;
-            }
-            Task.Run(Store.Save);   // the file can be several MB: never on the screen's thread
-        }
-
-        /// <summary>Loads the saved history once (so a page can show it before recording starts).</summary>
-        public void EnsureLoaded()
-        {
-            lock (_gate) { if (_loaded) return; Store.Load(); _loaded = true; }
-        }
-
-        /// <summary>Same, without holding up the caller (reading a day of history takes about half a second).</summary>
-        public Task EnsureLoadedAsync() => _loaded ? Task.CompletedTask : Task.Run(EnsureLoaded);
-
-        private void Loop(CancellationToken token)
-        {
+            var token = run.Cts.Token;
             while (!token.IsCancellationRequested)
             {
                 if (token.WaitHandle.WaitOne(Interval)) break;
-                try { Sample(); }
+                try { Sample(run); }
                 catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or UnauthorizedAccessException or NotSupportedException)
                 {
                     Log.Warn("Resource hogs reading failed: " + ex.Message);
                 }
-                if (DateTime.UtcNow - _lastSave > TimeSpan.FromMinutes(2)) { _lastSave = DateTime.UtcNow; Store.Save(); }
+                SaveIfDue();
             }
         }
 
-        private void Sample()
+        private void Sample(Run run)
         {
             var now = DateTime.UtcNow;
-            double elapsedMs = Math.Max(1, (now - _lastReading).TotalMilliseconds);
-            _lastReading = now;
+            double elapsedMs = Math.Max(1, (now - run.LastReading).TotalMilliseconds);
+            run.LastReading = now;
             int cores = Math.Max(1, Environment.ProcessorCount);
 
             var perApp = new Dictionary<string, (double Cpu, double MemMb, double Disk)>(StringComparer.OrdinalIgnoreCase);
@@ -113,12 +99,12 @@ namespace Smart_Tools.WPF.Controllers
                     double memMb = p.WorkingSet64 / 1048576.0;
 
                     double cpu = 0, disk = 0;
-                    if (_previous.TryGetValue(pid, out var before) && cpuMs >= before.CpuMs)
+                    if (run.Previous.TryGetValue(pid, out var before) && cpuMs >= before.CpuMs)
                     {
                         cpu = (cpuMs - before.CpuMs) / (elapsedMs * cores) * 100.0;
                         if (io >= before.IoBytes) disk = io - before.IoBytes;
                     }
-                    _previous[pid] = (cpuMs, io);
+                    run.Previous[pid] = (cpuMs, io);
 
                     perApp.TryGetValue(name, out var sum);
                     perApp[name] = (sum.Cpu + cpu, sum.MemMb + memMb, sum.Disk + disk);
@@ -129,7 +115,7 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 finally { p.Dispose(); }
             }
-            foreach (int gone in _previous.Keys.Where(k => !seen.Contains(k)).ToList()) _previous.Remove(gone);
+            foreach (int gone in run.Previous.Keys.Where(k => !seen.Contains(k)).ToList()) run.Previous.Remove(gone);
 
             Store.Tick(now);
             foreach (var (name, v) in perApp)
@@ -170,105 +156,50 @@ namespace Smart_Tools.WPF.Controllers
         }
     }
 
+    /// <summary>What Resource Hogs History can measure. The page, ranking and chart come from <see cref="UsageBoardBuilder"/>.</summary>
     public static class ResourceHogsManager
     {
-        public static UsageBoardData Build(AppUsageStore store, HogMetric metric, TimeSpan period)
+        private const double Step = AppUsageStore.SampleSeconds;
+
+        public static IReadOnlyList<UsageMetric> Metrics { get; } = new[]
         {
-            var since = DateTime.UtcNow - period;
-            var buckets = store.Since(since);
-            double samples = buckets.Sum(b => (double)b.Samples);
-            double seconds = Math.Max(1, samples * 5.0);   // a reading is taken every 5 seconds
+            Average("Cpu", "Str_ResourceHogs_Cpu", ResourceHogRecorder.SlotCpuSum, ResourceHogRecorder.SlotCpuPeak, UsageFormat.Percent),
+            Average("Memory", "Str_ResourceHogs_Memory", ResourceHogRecorder.SlotMemSum, ResourceHogRecorder.SlotMemPeak, UsageFormat.Megabytes),
+            Disk(),
+        };
 
-            // Per program: the headline value, and the second column.
-            var totals = new Dictionary<string, (double Sum, double Peak)>(StringComparer.OrdinalIgnoreCase);
-            int sumSlot = metric switch { HogMetric.Cpu => ResourceHogRecorder.SlotCpuSum, HogMetric.Memory => ResourceHogRecorder.SlotMemSum, _ => ResourceHogRecorder.SlotDiskBytes };
-            int peakSlot = metric switch { HogMetric.Cpu => ResourceHogRecorder.SlotCpuPeak, HogMetric.Memory => ResourceHogRecorder.SlotMemPeak, _ => -1 };
-            foreach (var b in buckets)
-                foreach (var (app, slots) in b.Apps)
-                {
-                    totals.TryGetValue(app, out var t);
-                    double peak = peakSlot >= 0 ? Math.Max(t.Peak, slots[peakSlot]) : Math.Max(t.Peak, slots[sumSlot] / Math.Max(5.0, b.Samples * 5.0));
-                    totals[app] = (t.Sum + slots[sumSlot], peak);
-                }
-
-            // Ranked by an average over the whole period for CPU and memory, by the total for disk.
-            double Value(double sum) => metric == HogMetric.Disk ? sum : samples > 0 ? sum / samples : 0;
-            var all = totals.Select(kv => (Name: kv.Key, Value: Value(kv.Value.Sum), kv.Value.Peak)).Where(r => r.Value > 0).OrderByDescending(r => r.Value).ToList();
-            var ranked = all.Take(40).ToList();
-            double top = ranked.Count > 0 ? ranked[0].Value : 1;
-
-            Func<double, string> format = metric switch { HogMetric.Cpu => UsageMath.Percent, HogMetric.Memory => UsageMath.Megabytes, _ => UsageMath.Rate };
-            string Text(double v) => metric switch { HogMetric.Cpu => UsageMath.Percent(v), HogMetric.Memory => UsageMath.Megabytes(v), _ => UsageMath.Bytes(v) };
-            string Second(double peak, double total) => metric switch { HogMetric.Disk => UsageMath.Rate(total / seconds), HogMetric.Cpu => UsageMath.Percent(peak), _ => UsageMath.Megabytes(peak) };
-
-            var rows = ranked.Select((r, i) => new UsageRow
-            {
-                Rank = i + 1,
-                Name = r.Name,
-                ValueText = Text(r.Value),
-                PeakText = Second(r.Peak, r.Value),
-                Share = top > 0 ? r.Value / top * 100.0 : 0,
-                ColorBrush = UsageMath.BrushOf(i < UsageMath.StackedPrograms ? UsageMath.Palette[i] : UsageMath.OtherColor),
-            }).ToList();
-
-            Func<double[], double> num = metric switch
-            {
-                HogMetric.Cpu => s => s[ResourceHogRecorder.SlotCpuSum],
-                HogMetric.Memory => s => s[ResourceHogRecorder.SlotMemSum],
-                _ => s => s[ResourceHogRecorder.SlotDiskBytes],
-            };
-            Func<UsageBucket, double> den = metric == HogMetric.Disk ? b => b.Samples * 5.0 : b => b.Samples;
-            var slices = UsageMath.Cut(buckets, since, period, num, den);
-            var stack = UsageMath.Stack(slices, ranked.Select(r => r.Name).ToList(), format, "HH:mm");
-
-            var highlights = new List<UsageHighlight>();
-            if (ranked.Count > 0)
-                highlights.Add(new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.TrendingUp, Loc.T("Str_ResourceHogs_StatHeaviest", "Heaviest program"), ranked[0].Name, Text(ranked[0].Value)));
-            highlights.Add(metric == HogMetric.Disk
-                ? new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.Harddisk, Loc.T("Str_ResourceHogs_StatMoved", "Read and written"), UsageMath.Bytes(all.Sum(r => r.Value)), Loc.T("Str_ResourceHogs_StatMovedSub", "by all programs"))
-                : new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.FormatListNumbered, Loc.T("Str_ResourceHogs_StatPrograms", "Programs counted"), all.Count.ToString("N0"), Loc.T("Str_ResourceHogs_StatProgramsSub", "that used something")));
-            var busiest = UsageMath.Busiest(slices);
-            highlights.Add(busiest == null
-                ? new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_ResourceHogs_StatBusiest", "Busiest moment"), "-", "")
-                : new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.ClockOutline, Loc.T("Str_ResourceHogs_StatBusiest", "Busiest moment"), busiest.Value.When.ToString("HH:mm"), format(busiest.Value.Value) + " " + Loc.T("Str_ResourceHogs_StatBusiestSub", "all programs together")));
-
-            return new UsageBoardData
-            {
-                Rows = rows,
-                Highlights = highlights,
-                Stack = stack,
-                ValueHeaderKey = metric == HogMetric.Disk ? "Str_ResourceHogs_ColTotal" : "Str_ResourceHogs_ColAverage",
-                PeakHeaderKey = metric == HogMetric.Disk ? "Str_ResourceHogs_ColRate" : "Str_ResourceHogs_ColHighest",
-            };
-        }
-    }
-}
-
-namespace Smart_Tools.WPF.Controllers
-{
-    /// <summary>Starts the history recorders the user switched on last time, and stops them (and their trace session) when the app closes.</summary>
-    public static class UsageRecorders
-    {
-        public static void StartIfEnabled()
+        /// <summary>CPU and memory: ranked by the average over the period, second column is the highest reading.</summary>
+        private static UsageMetric Average(string name, string labelKey, int sumSlot, int peakSlot, Func<double, string> text) => new()
         {
-            try
-            {
-                if (JsonSettings.Load<ResourceHogsSettings>(ResourceHogRecorder.SettingsName).Recording) ResourceHogRecorder.Instance.Start();
-                if (JsonSettings.Load<BandwidthSettings>(BandwidthRecorder.SettingsName).Recording) BandwidthRecorder.Instance.Start();
-            }
-            catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
-            {
-                Log.Warn("Could not start the history recorders: " + ex.Message);
-            }
-        }
+            Name = name,
+            LabelKey = labelKey,
+            Sum = s => s[sumSlot],
+            Den = b => b.Samples,
+            PeakOf = (s, _) => s[peakSlot],
+            Rank = (sum, t) => t.Samples > 0 ? sum / t.Samples : 0,
+            ValueText = text,
+            ChartFormat = text,
+            SecondText = (peak, _, _) => text(peak),
+            ValueHeaderKey = "Str_ResourceHogs_ColAverage",
+            PeakHeaderKey = "Str_ResourceHogs_ColHighest",
+            Middle = (_, all) => new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.FormatListNumbered, Loc.T("Str_ResourceHogs_StatPrograms", "Programs counted"), all.Count.ToString("N0"), Loc.T("Str_ResourceHogs_StatProgramsSub", "that used something")),
+        };
 
-        /// <summary>At exit: stops both (and the network trace session) and writes the history before the process ends.</summary>
-        public static void StopAll()
+        /// <summary>Disk: ranked by the bytes moved over the period, second column is the average rate.</summary>
+        private static UsageMetric Disk() => new()
         {
-            if (ResourceHogRecorder.Instance.IsRunning) ResourceHogRecorder.Instance.Stop();
-            if (BandwidthRecorder.Instance.IsRunning) BandwidthRecorder.Instance.Stop();
-            ResourceHogRecorder.Instance.Store.Save();
-            BandwidthRecorder.Instance.Store.Save();
-        }
+            Name = "Disk",
+            LabelKey = "Str_ResourceHogs_Disk",
+            Sum = s => s[ResourceHogRecorder.SlotDiskBytes],
+            Den = b => b.Samples * Step,
+            PeakOf = (s, b) => s[ResourceHogRecorder.SlotDiskBytes] / Math.Max(Step, b.Samples * Step),
+            Rank = (sum, _) => sum,
+            ValueText = UsageFormat.Bytes,
+            ChartFormat = UsageFormat.Rate,
+            SecondText = (_, value, t) => UsageFormat.Rate(value / t.Seconds),
+            ValueHeaderKey = "Str_ResourceHogs_ColTotal",
+            PeakHeaderKey = "Str_ResourceHogs_ColRate",
+            Middle = (_, all) => new UsageHighlight(MaterialDesignThemes.Wpf.PackIconKind.Harddisk, Loc.T("Str_ResourceHogs_StatMoved", "Read and written"), UsageFormat.Bytes(all.Sum(r => r.Value)), Loc.T("Str_ResourceHogs_StatMovedSub", "by all programs")),
+        };
     }
 }

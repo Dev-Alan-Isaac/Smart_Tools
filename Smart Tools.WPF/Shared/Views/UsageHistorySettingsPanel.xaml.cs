@@ -8,18 +8,32 @@ namespace Smart_Tools.WPF.Views
 {
     /// <summary>
     /// The "History recording" section of Settings: choose which history recorders start by themselves when Smart Tools opens
-    /// (both, or just one). It writes the same flags the two tools use for their Start / Stop recording button.
+    /// (all, or just some). One tick per recorder in <see cref="UsageRecorders.All"/>; it writes the same flag each tool uses for its
+    /// Start / Stop recording button.
     /// </summary>
     public partial class UsageHistorySettingsPanel : UserControl
     {
         /// <summary>A setting was saved; the host shows its "Saved" pill.</summary>
         public event Action? SettingChanged;
 
-        private bool _loading;
+        private readonly List<(UsageRecorder Recorder, CheckBox Box)> _tools = new();
+        private bool _loading, _someOn;   // _someOn: the "all" box is showing the in-between state
 
         public UsageHistorySettingsPanel()
         {
             InitializeComponent();
+            foreach (var recorder in UsageRecorders.All)
+            {
+                var box = new CheckBox { Margin = new Thickness(0, _tools.Count == 0 ? 0 : 14, 0, 0) };
+                box.SetResourceReference(ContentControl.ContentProperty, "Str_Tool_" + recorder.ToolId + "_Name");
+                box.Click += Tool_Click;
+                var note = new TextBlock { Margin = new Thickness(28, 2, 0, 0), FontSize = 11.5, TextWrapping = TextWrapping.Wrap };
+                note.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
+                note.SetResourceReference(TextBlock.TextProperty, recorder.SettingsNoteKey);
+                ToolList.Children.Add(box);
+                ToolList.Children.Add(note);
+                _tools.Add((recorder, box));
+            }
         }
 
         /// <summary>Shows the saved flags. Called when the section opens (the tools may have changed them meanwhile).</summary>
@@ -28,8 +42,7 @@ namespace Smart_Tools.WPF.Views
             _loading = true;
             try
             {
-                ChkHogs.IsChecked = JsonSettings.Load<ResourceHogsSettings>(ResourceHogRecorder.SettingsName).Recording;
-                ChkBandwidth.IsChecked = JsonSettings.Load<BandwidthSettings>(BandwidthRecorder.SettingsName).Recording;
+                foreach (var (recorder, box) in _tools) box.IsChecked = recorder.LoadSettings().Recording;
                 SyncAll();
                 ShowStatus(null);
             }
@@ -38,18 +51,20 @@ namespace Smart_Tools.WPF.Views
 
         private void SyncAll()
         {
-            bool hogs = ChkHogs.IsChecked == true, bandwidth = ChkBandwidth.IsChecked == true;
-            ChkAll.IsChecked = hogs && bandwidth ? true : !hogs && !bandwidth ? false : null;
+            int on = _tools.Count(t => t.Box.IsChecked == true);
+            _someOn = on > 0 && on < _tools.Count;
+            ChkAll.IsChecked = on == _tools.Count ? true : on == 0 ? false : null;
         }
 
         private void ChkAll_Click(object sender, RoutedEventArgs e)
         {
             if (_loading) return;
-            // A click on the three-state box goes true -> null -> false; treat "null" as the next step to "on".
-            bool on = ChkAll.IsChecked != false;
-            ChkHogs.IsChecked = on;
-            ChkBandwidth.IsChecked = on;
+            // A two-state box that SyncAll can show as "some" (null). WPF turns "some" into off on a click, but the user means "all":
+            // so some -> all on, off -> all on, all on -> all off.
+            bool on = _someOn || ChkAll.IsChecked == true;
+            foreach (var (_, box) in _tools) box.IsChecked = on;
             ChkAll.IsChecked = on;
+            _someOn = false;
             Apply();
         }
 
@@ -62,21 +77,17 @@ namespace Smart_Tools.WPF.Views
 
         private void Apply()
         {
-            bool hogs = ChkHogs.IsChecked == true, bandwidth = ChkBandwidth.IsChecked == true;
-
-            var hogSettings = JsonSettings.Load<ResourceHogsSettings>(ResourceHogRecorder.SettingsName);
-            hogSettings.Recording = hogs;
-            JsonSettings.Save(ResourceHogRecorder.SettingsName, hogSettings);
-            if (hogs) ResourceHogRecorder.Instance.Start();
-            else if (ResourceHogRecorder.Instance.IsRunning) ResourceHogRecorder.Instance.Stop();
-
-            var bwSettings = JsonSettings.Load<BandwidthSettings>(BandwidthRecorder.SettingsName);
-            bwSettings.Recording = bandwidth;
-            JsonSettings.Save(BandwidthRecorder.SettingsName, bwSettings);
             string? problem = null;
-            if (bandwidth) problem = BandwidthRecorder.Instance.Start();
-            else if (BandwidthRecorder.Instance.IsRunning) BandwidthRecorder.Instance.Stop();
-            ShowStatus(problem == "NotAdministrator"
+            foreach (var (recorder, box) in _tools)
+            {
+                bool wanted = box.IsChecked == true;
+                var settings = recorder.LoadSettings();
+                settings.Recording = wanted;
+                recorder.SaveSettings(settings);
+                if (wanted) { string? failed = recorder.Start(); problem ??= failed; }
+                else if (recorder.IsRunning) recorder.Stop();
+            }
+            ShowStatus(problem == UsageRecorder.NotAdministrator
                 ? Loc.T("Str_Settings_UhNeedsAdmin", "Bandwidth per App needs administrator rights. It will start by itself the next time you run Smart Tools as administrator.")
                 : problem != null ? Loc.F("Str_Bandwidth_StartFailed", "Couldn't start: {0}", problem) : null);
 

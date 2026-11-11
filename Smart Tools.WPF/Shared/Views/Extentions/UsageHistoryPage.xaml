@@ -1,0 +1,81 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Controls.UsageHistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        The page every per-program history tool shares (Resource Hogs History, Bandwidth per App) - UI only. The tool says what it is through
+        Configure(UsageHistoryConfig): its recorder, its measures and its Str_<Prefix>_* texts, which are set from code. Options (record,
+        delete) on the left; what to look at (measure, period) on top of the page.
+    -->
+
+    <UserControl.Resources>
+        <Style x:Key="UhHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{DynamicResource SidebarTextMuted}" />
+            <Setter Property="Margin" Value="2,8,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border x:Name="RecordCard" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl x:Name="RecordHeader" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.RecordCircleOutline}" />
+                            <Button x:Name="BtnRecord" MinHeight="38" Click="BtnRecord_Click" Style="{StaticResource AccentPrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon x:Name="IconRecord" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Record" />
+                                    <TextBlock x:Name="TxtRecord" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock x:Name="TxtRecordState" Style="{StaticResource UhHint}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DataCard" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl x:Name="DataHeader" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.DatabaseOutline}" />
+                            <TextBlock x:Name="DataNote" Margin="2,0,0,8" FontSize="11" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                            <TextBlock x:Name="TxtHistory" Margin="2,0,0,10" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextWrapping="Wrap" />
+                            <Button x:Name="BtnClear" HorizontalAlignment="Left" Click="BtnClear_Click" Style="{StaticResource NeutralIconButtonStyle}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  What to look at  -->
+                <Border Padding="14,10" Style="{StaticResource CardStyle}">
+                    <DockPanel>
+                        <UniformGrid x:Name="PeriodBar" Width="330" DockPanel.Dock="Right" Rows="1" />
+                        <UniformGrid x:Name="MetricBar" Width="330" HorizontalAlignment="Left" Rows="1" />
+                    </DockPanel>
+                </Border>
+
+                <controls:ElevationBannerCard x:Name="AdminBanner" Grid.Row="1" Margin="0,14,0,0" />
+
+                <controls:AppUsageBoard x:Name="Board" Grid.Row="2" Margin="0,14,0,0" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
