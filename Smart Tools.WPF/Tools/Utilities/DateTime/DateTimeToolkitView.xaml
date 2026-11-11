@@ -27,6 +27,11 @@
                 TextTrimming="CharacterEllipsis" />
         </DataTemplate>
 
+        <!--  Result rows in two columns so wide windows are used (one column of full-width rows left most of the line empty)  -->
+        <ItemsPanelTemplate x:Key="DtTwoColumnPanel">
+            <UniformGrid Margin="0,0,-8,0" Columns="2" />
+        </ItemsPanelTemplate>
+
         <Style x:Key="MiniLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -37,13 +42,13 @@
         <!--  One result line: label, value, copy  -->
         <DataTemplate x:Key="ResultRowTemplate" DataType="{x:Type models:DateToolRow}">
             <Border
-                Margin="0,0,0,6"
-                Padding="12,7,8,7"
+                Margin="0,0,8,8"
+                Padding="12,9,8,9"
                 Background="{DynamicResource RowBg}"
                 CornerRadius="8">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="170" />
+                        <ColumnDefinition Width="130" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
@@ -1091,7 +1096,8 @@
                                 <ItemsControl
                                     x:Name="ListUnixRows"
                                     Focusable="False"
-                                    ItemTemplate="{StaticResource ResultRowTemplate}" />
+                                    ItemTemplate="{StaticResource ResultRowTemplate}"
+                                    ItemsPanel="{StaticResource DtTwoColumnPanel}" />
                                 <ContentControl Content="{StaticResource FactsUnix}" IsTabStop="False" />
                             </StackPanel>
                         </ScrollViewer>
@@ -1717,7 +1723,8 @@
                                         x:Name="ListIsoRows"
                                         Margin="0,12,0,0"
                                         Focusable="False"
-                                        ItemTemplate="{StaticResource ResultRowTemplate}" />
+                                        ItemTemplate="{StaticResource ResultRowTemplate}"
+                                    ItemsPanel="{StaticResource DtTwoColumnPanel}" />
                                     <ContentControl Content="{StaticResource FactsIso}" IsTabStop="False" />
                                 </StackPanel>
                             </ScrollViewer>
@@ -1873,7 +1880,8 @@
                                 <ItemsControl
                                     x:Name="ListCalRows"
                                     Focusable="False"
-                                    ItemTemplate="{StaticResource ResultRowTemplate}" />
+                                    ItemTemplate="{StaticResource ResultRowTemplate}"
+                                    ItemsPanel="{StaticResource DtTwoColumnPanel}" />
 
                                 <!--  Event days from Settings  -->
                                 <Border

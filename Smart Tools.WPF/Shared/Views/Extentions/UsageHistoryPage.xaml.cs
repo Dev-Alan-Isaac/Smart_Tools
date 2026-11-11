@@ -1,5 +1,8 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
+using Microsoft.Win32;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -187,6 +190,63 @@ namespace Smart_Tools.WPF.Controls
             Refresh();
         }
 
+        /// <summary>One report with a section per measure: the top programs over the period as a chart, then the ranking. HTML and PDF carry the charts.</summary>
+        private async void BtnExport_Click(object sender, RoutedEventArgs e)
+        {
+            string kind = (sender as System.Windows.Controls.MenuItem)?.Tag as string ?? "html";
+            string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = Title,
+                Filter = Loc.T("Str_SystemMonitor_ReportFilterHtml", "Web page with charts (*.html)|*.html") + "|" + Loc.T("Str_SystemMonitor_ReportFilterPdf", "PDF with charts (*.pdf)|*.pdf"),
+                FilterIndex = kind == "pdf" ? 2 : 1,
+                FileName = Config.Prefix + "-" + stamp + "." + kind,
+                AddExtension = true,
+                OverwritePrompt = false,
+            };
+            if (dialog.ShowDialog() != true) return;
+            string path = OutputFolderManager.UniquePath(dialog.FileName);
+            var recorder = Recorder;
+            var metrics = Config.Metrics;
+            var period = TimeSpan.FromHours(CurrentHours());
+            string prefix = Config.Prefix, title = Title;
+            try
+            {
+                await recorder.EnsureLoadedAsync();
+                bool pdf = Path.GetExtension(path).Equals(".pdf", StringComparison.OrdinalIgnoreCase);
+                byte[] bytes = await Task.Run(() =>
+                {
+                    var report = BuildReport(recorder, metrics, period, prefix, title);
+                    return pdf ? PerfReportBuilder.ToPdf(report) : new System.Text.UTF8Encoding(false).GetBytes(PerfReportBuilder.ToHtml(report));
+                });
+                AtomicFile.WriteAllBytes(path, bytes);
+                if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, ""), title, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
+            {
+                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private static readonly string[] ReportColors = { PerfReportBuilder.Blue, PerfReportBuilder.Orange, PerfReportBuilder.Green, PerfReportBuilder.Red, "#8b5cf6", "#14b8a6", "#94a3b8" };
+
+        private static PerfReportData BuildReport(UsageRecorder recorder, IReadOnlyList<UsageMetric> metrics, TimeSpan period, string prefix, string title)
+        {
+            var sections = new List<PerfSection>();
+            foreach (var metric in metrics)
+            {
+                var data = UsageBoardBuilder.Build(recorder.Store, metric, period, prefix);
+                var series = data.Stack.Series.Select(s => new PerfSeries(s.Name, s.Values, ReportColors[Math.Min(s.ColorIndex, ReportColors.Length - 1)])).ToList();
+                var charts = new List<PerfChart>();
+                if (series.Count > 0) charts.Add(new PerfChart(Loc.T(metric.LabelKey, metric.Name), series, metric.ChartFormat));
+                var rows = data.Rows.Select(r => new PerfRow(r.Rank + ". " + r.Name, r.ValueText + "  |  " + r.PeakText)).ToList();
+                var highlights = data.Highlights.Select(h => new PerfRow(h.Label, (h.Value + " " + h.Sub).Trim())).ToList();
+                sections.Add(new PerfSection(Loc.T(metric.LabelKey, metric.Name), Loc.F("Str_UsageReport_Period", "Last {0} h", period.TotalHours.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)), highlights.Concat(rows).ToList(), charts));
+            }
+            return new PerfReportData(title, DateTime.Now, period.TotalSeconds / UsageMath.ChartPoints, Loc.T("Str_UsageReport_Note", "Chart: the programs that used the most, over the chosen period."), sections);
+        }
+
         private void UpdateTexts()
         {
             bool on = Recorder.IsRunning;
@@ -218,6 +278,7 @@ namespace Smart_Tools.WPF.Controls
             bool recording = recorder.IsRunning;
             Board.SetEmptyKeys(Key(recording ? "WaitTitle" : "EmptyTitle"), Key(recording ? "WaitHint" : "EmptyHint"));
             Board.SetData(data);
+            BtnExport.IsEnabled = data.Rows.Count > 0;
             var first = recorder.Store.FirstUtc;
             TxtHistory.Text = first == null
                 ? Loc.T(Key("NoHistory"), "No history yet.")

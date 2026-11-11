@@ -702,7 +702,17 @@
                                             ToolTip="{DynamicResource Str_HardwareSensors_SaveEverySensorAs}">
                                             <Button.ContextMenu>
                                                 <ContextMenu>
-                                                    <MenuItem Click="BtnSaveReport_Click" Header="{DynamicResource Str_Common_ExportAsText}">
+                                                    <MenuItem Click="BtnSaveReport_Click" Header="{DynamicResource Str_Common_ExportAsHtml}" Tag="html">
+                                                        <MenuItem.Icon>
+                                                            <materialDesign:PackIcon Kind="Web" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Click="BtnSaveReport_Click" Header="{DynamicResource Str_Common_ExportAsPdf}" Tag="pdf">
+                                                        <MenuItem.Icon>
+                                                            <materialDesign:PackIcon Kind="FilePdfBox" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Click="BtnSaveReport_Click" Header="{DynamicResource Str_Common_ExportAsText}" Tag="txt">
                                                         <MenuItem.Icon>
                                                             <materialDesign:PackIcon Kind="FileDocumentOutline" />
                                                         </MenuItem.Icon>

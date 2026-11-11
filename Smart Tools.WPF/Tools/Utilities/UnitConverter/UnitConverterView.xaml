@@ -24,6 +24,7 @@
             <Button
                 Click="Pair_Click"
                 Content="{Binding Label}"
+                Margin="0,0,6,6"
                 Style="{StaticResource PillChipStyle}"
                 Tag="{Binding Pair}"
                 ToolTip="{Binding Tip}" />
@@ -142,7 +143,7 @@
                                     <ItemsControl x:Name="ListFavorites" ItemTemplate="{StaticResource PairChipTemplate}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <WrapPanel />
+                                                <UniformGrid Columns="2" />
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                     </ItemsControl>
@@ -162,7 +163,7 @@
                                     <ItemsControl x:Name="ListRecent" ItemTemplate="{StaticResource PairChipTemplate}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <WrapPanel />
+                                                <UniformGrid Columns="2" />
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                     </ItemsControl>

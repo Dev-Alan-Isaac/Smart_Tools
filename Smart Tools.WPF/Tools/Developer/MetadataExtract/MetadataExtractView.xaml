@@ -556,9 +556,9 @@
                 <!--  Files + details (side by side; stacked on narrow windows)  -->
                 <Grid x:Name="ContentGrid" ctl:Tour.Key="Str_Tour_MetadataExtract_Results" ctl:Tour.Order="4" Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition MinWidth="300" Width="2*" />
-                        <ColumnDefinition x:Name="DetailsGapColumn" Width="14" />
                         <ColumnDefinition x:Name="DetailsColumn" MinWidth="460" Width="3*" />
+                        <ColumnDefinition x:Name="DetailsGapColumn" Width="14" />
+                        <ColumnDefinition x:Name="FilesColumn" MinWidth="300" Width="2*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="2*" />
@@ -567,7 +567,10 @@
                     </Grid.RowDefinitions>
 
                     <!--  ================= FILES =================  -->
-                    <Border x:Name="FilesCard" Style="{StaticResource CardStyle}">
+                    <Border
+                        x:Name="FilesCard"
+                        Grid.Column="2"
+                        Style="{StaticResource CardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -814,7 +817,7 @@
                     <!--  ================= DETAILS =================  -->
                     <Border
                         x:Name="DetailsCard"
-                        Grid.Column="2"
+                        Grid.Column="0"
                         Style="{StaticResource CardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>

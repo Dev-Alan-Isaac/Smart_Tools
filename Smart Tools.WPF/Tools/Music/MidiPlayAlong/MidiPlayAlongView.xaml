@@ -129,16 +129,17 @@
                     <Border ctl:Tour.Key="Str_Tour_PlayAlong_Tempo" ctl:Tour.Order="4" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_PlayAlong_TempoHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.SpeedometerSlow}" />
-                            <Grid>
+                            <Grid Margin="0,4,0,0">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Slider x:Name="SliderTempo" IsMoveToPointEnabled="True" LargeChange="10" Maximum="150" Minimum="40" SmallChange="1" TickFrequency="10" Value="100" ValueChanged="Tempo_Changed" />
-                                <TextBlock x:Name="TxtTempo" Grid.Column="1" Width="48" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource SidebarText}" TextAlignment="Right" />
+                                <TextBlock x:Name="TxtTempo" VerticalAlignment="Center" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource SidebarText}" />
+                                <TextBlock x:Name="TxtBpm" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource SidebarTextMuted}" TextTrimming="CharacterEllipsis" />
+                                <Button Grid.Column="2" Click="BtnTempoReset_Click" Content="{DynamicResource Str_PlayAlong_TempoReset}" Style="{StaticResource NeutralIconButtonStyle}" />
                             </Grid>
-                            <TextBlock x:Name="TxtBpm" Style="{StaticResource PaHint}" />
-                            <Button Margin="0,8,0,0" HorizontalAlignment="Left" Click="BtnTempoReset_Click" Content="{DynamicResource Str_PlayAlong_TempoReset}" Style="{StaticResource NeutralIconButtonStyle}" />
+                            <Slider x:Name="SliderTempo" Margin="0,8,0,0" IsMoveToPointEnabled="True" LargeChange="10" Maximum="150" Minimum="40" SmallChange="1" TickFrequency="10" Value="100" ValueChanged="Tempo_Changed" />
                         </StackPanel>
                     </Border>
 

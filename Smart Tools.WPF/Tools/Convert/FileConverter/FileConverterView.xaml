@@ -354,7 +354,10 @@
 
 
                             <!--  ============ CONVERT TO ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_FileConverter_Format" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border
+                                ctl:Tour.Key="Str_Tour_FileConverter_Format"
+                                ctl:Tour.Order="2"
+                                Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Convert_SettingsHeader}"
@@ -534,20 +537,16 @@
                                             Margin="0,12,0,6"
                                             Style="{StaticResource FieldLabel}"
                                             Text="{DynamicResource Str_Convert_QualityLabel}" />
-                                        <UniformGrid
-                                            x:Name="VideoQualityChips"
-                                            Columns="3"
-                                            ToolTip="{DynamicResource Str_Convert_VideoQualityTooltip}">
+                                        <Grid x:Name="VideoQualityChips" ToolTip="{DynamicResource Str_Convert_VideoQualityTooltip}">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!--  Top: Balanced (Full Width)  -->
                                             <RadioButton
-                                                Margin="0,0,2,0"
-                                                Click="Setting_Click"
-                                                Content="{DynamicResource Str_FileConverter_Best}"
-                                                GroupName="VideoQuality"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="Highest"
-                                                ToolTip="{DynamicResource Str_FileConverter_VisuallyLosslessBiggerFiles}" />
-                                            <RadioButton
-                                                Margin="2,0"
+                                                Grid.Row="0"
+                                                Margin="0,0,0,4"
                                                 Click="Setting_Click"
                                                 Content="{DynamicResource Str_DeviceScanner_Balanced}"
                                                 GroupName="VideoQuality"
@@ -555,15 +554,27 @@
                                                 Style="{StaticResource ModeToggleButtonStyle}"
                                                 Tag="Balanced"
                                                 ToolTip="{DynamicResource Str_FileConverter_GoodQualityAtA}" />
-                                            <RadioButton
-                                                Margin="2,0,0,0"
-                                                Click="Setting_Click"
-                                                Content="{DynamicResource Str_FileConverter_Smaller}"
-                                                GroupName="VideoQuality"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="Smaller"
-                                                ToolTip="{DynamicResource Str_FileConverter_SmallestFilesSomeDetail}" />
-                                        </UniformGrid>
+
+                                            <!--  Bottom: Best & Smaller (Side by Side)  -->
+                                            <UniformGrid Grid.Row="1" Columns="2">
+                                                <RadioButton
+                                                    Margin="0,0,2,0"
+                                                    Click="Setting_Click"
+                                                    Content="{DynamicResource Str_FileConverter_Best}"
+                                                    GroupName="VideoQuality"
+                                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                                    Tag="Highest"
+                                                    ToolTip="{DynamicResource Str_FileConverter_VisuallyLosslessBiggerFiles}" />
+                                                <RadioButton
+                                                    Margin="2,0,0,0"
+                                                    Click="Setting_Click"
+                                                    Content="{DynamicResource Str_FileConverter_Smaller}"
+                                                    GroupName="VideoQuality"
+                                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                                    Tag="Smaller"
+                                                    ToolTip="{DynamicResource Str_FileConverter_SmallestFilesSomeDetail}" />
+                                            </UniformGrid>
+                                        </Grid>
                                     </StackPanel>
 
                                     <!--  ~~~ Image ~~~  -->
@@ -957,9 +968,9 @@
                         <Button
                             x:Name="BtnConvertFiles"
                             MinWidth="180"
+                            VerticalAlignment="Center"
                             ctl:Tour.Key="Str_Tour_FileConverter_Run"
                             ctl:Tour.Order="5"
-                            VerticalAlignment="Center"
                             Click="BtnConvertFiles_Click"
                             Style="{StaticResource AccentPrimaryButtonStyle}"
                             ToolTip="{DynamicResource Str_Convert_ConvertButtonTooltip}">
@@ -969,18 +980,19 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <materialDesign:PackIcon
-                                    Grid.Column="0"
                                     x:Name="IconConvert"
+                                    Grid.Column="0"
                                     Width="18"
                                     Height="18"
                                     Margin="0,0,8,0"
                                     VerticalAlignment="Center"
                                     Kind="SwapHorizontal" />
                                 <TextBlock
-                                    Grid.Column="1"
                                     x:Name="TxtConvertLabel"
+                                    Grid.Column="1"
                                     VerticalAlignment="Center"
-                                    Text="{DynamicResource Str_Convert_ConvertButton}" TextWrapping="Wrap" />
+                                    Text="{DynamicResource Str_Convert_ConvertButton}"
+                                    TextWrapping="Wrap" />
                             </Grid>
                         </Button>
 
@@ -1173,8 +1185,8 @@
                                     x:Name="BtnOpenOutput"
                                     Margin="0,0,8,0"
                                     Click="BtnOpenOutput_Click"
-                                    ToolTip="{DynamicResource Str_FileConverter_OpenTheFolderThe}"
-                                    Style="{StaticResource ListToolButtonStyle}">
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_FileConverter_OpenTheFolderThe}">
                                     <materialDesign:PackIcon
                                         Width="16"
                                         Height="16"
@@ -1184,8 +1196,8 @@
                                     x:Name="BtnRemoveFiles"
                                     Margin="0,0,8,0"
                                     Click="BtnRemoveFiles_Click"
-                                    ToolTip="{DynamicResource Str_Convert_RemoveFilesTooltip}"
-                                    Style="{StaticResource ListToolButtonStyle}">
+                                    Style="{StaticResource ListToolButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Convert_RemoveFilesTooltip}">
                                     <materialDesign:PackIcon
                                         Width="16"
                                         Height="16"
@@ -1194,8 +1206,8 @@
                                 <Button
                                     x:Name="BtnClearFiles"
                                     Click="BtnClearFiles_Click"
-                                    ToolTip="{DynamicResource Str_Convert_ClearTooltip}"
-                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Convert_ClearTooltip}">
                                     <materialDesign:PackIcon
                                         Width="16"
                                         Height="16"
@@ -1211,9 +1223,9 @@
                             CanUserAddRows="False"
                             FontSize="12"
                             IsReadOnly="True"
+                            MinRowHeight="48"
                             MouseDoubleClick="DataGridFiles_MouseDoubleClick"
                             PreviewKeyDown="DataGridFiles_PreviewKeyDown"
-                            MinRowHeight="48"
                             SelectionMode="Extended"
                             ToolTip="{DynamicResource Str_Convert_GridTooltip}"
                             VirtualizingPanel.IsVirtualizing="True"
@@ -1238,9 +1250,9 @@
                                     Header="{DynamicResource Str_Convert_ColHeaderTargetFormat}"
                                     SortMemberPath="CurrentFormat" />
                                 <DataGridTextColumn
-                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
                                     Width="80"
                                     Binding="{Binding Size}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
                                     Header="{DynamicResource Str_Common_ColHeaderSize}"
                                     SortMemberPath="SizeBytes" />
                                 <DataGridTemplateColumn

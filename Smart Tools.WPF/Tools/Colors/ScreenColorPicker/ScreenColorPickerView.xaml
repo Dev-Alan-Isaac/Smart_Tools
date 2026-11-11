@@ -195,13 +195,20 @@
                                         Margin="0,8,0,0"
                                         Style="{StaticResource FieldLabel}"
                                         Text="{DynamicResource Str_ScreenColor_ExampleLabel}" />
-                                    <TextBlock
-                                        x:Name="TxtFormatExample"
-                                        Margin="0,8,0,0"
-                                        FontFamily="Consolas"
-                                        FontSize="11.5"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Opacity="0.8" />
+                                    <Border
+                                        Margin="0,6,0,0"
+                                        Padding="12,10"
+                                        Background="{DynamicResource SidebarInputBg}"
+                                        CornerRadius="8">
+                                        <TextBlock
+                                            x:Name="TxtFormatExample"
+                                            HorizontalAlignment="Center"
+                                            FontFamily="Consolas"
+                                            FontSize="16"
+                                            FontWeight="SemiBold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </Border>
                                     <CheckBox
                                         x:Name="ChkAutoCopy"
                                         Margin="0,10,0,0"

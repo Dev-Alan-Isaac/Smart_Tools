@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -109,10 +109,13 @@ namespace Smart_Tools.WPF.Views
             if (below != _detailsBelow)
             {
                 _detailsBelow = below;
-                Grid.SetColumn(DetailsCard, below ? 0 : 2);
+                // Wide: details on the left, the file list on the right. Stacked: list on top, details under it.
+                Grid.SetColumn(FilesCard, below ? 0 : 2);
                 Grid.SetRow(DetailsCard, below ? 2 : 0);
                 DetailsColumn.MinWidth = below ? 0 : 460;
-                DetailsColumn.Width = below ? new GridLength(0) : new GridLength(3, GridUnitType.Star);
+                DetailsColumn.Width = below ? new GridLength(1, GridUnitType.Star) : new GridLength(3, GridUnitType.Star);
+                FilesColumn.MinWidth = below ? 0 : 300;
+                FilesColumn.Width = below ? new GridLength(0) : new GridLength(2, GridUnitType.Star);
                 DetailsGapColumn.Width = new GridLength(below ? 0 : 14);
                 DetailsGapRow.Height = new GridLength(below ? 14 : 0);
                 DetailsRow.Height = below ? new GridLength(3, GridUnitType.Star) : new GridLength(0);   // stacked: the details get the larger share

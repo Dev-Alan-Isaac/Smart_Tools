@@ -834,12 +834,6 @@
                                 </StackPanel>
                             </Border>
                         </WrapPanel>
-                        <ProgressBar
-                            x:Name="LoadingIndicator"
-                            Height="6"
-                            Margin="0,0,0,6"
-                            IsIndeterminate="True"
-                            Visibility="Collapsed" />
                         <TextBlock
                             x:Name="TxtStatus"
                             FontSize="11.5"
@@ -875,6 +869,17 @@
                             Style="{StaticResource ModeToggleButtonStyle}"
                             ToolTip="{DynamicResource Str_DriveHealth_HowEachDriveS}" />
                     </UniformGrid>
+
+                    <!--  Loading bar: a thin line over the bottom edge of the card so showing it never resizes the buttons  -->
+                    <ProgressBar
+                        x:Name="LoadingIndicator"
+                        Grid.ColumnSpan="4"
+                        Height="3"
+                        Margin="0,0,0,-12"
+                        VerticalAlignment="Bottom"
+                        IsHitTestVisible="False"
+                        IsIndeterminate="True"
+                        Visibility="Collapsed" />
 
                     <!--  Elevation state  -->
                     <Border ctl:Tour.Key="Str_Tour_DriveHealth_Admin" ctl:Tour.Order="4"

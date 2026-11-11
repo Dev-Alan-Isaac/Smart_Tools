@@ -504,11 +504,13 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Dated name, and a taken name gets " (2)": a saved report never replaces another. HTML and PDF carry the charts; text is the plain list.</summary>
         private void BtnSaveReport_Click(object sender, RoutedEventArgs e)
         {
+            string kind = (sender as System.Windows.Controls.MenuItem)?.Tag as string ?? "html";   // the menu item picks the format; the dialog still lets it change
             var dialog = new SaveFileDialog
             {
                 Title = Loc.T("Str_SystemMonitor_SaveReportTitle", "Save system report"),
                 Filter = Loc.T("Str_SystemMonitor_ReportFilterHtml", "Web page with charts (*.html)|*.html") + "|" + Loc.T("Str_SystemMonitor_ReportFilterPdf", "PDF with charts (*.pdf)|*.pdf") + "|" + Loc.T("Str_SystemMonitor_ReportFilterTxt", "Text file (*.txt)|*.txt"),
-                FileName = Path.ChangeExtension(SystemMonitorManager.ReportFileName(DateTime.Now), "html"),
+                FileName = Path.ChangeExtension(SystemMonitorManager.ReportFileName(DateTime.Now), kind),
+                FilterIndex = kind == "pdf" ? 2 : kind == "txt" ? 3 : 1,
                 AddExtension = true,
                 OverwritePrompt = false,
             };
