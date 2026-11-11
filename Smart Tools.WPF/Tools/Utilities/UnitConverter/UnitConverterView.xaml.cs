@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
 using System.Globalization;
@@ -366,6 +366,9 @@ namespace Smart_Tools.WPF.Views
         {
             bool favorite = CurrentPair() is { } pair && UnitConverterManager.IsFavorite(_settings.Favorites, pair);
             IconFavorite.Kind = favorite ? PackIconKind.Star : PackIconKind.StarOutline;
+            // Yellow when it is a favorite, the same as the Color Picker
+            if (favorite) IconFavorite.SetResourceReference(ForegroundProperty, "StatusWarningFg");
+            else IconFavorite.ClearValue(ForegroundProperty);
             BtnFavorite.ToolTip = T(favorite ? "Str_Conv_RemoveFavorite" : "Str_Conv_AddFavorite", favorite ? "Remove from favorites" : "Add to favorites");
         }
 

@@ -240,6 +240,42 @@
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="16,4,16,16">
 
+                            <!--  ============ MY PUBLIC IP (what the internet sees) ============  -->
+                            <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_MyIp_Header}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.IpNetworkOutline}" />
+                                    <Border Padding="12,10" Background="{DynamicResource SidebarInputBg}" CornerRadius="8">
+                                        <TextBox
+                                            x:Name="TxtMyPublicIp"
+                                            Padding="0"
+                                            HorizontalContentAlignment="Center"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            FontFamily="Consolas"
+                                            FontSize="17"
+                                            FontWeight="Bold"
+                                            Foreground="{DynamicResource SidebarText}"
+                                            IsReadOnly="True"
+                                            Text="–" />
+                                    </Border>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="BtnLookUpIp" Click="BtnLookUpIp_Click" Content="{DynamicResource Str_MyIp_Lookup}" Style="{StaticResource AccentPrimaryButtonStyle}" />
+                                        <Button Grid.Column="2" Click="BtnCopyIp_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_DateTimeTool_CopyTooltip}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="ContentCopy" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MyIp_Hint}" />
+                                </StackPanel>
+                            </Border>
+
                             <!--  ============ SERVER ============  -->
                             <Border ctl:Tour.Key="Str_Tour_InternetSpeed_Server" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>

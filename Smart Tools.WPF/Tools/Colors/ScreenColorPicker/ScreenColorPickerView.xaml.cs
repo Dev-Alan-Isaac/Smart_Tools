@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -342,6 +342,9 @@ namespace Smart_Tools.WPF.Views
         {
             bool fav = _current != null && _history.IsFavorite(_current.Color);
             IconFavorite.Kind = fav ? PackIconKind.Star : PackIconKind.StarOutline;
+            // Yellow when it is a favorite, the same as the Color Picker
+            if (fav) IconFavorite.SetResourceReference(ForegroundProperty, "StatusWarningFg");
+            else IconFavorite.ClearValue(ForegroundProperty);
         }
 
         private void BtnFavorite_Click(object sender, RoutedEventArgs e)

@@ -1,8 +1,10 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -77,6 +79,30 @@ namespace Smart_Tools.WPF.Views
         private bool IsTesting => _cts != null;
 
         // ---------------- Layout ----------------
+
+        /// <summary>The address the internet sees. Only asked when the user presses the button (it contacts api.ipify.org).</summary>
+        private async void BtnLookUpIp_Click(object sender, RoutedEventArgs e)
+        {
+            BtnLookUpIp.IsEnabled = false;
+            TxtMyPublicIp.Text = Loc.T("Str_MyIp_Looking", "Looking up...");
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                TxtMyPublicIp.Text = await NetworkToolsManager.GetPublicIpAsync(cts.Token);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or OperationCanceledException)
+            {
+                TxtMyPublicIp.Text = Loc.T("Str_MyIp_Unavailable", "Unavailable");
+            }
+            finally { BtnLookUpIp.IsEnabled = true; }
+        }
+
+        private void BtnCopyIp_Click(object sender, RoutedEventArgs e)
+        {
+            string text = TxtMyPublicIp.Text;
+            if (text.Length == 0 || !char.IsDigit(text[0]) && !text.Contains(':')) return;   // nothing looked up yet
+            try { System.Windows.Clipboard.SetText(text); } catch (System.Runtime.InteropServices.COMException) { }
+        }
 
         private void Root_Loaded(object sender, RoutedEventArgs e) => UpdateLayoutForWidth();
 

@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -74,7 +74,6 @@ namespace Smart_Tools.WPF.Views
                 _applying = true;
                 try
                 {
-                    ChkLookUpPublicIp.IsChecked = s.LookUpPublicIp;
                     ChkShowVirtual.IsChecked = s.ShowVirtualAdapters;
                 }
                 finally
@@ -86,11 +85,11 @@ namespace Smart_Tools.WPF.Views
             if (!_ipLoadedOnce)
             {
                 _ipLoadedOnce = true;   // once per session - not on every visit
-                await RefreshIpInfoAsync(log: false, lookUpPublicIp: true);
+                await RefreshIpInfoAsync(log: false);
             }
             else if (_adaptersStale && !_adapterBusy)
             {
-                await RefreshIpInfoAsync(log: false, lookUpPublicIp: false);
+                await RefreshIpInfoAsync(log: false);
             }
         }
 
@@ -123,12 +122,11 @@ namespace Smart_Tools.WPF.Views
         private void Option_Changed(object sender, RoutedEventArgs e)
         {
             if (!_viewConstructed || _applying || !_loadedOnce) return;
-            bool lookUp = ChkLookUpPublicIp.IsChecked == true, showVirtual = ChkShowVirtual.IsChecked == true;
+            bool showVirtual = ChkShowVirtual.IsChecked == true;
             try
             {
                 NetworkToolsManager.UpdateSettings(s =>
                 {
-                    s.LookUpPublicIp = lookUp;
                     s.ShowVirtualAdapters = showVirtual;
                 });
             }
@@ -136,14 +134,13 @@ namespace Smart_Tools.WPF.Views
             {
                 Log.Info($"Adapter settings not saved: {ex.Message}");
             }
-            if (sender == ChkShowVirtual) _ = RefreshIpInfoAsync(log: false, lookUpPublicIp: false);
-            if (sender == ChkLookUpPublicIp) _ = RefreshIpInfoAsync(log: false, lookUpPublicIp: true);
+            if (sender == ChkShowVirtual) _ = RefreshIpInfoAsync(log: false);
         }
 
         private void BtnAction_Click(object sender, RoutedEventArgs e)
         {
             UiMotion.Pop(BtnAction, 0.96);
-            _ = RefreshIpInfoAsync(log: true, lookUpPublicIp: true);
+            _ = RefreshIpInfoAsync(log: true);
         }
 
         // =================================================================
@@ -181,11 +178,11 @@ namespace Smart_Tools.WPF.Views
             _networkChangedTimer.Stop();
             if (_closed) return;
             // Only read while this page is showing; otherwise read when it's next opened.
-            if (IsVisible && !_adapterBusy) _ = RefreshIpInfoAsync(log: false, lookUpPublicIp: true);
+            if (IsVisible && !_adapterBusy) _ = RefreshIpInfoAsync(log: false);
             else _adaptersStale = true;
         }
 
-        private async Task RefreshIpInfoAsync(bool log, bool lookUpPublicIp)
+        private async Task RefreshIpInfoAsync(bool log)
         {
             _ipCts?.Cancel();
             var cts = _ipCts = new CancellationTokenSource();
@@ -203,28 +200,6 @@ namespace Smart_Tools.WPF.Views
                 {
                     Results.Log(ConsoleKind.Info, "IP", $"{TxtHostname.Text} · " + (adapters.Count == 0 ? "no adapters" :
                         string.Join(" · ", adapters.Select(a => a.State == AdapterState.Connected ? $"{a.Name} {a.AddressText}" : $"{a.Name} ({a.StatusText.ToLowerInvariant()})"))));
-                }
-
-                if (!lookUpPublicIp) return;
-                if (ChkLookUpPublicIp.IsChecked == true)
-                {
-                    TxtPublicIp.Text = "Looking up...";
-                    TxtPublicIp.ToolTip = null;
-                    try
-                    {
-                        TxtPublicIp.Text = await NetworkToolsManager.GetPublicIpAsync(cts.Token);
-                        if (log) Results.Log(ConsoleKind.Info, "IP", $"Public address: {TxtPublicIp.Text}");
-                    }
-                    catch (Exception ex) when (ex is not OperationCanceledException || !cts.IsCancellationRequested)
-                    {
-                        TxtPublicIp.Text = "Unavailable";
-                        TxtPublicIp.ToolTip = "No internet, a firewall blocked it, or api.ipify.org is down.";
-                    }
-                }
-                else
-                {
-                    TxtPublicIp.Text = "Not looked up";
-                    TxtPublicIp.ToolTip = "Tick \"Look up my public IP\" on the left.";
                 }
             }
             catch (OperationCanceledException)
@@ -251,7 +226,13 @@ namespace Smart_Tools.WPF.Views
         {
             _adapters = adapters;
             int connected = adapters.Count(a => a.State == AdapterState.Connected);
-            TxtAdapterCount.Text = adapters.Count == 0 ? "0" : $"{connected} of {adapters.Count} on";
+            TxtAdapterCount.Text = adapters.Count == 0 ? "0" : Loc.F("Str_NetworkAdapters_CountOn", "{0} of {1} on", connected, adapters.Count);
+            // The connection in use: the connected adapter that has a gateway (it reaches the internet), else the first connected one
+            var main = adapters.FirstOrDefault(a => a.State == AdapterState.Connected && a.Gateways.Count > 0) ?? adapters.FirstOrDefault(a => a.State == AdapterState.Connected);
+            TxtMainAdapter.Text = main?.Name ?? "–";
+            TxtLocalIp.Text = main == null ? "–" : main.IPv4.Count > 0 ? main.IPv4[0].Address : main.AddressText;
+            TxtGateway.Text = main?.Gateways.FirstOrDefault() ?? "–";
+            TxtDnsMain.Text = main?.Dns.FirstOrDefault() ?? "–";
             TxtNoAdapters.Text = "No network adapters found." + (ChkShowVirtual.IsChecked == true ? "" : " Tick \"Show virtual adapters\" on the left to list VPN and Hyper-V ones.");
             TxtNoAdapters.Visibility = adapters.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
@@ -530,9 +511,9 @@ namespace Smart_Tools.WPF.Views
         private async Task RefreshAfterChangeAsync()
         {
             await Task.Delay(1500);
-            if (!_closed && !_adapterBusy) await RefreshIpInfoAsync(log: false, lookUpPublicIp: false);
+            if (!_closed && !_adapterBusy) await RefreshIpInfoAsync(log: false);
             await Task.Delay(3500);
-            if (!_closed && !_adapterBusy) await RefreshIpInfoAsync(log: false, lookUpPublicIp: true);
+            if (!_closed && !_adapterBusy) await RefreshIpInfoAsync(log: false);
         }
 
     }

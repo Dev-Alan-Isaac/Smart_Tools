@@ -112,7 +112,7 @@
         <!--  An event day: name, then its date or status  -->
         <DataTemplate x:Key="EventLineTemplate" DataType="{x:Type models:DateToolRow}">
             <Border
-                Margin="0,0,0,6"
+                Margin="0,0,8,8"
                 Padding="12,8"
                 Background="{DynamicResource CardBg}"
                 CornerRadius="8">
@@ -1238,9 +1238,16 @@
                         Visibility="Collapsed">
                         <StackPanel>
 
+                            <!--  Difference and Add / subtract side by side: each gets half the width  -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MinWidth="340" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" MinWidth="340" />
+                                </Grid.ColumnDefinitions>
+
                             <!--  Difference  -->
                             <Border
-                                Margin="0,0,0,14"
                                 Padding="14,12"
                                 Background="{DynamicResource RowBg}"
                                 CornerRadius="12">
@@ -1328,6 +1335,7 @@
 
                             <!--  Add / subtract  -->
                             <Border
+                                Grid.Column="2"
                                 Padding="14,12"
                                 Background="{DynamicResource RowBg}"
                                 CornerRadius="12">
@@ -1549,6 +1557,7 @@
                                     </Grid>
                                 </StackPanel>
                             </Border>
+                            </Grid>
                             <ContentControl Content="{StaticResource FactsDiff}" IsTabStop="False" />
                         </StackPanel>
                     </ScrollViewer>
@@ -1899,7 +1908,8 @@
                                         <ItemsControl
                                             x:Name="ListUpcoming"
                                             Focusable="False"
-                                            ItemTemplate="{StaticResource EventLineTemplate}" />
+                                            ItemTemplate="{StaticResource EventLineTemplate}"
+                                            ItemsPanel="{StaticResource DtTwoColumnPanel}" />
                                         <TextBlock
                                             x:Name="TxtNoEvents"
                                             FontSize="12"

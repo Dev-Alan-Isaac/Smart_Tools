@@ -3604,6 +3604,15 @@
     <system:String x:Key="Str_Common_ExportAsPdf">Export as PDF</system:String>
     <system:String x:Key="Str_UsageReport_Period">Last {0} h</system:String>
     <system:String x:Key="Str_UsageReport_Note">Chart: the programs that used the most, over the chosen period.</system:String>
+    <system:String x:Key="Str_MyIp_Header">My public IP</system:String>
+    <system:String x:Key="Str_MyIp_Lookup">Look up</system:String>
+    <system:String x:Key="Str_MyIp_Hint">The address the internet sees. Pressing Look up asks api.ipify.org; nothing is sent until you do.</system:String>
+    <system:String x:Key="Str_MyIp_Looking">Looking up...</system:String>
+    <system:String x:Key="Str_MyIp_Unavailable">Unavailable</system:String>
+    <system:String x:Key="Str_NetworkAdapters_ViewHeader">View</system:String>
+    <system:String x:Key="Str_NetworkAdapters_ConnectedVia">Connected via</system:String>
+    <system:String x:Key="Str_NetworkAdapters_LocalIp">Local IP</system:String>
+    <system:String x:Key="Str_NetworkAdapters_CountOn">{0} of {1} on</system:String>
     <system:String x:Key="Str_Common_ExportAsText">Text file (.txt)</system:String>
     <system:String x:Key="Str_Common_ExportAsMarkdown">Markdown (.md)</system:String>
     <system:String x:Key="Str_Common_SaveAs">Save As...</system:String>
@@ -6690,8 +6699,8 @@
     <system:String x:Key="Str_Tool_password-generator_Description">Make strong passwords and passphrases</system:String>
     <system:String x:Key="Str_Tool_password-vault_Name">Password Vault</system:String>
     <system:String x:Key="Str_Tool_password-vault_Description">Encrypted password manager with 2FA codes, a health check and a quick-access widget</system:String>
-    <system:String x:Key="Str_Tool_network-adapters_Name">My IP &amp; Adapters</system:String>
-    <system:String x:Key="Str_Tool_network-adapters_Description">Your addresses, every adapter, edit IP, enable or disable</system:String>
+    <system:String x:Key="Str_Tool_network-adapters_Name">Network Adapters</system:String>
+    <system:String x:Key="Str_Tool_network-adapters_Description">Every adapter (network and Bluetooth), its addresses, edit IP, enable or disable</system:String>
     <system:String x:Key="Str_Tool_ping_Name">Ping</system:String>
     <system:String x:Key="Str_Tool_ping_Description">Is a host reachable, and how fast - from the adapter you choose</system:String>
     <system:String x:Key="Str_Tool_port-scanner_Name">Port Scanner</system:String>

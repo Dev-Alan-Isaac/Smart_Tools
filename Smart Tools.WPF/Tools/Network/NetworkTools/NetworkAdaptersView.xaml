@@ -165,30 +165,34 @@
 
         <!--  A detail line: label / value (selectable to copy)  -->
         <DataTemplate x:Key="InfoRowTemplate" DataType="{x:Type models:NetworkInfoRow}">
-            <Grid Margin="0,0,0,6">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="130" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    FontSize="11.5"
-                    Foreground="{DynamicResource TextSecondary}"
-                    Text="{Binding Label}" />
-                <TextBox
-                    Grid.Column="1"
-                    Height="Auto"
-                    Padding="0"
-                    VerticalContentAlignment="Top"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    FontFamily="Consolas"
-                    FontSize="12"
-                    Foreground="{DynamicResource TextPrimary}"
-                    IsReadOnly="True"
-                    Text="{Binding Value, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    ToolTip="{DynamicResource Str_NetworkAdapters_SelectToCopy}" />
-            </Grid>
+            <Border
+                Margin="0,0,8,8"
+                Padding="12,8"
+                Background="{DynamicResource RowBg}"
+                CornerRadius="8">
+                <StackPanel>
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Label}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBox
+                        Height="Auto"
+                        Margin="0,2,0,0"
+                        Padding="0"
+                        VerticalContentAlignment="Top"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        FontFamily="Consolas"
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        IsReadOnly="True"
+                        Text="{Binding Value, Mode=OneWay}"
+                        TextWrapping="Wrap"
+                        ToolTip="{DynamicResource Str_NetworkAdapters_SelectToCopy}" />
+                </StackPanel>
+            </Border>
         </DataTemplate>
 
         <!--  Label above a field in the edit form  -->
@@ -277,25 +281,11 @@
                             <Border ctl:Tour.Key="Str_Tour_NetworkAdapters_MyIp" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
-                                        Content="{DynamicResource Str_Network_IpInfoHeader}"
+                                        Content="{DynamicResource Str_NetworkAdapters_ViewHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.IpNetworkOutline}" />
-                                    <CheckBox
-                                        x:Name="ChkLookUpPublicIp"
-                                        Checked="Option_Changed"
-                                        Content="{DynamicResource Str_NetworkAdapters_LookUpMyPublic}"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        ToolTip="{DynamicResource Str_NetworkAdapters_AsksApiIpifyOrg}"
-                                        Unchecked="Option_Changed" />
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_NetworkAdapters_ThePublicAddressComes}"
-                                        TextWrapping="Wrap" />
+                                        Tag="{x:Static materialDesign:PackIconKind.LanConnect}" />
                                     <CheckBox
                                         x:Name="ChkShowVirtual"
-                                        Margin="0,12,0,0"
                                         Checked="Option_Changed"
                                         Content="{DynamicResource Str_NetworkAdapters_ShowVirtualAdapters}"
                                         Foreground="{DynamicResource SidebarText}"
@@ -385,23 +375,26 @@
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <WrapPanel>
+                            <!--  The whole picture at a glance: equal tiles that fill the width  -->
+                            <UniformGrid Columns="3">
                                 <Border Style="{StaticResource StatTileStyle}">
                                     <StackPanel>
                                         <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_Network_HostnameLabel}" />
                                         <TextBlock
                                             x:Name="TxtHostname"
                                             Style="{StaticResource StatValueStyle}"
-                                            Text="–" />
+                                            Text="–"
+                                            TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource StatTileStyle}">
                                     <StackPanel>
-                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_Network_PublicIpLabel}" />
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_NetworkAdapters_ConnectedVia}" />
                                         <TextBlock
-                                            x:Name="TxtPublicIp"
+                                            x:Name="TxtMainAdapter"
                                             Style="{StaticResource StatValueStyle}"
-                                            Text="–" />
+                                            Text="–"
+                                            TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource StatTileStyle}">
@@ -410,12 +403,46 @@
                                         <TextBlock
                                             x:Name="TxtAdapterCount"
                                             Style="{StaticResource StatValueStyle}"
-                                            Text="–" />
+                                            Text="–"
+                                            TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                 </Border>
-                            </WrapPanel>
+                                <Border Style="{StaticResource StatTileStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_NetworkAdapters_LocalIp}" />
+                                        <TextBlock
+                                            x:Name="TxtLocalIp"
+                                            Style="{StaticResource StatValueStyle}"
+                                            FontFamily="Consolas"
+                                            Text="–"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatTileStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_NetworkAdapters_Gateway}" />
+                                        <TextBlock
+                                            x:Name="TxtGateway"
+                                            Style="{StaticResource StatValueStyle}"
+                                            FontFamily="Consolas"
+                                            Text="–"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatTileStyle}">
+                                    <StackPanel>
+                                        <TextBlock Style="{StaticResource StatLabelStyle}" Text="{DynamicResource Str_NetworkAdapters_DnsServers}" />
+                                        <TextBlock
+                                            x:Name="TxtDnsMain"
+                                            Style="{StaticResource StatValueStyle}"
+                                            FontFamily="Consolas"
+                                            Text="–"
+                                            TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
 
-                            <Grid Grid.Row="1" MinHeight="260">
+                            <Grid Grid.Row="1" Margin="0,6,0,0" MinHeight="260">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="260" />
                                     <ColumnDefinition Width="14" />
@@ -767,9 +794,15 @@
                                         <!--  Details  -->
                                         <ItemsControl
                                             x:Name="AdapterInfoRows"
-                                            Margin="0,16,0,0"
+                                            Margin="0,16,-8,0"
                                             Focusable="False"
-                                            ItemTemplate="{StaticResource InfoRowTemplate}" />
+                                            ItemTemplate="{StaticResource InfoRowTemplate}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <UniformGrid Columns="2" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                        </ItemsControl>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Grid>
