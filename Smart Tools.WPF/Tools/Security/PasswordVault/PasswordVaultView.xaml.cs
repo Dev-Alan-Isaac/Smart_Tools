@@ -635,6 +635,34 @@ namespace Smart_Tools.WPF.Views
 
         private void MenuCopyPass_Click(object sender, RoutedEventArgs e) => CopyWithStatus(MenuEntry(sender)?.Password);
 
+        /// <summary>Right-click > Move to group: changes the entry's group (its first tag) and saves it.</summary>
+        private void MenuMoveGroup_Click(object sender, RoutedEventArgs e)
+        {
+            if (MenuEntry(sender) is not { } entry) return;
+            if (_editing?.Id == entry.Id && !ConfirmDiscard()) return;
+
+            string current = string.Join("/", PasswordVaultManager.GroupPath(entry.Tags));
+            var dlg = new VaultGroupDialog(
+                DialogTitle,
+                T("Str_Vault_MoveToGroupHint", "Pick a group or type a new one (Games/Launchers). Leave empty for no group."),
+                PasswordVaultManager.ExistingGroups(_vault.Entries),
+                current);
+            dlg.ShowDialog();
+            if (dlg.Result == null) return;
+
+            string tags = PasswordVaultManager.WithGroup(entry.Tags, dlg.Result);
+            if (tags == (entry.Tags ?? "").Trim()) return;
+            var moved = entry.Clone();
+            moved.Tags = tags;
+            try { _vault.Upsert(moved); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (_editing?.Id == entry.Id) { _editing = moved.Clone(); _loadingEditor = true; TxtTags.Text = moved.Tags; _loadingEditor = false; _dirty = false; }
+        }
+
         private void MenuDelete_Click(object sender, RoutedEventArgs e)
         {
             if (MenuEntry(sender) is { } entry) DeleteEntry(entry.Id);
