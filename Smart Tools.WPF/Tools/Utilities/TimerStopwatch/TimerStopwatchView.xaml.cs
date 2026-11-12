@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -26,6 +26,8 @@ namespace Smart_Tools.WPF.Views
         private readonly DispatcherTimer _tick;
         private readonly DispatcherTimer _saveTimer;
         private readonly bool _viewConstructed;
+        private readonly TimerAlertPlayer _alert = new();
+        private string? _soundFile;
 
         private bool _loadedOnce;
         private bool _applying;
@@ -45,6 +47,9 @@ namespace Smart_Tools.WPF.Views
             _tick.Tick += (_, _) => Tick();
             _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
             _saveTimer.Tick += (_, _) => { _saveTimer.Stop(); SaveSettings(); };
+            _alert.Ended += () => IconTestSound.Kind = PackIconKind.VolumeHigh;
+            foreach (var c in TimerAlertPlayer.Choices)
+                CmbSound.Items.Add(new ComboBoxItem { Content = Loc.T(c.LanguageKey, c.Fallback), Tag = c.Id });
             _viewConstructed = true;
         }
 
@@ -64,6 +69,9 @@ namespace Smart_Tools.WPF.Views
             TxtLong.Text = s.LongBreakMinutes.ToString(CultureInfo.InvariantCulture);
             TxtEvery.Text = s.LongBreakEvery.ToString(CultureInfo.InvariantCulture);
             ChkSound.IsChecked = s.PlaySound;
+            _soundFile = s.SoundFile;
+            CmbSound.SelectedIndex = Math.Max(0, TimerAlertPlayer.Choices.ToList().FindIndex(c => c.Id == s.Sound));
+            UpdateSoundUi();
             (s.Mode switch { TimerMode.Countdown => RadioCountdown, TimerMode.Pomodoro => RadioPomodoro, _ => RadioStopwatch }).IsChecked = true;
             _applying = false;
             SetMode(s.Mode);
@@ -71,6 +79,7 @@ namespace Smart_Tools.WPF.Views
 
         private void Root_Unloaded(object sender, RoutedEventArgs e)
         {
+            _alert.Stop();
             if (_saveTimer.IsEnabled) { _saveTimer.Stop(); SaveSettings(); }
         }
 
@@ -86,6 +95,8 @@ namespace Smart_Tools.WPF.Views
                 LongBreakMinutes = Num(TxtLong.Text, 15),
                 LongBreakEvery = Num(TxtEvery.Text, 4),
                 PlaySound = ChkSound.IsChecked == true,
+                Sound = SoundId,
+                SoundFile = _soundFile,
             });
         }
 
@@ -106,6 +117,64 @@ namespace Smart_Tools.WPF.Views
         }
 
         private void Setting_Click(object sender, RoutedEventArgs e) => QueueSave();
+
+        // =================================================================
+        //  Alert sound
+        // =================================================================
+
+        private string SoundId => (CmbSound.SelectedItem as ComboBoxItem)?.Tag as string ?? TimerAlertPlayer.DefaultId;
+
+        private void UpdateSoundUi()
+        {
+            bool file = SoundId == TimerAlertPlayer.FileId;
+            BtnPickSound.Visibility = file ? Visibility.Visible : Visibility.Collapsed;
+            TxtSoundFile.Visibility = file ? Visibility.Visible : Visibility.Collapsed;
+            TxtSoundFile.Text = string.IsNullOrEmpty(_soundFile) ? Loc.T("Str_Timer_SndNoFile", "No file chosen yet - the Windows alert plays until you pick one.") : _soundFile;
+            TxtSoundFile.ToolTip = _soundFile;
+        }
+
+        private void Sound_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_viewConstructed || _applying) return;
+            _alert.Stop();
+            IconTestSound.Kind = PackIconKind.VolumeHigh;
+            UpdateSoundUi();
+            QueueSave();
+            if (SoundId == TimerAlertPlayer.FileId && string.IsNullOrEmpty(_soundFile)) BtnPickSound_Click(sender, e);
+            else PlayTest();
+        }
+
+        private void BtnPickSound_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = Loc.T("Str_Timer_SndPick", "Choose a sound or song"),
+                Filter = TimerAlertPlayer.FileFilter,
+            };
+            if (!string.IsNullOrEmpty(_soundFile) && System.IO.File.Exists(_soundFile)) dlg.InitialDirectory = System.IO.Path.GetDirectoryName(_soundFile);
+            if (dlg.ShowDialog() != true) return;
+            _soundFile = dlg.FileName;
+            UpdateSoundUi();
+            QueueSave();
+            PlayTest();
+        }
+
+        private void BtnTestSound_Click(object sender, RoutedEventArgs e)
+        {
+            if (IconTestSound.Kind == PackIconKind.Stop)
+            {
+                _alert.Stop();
+                IconTestSound.Kind = PackIconKind.VolumeHigh;
+                return;
+            }
+            PlayTest();
+        }
+
+        private void PlayTest()
+        {
+            _alert.Play(SoundId, _soundFile);
+            IconTestSound.Kind = PackIconKind.Stop;
+        }
 
         private void Preset_Click(object sender, RoutedEventArgs e)
         {
@@ -134,6 +203,7 @@ namespace Smart_Tools.WPF.Views
         private void SetMode(TimerMode mode)
         {
             _mode = mode;
+            OptionsCard.Visibility = mode == TimerMode.Stopwatch ? Visibility.Collapsed : Visibility.Visible;
             CardCountdown.Visibility = mode == TimerMode.Countdown ? Visibility.Visible : Visibility.Collapsed;
             CardPomodoro.Visibility = mode == TimerMode.Pomodoro ? Visibility.Visible : Visibility.Collapsed;
             LapArea.Visibility = mode == TimerMode.Stopwatch ? Visibility.Visible : Visibility.Collapsed;
@@ -229,6 +299,8 @@ namespace Smart_Tools.WPF.Views
         private void BtnStart_Click(object sender, RoutedEventArgs e)
         {
             if (_state == RunState.Running) { Pause(); return; }
+            _alert.Stop();
+            IconTestSound.Kind = PackIconKind.VolumeHigh;
 
             if (_state == RunState.Idle)
             {
@@ -265,6 +337,8 @@ namespace Smart_Tools.WPF.Views
 
         private void Reset()
         {
+            _alert.Stop();
+            IconTestSound.Kind = PackIconKind.VolumeHigh;
             _tick.Stop();
             _clock.Reset();
             _state = RunState.Idle;
@@ -302,7 +376,7 @@ namespace Smart_Tools.WPF.Views
 
         private void Finished()
         {
-            if (ChkSound.IsChecked == true) System.Media.SystemSounds.Exclamation.Play();
+            if (ChkSound.IsChecked == true) _alert.Play(SoundId, _soundFile);
 
             if (_mode == TimerMode.Countdown)
             {
@@ -352,6 +426,7 @@ namespace Smart_Tools.WPF.Views
         {
             _tick.Stop();
             _clock.Stop();
+            _alert.Stop();
             if (_saveTimer.IsEnabled)
             {
                 _saveTimer.Stop();

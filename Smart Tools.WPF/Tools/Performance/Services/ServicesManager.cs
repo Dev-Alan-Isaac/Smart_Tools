@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 
 namespace Smart_Tools.WPF.Controllers
 {
@@ -64,6 +64,9 @@ namespace Smart_Tools.WPF.Controllers
             _dependents = dependents;
             return services;
         }
+
+        /// <summary>A fresh reading of every service's live values, to bring the page up to date. Safe to call off the UI thread.</summary>
+        public List<WinService> ReadStates() => ReadServices();
 
         /// <summary>
         /// The services that depend on this one and are not stopped, deepest first - the order they must be stopped in.

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace Smart_Tools.WPF.Models
 {
@@ -80,6 +80,10 @@ namespace Smart_Tools.WPF.Models
         public bool CanRestart => !_isBusy && _acceptsStop && _state == WinServiceState.Running;
 
         public bool CanOpenMenu => !_isBusy;
+
+        /// <summary>True when a fresh reading has a different state, startup type or accepted controls.</summary>
+        public bool LiveDiffers(WinService fresh) =>
+            _state != fresh._state || _startMode != fresh._startMode || _acceptsStop != fresh._acceptsStop || _acceptsPause != fresh._acceptsPause;
 
         /// <summary>Takes the live values (state, startup type, accepted controls) from a fresh reading of the same service.</summary>
         public void UpdateFrom(WinService fresh)

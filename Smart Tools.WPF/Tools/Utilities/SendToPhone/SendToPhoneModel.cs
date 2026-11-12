@@ -77,6 +77,9 @@ namespace Smart_Tools.WPF.Models
         public bool IsFailed => State == PhoneTransferState.Failed;
         public bool CanShowFolder => SavedPath != null && State == PhoneTransferState.Done;
         public bool CanCopyText => IsText && Text != null && State == PhoneTransferState.Done;
+        /// <summary>The message itself, shown under the transfer so a text from the phone can be read without copying it first.</summary>
+        public bool HasTextBody => CanCopyText && !string.IsNullOrWhiteSpace(Text);
+        public string TextBody => Text ?? "";
         public string SizeText => IsText ? "" : FormatSize(Size);
 
         public string StatusText => State switch

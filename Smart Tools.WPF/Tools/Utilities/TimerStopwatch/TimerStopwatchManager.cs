@@ -16,6 +16,10 @@ namespace Smart_Tools.WPF.Controllers
         public int LongBreakMinutes { get; set; } = 15;
         public int LongBreakEvery { get; set; } = 4;
         public bool PlaySound { get; set; } = true;
+        /// <summary>Which alert sound (<see cref="TimerAlertPlayer.Choices"/> id).</summary>
+        public string Sound { get; set; } = TimerAlertPlayer.DefaultId;
+        /// <summary>The user's own sound file, used when <see cref="Sound"/> is "file".</summary>
+        public string? SoundFile { get; set; }
     }
 
     /// <summary>Timer &amp; Stopwatch logic: reading a typed time, showing it, and the Pomodoro cycle. No WPF types.</summary>
@@ -105,6 +109,7 @@ namespace Smart_Tools.WPF.Controllers
             s.ShortBreakMinutes = Math.Clamp(s.ShortBreakMinutes, 1, 60);
             s.LongBreakMinutes = Math.Clamp(s.LongBreakMinutes, 1, 120);
             s.LongBreakEvery = Math.Clamp(s.LongBreakEvery, 1, 12);
+            if (!TimerAlertPlayer.Choices.Any(c => c.Id == s.Sound)) s.Sound = TimerAlertPlayer.DefaultId;
             return s;
         }
     }

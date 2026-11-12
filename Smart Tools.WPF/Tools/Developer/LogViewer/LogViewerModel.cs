@@ -166,5 +166,9 @@ namespace Smart_Tools.WPF.Models
         public bool ShowLineNumbers { get; set; } = true;
         public int InitialLines { get; set; } = 500;
         public List<LogViewerRule> Rules { get; set; } = new();
+        /// <summary>The files that were open (reopened next time, if they still exist). Saved because the user asked for it.</summary>
+        public List<string> OpenFiles { get; set; } = new();
+        /// <summary>Folder of the last file picked, where the Open dialog starts.</summary>
+        public string? LastFolder { get; set; }
     }
 }

@@ -137,6 +137,28 @@
                             Margin="0,6,0,0"
                             Maximum="100"
                             Value="{Binding Percent, Mode=OneWay}" />
+                        <Border
+                            x:Name="BodyBox"
+                            MaxHeight="160"
+                            Margin="0,8,0,0"
+                            Padding="10,8"
+                            Background="{DynamicResource CardBg}"
+                            BorderBrush="{DynamicResource AccentColorSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Visibility="Collapsed">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <TextBox
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    FontSize="13"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    IsReadOnly="True"
+                                    Padding="0"
+                                    Text="{Binding TextBody, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                            </ScrollViewer>
+                        </Border>
                     </StackPanel>
                     <StackPanel
                         Grid.Column="2"
@@ -182,6 +204,9 @@
                 </DataTrigger>
                 <DataTrigger Binding="{Binding CanCopyText}" Value="True">
                     <Setter TargetName="BtnCopyText" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasTextBody}" Value="True">
+                    <Setter TargetName="BodyBox" Property="Visibility" Value="Visible" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding CanShowFolder}" Value="True">
                     <Setter TargetName="BtnShow" Property="Visibility" Value="Visible" />

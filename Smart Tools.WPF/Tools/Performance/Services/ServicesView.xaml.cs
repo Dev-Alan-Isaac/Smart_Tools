@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Controllers;
+﻿using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
@@ -35,17 +36,73 @@ namespace Smart_Tools.WPF.Views
         private List<WinService> _all = new();
         private ServiceFilter _filter = ServiceFilter.All;
         private readonly bool _viewConstructed;
-        private bool _loadedOnce, _scanning;
+        private bool _loadedOnce, _scanning, _polling;
+        private int _changeStamp;   // bumps when a change ends, so a reading taken before it is not applied after it
+        private readonly DispatcherTimer _poll = new() { Interval = TimeSpan.FromSeconds(3) };
 
         public ServicesView()
         {
             InitializeComponent();
             GridServices.ItemsSource = _shown;
+            _poll.Tick += async (_, _) => await PollStatesAsync();
+            IsVisibleChanged += (_, _) => UpdatePolling();
+            Loaded += (_, _) => { if (Window.GetWindow(this) is { } w) w.StateChanged += (_, _) => UpdatePolling(); };
+            Unloaded += (_, _) => _poll.Stop();
             _viewConstructed = true;
         }
 
+        /// <summary>The refresh runs only while this page is on screen: not on another tool, not with the window minimized.</summary>
+        private bool CanPoll => IsLoaded && IsVisible && Window.GetWindow(this) is { WindowState: not WindowState.Minimized, IsVisible: true };
+
+        private void UpdatePolling()
+        {
+            if (!_loadedOnce) return;
+            if (CanPoll)
+            {
+                if (!_poll.IsEnabled) { _poll.Start(); _ = PollStatesAsync(); }   // catch up at once on coming back
+            }
+            else _poll.Stop();
+        }
+
         /// <summary>Called from MainWindow.Window_Closing. Nothing is held open between changes.</summary>
-        public void CancelActiveRun() { }
+        public void CancelActiveRun() => _poll.Stop();
+
+        /// <summary>
+        /// Brings every row up to date with what Windows says now. A change is read once right after it, but a service can
+        /// finish starting later, hang while stopping, crash, or be changed by another program - without this the page
+        /// kept showing the old state (for example "Stopped" for a service that was running).
+        /// </summary>
+        private async Task PollStatesAsync()
+        {
+            if (!CanPoll) { _poll.Stop(); return; }   // minimized meanwhile: sleep until the page is seen again
+            if (_polling || _scanning || _all.Count == 0) return;
+            _polling = true;
+            try
+            {
+                int stamp = _changeStamp;
+                var fresh = await Task.Run(_services.ReadStates);
+                if (stamp != _changeStamp) return;   // a change finished meanwhile: this reading may be older than its result
+                var byName = _all.ToDictionary(s => s.Name, StringComparer.OrdinalIgnoreCase);
+                bool changed = false;
+                foreach (var f in fresh)
+                {
+                    if (!byName.TryGetValue(f.Name, out var row) || row.IsBusy || !row.LiveDiffers(f)) continue;   // a busy row is updated by its own change
+                    row.UpdateFrom(f);
+                    changed = true;
+                }
+                if (!changed) return;
+                if (_filter != ServiceFilter.All) Refresh();   // a service may now belong in the other list
+                else UpdateCount();
+            }
+            catch (Exception ex) when (ex is ManagementException or UnauthorizedAccessException or COMException)
+            {
+                // Try again at the next tick; the rows keep what they show.
+            }
+            finally
+            {
+                _polling = false;
+            }
+        }
 
         internal static string T(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
 
@@ -75,6 +132,7 @@ namespace Smart_Tools.WPF.Views
             _loadedOnce = true;
             ElevationBanner.ShowIfNotElevated();
             await ScanAsync();
+            UpdatePolling();
         }
 
         private async void BtnRefresh_Click(object sender, RoutedEventArgs e) => await ScanAsync();
@@ -296,9 +354,11 @@ namespace Smart_Tools.WPF.Views
             finally
             {
                 service.IsBusy = false;
+                _changeStamp++;
             }
             UpdateCount();
             Report(result, doneText);
+            _ = PollStatesAsync();   // whatever it really ended up as, the row shows it
         }
 
         private void Report(WinServiceChangeResult result, string doneText)

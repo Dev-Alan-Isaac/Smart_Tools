@@ -75,7 +75,7 @@ namespace Smart_Tools.WPF.Views
         private LogViewerSettings _settings = new();
         private LogViewerTab? _current;
         private ScrollViewer? _scroll;
-        private string? _lastOpenFolder;     // this session only - never saved
+        private string? _lastOpenFolder;     // saved in the settings (Alan asked for the last files to be remembered)
         private string? _lastExportFolder;   // this session only - never saved
         private bool _loadedOnce;
         private bool _applying;
@@ -141,6 +141,11 @@ namespace Smart_Tools.WPF.Views
             LogViewerManager.Rehighlight(_tabs, _rules.ToList());
             _loadedOnce = true;
             UpdatePage();
+
+            _lastOpenFolder = _settings.LastFolder;
+            foreach (var file in _settings.OpenFiles.ToList())
+                if (File.Exists(file)) OpenLogFile(file);
+            SaveSettings();   // drops files that no longer exist
         }
 
         private void SaveSettings(bool force = false)
@@ -149,6 +154,8 @@ namespace Smart_Tools.WPF.Views
             _settings.WordWrap = ChkWordWrap.IsChecked == true;
             _settings.ShowLineNumbers = ChkLineNumbers.IsChecked == true;
             _settings.Rules = _rules.ToList();
+            _settings.OpenFiles = _tabs.Select(t => t.FilePath).ToList();
+            _settings.LastFolder = _lastOpenFolder;
             try
             {
                 LogViewerManager.SaveSettings(_settings);
@@ -215,6 +222,7 @@ namespace Smart_Tools.WPF.Views
             if (dlg.ShowDialog() != true) return;
             _lastOpenFolder = Path.GetDirectoryName(dlg.FileNames[0]);
             foreach (var file in dlg.FileNames) OpenLogFile(file);
+            SaveSettings();
         }
 
         /// <summary>A file already open just gets its tab selected (the old page opened a second tab following the same file).</summary>
@@ -269,6 +277,7 @@ namespace Smart_Tools.WPF.Views
             _tabs.Remove(tab);
             if (_tabs.Count > 0) TabsControl.SelectedItem = _tabs[Math.Min(index, _tabs.Count - 1)];
             UpdatePage();
+            SaveSettings();
             e.Handled = true;
         }
 
@@ -760,6 +769,7 @@ namespace Smart_Tools.WPF.Views
             if (e.Data.GetData(DataFormats.FileDrop) is not string[] paths) return;
             e.Handled = true;
             foreach (var path in paths.Where(File.Exists)) OpenLogFile(path);   // a folder isn't a log - skipped
+            SaveSettings();
         }
     }
 }

@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -17,17 +17,22 @@ namespace Smart_Tools.WPF.Controllers
 
         private static string Escape(string name) => name.Replace("\\", "\\\\").Replace("'", "\\'");
 
-        private (List<WinService> Services, Dictionary<string, List<string>> Dependents) ReadAll()
+        /// <summary>One query for every service (no dependency links): what the periodic state check uses.</summary>
+        private static List<WinService> ReadServices()
         {
             var services = new List<WinService>();
-            using (var searcher = new ManagementObjectSearcher(Scope, $"SELECT {Columns} FROM Win32_Service"))
-            using (var results = searcher.Get())
+            using var searcher = new ManagementObjectSearcher(Scope, $"SELECT {Columns} FROM Win32_Service");
+            using var results = searcher.Get();
+            foreach (ManagementBaseObject item in results)
             {
-                foreach (ManagementBaseObject item in results)
-                {
-                    using (item) services.Add(FromWmi(item));
-                }
+                using (item) services.Add(FromWmi(item));
             }
+            return services;
+        }
+
+        private (List<WinService> Services, Dictionary<string, List<string>> Dependents) ReadAll()
+        {
+            var services = ReadServices();
 
             var dependents = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             try
