@@ -565,7 +565,7 @@
                                             Grid.Column="1"
                                             VerticalAlignment="Top"
                                             Orientation="Horizontal">
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnTickAllPatterns"
                                                 Width="26"
                                                 Height="26"
@@ -577,7 +577,7 @@
                                                     Height="14"
                                                     Kind="CheckboxMultipleMarkedOutline" />
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnUntickAllPatterns"
                                                 Width="26"
                                                 Height="26"
@@ -739,7 +739,7 @@
                                         Tag="Type a pattern (optional) - Enter adds it to the list"
                                         TextChanged="TxtRegexPattern_TextChanged"
                                         ToolTip="{DynamicResource Str_Search_PatternTooltip}" />
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnAddRegexPattern"
                                         Grid.Column="2"
                                         Width="30"

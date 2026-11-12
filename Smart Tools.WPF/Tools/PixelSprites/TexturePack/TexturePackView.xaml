@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.TexturePackView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -291,7 +291,7 @@
                                             TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClearIcon"
                                     Grid.Column="1"
                                     Width="30"

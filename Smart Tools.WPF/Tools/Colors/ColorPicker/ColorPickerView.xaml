@@ -348,7 +348,7 @@
                                                         TextWrapping="Wrap" />
                                                 </Grid>
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnScanFolder"
                                                 Grid.Column="2"
                                                 Width="34"
@@ -1004,7 +1004,7 @@
                                     Grid.Column="1"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnPasteImage"
                                         Width="30"
                                         Height="30"

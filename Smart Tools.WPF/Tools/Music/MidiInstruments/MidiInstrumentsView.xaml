@@ -379,7 +379,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnOctaveDown"
                                         Width="34"
                                         Height="34"
@@ -415,7 +415,7 @@
                                                 Text="C4 – C7" />
                                         </StackPanel>
                                     </Border>
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnOctaveUp"
                                         Grid.Column="2"
                                         Width="34"

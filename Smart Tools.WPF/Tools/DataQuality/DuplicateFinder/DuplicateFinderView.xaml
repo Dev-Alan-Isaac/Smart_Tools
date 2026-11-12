@@ -321,7 +321,7 @@
                             Content="{DynamicResource Str_VideoEditor_Remove}"
                             IsChecked="{Binding IsSelected, Mode=TwoWay}"
                             ToolTip="{DynamicResource Str_Dup_FlagCheckboxTooltip}" />
-                        <Button
+                        <Button Padding="0"
                             Grid.Column="2"
                             Width="30"
                             Height="30"
@@ -911,7 +911,7 @@
                             </Grid>
                         </Button>
 
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnRescan"
                             Grid.Column="1"
                             Width="36"
@@ -1121,7 +1121,7 @@
                                     </Grid>
                                 </Button>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnCollapseGroups"
                                     Width="32"
                                     Height="32"
@@ -1134,7 +1134,7 @@
                                         Height="16"
                                         Kind="UnfoldLessHorizontal" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnExpandGroups"
                                     Width="32"
                                     Height="32"
@@ -1147,7 +1147,7 @@
                                         Height="16"
                                         Kind="UnfoldMoreHorizontal" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnDeselectAll"
                                     Width="32"
                                     Height="32"
@@ -1314,7 +1314,7 @@
                                 Content="{DynamicResource Str_Dup_CompareTitle}"
                                 Style="{StaticResource CardHeader}"
                                 Tag="{x:Static materialDesign:PackIconKind.FileCompare}" />
-                            <Button
+                            <Button Padding="0"
                                 Grid.Column="1"
                                 Width="30"
                                 Height="30"
@@ -1339,7 +1339,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnPrevCompareGroup"
                                     Width="30"
                                     Height="30"
@@ -1368,7 +1368,7 @@
                                         Foreground="{DynamicResource TextSecondary}"
                                         Text="{DynamicResource Str_Dup_GroupPlaceholder}" />
                                 </StackPanel>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnNextCompareGroup"
                                     Grid.Column="2"
                                     Width="30"

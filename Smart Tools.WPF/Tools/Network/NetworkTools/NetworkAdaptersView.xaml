@@ -758,10 +758,10 @@
                                                     <Button
                                                         x:Name="BtnCancelEdit"
                                                         Grid.Column="1"
-                                                        Width="50"
+                                                        MinWidth="84"
                                                         MinHeight="34"
                                                         Margin="12,0,6,0"
-                                                        Padding="14,0"
+                                                        Padding="14,4"
                                                         Click="BtnCancelEdit_Click"
                                                         Content="{DynamicResource Str_Common_Cancel}"
                                                         Style="{StaticResource NeutralIconButtonStyle}" />

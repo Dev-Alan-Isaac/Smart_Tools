@@ -166,7 +166,7 @@
                         </Border>
 
                         <StackPanel Grid.Column="3" Orientation="Horizontal">
-                            <Button
+                            <Button Padding="0"
                                 Width="28"
                                 Height="28"
                                 Margin="0,0,2,0"
@@ -178,7 +178,7 @@
                                     Height="15"
                                     Kind="ChevronUp" />
                             </Button>
-                            <Button
+                            <Button Padding="0"
                                 Width="28"
                                 Height="28"
                                 Margin="0,0,2,0"
@@ -666,7 +666,7 @@
                                                 Style="{StaticResource BareTextBox}"
                                                 Text="12345"
                                                 TextChanged="Setting_Changed" />
-                                            <Button
+                                            <Button Padding="0"
                                                 Grid.Column="1"
                                                 Width="30"
                                                 Height="30"

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.ScreenshotView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -252,7 +252,7 @@
                             Text="{DynamicResource Str_Screenshot_ReadyInfo}"
                             TextTrimming="CharacterEllipsis" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnUndo"
                                 Width="40"
                                 Click="BtnUndo_Click"
@@ -261,7 +261,7 @@
                                 ToolTip="{DynamicResource Str_Screenshot_Undo}">
                                 <materialDesign:PackIcon Width="18" Height="18" Kind="Undo" />
                             </Button>
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnClearMarks"
                                 Width="40"
                                 Margin="4,0,0,0"

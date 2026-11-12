@@ -678,7 +678,7 @@
                                                     Content="{DynamicResource Str_KbMouse_PollingHeader}"
                                                     Style="{StaticResource CardHeader}"
                                                     Tag="{x:Static materialDesign:PackIconKind.Speedometer}" />
-                                                <Button
+                                                <Button Padding="0"
                                                     Grid.Column="1"
                                                     Width="40"
                                                     Click="BtnResetPolling_Click"

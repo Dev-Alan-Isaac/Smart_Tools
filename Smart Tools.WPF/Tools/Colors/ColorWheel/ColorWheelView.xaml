@@ -447,7 +447,7 @@
                                             </Grid>
                                         </Border>
 
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnSwapGradient"
                                             Grid.RowSpan="4"
                                             Grid.Column="1"
@@ -649,7 +649,7 @@
 
                                 <!--  Harmony palette  -->
                                 <DockPanel Margin="0,0,0,8">
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnCopyHarmony"
                                         Width="30"
                                         Height="30"

@@ -61,7 +61,7 @@
                     VerticalAlignment="Center"
                     Text="{Binding Title}"
                     TextTrimming="CharacterEllipsis" />
-                <Button
+                <Button Padding="0"
                     Width="20"
                     Height="20"
                     Margin="8,0,-4,0"
@@ -561,7 +561,7 @@
                                             Content="{DynamicResource Str_Log_HighlightRulesHeader}"
                                             Style="{StaticResource SidebarGroupHeader}"
                                             Tag="{x:Static materialDesign:PackIconKind.FormatColorHighlight}" />
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnAddRule"
                                             Width="28"
                                             Height="28"
@@ -865,7 +865,7 @@
                                         </ContextMenu>
                                     </Button.ContextMenu>
                                 </controls:ExportButton>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClearLog"
                                     Width="32"
                                     Height="32"

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.DbMigrateView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -293,7 +293,7 @@
                                             Height="32"
                                             IsEditable="True"
                                             ToolTip="{DynamicResource Str_DbMigrate_DatabaseTip}" />
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnSrcList"
                                             Grid.Column="1"
                                             Width="32"
@@ -318,7 +318,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnSrcTest"
                                             Width="32"
                                             Height="32"
@@ -407,7 +407,7 @@
                                             Height="32"
                                             IsEditable="True"
                                             ToolTip="{DynamicResource Str_DbMigrate_DatabaseTip}" />
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnDstList"
                                             Grid.Column="1"
                                             Width="32"
@@ -432,7 +432,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnDstTest"
                                             Width="32"
                                             Height="32"

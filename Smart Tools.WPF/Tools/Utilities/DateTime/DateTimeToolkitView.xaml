@@ -29,8 +29,43 @@
 
         <!--  Result rows in two columns so wide windows are used (one column of full-width rows left most of the line empty)  -->
         <ItemsPanelTemplate x:Key="DtTwoColumnPanel">
-            <UniformGrid Margin="0,0,-8,0" Columns="2" />
+            <UniformGrid Margin="0,0,-14,0" Columns="2" />
         </ItemsPanelTemplate>
+
+        <!--  A mode tab: icon and label, an accent underline on the chosen one  -->
+        <Style x:Key="DtTabStyle" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border
+                            x:Name="Bd"
+                            Padding="18,11,18,9"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="0,0,0,3"
+                            CornerRadius="8,8,0,0">
+                            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <Style x:Key="MiniLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
@@ -42,8 +77,8 @@
         <!--  One result line: label, value, copy  -->
         <DataTemplate x:Key="ResultRowTemplate" DataType="{x:Type models:DateToolRow}">
             <Border
-                Margin="0,0,8,8"
-                Padding="12,9,8,9"
+                Margin="0,0,14,14"
+                Padding="16,12,10,12"
                 Background="{DynamicResource RowBg}"
                 CornerRadius="8">
                 <Grid>
@@ -67,7 +102,7 @@
                         Foreground="{DynamicResource TextPrimary}"
                         Text="{Binding Value}"
                         TextWrapping="Wrap" />
-                    <Button
+                    <Button Padding="0"
                         Grid.Column="2"
                         Width="28"
                         Height="28"
@@ -89,9 +124,9 @@
         <!--  A total (days, weeks ...) as a tile  -->
         <DataTemplate x:Key="TotalTileTemplate" DataType="{x:Type models:DateToolRow}">
             <Border
-                MinWidth="110"
-                Margin="0,0,8,8"
-                Padding="12,8"
+                MinWidth="120"
+                Margin="0,0,14,14"
+                Padding="16,12"
                 Background="{DynamicResource RowBg}"
                 CornerRadius="8">
                 <StackPanel>
@@ -112,8 +147,8 @@
         <!--  An event day: name, then its date or status  -->
         <DataTemplate x:Key="EventLineTemplate" DataType="{x:Type models:DateToolRow}">
             <Border
-                Margin="0,0,8,8"
-                Padding="12,8"
+                Margin="0,0,14,14"
+                Padding="16,12"
                 Background="{DynamicResource CardBg}"
                 CornerRadius="8">
                 <Grid>
@@ -294,8 +329,8 @@
         <!--  "Good to know" cards: what each mode is, how it works.  -->
         <Border
             x:Key="FactsUnix"
-            Margin="0,14,0,0"
-            Padding="16,14,0,0"
+            Margin="0,16,0,0"
+            Padding="18,14,0,2"
             x:Shared="False"
             Background="{DynamicResource RowBg}"
             CornerRadius="12">
@@ -315,7 +350,7 @@
                         Foreground="{DynamicResource TextPrimary}"
                         Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
                 </StackPanel>
-                <UniformGrid Columns="2">
+                <UniformGrid Columns="3">
                     <controls:InfoFact
                         Title="{DynamicResource Str_DateTimeTool_Fact_Unix1_T}"
                         Body="{DynamicResource Str_DateTimeTool_Fact_Unix1_B}"
@@ -345,8 +380,8 @@
         </Border>
         <Border
             x:Key="FactsZones"
-            Margin="0,14,0,0"
-            Padding="16,14,0,0"
+            Margin="0,16,0,0"
+            Padding="18,14,0,2"
             x:Shared="False"
             Background="{DynamicResource RowBg}"
             CornerRadius="12">
@@ -384,8 +419,8 @@
         </Border>
         <Border
             x:Key="FactsDiff"
-            Margin="0,14,0,0"
-            Padding="16,14,0,0"
+            Margin="0,16,0,0"
+            Padding="18,14,0,2"
             x:Shared="False"
             Background="{DynamicResource RowBg}"
             CornerRadius="12">
@@ -405,7 +440,7 @@
                         Foreground="{DynamicResource TextPrimary}"
                         Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
                 </StackPanel>
-                <UniformGrid Columns="2">
+                <UniformGrid Columns="3">
                     <controls:InfoFact
                         Title="{DynamicResource Str_DateTimeTool_Fact_Diff1_T}"
                         Body="{DynamicResource Str_DateTimeTool_Fact_Diff1_B}"
@@ -427,8 +462,8 @@
         </Border>
         <Border
             x:Key="FactsIso"
-            Margin="0,14,0,0"
-            Padding="16,14,0,0"
+            Margin="0,16,0,0"
+            Padding="18,14,0,2"
             x:Shared="False"
             Background="{DynamicResource RowBg}"
             CornerRadius="12">
@@ -448,7 +483,7 @@
                         Foreground="{DynamicResource TextPrimary}"
                         Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
                 </StackPanel>
-                <UniformGrid Columns="2">
+                <UniformGrid Columns="3">
                     <controls:InfoFact
                         Title="{DynamicResource Str_DateTimeTool_Fact_Iso1_T}"
                         Body="{DynamicResource Str_DateTimeTool_Fact_Iso1_B}"
@@ -478,8 +513,8 @@
         </Border>
         <Border
             x:Key="FactsCal"
-            Margin="0,14,0,0"
-            Padding="16,14,0,0"
+            Margin="0,16,0,0"
+            Padding="18,14,0,2"
             x:Shared="False"
             Background="{DynamicResource RowBg}"
             CornerRadius="12">
@@ -499,7 +534,7 @@
                         Foreground="{DynamicResource TextPrimary}"
                         Text="{DynamicResource Str_DateTimeTool_GoodToKnow}" />
                 </StackPanel>
-                <UniformGrid Columns="2">
+                <UniformGrid Columns="3">
                     <controls:InfoFact
                         Title="{DynamicResource Str_DateTimeTool_Fact_Cal1_T}"
                         Body="{DynamicResource Str_DateTimeTool_Fact_Cal1_B}"
@@ -531,388 +566,85 @@
         <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
 
         <Grid Margin="16,8,16,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="14" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
-                <ColumnDefinition Width="14" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <!--  ================= MODE TABS + OPTIONS =================  -->
 
-            <!--  ================= OPTIONS SIDEBAR =================  -->
-
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel>
-                        <Button
-                            x:Name="BtnCollapseOptions"
-                            MinHeight="45"
-                            HorizontalContentAlignment="Left"
-                            Click="BtnCollapseOptions_Click"
-                            Cursor="Hand"
-                            FocusVisualStyle="{x:Null}"
-                            Foreground="{DynamicResource SidebarText}"
-                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderBrush" Value="Transparent" />
-                                    <Setter Property="OverridesDefaultStyle" Value="True" />
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}">
-                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="20"
-                                    Height="20"
-                                    VerticalAlignment="Center"
-                                    Kind="TuneVariant" />
-                                <TextBlock
-                                    x:Name="TxtOptionsHeaderLabel"
-                                    Margin="10,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontWeight="SemiBold"
-                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
-                            </StackPanel>
-                        </Button>
-                        <Separator
-                            x:Name="SepHeader"
-                            Margin="16,4"
-                            Style="{StaticResource SidebarSeparatorStyle}" />
-                    </StackPanel>
-
-                    <ScrollViewer
-                        x:Name="OptionsScrollViewer"
-                        Grid.Row="1"
-                        HorizontalScrollBarVisibility="Disabled"
-                        VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="16,4,16,16">
-
-                            <!--  ============ MODE ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_DateTime_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_DateTimeTool_ModeHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
-                                    <RadioButton
-                                        x:Name="RadioModeUnix"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_DateTimeTool_ModeUnix}"
-                                        GroupName="DtMode"
-                                        IsChecked="True"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Unix" />
-                                    <RadioButton
-                                        x:Name="RadioModeZones"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_DateTimeTool_ModeZones}"
-                                        GroupName="DtMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Zones" />
-                                    <RadioButton
-                                        x:Name="RadioModeDiff"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_DateTimeTool_ModeDiff}"
-                                        GroupName="DtMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Difference" />
-                                    <RadioButton
-                                        x:Name="RadioModeIso"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_DateTimeTool_ModeIso}"
-                                        GroupName="DtMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Iso" />
-                                    <RadioButton
-                                        x:Name="RadioModeCalendar"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_DateTimeTool_ModeCalendar}"
-                                        GroupName="DtMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Calendar" />
-                                </StackPanel>
-                            </Border>
-
-                            <!--  ============ UNIX OPTIONS ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_DateTime_Options" ctl:Tour.Order="2" x:Name="UnixOptionsPanel" Style="{StaticResource SidebarGroupCardStyle}">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_DateTimeTool_InputHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.NumericPositive_1}" />
-                                    <TextBlock
-                                        Margin="2,0,0,4"
-                                        FontSize="11"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Text="{DynamicResource Str_DateTimeTool_UnitLabel}" />
-                                    <Border Style="{StaticResource InputBarStyle}">
-                                        <ComboBox
-                                            x:Name="CmbUnit"
-                                            VerticalContentAlignment="Center"
-                                            SelectedIndex="0"
-                                            SelectionChanged="CmbUnit_SelectionChanged"
-                                            Style="{StaticResource BareComboBox}">
-                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Auto}" Tag="Auto" />
-                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Seconds}" Tag="Seconds" />
-                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Milliseconds}" Tag="Milliseconds" />
-                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Microseconds}" Tag="Microseconds" />
-                                            <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Nanoseconds}" Tag="Nanoseconds" />
-                                        </ComboBox>
-                                    </Border>
-                                    <TextBlock
-                                        Margin="2,6,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_UnitHint}"
-                                        TextWrapping="Wrap" />
-
-                                    <TextBlock
-                                        Margin="2,14,0,4"
-                                        FontSize="11"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Text="{DynamicResource Str_DateTimeTool_AssumeHeader}" />
-                                    <UniformGrid Columns="2">
-                                        <RadioButton
-                                            x:Name="RadioAssumeLocal"
-                                            Margin="0,0,2,0"
-                                            Click="Assume_Click"
-                                            Content="{DynamicResource Str_DateTimeTool_AssumeLocal}"
-                                            GroupName="DtAssume"
-                                            IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
-                                        <RadioButton
-                                            x:Name="RadioAssumeUtc"
-                                            Margin="2,0,0,0"
-                                            Click="Assume_Click"
-                                            Content="{DynamicResource Str_DateTime_Utc}"
-                                            GroupName="DtAssume"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
-                                    </UniformGrid>
-                                    <TextBlock
-                                        Margin="2,6,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_AssumeHint}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-
-                            <!--  ============ ZONES OPTIONS ============  -->
-                            <Border
-                                x:Name="ZonesOptionsPanel"
-                                Style="{StaticResource SidebarGroupCardStyle}"
-                                Visibility="Collapsed">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_DateTimeTool_ZonesHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.EarthArrowRight}" />
-                                    <TextBlock
-                                        Margin="2,0,0,4"
-                                        FontSize="11"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Text="{DynamicResource Str_DateTimeTool_AddZoneLabel}" />
-                                    <Border Style="{StaticResource InputBarStyle}">
-                                        <ComboBox
-                                            x:Name="CmbAddZone"
-                                            VerticalContentAlignment="Center"
-                                            ItemTemplate="{StaticResource ZoneOptionTemplate}"
-                                            SelectedValuePath="Id"
-                                            Style="{StaticResource BareComboBox}" />
-                                    </Border>
-                                    <Button
-                                        x:Name="BtnAddZone"
-                                        Margin="0,8,0,0"
-                                        Click="BtnAddZone_Click"
-                                        Style="{StaticResource ListToolPrimaryButtonStyle}">
-                                        <Grid HorizontalAlignment="Center">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <materialDesign:PackIcon
-                                                Grid.Column="0"
-                                                Width="16"
-                                                Height="16"
-                                                Margin="0,0,6,0"
-                                                VerticalAlignment="Center"
-                                                Kind="Plus" />
-                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_AddZone}" TextWrapping="Wrap" />
-                                        </Grid>
-                                    </Button>
-                                    <TextBlock
-                                        x:Name="TxtZoneLimit"
-                                        Margin="2,6,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_ZoneLimit}"
-                                        TextWrapping="Wrap"
-                                        Visibility="Collapsed" />
-
-                                    <Separator Margin="0,12" Style="{StaticResource SidebarSeparatorStyle}" />
-
-                                    <CheckBox
-                                        x:Name="Chk24Hour"
-                                        Click="Chk24Hour_Click"
-                                        Content="{DynamicResource Str_DateTimeTool_Use24Hour}"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True" />
-                                    <Button
-                                        Margin="0,10,0,0"
-                                        Click="BtnResetZones_Click"
-                                        Style="{StaticResource ListToolButtonStyle}"
-                                        ToolTip="{DynamicResource Str_DateTimeTool_ResetZones}">
-                                        <materialDesign:PackIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="Restore" />
-                                    </Button>
-                                </StackPanel>
-                            </Border>
-
-                            <!--  ============ DIFFERENCE NOTE ============  -->
-                            <Border
-                                x:Name="DiffOptionsPanel"
-                                Style="{StaticResource SidebarGroupCardStyle}"
-                                Visibility="Collapsed">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_DateTimeTool_CalendarHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.CalendarRange}" />
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_CalendarNote}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        Margin="0,8,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_BusinessNote}"
-                                        TextWrapping="Wrap" />
-                                    <Separator Margin="0,12" Style="{StaticResource SidebarSeparatorStyle}" />
-                                    <CheckBox
-                                        x:Name="ChkSkipEventDays"
-                                        Click="ChkSkipEventDays_Click"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DateTimeTool_SkipEventDaysTip}">
-                                        <TextBlock Text="{DynamicResource Str_DateTimeTool_SkipEventDays}" TextWrapping="Wrap" />
-                                    </CheckBox>
-                                    <TextBlock
-                                        x:Name="TxtEventDaysCount"
-                                        Margin="2,6,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-
-                            <!--  ============ ISO OPTIONS ============  -->
-                            <Border
-                                x:Name="IsoOptionsPanel"
-                                Style="{StaticResource SidebarGroupCardStyle}"
-                                Visibility="Collapsed">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_DateTimeTool_IsoHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.CalendarCheck}" />
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_IsoNote}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        Margin="0,8,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_IsoNote2}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-
-                            <!--  ============ CALENDAR OPTIONS ============  -->
-                            <Border
-                                x:Name="CalendarOptionsPanel"
-                                Style="{StaticResource SidebarGroupCardStyle}"
-                                Visibility="Collapsed">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_DateTimeTool_CalOptHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.CalendarWeek}" />
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_CalOptNote}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        x:Name="TxtCalEventsCount"
-                                        Margin="0,8,0,0"
-                                        FontSize="11"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        Margin="0,4,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource SidebarTextMuted}"
-                                        Text="{DynamicResource Str_DateTimeTool_CalOptSettings}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
-
-            <!--  ================= MAIN =================  -->
-
-            <Border ctl:Tour.Key="Str_Tour_DateTime_Results" ctl:Tour.Order="3" Grid.Column="2" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Grid Margin="0,0,0,12">
+            <Border Grid.Row="0" Padding="18,12,18,16" Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid ctl:Tour.Key="Str_Tour_DateTime_Mode" ctl:Tour.Order="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ContentControl
-                            x:Name="HeaderTitle"
-                            VerticalAlignment="Center"
-                            Content="{DynamicResource Str_DateTimeTool_ModeUnix}"
-                            Style="{StaticResource CardHeader}"
-                            Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton
+                                x:Name="RadioModeUnix"
+                                Click="Mode_Click"
+                                GroupName="DtMode"
+                                IsChecked="True"
+                                Style="{StaticResource DtTabStyle}"
+                                Tag="Unix">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarClock" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeUnix}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="RadioModeZones"
+                                Click="Mode_Click"
+                                GroupName="DtMode"
+                                Style="{StaticResource DtTabStyle}"
+                                Tag="Zones">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="EarthArrowRight" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeZones}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="RadioModeDiff"
+                                Click="Mode_Click"
+                                GroupName="DtMode"
+                                Style="{StaticResource DtTabStyle}"
+                                Tag="Difference">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarRange" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeDiff}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="RadioModeIso"
+                                Click="Mode_Click"
+                                GroupName="DtMode"
+                                Style="{StaticResource DtTabStyle}"
+                                Tag="Iso">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarCheck" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeIso}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton
+                                x:Name="RadioModeCalendar"
+                                Click="Mode_Click"
+                                GroupName="DtMode"
+                                Style="{StaticResource DtTabStyle}"
+                                Tag="Calendar">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarWeek" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeCalendar}" />
+                                </StackPanel>
+                            </RadioButton>
+                        </StackPanel>
                         <Border
                             x:Name="CopiedPill"
-                            Grid.Column="2"
+                            Grid.Column="1"
+                            Margin="12,0,0,0"
                             VerticalAlignment="Center"
                             Background="{DynamicResource StatusSuccessBg}"
                             Style="{StaticResource IconStatusPillStyle}"
@@ -932,6 +664,209 @@
                                     Text="{DynamicResource Str_DateTimeTool_Copied}" />
                             </StackPanel>
                         </Border>
+                    </Grid>
+                        <!--  Options of the chosen mode (the old sidebar groups, now one row under the tabs)  -->
+                        <Border
+                            ctl:Tour.Key="Str_Tour_DateTime_Options"
+                            ctl:Tour.Order="2"
+                            Margin="0,10,0,0"
+                            Padding="0,16,0,2"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="0,1,0,0">
+                            <Grid>
+
+                                <!--  Unix  -->
+                                <Grid x:Name="UnixOptionsPanel">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="32" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="32" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Width="260">
+                                        <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_UnitLabel}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <ComboBox
+                                                x:Name="CmbUnit"
+                                                VerticalContentAlignment="Center"
+                                                SelectedIndex="0"
+                                                SelectionChanged="CmbUnit_SelectionChanged"
+                                                Style="{StaticResource BareComboBox}">
+                                                <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Auto}" Tag="Auto" />
+                                                <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Seconds}" Tag="Seconds" />
+                                                <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Milliseconds}" Tag="Milliseconds" />
+                                                <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Microseconds}" Tag="Microseconds" />
+                                                <ComboBoxItem Content="{DynamicResource Str_DateTimeTool_Unit_Nanoseconds}" Tag="Nanoseconds" />
+                                            </ComboBox>
+                                        </Border>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Width="220">
+                                        <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_AssumeHeader}" />
+                                        <UniformGrid Columns="2">
+                                            <RadioButton
+                                                x:Name="RadioAssumeLocal"
+                                                Margin="0,0,3,0"
+                                                Click="Assume_Click"
+                                                Content="{DynamicResource Str_DateTimeTool_AssumeLocal}"
+                                                GroupName="DtAssume"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleButtonStyle}" />
+                                            <RadioButton
+                                                x:Name="RadioAssumeUtc"
+                                                Margin="3,0,0,0"
+                                                Click="Assume_Click"
+                                                Content="{DynamicResource Str_DateTime_Utc}"
+                                                GroupName="DtAssume"
+                                                Style="{StaticResource ModeToggleButtonStyle}" />
+                                        </UniformGrid>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4" VerticalAlignment="Bottom">
+                                        <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_UnitHint}" TextWrapping="Wrap" />
+                                        <TextBlock Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_AssumeHint}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!--  Zones  -->
+                                <Grid x:Name="ZonesOptionsPanel" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="32" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Width="340">
+                                        <TextBlock Style="{StaticResource MiniLabel}" Text="{DynamicResource Str_DateTimeTool_AddZoneLabel}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <ComboBox
+                                                x:Name="CmbAddZone"
+                                                VerticalContentAlignment="Center"
+                                                ItemTemplate="{StaticResource ZoneOptionTemplate}"
+                                                SelectedValuePath="Id"
+                                                Style="{StaticResource BareComboBox}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <Button
+                                        x:Name="BtnAddZone"
+                                        Grid.Column="2"
+                                        VerticalAlignment="Bottom"
+                                        Click="BtnAddZone_Click"
+                                        Style="{StaticResource ListToolPrimaryButtonStyle}">
+                                        <Grid HorizontalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon Grid.Column="0" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Plus" />
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_AddZone}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                    <CheckBox
+                                        x:Name="Chk24Hour"
+                                        Grid.Column="4"
+                                        VerticalAlignment="Bottom"
+                                        Click="Chk24Hour_Click"
+                                        Content="{DynamicResource Str_DateTimeTool_Use24Hour}"
+                                        Foreground="{DynamicResource TextPrimary}"
+                                        IsChecked="True" />
+                                    <Button
+                                        Grid.Column="6"
+                                        VerticalAlignment="Bottom"
+                                        Click="BtnResetZones_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_DateTimeTool_ResetZones}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="Restore" />
+                                    </Button>
+                                    <TextBlock
+                                        x:Name="TxtZoneLimit"
+                                        Grid.Column="7"
+                                        Margin="16,0,0,6"
+                                        VerticalAlignment="Bottom"
+                                        FontSize="11.5"
+                                        Foreground="{DynamicResource TextSecondary}"
+                                        Text="{DynamicResource Str_DateTimeTool_ZoneLimit}"
+                                        TextWrapping="Wrap"
+                                        Visibility="Collapsed" />
+                                </Grid>
+
+                                <!--  Difference  -->
+                                <Grid x:Name="DiffOptionsPanel" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="32" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <CheckBox
+                                            x:Name="ChkSkipEventDays"
+                                            Click="ChkSkipEventDays_Click"
+                                            Foreground="{DynamicResource TextPrimary}"
+                                            IsChecked="True"
+                                            ToolTip="{DynamicResource Str_DateTimeTool_SkipEventDaysTip}">
+                                            <TextBlock Text="{DynamicResource Str_DateTimeTool_SkipEventDays}" TextWrapping="Wrap" />
+                                        </CheckBox>
+                                        <TextBlock
+                                            x:Name="TxtEventDaysCount"
+                                            Margin="26,4,0,0"
+                                            FontSize="11.5"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_CalendarNote}" TextWrapping="Wrap" />
+                                        <TextBlock Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_BusinessNote}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!--  ISO  -->
+                                <StackPanel x:Name="IsoOptionsPanel" Visibility="Collapsed">
+                                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_IsoNote}" TextWrapping="Wrap" />
+                                    <TextBlock Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_IsoNote2}" TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <!--  Calendar  -->
+                                <StackPanel x:Name="CalendarOptionsPanel" Visibility="Collapsed">
+                                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_CalOptNote}" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="TxtCalEventsCount" Margin="0,4,0,0" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                    <TextBlock Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_DateTimeTool_CalOptSettings}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+
+            <Border
+                ctl:Tour.Key="Str_Tour_DateTime_Results"
+                ctl:Tour.Order="3"
+                Grid.Row="2"
+                Padding="22,20"
+                Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ContentControl
+                            x:Name="HeaderTitle"
+                            Visibility="Collapsed"
+                            VerticalAlignment="Center"
+                            Content="{DynamicResource Str_DateTimeTool_ModeUnix}"
+                            Style="{StaticResource CardHeader}"
+                            Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
+
                     </Grid>
 
                     <!--  ============ UNIX <-> DATE ============  -->
@@ -986,7 +921,7 @@
                             </Grid>
                         </Border>
 
-                        <WrapPanel Grid.Row="1" Margin="0,10,0,0">
+                        <WrapPanel Grid.Row="1" Margin="0,16,0,8">
                             <Border
                                 x:Name="PillNow"
                                 Margin="0,0,8,4"
@@ -1098,7 +1033,6 @@
                                     Focusable="False"
                                     ItemTemplate="{StaticResource ResultRowTemplate}"
                                     ItemsPanel="{StaticResource DtTwoColumnPanel}" />
-                                <ContentControl Content="{StaticResource FactsUnix}" IsTabStop="False" />
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
@@ -1181,7 +1115,7 @@
                         <ScrollViewer
                             x:Name="ZonesScroll"
                             Grid.Row="2"
-                            Margin="0,12,0,0"
+                            Margin="0,18,0,0"
                             HorizontalScrollBarVisibility="Disabled"
                             SizeChanged="ZonesScroll_SizeChanged"
                             VerticalScrollBarVisibility="Auto">
@@ -1198,10 +1132,6 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <ContentControl
-                            Grid.Row="3"
-                            Content="{StaticResource FactsZones}"
-                            IsTabStop="False" />
 
                         <StackPanel
                             x:Name="ZonesEmptyPanel"
@@ -1242,13 +1172,13 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" MinWidth="340" />
-                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="24" />
                                     <ColumnDefinition Width="*" MinWidth="340" />
                                 </Grid.ColumnDefinitions>
 
                             <!--  Difference  -->
                             <Border
-                                Padding="14,12"
+                                Padding="20,16"
                                 Background="{DynamicResource RowBg}"
                                 CornerRadius="12">
                                 <StackPanel>
@@ -1320,7 +1250,7 @@
                                             TextWrapping="Wrap" />
                                         <ItemsControl
                                             x:Name="ListDiffTotals"
-                                            Margin="0,0,-8,0"
+                                            Margin="0,0,-14,0"
                                             Focusable="False"
                                             ItemTemplate="{StaticResource TotalTileTemplate}">
                                             <ItemsControl.ItemsPanel>
@@ -1336,7 +1266,7 @@
                             <!--  Add / subtract  -->
                             <Border
                                 Grid.Column="2"
-                                Padding="14,12"
+                                Padding="20,16"
                                 Background="{DynamicResource RowBg}"
                                 CornerRadius="12">
                                 <StackPanel>
@@ -1558,7 +1488,6 @@
                                 </StackPanel>
                             </Border>
                             </Grid>
-                            <ContentControl Content="{StaticResource FactsDiff}" IsTabStop="False" />
                         </StackPanel>
                     </ScrollViewer>
 
@@ -1734,7 +1663,6 @@
                                         Focusable="False"
                                         ItemTemplate="{StaticResource ResultRowTemplate}"
                                     ItemsPanel="{StaticResource DtTwoColumnPanel}" />
-                                    <ContentControl Content="{StaticResource FactsIso}" IsTabStop="False" />
                                 </StackPanel>
                             </ScrollViewer>
 
@@ -1768,7 +1696,6 @@
                                             TextWrapping="Wrap" />
                                         <WrapPanel x:Name="IsoExamples" HorizontalAlignment="Center" />
                                     </StackPanel>
-                                    <ContentControl Content="{StaticResource FactsIso}" IsTabStop="False" />
                                 </StackPanel>
                             </ScrollViewer>
                         </Grid>
@@ -1840,7 +1767,7 @@
                         <ScrollViewer
                             x:Name="CalScroll"
                             Grid.Row="2"
-                            Margin="0,12,0,0"
+                            Margin="0,18,0,0"
                             HorizontalScrollBarVisibility="Disabled"
                             VerticalScrollBarVisibility="Auto">
                             <StackPanel>
@@ -1876,7 +1803,7 @@
 
                                 <ItemsControl
                                     x:Name="ListCalTiles"
-                                    Margin="0,12,-8,0"
+                                    Margin="0,16,-14,0"
                                     Focusable="False"
                                     ItemTemplate="{StaticResource TotalTileTemplate}">
                                     <ItemsControl.ItemsPanel>
@@ -2053,12 +1980,19 @@
                                         </StackPanel>
                                     </Border>
                                 </Grid>
-                                <ContentControl Content="{StaticResource FactsCal}" IsTabStop="False" />
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
                 </Grid>
             </Border>
+            <!--  ================= GOOD TO KNOW (footer, changes with the tab) =================  -->
+            <ScrollViewer
+                Grid.Row="3"
+                MaxHeight="250"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <ContentControl x:Name="FactsFooter" IsTabStop="False" />
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>

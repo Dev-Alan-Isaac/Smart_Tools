@@ -637,7 +637,7 @@
                                 x:Name="ListTools"
                                 Grid.Column="2"
                                 Orientation="Horizontal">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSelectAll"
                                     Width="32"
                                     Height="32"
@@ -649,7 +649,7 @@
                                         Height="16"
                                         Kind="CheckboxMultipleMarkedOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnDeselectAll"
                                     Width="32"
                                     Height="32"

@@ -360,7 +360,7 @@
                                 </Grid>
                             </Button>
 
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnPause"
                                 Grid.Column="1"
                                 Width="38"
@@ -377,7 +377,7 @@
                                     Kind="Pause" />
                             </Button>
 
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnStop"
                                 Grid.Column="2"
                                 Width="38"
@@ -526,7 +526,7 @@
                                 Content="{DynamicResource Str_FileDiff_ColHeaderText}"
                                 Style="{StaticResource CardHeader}"
                                 Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnPaste"
                                 Grid.Column="1"
                                 Width="34"
@@ -539,7 +539,7 @@
                                     Height="16"
                                     Kind="ContentPaste" />
                             </Button>
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnLoadFromFile"
                                 Grid.Column="2"
                                 Width="34"
@@ -553,7 +553,7 @@
                                     Height="16"
                                     Kind="FileDocumentOutline" />
                             </Button>
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnClearText"
                                 Grid.Column="3"
                                 Width="34"

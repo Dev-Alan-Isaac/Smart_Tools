@@ -272,7 +272,7 @@ namespace Smart_Tools.WPF.Views
                 row.Value.TextTrimming = TextTrimming.CharacterEllipsis;
                 row.Value.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
 
-                var copy = new Button { Style = (Style)FindResource("NeutralIconButtonStyle"), Width = 28, Height = 28, Tag = row.Text };
+                var copy = new Button { Style = (Style)FindResource("NeutralIconButtonStyle"), Width = 28, Height = 28, Padding = new Thickness(0), Tag = row.Text };
                 copy.Content = new PackIcon { Kind = PackIconKind.ContentCopy, Width = 14, Height = 14 };
                 copy.ToolTip = Str("Str_Common_CopyToClipboardTooltip");
                 copy.Click += RowCopy_Click;

@@ -1196,7 +1196,7 @@
                             </Grid>
                         </Button>
 
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnUndoRename"
                             Grid.Column="1"
                             Width="36"
@@ -1213,7 +1213,7 @@
                                 Kind="Undo" />
                         </Button>
 
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnGeneratePreview"
                             Grid.Column="2"
                             Width="36"

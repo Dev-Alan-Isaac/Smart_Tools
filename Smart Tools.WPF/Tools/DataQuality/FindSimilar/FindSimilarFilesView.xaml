@@ -445,7 +445,7 @@
                             Content="{DynamicResource Str_VideoEditor_Remove}"
                             IsChecked="{Binding IsSelected, Mode=TwoWay}"
                             ToolTip="{DynamicResource Str_FindSimilar_RemoveThisOneTooltip}" />
-                        <Button
+                        <Button Padding="0"
                             Grid.Column="2"
                             Width="30"
                             Height="30"
@@ -953,7 +953,7 @@
                             </Grid>
                         </Button>
 
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnRescan"
                             Grid.Column="1"
                             Width="36"
@@ -1141,7 +1141,7 @@
                                             TextWrapping="Wrap" />
                                     </Grid>
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnCollapseGroups"
                                     Width="32"
                                     Height="32"
@@ -1154,7 +1154,7 @@
                                         Height="16"
                                         Kind="UnfoldLessHorizontal" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnExpandGroups"
                                     Width="32"
                                     Height="32"
@@ -1167,7 +1167,7 @@
                                         Height="16"
                                         Kind="UnfoldMoreHorizontal" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnDeselectAll"
                                     Width="32"
                                     Height="32"
@@ -1340,7 +1340,7 @@
                                 Content="{DynamicResource Str_FindSimilar_KeepCompareTitle}"
                                 Style="{StaticResource CardHeader}"
                                 Tag="{x:Static materialDesign:PackIconKind.ViewCarouselOutline}" />
-                            <Button
+                            <Button Padding="0"
                                 Grid.Column="1"
                                 Width="30"
                                 Height="30"
@@ -1365,7 +1365,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnPrevGroup"
                                     Width="30"
                                     Height="30"
@@ -1394,7 +1394,7 @@
                                         Foreground="{DynamicResource TextSecondary}"
                                         Text="{DynamicResource Str_FindSimilar_GroupPlaceholder}" />
                                 </StackPanel>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnNextGroup"
                                     Grid.Column="2"
                                     Width="30"
@@ -1568,7 +1568,7 @@
                             Background="{DynamicResource RowBg}"
                             CornerRadius="8">
                             <StackPanel Orientation="Horizontal">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnComparePrevGroup"
                                     Width="30"
                                     Height="30"
@@ -1589,7 +1589,7 @@
                                     FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextPrimary}"
                                     TextAlignment="Center" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnCompareNextGroup"
                                     Width="30"
                                     Height="30"
@@ -1604,7 +1604,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Button
+                        <Button Padding="0"
                             Grid.Column="2"
                             Width="32"
                             Height="32"

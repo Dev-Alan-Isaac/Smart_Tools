@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.HashVerifierView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -450,7 +450,7 @@
                                                     Foreground="{DynamicResource TextPrimary}"
                                                     TextTrimming="CharacterEllipsis" />
                                             </Border>
-                                            <Button
+                                            <Button Padding="0"
                                                 Grid.Column="1"
                                                 Width="34"
                                                 Height="34"
@@ -700,7 +700,7 @@
                                         Kind="WarningOutline" />
                                 </Button>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnCopyHash"
                                     Width="32"
                                     Height="32"
@@ -714,7 +714,7 @@
                                         Kind="ContentCopy" />
                                 </Button>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnCopyPath"
                                     Width="32"
                                     Height="32"

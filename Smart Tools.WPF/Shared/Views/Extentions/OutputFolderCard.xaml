@@ -187,7 +187,7 @@
                         <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_OutputFolderCard_ChooseFolder}" TextWrapping="Wrap" />
                     </Grid>
                 </Button>
-                <Button
+                <Button Padding="0"
                     x:Uid="BtnOpenFolder"
                     Grid.Column="1"
                     Width="34"
@@ -201,7 +201,7 @@
                         Height="16"
                         Kind="FolderOpenOutline" />
                 </Button>
-                <Button
+                <Button Padding="0"
                     x:Uid="BtnResetFolder"
                     Grid.Column="2"
                     Width="34"

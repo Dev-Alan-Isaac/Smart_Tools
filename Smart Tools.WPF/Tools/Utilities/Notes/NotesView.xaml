@@ -312,7 +312,7 @@
                             <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileConverter_OpenFolder}" TextWrapping="Wrap" />
                         </Grid>
                     </Button>
-                    <Button
+                    <Button Padding="0"
                         Grid.Column="3"
                         Width="28"
                         Height="28"
@@ -413,7 +413,7 @@
                                     Style="{StaticResource BareTextBox}"
                                     Tag="Search notes (Ctrl+F)"
                                     TextChanged="TxtSearch_TextChanged" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClearSearch"
                                     Grid.Column="2"
                                     Width="26"

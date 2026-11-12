@@ -802,7 +802,7 @@
                                     Grid.Column="1"
                                     VerticalAlignment="Top"
                                     Orientation="Horizontal">
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnSelectAllItems"
                                         Width="32"
                                         Height="32"
@@ -815,7 +815,7 @@
                                             Height="16"
                                             Kind="CheckboxMultipleMarkedOutline" />
                                     </Button>
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnDeselectAllItems"
                                         Width="32"
                                         Height="32"

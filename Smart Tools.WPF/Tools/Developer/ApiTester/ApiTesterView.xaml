@@ -1008,7 +1008,7 @@
                                                     ToolTip="{DynamicResource Str_Api_PrettyPrintTooltip}"
                                                     Unchecked="ChkPrettyPrint_CheckedChanged" />
 
-                                                <Button
+                                                <Button Padding="0"
                                                     x:Name="BtnCopyResponseBody"
                                                     Grid.Column="1"
                                                     Width="30"

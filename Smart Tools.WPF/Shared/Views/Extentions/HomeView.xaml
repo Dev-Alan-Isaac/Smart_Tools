@@ -367,7 +367,7 @@
                                 Tag="Find a tool… (Ctrl+K)"
                                 TextChanged="TxtSearch_TextChanged"
                                 ToolTip="{DynamicResource Str_Home_TypePartOfA}" />
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnClearSearch"
                                 Grid.Column="2"
                                 Width="28"

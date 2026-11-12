@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.IdGeneratorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -215,7 +215,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="TxtInspect" VerticalContentAlignment="Center" FontFamily="Consolas" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_IdGen_InspectHint}" TextChanged="Inspect_TextChanged" />
-                                <Button x:Name="BtnInspectPaste" Grid.Column="1" Width="28" Height="28" Margin="2,4" Click="BtnInspectPaste_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_ColorPicker_Paste}">
+                                <Button Padding="0" x:Name="BtnInspectPaste" Grid.Column="1" Width="28" Height="28" Margin="2,4" Click="BtnInspectPaste_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_ColorPicker_Paste}">
                                     <materialDesign:PackIcon Width="15" Height="15" Kind="ContentPaste" />
                                 </Button>
                             </Grid>

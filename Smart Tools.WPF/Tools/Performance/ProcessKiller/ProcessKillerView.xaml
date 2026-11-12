@@ -468,7 +468,7 @@
                                     Tag="{DynamicResource Str_ProcessKiller_SearchPlaceholder}"
                                     TextChanged="TxtSearch_TextChanged"
                                     ToolTip="{DynamicResource Str_ProcessKiller_SearchTooltip}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClearSearch"
                                     Grid.Column="2"
                                     Width="26"
@@ -510,7 +510,7 @@
                                     MaxLength="6"
                                     Style="{StaticResource BareTextBox}"
                                     Tag="{DynamicResource Str_ProcessKiller_PortPlaceholder}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnFindPort"
                                     Grid.Column="2"
                                     Width="28"
@@ -838,7 +838,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="TxtDetailPath" Style="{StaticResource DetailValue}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnOpenLocation"
                                     Grid.Column="1"
                                     Width="24"

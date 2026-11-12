@@ -574,7 +574,7 @@
                                                     <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Watermark_ChooseLogo}" TextWrapping="Wrap" />
                                                 </Grid>
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnClearLogo"
                                                 Grid.Column="1"
                                                 Width="34"
@@ -994,7 +994,7 @@
                                                     <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Watermark_PresetConfirm}" TextWrapping="Wrap" />
                                                 </Grid>
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 Grid.Column="1"
                                                 Width="34"
                                                 Height="34"

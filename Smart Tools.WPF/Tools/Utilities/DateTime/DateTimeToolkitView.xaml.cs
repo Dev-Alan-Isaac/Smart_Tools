@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -27,8 +27,6 @@ namespace Smart_Tools.WPF.Views
     /// </summary>
     public partial class DateTimeToolkitView : UserControl
     {
-        private const double SidebarExpandedWidth = 280;
-        private const double SidebarCollapsedWidth = 56;
 
         private readonly ObservableCollection<DateToolZoneItem> _zoneCards = new();
         private readonly List<string> _zoneIds = new();
@@ -41,7 +39,6 @@ namespace Smart_Tools.WPF.Views
         private UniformGrid? _zonesGrid;
         private List<DateToolZoneOption> _allZones = new();
         private DateToolMode _mode = DateToolMode.Unix;
-        private bool _optionsCollapsed;
         private bool _loadedOnce;
         private bool _applyingSettings;
 
@@ -117,7 +114,6 @@ namespace Smart_Tools.WPF.Views
                 ChkSkipEventDays.IsChecked = s.SkipEventDays;
                 _zoneIds.Clear();
                 _zoneIds.AddRange(s.ZoneIds ?? DateTimeToolkitManager.DefaultZoneIds());
-                if (s.OptionsCollapsed != _optionsCollapsed) BtnCollapseOptions_Click(this, new RoutedEventArgs());
             }
             finally
             {
@@ -133,7 +129,6 @@ namespace Smart_Tools.WPF.Views
             TreatDatesAsUtc = RadioAssumeUtc.IsChecked == true,
             Use24HourClock = Chk24Hour.IsChecked == true,
             SkipEventDays = ChkSkipEventDays.IsChecked == true,
-            OptionsCollapsed = _optionsCollapsed,
             ZoneIds = _zoneIds.ToList(),
         };
 
@@ -164,19 +159,8 @@ namespace Smart_Tools.WPF.Views
         private string Str(string key, string fallback) => TryFindResource(key) as string ?? fallback;
 
         // =================================================================
-        //  Modes and sidebar
+        //  Modes (tabs)
         // =================================================================
-
-        private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
-        {
-            _optionsCollapsed = !_optionsCollapsed;
-            var visibility = _optionsCollapsed ? Visibility.Collapsed : Visibility.Visible;
-            TxtOptionsHeaderLabel.Visibility = visibility;
-            SepHeader.Visibility = visibility;
-            OptionsScrollViewer.Visibility = visibility;
-            OptionsColumn.Width = new GridLength(_optionsCollapsed ? SidebarCollapsedWidth : SidebarExpandedWidth);
-            ScheduleSave();
-        }
 
         private void Mode_Click(object sender, RoutedEventArgs e)
         {
@@ -208,6 +192,15 @@ namespace Smart_Tools.WPF.Views
             DiffOptionsPanel.Visibility = Show(mode == DateToolMode.Difference);
             IsoOptionsPanel.Visibility = Show(mode == DateToolMode.Iso);
             CalendarOptionsPanel.Visibility = Show(mode == DateToolMode.Calendar);
+            // "Good to know" is the footer: each tab brings its own (x:Shared="False" resources, so a fresh copy every time)
+            FactsFooter.Content = FindResource(mode switch
+            {
+                DateToolMode.Zones => "FactsZones",
+                DateToolMode.Difference => "FactsDiff",
+                DateToolMode.Iso => "FactsIso",
+                DateToolMode.Calendar => "FactsCal",
+                _ => "FactsUnix",
+            });
 
             (string key, PackIconKind icon) = mode switch
             {

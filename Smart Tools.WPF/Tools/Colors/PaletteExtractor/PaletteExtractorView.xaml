@@ -374,7 +374,7 @@
                                                             CornerRadius="18"
                                                             Visibility="Hidden">
                                                             <StackPanel Orientation="Horizontal">
-                                                                <Button
+                                                                <Button Padding="0"
                                                                     x:Name="BtnPrevPicture"
                                                                     Width="32"
                                                                     Height="32"
@@ -397,7 +397,7 @@
                                                                         Foreground="{DynamicResource TextSecondary}"
                                                                         TextAlignment="Center" />
                                                                 </StackPanel>
-                                                                <Button
+                                                                <Button Padding="0"
                                                                     x:Name="BtnNextPicture"
                                                                     Width="32"
                                                                     Height="32"

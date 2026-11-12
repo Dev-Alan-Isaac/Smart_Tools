@@ -1,4 +1,4 @@
-<ResourceDictionary
+﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
@@ -609,7 +609,8 @@
         <Setter Property="FontSize" Value="12" />
         <!--  Removed Width and Height setters so it can stretch  -->
         <Setter Property="MinHeight" Value="28" />
-        <Setter Property="Padding" Value="10,0" />
+        <!--  Text buttons breathe: the content is inset by Padding. Fixed-size icon buttons set Padding="0".  -->
+        <Setter Property="Padding" Value="14,4" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
         <Setter Property="Template">
@@ -625,7 +626,7 @@
                         <Border.RenderTransform>
                             <ScaleTransform x:Name="BdScale" ScaleX="1" ScaleY="1" />
                         </Border.RenderTransform>
-                        <ContentPresenter Margin="0,3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <ContentPresenter.Resources>
                                 <Style BasedOn="{StaticResource ButtonLabelTextStyle}" TargetType="TextBlock" />
                             </ContentPresenter.Resources>

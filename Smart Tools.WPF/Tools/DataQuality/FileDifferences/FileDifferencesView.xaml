@@ -485,7 +485,7 @@
                                                 <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_FileDiff_ChooseFiles}" TextWrapping="Wrap" />
                                             </Grid>
                                         </Button>
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnReload"
                                             Grid.Column="2"
                                             Width="34"

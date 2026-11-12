@@ -535,7 +535,7 @@
                                                     Text="{DynamicResource Str_OrganizeFiles_ChooseAFolder}"
                                                     TextTrimming="CharacterEllipsis" />
                                             </Border>
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnBrowseDestination"
                                                 Grid.Column="1"
                                                 Width="34"
@@ -676,7 +676,7 @@
 
                                         <!--  Add Step Button Container  -->
                                         <Grid Margin="0,4,0,0">
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnAddStep"
                                                 Width="40"
                                                 HorizontalAlignment="Center"
@@ -832,7 +832,7 @@
                             </Grid>
                         </Button>
 
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnUndoOrganize"
                             Grid.Column="1"
                             Width="36"

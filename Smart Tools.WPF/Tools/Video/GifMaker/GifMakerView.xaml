@@ -805,7 +805,7 @@
                                                 FontWeight="SemiBold"
                                                 Foreground="{DynamicResource MediaStageText}" />
                                         </Border>
-                                        <Button
+                                        <Button Padding="0"
                                             x:Name="BtnLoop"
                                             Width="32"
                                             Height="32"
@@ -861,7 +861,7 @@
                                                 FontSize="11.5"
                                                 Foreground="{DynamicResource TextSecondary}"
                                                 Text="1×" />
-                                            <Button
+                                            <Button Padding="0"
                                                 Width="32"
                                                 Height="28"
                                                 Click="BtnZoomOut_Click"
@@ -872,7 +872,7 @@
                                                     Height="16"
                                                     Kind="MagnifyMinusOutline" />
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 Width="32"
                                                 Height="28"
                                                 Click="BtnZoomIn_Click"
@@ -883,7 +883,7 @@
                                                     Height="16"
                                                     Kind="MagnifyPlusOutline" />
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 Width="32"
                                                 Height="28"
                                                 Click="BtnZoomSelection_Click"
@@ -894,7 +894,7 @@
                                                     Height="16"
                                                     Kind="ArrowExpandHorizontal" />
                                             </Button>
-                                            <Button
+                                            <Button Padding="0"
                                                 Width="32"
                                                 Height="28"
                                                 Click="BtnZoomReset_Click"
@@ -959,7 +959,7 @@
                                     x:Name="FrameTools"
                                     Margin="0,0,0,10"
                                     Orientation="Horizontal">
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnMoveUp"
                                         Width="32"
                                         Height="32"
@@ -971,7 +971,7 @@
                                             Height="16"
                                             Kind="ArrowUp" />
                                     </Button>
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnMoveDown"
                                         Width="32"
                                         Height="32"
@@ -984,7 +984,7 @@
                                             Height="16"
                                             Kind="ArrowDown" />
                                     </Button>
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnSortByName"
                                         Width="32"
                                         Height="32"
@@ -997,7 +997,7 @@
                                             Height="16"
                                             Kind="SortAlphabeticalAscending" />
                                     </Button>
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnSortByDate"
                                         Width="32"
                                         Height="32"
@@ -1190,7 +1190,7 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnPlayPause"
                                     Width="34"
                                     Height="34"

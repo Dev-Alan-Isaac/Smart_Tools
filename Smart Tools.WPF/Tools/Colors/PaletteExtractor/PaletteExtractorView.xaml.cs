@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -809,6 +809,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     Width = 28,
                     Height = 28,
+                    Padding = new Thickness(0),
                     VerticalAlignment = VerticalAlignment.Center,
                     Style = (Style)FindResource("NeutralIconButtonStyle"),
                     ToolTip = S("Str_Palette_CopyRowTooltip"),

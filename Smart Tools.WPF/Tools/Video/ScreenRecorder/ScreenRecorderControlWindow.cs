@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Models;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -134,6 +134,7 @@ namespace Smart_Tools.WPF.Views
             {
                 Margin = new Thickness(0, 0, 8, 0),
                 Cursor = Cursors.Hand,
+                Padding = new Thickness(10, 4, 10, 4),
                 Content = new PackIcon { Kind = PackIconKind.MonitorMultiple, Width = 18, Height = 18 },
                 ToolTip = Application.Current?.TryFindResource("Str_Recorder_SwitchScreen") as string ?? "Switch the screen being recorded",
             };

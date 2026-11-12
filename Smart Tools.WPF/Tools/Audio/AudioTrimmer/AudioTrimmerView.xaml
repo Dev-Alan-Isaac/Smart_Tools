@@ -107,7 +107,7 @@
                         Grid.Column="3"
                         VerticalAlignment="Center"
                         Orientation="Horizontal">
-                        <Button
+                        <Button Padding="0"
                             Width="26"
                             Height="26"
                             Margin="0,0,2,0"
@@ -119,7 +119,7 @@
                                 Height="14"
                                 Kind="ChevronUp" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="26"
                             Height="26"
                             Margin="0,0,2,0"
@@ -909,7 +909,7 @@
                                         Height="16"
                                         Kind="Restore" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnUndo"
                                     Width="32"
                                     Height="32"
@@ -922,7 +922,7 @@
                                         Height="16"
                                         Kind="UndoVariant" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnRedo"
                                     Width="32"
                                     Height="32"

@@ -887,7 +887,7 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <WrapPanel Margin="0,0,0,8">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnMoveUp"
                                     Width="32"
                                     Height="32"
@@ -900,7 +900,7 @@
                                         Height="16"
                                         Kind="ArrowUp" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnMoveDown"
                                     Width="32"
                                     Height="32"
@@ -913,7 +913,7 @@
                                         Height="16"
                                         Kind="ArrowDown" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSortName"
                                     Width="32"
                                     Height="32"
@@ -998,7 +998,7 @@
                                     x:Name="PageNav"
                                     Orientation="Horizontal"
                                     Visibility="Collapsed">
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnPrevPage"
                                         Width="32"
                                         Height="32"
@@ -1017,7 +1017,7 @@
                                         FontSize="12"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimary}" />
-                                    <Button
+                                    <Button Padding="0"
                                         x:Name="BtnNextPage"
                                         Width="32"
                                         Height="32"

@@ -347,7 +347,7 @@
                                                 Style="{StaticResource BareTextBox}"
                                                 Tag="No file chosen"
                                                 ToolTip="{DynamicResource Str_Barcode_FilePathTooltip}" />
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BrowseButton"
                                                 Grid.Column="2"
                                                 Width="28"
@@ -1144,7 +1144,7 @@
                                     Style="{StaticResource BareTextBox}"
                                     Tag="{DynamicResource Str_Generators_TypeValueHint}"
                                     ToolTip="{DynamicResource Str_Barcode_TypeValueTooltip}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnAddBatchEntry"
                                     Grid.Column="1"
                                     Width="28"

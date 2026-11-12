@@ -266,7 +266,7 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal"
                 Visibility="{Binding CanOpen, Converter={StaticResource BoolToVisibility}}">
-                <Button
+                <Button Padding="0"
                     Width="28"
                     Height="28"
                     Margin="0,0,4,0"
@@ -664,7 +664,7 @@
                             </Grid>
                         </Button>
 
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnRescan"
                             Grid.Column="1"
                             Width="36"
@@ -872,7 +872,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnUpFolder"
                                     Width="30"
                                     Height="30"

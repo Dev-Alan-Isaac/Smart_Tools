@@ -1342,7 +1342,7 @@
                                 Grid.Row="1"
                                 Margin="0,0,0,10"
                                 Orientation="Horizontal">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnMoveUp"
                                     Width="32"
                                     Height="32"
@@ -1354,7 +1354,7 @@
                                         Height="16"
                                         Kind="ArrowUp" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnMoveDown"
                                     Width="32"
                                     Height="32"
@@ -1367,7 +1367,7 @@
                                         Height="16"
                                         Kind="ArrowDown" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSortByName"
                                     Width="32"
                                     Height="32"
@@ -1380,7 +1380,7 @@
                                         Height="16"
                                         Kind="SortAlphabeticalAscending" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSortByDate"
                                     Width="32"
                                     Height="32"
@@ -1492,7 +1492,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSelectAll"
                                     Grid.Column="0"
                                     Width="34"
@@ -1507,7 +1507,7 @@
                                         Kind="CheckboxMultipleMarkedOutline" />
                                 </Button>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnDeselectAll"
                                     Grid.Column="1"
                                     Width="34"

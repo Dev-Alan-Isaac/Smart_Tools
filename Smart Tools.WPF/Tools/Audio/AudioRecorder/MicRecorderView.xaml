@@ -522,7 +522,7 @@
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                                <Button
+                                                <Button Padding="0"
                                                     Width="30"
                                                     Height="30"
                                                     Click="BtnPlayTake_Click"
@@ -535,7 +535,7 @@
                                                         Height="16"
                                                         Kind="Play" />
                                                 </Button>
-                                                <Button
+                                                <Button Padding="0"
                                                     Width="30"
                                                     Height="30"
                                                     Margin="2,0,0,0"
@@ -548,7 +548,7 @@
                                                         Height="16"
                                                         Kind="ContentSaveOutline" />
                                                 </Button>
-                                                <Button
+                                                <Button Padding="0"
                                                     x:Name="BtnShowTake"
                                                     Width="30"
                                                     Height="30"

@@ -852,7 +852,7 @@
                             </WrapPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnMoveUp"
                                     Width="32"
                                     Height="32"
@@ -864,7 +864,7 @@
                                         Height="16"
                                         Kind="ArrowUp" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnMoveDown"
                                     Width="32"
                                     Height="32"
@@ -878,7 +878,7 @@
                                         Kind="ArrowDown" />
                                 </Button>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSortByName"
                                     Width="32"
                                     Height="32"
@@ -891,7 +891,7 @@
                                         Height="16"
                                         Kind="SortAlphabeticalAscending" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSortByDate"
                                     Width="32"
                                     Height="32"

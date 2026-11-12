@@ -647,7 +647,7 @@
                                     Tag="{DynamicResource Str_EventExplorer_SearchPlaceholder}"
                                     TextChanged="Filter_TextChanged"
                                     ToolTip="{DynamicResource Str_EventExplorer_SearchTooltip}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClearSearch"
                                     Grid.Column="2"
                                     Width="26"
@@ -989,7 +989,7 @@
                                         Height="16"
                                         Kind="ContentCopy" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSearchOnline"
                                     Width="32"
                                     Height="32"
@@ -1002,7 +1002,7 @@
                                         Height="16"
                                         Kind="Web" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     Width="32"
                                     Height="32"
                                     Margin="4,0,0,0"

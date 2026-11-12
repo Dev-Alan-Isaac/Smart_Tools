@@ -826,7 +826,7 @@
                                 Margin="10,0,0,0"
                                 VerticalAlignment="Center"
                                 Orientation="Horizontal">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="SaveButton"
                                     Width="36"
                                     Height="36"
@@ -839,7 +839,7 @@
                                         Height="17"
                                         Kind="ContentSaveEditOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="CopyButton"
                                     Width="36"
                                     Height="36"
@@ -867,7 +867,7 @@
                                         Height="16"
                                         Kind="FolderSearchOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnZoomActual"
                                     Width="36"
                                     Height="36"

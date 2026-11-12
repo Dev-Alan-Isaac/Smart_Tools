@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.CopyQueueView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -165,7 +165,7 @@
                             </Grid>
                         </Button>
 
-                        <Button ctl:Tour.Key="Str_Tour_CopyQueue_Pause" ctl:Tour.Order="5" x:Name="BtnPause" Grid.Column="1" Width="36" Height="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnPause_Click" IsEnabled="False" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_MicRecorder_Pause}">
+                        <Button Padding="0" ctl:Tour.Key="Str_Tour_CopyQueue_Pause" ctl:Tour.Order="5" x:Name="BtnPause" Grid.Column="1" Width="36" Height="36" Margin="8,0,0,0" VerticalAlignment="Center" Click="BtnPause_Click" IsEnabled="False" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_MicRecorder_Pause}">
                             <materialDesign:PackIcon x:Name="IconPause" Width="17" Height="17" Kind="Pause" />
                         </Button>
 

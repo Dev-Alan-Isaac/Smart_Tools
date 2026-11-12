@@ -1004,7 +1004,7 @@
                             Margin="12,0,0,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top">
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnUndo"
                             Width="34"
                             Height="34"
@@ -1017,7 +1017,7 @@
                                 Height="17"
                                 Kind="Undo" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnRedo"
                             Width="34"
                             Height="34"
@@ -1030,7 +1030,7 @@
                                 Height="17"
                                 Kind="Redo" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,4,4"
@@ -1042,7 +1042,7 @@
                                 Height="17"
                                 Kind="FlipHorizontal" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,4,4"
@@ -1054,7 +1054,7 @@
                                 Height="17"
                                 Kind="FlipVertical" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,4,4"
@@ -1066,7 +1066,7 @@
                                 Height="17"
                                 Kind="RotateLeft" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,4,4"
@@ -1078,7 +1078,7 @@
                                 Height="17"
                                 Kind="RotateRight" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,12,4"
@@ -1090,7 +1090,7 @@
                                 Height="17"
                                 Kind="DeleteOutline" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,4,4"
@@ -1102,7 +1102,7 @@
                                 Height="17"
                                 Kind="MagnifyMinusOutline" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,4,4"
@@ -1114,7 +1114,7 @@
                                 Height="17"
                                 Kind="MagnifyPlusOutline" />
                         </Button>
-                        <Button
+                        <Button Padding="0"
                             Width="34"
                             Height="34"
                             Margin="0,0,0,4"
@@ -1234,7 +1234,7 @@
                                 Grid.Column="1"
                                 Margin="0,-4,0,6"
                                 HorizontalAlignment="Right">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnFrameAdd"
                                     Width="30"
                                     Height="30"
@@ -1247,7 +1247,7 @@
                                         Height="16"
                                         Kind="PlusBoxOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnFrameDuplicate"
                                     Width="30"
                                     Height="30"
@@ -1260,7 +1260,7 @@
                                         Height="16"
                                         Kind="ContentDuplicate" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnFrameLeft"
                                     Width="30"
                                     Height="30"
@@ -1273,7 +1273,7 @@
                                         Height="16"
                                         Kind="ChevronLeft" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnFrameRight"
                                     Width="30"
                                     Height="30"
@@ -1297,7 +1297,7 @@
                                         Height="16"
                                         Kind="TrashCanOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnPlay"
                                     Width="30"
                                     Height="30"

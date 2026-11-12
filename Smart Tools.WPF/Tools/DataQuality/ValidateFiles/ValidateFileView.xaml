@@ -889,7 +889,7 @@
                                                     Foreground="{DynamicResource SidebarText}"
                                                     TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnBrowseQuarantine"
                                                 Grid.Column="1"
                                                 Width="30"
@@ -1195,7 +1195,7 @@
                                     </Button.ContextMenu>
                                 </controls:ExportButton>
 
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnTickProblems"
                                     Width="32"
                                     Height="32"

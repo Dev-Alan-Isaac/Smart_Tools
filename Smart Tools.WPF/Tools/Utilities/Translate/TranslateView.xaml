@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.TranslateView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -203,7 +203,7 @@
                         Text="{Binding Percent, StringFormat={}{0:0}%}"
                         TextAlignment="Right"
                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
-                    <Button
+                    <Button Padding="0"
                         Grid.Column="2"
                         Width="40"
                         Margin="8,0,0,0"
@@ -484,7 +484,7 @@
                             VerticalAlignment="Center"
                             SelectionChanged="Language_SelectionChanged"
                             ToolTip="{DynamicResource Str_Translate_From}" />
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnSwap"
                             Grid.Column="2"
                             Width="40"
@@ -505,7 +505,7 @@
                             VerticalAlignment="Center"
                             SelectionChanged="Language_SelectionChanged"
                             ToolTip="{DynamicResource Str_Translate_To}" />
-                        <Button
+                        <Button Padding="0"
                             x:Name="BtnFavorite"
                             Grid.Column="4"
                             Width="40"
@@ -649,7 +649,7 @@
                                     Content="{DynamicResource Str_Translate_InputHeader}"
                                     Style="{StaticResource CardHeader}"
                                     Tag="{x:Static materialDesign:PackIconKind.TextBoxOutline}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClear"
                                     Width="40"
                                     HorizontalAlignment="Right"
@@ -689,7 +689,7 @@
                                     Content="{DynamicResource Str_Translate_OutputHeader}"
                                     Style="{StaticResource CardHeader}"
                                     Tag="{x:Static materialDesign:PackIconKind.TranslateVariant}" />
-                                <Button ctl:Tour.Key="Str_Tour_Translate_Copy" ctl:Tour.Order="5"
+                                <Button Padding="0" ctl:Tour.Key="Str_Tour_Translate_Copy" ctl:Tour.Order="5"
                                     x:Name="BtnCopy"
                                     Width="40"
                                     HorizontalAlignment="Right"
