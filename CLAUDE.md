@@ -48,6 +48,9 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Alan wants both: bring tools to the style guide automatically, and *propose* extra UX improvements for approval before applying them.
 - Shell tool gotchas on this machine: apostrophes and `\\` inside inline `python - <<EOF` scripts break; write the script to a file in the scratchpad and run it. Edit files with CRLF-aware code (read, normalise `\r\n`, write back).
 
+## Where we left off (updated 2026-11-12, Password Vault move to group)
+**Built OK, UI NOT run, uncommitted.** Right-click an entry > "Move to group..." (`MenuMoveGroup_Click`) opens `VaultGroupDialog` (editable combo of existing groups, empty = ungrouped) and rewrites the entry's first tag with `PasswordVaultManager.WithGroup` (other tags kept); `ExistingGroups` feeds the combo. Keys `Str_Vault_MoveToGroup(+Hint)` in en+es. Not done: drag an entry onto a group header, rename/move a whole group.
+
 ## Where we left off (updated 2026-11-11, UI polish pass)
 **Built OK, UI NOT run, uncommitted.** Alan's list, all XAML only: Metadata Extractor (details card now left, file list right; stacked layout unchanged: `FilesColumn`), Subnet Calculator (examples = full-width chips, prefixes = 3-column grid with new `ScPrefixChip`), Unit Converter (favorites/recent chips in a 2-column `UniformGrid`), Date Toolkit (result rows in two columns via `DtTwoColumnPanel`; the modes' other layouts untouched), MIDI Play-Along tempo card (big % + BPM + Reset on one row, slider below), Screen Color Picker (format example in a bordered 16 pt box), Drive Health (loading bar now a thin overlay at the card's bottom edge instead of inside the run bar). Need a look in the app; Date Toolkit "full space" for Zones/Diff/Calendar panels was only partly addressed.
 
