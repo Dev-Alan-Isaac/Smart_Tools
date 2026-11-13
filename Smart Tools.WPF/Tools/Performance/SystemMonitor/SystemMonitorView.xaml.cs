@@ -523,8 +523,7 @@ namespace Smart_Tools.WPF.Views
                 else if (ext == ".html" || ext == ".htm") AtomicFile.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(PerfReportBuilder.ToHtml(BuildPerfReport())));
                 else AtomicFile.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(Report()));
                 string note = path != dialog.FileName ? $"\n\n{Path.GetFileName(dialog.FileName)} already exists, so it was kept and this report got its own name." : "";
-                if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, note), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
-                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                SavedFileDialog.Show(DialogTitle, path, note);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {

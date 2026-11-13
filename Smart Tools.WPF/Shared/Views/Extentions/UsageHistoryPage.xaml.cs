@@ -220,8 +220,7 @@ namespace Smart_Tools.WPF.Controls
                     return pdf ? PerfReportBuilder.ToPdf(report) : new System.Text.UTF8Encoding(false).GetBytes(PerfReportBuilder.ToHtml(report));
                 });
                 AtomicFile.WriteAllBytes(path, bytes);
-                if (MessageBox.Show(Loc.F("Str_MB_SavedToNN", "Saved to:\n{0}{1}\n\nOpen it now?", path, ""), title, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
-                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                Smart_Tools.WPF.Views.SavedFileDialog.Show(title, path);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {

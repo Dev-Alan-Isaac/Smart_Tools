@@ -1,4 +1,4 @@
-using ImageMagick;
+﻿using ImageMagick;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
@@ -10,6 +10,15 @@ namespace Smart_Tools.WPF.Controllers
     /// <summary>The PdfSharp (and ImageMagick) side of the PDF Toolkit.</summary>
     public static partial class PdfToolkitManager
     {
+        /// <summary>Passwords the person typed for protected PDFs, by file path. Kept in memory only while the tool is open, never saved.</summary>
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> Passwords = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>True when the exception says the PDF needs a password (or the one given is wrong).</summary>
+        public static bool NeedsPassword(Exception ex) =>
+            ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("encrypt", StringComparison.OrdinalIgnoreCase);
+
+        private static string? PasswordFor(string path) => Passwords.TryGetValue(path, out var pw) ? pw : null;
+
         /// <summary>The real engine the view uses.</summary>
         public static readonly IPdfEngine Engine = new PdfSharpEngine();
 
@@ -63,7 +72,7 @@ namespace Smart_Tools.WPF.Controllers
 
         private sealed class PdfSharpEngine : IPdfEngine
         {
-            public IPdfSource Open(string path) => new PdfSharpSource(PdfReader.Open(path, PdfDocumentOpenMode.Import));
+            public IPdfSource Open(string path) => new PdfSharpSource(PdfReader.Open(path, PasswordFor(path), PdfDocumentOpenMode.Import));
 
             public IPdfWriter NewDocument() => new PdfSharpWriter();
 
@@ -80,7 +89,7 @@ namespace Smart_Tools.WPF.Controllers
             public PdfCompressOutcome Compress(string source, string target, PdfCompressLevel level, CancellationToken token)
             {
                 var (quality, maxSide) = CompressPreset(level);
-                using var doc = PdfReader.Open(source, PdfDocumentOpenMode.Modify);
+                using var doc = PdfReader.Open(source, PasswordFor(source), PdfDocumentOpenMode.Modify);
                 var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
                 int recompressed = 0, kept = 0;
 

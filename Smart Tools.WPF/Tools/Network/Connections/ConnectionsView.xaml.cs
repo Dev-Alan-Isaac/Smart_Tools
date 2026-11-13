@@ -291,6 +291,39 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+        /// <summary>Right-click > show only the program of this row (types its name into the search box).</summary>
+        private void MenuOnlyApp_Click(object sender, RoutedEventArgs e)
+        {
+            if (GridConnections.SelectedItem is ConnectionRow row) TxtSearch.Text = row.AppName;
+        }
+
+        private void MenuOnlyRemote_Click(object sender, RoutedEventArgs e)
+        {
+            if (GridConnections.SelectedItem is ConnectionRow { RemoteAddress: not "*" } row) TxtSearch.Text = row.RemoteAddress;
+        }
+
+        /// <summary>Right-click > close the selected connection (IPv4 TCP, administrator only). Asks first.</summary>
+        private void MenuClose_Click(object sender, RoutedEventArgs e)
+        {
+            if (GridConnections.SelectedItem is not ConnectionRow row) return;
+            var c = row.Info;
+            string title = T("Str_Tool_network-connections_Name", "Network Connections");
+            string target = $"{c.AppName}  {c.LocalAddress}:{c.LocalPort} -> {c.RemoteAddress}:{c.RemotePort}";
+            if (MessageBox.Show(Window.GetWindow(this), string.Format(T("Str_Connections_CloseAsk", "Close this connection?\n\n{0}\n\nThe program may open a new one."), target),
+                    title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+
+            var result = TcpUdpTable.CloseConnection(c.LocalAddress, c.LocalPort, c.RemoteAddress, c.RemotePort);
+            string message = result switch
+            {
+                TcpUdpTable.CloseResult.Closed => T("Str_Connections_CloseDone", "The connection was closed."),
+                TcpUdpTable.CloseResult.NeedsAdministrator => T("Str_Connections_CloseAdmin", "Closing a connection needs administrator rights. Start Smart Tools as administrator and try again."),
+                TcpUdpTable.CloseResult.NotSupported => T("Str_Connections_CloseUnsupported", "Only IPv4 TCP connections can be closed."),
+                _ => T("Str_Connections_CloseFailed", "Windows could not close the connection (it may already be gone)."),
+            };
+            MessageBox.Show(Window.GetWindow(this), message, title, MessageBoxButton.OK,
+                result == TcpUdpTable.CloseResult.Closed ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        }
+
         private void BtnExport_Click(object sender, RoutedEventArgs e)
         {
             var rows = _view.Cast<ConnectionRow>().ToList();
@@ -313,6 +346,7 @@ namespace Smart_Tools.WPF.Views
                     case ".txt": AtomicFile.WriteAllText(dialog.FileName, ConnectionsExport.ToText(rows), new UTF8Encoding(true)); break;
                     default: AtomicFile.WriteAllText(dialog.FileName, ConnectionsManager.ToCsv(rows), new UTF8Encoding(true)); break;
                 }
+                SavedFileDialog.Show(title, dialog.FileName);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

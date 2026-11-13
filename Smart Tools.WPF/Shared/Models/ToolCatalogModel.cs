@@ -1,4 +1,4 @@
-namespace Smart_Tools.WPF.Models
+﻿namespace Smart_Tools.WPF.Models
 {
     // =====================================================================
     //  Tool catalog data: the sections (categories) and tools the main
@@ -97,6 +97,9 @@ namespace Smart_Tools.WPF.Models
     public sealed class ShellSettings
     {
         public List<string> RecentToolIds { get; set; } = new();
+
+        /// <summary>Tools the person pinned (star), in the order they were pinned.</summary>
+        public List<string> FavoriteToolIds { get; set; } = new();
         public List<string> ExpandedCategories { get; set; } = new();
     }
 }

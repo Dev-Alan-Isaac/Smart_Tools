@@ -473,6 +473,8 @@ To give a tool a shortcut:
 2. Add the `Str_Shortcut_X` title to `en.xaml` and `es.xaml`.
 3. In the view, attach the handler: `ShortcutManager.Attach("tool.action", () => ...)`. `ShortcutManager.ChordText("tool.action")` gives the current key for tooltips.
 
+**Default keys for every tool** (MainWindow.TryDefaultToolKey, used only when a tool has not bound the key itself): **F5** presses the page's main accent button, **Ctrl+S** its Save / Export button (or the ExportButton), **Esc** its BtnCancel* / BtnStop* button - only a visible, enabled button is pressed. **Ctrl+K** opens the launcher popup (Shared/Views/CommandPalette.cs: tools, favorites and recent first, plus Home, Settings, theme switch, open log folder). Right-click a tool on Home to pin it to Favorites. After saving a file, tools call SavedFileDialog.Show(title, path, note) (Open file / Show in folder).
+
 Tools with shortcuts today: Notes, Password Generator, Password Vault, Regex Tester, Screenshot, Screen OCR, Loudness Meter, Duplicate Data and Find Similar Files (scan, fold/unfold groups, next/previous group, delete marked).
 
 ---

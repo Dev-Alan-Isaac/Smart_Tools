@@ -3555,6 +3555,18 @@
     <system:String x:Key="Str_Home_WhatDoYouWant">What do you want to do?</system:String>
     <system:String x:Key="Str_Home_TypePartOfA">Type part of a name or what you want to do - Enter opens the first match, Esc clears</system:String>
     <system:String x:Key="Str_Home_Recent">RECENT</system:String>
+    <system:String x:Key="Str_Palette_Home">Home - browse all tools</system:String>
+    <system:String x:Key="Str_Palette_Settings">Settings</system:String>
+    <system:String x:Key="Str_Palette_Theme">Switch light / dark theme</system:String>
+    <system:String x:Key="Str_Palette_Log">Open the log folder</system:String>
+    <system:String x:Key="Str_Saved_Heading">Saved</system:String>
+    <system:String x:Key="Str_Saved_Open">Open file</system:String>
+    <system:String x:Key="Str_Saved_Show">Show in folder</system:String>
+    <system:String x:Key="Str_Saved_Close">Close</system:String>
+    <system:String x:Key="Str_Home_Favorites">FAVORITES</system:String>
+    <system:String x:Key="Str_Home_FavoritesHint">Right-click any tool and choose Add to favorites to keep it here.</system:String>
+    <system:String x:Key="Str_Home_AddFavorite">Add to favorites</system:String>
+    <system:String x:Key="Str_Home_RemoveFavorite">Remove from favorites</system:String>
     <system:String x:Key="Str_Home_TryAnotherWordLike">Try another word - like music, pdf, password or speed.</system:String>
     <system:String x:Key="Str_OutputFolderCard_KeepFolderStructure">Keep folder structure</system:String>
     <system:String x:Key="Str_OutputFolderCard_UsedUntilYouChoose">Used until you choose a folder</system:String>
@@ -7238,6 +7250,7 @@
     <system:String x:Key="Str_Conv_CopyResult">Copy the result</system:String>
     <system:String x:Key="Str_Conv_AllUnits">In every unit</system:String>
     <system:String x:Key="Str_Conv_AllUnitsTip">Click a unit to convert to it</system:String>
+    <system:String x:Key="Str_Conv_AmountTip">Up / Down change the amount (Shift = 10, Ctrl = 0.1). Or type "5 km to mi" and press Enter.</system:String>
     <system:String x:Key="Str_Conv_ColUnit">Unit</system:String>
     <system:String x:Key="Str_Conv_ColName">Name</system:String>
     <system:String x:Key="Str_Conv_ColValue">Value</system:String>
@@ -8862,6 +8875,9 @@
     <system:String x:Key="Str_Settings_UhHeader">Record in the background</system:String>
     <system:String x:Key="Str_Settings_UhIntro">Resource Hogs History and Bandwidth per App can only show what happened while they were recording. Choose which ones start by themselves when Smart Tools opens.</system:String>
     <system:String x:Key="Str_Settings_UhAll">Start both automatically</system:String>
+    <system:String x:Key="Str_Settings_UhAlert">Notify me when a program stays above</system:String>
+    <system:String x:Key="Str_UhAlert_Title">High usage</system:String>
+    <system:String x:Key="Str_UhAlert_Body">{0} has been above {1} for a while.</system:String>
     <system:String x:Key="Str_Settings_UhHogsNote">CPU, memory and disk used by each program.</system:String>
     <system:String x:Key="Str_Settings_UhBandwidthNote">Data sent and received by each program. Needs administrator rights.</system:String>
     <system:String x:Key="Str_Settings_UhNeedsAdmin">Bandwidth per App needs administrator rights. It will start by itself the next time you run Smart Tools as administrator.</system:String>
@@ -8877,6 +8893,15 @@
     <system:String x:Key="Str_Connections_Export">Export...</system:String>
     <system:String x:Key="Str_Connections_ExportTip">Saves the rows you see as CSV, PDF, HTML or plain text.</system:String>
     <system:String x:Key="Str_Connections_CopyRemote">Copy remote address</system:String>
+    <system:String x:Key="Str_Connections_OnlyApp">Show only this program</system:String>
+    <system:String x:Key="Str_Connections_OnlyRemote">Show only this remote address</system:String>
+    <system:String x:Key="Str_Connections_CloseConnection">Close this connection...</system:String>
+    <system:String x:Key="Str_Connections_CloseTip">Needs administrator. Only IPv4 TCP connections can be closed.</system:String>
+    <system:String x:Key="Str_Connections_CloseAsk" xml:space="preserve">Close this connection?&#10;&#10;{0}&#10;&#10;The program may open a new one.</system:String>
+    <system:String x:Key="Str_Connections_CloseDone">The connection was closed.</system:String>
+    <system:String x:Key="Str_Connections_CloseAdmin">Closing a connection needs administrator rights. Start Smart Tools as administrator and try again.</system:String>
+    <system:String x:Key="Str_Connections_CloseUnsupported">Only IPv4 TCP connections can be closed.</system:String>
+    <system:String x:Key="Str_Connections_CloseFailed">Windows could not close the connection (it may already be gone).</system:String>
     <system:String x:Key="Str_Connections_Waiting">Reading connections...</system:String>
     <system:String x:Key="Str_Connections_NoMatch">No connections match</system:String>
     <system:String x:Key="Str_Connections_NothingOutside">No app is connected outside right now</system:String>
@@ -10887,6 +10912,10 @@
     <system:String x:Key="Str_Mock_TemplatesHeader">START FROM</system:String>
     <system:String x:Key="Str_Mock_ChooseTemplate">Choose a template…</system:String>
     <system:String x:Key="Str_Mock_TemplatesHint">Replaces the columns with a ready-made set that you can then change.</system:String>
+    <system:String x:Key="Str_Mock_SaveTemplate">Save mine...</system:String>
+    <system:String x:Key="Str_Mock_SaveTemplateTip">Saves the current columns under a name (same name replaces it). It appears in the list above with a star.</system:String>
+    <system:String x:Key="Str_Mock_DeleteTemplate">Delete one...</system:String>
+    <system:String x:Key="Str_Mock_TemplateNamePrompt">Name for this set of columns:</system:String>
     <system:String x:Key="Str_IdGen_KindNano">NanoID (short, URL-safe)</system:String>
     <system:String x:Key="Str_IdGen_KindShort">Short code (easy to read)</system:String>
     <system:String x:Key="Str_IdGen_HintNano">Short, URL-safe and random (A-Z, a-z, 0-9, _ and -). 21 characters is as unique as a UUID.</system:String>

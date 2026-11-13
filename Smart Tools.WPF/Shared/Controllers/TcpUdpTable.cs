@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 using System.Net;
 using System.Runtime.InteropServices;
 
@@ -25,6 +25,41 @@ namespace Smart_Tools.WPF.Controllers
 
         [DllImport("iphlpapi.dll", SetLastError = true)]
         private static extern int GetExtendedUdpTable(IntPtr table, ref int size, bool sort, int family, int tableClass, uint reserved);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MibTcpRow
+        {
+            public uint State;
+            public uint LocalAddr;
+            public uint LocalPort;
+            public uint RemoteAddr;
+            public uint RemotePort;
+        }
+
+        [DllImport("iphlpapi.dll")]
+        private static extern int SetTcpEntry(ref MibTcpRow row);
+
+        private const uint MIB_TCP_STATE_DELETE_TCB = 12;
+        private const int ERROR_ACCESS_DENIED = 5;
+
+        public enum CloseResult { Closed, NeedsAdministrator, NotSupported, Failed }
+
+        /// <summary>
+        /// Closes one established IPv4 TCP connection (the same as TCPView's "Close connection"). Needs administrator rights.
+        /// IPv6 and UDP cannot be closed this way and report <see cref="CloseResult.NotSupported"/>.
+        /// </summary>
+        public static CloseResult CloseConnection(string localAddress, int localPort, string remoteAddress, int remotePort)
+        {
+            if (!IPAddress.TryParse(localAddress, out var local) || !IPAddress.TryParse(remoteAddress, out var remote)
+                || local.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork || remote.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+                return CloseResult.NotSupported;
+
+            static uint Net(IPAddress a) => BitConverter.ToUInt32(a.GetAddressBytes(), 0);
+            static uint NetPort(int port) => (uint)(((port & 0xFF) << 8) | ((port >> 8) & 0xFF));
+            var row = new MibTcpRow { State = MIB_TCP_STATE_DELETE_TCB, LocalAddr = Net(local), LocalPort = NetPort(localPort), RemoteAddr = Net(remote), RemotePort = NetPort(remotePort) };
+            int result = SetTcpEntry(ref row);
+            return result == 0 ? CloseResult.Closed : result == ERROR_ACCESS_DENIED ? CloseResult.NeedsAdministrator : CloseResult.Failed;
+        }
 
         /// <summary>Every TCP and UDP endpoint on this PC. Call off the UI thread.</summary>
         public static List<EndpointUse> ReadAll()

@@ -376,6 +376,13 @@ namespace Smart_Tools.WPF.Views
         private void AskPassword(PdfToolItem item, bool wrong)
         {
             if (_askingPassword || _declinedPassword.Contains(item.FullPath)) return;
+
+            // A password already typed in another PDF tool this session is tried first, without asking again.
+            if (!wrong && PdfToolkitManager.Passwords.TryGetValue(item.FullPath, out var known) && known != PwdShared.Password)
+            {
+                PwdShared.Password = known;
+                return;
+            }
             _askingPassword = true;
             string? typed;
             try
@@ -388,6 +395,7 @@ namespace Smart_Tools.WPF.Views
             }
 
             if (typed == null) { _declinedPassword.Add(item.FullPath); return; }
+            PdfToolkitManager.Passwords[item.FullPath] = typed;   // the other PDF tools reuse it this session
             PwdShared.Password = typed;   // PasswordChanged re-reads every PDF that was waiting
         }
 

@@ -719,6 +719,8 @@ namespace Smart_Tools.WPF.Views
 
         private void TxtSize_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (PresetSize != null && TxtNewWidth != null && TxtNewHeight != null)
+                PresetSize.Selected = TxtNewWidth.Text.Trim() == TxtNewHeight.Text.Trim() ? TxtNewWidth.Text.Trim() : "";
             if (!_viewConstructed) return;
             bool bad = (!string.IsNullOrWhiteSpace(TxtNewWidth.Text) && ParseSize(TxtNewWidth.Text) == null)
                        || (!string.IsNullOrWhiteSpace(TxtNewHeight.Text) && ParseSize(TxtNewHeight.Text) == null);

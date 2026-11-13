@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Controls;
+﻿using Smart_Tools.WPF.Controls;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -25,6 +25,10 @@ namespace Smart_Tools.WPF.Controllers
         public override string ToolId => "resource-hogs";
 
         public override string SettingsNoteKey => "Str_Settings_UhHogsNote";
+
+        public override string AlertUnit => "% CPU";
+
+        public override double AlertDefaultLimit => 80;
 
         /// <summary>
         /// State of one recording. Every Start gets its own, so a sampler thread that is still finishing a reading after
@@ -118,6 +122,9 @@ namespace Smart_Tools.WPF.Controllers
             foreach (int gone in run.Previous.Keys.Where(k => !seen.Contains(k)).ToList()) run.Previous.Remove(gone);
 
             Store.Tick(now);
+            foreach (var (name, v) in perApp) CheckAlert(name, v.Cpu);
+            var top = perApp.Count == 0 ? default : perApp.OrderByDescending(kv => kv.Value.Cpu).First();
+            TopSummary = top.Key == null ? "" : $"{top.Key} {top.Value.Cpu:0} % CPU";
             foreach (var (name, v) in perApp)
             {
                 // Only programs that matter: a small program that sleeps is not worth a row in a day of history.

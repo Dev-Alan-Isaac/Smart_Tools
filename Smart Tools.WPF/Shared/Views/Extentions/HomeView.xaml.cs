@@ -1,10 +1,13 @@
-using Smart_Tools.WPF.Controllers;
+﻿using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Application = System.Windows.Application;
+using ContextMenu = System.Windows.Controls.ContextMenu;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MenuItem = System.Windows.Controls.MenuItem;
 using Orientation = System.Windows.Controls.Orientation;
 using Panel = System.Windows.Controls.Panel;
 using UserControl = System.Windows.Controls.UserControl;
@@ -107,6 +110,34 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
         //  Recent
         // =================================================================
+
+        private IReadOnlyList<string> _favoriteIds = Array.Empty<string>();
+
+        /// <summary>The person pinned or unpinned a tool (the id); the window saves it and calls <see cref="SetFavorites"/>.</summary>
+        public event Action<string>? FavoriteToggled;
+
+        public void SetFavorites(IReadOnlyList<string> ids)
+        {
+            _favoriteIds = ids.ToList();
+            var tools = ToolCatalogManager.FavoriteTools(ids);
+            FavoritesList.ItemsSource = tools;
+            TxtNoFavorites.Visibility = tools.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>The menu says Add or Remove depending on whether the tool under the pointer is pinned.</summary>
+        private void ToolMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (sender is not ContextMenu { PlacementTarget: FrameworkElement { DataContext: ToolInfo tool } } menu || menu.Items[0] is not MenuItem item) return;
+            bool pinned = ToolCatalogManager.IsFavorite(_favoriteIds, tool.Id);
+            item.Header = Application.Current.TryFindResource(pinned ? "Str_Home_RemoveFavorite" : "Str_Home_AddFavorite") as string ?? (pinned ? "Remove from favorites" : "Add to favorites");
+            if (item.Icon is MaterialDesignThemes.Wpf.PackIcon icon) icon.Kind = pinned ? MaterialDesignThemes.Wpf.PackIconKind.StarOff : MaterialDesignThemes.Wpf.PackIconKind.StarOutline;
+        }
+
+        private void ToolMenuFavorite_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem { Parent: ContextMenu { PlacementTarget: FrameworkElement { DataContext: ToolInfo tool } } })
+                FavoriteToggled?.Invoke(tool.Id);
+        }
 
         public void SetRecent(IReadOnlyList<ToolInfo> recent)
         {

@@ -267,6 +267,7 @@ namespace Smart_Tools.WPF.Views
 
         private void PackSetting_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (PresetPadding != null && TxtPadding != null) PresetPadding.Selected = TxtPadding.Text.Trim();
             if (!_viewConstructed) return;
             bool bad = !string.IsNullOrWhiteSpace(TxtPadding.Text) && ParseInt(TxtPadding.Text, 0, 32) == null;
             TxtPaddingError.Visibility = bad ? Visibility.Visible : Visibility.Collapsed;

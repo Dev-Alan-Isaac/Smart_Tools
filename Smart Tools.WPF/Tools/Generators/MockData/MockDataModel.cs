@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace Smart_Tools.WPF.Models
@@ -277,6 +277,16 @@ namespace Smart_Tools.WPF.Models
         public bool IncludeHeader { get; set; } = true;
         public bool OptionsCollapsed { get; set; }
         public List<MockDataFieldSetting>? Fields { get; set; }
+
+        /// <summary>Column sets the person saved under their own name (the columns only, never data).</summary>
+        public List<MockDataUserTemplate>? Templates { get; set; }
+    }
+
+    /// <summary>A named set of columns saved by the person.</summary>
+    public sealed class MockDataUserTemplate
+    {
+        public string Name { get; set; } = "";
+        public List<MockDataFieldSetting> Fields { get; set; } = new();
     }
 
     /// <summary>A ready-made set of columns shown as a chip.</summary>

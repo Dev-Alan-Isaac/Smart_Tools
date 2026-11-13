@@ -150,6 +150,10 @@
                     <DataGrid.ContextMenu>
                         <ContextMenu>
                             <MenuItem Click="MenuCopy_Click" Header="{DynamicResource Str_Connections_CopyRemote}" />
+                            <MenuItem Click="MenuOnlyApp_Click" Header="{DynamicResource Str_Connections_OnlyApp}" />
+                            <MenuItem Click="MenuOnlyRemote_Click" Header="{DynamicResource Str_Connections_OnlyRemote}" />
+                            <Separator />
+                            <MenuItem Click="MenuClose_Click" Header="{DynamicResource Str_Connections_CloseConnection}" ToolTip="{DynamicResource Str_Connections_CloseTip}" />
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                     <DataGrid.Columns>

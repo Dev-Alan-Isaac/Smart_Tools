@@ -154,6 +154,7 @@ namespace Smart_Tools.WPF.Views
 
         private void GridText_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (PresetGrid != null) PresetGrid.Selected = TxtGrid.Text.Trim();
             Changed();
         }
         private void GridPreset_Chosen(object? sender, string size) => TxtGrid.Text = size;

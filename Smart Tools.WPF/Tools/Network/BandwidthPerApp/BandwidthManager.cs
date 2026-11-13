@@ -1,4 +1,4 @@
-using Microsoft.Diagnostics.Tracing;
+﻿using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Session;
 using Smart_Tools.WPF.Controls;
 using System.Diagnostics;
@@ -33,6 +33,10 @@ namespace Smart_Tools.WPF.Controllers
         public override string ToolId => "bandwidth-per-app";
 
         public override string SettingsNoteKey => "Str_Settings_UhBandwidthNote";
+
+        public override string AlertUnit => "MB/s";
+
+        public override double AlertDefaultLimit => 10;
 
         public override bool IsRunning { get { lock (Gate) return _session != null; } }
 
@@ -143,6 +147,9 @@ namespace Smart_Tools.WPF.Controllers
             lock (_pending) { take = new Dictionary<string, (long, long)>(_pending); _pending.Clear(); }
             var now = DateTime.UtcNow;
             Store.Tick(now);
+            foreach (var (name, v) in take) CheckAlert(name, (v.Down + v.Up) / 1048576.0 / AppUsageStore.SampleSeconds);
+            var top = take.Count == 0 ? default : take.OrderByDescending(kv => kv.Value.Down + kv.Value.Up).First();
+            TopSummary = top.Key == null ? "" : $"{top.Key} {(top.Value.Down + top.Value.Up) / 1048576.0 / AppUsageStore.SampleSeconds:0.0} MB/s";
             foreach (var (name, v) in take)
             {
                 Store.Add(now, name, SlotDown, v.Down);

@@ -180,7 +180,7 @@
                                     Style="{StaticResource BareTextBox}"
                                     TextChanged="GridText_TextChanged" />
                             </Border>
-                            <controls:PresetChips Columns="5" Items="16;32;48;64;128" PresetChosen="GridPreset_Chosen" />
+                            <controls:PresetChips x:Name="PresetGrid" Columns="5" Items="16;32;48;64;128" PresetChosen="GridPreset_Chosen" />
                             <TextBlock x:Name="TxtGridInfo" Style="{StaticResource IpHint}" />
                         </StackPanel>
                     </Border>

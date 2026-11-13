@@ -99,6 +99,13 @@ namespace Smart_Tools.WPF
             BuildSidebar();
 
             _homeView.ToolRequested += id => Open(id);
+            _homeView.FavoriteToggled += id =>
+            {
+                ToolCatalogManager.ToggleFavorite(_shell.FavoriteToolIds, id);
+                _homeView.SetFavorites(_shell.FavoriteToolIds);
+                ToolCatalogManager.SaveSettings(_shell);
+            };
+            _homeView.SetFavorites(_shell.FavoriteToolIds);
             RefreshRecent();
             Open(ToolCatalogManager.HomeId);
             LanguageManager.Changed += OnLanguageChanged;
@@ -379,6 +386,7 @@ namespace Smart_Tools.WPF
 
             if (string.Equals(id, ToolCatalogManager.HomeId, StringComparison.OrdinalIgnoreCase))
             {
+                _homeView.SetFavorites(_shell.FavoriteToolIds);
                 _homeView.SetRecent(ToolCatalogManager.RecentTools(_shell.RecentToolIds));
                 var home = HeaderTexts(ToolCatalogManager.HomeId);
                 Show(ToolCatalogManager.HomeId, _homeView, home.Label, PackIconKind.HomeOutline, home.Section);
@@ -444,6 +452,7 @@ namespace Smart_Tools.WPF
             RefreshRecent();
             ApplySidebarLayout(_isCompact);
             _homeView.RefreshLanguage();
+            _homeView.SetFavorites(_shell.FavoriteToolIds);
             _homeView.SetRecent(ToolCatalogManager.RecentTools(_shell.RecentToolIds));
 
             var header = HeaderTexts(_currentId);
@@ -564,6 +573,47 @@ namespace Smart_Tools.WPF
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (ShortcutManager.TryHandle(e, _currentId)) e.Handled = true;
+            else if (TryDefaultToolKey(e)) e.Handled = true;
+        }
+
+        /// <summary>
+        /// Keys every tool answers to without defining them (a key a tool binds itself in ShortcutManager wins):
+        /// F5 presses the page's main (accent) button, Ctrl+S its Save / Export button, Esc its Cancel / Stop button.
+        /// Only a visible, enabled button is pressed, so nothing happens while a tool has that action switched off.
+        /// </summary>
+        private bool TryDefaultToolKey(KeyEventArgs e)
+        {
+            if (_currentId is null || _currentId == ToolCatalogManager.HomeId || _currentId == ToolCatalogManager.SettingsId || _currentId == ContactId) return false;
+            if (!_views.TryGetValue(_currentId, out var view)) return false;
+
+            var mods = Keyboard.Modifiers;
+            Func<Button, bool>? match = null;
+            if (e.Key == Key.F5 && mods == ModifierKeys.None)
+                match = b => b.TryFindResource("AccentPrimaryButtonStyle") is Style s && ReferenceEquals(b.Style, s);
+            else if (e.Key == Key.S && mods == ModifierKeys.Control)
+                match = b => b is ExportButton || b.Name is "BtnSave" or "BtnSaveAll" or "BtnExport" or "BtnSaveAs";
+            else if (e.Key == Key.Escape && mods == ModifierKeys.None && Keyboard.FocusedElement is not (System.Windows.Controls.ComboBox or ComboBoxItem))
+                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);
+            if (match == null) return false;
+
+            var target = FindButton(view, match);
+            if (target == null) return false;
+            (new System.Windows.Automation.Peers.ButtonAutomationPeer(target).GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke)
+                as System.Windows.Automation.Provider.IInvokeProvider)?.Invoke();
+            return true;
+        }
+
+        private static Button? FindButton(DependencyObject root, Func<Button, bool> match)
+        {
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                if (child is Button b && b.IsVisible && b.IsEnabled && match(b)) return b;
+                if (child is UIElement { IsVisible: false }) continue;
+                if (FindButton(child, match) is { } found) return found;
+            }
+            return null;
         }
 
         // =================================================================
@@ -572,12 +622,8 @@ namespace Smart_Tools.WPF
 
         private void SetUpShortcuts()
         {
-            // Ctrl+K by default: jump to Home with the search box focused.
-            ShortcutManager.Attach(ShortcutManager.SearchActionId, () =>
-            {
-                Open(ToolCatalogManager.HomeId);
-                _homeView.FocusSearch();
-            });
+            // Ctrl+K by default: the launcher popup (tools and a few app actions) over whatever page is open.
+            ShortcutManager.Attach(ShortcutManager.SearchActionId, ShowCommandPalette);
             ShortcutManager.Attach(ShortcutManager.ToggleWindowActionId, ToggleWindow);
             // Attached here, not in the view: pages are created on first open, and this key must work before that.
             ShortcutManager.Attach(ShortcutManager.ScreenshotCaptureActionId, async () =>
@@ -604,6 +650,26 @@ namespace Smart_Tools.WPF
                 WindowState = WindowState.Minimized;
                 ContentRendered += (_, _) => HideToTray();
             }
+        }
+
+        private CommandPalette? _palette;
+
+        private void ShowCommandPalette()
+        {
+            if (_palette != null) { _palette.Activate(); return; }
+            var actions = new List<PaletteAction>
+            {
+                new(Str("Str_Palette_Home", "Home - browse all tools"), "", PackIconKind.HomeOutline, () => { Open(ToolCatalogManager.HomeId); _homeView.FocusSearch(); }),
+                new(Str("Str_Palette_Settings", "Settings"), "", PackIconKind.CogOutline, () => Open(ToolCatalogManager.SettingsId)),
+                new(Str("Str_Palette_Theme", "Switch light / dark theme"), "", PackIconKind.ThemeLightDark, () => BtnThemeToggle_Click(this, new RoutedEventArgs())),
+                new(Str("Str_Palette_Log", "Open the log folder"), "", PackIconKind.FolderOpenOutline, () => ShellOpen.OpenFolder(Log.Folder)),
+            };
+            _palette = new CommandPalette(
+                () => ToolCatalogManager.FavoriteTools(_shell.FavoriteToolIds).Concat(ToolCatalogManager.RecentTools(_shell.RecentToolIds)).DistinctBy(t => t.Id).ToList(),
+                actions,
+                id => Open(id));
+            _palette.Closed += (_, _) => _palette = null;
+            _palette.Show();
         }
 
         /// <summary>A picture taken with the global key: bring the app forward on the Screenshot page, where it can be marked up.</summary>
@@ -639,6 +705,21 @@ namespace Smart_Tools.WPF
         /// <summary>A second launch of the app asked this instance to come forward.</summary>
         public void ShowFromOutside() => BringToFront();
 
+        private System.Windows.Threading.DispatcherTimer? _trayTipTimer;
+
+        private void TrayTipTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_tray is { Visible: true }) UpdateTrayTooltip();
+            else _trayTipTimer?.Stop();
+        }
+
+        /// <summary>The tray tooltip: the busiest program from the history recorders that are running.</summary>
+        private void UpdateTrayTooltip()
+        {
+            var tops = UsageRecorders.All.Where(r => r.IsRunning && r.TopSummary.Length > 0).Select(r => r.TopSummary).ToList();
+            _tray?.SetTooltip(tops.Count == 0 ? "Smart Tools" : "Smart Tools - " + string.Join(" | ", tops));
+        }
+
         private void HideToTray()
         {
             if (_tray == null)
@@ -654,6 +735,11 @@ namespace Smart_Tools.WPF
                 };
             }
             _tray.Visible = true;
+            UpdateTrayTooltip();
+            _trayTipTimer ??= new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+            _trayTipTimer.Tick -= TrayTipTimer_Tick;
+            _trayTipTimer.Tick += TrayTipTimer_Tick;
+            _trayTipTimer.Start();
             Hide();
         }
 

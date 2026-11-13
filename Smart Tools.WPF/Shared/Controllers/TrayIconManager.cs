@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using Application = System.Windows.Application;
 
@@ -40,6 +40,13 @@ namespace Smart_Tools.WPF.Controllers
             {
                 if (e.Button == MouseButtons.Left) ShowRequested?.Invoke();
             };
+        }
+
+        /// <summary>The icon's tooltip (Windows keeps only 63 characters).</summary>
+        public void SetTooltip(string text)
+        {
+            if (text.Length > 63) text = text[..60] + "...";
+            _icon.Text = text;
         }
 
         public bool Visible

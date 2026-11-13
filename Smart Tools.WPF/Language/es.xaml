@@ -3615,6 +3615,18 @@
     <system:String x:Key="Str_Home_WhatDoYouWant">¿Qué quieres hacer?</system:String>
     <system:String x:Key="Str_Home_TypePartOfA">Escribe parte de un nombre o lo que quieres hacer: Intro abre la primera coincidencia, Esc borra</system:String>
     <system:String x:Key="Str_Home_Recent">RECIENTES</system:String>
+    <system:String x:Key="Str_Palette_Home">Inicio - ver todas las herramientas</system:String>
+    <system:String x:Key="Str_Palette_Settings">Ajustes</system:String>
+    <system:String x:Key="Str_Palette_Theme">Cambiar tema claro / oscuro</system:String>
+    <system:String x:Key="Str_Palette_Log">Abrir la carpeta del registro</system:String>
+    <system:String x:Key="Str_Saved_Heading">Guardado</system:String>
+    <system:String x:Key="Str_Saved_Open">Abrir archivo</system:String>
+    <system:String x:Key="Str_Saved_Show">Mostrar en la carpeta</system:String>
+    <system:String x:Key="Str_Saved_Close">Cerrar</system:String>
+    <system:String x:Key="Str_Home_Favorites">FAVORITOS</system:String>
+    <system:String x:Key="Str_Home_FavoritesHint">Haz clic derecho en una herramienta y elige Añadir a favoritos para tenerla aquí.</system:String>
+    <system:String x:Key="Str_Home_AddFavorite">Añadir a favoritos</system:String>
+    <system:String x:Key="Str_Home_RemoveFavorite">Quitar de favoritos</system:String>
     <system:String x:Key="Str_Home_TryAnotherWordLike">Prueba con otra palabra, como música, pdf, contraseña o velocidad.</system:String>
     <system:String x:Key="Str_OutputFolderCard_KeepFolderStructure">Mantener la estructura de carpetas</system:String>
     <system:String x:Key="Str_OutputFolderCard_UsedUntilYouChoose">Se usa hasta que elijas una carpeta</system:String>
@@ -7240,6 +7252,7 @@
     <system:String x:Key="Str_Conv_CopyResult">Copiar el resultado</system:String>
     <system:String x:Key="Str_Conv_AllUnits">En todas las unidades</system:String>
     <system:String x:Key="Str_Conv_AllUnitsTip">Haz clic en una unidad para convertir a ella</system:String>
+    <system:String x:Key="Str_Conv_AmountTip">Arriba / Abajo cambian la cantidad (Mayús = 10, Ctrl = 0,1). O escribe "5 km to mi" y pulsa Intro.</system:String>
     <system:String x:Key="Str_Conv_ColUnit">Unidad</system:String>
     <system:String x:Key="Str_Conv_ColName">Nombre</system:String>
     <system:String x:Key="Str_Conv_ColValue">Valor</system:String>
@@ -8864,6 +8877,9 @@
     <system:String x:Key="Str_Settings_UhHeader">Grabar en segundo plano</system:String>
     <system:String x:Key="Str_Settings_UhIntro">El historial de consumo y los datos por programa solo pueden mostrar lo que pasó mientras grababan. Elige cuáles se inician solos al abrir Smart Tools.</system:String>
     <system:String x:Key="Str_Settings_UhAll">Iniciar ambos automáticamente</system:String>
+    <system:String x:Key="Str_Settings_UhAlert">Avisarme cuando un programa supere</system:String>
+    <system:String x:Key="Str_UhAlert_Title">Uso alto</system:String>
+    <system:String x:Key="Str_UhAlert_Body">{0} lleva un rato por encima de {1}.</system:String>
     <system:String x:Key="Str_Settings_UhHogsNote">CPU, memoria y disco usados por cada programa.</system:String>
     <system:String x:Key="Str_Settings_UhBandwidthNote">Datos enviados y recibidos por cada programa. Necesita permisos de administrador.</system:String>
     <system:String x:Key="Str_Settings_UhNeedsAdmin">Datos por programa necesita permisos de administrador. Se iniciará solo la próxima vez que ejecutes Smart Tools como administrador.</system:String>
@@ -8879,6 +8895,15 @@
     <system:String x:Key="Str_Connections_Export">Exportar...</system:String>
     <system:String x:Key="Str_Connections_ExportTip">Guarda las filas que ves como CSV, PDF, HTML o texto.</system:String>
     <system:String x:Key="Str_Connections_CopyRemote">Copiar dirección remota</system:String>
+    <system:String x:Key="Str_Connections_OnlyApp">Mostrar solo este programa</system:String>
+    <system:String x:Key="Str_Connections_OnlyRemote">Mostrar solo esta dirección remota</system:String>
+    <system:String x:Key="Str_Connections_CloseConnection">Cerrar esta conexión...</system:String>
+    <system:String x:Key="Str_Connections_CloseTip">Requiere administrador. Solo se pueden cerrar conexiones TCP IPv4.</system:String>
+    <system:String x:Key="Str_Connections_CloseAsk" xml:space="preserve">¿Cerrar esta conexión?&#10;&#10;{0}&#10;&#10;El programa puede abrir una nueva.</system:String>
+    <system:String x:Key="Str_Connections_CloseDone">La conexión se cerró.</system:String>
+    <system:String x:Key="Str_Connections_CloseAdmin">Cerrar una conexión requiere derechos de administrador. Inicia Smart Tools como administrador e inténtalo de nuevo.</system:String>
+    <system:String x:Key="Str_Connections_CloseUnsupported">Solo se pueden cerrar conexiones TCP IPv4.</system:String>
+    <system:String x:Key="Str_Connections_CloseFailed">Windows no pudo cerrar la conexión (puede que ya no exista).</system:String>
     <system:String x:Key="Str_Connections_Waiting">Leyendo conexiones...</system:String>
     <system:String x:Key="Str_Connections_NoMatch">Ninguna conexión coincide</system:String>
     <system:String x:Key="Str_Connections_NothingOutside">Ninguna app está conectada al exterior ahora mismo</system:String>
@@ -10889,6 +10914,10 @@
     <system:String x:Key="Str_Mock_TemplatesHeader">EMPEZAR DESDE</system:String>
     <system:String x:Key="Str_Mock_ChooseTemplate">Elige una plantilla…</system:String>
     <system:String x:Key="Str_Mock_TemplatesHint">Sustituye las columnas por un conjunto ya hecho que luego puedes cambiar.</system:String>
+    <system:String x:Key="Str_Mock_SaveTemplate">Guardar el mío...</system:String>
+    <system:String x:Key="Str_Mock_SaveTemplateTip">Guarda las columnas actuales con un nombre (el mismo nombre lo reemplaza). Aparece en la lista de arriba con una estrella.</system:String>
+    <system:String x:Key="Str_Mock_DeleteTemplate">Borrar uno...</system:String>
+    <system:String x:Key="Str_Mock_TemplateNamePrompt">Nombre para este conjunto de columnas:</system:String>
     <system:String x:Key="Str_IdGen_KindNano">NanoID (corto, apto para URL)</system:String>
     <system:String x:Key="Str_IdGen_KindShort">Código corto (fácil de leer)</system:String>
     <system:String x:Key="Str_IdGen_HintNano">Corto, apto para URL y aleatorio (A-Z, a-z, 0-9, _ y -). 21 caracteres son tan únicos como un UUID.</system:String>

@@ -320,6 +320,22 @@ namespace Smart_Tools.WPF.Controllers
             if (recent.Count > MaxRecent) recent.RemoveRange(MaxRecent, recent.Count - MaxRecent);
         }
 
+        /// <summary>Pins the tool, or unpins it when it already is. Returns true when it is pinned afterwards.</summary>
+        public static bool ToggleFavorite(List<string> favorites, string id)
+        {
+            if (Find(id) is not { } tool || tool.Id == SettingsId) return false;
+            if (favorites.RemoveAll(f => string.Equals(f, tool.Id, StringComparison.OrdinalIgnoreCase)) > 0) return false;
+            favorites.Add(tool.Id);
+            return true;
+        }
+
+        public static bool IsFavorite(IEnumerable<string> favorites, string id) =>
+            favorites.Any(f => string.Equals(f, id, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>The pinned tools in pinned order; ids that no longer exist are skipped.</summary>
+        public static List<ToolInfo> FavoriteTools(IEnumerable<string> ids) =>
+            ids.Select(Find).Where(t => t != null && t.Id != SettingsId).Select(t => t!).Distinct().ToList();
+
         public static List<ToolInfo> RecentTools(IEnumerable<string> ids) =>
             ids.Select(Find).Where(t => t != null && t.Id != SettingsId).Select(t => t!).Distinct().Take(MaxRecent).ToList();
 
@@ -340,6 +356,7 @@ namespace Smart_Tools.WPF.Controllers
                 if (!File.Exists(file)) return new ShellSettings();
                 var s = JsonSerializer.Deserialize<ShellSettings>(File.ReadAllText(file), Json) ?? new ShellSettings();
                 s.RecentToolIds = RecentTools(s.RecentToolIds ?? new()).Select(t => t.Id).ToList();
+                s.FavoriteToolIds = FavoriteTools(s.FavoriteToolIds ?? new()).Select(t => t.Id).ToList();
                 s.ExpandedCategories = (s.ExpandedCategories ?? new()).Where(id => Categories.Any(c => c.Id == id)).Distinct().ToList();
                 return s;
             }

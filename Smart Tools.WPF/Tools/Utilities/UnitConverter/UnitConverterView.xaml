@@ -386,7 +386,9 @@
                                             Style="{StaticResource BareTextBox}"
                                             Tag="0"
                                             Text="1"
-                                            TextChanged="TxtValue_TextChanged" />
+                                            PreviewKeyDown="TxtValue_PreviewKeyDown"
+                                            TextChanged="TxtValue_TextChanged"
+                                            ToolTip="{DynamicResource Str_Conv_AmountTip}" />
                                         <Border
                                             Height="1"
                                             Margin="0,6,0,8"

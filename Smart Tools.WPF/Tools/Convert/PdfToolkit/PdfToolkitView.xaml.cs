@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -78,6 +78,7 @@ namespace Smart_Tools.WPF.Views
         {
             _runCts?.Cancel();
             _lifetimeCts.Cancel();
+            PdfToolkitManager.Passwords.Clear();   // typed passwords never outlive the tool
         }
 
         private bool Ignore => !_viewConstructed || _applyingSettings;
@@ -419,32 +420,61 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+        private bool _askingPassword;
+        private readonly HashSet<string> _declinedPassword = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>A PDF needs a password: ask for it now (one box at a time; a cancelled file is not asked again), then read it again.</summary>
+        private void AskPassword(PdfToolItem item)
+        {
+            if (_askingPassword || _declinedPassword.Contains(item.FullPath)) return;
+            _askingPassword = true;
+            string? typed;
+            try
+            {
+                typed = PdfPasswordDialog.Ask(Loc.T("Str_Tool_pdf-toolkit_Name", "PDF Merge & Split"), item.Name, wrong: PdfToolkitManager.Passwords.ContainsKey(item.FullPath));
+            }
+            finally
+            {
+                _askingPassword = false;
+            }
+
+            if (typed == null) { _declinedPassword.Add(item.FullPath); return; }
+            PdfToolkitManager.Passwords[item.FullPath] = typed;
+            item.PageCount = 0;
+            item.Message = "";
+            item.InfoRequested = true;
+            _ = LoadInfoAsync(item, _lifetimeCts.Token);
+        }
+
         private async Task LoadInfoAsync(PdfToolItem item, CancellationToken token)
         {
+            bool needsPassword = false;
             try
             {
                 await _infoGate.WaitAsync(token);
                 try
                 {
-                    var (pages, error) = await Task.Run(() =>
+                    var (pages, error, locked) = await Task.Run(() =>
                     {
                         try
                         {
-                            return (PdfToolkitManager.CountPages(item.FullPath), (string?)null);
+                            return (PdfToolkitManager.CountPages(item.FullPath), (string?)null, false);
                         }
                         catch (Exception ex)
                         {
-                            return (-1, PdfToolkitManager.PlainError(ex));
+                            return (-1, PdfToolkitManager.PlainError(ex), PdfToolkitManager.NeedsPassword(ex));
                         }
                     }, token);
                     if (token.IsCancellationRequested || item.PageCount != 0) return;   // a run may have filled it in already
                     item.PageCount = pages;
                     if (error != null && item.Status == PdfItemStatus.Ready) item.Message = error;
+                    needsPassword = locked;
                 }
                 finally
                 {
                     _infoGate.Release();
                 }
+                if (needsPassword) AskPassword(item);
             }
             catch (OperationCanceledException)
             {

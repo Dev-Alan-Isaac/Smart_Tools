@@ -606,7 +606,7 @@
                                         </StackPanel>
                                     </Grid>
                                     <TextBlock Style="{StaticResource PxSideLabel}" Text="{DynamicResource Str_PixelArt_SizePresetLabel}" />
-                                    <controls:PresetChips Columns="3" Items="16 × 16:16;32 × 32:32;64 × 64:64;128 × 128:128;256 × 256:256" PresetChosen="SizePreset_Chosen" />
+                                    <controls:PresetChips x:Name="PresetSize" Columns="3" Items="16 × 16:16;32 × 32:32;64 × 64:64;128 × 128:128;256 × 256:256" PresetChosen="SizePreset_Chosen" />
                                     <TextBlock
                                         x:Name="TxtSizeError"
                                         Margin="2,0,0,4"

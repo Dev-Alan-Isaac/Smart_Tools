@@ -344,8 +344,18 @@ namespace Smart_Tools.WPF.Views
             // Ask for the password right away instead of waiting for the sidebar card; a wrong one asks again, Cancel stops.
             if (askPassword)
             {
+                // A password typed in another PDF tool this session is tried first.
+                if (string.IsNullOrEmpty(password) && PdfToolkitManager.Passwords.TryGetValue(path, out var known))
+                {
+                    await OpenAsync(path, known);
+                    return;
+                }
                 string? typed = PdfPasswordDialog.Ask(DialogTitle, System.IO.Path.GetFileName(path), wrong: !string.IsNullOrEmpty(password));
-                if (typed != null) await OpenAsync(path, typed);
+                if (typed != null)
+                {
+                    PdfToolkitManager.Passwords[path] = typed;
+                    await OpenAsync(path, typed);
+                }
             }
         }
 

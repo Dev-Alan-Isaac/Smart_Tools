@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -225,8 +225,8 @@ namespace Smart_Tools.WPF.Views
             ChkMsTasks.IsEnabled = ChkBuiltInRules.IsEnabled = !scanning;
 
             bool can = !scanning && _tables.Count > 0;
-            BtnExportHtml.IsEnabled = BtnExportJson.IsEnabled = BtnExportText.IsEnabled = can;
-            if (!scanning) BtnExportCsv.IsEnabled = can && _shown != null;
+            BtnExport.IsEnabled = can;
+            if (!scanning) MiCsv.IsEnabled = can && _shown != null;
         }
 
         // =================================================================
@@ -293,7 +293,7 @@ namespace Smart_Tools.WPF.Views
             PanelOverview.Visibility = overview ? Visibility.Visible : Visibility.Collapsed;
             PanelTable.Visibility = table != null ? Visibility.Visible : Visibility.Collapsed;
             _shown = table;
-            BtnExportCsv.IsEnabled = !_scanning && table != null;
+            MiCsv.IsEnabled = !_scanning && table != null;
 
             if (overview) ShowOverview();
             else if (table != null) ShowTable(table);
@@ -375,7 +375,7 @@ namespace Smart_Tools.WPF.Views
 
         private async void BtnExport_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not Button { Tag: string kind } || _snapshot == null && kind != "csv") return;
+            if (sender is not FrameworkElement { Tag: string kind } || _snapshot == null && kind != "csv") return;
 
             string content, extension, filter, title;
             string? sectionId = null;

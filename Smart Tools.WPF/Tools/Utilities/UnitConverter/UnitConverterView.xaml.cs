@@ -13,6 +13,7 @@ using Clipboard = System.Windows.Clipboard;
 using Orientation = System.Windows.Controls.Orientation;
 using ComboBox = System.Windows.Controls.ComboBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -216,6 +217,54 @@ namespace Smart_Tools.WPF.Views
             if (!_viewConstructed) return;
             Recalculate();
             ScheduleRecent();
+        }
+
+        /// <summary>Up / Down change the amount by 1 (Shift 10, Ctrl 0.1); Enter reads a sentence such as "5 km to mi".</summary>
+        private void TxtValue_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key is Key.Up or Key.Down)
+            {
+                if (!UnitConverterManager.TryParse(TxtValue.Text, out double current)) current = 0;
+                double step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 10 : Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 0.1 : 1;
+                double next = Math.Round(current + (e.Key == Key.Up ? step : -step), 10);
+                TxtValue.Text = UnitConverterManager.Format(next).Replace(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator, "");
+                TxtValue.CaretIndex = TxtValue.Text.Length;
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter && TryQuickEntry(TxtValue.Text)) e.Handled = true;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex QuickEntry = new(
+            @"^\s*(?<n>[-+]?[\d.,]+)\s*(?<a>[^\s\d][^\s]*)\s+(?:to|in|into|a|en|->|=|>)\s+(?<b>\S+)\s*$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+        /// <summary>"5 km to mi", "100 usd in eur": sets the amount and both units when both symbols exist in the current category.</summary>
+        private bool TryQuickEntry(string text)
+        {
+            if (_category == null || QuickEntry.Match(text) is not { Success: true } m) return false;
+            if (!UnitConverterManager.TryParse(m.Groups["n"].Value, out _)) return false;
+
+            ConvUnit? Find(string symbol) =>
+                _category.Units.FirstOrDefault(u => string.Equals(u.Symbol, symbol, StringComparison.OrdinalIgnoreCase) || string.Equals(u.Id, symbol, StringComparison.OrdinalIgnoreCase));
+            if (Find(m.Groups["a"].Value) is not { } from || Find(m.Groups["b"].Value) is not { } to) return false;
+
+            _applying = true;
+            try
+            {
+                CmbFrom.SelectedItem = CmbFrom.Items.OfType<ConvUnit>().FirstOrDefault(u => u.Id == from.Id);
+                CmbTo.SelectedItem = CmbTo.Items.OfType<ConvUnit>().FirstOrDefault(u => u.Id == to.Id);
+            }
+            finally
+            {
+                _applying = false;
+            }
+            _settings.From[_category.Id] = from.Id;
+            _settings.To[_category.Id] = to.Id;
+            TxtValue.Text = m.Groups["n"].Value;
+            Recalculate();
+            UpdateFavoriteButton();
+            RememberCurrent();
+            return true;
         }
 
         private void Unit_SelectionChanged(object sender, SelectionChangedEventArgs e)

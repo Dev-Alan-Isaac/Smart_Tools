@@ -1,7 +1,11 @@
-using Smart_Tools.WPF.Controllers;
+﻿using Smart_Tools.WPF.Controllers;
 using System.Windows;
 using System.Windows.Controls;
 using CheckBox = System.Windows.Controls.CheckBox;
+using Orientation = System.Windows.Controls.Orientation;
+using TextBlock = System.Windows.Controls.TextBlock;
+using TextBox = System.Windows.Controls.TextBox;
+using VerticalAlignment = System.Windows.VerticalAlignment;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
@@ -17,6 +21,7 @@ namespace Smart_Tools.WPF.Views
         public event Action? SettingChanged;
 
         private readonly List<(UsageRecorder Recorder, CheckBox Box)> _tools = new();
+        private readonly List<(UsageRecorder Recorder, CheckBox On, TextBox Limit)> _alerts = new();
         private bool _loading, _someOn;   // _someOn: the "all" box is showing the in-between state
 
         public UsageHistorySettingsPanel()
@@ -33,6 +38,23 @@ namespace Smart_Tools.WPF.Views
                 ToolList.Children.Add(box);
                 ToolList.Children.Add(note);
                 _tools.Add((recorder, box));
+
+                if (recorder.AlertUnit.Length > 0)
+                {
+                    var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(28, 8, 0, 0) };
+                    var on = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
+                    on.SetResourceReference(ContentControl.ContentProperty, "Str_Settings_UhAlert");
+                    var limit = new TextBox { Width = 64, Margin = new Thickness(10, 0, 6, 0), VerticalContentAlignment = VerticalAlignment.Center };
+                    var unit = new TextBlock { Text = recorder.AlertUnit, VerticalAlignment = VerticalAlignment.Center };
+                    unit.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
+                    on.Click += Alert_Changed;
+                    limit.LostFocus += Alert_Changed;
+                    row.Children.Add(on);
+                    row.Children.Add(limit);
+                    row.Children.Add(unit);
+                    ToolList.Children.Add(row);
+                    _alerts.Add((recorder, on, limit));
+                }
             }
         }
 
@@ -43,6 +65,12 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 foreach (var (recorder, box) in _tools) box.IsChecked = recorder.LoadSettings().Recording;
+                foreach (var (recorder, on, limit) in _alerts)
+                {
+                    var s = recorder.LoadSettings();
+                    on.IsChecked = s.AlertOn;
+                    limit.Text = (s.AlertLimit > 0 ? s.AlertLimit : recorder.AlertDefaultLimit).ToString("0.##", System.Globalization.CultureInfo.CurrentCulture);
+                }
                 SyncAll();
                 ShowStatus(null);
             }
@@ -73,6 +101,21 @@ namespace Smart_Tools.WPF.Views
             if (_loading) return;
             SyncAll();
             Apply();
+        }
+
+        private void Alert_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_loading) return;
+            foreach (var (recorder, on, limit) in _alerts)
+            {
+                var s = recorder.LoadSettings();
+                s.AlertOn = on.IsChecked == true;
+                if (double.TryParse(limit.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.CurrentCulture, out double value) && value > 0)
+                    s.AlertLimit = value;
+                else limit.Text = (s.AlertLimit > 0 ? s.AlertLimit : recorder.AlertDefaultLimit).ToString("0.##", System.Globalization.CultureInfo.CurrentCulture);
+                recorder.SaveSettings(s);
+            }
+            SettingChanged?.Invoke();
         }
 
         private void Apply()

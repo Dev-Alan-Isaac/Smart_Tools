@@ -123,6 +123,9 @@ namespace Smart_Tools.WPF.Views
                     _fields.Add(f);
                 }
 
+                _userTemplates = s.Templates ?? new List<MockDataUserTemplate>();
+                RebuildTemplateList();
+
                 if (s.OptionsCollapsed != _optionsCollapsed) BtnCollapseOptions_Click(this, new RoutedEventArgs());
                 UpdateFormatPanels();
             }
@@ -151,6 +154,7 @@ namespace Smart_Tools.WPF.Views
                 IncludeHeader = ChkHeader.IsChecked == true,
                 OptionsCollapsed = _optionsCollapsed,
                 Fields = MockDataManager.ToSettings(_fields),
+                Templates = _userTemplates,
             };
         }
 
@@ -304,14 +308,55 @@ namespace Smart_Tools.WPF.Views
         private bool _fillingTemplates;
 
         /// <summary>Fills the "Start from" list in the sidebar: a prompt, then one entry per ready-made column set.</summary>
-        private void BuildPresetChips()
+        private void BuildPresetChips() => RebuildTemplateList();
+
+        private List<MockDataUserTemplate> _userTemplates = new();
+
+        /// <summary>The list: a prompt, the ready-made sets, then the person's own saved sets (tagged "U:name").</summary>
+        private void RebuildTemplateList()
         {
             _fillingTemplates = true;
+            CmbTemplate.Items.Clear();
             CmbTemplate.Items.Add(new ComboBoxItem { Content = Str("Str_Mock_ChooseTemplate", "Choose a template…"), Tag = "" });
             foreach (var preset in MockDataManager.Presets)
                 CmbTemplate.Items.Add(new ComboBoxItem { Content = Str($"Str_Mock_Preset_{preset.Key}", preset.Key), Tag = preset.Key });
+            foreach (var mine in _userTemplates)
+                CmbTemplate.Items.Add(new ComboBoxItem { Content = "★ " + mine.Name, Tag = "U:" + mine.Name });
             CmbTemplate.SelectedIndex = 0;
+            BtnDeleteTemplate.IsEnabled = _userTemplates.Count > 0;
             _fillingTemplates = false;
+        }
+
+        private void BtnSaveTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            if (_isSaving || _fields.Count == 0) return;
+            string? name = TextPromptDialog.Ask(DialogTitle, Str("Str_Mock_TemplateNamePrompt", "Name for this set of columns:"));
+            if (name == null) return;
+
+            var mine = new MockDataUserTemplate { Name = name, Fields = MockDataManager.ToSettings(_fields) };
+            int at = _userTemplates.FindIndex(t => string.Equals(t.Name, name, StringComparison.CurrentCultureIgnoreCase));
+            if (at >= 0) _userTemplates[at] = mine;   // same name: replaced
+            else _userTemplates.Add(mine);
+            RebuildTemplateList();
+            SaveSettings();
+        }
+
+        private void BtnDeleteTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            var menu = new System.Windows.Controls.ContextMenu();
+            foreach (var mine in _userTemplates.ToList())
+            {
+                var item = new System.Windows.Controls.MenuItem { Header = mine.Name, Icon = new PackIcon { Kind = PackIconKind.DeleteOutline } };
+                item.Click += (_, _) =>
+                {
+                    _userTemplates.Remove(mine);
+                    RebuildTemplateList();
+                    SaveSettings();
+                };
+                menu.Items.Add(item);
+            }
+            menu.PlacementTarget = BtnDeleteTemplate;
+            menu.IsOpen = true;
         }
 
         private void Template_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -326,12 +371,14 @@ namespace Smart_Tools.WPF.Views
         private void ApplyPreset(string key)
         {
             if (_isSaving) return;
-            var preset = MockDataManager.Presets.FirstOrDefault(p => p.Key == key);
-            if (preset == null) return;
+            IReadOnlyList<MockDataFieldSetting>? source = key.StartsWith("U:", StringComparison.Ordinal)
+                ? _userTemplates.FirstOrDefault(t => t.Name == key[2..])?.Fields
+                : MockDataManager.Presets.FirstOrDefault(p => p.Key == key)?.Fields;
+            if (source == null) return;
 
             foreach (var f in _fields) f.PropertyChanged -= Field_Changed;
             _fields.Clear();
-            foreach (var f in MockDataManager.FieldsFrom(preset.Fields))
+            foreach (var f in MockDataManager.FieldsFrom(source))
             {
                 RefreshHints(f);
                 f.PropertyChanged += Field_Changed;
@@ -474,9 +521,7 @@ namespace Smart_Tools.WPF.Views
 
         private void Rows_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (_viewConstructed)
-            {
-            }
+            if (PresetRows != null) PresetRows.Selected = new string(TxtRows.Text.Where(char.IsAsciiDigit).ToArray());
             Setting_Changed(sender, e);
         }
 

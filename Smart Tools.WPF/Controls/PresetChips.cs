@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Button = System.Windows.Controls.Button;
@@ -20,6 +20,17 @@ namespace Smart_Tools.WPF.Controls
             DependencyProperty.Register(nameof(Columns), typeof(int), typeof(PresetChips),
                 new PropertyMetadata(3, (d, _) => ((PresetChips)d).Rebuild()));
 
+        public static readonly DependencyProperty SelectedProperty =
+            DependencyProperty.Register(nameof(Selected), typeof(string), typeof(PresetChips),
+                new PropertyMetadata("", (d, _) => ((PresetChips)d).MarkActive()));
+
+        /// <summary>Set on the chip whose value is the current one; <c>PresetChipStyle</c> draws it with the accent outline.</summary>
+        public static readonly DependencyProperty IsActiveProperty =
+            DependencyProperty.RegisterAttached("IsActive", typeof(bool), typeof(PresetChips), new PropertyMetadata(false));
+
+        public static bool GetIsActive(DependencyObject d) => (bool)d.GetValue(IsActiveProperty);
+        public static void SetIsActive(DependencyObject d, bool value) => d.SetValue(IsActiveProperty, value);
+
         private readonly UniformGrid _grid = new();
 
         public PresetChips()
@@ -34,6 +45,15 @@ namespace Smart_Tools.WPF.Controls
 
         /// <summary>Chips per row (3 by default).</summary>
         public int Columns { get => (int)GetValue(ColumnsProperty); set => SetValue(ColumnsProperty, value); }
+
+        /// <summary>The value that is in use right now (the chip with this value is outlined). Leave empty when none matches.</summary>
+        public string Selected { get => (string)GetValue(SelectedProperty); set => SetValue(SelectedProperty, value); }
+
+        private void MarkActive()
+        {
+            foreach (var child in _grid.Children.OfType<Button>())
+                SetIsActive(child, Selected.Length > 0 && string.Equals(child.Tag as string, Selected, StringComparison.Ordinal));
+        }
 
         /// <summary>A chip was clicked; the argument is its value.</summary>
         public event EventHandler<string>? PresetChosen;
@@ -55,6 +75,7 @@ namespace Smart_Tools.WPF.Controls
                 button.Click += (_, _) => PresetChosen?.Invoke(this, value);
                 _grid.Children.Add(button);
             }
+            MarkActive();
         }
     }
 }
