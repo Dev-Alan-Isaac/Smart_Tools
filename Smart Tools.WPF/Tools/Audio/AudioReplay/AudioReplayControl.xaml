@@ -310,7 +310,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_AudioReplayControl_AlsoAddTheAudio}"
-                                        Unchecked="ChkIncludeSubfolders_Changed" />
+                                        Unchecked="ChkIncludeSubfolders_Changed"
+                                        controls:ChoiceIcon.Kind="FolderMultipleOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

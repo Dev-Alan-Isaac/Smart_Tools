@@ -203,7 +203,9 @@
                                         Margin="0,12,0,0"
                                         Click="Setting_Changed"
                                         Content="{DynamicResource Str_Dns_ResolveNames}"
-                                        ToolTip="{DynamicResource Str_Dns_ResolveNamesTip}" />
+                                        ToolTip="{DynamicResource Str_Dns_ResolveNamesTip}"
+                                        controls:ChoiceIcon.Kind="Magnify"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Dns_TraceNote}" />
                                 </StackPanel>
                             </Border>

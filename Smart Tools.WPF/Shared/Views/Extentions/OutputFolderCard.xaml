@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Controls.OutputFolderCard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
     <!--
@@ -27,7 +28,11 @@
                 ExampleFileName="photo-converted.png"
                 FolderChanged="OutputCard_FolderChanged">
                 <controls:OutputFolderCard.Options>
-                    <CheckBox x:Name="ChkKeepStructure" Content="{DynamicResource Str_OutputFolderCard_KeepFolderStructure}" />
+                    <CheckBox
+                        x:Name="ChkKeepStructure"
+                        Content="{DynamicResource Str_OutputFolderCard_KeepFolderStructure}"
+                        controls:ChoiceIcon.Kind="FolderOutline"
+                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                 </controls:OutputFolderCard.Options>
             </controls:OutputFolderCard>
         (xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls")
@@ -267,7 +272,9 @@
                     Content="{DynamicResource Str_OutputFolderCard_AskWhereToSave}"
                     Foreground="{DynamicResource SidebarText}"
                     ToolTip="{DynamicResource Str_OutputFolderCard_OffSavesStraightInto}"
-                    Visibility="Collapsed" />
+                    Visibility="Collapsed"
+                    controls:ChoiceIcon.Kind="HelpCircleOutline"
+                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
             </StackPanel>
 
             <CheckBox
@@ -277,7 +284,9 @@
                 Content="{DynamicResource Str_OutputFolderCard_SaveNextToEach}"
                 Foreground="{DynamicResource SidebarText}"
                 ToolTip="{DynamicResource Str_OutputFolderCard_EachResultGoesIn}"
-                Visibility="Collapsed" />
+                Visibility="Collapsed"
+                controls:ChoiceIcon.Kind="FolderOutline"
+                Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
             <!--  The tool's own extra options (Options property)  -->
             <ContentPresenter x:Uid="OptionsPresenter" />

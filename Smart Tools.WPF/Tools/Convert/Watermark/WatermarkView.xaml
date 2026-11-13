@@ -382,13 +382,17 @@
                                                 Click="Setting_Click"
                                                 Content="{DynamicResource Str_Watermark_Bold}"
                                                 Foreground="{DynamicResource SidebarText}"
-                                                IsChecked="True" />
+                                                IsChecked="True"
+                                                controls:ChoiceIcon.Kind="FormatBold"
+                                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                             <CheckBox
                                                 x:Name="ChkItalic"
                                                 Margin="0,0,14,4"
                                                 Click="Setting_Click"
                                                 Content="{DynamicResource Str_Watermark_Italic}"
-                                                Foreground="{DynamicResource SidebarText}" />
+                                                Foreground="{DynamicResource SidebarText}"
+                                                controls:ChoiceIcon.Kind="FormatItalic"
+                                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                             <CheckBox
                                                 x:Name="ChkOutline"
                                                 Margin="0,0,0,4"
@@ -396,7 +400,9 @@
                                                 Content="{DynamicResource Str_Watermark_Outline}"
                                                 Foreground="{DynamicResource SidebarText}"
                                                 IsChecked="True"
-                                                ToolTip="{DynamicResource Str_Watermark_OutlineTip}" />
+                                                ToolTip="{DynamicResource Str_Watermark_OutlineTip}"
+                                                controls:ChoiceIcon.Kind="SquareOutline"
+                                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         </WrapPanel>
                                         <TextBlock
                                             Margin="2,6,0,4"

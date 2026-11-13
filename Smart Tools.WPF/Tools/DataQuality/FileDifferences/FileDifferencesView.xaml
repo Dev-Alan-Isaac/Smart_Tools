@@ -516,13 +516,17 @@
                                         Click="CompareOption_Click"
                                         Content="{DynamicResource Str_FileDiff_IgnoreWhitespace}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreWhitespaceTooltip}" />
+                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreWhitespaceTooltip}"
+                                        controls:ChoiceIcon.Kind="KeyboardSpace"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkIgnoreCase"
                                         Click="CompareOption_Click"
                                         Content="{DynamicResource Str_FileDiff_IgnoreCase}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreCaseTooltip}" />
+                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreCaseTooltip}"
+                                        controls:ChoiceIcon.Kind="FormatLetterCase"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 
@@ -589,7 +593,9 @@
                                         Click="ChkOnlyChanges_Click"
                                         Content="{DynamicResource Str_FileDiff_OnlyChanges}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_FileDiff_OnlyChangesTooltip}" />
+                                        ToolTip="{DynamicResource Str_FileDiff_OnlyChangesTooltip}"
+                                        controls:ChoiceIcon.Kind="EyeOffOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
                                         <materialDesign:PackIcon

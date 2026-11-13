@@ -1062,7 +1062,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_QR_ShowTextTooltip}"
-                                        Unchecked="OptionToggle_Changed" />
+                                        Unchecked="OptionToggle_Changed"
+                                        controls:ChoiceIcon.Kind="TextBoxOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

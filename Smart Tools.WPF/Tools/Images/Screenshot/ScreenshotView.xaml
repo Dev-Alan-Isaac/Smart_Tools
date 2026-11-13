@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.ScreenshotView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root">
@@ -150,7 +151,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Screenshot_HideAppTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="EyeOffOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkCopyAfter"
                                         Margin="0,8,0,0"
@@ -158,7 +161,9 @@
                                         Content="{DynamicResource Str_Screenshot_CopyAfter}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Screenshot_CopyAfterTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="ContentCopy"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <Button
                                         x:Name="BtnCapture"

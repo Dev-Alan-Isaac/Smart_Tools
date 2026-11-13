@@ -301,7 +301,9 @@
                                     Content="{DynamicResource Str_MidiInstruments_ClickLowerOnA}"
                                     Foreground="{DynamicResource SidebarText}"
                                     ToolTip="{DynamicResource Str_MidiInstruments_LikeARealKey}"
-                                    Unchecked="ChkTouch_Changed" />
+                                    Unchecked="ChkTouch_Changed"
+                                    controls:ChoiceIcon.Kind="MusicNote"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                 <Grid Margin="0,14,0,0">
                                     <Grid.ColumnDefinitions>
@@ -360,7 +362,9 @@
                                     Content="{DynamicResource Str_MidiInstruments_SustainNotesRingAfter}"
                                     Foreground="{DynamicResource SidebarText}"
                                     ToolTip="{DynamicResource Str_MidiInstruments_LikeHoldingThePiano}"
-                                    Unchecked="ChkSustain_Changed" />
+                                    Unchecked="ChkSustain_Changed"
+                                    controls:ChoiceIcon.Kind="NoteEditOutline"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MidiInstruments_OrHoldSpaceWhile}" />
                             </StackPanel>
                         </Border>
@@ -438,7 +442,9 @@
                                     Foreground="{DynamicResource SidebarText}"
                                     IsChecked="True"
                                     ToolTip="{DynamicResource Str_MidiInstruments_C4D4OnThe}"
-                                    Unchecked="KeyLabels_Changed" />
+                                    Unchecked="KeyLabels_Changed"
+                                    controls:ChoiceIcon.Kind="MusicNote"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 <CheckBox
                                     x:Name="ChkShowComputerKeys"
                                     Margin="0,6,0,0"
@@ -447,7 +453,9 @@
                                     Foreground="{DynamicResource SidebarText}"
                                     IsChecked="True"
                                     ToolTip="{DynamicResource Str_MidiInstruments_WhichLetterOnYour}"
-                                    Unchecked="KeyLabels_Changed" />
+                                    Unchecked="KeyLabels_Changed"
+                                    controls:ChoiceIcon.Kind="Keyboard"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MidiInstruments_BottomLetterRowZ}" />
                             </StackPanel>
                         </Border>

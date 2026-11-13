@@ -369,7 +369,9 @@
                                         Content="{DynamicResource Str_SecureFileShredder_ScrambleTheNameSize}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_SecureFileShredder_BeforeDeletingCutThe}" />
+                                        ToolTip="{DynamicResource Str_SecureFileShredder_BeforeDeletingCutThe}"
+                                        controls:ChoiceIcon.Kind="CalendarClock"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkRemoveEmptyFolders"
                                         Margin="0,0,0,6"
@@ -377,7 +379,9 @@
                                         Content="{DynamicResource Str_SecureFileShredder_RemoveFoldersThisLeaves}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_SecureFileShredder_OnlyInsideFoldersYou}" />
+                                        ToolTip="{DynamicResource Str_SecureFileShredder_OnlyInsideFoldersYou}"
+                                        controls:ChoiceIcon.Kind="FolderRemoveOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkConfirmBeforeShredding"
                                         Margin="0,0,0,6"
@@ -385,7 +389,9 @@
                                         Content="{DynamicResource Str_Shredder_ConfirmBeforeShredding}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_Shredder_ConfirmBeforeShreddingTooltip}" />
+                                        ToolTip="{DynamicResource Str_Shredder_ConfirmBeforeShreddingTooltip}"
+                                        controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

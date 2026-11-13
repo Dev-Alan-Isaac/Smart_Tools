@@ -142,9 +142,31 @@
 <ContentControl Content="{DynamicResource Str_NetWidget_LookHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
 <TextBlock Margin="0,0,0,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Opacity}" />
 <Slider x:Name="SliderOpacity" Margin="0,8,0,0" Maximum="1" Minimum="0.3" SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05" ValueChanged="SliderOpacity_ValueChanged" Value="0.9" />
-<CheckBox x:Name="ChkMini" Margin="0,0,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_Mini}" />
-<CheckBox x:Name="ChkMaker" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ShowMaker}" IsChecked="True" />
-<CheckBox x:Name="ChkClickThrough" Margin="0,8,0,0" Checked="Option_Changed" Unchecked="Option_Changed" Content="{DynamicResource Str_NetWidget_ClickThrough}" />
+<CheckBox
+    x:Name="ChkMini"
+    Margin="0,0,0,0"
+    Checked="Option_Changed"
+    Unchecked="Option_Changed"
+    Content="{DynamicResource Str_NetWidget_Mini}"
+    controls:ChoiceIcon.Kind="FormatListNumbered"
+    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+<CheckBox
+    x:Name="ChkMaker"
+    Margin="0,8,0,0"
+    Checked="Option_Changed"
+    Unchecked="Option_Changed"
+    Content="{DynamicResource Str_NetWidget_ShowMaker}"
+    IsChecked="True"
+    controls:ChoiceIcon.Kind="WidgetsOutline"
+    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+<CheckBox
+    x:Name="ChkClickThrough"
+    Margin="0,8,0,0"
+    Checked="Option_Changed"
+    Unchecked="Option_Changed"
+    Content="{DynamicResource Str_NetWidget_ClickThrough}"
+    controls:ChoiceIcon.Kind="WidgetsOutline"
+    Style="{StaticResource ToggleChipCheckBoxStyle}" />
 </StackPanel>
 </Border>
 <TextBlock Margin="2,2,2,0" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_NetWidget_Hint}" TextWrapping="Wrap" />

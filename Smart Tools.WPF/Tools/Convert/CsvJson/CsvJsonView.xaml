@@ -100,20 +100,26 @@
                                     x:Name="ChkHeader"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_CsvJson_FirstRowIsThe}"
-                                    IsChecked="True" />
+                                    IsChecked="True"
+                                    controls:ChoiceIcon.Kind="TableHeadersEye"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 <CheckBox
                                     x:Name="ChkTypes"
                                     Margin="0,0,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_CsvJson_KeepNumbersAndTrue}"
                                     IsChecked="True"
-                                    ToolTip="{DynamicResource Str_CsvJson_NumbersLikeStayText}" />
+                                    ToolTip="{DynamicResource Str_CsvJson_NumbersLikeStayText}"
+                                    controls:ChoiceIcon.Kind="FormatListNumbered"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 <CheckBox
                                     x:Name="ChkIndented"
                                     Margin="0,6,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_CsvJson_PrettyJsonIndented}"
-                                    IsChecked="True" />
+                                    IsChecked="True"
+                                    controls:ChoiceIcon.Kind="CodeJson"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                             </StackPanel>
                             <TextBlock x:Name="TxtHint" Style="{StaticResource CjHint}" />
                         </StackPanel>

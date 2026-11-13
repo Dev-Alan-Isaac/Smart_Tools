@@ -113,7 +113,15 @@
                                     <RadioButton x:Name="RadioBand5" Margin="2,0,2,0" Checked="Band_Changed" Content="5 GHz" GroupName="WfBand" Style="{StaticResource ModeToggleButtonStyle}" />
                                     <RadioButton x:Name="RadioBand6" Margin="2,0,0,0" Checked="Band_Changed" Content="6 GHz" GroupName="WfBand" Style="{StaticResource ModeToggleButtonStyle}" />
                                 </UniformGrid>
-                                <CheckBox x:Name="ChkAuto" Margin="2,12,0,0" Checked="ChkAuto_Changed" Content="{DynamicResource Str_WifiAnalyzer_ScanAgainEverySeconds}" Foreground="{DynamicResource SidebarText}" Unchecked="ChkAuto_Changed" />
+                                <CheckBox
+                                    x:Name="ChkAuto"
+                                    Margin="2,12,0,0"
+                                    Checked="ChkAuto_Changed"
+                                    Content="{DynamicResource Str_WifiAnalyzer_ScanAgainEverySeconds}"
+                                    Foreground="{DynamicResource SidebarText}"
+                                    Unchecked="ChkAuto_Changed"
+                                    controls:ChoiceIcon.Kind="Reload"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

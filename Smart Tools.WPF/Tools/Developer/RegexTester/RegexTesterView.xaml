@@ -390,7 +390,9 @@
                                             Content="{DynamicResource Str_Common_IncludeSubfolders}"
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
-                                            ToolTip="{DynamicResource Str_Regex_IncludeSubfoldersTooltip}" />
+                                            ToolTip="{DynamicResource Str_Regex_IncludeSubfoldersTooltip}"
+                                            controls:ChoiceIcon.Kind="FolderMultipleOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <TextBlock
                                             Margin="2,10,0,4"
                                             FontSize="11"
@@ -462,28 +464,36 @@
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_Regex_IgnoreCase}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Common_IgnoreCaseTooltip}" />
+                                        ToolTip="{DynamicResource Str_Common_IgnoreCaseTooltip}"
+                                        controls:ChoiceIcon.Kind="FormatLetterCase"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkMultiline"
                                         Margin="0,0,0,6"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_Regex_Multiline}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Regex_MultilineTooltip}" />
+                                        ToolTip="{DynamicResource Str_Regex_MultilineTooltip}"
+                                        controls:ChoiceIcon.Kind="Regex"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkSingleline"
                                         Margin="0,0,0,6"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_Regex_Singleline}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Common_DotMatchesNewlineTooltip}" />
+                                        ToolTip="{DynamicResource Str_Common_DotMatchesNewlineTooltip}"
+                                        controls:ChoiceIcon.Kind="Regex"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkIgnoreWhitespace"
                                         Margin="0,0,0,6"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_RegexTester_IgnoreWhitespaceX}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_RegexTester_SpacesInThePattern}" />
+                                        ToolTip="{DynamicResource Str_RegexTester_SpacesInThePattern}"
+                                        controls:ChoiceIcon.Kind="KeyboardSpace"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock
                                         x:Name="TxtFlagsSummary"
                                         Margin="0,8,0,0"

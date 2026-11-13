@@ -637,7 +637,9 @@
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_FileGen_InjectMetadata}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_FileGen_InjectMetadataTooltip}" />
+                                        ToolTip="{DynamicResource Str_FileGen_InjectMetadataTooltip}"
+                                        controls:ChoiceIcon.Kind="TimerOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <StackPanel
                                         x:Name="PanelMetadataTag"
                                         Margin="0,8,0,0"
@@ -770,7 +772,9 @@
                                             Content="{DynamicResource Str_FileGenerator_PadNumbers0102}"
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
-                                            ToolTip="{DynamicResource Str_FileGenerator_File01File12SoThe}" />
+                                            ToolTip="{DynamicResource Str_FileGenerator_File01File12SoThe}"
+                                            controls:ChoiceIcon.Kind="FormatListNumbered"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </Grid>
 
                                     <Border
@@ -901,7 +905,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         IsEnabled="False"
-                                        ToolTip="{DynamicResource Str_FileGenerator_OffOnlyTheArchive}" />
+                                        ToolTip="{DynamicResource Str_FileGenerator_OffOnlyTheArchive}"
+                                        controls:ChoiceIcon.Kind="FileMultipleOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

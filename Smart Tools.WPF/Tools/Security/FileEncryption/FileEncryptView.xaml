@@ -540,7 +540,9 @@
                                         Content="{DynamicResource Str_Encrypt_DeleteOriginal}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Encrypt_DeleteOriginalTooltip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock
                                         x:Name="TxtDeleteNote"
                                         Margin="26,4,0,0"

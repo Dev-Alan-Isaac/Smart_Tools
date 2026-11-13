@@ -658,7 +658,9 @@
                                             Content="{DynamicResource Str_Rename_MatchCase}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Common_MatchCaseTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FormatLetterCase"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkWholeWord"
                                             Margin="0,8,0,0"
@@ -666,7 +668,9 @@
                                             Content="{DynamicResource Str_Common_WholeWordOnly}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_RenameFiles_OnlyWhereItIsn}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="TextSearch"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -699,7 +703,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_SuffixBeforeExtTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FormatTextVariant"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -723,7 +729,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_RenameFiles_WindowsStyleTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FormatListNumbered"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -855,7 +863,9 @@
                                             Content="{DynamicResource Str_RenameFiles_StartAgainInEach}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_RenameFiles_EveryFolderStartsAt}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="Restart"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -885,7 +895,9 @@
                                             Content="{DynamicResource Str_Rename_ApplyToExtension}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_RenameFiles_UppercaseMakesTheExtension}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FileCogOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -929,7 +941,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_StripSpacesTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="KeyboardSpace"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkCollapseSpaces"
                                             Margin="0,8,0,0"
@@ -937,7 +951,9 @@
                                             Content="{DynamicResource Str_Rename_CollapseSpaces}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Rename_CollapseSpacesTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="KeyboardSpace"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -978,7 +994,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Common_IgnoreCaseTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FormatLetterCase"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkReplaceAll"
                                             Margin="0,8,0,0"
@@ -987,7 +1005,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_ReplaceAllMatchesTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FileReplaceOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -1010,7 +1030,9 @@
                                             Content="{DynamicResource Str_Rename_RemoveNumbers}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Rename_RemoveNumbersTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="FormatListNumbered"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkRemoveSymbols"
                                             Margin="0,8,0,0"
@@ -1018,7 +1040,9 @@
                                             Content="{DynamicResource Str_Rename_RemoveSymbols}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Rename_RemoveSymbolsTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="DeleteOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkRemoveSpaces"
                                             Margin="0,8,0,0"
@@ -1026,7 +1050,9 @@
                                             Content="{DynamicResource Str_Rename_RemoveSpaces}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Rename_RemoveSpacesTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="KeyboardSpace"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkRemoveDiacritics"
                                             Margin="0,8,0,0"
@@ -1034,7 +1060,9 @@
                                             Content="{DynamicResource Str_Rename_RemoveDiacritics}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Rename_RemoveDiacriticsTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="DeleteOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <StackPanel
@@ -1049,7 +1077,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_StripUnderscoreTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="DeleteOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkStripDash"
                                             Margin="0,8,0,0"
@@ -1058,7 +1088,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_StripDashTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="DeleteOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkStripCopyWords"
                                             Margin="0,8,0,0"
@@ -1067,7 +1099,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_StripCopyWordsTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="DeleteOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkStripWindowsCounter"
                                             Margin="0,8,0,0"
@@ -1076,7 +1110,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Rename_StripWindowsCounterTooltip}"
-                                            Unchecked="Setting_Changed" />
+                                            Unchecked="Setting_Changed"
+                                            controls:ChoiceIcon.Kind="DeleteOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  Input problems (a letter in a number box...)  -->
@@ -1135,7 +1171,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_RenameFiles_UpdateTheListAs}"
-                                        Unchecked="AutoPreview_Changed" />
+                                        Unchecked="AutoPreview_Changed"
+                                        controls:ChoiceIcon.Kind="Update"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkSkipHidden"
                                         Margin="0,6,0,0"
@@ -1144,7 +1182,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_RenameFiles_DonTRenameDesktop}"
-                                        Unchecked="ScanOption_Changed" />
+                                        Unchecked="ScanOption_Changed"
+                                        controls:ChoiceIcon.Kind="EyeOffOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <Border
                                         Margin="0,10,0,0"
                                         Padding="10,8"

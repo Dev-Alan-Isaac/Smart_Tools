@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.KeyboardMouseTestView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -212,9 +213,10 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_KbMouse_BlockKeysTip}"
-                                        Unchecked="Option_Changed">
-                                        <TextBlock Text="{DynamicResource Str_KbMouse_BlockKeys}" TextWrapping="Wrap" />
-                                    </CheckBox>
+                                        Unchecked="Option_Changed"
+                                        Content="{DynamicResource Str_KbMouse_BlockKeys}"
+                                        controls:ChoiceIcon.Kind="KeyboardOff"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <Button
                                         Margin="0,12,0,0"

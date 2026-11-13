@@ -172,12 +172,65 @@
                                 <ComboBoxItem Content="{DynamicResource Str_FolderTree_Levels3}" />
                                 <ComboBoxItem Content="{DynamicResource Str_FolderTree_Levels4}" />
                             </ComboBox>
-                            <CheckBox x:Name="ChkFiles" Margin="2,12,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_IncludeFiles}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkSize" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_ShowSizes}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkCount" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_ShowFileCounts}" Foreground="{DynamicResource SidebarText}" IsChecked="True" ToolTip="{DynamicResource Str_FolderTree_ShowFileCountsTip}" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkDate" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_ShowModifiedDates}" Foreground="{DynamicResource SidebarText}" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkHidden" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_IncludeHiddenAndSystem}" Foreground="{DynamicResource SidebarText}" Unchecked="Option_Changed" />
-                            <CheckBox x:Name="ChkNoise" Margin="2,8,0,0" Checked="Option_Changed" Content="{DynamicResource Str_FolderTree_SkipGitNodeModules}" Foreground="{DynamicResource SidebarText}" IsChecked="True" Unchecked="Option_Changed" />
+                            <CheckBox
+                                x:Name="ChkFiles"
+                                Margin="2,12,0,0"
+                                Checked="Option_Changed"
+                                Content="{DynamicResource Str_FolderTree_IncludeFiles}"
+                                Foreground="{DynamicResource SidebarText}"
+                                IsChecked="True"
+                                Unchecked="Option_Changed"
+                                controls:ChoiceIcon.Kind="FileOutline"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                            <CheckBox
+                                x:Name="ChkSize"
+                                Margin="2,8,0,0"
+                                Checked="Option_Changed"
+                                Content="{DynamicResource Str_FolderTree_ShowSizes}"
+                                Foreground="{DynamicResource SidebarText}"
+                                IsChecked="True"
+                                Unchecked="Option_Changed"
+                                controls:ChoiceIcon.Kind="ArrowExpandHorizontal"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                            <CheckBox
+                                x:Name="ChkCount"
+                                Margin="2,8,0,0"
+                                Checked="Option_Changed"
+                                Content="{DynamicResource Str_FolderTree_ShowFileCounts}"
+                                Foreground="{DynamicResource SidebarText}"
+                                IsChecked="True"
+                                ToolTip="{DynamicResource Str_FolderTree_ShowFileCountsTip}"
+                                Unchecked="Option_Changed"
+                                controls:ChoiceIcon.Kind="Counter"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                            <CheckBox
+                                x:Name="ChkDate"
+                                Margin="2,8,0,0"
+                                Checked="Option_Changed"
+                                Content="{DynamicResource Str_FolderTree_ShowModifiedDates}"
+                                Foreground="{DynamicResource SidebarText}"
+                                Unchecked="Option_Changed"
+                                controls:ChoiceIcon.Kind="CalendarClock"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                            <CheckBox
+                                x:Name="ChkHidden"
+                                Margin="2,8,0,0"
+                                Checked="Option_Changed"
+                                Content="{DynamicResource Str_FolderTree_IncludeHiddenAndSystem}"
+                                Foreground="{DynamicResource SidebarText}"
+                                Unchecked="Option_Changed"
+                                controls:ChoiceIcon.Kind="EyeOutline"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                            <CheckBox
+                                x:Name="ChkNoise"
+                                Margin="2,8,0,0"
+                                Checked="Option_Changed"
+                                Content="{DynamicResource Str_FolderTree_SkipGitNodeModules}"
+                                Foreground="{DynamicResource SidebarText}"
+                                IsChecked="True"
+                                Unchecked="Option_Changed"
+                                controls:ChoiceIcon.Kind="SourceBranch"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                         </StackPanel>
                     </Border>
 

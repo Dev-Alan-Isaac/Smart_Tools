@@ -89,8 +89,19 @@
                             </StackPanel>
 
                             <StackPanel x:Name="PanelCase" Margin="0,10,0,0">
-                                <CheckBox x:Name="ChkUpper" Click="Option_Click" Content="{DynamicResource Str_IdGenerator_UpperCase}" />
-                                <CheckBox x:Name="ChkNoHyphens" Margin="0,6,0,0" Click="Option_Click" Content="{DynamicResource Str_IdGenerator_RemoveHyphens}" />
+                                <CheckBox
+                                    x:Name="ChkUpper"
+                                    Click="Option_Click"
+                                    Content="{DynamicResource Str_IdGenerator_UpperCase}"
+                                    controls:ChoiceIcon.Kind="FormatLetterCaseUpper"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                <CheckBox
+                                    x:Name="ChkNoHyphens"
+                                    Margin="0,6,0,0"
+                                    Click="Option_Click"
+                                    Content="{DynamicResource Str_IdGenerator_RemoveHyphens}"
+                                    controls:ChoiceIcon.Kind="DeleteOutline"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

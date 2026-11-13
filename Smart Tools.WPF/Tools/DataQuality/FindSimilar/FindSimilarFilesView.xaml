@@ -730,7 +730,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_FindSimilar_FindCropsTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="Crop"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  Videos: keyframe-only reading (much faster)  -->
@@ -742,7 +744,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_FindSimilar_FastVideoTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileVideoOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <TextBlock
@@ -857,7 +861,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_FindSimilar_IncludeSubfoldersTooltip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FolderMultipleOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkIgnoreSystemFiles"
                                         Margin="0,8,0,0"
@@ -866,7 +872,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_FindSimilar_IgnoreSystemFilesTooltip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="EyeOffOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <TextBlock
                                         Margin="0,14,0,6"
@@ -890,7 +898,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_FindSimilarFiles_DeletedFilesCanBe}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

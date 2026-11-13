@@ -1394,8 +1394,10 @@
 
     <!--
         A CheckBox drawn as a toggle chip, the multi-choice twin of ModeToggleButtonStyle (which is for one-of-many
-        RadioButtons): same pill, same colours, same hover. Checked = AccentFill with white text and a small tick.
-        The tick's space is always reserved, so a chip does not change width when it is switched.
+        RadioButtons): same pill, same colours, same hover. Checked = AccentFill with white text.
+        There is always an icon in front of the label, in both states, and it is always the same size, so a chip never has a gap
+        and never changes width when switched: unchecked shows presetchips:ChoiceIcon.Kind (a plain circle when none is set),
+        checked shows a tick.
     -->
     <Style x:Key="ToggleChipCheckBoxStyle" TargetType="CheckBox">
         <Setter Property="MinHeight" Value="34" />
@@ -1419,47 +1421,43 @@
                         <Border.RenderTransform>
                             <ScaleTransform x:Name="BdScale" ScaleX="1" ScaleY="1" />
                         </Border.RenderTransform>
-                        <StackPanel Margin="10,4,12,4" HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Grid Margin="0,0,6,0" VerticalAlignment="Center">
-                                <Path
+                        <Grid Margin="10,4,12,4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="16" Height="16" Margin="0,0,7,0" VerticalAlignment="Center">
+                                <!--  Checked: a tick. Unchecked: the chip's own icon (a plain circle if none was set). Same slot, same size.  -->
+                                <materialDesign:PackIcon
                                     x:Name="Tick"
-                                    Width="11"
-                                    Height="9"
+                                    Width="16"
+                                    Height="16"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Data="M1,4.5 L4.2,7.7 L10,1.2"
-                                    Opacity="0"
-                                    Stretch="Fill"
-                                    Stroke="White"
-                                    StrokeEndLineCap="Round"
-                                    StrokeStartLineCap="Round"
-                                    StrokeThickness="2" />
-                                <!--  Shown while unchecked (when an icon is set) so the tick's slot is never an empty gap  -->
+                                    Kind="Check"
+                                    Visibility="Collapsed" />
                                 <materialDesign:PackIcon
                                     x:Name="ChoiceGlyph"
-                                    Width="14"
-                                    Height="14"
+                                    Width="16"
+                                    Height="16"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Kind="{Binding Path=(presetchips:ChoiceIcon.Kind), RelativeSource={RelativeSource TemplatedParent}}" />
+                                    Kind="{Binding Path=(presetchips:ChoiceIcon.Kind), RelativeSource={RelativeSource TemplatedParent}, FallbackValue=CircleOutline, TargetNullValue=CircleOutline}" />
                             </Grid>
-                            <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True">
+                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center" RecognizesAccessKey="True">
                                 <ContentPresenter.Resources>
                                     <Style BasedOn="{StaticResource ButtonLabelTextStyle}" TargetType="TextBlock" />
                                 </ContentPresenter.Resources>
                             </ContentPresenter>
-                        </StackPanel>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
                         </Trigger>
-                        <Trigger Property="presetchips:ChoiceIcon.Kind" Value="{x:Null}">
-                            <Setter TargetName="ChoiceGlyph" Property="Visibility" Value="Collapsed" />
-                        </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
-                            <Setter TargetName="Tick" Property="Opacity" Value="1" />
+                            <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
                             <Setter TargetName="ChoiceGlyph" Property="Visibility" Value="Collapsed" />
                             <Setter Property="Foreground" Value="White" />
                         </Trigger>
@@ -4223,160 +4221,6 @@
         <Setter Property="MinHeight" Value="54" />
         <Setter Property="FontSize" Value="11.5" />
         <Setter Property="presetchips:ChoiceIcon.Stacked" Value="True" />
-    </Style>
-
-    <!--
-        =====================================================================
-        DEPTH KIT - raised, layered surfaces for the live hardware tests
-        (Microphone, Audio Output, Game Controller). Nothing here is flat:
-        a soft shadow lifts the card, a light edge catches the top, and a
-        faint sheen runs from the top corner. Colours still follow the theme
-        (RowBg / CardBorder); only the white edge and sheen are fixed alphas.
-        =====================================================================
-    -->
-    <DropShadowEffect
-        x:Key="DepthShadow"
-        BlurRadius="18"
-        Direction="270"
-        Opacity="0.32"
-        ShadowDepth="4"
-        Color="Black" />
-
-    <LinearGradientBrush x:Key="DepthEdgeBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#38FFFFFF" />
-        <GradientStop Offset="0.55" Color="#0DFFFFFF" />
-        <GradientStop Offset="1" Color="#05FFFFFF" />
-    </LinearGradientBrush>
-
-    <LinearGradientBrush x:Key="DepthSheenBrush" StartPoint="0,0" EndPoint="0.8,1">
-        <GradientStop Offset="0" Color="#1AFFFFFF" />
-        <GradientStop Offset="0.45" Color="#06FFFFFF" />
-        <GradientStop Offset="1" Color="#00FFFFFF" />
-    </LinearGradientBrush>
-
-    <!--  Glossy highlight laid over the top half of a bar fill, so a level bar reads as a lit tube and not a flat strip  -->
-    <LinearGradientBrush x:Key="DepthGlossBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#66FFFFFF" />
-        <GradientStop Offset="0.5" Color="#14FFFFFF" />
-        <GradientStop Offset="0.51" Color="#00FFFFFF" />
-        <GradientStop Offset="1" Color="#22000000" />
-    </LinearGradientBrush>
-
-    <!--  A raised card: use as <ContentControl Style="{StaticResource DepthCard}" Padding="14,10">content</ContentControl>  -->
-    <Style x:Key="DepthCard" TargetType="ContentControl">
-        <Setter Property="Padding" Value="14,10" />
-        <Setter Property="Focusable" Value="False" />
-        <Setter Property="IsTabStop" Value="False" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ContentControl">
-                    <Border
-                        Background="{DynamicResource RowBg}"
-                        BorderBrush="{StaticResource DepthEdgeBrush}"
-                        BorderThickness="1"
-                        CornerRadius="14"
-                        Effect="{StaticResource DepthShadow}">
-                        <Grid>
-                            <Border
-                                Background="{StaticResource DepthSheenBrush}"
-                                CornerRadius="14"
-                                IsHitTestVisible="False" />
-                            <ContentPresenter Margin="{TemplateBinding Padding}" />
-                        </Grid>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!--  The big panel a live picture sits on: rounder, deeper shadow, a little more sheen  -->
-    <Style x:Key="DepthHero" TargetType="ContentControl">
-        <Setter Property="Padding" Value="18" />
-        <Setter Property="Focusable" Value="False" />
-        <Setter Property="IsTabStop" Value="False" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ContentControl">
-                    <Border
-                        Background="{DynamicResource RowBg}"
-                        BorderBrush="{StaticResource DepthEdgeBrush}"
-                        BorderThickness="1"
-                        CornerRadius="20">
-                        <Border.Effect>
-                            <DropShadowEffect
-                                BlurRadius="28"
-                                Direction="270"
-                                Opacity="0.4"
-                                ShadowDepth="6"
-                                Color="Black" />
-                        </Border.Effect>
-                        <Grid>
-                            <Border
-                                Background="{StaticResource DepthSheenBrush}"
-                                CornerRadius="20"
-                                IsHitTestVisible="False" />
-                            <ContentPresenter Margin="{TemplateBinding Padding}" />
-                        </Grid>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!--  The shell of a level bar: a recessed, outlined tube. Put the fill inside it (give the fill a child Border with DepthGlossBrush).  -->
-    <Style x:Key="DepthMeterShell" TargetType="Border">
-        <Setter Property="Padding" Value="5" />
-        <Setter Property="Background" Value="{DynamicResource RowBg}" />
-        <Setter Property="BorderBrush" Value="{StaticResource DepthEdgeBrush}" />
-        <Setter Property="BorderThickness" Value="1.5" />
-        <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="Effect" Value="{StaticResource DepthShadow}" />
-    </Style>
-
-    <!--  A big live number with a soft glow so it looks lit, not printed  -->
-    <Style x:Key="GlowReadout" TargetType="TextBlock">
-        <Setter Property="FontWeight" Value="Bold" />
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect
-                    BlurRadius="22"
-                    Opacity="0.28"
-                    ShadowDepth="0"
-                    Color="White" />
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!--  A level bar drawn as a lit tube: recessed track with an edge, a glossy fill. Foreground is the fill colour.  -->
-    <Style x:Key="DepthProgressBar" TargetType="ProgressBar">
-        <Setter Property="Height" Value="14" />
-        <Setter Property="Foreground" Value="{DynamicResource AccentFill}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ProgressBar">
-                    <Grid>
-                        <Border
-                            x:Name="PART_Track"
-                            Background="{DynamicResource ContentBg}"
-                            BorderBrush="{StaticResource DepthEdgeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="7" />
-                        <Border
-                            x:Name="PART_Indicator"
-                            Margin="1"
-                            HorizontalAlignment="Left"
-                            Background="{TemplateBinding Foreground}"
-                            CornerRadius="6">
-                            <Border
-                                Background="{StaticResource DepthGlossBrush}"
-                                CornerRadius="6"
-                                IsHitTestVisible="False" />
-                        </Border>
-                    </Grid>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <!--  Compact "chip" that groups a small control cluster (volume, speed, ...)  -->

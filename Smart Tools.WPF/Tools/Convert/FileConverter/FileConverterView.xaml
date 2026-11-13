@@ -892,7 +892,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Convert_FileSelectionTooltip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FilterOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <CheckBox
                                         x:Name="ChkOverwriteExisting"
@@ -901,7 +903,9 @@
                                         Content="{DynamicResource Str_Convert_OverwriteExisting}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_FileConverter_ReplaceAFileWith}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FileReplaceOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <CheckBox
                                         x:Name="ChkDeleteOriginal"
@@ -910,7 +914,9 @@
                                         Content="{DynamicResource Str_Convert_DeleteOriginal}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_FileConverter_AfterAFileConverts}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

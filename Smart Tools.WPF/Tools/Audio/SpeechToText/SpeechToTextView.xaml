@@ -409,7 +409,9 @@
                                         Click="Option_Changed"
                                         Content="{DynamicResource Str_Stt_Translate}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Stt_TranslateTip}" />
+                                        ToolTip="{DynamicResource Str_Stt_TranslateTip}"
+                                        controls:ChoiceIcon.Kind="Translate"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock
                                         x:Name="TxtLanguageNote"
                                         Margin="0,8,0,0"
@@ -427,26 +429,34 @@
                                         Click="Format_Click"
                                         Content="{DynamicResource Str_Stt_FormatTxt}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True" />
+                                        IsChecked="True"
+                                        controls:ChoiceIcon.Kind="FileDocumentOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkSrt"
                                         Margin="0,6,0,0"
                                         Click="Format_Click"
                                         Content="{DynamicResource Str_Stt_FormatSrt}"
-                                        Foreground="{DynamicResource SidebarText}" />
+                                        Foreground="{DynamicResource SidebarText}"
+                                        controls:ChoiceIcon.Kind="Subtitles"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkVtt"
                                         Margin="0,6,0,0"
                                         Click="Format_Click"
                                         Content="{DynamicResource Str_Stt_FormatVtt}"
-                                        Foreground="{DynamicResource SidebarText}" />
+                                        Foreground="{DynamicResource SidebarText}"
+                                        controls:ChoiceIcon.Kind="Subtitles"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkTimestamps"
                                         Margin="0,10,0,0"
                                         Click="Option_Changed"
                                         Content="{DynamicResource Str_Stt_Timestamps}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Stt_TimestampsTip}" />
+                                        ToolTip="{DynamicResource Str_Stt_TimestampsTip}"
+                                        controls:ChoiceIcon.Kind="TimerOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Stt_SpeedNote}" />
                                 </StackPanel>
                             </Border>

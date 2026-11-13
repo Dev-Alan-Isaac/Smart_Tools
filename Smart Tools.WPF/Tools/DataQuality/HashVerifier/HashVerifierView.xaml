@@ -292,38 +292,50 @@
                                             Margin="0,0,0,6"
                                             Click="Algorithm_Click"
                                             Content="MD5"
-                                            Foreground="{DynamicResource SidebarText}" />
+                                            Foreground="{DynamicResource SidebarText}"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkSha1"
                                             Margin="0,0,0,6"
                                             Click="Algorithm_Click"
                                             Content="SHA-1"
-                                            Foreground="{DynamicResource SidebarText}" />
+                                            Foreground="{DynamicResource SidebarText}"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkSha256"
                                             Margin="0,0,0,6"
                                             Click="Algorithm_Click"
                                             Content="SHA-256"
                                             Foreground="{DynamicResource SidebarText}"
-                                            IsChecked="True" />
+                                            IsChecked="True"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkSha384"
                                             Margin="0,0,0,6"
                                             Click="Algorithm_Click"
                                             Content="SHA-384"
-                                            Foreground="{DynamicResource SidebarText}" />
+                                            Foreground="{DynamicResource SidebarText}"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkSha512"
                                             Margin="0,0,0,6"
                                             Click="Algorithm_Click"
                                             Content="SHA-512"
-                                            Foreground="{DynamicResource SidebarText}" />
+                                            Foreground="{DynamicResource SidebarText}"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkCrc32"
                                             Margin="0,0,0,6"
                                             Click="Algorithm_Click"
                                             Content="{DynamicResource Str_HashVerifier_Crc}"
-                                            Foreground="{DynamicResource SidebarText}" />
+                                            Foreground="{DynamicResource SidebarText}"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </UniformGrid>
                                     <CheckBox
                                         x:Name="ChkUpperCase"
@@ -331,7 +343,9 @@
                                         Click="UpperCase_Click"
                                         Content="{DynamicResource Str_Hash_UpperCase}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Hash_UpperCaseTooltip}" />
+                                        ToolTip="{DynamicResource Str_Hash_UpperCaseTooltip}"
+                                        controls:ChoiceIcon.Kind="FormatLetterCaseUpper"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

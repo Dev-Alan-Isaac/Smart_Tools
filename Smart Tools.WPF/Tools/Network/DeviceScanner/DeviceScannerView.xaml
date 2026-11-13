@@ -295,7 +295,9 @@
                                         Content="{DynamicResource Str_DeviceScanner_ScanACustomRange}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_DeviceScan_OverrideSubnetTooltip}"
-                                        Unchecked="ChkSubnetOverride_CheckedChanged" />
+                                        Unchecked="ChkSubnetOverride_CheckedChanged"
+                                        controls:ChoiceIcon.Kind="Magnify"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <Border
                                         x:Name="SubnetBar"
@@ -438,13 +440,17 @@
                                         Content="{DynamicResource Str_DeviceScanner_LookUpDeviceNames}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DeviceScanner_ReverseDnsForEach}" />
+                                        ToolTip="{DynamicResource Str_DeviceScanner_ReverseDnsForEach}"
+                                        controls:ChoiceIcon.Kind="Magnify"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkIncludeArp"
                                         Content="{DynamicResource Str_DeviceScanner_IncludeDevicesThatIgnore}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DeviceScanner_PhonesAndFirewalledPcs}" />
+                                        ToolTip="{DynamicResource Str_DeviceScanner_PhonesAndFirewalledPcs}"
+                                        controls:ChoiceIcon.Kind="Magnify"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

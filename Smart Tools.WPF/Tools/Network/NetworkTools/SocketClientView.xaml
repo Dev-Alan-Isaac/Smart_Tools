@@ -199,7 +199,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Network_AppendCrlfTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="KeyboardReturn"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkSendHex"
                                             Margin="0,0,0,6"
@@ -207,7 +209,9 @@
                                             Content="{DynamicResource Str_Network_SendAsHex}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Network_SendAsHexTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkShowHex"
                                             Margin="0,0,0,6"
@@ -215,7 +219,9 @@
                                             Content="{DynamicResource Str_NetworkTools_ShowReceivedDataAs}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_NetworkTools_ForBinaryProtocolsShows}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="Pound"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

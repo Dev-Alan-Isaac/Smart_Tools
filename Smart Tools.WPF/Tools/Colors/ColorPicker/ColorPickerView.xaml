@@ -368,7 +368,9 @@
                                             Click="ChkUniqueColors_Click"
                                             Content="{DynamicResource Str_Color_ScanUnique}"
                                             IsChecked="True"
-                                            ToolTip="{DynamicResource Str_Color_ScanUniqueTooltip}" />
+                                            ToolTip="{DynamicResource Str_Color_ScanUniqueTooltip}"
+                                            controls:ChoiceIcon.Kind="Palette"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <TextBlock
                                             Margin="0,8,0,0"
                                             FontSize="10.5"

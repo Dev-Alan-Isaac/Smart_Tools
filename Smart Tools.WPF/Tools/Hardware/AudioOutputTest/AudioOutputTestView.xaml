@@ -430,8 +430,7 @@
                         Tag="{x:Static materialDesign:PackIconKind.Headphones}" />
 
                     <!--  Which test  -->
-                    <ContentControl Grid.Row="1" Margin="0,0,0,14" Padding="6" Style="{StaticResource DepthCard}">
-                    <Grid>
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
@@ -539,7 +538,6 @@
                             </StackPanel>
                         </RadioButton>
                     </Grid>
-                    </ContentControl>
 
                     <!--  Channels + what to listen for  -->
                     <Grid Grid.Row="2">
@@ -559,7 +557,7 @@
                         <!--  The big reading, like the percentage on Battery Health: the output level you set  -->
                         <Viewbox Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
                             <StackPanel>
-                                <TextBlock x:Name="TxtHeroLevel" FontSize="64" Style="{StaticResource GlowReadout}" Text="-30 dB" />
+                                <TextBlock x:Name="TxtHeroLevel" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-30 dB" />
                                 <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_AudioOutputTest_OutputLevel}" />
                             </StackPanel>
                         </Viewbox>
@@ -573,16 +571,25 @@
                                 Text="{DynamicResource Str_AudioOut_ChannelsHeader}" />
                         </Grid>
                         <!--  Headphones / earphones / headset: each side fills with the sound that side plays  -->
-                        <ContentControl x:Name="HeroStage" ctl:Tour.Key="Str_Tour_AudioOut_Picture" ctl:Tour.Order="6" Grid.Row="1" Height="240" Margin="0,0,0,16" Padding="14" Style="{StaticResource DepthHero}" Visibility="Collapsed">
-                        <Grid>
+                        <!--  One or two channels: the picture takes the place of the tiles; a click on a half includes or leaves out that side  -->
+                        <Grid
+                            x:Name="HeroStage"
+                            ctl:Tour.Key="Str_Tour_AudioOut_Picture" ctl:Tour.Order="6"
+                            Grid.Row="2"
+                            MinHeight="180"
+                            Margin="0,0,0,12"
+                            Background="Transparent"
+                            Cursor="Hand"
+                            MouseLeftButtonUp="HeroStage_Click"
+                            ToolTip="{DynamicResource Str_AudioOut_TileTip}"
+                            Visibility="Collapsed">
                             <controls:LevelGlyph x:Name="HeroLeft" Side="Left" Kind="Headphones" />
                             <controls:LevelGlyph x:Name="HeroRight" Side="Right" ShowTrack="False" Kind="Headphones" />
                             <TextBlock Margin="6,0,0,4" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ImageEditor_Left}" />
                             <TextBlock Margin="0,0,6,4" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ImageEditor_Right}" />
                         </Grid>
-                        </ContentControl>
 
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer x:Name="ChannelScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto">
                             <UniformGrid
                                 x:Name="ChannelPanel"
                                 VerticalAlignment="Center"
@@ -619,10 +626,7 @@
                             Margin="0,14,0,0"
                             Padding="14,10"
                             Background="{DynamicResource StatusInfoBg}"
-                            BorderBrush="{StaticResource DepthEdgeBrush}"
-                            BorderThickness="1"
-                            CornerRadius="14"
-                            Effect="{StaticResource DepthShadow}">
+                            CornerRadius="12">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />

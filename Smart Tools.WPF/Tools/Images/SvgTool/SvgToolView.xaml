@@ -168,7 +168,9 @@
                                         Content="{DynamicResource Str_SvgTool_StripComments}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="ContentCut"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkStripMetadata"
                                         Margin="0,8,0,0"
@@ -177,7 +179,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_SvgTool_StripMetadataTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="ContentCut"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkStripTitleDesc"
                                         Margin="0,8,0,0"
@@ -185,7 +189,9 @@
                                         Content="{DynamicResource Str_SvgTool_StripTitleDesc}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_SvgTool_StripTitleDescTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="ContentCut"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkRemoveScripts"
                                         Margin="0,8,0,0"
@@ -193,7 +199,9 @@
                                         Content="{DynamicResource Str_SvgTool_RemoveScripts}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_SvgTool_RemoveScriptsTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkRemoveUnusedDefs"
                                         Margin="0,8,0,0"
@@ -202,7 +210,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_SvgTool_RemoveUnusedDefsTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkRemoveUnusedIds"
                                         Margin="0,8,0,0"
@@ -211,7 +221,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_SvgTool_RemoveUnusedIdsTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkRemoveEmpty"
                                         Margin="0,8,0,0"
@@ -219,7 +231,9 @@
                                         Content="{DynamicResource Str_SvgTool_RemoveEmpty}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FolderRemoveOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 
@@ -238,7 +252,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_SvgTool_DropDefaultsTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkColors"
                                         Margin="0,8,0,0"
@@ -246,7 +262,9 @@
                                         Content="{DynamicResource Str_SvgTool_ShortenColors}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="Palette"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkMergePaths"
                                         Margin="0,8,0,0"
@@ -254,7 +272,9 @@
                                         Content="{DynamicResource Str_SvgTool_MergePaths}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_SvgTool_MergePathsTip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="VectorCombine"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkRoundNumbers"
                                         Margin="0,8,0,0"
@@ -262,7 +282,9 @@
                                         Content="{DynamicResource Str_SvgTool_RoundNumbers}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FormatListNumbered"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <Grid x:Name="PrecisionRow" Margin="0,10,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -306,7 +328,9 @@
                                         Content="{DynamicResource Str_SvgTool_Minify}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="KeyboardSpace"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 
@@ -376,7 +400,9 @@
                                         Content="{DynamicResource Str_SvgTool_ExportTransparent}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Export_Checked" />
+                                        Unchecked="Export_Checked"
+                                        controls:ChoiceIcon.Kind="Checkerboard"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

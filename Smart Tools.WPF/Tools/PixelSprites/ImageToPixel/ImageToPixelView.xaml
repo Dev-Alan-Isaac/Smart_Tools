@@ -218,7 +218,9 @@
                                 Margin="0,12,0,0"
                                 Click="Option_Click"
                                 Content="{DynamicResource Str_ImageToPixel_DitherSmootherGradients}"
-                                ToolTip="{DynamicResource Str_ImageToPixel_MixesNeighbouringPixelsSo}" />
+                                ToolTip="{DynamicResource Str_ImageToPixel_MixesNeighbouringPixelsSo}"
+                                controls:ChoiceIcon.Kind="AutoFix"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                         </StackPanel>
                     </Border>
 

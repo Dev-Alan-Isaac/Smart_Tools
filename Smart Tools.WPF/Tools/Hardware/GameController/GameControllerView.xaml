@@ -98,10 +98,7 @@
                                     <Border
                                         Padding="12,10"
                                         Background="{DynamicResource SidebarInputBg}"
-                                        BorderBrush="{StaticResource DepthEdgeBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="12"
-                                        Effect="{StaticResource DepthShadow}">
+                                        CornerRadius="12">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
@@ -445,8 +442,6 @@
                             Tag="{x:Static materialDesign:PackIconKind.Gamepad}" />
                         <Border
                             x:Name="PillRate"
-                            BorderBrush="{StaticResource DepthEdgeBrush}"
-                            BorderThickness="1"
                             Grid.Column="1"
                             Margin="12,0,0,0"
                             VerticalAlignment="Center"
@@ -471,8 +466,6 @@
                         </Border>
                         <Border
                             x:Name="BorderStatus"
-                            BorderBrush="{StaticResource DepthEdgeBrush}"
-                            BorderThickness="1"
                             Grid.Column="3"
                             MaxWidth="420"
                             VerticalAlignment="Center"
@@ -648,7 +641,6 @@
                                         <ColumnDefinition Width="16" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <ContentControl Padding="16,12" Style="{StaticResource DepthCard}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -675,9 +667,7 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource TextPrimary}" />
                                     </Grid>
-                                    </ContentControl>
-                                    <ContentControl Grid.Column="2" Padding="16,12" Style="{StaticResource DepthCard}">
-                                    <Grid>
+                                    <Grid Grid.Column="2">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="*" />
@@ -703,7 +693,6 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource TextPrimary}" />
                                     </Grid>
-                                    </ContentControl>
                                 </Grid>
 
                                 <TextBlock
@@ -715,13 +704,10 @@
                                     TextWrapping="Wrap" />
 
                                 <!--  Triggers (Xbox-style)  -->
-                                <ContentControl
+                                <StackPanel
                                     x:Name="TriggerBars"
                                     Grid.Row="2"
-                                    Margin="0,16,0,0"
-                                    Padding="16,12"
-                                    Style="{StaticResource DepthCard}">
-                                <StackPanel>
+                                    Margin="0,16,0,0">
                                     <TextBlock
                                         FontSize="12"
                                         FontWeight="SemiBold"
@@ -741,8 +727,7 @@
                                         <ProgressBar
                                             x:Name="BarLT"
                                             Grid.Column="1"
-                                            Height="14"
-                                            Style="{StaticResource DepthProgressBar}"
+                                            Height="10"
                                             Maximum="1"
                                             Minimum="0" />
                                         <TextBlock
@@ -767,8 +752,7 @@
                                         <ProgressBar
                                             x:Name="BarRT"
                                             Grid.Column="1"
-                                            Height="14"
-                                            Style="{StaticResource DepthProgressBar}"
+                                            Height="10"
                                             Maximum="1"
                                             Minimum="0" />
                                         <TextBlock
@@ -780,7 +764,6 @@
                                             Foreground="{DynamicResource TextPrimary}" />
                                     </Grid>
                                 </StackPanel>
-                                </ContentControl>
 
                                 <!--  Other axes (generic controllers)  -->
                                 <StackPanel
@@ -796,28 +779,21 @@
                                     <StackPanel x:Name="ExtraAxesRows" Margin="0,6,0,0" />
                                 </StackPanel>
 
-                                <ContentControl
+                                <TextBlock
                                     Grid.Row="4"
-                                    Grid.RowSpan="3"
-                                    Margin="0,16,0,0"
-                                    Padding="16,12"
-                                    Style="{StaticResource DepthCard}">
-                                <StackPanel>
-                                    <TextBlock
-                                    Margin="0,0,0,8"
+                                    Margin="0,16,0,6"
                                     FontSize="12"
                                     FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextSecondary}"
                                     Text="{DynamicResource Str_GameCtl_Buttons}" />
-                                <WrapPanel x:Name="ButtonsPanel" />
-                                    <TextBlock
+                                <WrapPanel x:Name="ButtonsPanel" Grid.Row="5" />
+                                <TextBlock
                                     x:Name="TxtPov"
+                                    Grid.Row="6"
                                     Margin="0,8,0,0"
                                     FontFamily="Consolas"
                                     FontSize="12"
                                     Foreground="{DynamicResource TextSecondary}" />
-                                </StackPanel>
-                                </ContentControl>
                             </Grid>
                         </ScrollViewer>
 

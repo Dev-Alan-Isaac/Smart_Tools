@@ -286,7 +286,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_TextToSpeech_FollowAlongInThe}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FormatColorHighlight"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_TextToSpeech_ChangesApplyTheNext}" />
                                 </StackPanel>
                             </Border>

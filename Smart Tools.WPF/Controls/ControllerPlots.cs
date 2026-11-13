@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Media;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
-using Color = System.Windows.Media.Color;
 using Pen = System.Windows.Media.Pen;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
@@ -88,24 +87,7 @@ namespace Smart_Tools.WPF.Controls
             var gridPen = new Pen(grid, 1.2);
             var faintPen = new Pen(grid, 0.8) { DashStyle = new DashStyle(new double[] { 3, 4 }, 0) };
 
-            // A raised dish, not a flat circle: a soft shadow under it, the base, a lit top-left sheen and an inner rim.
-            var halo = new RadialGradientBrush(new GradientStopCollection
-            {
-                new GradientStop(Color.FromArgb(70, 0, 0, 0), 0.86),
-                new GradientStop(Color.FromArgb(0, 0, 0, 0), 1.0),
-            });
-            halo.Freeze();
-            dc.DrawEllipse(halo, null, new Point(centre.X, centre.Y + 4), r + 9, r + 9);
             dc.DrawEllipse(BackBrush, gridPen, centre, r, r);
-            var sheen = new RadialGradientBrush(new GradientStopCollection
-            {
-                new GradientStop(Color.FromArgb(46, 255, 255, 255), 0.0),
-                new GradientStop(Color.FromArgb(0, 255, 255, 255), 1.0),
-            })
-            { Center = new Point(0.32, 0.26), GradientOrigin = new Point(0.32, 0.26), RadiusX = 0.85, RadiusY = 0.85 };
-            sheen.Freeze();
-            dc.DrawEllipse(sheen, null, centre, r - 1, r - 1);
-            dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)), 1), centre, r - 3, r - 3);
             dc.DrawEllipse(null, faintPen, centre, r * 0.5, r * 0.5);
             dc.DrawLine(faintPen, new Point(centre.X - r, centre.Y), new Point(centre.X + r, centre.Y));
             dc.DrawLine(faintPen, new Point(centre.X, centre.Y - r), new Point(centre.X, centre.Y + r));
@@ -161,12 +143,7 @@ namespace Smart_Tools.WPF.Controls
 
             // before the dead zone: a ring. After: a solid dot.
             dc.DrawEllipse(null, new Pen(dot, 1.6), ToScreen(RawX, RawY), 7, 7);
-            // the live dot sits in a soft glow of the accent colour
-            var outPoint = ToScreen(OutX, OutY);
-            var glow = accent.Clone();
-            glow.Opacity = 0.28;
-            dc.DrawEllipse(glow, null, outPoint, 13, 13);
-            dc.DrawEllipse(accent, new Pen(dot, 1.2), outPoint, 5.5, 5.5);
+            dc.DrawEllipse(accent, new Pen(dot, 1.2), ToScreen(OutX, OutY), 5, 5);
         }
     }
 

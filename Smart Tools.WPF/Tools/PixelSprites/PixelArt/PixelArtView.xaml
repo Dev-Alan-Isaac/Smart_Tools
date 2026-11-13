@@ -550,9 +550,10 @@
                                         x:Name="ChkFilled"
                                         Margin="0,12,0,0"
                                         Click="Option_Click"
-                                        Foreground="{DynamicResource SidebarText}">
-                                        <TextBlock Text="{DynamicResource Str_PixelArt_Filled}" TextWrapping="Wrap" />
-                                    </CheckBox>
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Content="{DynamicResource Str_PixelArt_Filled}"
+                                        controls:ChoiceIcon.Kind="FormatColorFill"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 
@@ -722,17 +723,19 @@
                                         x:Name="ChkGrid"
                                         Click="ViewOption_Click"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True">
-                                        <TextBlock Text="{DynamicResource Str_PixelArt_ShowGrid}" TextWrapping="Wrap" />
-                                    </CheckBox>
+                                        IsChecked="True"
+                                        Content="{DynamicResource Str_PixelArt_ShowGrid}"
+                                        controls:ChoiceIcon.Kind="Grid"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock Style="{StaticResource PxSideHint}" Text="{DynamicResource Str_PixelArt_GridHint}" />
                                     <CheckBox
                                         x:Name="ChkOnion"
                                         Margin="0,10,0,0"
                                         Click="ViewOption_Click"
-                                        Foreground="{DynamicResource SidebarText}">
-                                        <TextBlock Text="{DynamicResource Str_PixelArt_OnionSkin}" TextWrapping="Wrap" />
-                                    </CheckBox>
+                                        Foreground="{DynamicResource SidebarText}"
+                                        Content="{DynamicResource Str_PixelArt_OnionSkin}"
+                                        controls:ChoiceIcon.Kind="LayersOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock Style="{StaticResource PxSideHint}" Text="{DynamicResource Str_PixelArt_OnionHint}" />
                                 </StackPanel>
                             </Border>

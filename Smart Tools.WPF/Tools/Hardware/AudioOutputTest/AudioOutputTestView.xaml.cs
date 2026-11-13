@@ -298,17 +298,31 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
 
         /// <summary>
-        /// Any device with one or two channels (speakers, headphones, earphones, a headset) gets the picture, each side filling with
-        /// the sound that side plays; devices with more channels keep only the per-channel tiles, which become taller to use the room.
+        /// A device with one or two channels (speakers, headphones, earphones, a headset) is shown as one picture: each side fills with
+        /// the sound that side plays, and a click on a half includes or leaves out that side. Devices with more channels
+        /// keep the per-channel tiles instead.
         /// </summary>
         private void ApplyStage()
         {
             bool picture = _device?.Channels is 1 or 2;
             HeroStage.Visibility = picture ? Visibility.Visible : Visibility.Collapsed;
+            ChannelScroll.Visibility = picture ? Visibility.Collapsed : Visibility.Visible;
             HeroLeft.SetFillResource("AccentColor");
             HeroRight.SetFillResource("AccentColor");
-            foreach (var tile in _tiles) tile.Frame.MinHeight = picture ? 96 : 170;
             if (!picture) { HeroLeft.Level = 0; HeroRight.Level = 0; }
+            RefreshTileSelection();
+        }
+
+        /// <summary>The picture does the job of the left / right tiles: a click on a half flips that channel.</summary>
+        private void HeroStage_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (_tiles.Count != 2) return;   // mono (Bluetooth hands-free): one signal feeds both sides, nothing to leave out
+            int index = e.GetPosition(HeroStage).X < HeroStage.ActualWidth / 2 ? 0 : 1;
+            _mask ^= 1u << index;
+            if ((_mask & AudioOutputTestManager.AllChannels(_tiles.Count)) == 0) _mask |= 1u << index;   // never leave nothing selected
+            RefreshTileSelection();
+            _session?.Generator.Configure(ReadConfig());
+            UiMotion.Pop(index == 0 ? HeroLeft : HeroRight);
         }
 
         private void BuildTiles(int channels, uint speakerMask)
@@ -325,21 +339,19 @@ namespace Smart_Tools.WPF.Views
             {
                 var (englishName, shortName) = names[i];
                 string name = TryFindResource("Str_AudioOut_Spk_" + shortName) as string ?? englishName;
-                var shortText = new TextBlock { Text = shortName, FontSize = 32, HorizontalAlignment = HorizontalAlignment.Center };
-                shortText.SetResourceReference(FrameworkElement.StyleProperty, "GlowReadout");
+                var shortText = new TextBlock { Text = shortName, FontSize = 32, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center };
+                shortText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
                 var nameText = new TextBlock { Text = name, FontSize = 12.5, HorizontalAlignment = HorizontalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
                 nameText.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
                 var number = new TextBlock { Text = (i + 1).ToString(CultureInfo.CurrentCulture), FontSize = 10.5, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 1, 0, 0) };
                 number.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
 
                 // Like the battery bar on Battery Health: a rounded outline with the fill inside
-                var gloss = new Border { CornerRadius = new CornerRadius(6), IsHitTestVisible = false };
-                gloss.SetResourceReference(Border.BackgroundProperty, "DepthGlossBrush");
-                var meter = new Border { Height = 12, CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Left, Width = 0, Child = gloss };
+                var meter = new Border { Height = 10, CornerRadius = new CornerRadius(5), HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
                 meter.SetResourceReference(Border.BackgroundProperty, "AccentFill");
-                var track = new Border { Height = 12, CornerRadius = new CornerRadius(6), Child = meter };
-                var outline = new Border { Margin = new Thickness(0, 14, 0, 0), Padding = new Thickness(4), BorderThickness = new Thickness(1.5), CornerRadius = new CornerRadius(11), Child = track };
-                outline.SetResourceReference(Border.BorderBrushProperty, "DepthEdgeBrush");
+                var track = new Border { Height = 10, CornerRadius = new CornerRadius(5), Child = meter };
+                var outline = new Border { Margin = new Thickness(0, 14, 0, 0), Padding = new Thickness(3), BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(10), Child = track };
+                outline.SetResourceReference(Border.BorderBrushProperty, "TextSecondary");
                 outline.SetResourceReference(Border.BackgroundProperty, "ContentBg");
 
                 var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -354,8 +366,8 @@ namespace Smart_Tools.WPF.Views
                     MaxHeight = 320,
                     Margin = new Thickness(0, 0, 8, 8),
                     Padding = new Thickness(14, 12, 14, 12),
-                    CornerRadius = new CornerRadius(14),
-                    BorderThickness = new Thickness(1.5),
+                    CornerRadius = new CornerRadius(12),
+                    BorderThickness = new Thickness(2),
                     Cursor = Cursors.Hand,
                     Child = stack,
                     Tag = i,
@@ -392,13 +404,12 @@ namespace Smart_Tools.WPF.Views
             {
                 bool on = (_mask & (1u << t.Index)) != 0;
                 t.Frame.SetResourceReference(Border.BackgroundProperty, on ? "RowBg" : "ContentBg");
-                t.Frame.SetResourceReference(Border.BorderBrushProperty, on ? "AccentColor" : "DepthEdgeBrush");
-                t.Frame.Opacity = on ? 1 : 0.6;
-                // A selected channel glows in the accent colour; the others sit raised on a soft shadow.
-                t.Frame.Effect = on && TryFindResource("AccentColor") is SolidColorBrush accent
-                    ? new System.Windows.Media.Effects.DropShadowEffect { Color = accent.Color, BlurRadius = 20, ShadowDepth = 0, Opacity = 0.45 }
-                    : (System.Windows.Media.Effects.Effect)TryFindResource("DepthShadow");
+                t.Frame.SetResourceReference(Border.BorderBrushProperty, on ? "AccentColor" : "CardBorder");
+                t.Frame.Opacity = on ? 1 : 0.55;
             }
+            // Two channels are shown as the picture: a side that is left out dims.
+            HeroLeft.Opacity = _tiles.Count == 0 || (_mask & 1u) != 0 ? 1 : 0.35;
+            HeroRight.Opacity = _tiles.Count == 1 || (_mask & 2u) != 0 ? 1 : 0.35;
         }
 
         // =================================================================

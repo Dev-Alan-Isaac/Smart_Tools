@@ -831,7 +831,9 @@
                                         Margin="0,12,0,0"
                                         Click="Setting_Click"
                                         Content="{DynamicResource Str_PdfX_SkipFirst}"
-                                        ToolTip="{DynamicResource Str_PdfX_SkipFirstTip}" />
+                                        ToolTip="{DynamicResource Str_PdfX_SkipFirstTip}"
+                                        controls:ChoiceIcon.Kind="FileOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock x:Name="TxtNumbersPreview" Style="{StaticResource SidebarHint}" />
                                 </StackPanel>
                             </Border>
@@ -848,7 +850,9 @@
                                         Margin="0,0,0,12"
                                         Click="Setting_Click"
                                         Content="{DynamicResource Str_PdfX_CleanAll}"
-                                        ToolTip="{DynamicResource Str_PdfX_CleanAllTip}" />
+                                        ToolTip="{DynamicResource Str_PdfX_CleanAllTip}"
+                                        controls:ChoiceIcon.Kind="Eraser"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock
                                         Margin="0,0,0,6"
                                         Style="{StaticResource FieldLabel}"
@@ -920,19 +924,25 @@
                                         x:Name="ChkAllowPrint"
                                         Click="Setting_Click"
                                         Content="{DynamicResource Str_PdfX_AllowPrint}"
-                                        IsChecked="True" />
+                                        IsChecked="True"
+                                        controls:ChoiceIcon.Kind="Printer"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkAllowCopy"
                                         Margin="0,6,0,0"
                                         Click="Setting_Click"
                                         Content="{DynamicResource Str_PdfX_AllowCopy}"
-                                        IsChecked="True" />
+                                        IsChecked="True"
+                                        controls:ChoiceIcon.Kind="ContentCopy"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkAllowEdit"
                                         Margin="0,6,0,0"
                                         Click="Setting_Click"
                                         Content="{DynamicResource Str_PdfX_AllowEdit}"
-                                        IsChecked="True" />
+                                        IsChecked="True"
+                                        controls:ChoiceIcon.Kind="NoteEditOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_PdfX_ProtectNote}" />
                                 </StackPanel>
                             </Border>

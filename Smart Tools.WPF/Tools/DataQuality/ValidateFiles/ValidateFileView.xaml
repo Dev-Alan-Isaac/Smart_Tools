@@ -492,7 +492,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_VideoFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileVideoOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAutoImage"
                                             Checked="Option_Changed"
@@ -500,7 +502,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_ImageFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileImageOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAutoAudio"
                                             Checked="Option_Changed"
@@ -508,7 +512,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_AudioFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileMusicOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAutoDocument"
                                             Checked="Option_Changed"
@@ -516,7 +522,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_DocumentFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileDocumentOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAutoArchive"
                                             Checked="Option_Changed"
@@ -524,7 +532,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_ArchiveFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ZipBoxOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  ~~~ Video ~~~  -->
@@ -536,7 +546,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_VideoContainerTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="AlertCircleOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkVideoStream"
                                             Checked="Option_Changed"
@@ -544,7 +556,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_VideoStreamTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileVideoOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkVideoAudioStream"
                                             Checked="Option_Changed"
@@ -552,21 +566,27 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_VideoAudioStreamTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileMusicOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkVideoDuration"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_DurationMatches}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_DurationMatchesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="TimerOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkVideoFrames"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_DroppedFrames}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_DroppedFramesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="AlertCircleOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                         <StackPanel x:Name="PanelScanDepth">
                                             <TextBlock
@@ -596,7 +616,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_HeaderSignatureTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="TableHeadersEye"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkImageFullDecode"
                                             Checked="Option_Changed"
@@ -604,7 +626,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_FullPixelDecodeTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkImageTruncated"
                                             Checked="Option_Changed"
@@ -612,21 +636,27 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_TruncatedFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="AlertCircleOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkImageExif"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_ExifReadable}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_ExifReadableTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkImageSmall"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_SmallDimensions}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_SmallDimensionsTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  ~~~ Audio ~~~  -->
@@ -638,7 +668,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_HeaderSignatureTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="TableHeadersEye"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAudioFullDecode"
                                             Checked="Option_Changed"
@@ -646,7 +678,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_FullAudioDecodeTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileMusicOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAudioTruncated"
                                             Checked="Option_Changed"
@@ -654,21 +688,27 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_TruncatedFilesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="AlertCircleOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAudioDuration"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_DurationMatches}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_DurationMatchesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="TimerOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkAudioSilent"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_SilentTracks}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_SilentTracksTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileMusicOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  ~~~ Document ~~~  -->
@@ -680,7 +720,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_DocStructureTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkDocOpens"
                                             Checked="Option_Changed"
@@ -688,21 +730,27 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_DocOpensTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkDocEmbeddedImages"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_DocImages}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_DocImagesTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="FileImageOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkDocEmbeddedFonts"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_DocFonts}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_DocFontsTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkDocPassword"
                                             Checked="Option_Changed"
@@ -710,7 +758,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_DocPasswordTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="LockOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  ~~~ Archive ~~~  -->
@@ -722,7 +772,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_ArchiveCrcTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkArchiveExtract"
                                             Checked="Option_Changed"
@@ -730,7 +782,9 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_ArchiveExtractTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ShieldCheckOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkArchivePassword"
                                             Checked="Option_Changed"
@@ -738,14 +792,18 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Validate_ArchivePasswordTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="ZipBoxOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                         <CheckBox
                                             x:Name="ChkArchiveBomb"
                                             Checked="Option_Changed"
                                             Content="{DynamicResource Str_Validate_ArchiveBomb}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Validate_ArchiveBombTooltip}"
-                                            Unchecked="Option_Changed" />
+                                            Unchecked="Option_Changed"
+                                            controls:ChoiceIcon.Kind="AlertCircleOutline"
+                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     </StackPanel>
 
                                     <!--  ffmpeg missing  -->
@@ -863,7 +921,9 @@
                                         Content="{DynamicResource Str_Validate_Quarantine}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Validate_QuarantineTooltip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <Border
                                         x:Name="PanelQuarantineFolder"
                                         Margin="0,0,0,10"
@@ -924,7 +984,9 @@
                                         Content="{DynamicResource Str_Validate_GenerateReport}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Validate_GenerateReportTooltip}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FileChartOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <TextBlock
                                         x:Name="TxtReportHint"
                                         Margin="26,-4,0,0"
@@ -948,7 +1010,9 @@
                                         Content="{DynamicResource Str_ValidateFile_OnlyProblems}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Validate_OnlyProblemsTooltip}"
-                                        Unchecked="ChkOnlyProblems_Changed" />
+                                        Unchecked="ChkOnlyProblems_Changed"
+                                        controls:ChoiceIcon.Kind="AlertCircleOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

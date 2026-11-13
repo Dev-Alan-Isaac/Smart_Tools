@@ -40,7 +40,14 @@
                             <Border Style="{StaticResource InputBarStyle}">
                                 <ComboBox x:Name="CmbBeats" VerticalContentAlignment="Center" SelectionChanged="Beats_SelectionChanged" Style="{StaticResource BareComboBox}" />
                             </Border>
-                            <CheckBox x:Name="ChkAccent" Margin="0,12,0,0" Click="Accent_Click" Content="{DynamicResource Str_Metronome_AccentTheFirstBeat}" IsChecked="True" />
+                            <CheckBox
+                                x:Name="ChkAccent"
+                                Margin="0,12,0,0"
+                                Click="Accent_Click"
+                                Content="{DynamicResource Str_Metronome_AccentTheFirstBeat}"
+                                IsChecked="True"
+                                controls:ChoiceIcon.Kind="MusicNote"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                         </StackPanel>
                     </Border>
 

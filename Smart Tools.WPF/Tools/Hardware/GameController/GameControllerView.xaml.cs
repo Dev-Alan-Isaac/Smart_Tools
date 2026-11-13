@@ -387,10 +387,8 @@ namespace Smart_Tools.WPF.Views
             {
                 var text = new TextBlock { Text = label, FontSize = 12, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
                 text.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
-                var chip = new Border { MinWidth = 42, Height = 34, Margin = new Thickness(0, 0, 8, 8), Padding = new Thickness(9, 0, 9, 0), CornerRadius = new CornerRadius(10), BorderThickness = new Thickness(1), Child = text };
-                chip.SetResourceReference(Border.BackgroundProperty, "ContentBg");
-                chip.SetResourceReference(Border.BorderBrushProperty, "DepthEdgeBrush");
-                chip.Effect = (System.Windows.Media.Effects.Effect)TryFindResource("DepthShadow");
+                var chip = new Border { MinWidth = 40, Height = 32, Margin = new Thickness(0, 0, 6, 6), Padding = new Thickness(8, 0, 8, 0), CornerRadius = new CornerRadius(8), Child = text };
+                chip.SetResourceReference(Border.BackgroundProperty, "RowBg");
                 ButtonsPanel.Children.Add(chip);
                 _buttonChips.Add((bit, chip, text));
             }
@@ -546,10 +544,7 @@ namespace Smart_Tools.WPF.Views
                 foreach (var (bit, chip, text) in _buttonChips)
                 {
                     bool down = s.IsDown(bit);
-                    chip.SetResourceReference(Border.BackgroundProperty, down ? "AccentFill" : "ContentBg");
-                    chip.Effect = down && TryFindResource("AccentColor") is SolidColorBrush accent
-                        ? new System.Windows.Media.Effects.DropShadowEffect { Color = accent.Color, BlurRadius = 18, ShadowDepth = 0, Opacity = 0.7 }
-                        : (System.Windows.Media.Effects.Effect)TryFindResource("DepthShadow");
+                    chip.SetResourceReference(Border.BackgroundProperty, down ? "AccentFill" : "RowBg");
                     if (down) text.Foreground = Brushes.White;
                     else text.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
                 }

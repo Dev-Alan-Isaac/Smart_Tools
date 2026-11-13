@@ -85,7 +85,9 @@
                                 Content="{DynamicResource Str_MicTest_Hear}"
                                 Foreground="{DynamicResource SidebarText}"
                                 ToolTip="{DynamicResource Str_MicTest_HearTip}"
-                                Unchecked="ChkHear_Changed" />
+                                Unchecked="ChkHear_Changed"
+                                controls:ChoiceIcon.Kind="Headphones"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                             <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MicTest_HearHint}" />
                         </StackPanel>
                     </Border>
@@ -152,7 +154,7 @@
                     </Grid>
 
                     <!--  The hero, like Battery Health: the picture and the level bar on the left, the big reading on the right  -->
-                    <ContentControl Grid.Row="1" Style="{StaticResource DepthHero}">
+                    <Border Grid.Row="1" Padding="18" Background="{DynamicResource RowBg}" CornerRadius="16">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" />
@@ -181,12 +183,16 @@
                                 ctl:Tour.Key="Str_Tour_MicTest_Meter"
                                 ctl:Tour.Order="6"
                                 Grid.Row="1"
-                                Margin="0,14,0,0"
-                                Style="{StaticResource DepthMeterShell}"
+                                Margin="0,12,0,0"
+                                Padding="5"
+                                Background="{DynamicResource RowBg}"
+                                BorderBrush="{DynamicResource TextSecondary}"
+                                BorderThickness="3"
+                                CornerRadius="16"
                                 ToolTip="{DynamicResource Str_MicTest_MeterTip}">
                                 <Border
                                     x:Name="MeterTrack"
-                                    Height="20"
+                                    Height="18"
                                     CornerRadius="10"
                                     SizeChanged="MeterTrack_SizeChanged">
                                     <Grid>
@@ -198,7 +204,6 @@
                                             <Border.RenderTransform>
                                                 <ScaleTransform x:Name="LevelScale" ScaleX="0" />
                                             </Border.RenderTransform>
-                                            <Border Background="{StaticResource DepthGlossBrush}" CornerRadius="10" IsHitTestVisible="False" />
                                         </Border>
                                         <Border
                                             x:Name="PeakMarker"
@@ -214,16 +219,16 @@
 
                         <Viewbox Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
                             <StackPanel>
-                                <TextBlock x:Name="TxtDb" FontSize="64" Style="{StaticResource GlowReadout}" Text="-∞ dB" />
+                                <TextBlock x:Name="TxtDb" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-∞ dB" />
                                 <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_MicrophoneLevel}" />
                             </StackPanel>
                         </Viewbox>
                     </Grid>
-                    </ContentControl>
+                    </Border>
 
                     <!--  Verdict pill, coloured by how it went  -->
                     <StackPanel Grid.Row="2" Margin="0,14,0,14">
-                        <Border x:Name="VerdictPill" Padding="14,8" HorizontalAlignment="Left" Background="{DynamicResource RowBg}" BorderBrush="{StaticResource DepthEdgeBrush}" BorderThickness="1" CornerRadius="10" Effect="{StaticResource DepthShadow}">
+                        <Border x:Name="VerdictPill" Padding="12,7" HorizontalAlignment="Left" Background="{DynamicResource RowBg}" CornerRadius="9">
                             <TextBlock
                                 x:Name="TxtVerdict"
                                 FontSize="14"
@@ -250,9 +255,9 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!--  Numbers as raised tiles, each with an icon chip  -->
+                    <!--  Numbers as tiles, each with an icon chip  -->
                     <UniformGrid Grid.Row="3" Columns="4">
-                        <ContentControl Margin="0,0,12,0" MinHeight="70" Style="{StaticResource DepthCard}">
+                        <Border Margin="0,0,12,0" MinHeight="70" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -266,8 +271,8 @@
                                     <TextBlock ctl:Tour.Key="Str_Tour_MicTest_Readings" ctl:Tour.Order="6" x:Name="TxtPeak" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
                                 </StackPanel>
                             </Grid>
-                        </ContentControl>
-                        <ContentControl Margin="0,0,12,0" MinHeight="70" Style="{StaticResource DepthCard}" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
+                        </Border>
+                        <Border Margin="0,0,12,0" MinHeight="70" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -281,8 +286,8 @@
                                     <TextBlock x:Name="TxtQuietest" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
                                 </StackPanel>
                             </Grid>
-                        </ContentControl>
-                        <ContentControl Margin="0,0,12,0" MinHeight="70" Style="{StaticResource DepthCard}">
+                        </Border>
+                        <Border Margin="0,0,12,0" MinHeight="70" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -296,8 +301,8 @@
                                     <TextBlock x:Name="TxtClipped" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0" />
                                 </StackPanel>
                             </Grid>
-                        </ContentControl>
-                        <ContentControl Margin="0" MinHeight="70" Style="{StaticResource DepthCard}">
+                        </Border>
+                        <Border Margin="0" MinHeight="70" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -311,7 +316,7 @@
                                     <TextBlock x:Name="TxtTime" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0:00" />
                                 </StackPanel>
                             </Grid>
-                        </ContentControl>
+                        </Border>
                     </UniformGrid>
                 </Grid>
             </Border>

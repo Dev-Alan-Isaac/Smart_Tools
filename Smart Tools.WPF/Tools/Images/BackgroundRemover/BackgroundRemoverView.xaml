@@ -581,7 +581,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_BgRemove_CleanEdgesTooltip}"
-                                        Unchecked="ChkCleanEdges_Changed" />
+                                        Unchecked="ChkCleanEdges_Changed"
+                                        controls:ChoiceIcon.Kind="DeleteOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <StackPanel x:Name="EdgeOptionsPanel">
                                         <Grid>
@@ -651,7 +653,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_BgRemove_TrimEdgesTooltip}"
-                                        Unchecked="PreviewOption_Changed" />
+                                        Unchecked="PreviewOption_Changed"
+                                        controls:ChoiceIcon.Kind="Checkerboard"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 
@@ -983,7 +987,9 @@
                                         Margin="0,12,0,0"
                                         Content="{DynamicResource Str_Convert_OverwriteExisting}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_BackgroundRemover_IfAProcessedFile}" />
+                                        ToolTip="{DynamicResource Str_BackgroundRemover_IfAProcessedFile}"
+                                        controls:ChoiceIcon.Kind="FileReplaceOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 

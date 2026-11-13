@@ -489,7 +489,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_ImageConvertPDF_EnlargeSmallPicturesTo}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FitToPageOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <CheckBox
                                         x:Name="ChkPageNumbering"
                                         Margin="0,8,0,0"
@@ -497,7 +499,9 @@
                                         Content="{DynamicResource Str_ImgPdf_AddPageNumbers}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_ImageConvertPDF_QuotPage1Quot}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FormatListNumbered"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                 </StackPanel>
                             </Border>
 
@@ -662,7 +666,9 @@
                                         Content="{DynamicResource Str_ImgPdf_AddTitlePage}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_ImageConvertPDF_AFirstPageWith}"
-                                        Unchecked="Option_Changed" />
+                                        Unchecked="Option_Changed"
+                                        controls:ChoiceIcon.Kind="FileOutline"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
                                     <StackPanel x:Name="TitlePageOptionsPanel" Visibility="Collapsed">
                                         <TextBlock
                                             Margin="0,10,0,4"

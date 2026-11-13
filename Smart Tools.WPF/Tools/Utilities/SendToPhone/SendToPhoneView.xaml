@@ -390,7 +390,9 @@
                                 Margin="0,10,0,0"
                                 Click="Option_Click"
                                 Content="{DynamicResource Str_SendToPhone_BlockPrograms}"
-                                ToolTip="{DynamicResource Str_SendToPhone_BlockProgramsTip}" />
+                                ToolTip="{DynamicResource Str_SendToPhone_BlockProgramsTip}"
+                                controls:ChoiceIcon.Kind="Cancel"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

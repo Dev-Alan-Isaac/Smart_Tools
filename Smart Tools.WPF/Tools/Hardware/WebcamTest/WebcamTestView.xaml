@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.WebcamTestView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -136,7 +137,9 @@
                                             ToolTip="{DynamicResource Str_WebcamTest_SizeTip}" />
                                     </Border>
 
-                                    <CheckBox ctl:Tour.Key="Str_Tour_WebcamTest_Mirror" ctl:Tour.Order="2"
+                                    <CheckBox
+                                        ctl:Tour.Key="Str_Tour_WebcamTest_Mirror"
+                                        ctl:Tour.Order="2"
                                         x:Name="ChkMirror"
                                         Margin="0,12,0,0"
                                         Checked="ChkMirror_Changed"
@@ -144,7 +147,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_WebcamTest_MirrorTip}"
-                                        Unchecked="ChkMirror_Changed" />
+                                        Unchecked="ChkMirror_Changed"
+                                        controls:ChoiceIcon.Kind="AutoFix"
+                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
 
                                     <TextBlock
                                         x:Name="TxtDeviceHint"
