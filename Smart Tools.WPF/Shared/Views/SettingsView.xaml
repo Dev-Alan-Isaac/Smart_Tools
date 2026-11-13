@@ -1539,12 +1539,6 @@
                                     Content="{DynamicResource Str_Settings_ShowNotifications}"
                                     ToolTip="{DynamicResource Str_Settings_ShowNotificationsTooltip}"
                                     Unchecked="Behaviour_Changed" />
-                                <CheckBox
-                                    x:Name="ChkTrackActiveTool"
-                                    Checked="Behaviour_Changed"
-                                    Content="{DynamicResource Str_Settings_TrackActiveTool}"
-                                    ToolTip="{DynamicResource Str_Settings_TrackActiveToolTooltip}"
-                                    Unchecked="Behaviour_Changed" />
                             </StackPanel>
                         </Border>
 

@@ -814,13 +814,33 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
+                            <!--  Back to the page that was open before this one (hidden until there is one)  -->
+                            <Button
+                                x:Name="BtnBack"
+                                Grid.Column="0"
+                                Width="36"
+                                Height="36"
+                                Margin="0,0,10,0"
+                                Padding="0"
+                                VerticalAlignment="Center"
+                                Click="BtnBack_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Shell_Back}"
+                                Visibility="Collapsed">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    Kind="ArrowLeft" />
+                            </Button>
+
                             <Border
                                 x:Name="ActiveToolBadge"
-                                Grid.Column="0"
+                                Grid.Column="1"
                                 Width="36"
                                 Height="36"
                                 Margin="0,0,12,0"
@@ -841,7 +861,7 @@
                                     Kind="HomeOutline" />
                             </Border>
 
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock
                                         FontSize="11.5"
@@ -871,7 +891,7 @@
                             <!--  Starts the guided tour of the page that is open (enabled only when the page has one)  -->
                             <Button
                                 x:Name="BtnHelpTour"
-                                Grid.Column="2"
+                                Grid.Column="3"
                                 Width="90"
                                 Margin="12,0,0,0"
                                 VerticalAlignment="Center"

@@ -645,7 +645,6 @@ namespace Smart_Tools.WPF.Views
 
                 ChkConfirmDelete.IsChecked = AppSettingsStore.ConfirmBeforeDeleting;
                 ChkShowNotifications.IsChecked = AppSettingsStore.ShowDesktopNotifications;
-                ChkTrackActiveTool.IsChecked = AppSettingsStore.TrackActiveTool;
             }
             finally
             {
@@ -674,7 +673,6 @@ namespace Smart_Tools.WPF.Views
             if (Ignore) return;
             AppSettingsStore.ConfirmBeforeDeleting = ChkConfirmDelete.IsChecked == true;
             AppSettingsStore.ShowDesktopNotifications = ChkShowNotifications.IsChecked == true;
-            AppSettingsStore.TrackActiveTool = ChkTrackActiveTool.IsChecked == true;
             SaveAndConfirm();
         }
 

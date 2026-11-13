@@ -407,9 +407,6 @@ namespace Smart_Tools.WPF.Modules
         public static bool ConfirmBeforeDeleting { get; set; } = true;
         public static bool ShowDesktopNotifications { get; set; } = true;
 
-        /// <summary>The main sidebar follows the open tool: opens its section, closes the others and scrolls to it.</summary>
-        public static bool TrackActiveTool { get; set; } = true;
-
         // Keyboard shortcuts: only what differs from each action's default is stored, keyed by action id.
         // A value of "" means the user cleared the key.
         public static Dictionary<string, string> Shortcuts { get; private set; } = new();
@@ -446,7 +443,6 @@ namespace Smart_Tools.WPF.Modules
                 Language = "en";
                 ConfirmBeforeDeleting = true;
                 ShowDesktopNotifications = true;
-                TrackActiveTool = true;
                 Shortcuts = new();
                 DisabledShortcuts = new();
                 GlobalHotkeysEnabled = true;
@@ -479,7 +475,6 @@ namespace Smart_Tools.WPF.Modules
                         Language = Language,
                         ConfirmBeforeDeleting = ConfirmBeforeDeleting,
                         ShowDesktopNotifications = ShowDesktopNotifications,
-                        TrackActiveTool = TrackActiveTool,
                         Shortcuts = new Dictionary<string, string>(Shortcuts),
                         DisabledShortcuts = DisabledShortcuts.ToList(),
                         GlobalHotkeysEnabled = GlobalHotkeysEnabled,
@@ -517,7 +512,6 @@ namespace Smart_Tools.WPF.Modules
                 // Missing keys (older files) keep the defaults instead of turning into false.
                 ConfirmBeforeDeleting = dto.ConfirmBeforeDeleting ?? true;
                 ShowDesktopNotifications = dto.ShowDesktopNotifications ?? true;
-                TrackActiveTool = dto.TrackActiveTool ?? true;
                 Shortcuts = dto.Shortcuts != null ? new Dictionary<string, string>(dto.Shortcuts) : new();
                 DisabledShortcuts = dto.DisabledShortcuts != null ? new HashSet<string>(dto.DisabledShortcuts) : new();
                 GlobalHotkeysEnabled = dto.GlobalHotkeysEnabled ?? true;
@@ -587,7 +581,6 @@ namespace Smart_Tools.WPF.Modules
             public string? Language { get; set; }
             public bool? ConfirmBeforeDeleting { get; set; }
             public bool? ShowDesktopNotifications { get; set; }
-            public bool? TrackActiveTool { get; set; }
             public Dictionary<string, string>? Shortcuts { get; set; }
             public List<string>? DisabledShortcuts { get; set; }
             public bool? GlobalHotkeysEnabled { get; set; }
