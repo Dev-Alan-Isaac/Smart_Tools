@@ -35,6 +35,7 @@ namespace Smart_Tools.WPF.Views
         public HomeView()
         {
             InitializeComponent();
+            AddHandler(ContextMenuOpeningEvent, new ContextMenuEventHandler(ToolButton_ContextMenuOpening));
             UpdateToolCount();
             BuildCards();
         }
@@ -122,6 +123,30 @@ namespace Smart_Tools.WPF.Views
             var tools = ToolCatalogManager.FavoriteTools(ids);
             FavoritesList.ItemsSource = tools;
             TxtNoFavorites.Visibility = tools.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Gives a tool button its Add / Remove favorite menu the first time it is right-clicked. It is built here, not in a
+        /// Style setter in the XAML: the XAML compiler wires event handlers of a menu inside a Style to the wrong element,
+        /// which throws when the view loads and the main window never opens.
+        /// </summary>
+        private void ToolButton_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (e.OriginalSource is not DependencyObject source) return;
+            for (DependencyObject? d = source; d != null && d != this; d = System.Windows.Media.VisualTreeHelper.GetParent(d))
+            {
+                if (d is not System.Windows.Controls.Button { DataContext: ToolInfo } button) continue;
+                if (button.ContextMenu == null)
+                {
+                    var item = new MenuItem { Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.StarOutline } };
+                    item.Click += ToolMenuFavorite_Click;
+                    var menu = new ContextMenu();
+                    menu.Items.Add(item);
+                    menu.Opened += ToolMenu_Opened;
+                    button.ContextMenu = menu;
+                }
+                return;
+            }
         }
 
         /// <summary>The menu says Add or Remove depending on whether the tool under the pointer is pinned.</summary>

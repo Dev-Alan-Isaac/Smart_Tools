@@ -76,6 +76,9 @@ namespace Smart_Tools.WPF
         private ShellSettings _shell = new();
         private string _currentId = ToolCatalogManager.HomeId;
         private string? _beforeMemorialId;
+        private const int MaxHistory = 30;
+        private readonly List<string> _history = new();   // pages visited before the current one, newest last (the Back button)
+        private bool _navigatingBack;
         private bool _isCompact;
         private TrayIconManager? _tray;
         private bool _exiting;   // the tray's Exit item: really close instead of hiding to the tray
@@ -125,7 +128,10 @@ namespace Smart_Tools.WPF
                 if (string.IsNullOrWhiteSpace(current) || _shell.LastSeenVersion == current) return;
                 bool freshInstall = _shell.LastSeenVersion.Length == 0 && _shell.RecentToolIds.Count == 0;
                 var pending = freshInstall ? new List<ReleaseEntry>() : ReleaseNotes.Pending(_shell.LastSeenVersion, current);
-                if (pending.Count > 0 && !IsVisible) return; // started hidden in the tray: show it next time
+                // Started into the tray: this handler runs before HideToTray's, so IsVisible is still true here. Showing the
+                // dialog would block until "Got it" and only then hide the window, which looks like the app never started.
+                bool startsInTray = App.StartInTray && AppSettingsStore.CloseToTray;
+                if (pending.Count > 0 && (startsInTray || !IsVisible || WindowState == WindowState.Minimized)) return; // show it next time
                 _shell.LastSeenVersion = current;
                 ToolCatalogManager.SaveSettings(_shell);
                 if (pending.Count > 0) WhatsNewDialog.Show(pending);
@@ -404,7 +410,7 @@ namespace Smart_Tools.WPF
         // =================================================================
 
         /// <summary>Opens Home, a tool (by catalog id) or Contact.</summary>
-        private void Open(string id, bool fromSidebar = false)
+        private void Open(string id, bool keepRecentOrder = false)
         {
             _titleClickCount = 0;   // any navigation resets the easter-egg count (as the comment always said)
 
@@ -443,11 +449,14 @@ namespace Smart_Tools.WPF
 
             if (tool.Id != ToolCatalogManager.SettingsId)
             {
-                ToolCatalogManager.PushRecent(_shell.RecentToolIds, tool.Id);
-                // A click on a section's own button needs no tracking: the user is already looking at it.
-                if (AppSettingsStore.TrackActiveTool && !fromSidebar) RevealInSidebar(tool);
-                RefreshRecent();
-                ToolCatalogManager.SaveSettings(_shell);
+                // Opened from the Recent list (or Back): the tool is already there, so the list keeps its order.
+                // Opened from anywhere else: it moves to the top.
+                if (!keepRecentOrder)
+                {
+                    ToolCatalogManager.PushRecent(_shell.RecentToolIds, tool.Id);
+                    RefreshRecent();
+                    ToolCatalogManager.SaveSettings(_shell);
+                }
             }
         }
 
@@ -488,6 +497,11 @@ namespace Smart_Tools.WPF
         private void Show(string id, UIElement view, string label, PackIconKind icon, string section)
         {
             Log.Info($"Open page '{_currentId}' -> '{id}'");
+            if (!_navigatingBack && !string.Equals(id, _currentId, StringComparison.OrdinalIgnoreCase) && _currentId != MemorialId)
+            {
+                if (_history.Count == 0 || _history[^1] != _currentId) _history.Add(_currentId);
+                if (_history.Count > MaxHistory) _history.RemoveAt(0);
+            }
             ResourceMonitor.CurrentTool = id;
             _currentId = id;
             bool changed = !ReferenceEquals(MainContentArea.Content, view);
@@ -497,6 +511,7 @@ namespace Smart_Tools.WPF
             TxtBreadcrumbSection.Text = section;
             IconActiveTool.Kind = icon;
             SelectNav(id);
+            BtnBack.Visibility = _history.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             TourLayer.Close();   // a tour belongs to the page it was started on
             UpdateHelpButton();
@@ -529,6 +544,20 @@ namespace Smart_Tools.WPF
                 BtnHelpTour.SetResourceReference(ToolTipProperty, hasTour ? "Str_Tour_Help" : "Str_Tour_NoTour");
             }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
+
+        /// <summary>Back: returns to the page that was open before this one. Recent keeps its order.</summary>
+        private void GoBack()
+        {
+            if (_history.Count == 0) return;
+            string id = _history[^1];
+            _history.RemoveAt(_history.Count - 1);
+            _navigatingBack = true;
+            try { Open(id, keepRecentOrder: true); }
+            finally { _navigatingBack = false; }
+            BtnBack.Visibility = _history.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnBack_Click(object sender, RoutedEventArgs e) => GoBack();
 
         private void BtnHelpTour_Click(object sender, RoutedEventArgs e)
         {
@@ -870,28 +899,7 @@ namespace Smart_Tools.WPF
 
         private void NavButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is RadioButton { Tag: string id } button) Open(id, fromSidebar: ReferenceEquals(_navButtons.GetValueOrDefault(id), button));
-        }
-
-        /// <summary>
-        /// "Track active item", like Solution Explorer: opens the tool's section, closes the others and scrolls the
-        /// sidebar so its button is in the middle, with a small pop. Only tools in the sidebar's sections are tracked.
-        /// </summary>
-        private void RevealInSidebar(ToolInfo tool)
-        {
-            if (!_navButtons.TryGetValue(tool.Id, out var button)) return;
-
-            foreach (var other in _shell.ExpandedCategories.Where(c => c != tool.CategoryId).ToList())
-                SetSectionExpanded(other, false, animate: false);
-            SetSectionExpanded(tool.CategoryId, true, animate: true);
-
-            NavPanel.UpdateLayout();   // the sections just changed size; measure before working out where the button is
-            double top = button.TransformToAncestor(NavScroll).Transform(new System.Windows.Point(0, 0)).Y;
-            double room = NavScroll.ViewportHeight - button.ActualHeight;
-            if (top < 0 || top > room)
-                NavScroll.ScrollToVerticalOffset(Math.Max(0, NavScroll.VerticalOffset + top - room / 2));
-
-            UiMotion.Pop(button);
+            if (sender is RadioButton { Tag: string id } button) Open(id, keepRecentOrder: _recentButtons.Contains(button));
         }
 
         private void SectionHeader_Click(object sender, RoutedEventArgs e)
