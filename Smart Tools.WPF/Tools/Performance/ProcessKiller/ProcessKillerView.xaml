@@ -420,9 +420,7 @@
                                         Checked="ChkAskSingle_Changed"
                                         Content="{DynamicResource Str_ProcessKiller_AskSingle}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        Unchecked="ChkAskSingle_Changed"
-                                        controls:ChoiceIcon.Kind="HelpCircleOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="ChkAskSingle_Changed" />
                                 </StackPanel>
                             </Border>
 

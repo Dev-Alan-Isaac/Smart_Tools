@@ -331,9 +331,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_VoiceChanger_WhileTheVoiceGoes}"
-                                        Unchecked="HearYourself_Changed"
-                                        controls:ChoiceIcon.Kind="Headphones"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="HearYourself_Changed" />
 
                                     <!--  What to pick in the other app - or how to get a cable  -->
                                     <Border
@@ -651,9 +649,7 @@
                                         Content="{DynamicResource Str_VoiceChanger_Robot}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_VoiceChanger_MixesTheVoiceWith}"
-                                        Unchecked="Effect_Changed"
-                                        controls:ChoiceIcon.Kind="Robot"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Effect_Changed" />
                                     <CheckBox
                                         x:Name="ChkEcho"
                                         Margin="0,8,0,0"
@@ -661,9 +657,7 @@
                                         Content="{DynamicResource Str_VoiceChanger_Echo}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_VoiceChanger_ARepeatingFadingCopy}"
-                                        Unchecked="Effect_Changed"
-                                        controls:ChoiceIcon.Kind="Waveform"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Effect_Changed" />
 
                                     <StackPanel x:Name="EchoPanel" Margin="0,10,0,0">
                                         <Grid>

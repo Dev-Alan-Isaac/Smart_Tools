@@ -410,9 +410,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_MdHtml_SyncScrollTooltip}"
-                                        Unchecked="ChkSyncScroll_Changed"
-                                        controls:ChoiceIcon.Kind="SwapVertical"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="ChkSyncScroll_Changed" />
                                     <CheckBox
                                         x:Name="ChkWordWrap"
                                         Margin="0,8,0,0"
@@ -420,9 +418,7 @@
                                         Content="{DynamicResource Str_MdHtml_WordWrap}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="ChkWordWrap_Changed"
-                                        controls:ChoiceIcon.Kind="FormatTextWrappingWrap"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="ChkWordWrap_Changed" />
                                 </StackPanel>
                             </Border>
 

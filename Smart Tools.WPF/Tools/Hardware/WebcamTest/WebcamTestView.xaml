@@ -147,9 +147,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_WebcamTest_MirrorTip}"
-                                        Unchecked="ChkMirror_Changed"
-                                        controls:ChoiceIcon.Kind="AutoFix"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="ChkMirror_Changed" />
 
                                     <TextBlock
                                         x:Name="TxtDeviceHint"

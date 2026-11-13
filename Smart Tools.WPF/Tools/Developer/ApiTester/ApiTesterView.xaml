@@ -404,9 +404,7 @@
                                             x:Name="ChkAutoReconnect"
                                             Content="{DynamicResource Str_Api_AutoReconnect}"
                                             Foreground="{DynamicResource SidebarText}"
-                                            ToolTip="{DynamicResource Str_Api_AutoReconnectTooltip}"
-                                            controls:ChoiceIcon.Kind="Reload"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            ToolTip="{DynamicResource Str_Api_AutoReconnectTooltip}" />
 
                                     </StackPanel>
                                 </StackPanel>

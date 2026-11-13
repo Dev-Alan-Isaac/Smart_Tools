@@ -349,20 +349,18 @@
                                             Margin="0,12,0,0"
                                             Click="PackSetting_Click"
                                             Foreground="{DynamicResource SidebarText}"
-                                            IsChecked="True"
-                                            Content="{DynamicResource Str_SpritePacker_PowerOfTwo}"
-                                            controls:ChoiceIcon.Kind="ArrowExpandAll"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            IsChecked="True">
+                                            <TextBlock Text="{DynamicResource Str_SpritePacker_PowerOfTwo}" TextWrapping="Wrap" />
+                                        </CheckBox>
                                         <TextBlock Style="{StaticResource SpSideHint}" Text="{DynamicResource Str_SpritePacker_PowerOfTwoHint}" />
                                         <CheckBox
                                             x:Name="ChkTrim"
                                             Margin="0,10,0,0"
                                             Click="PackSetting_Click"
                                             Foreground="{DynamicResource SidebarText}"
-                                            IsChecked="True"
-                                            Content="{DynamicResource Str_SpritePacker_Trim}"
-                                            controls:ChoiceIcon.Kind="ContentCut"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            IsChecked="True">
+                                            <TextBlock Text="{DynamicResource Str_SpritePacker_Trim}" TextWrapping="Wrap" />
+                                        </CheckBox>
                                         <TextBlock Style="{StaticResource SpSideHint}" Text="{DynamicResource Str_SpritePacker_TrimHint}" />
                                     </StackPanel>
                                 </Border>
@@ -654,10 +652,9 @@
                                             Margin="0,12,0,0"
                                             Click="SliceSetting_Click"
                                             Foreground="{DynamicResource SidebarText}"
-                                            IsChecked="True"
-                                            Content="{DynamicResource Str_SpritePacker_SkipEmpty}"
-                                            controls:ChoiceIcon.Kind="SkipNext"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            IsChecked="True">
+                                            <TextBlock Text="{DynamicResource Str_SpritePacker_SkipEmpty}" TextWrapping="Wrap" />
+                                        </CheckBox>
                                         <TextBlock Style="{StaticResource SpSideHint}" Text="{DynamicResource Str_SpritePacker_SkipEmptyHint}" />
 
                                         <TextBlock Style="{StaticResource SpSideLabel}" Text="{DynamicResource Str_SpritePacker_NamePrefix}" />

@@ -265,9 +265,7 @@
     Margin="0,12,0,0"
     Click="ChkHideListening_Click"
     Content="{DynamicResource Str_Connections_HideListening}"
-    ToolTip="{DynamicResource Str_Connections_HideListeningTip}"
-    controls:ChoiceIcon.Kind="EyeOffOutline"
-    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+    ToolTip="{DynamicResource Str_Connections_HideListeningTip}" />
 </StackPanel>
 </Border>
 <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
@@ -286,9 +284,7 @@
     Margin="0,0,0,0"
     Click="ChkLookUp_Click"
     Content="{DynamicResource Str_Connections_LookUp}"
-    ToolTip="{DynamicResource Str_Connections_LookUpTip}"
-    controls:ChoiceIcon.Kind="Magnify"
-    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+    ToolTip="{DynamicResource Str_Connections_LookUpTip}" />
 </StackPanel>
 </Border>
 <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">

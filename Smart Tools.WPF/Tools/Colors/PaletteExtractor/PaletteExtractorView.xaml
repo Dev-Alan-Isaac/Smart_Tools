@@ -293,25 +293,19 @@
                                         Checked="Filter_Changed"
                                         Content="{DynamicResource Str_Palette_IgnoreTransparent}"
                                         IsChecked="True"
-                                        Unchecked="Filter_Changed"
-                                        controls:ChoiceIcon.Kind="Checkerboard"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Filter_Changed" />
                                     <CheckBox
                                         x:Name="ChkIgnoreWhite"
                                         Margin="0,8,0,0"
                                         Checked="Filter_Changed"
                                         Content="{DynamicResource Str_Palette_IgnoreWhite}"
-                                        Unchecked="Filter_Changed"
-                                        controls:ChoiceIcon.Kind="Checkerboard"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Filter_Changed" />
                                     <CheckBox
                                         x:Name="ChkIgnoreBlack"
                                         Margin="0,8,0,0"
                                         Checked="Filter_Changed"
                                         Content="{DynamicResource Str_Palette_IgnoreBlack}"
-                                        Unchecked="Filter_Changed"
-                                        controls:ChoiceIcon.Kind="Checkerboard"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Filter_Changed" />
                                 </StackPanel>
                             </Border>
 

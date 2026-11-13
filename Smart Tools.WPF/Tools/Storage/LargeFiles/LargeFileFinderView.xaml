@@ -585,9 +585,7 @@
                                         Content="{DynamicResource Str_Common_IncludeSubfolders}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_LargeFile_IncludeSubfoldersTooltip}"
-                                        controls:ChoiceIcon.Kind="FolderMultipleOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_LargeFile_IncludeSubfoldersTooltip}" />
                                     <CheckBox
                                         x:Name="ChkIgnoreSystemFiles"
                                         Margin="0,0,0,6"
@@ -595,18 +593,14 @@
                                         Content="{DynamicResource Str_LargeFile_IgnoreSystemFiles}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_LargeFile_IgnoreSystemFilesTooltip}"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_LargeFile_IgnoreSystemFilesTooltip}" />
                                     <CheckBox
                                         x:Name="ChkShowHidden"
                                         Margin="0,0,0,6"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_LargeFile_ShowHiddenFiles}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_LargeFile_ShowHiddenFilesTooltip}"
-                                        controls:ChoiceIcon.Kind="EyeOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_LargeFile_ShowHiddenFilesTooltip}" />
                                     <TextBlock
                                         Margin="0,8,0,0"
                                         FontSize="11"

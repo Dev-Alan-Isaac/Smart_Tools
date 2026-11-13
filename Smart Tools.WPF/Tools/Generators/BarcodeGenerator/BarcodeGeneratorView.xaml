@@ -776,9 +776,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Barcode_ShowTextTooltip}"
-                                        Unchecked="ShowTextCheckBox_Changed"
-                                        controls:ChoiceIcon.Kind="TextBoxOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="ShowTextCheckBox_Changed" />
                                 </StackPanel>
                             </Border>
 

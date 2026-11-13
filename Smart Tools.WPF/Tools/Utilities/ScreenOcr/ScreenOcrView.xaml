@@ -189,9 +189,7 @@
                                         Content="{DynamicResource Str_Ocr_HideWhileSelecting}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Ocr_HideWhileSelectingTip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Ocr_FreezeHint}" />
                                 </StackPanel>
                             </Border>
@@ -231,9 +229,7 @@
                                         Content="{DynamicResource Str_Ocr_Enhance}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Ocr_EnhanceTip}"
-                                        Unchecked="ChkEnhance_Changed"
-                                        controls:ChoiceIcon.Kind="AutoFix"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="ChkEnhance_Changed" />
 
                                     <TextBlock
                                         Margin="0,12,0,6"
@@ -268,9 +264,7 @@
                                         Content="{DynamicResource Str_Ocr_CopyWhenDone}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Ocr_CopyWhenDoneTip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="ContentCopy"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Ocr_OfflineHint}" />
                                 </StackPanel>
                             </Border>

@@ -513,18 +513,14 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_VideoToAudio_KeepTagsTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="FileVideoOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <CheckBox
                                         x:Name="ChkTitleFromName"
                                         Margin="0,8,0,0"
                                         Checked="Option_Changed"
                                         Content="{DynamicResource Str_VideoToAudio_TitleFromName}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="CheckCircleOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
 
                                     <TextBlock
                                         Margin="0,12,0,6"

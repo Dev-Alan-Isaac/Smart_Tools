@@ -313,9 +313,7 @@
                                         Content="{DynamicResource Str_DbMigrate_TrustCert}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DbMigrate_TrustCertTip}"
-                                        controls:ChoiceIcon.Kind="CertificateOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DbMigrate_TrustCertTip}" />
                                     <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -429,9 +427,7 @@
                                         Content="{DynamicResource Str_DbMigrate_TrustCert}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DbMigrate_TrustCertTip}"
-                                        controls:ChoiceIcon.Kind="CertificateOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DbMigrate_TrustCertTip}" />
                                     <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -471,41 +467,31 @@
                                         Margin="0,0,0,6"
                                         Content="{DynamicResource Str_DbMigrate_OptData}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        controls:ChoiceIcon.Kind="DatabaseOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True" />
                                     <CheckBox
                                         x:Name="ChkIndexes"
                                         Margin="0,0,0,6"
                                         Content="{DynamicResource Str_DbMigrate_OptIndexes}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DbMigrate_OptIndexesTip}"
-                                        controls:ChoiceIcon.Kind="DatabaseOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DbMigrate_OptIndexesTip}" />
                                     <CheckBox
                                         x:Name="ChkCode"
                                         Margin="0,0,0,6"
                                         Content="{DynamicResource Str_DbMigrate_OptCode}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        controls:ChoiceIcon.Kind="DatabaseOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True" />
                                     <CheckBox
                                         x:Name="ChkChecksum"
                                         Margin="0,0,0,6"
                                         Content="{DynamicResource Str_DbMigrate_OptChecksum}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_DbMigrate_OptChecksumTip}"
-                                        controls:ChoiceIcon.Kind="ShieldCheckOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DbMigrate_OptChecksumTip}" />
                                     <CheckBox
                                         x:Name="ChkDropOnFail"
                                         Content="{DynamicResource Str_DbMigrate_OptDropOnFail}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_DbMigrate_OptDropOnFailTip}"
-                                        controls:ChoiceIcon.Kind="DatabaseOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DbMigrate_OptDropOnFailTip}" />
                                 </StackPanel>
                             </Border>
 

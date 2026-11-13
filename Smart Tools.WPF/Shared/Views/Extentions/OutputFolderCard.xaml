@@ -30,9 +30,7 @@
                 <controls:OutputFolderCard.Options>
                     <CheckBox
                         x:Name="ChkKeepStructure"
-                        Content="{DynamicResource Str_OutputFolderCard_KeepFolderStructure}"
-                        controls:ChoiceIcon.Kind="FolderOutline"
-                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                        Content="{DynamicResource Str_OutputFolderCard_KeepFolderStructure}" />
                 </controls:OutputFolderCard.Options>
             </controls:OutputFolderCard>
         (xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls")
@@ -272,9 +270,7 @@
                     Content="{DynamicResource Str_OutputFolderCard_AskWhereToSave}"
                     Foreground="{DynamicResource SidebarText}"
                     ToolTip="{DynamicResource Str_OutputFolderCard_OffSavesStraightInto}"
-                    Visibility="Collapsed"
-                    controls:ChoiceIcon.Kind="HelpCircleOutline"
-                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                    Visibility="Collapsed" />
             </StackPanel>
 
             <CheckBox
@@ -284,9 +280,7 @@
                 Content="{DynamicResource Str_OutputFolderCard_SaveNextToEach}"
                 Foreground="{DynamicResource SidebarText}"
                 ToolTip="{DynamicResource Str_OutputFolderCard_EachResultGoesIn}"
-                Visibility="Collapsed"
-                controls:ChoiceIcon.Kind="FolderOutline"
-                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                Visibility="Collapsed" />
 
             <!--  The tool's own extra options (Options property)  -->
             <ContentPresenter x:Uid="OptionsPresenter" />

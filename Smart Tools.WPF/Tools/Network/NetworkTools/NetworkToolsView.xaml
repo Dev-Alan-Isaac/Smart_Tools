@@ -700,27 +700,22 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Network_AppendCrlfTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="KeyboardReturn"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <CheckBox
                                         x:Name="ChkSendHex"
                                         Checked="Option_Changed"
                                         Content="{DynamicResource Str_Network_SendAsHex}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Network_SendAsHexTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="Pound"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <CheckBox
                                         x:Name="ChkShowHex"
                                         Checked="Option_Changed"
-                                        Content="{DynamicResource Str_NetworkTools_ShowReceivedDataAs}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_NetworkTools_ForBinaryProtocolsShows}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="Pound"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed">
+                                        <TextBlock Text="{DynamicResource Str_NetworkTools_ShowReceivedDataAs}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
 
@@ -741,9 +736,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_NetworkAdapters_AsksApiIpifyOrg}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="Magnify"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock
                                         FontSize="11"
                                         Foreground="{DynamicResource SidebarTextMuted}"
@@ -756,9 +749,7 @@
                                         Content="{DynamicResource Str_NetworkAdapters_ShowVirtualAdapters}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_NetworkAdapters_AlsoListHyperV}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock
                                         FontSize="11"
                                         Foreground="{DynamicResource SidebarTextMuted}"

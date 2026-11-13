@@ -415,9 +415,7 @@
                                         Content="{DynamicResource Str_VideoReplay_RepeatThePlaylist}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_VideoReplay_StartAgainFromThe}"
-                                        Unchecked="Repeat_Changed"
-                                        controls:ChoiceIcon.Kind="Repeat"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Repeat_Changed" />
                                 </StackPanel>
                             </Border>
 

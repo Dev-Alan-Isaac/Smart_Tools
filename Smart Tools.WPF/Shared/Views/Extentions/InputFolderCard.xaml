@@ -337,9 +337,7 @@
                 Content="{DynamicResource Str_Common_IncludeSubfolders}"
                 Foreground="{DynamicResource SidebarText}"
                 IsChecked="True"
-                ToolTip="{DynamicResource Str_InputFolderCard_IncludeSubfoldersTooltip}"
-                controls:ChoiceIcon.Kind="FolderMultipleOutline"
-                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                ToolTip="{DynamicResource Str_InputFolderCard_IncludeSubfoldersTooltip}" />
 
             <!--  The tool's own extra options (e.g. "Skip hidden files")  -->
             <ContentPresenter x:Uid="OptionsPresenter" Margin="0,10,0,0" />

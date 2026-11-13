@@ -273,9 +273,7 @@
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_Recorder_Cursor}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        controls:ChoiceIcon.Kind="CursorDefaultOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True" />
                                     <CheckBox
                                         x:Name="ChkMinimize"
                                         Margin="0,8,0,0"
@@ -283,9 +281,7 @@
                                         Content="{DynamicResource Str_Recorder_Minimize}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_Recorder_MinimizeTip}"
-                                        controls:ChoiceIcon.Kind="CursorDefaultOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Recorder_MinimizeTip}" />
                                     <CheckBox
                                         x:Name="ChkSkipUac"
                                         Margin="0,8,0,0"
@@ -293,9 +289,7 @@
                                         Content="{DynamicResource Str_Recorder_SkipUac}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_Recorder_SkipUacTip}"
-                                        controls:ChoiceIcon.Kind="CursorDefaultOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Recorder_SkipUacTip}" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Recorder_SkipUacHint}" />
                                 </StackPanel>
                             </Border>

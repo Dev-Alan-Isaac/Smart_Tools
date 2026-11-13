@@ -246,32 +246,24 @@
                                     Margin="0,8,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_AsciiArt_MatchOriginal}"
-                                    ToolTip="{DynamicResource Str_AsciiArt_MatchOriginalTip}"
-                                    controls:ChoiceIcon.Kind="FileImageOutline"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    ToolTip="{DynamicResource Str_AsciiArt_MatchOriginalTip}" />
                                 <CheckBox
                                     x:Name="ChkMatchShapes"
                                     Margin="0,8,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_AsciiArt_MatchShapes}"
-                                    ToolTip="{DynamicResource Str_AsciiArt_MatchShapesTip}"
-                                    controls:ChoiceIcon.Kind="AutoFix"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    ToolTip="{DynamicResource Str_AsciiArt_MatchShapesTip}" />
                                 <CheckBox
                                     x:Name="ChkSharpen"
                                     Margin="0,8,0,0"
                                     Click="Option_Click"
-                                    Content="{DynamicResource Str_AsciiArt_Sharpen}"
-                                    controls:ChoiceIcon.Kind="Pound"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    Content="{DynamicResource Str_AsciiArt_Sharpen}" />
                                 <CheckBox
                                     x:Name="ChkAutoLevels"
                                     Margin="0,8,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_AsciiArt_AutoLevels}"
-                                    ToolTip="{DynamicResource Str_AsciiArt_AutoLevelsTip}"
-                                    controls:ChoiceIcon.Kind="AutoFix"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    ToolTip="{DynamicResource Str_AsciiArt_AutoLevelsTip}" />
                                 <TextBlock x:Name="TxtContrastLabel" Style="{StaticResource AaLabel}" />
                                 <Slider
                                     x:Name="SliderContrast"
@@ -289,9 +281,7 @@
                                     Margin="0,8,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_AsciiArt_Invert}"
-                                    ToolTip="{DynamicResource Str_AsciiArt_InvertTip}"
-                                    controls:ChoiceIcon.Kind="AutoFix"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    ToolTip="{DynamicResource Str_AsciiArt_InvertTip}" />
                             </StackPanel>
                         </Border>
 
@@ -337,9 +327,7 @@
                                     Margin="0,8,0,0"
                                     Click="Option_Click"
                                     Content="{DynamicResource Str_AsciiArt_UseSpace}"
-                                    ToolTip="{DynamicResource Str_AsciiArt_UseSpaceTip}"
-                                    controls:ChoiceIcon.Kind="KeyboardSpace"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    ToolTip="{DynamicResource Str_AsciiArt_UseSpaceTip}" />
                                 <TextBlock Style="{StaticResource AaLabel}" Text="{DynamicResource Str_AsciiArt_Font}" />
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <ComboBox
@@ -479,9 +467,7 @@
                                     Margin="0,10,0,0"
                                     Click="ChkSymmetry_Click"
                                     Content="{DynamicResource Str_AsciiArt_Symmetry}"
-                                    ToolTip="{DynamicResource Str_AsciiArt_SymmetryTip}"
-                                    controls:ChoiceIcon.Kind="AutoFix"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    ToolTip="{DynamicResource Str_AsciiArt_SymmetryTip}" />
                                 <UniformGrid Margin="0,10,0,0" Columns="3">
                                     <Button
                                         x:Name="BtnUndo"

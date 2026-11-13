@@ -119,9 +119,7 @@
                                     Checked="ChkAuto_Changed"
                                     Content="{DynamicResource Str_WifiAnalyzer_ScanAgainEverySeconds}"
                                     Foreground="{DynamicResource SidebarText}"
-                                    Unchecked="ChkAuto_Changed"
-                                    controls:ChoiceIcon.Kind="Reload"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    Unchecked="ChkAuto_Changed" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

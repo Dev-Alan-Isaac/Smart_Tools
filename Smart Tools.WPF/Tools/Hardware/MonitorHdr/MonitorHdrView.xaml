@@ -169,9 +169,7 @@
                                         Content="{DynamicResource Str_MonitorHdr_ShowHints}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="Keyboard"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                 </StackPanel>
                             </Border>
 

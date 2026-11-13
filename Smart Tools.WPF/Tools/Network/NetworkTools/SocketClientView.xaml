@@ -199,9 +199,7 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Network_AppendCrlfTooltip}"
-                                            Unchecked="Option_Changed"
-                                            controls:ChoiceIcon.Kind="KeyboardReturn"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="Option_Changed" />
                                         <CheckBox
                                             x:Name="ChkSendHex"
                                             Margin="0,0,0,6"
@@ -209,19 +207,16 @@
                                             Content="{DynamicResource Str_Network_SendAsHex}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_Network_SendAsHexTooltip}"
-                                            Unchecked="Option_Changed"
-                                            controls:ChoiceIcon.Kind="Pound"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="Option_Changed" />
                                         <CheckBox
                                             x:Name="ChkShowHex"
                                             Margin="0,0,0,6"
                                             Checked="Option_Changed"
-                                            Content="{DynamicResource Str_NetworkTools_ShowReceivedDataAs}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_NetworkTools_ForBinaryProtocolsShows}"
-                                            Unchecked="Option_Changed"
-                                            controls:ChoiceIcon.Kind="Pound"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="Option_Changed">
+                                            <TextBlock Text="{DynamicResource Str_NetworkTools_ShowReceivedDataAs}" TextWrapping="Wrap" />
+                                        </CheckBox>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

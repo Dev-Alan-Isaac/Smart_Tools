@@ -510,26 +510,20 @@
                                         Content="{DynamicResource Str_Common_IncludeSubfolders}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DiskSpace_IncludeSubfoldersTooltip}"
-                                        controls:ChoiceIcon.Kind="FolderMultipleOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DiskSpace_IncludeSubfoldersTooltip}" />
                                     <CheckBox
                                         x:Name="ChkIgnoreSystemFiles"
                                         Margin="0,0,0,6"
                                         Content="{DynamicResource Str_DiskSpace_IgnoreSystemFiles}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DiskSpace_IgnoreSystemFilesTooltip}"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DiskSpace_IgnoreSystemFilesTooltip}" />
                                     <CheckBox
                                         x:Name="ChkShowHidden"
                                         Margin="0,0,0,6"
                                         Content="{DynamicResource Str_DiskSpace_ShowHiddenItems}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_DiskSpace_ShowHiddenItemsTooltip}"
-                                        controls:ChoiceIcon.Kind="EyeOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DiskSpace_ShowHiddenItemsTooltip}" />
                                     <TextBlock
                                         Margin="0,8,0,0"
                                         FontSize="11"

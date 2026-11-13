@@ -519,9 +519,7 @@
                                         Content="{DynamicResource Str_Search_SearchFileNames}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_Search_SearchFileNamesTooltip}"
-                                        controls:ChoiceIcon.Kind="Magnify"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Search_SearchFileNamesTooltip}" />
                                     <CheckBox
                                         x:Name="ChkSearchFileContents"
                                         Margin="0,8,0,0"
@@ -529,27 +527,21 @@
                                         Content="{DynamicResource Str_Search_SearchFileContents}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_Search_SearchFileContentsTooltip}"
-                                        controls:ChoiceIcon.Kind="FileCompare"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Search_SearchFileContentsTooltip}" />
                                     <CheckBox
                                         x:Name="ChkCaseSensitive"
                                         Margin="0,8,0,0"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_Search_CaseSensitive}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Common_MatchCaseTooltip}"
-                                        controls:ChoiceIcon.Kind="FormatLetterCase"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Common_MatchCaseTooltip}" />
                                     <CheckBox
                                         x:Name="ChkWholeWordOnly"
                                         Margin="0,8,0,0"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_Common_WholeWordOnly}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Common_WholeWordOnlyTooltip}"
-                                        controls:ChoiceIcon.Kind="TextSearch"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Common_WholeWordOnlyTooltip}" />
                                 </StackPanel>
                             </Border>
 
@@ -636,9 +628,7 @@
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_SearchFile_ListEachValueOnly}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_SearchFile_AValueFoundAgain}"
-                                        controls:ChoiceIcon.Kind="EyeOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_SearchFile_AValueFoundAgain}" />
                                     <TextBlock
                                         Margin="22,2,0,0"
                                         FontSize="11"
@@ -651,9 +641,7 @@
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_SearchFile_AtMostOneRow}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_Search_StopAtFirstMatchTooltip}"
-                                        controls:ChoiceIcon.Kind="TableRow"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Search_StopAtFirstMatchTooltip}" />
                                     <TextBlock
                                         x:Name="TxtFirstMatchHint"
                                         Margin="22,2,0,0"

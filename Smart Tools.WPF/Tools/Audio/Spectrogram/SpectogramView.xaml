@@ -465,9 +465,7 @@
                                         Content="{DynamicResource Str_Spectrogram_ShowLegend}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_Spectogram_TimeAndFrequencyScales}"
-                                        controls:ChoiceIcon.Kind="FormatListBulletedType"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_Spectogram_TimeAndFrequencyScales}" />
                                 </StackPanel>
                             </Border>
 

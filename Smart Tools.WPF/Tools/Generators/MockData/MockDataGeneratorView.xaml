@@ -508,9 +508,7 @@
                                         Click="Setting_Changed"
                                         Content="{DynamicResource Str_Mock_IncludeHeader}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        controls:ChoiceIcon.Kind="TableHeadersEye"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True" />
                                 </StackPanel>
                             </Border>
 

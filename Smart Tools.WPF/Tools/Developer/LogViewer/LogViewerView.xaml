@@ -478,18 +478,14 @@
                                         Click="DisplayOption_Click"
                                         Content="{DynamicResource Str_Log_WrapLongLines}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_LogViewer_OffLongLinesScroll}"
-                                        controls:ChoiceIcon.Kind="FormatTextWrappingWrap"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_LogViewer_OffLongLinesScroll}" />
                                     <CheckBox
                                         x:Name="ChkLineNumbers"
                                         Margin="0,0,0,6"
                                         Click="DisplayOption_Click"
                                         Content="{DynamicResource Str_LogViewer_ShowLineNumbers}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        controls:ChoiceIcon.Kind="FormatListNumbered"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True" />
 
                                     <TextBlock
                                         Margin="0,14,0,6"

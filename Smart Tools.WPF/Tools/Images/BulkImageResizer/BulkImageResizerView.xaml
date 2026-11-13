@@ -277,9 +277,7 @@
                                         Content="{DynamicResource Str_BulkResize_OnlyShrink}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_BulkResize_OnlyShrinkTip}"
-                                        controls:ChoiceIcon.Kind="FileImageOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_BulkResize_OnlyShrinkTip}" />
                                 </StackPanel>
                             </Border>
 
@@ -353,9 +351,7 @@
                                         Click="Field_LostFocus"
                                         Content="{DynamicResource Str_BulkResize_Target}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        ToolTip="{DynamicResource Str_BulkResize_TargetTip}"
-                                        controls:ChoiceIcon.Kind="ContentSave"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_BulkResize_TargetTip}" />
                                     <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -384,9 +380,7 @@
                                         Content="{DynamicResource Str_BulkResize_Strip}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_BulkResize_StripTip}"
-                                        controls:ChoiceIcon.Kind="Eraser"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_BulkResize_StripTip}" />
 
                                     <TextBlock
                                         Margin="0,12,0,6"

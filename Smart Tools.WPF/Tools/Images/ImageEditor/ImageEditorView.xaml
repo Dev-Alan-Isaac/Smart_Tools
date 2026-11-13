@@ -497,9 +497,7 @@
                                         Content="{DynamicResource Str_ImgEdit_ApplyToAllChecked}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_ImgEdit_ApplyToAllCheckedTooltip}"
-                                        Unchecked="Setting_Changed"
-                                        controls:ChoiceIcon.Kind="ShieldCheckOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Setting_Changed" />
                                 </StackPanel>
                             </Border>
 
@@ -680,9 +678,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_ImageEditor_FitInsideTheWidth}"
-                                        Unchecked="Resize_Changed"
-                                        controls:ChoiceIcon.Kind="FitToPageOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Resize_Changed" />
                                     <CheckBox
                                         x:Name="ChkAllowEnlarge"
                                         Margin="0,8,0,0"
@@ -690,9 +686,7 @@
                                         Content="{DynamicResource Str_ImageEditor_EnlargeSmallerImages}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_ImageEditor_OffImagesAlreadySmaller}"
-                                        Unchecked="Resize_Changed"
-                                        controls:ChoiceIcon.Kind="ArrowExpandAll"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Resize_Changed" />
                                     <TextBlock
                                         x:Name="TxtResizeHint"
                                         Margin="0,8,0,0"

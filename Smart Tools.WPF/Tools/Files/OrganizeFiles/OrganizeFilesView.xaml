@@ -559,9 +559,7 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_OrganizeFiles_DonTMoveDesktop}"
-                                            Unchecked="ScanOption_Changed"
-                                            controls:ChoiceIcon.Kind="EyeOffOutline"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="ScanOption_Changed" />
                                     </StackPanel>
                             </Border>
 
@@ -710,9 +708,7 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_OrganizeFiles_NameCategoryFoldersLike}"
-                                            Unchecked="PlanOption_Changed"
-                                            controls:ChoiceIcon.Kind="EmoticonOutline"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="PlanOption_Changed" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -749,9 +745,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Organize_RemoveEmptyFoldersTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="FolderRemoveOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <Border
                                         Margin="0,10,0,0"
                                         Padding="10,8"

@@ -55,16 +55,12 @@
                                 x:Name="ChkMsTasks"
                                 Margin="0,4,0,0"
                                 Content="{DynamicResource Str_SysSnap_MsTasks}"
-                                Foreground="{DynamicResource SidebarText}"
-                                controls:ChoiceIcon.Kind="MicrosoftWindows"
-                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                Foreground="{DynamicResource SidebarText}" />
                             <CheckBox
                                 x:Name="ChkBuiltInRules"
                                 Margin="0,8,0,0"
                                 Content="{DynamicResource Str_SysSnap_BuiltInRules}"
-                                Foreground="{DynamicResource SidebarText}"
-                                controls:ChoiceIcon.Kind="MicrosoftWindows"
-                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                Foreground="{DynamicResource SidebarText}" />
                             <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_SysSnap_OptionsHint}" />
                         </StackPanel>
                     </Border>

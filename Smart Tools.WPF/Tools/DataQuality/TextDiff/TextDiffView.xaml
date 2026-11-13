@@ -336,9 +336,7 @@
                                         Margin="0,12,0,0"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_FileDiff_OnlyChanges}"
-                                        ToolTip="{DynamicResource Str_FileDiff_OnlyChangesTooltip}"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_FileDiff_OnlyChangesTooltip}" />
                                 </StackPanel>
                             </Border>
 
@@ -353,17 +351,13 @@
                                         x:Name="ChkWhitespace"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_FileDiff_IgnoreWhitespace}"
-                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreWhitespaceTooltip}"
-                                        controls:ChoiceIcon.Kind="KeyboardSpace"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreWhitespaceTooltip}" />
                                     <CheckBox
                                         x:Name="ChkCase"
                                         Margin="0,8,0,0"
                                         Click="Option_Click"
                                         Content="{DynamicResource Str_FileDiff_IgnoreCase}"
-                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreCaseTooltip}"
-                                        controls:ChoiceIcon.Kind="FormatLetterCase"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_FileDiff_IgnoreCaseTooltip}" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_TextDiff_ShortcutsHint}" />
                                 </StackPanel>
                             </Border>

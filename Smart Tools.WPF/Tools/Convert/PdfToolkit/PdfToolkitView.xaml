@@ -435,9 +435,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_PdfToolkit_AddsABookmarkNamed}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="BookmarkOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock Style="{StaticResource NoteText}" Text="{DynamicResource Str_PdfToolkit_PagesGoInList}" />
                                 </StackPanel>
                             </Border>
@@ -516,9 +514,7 @@
                                             Content="{DynamicResource Str_PdfToolkit_PutThesePagesIn}"
                                             Foreground="{DynamicResource SidebarText}"
                                             ToolTip="{DynamicResource Str_PdfToolkit_OnOneFileWith}"
-                                            Unchecked="Option_Changed"
-                                            controls:ChoiceIcon.Kind="FileMultipleOutline"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="Option_Changed" />
                                     </StackPanel>
                                     <TextBlock Style="{StaticResource NoteText}" Text="{DynamicResource Str_PdfToolkit_APdfThatSplits}" />
                                 </StackPanel>

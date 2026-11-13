@@ -221,9 +221,7 @@
                                 x:Name="ChkClick"
                                 Click="Click_Changed"
                                 Content="{DynamicResource Str_PlayAlong_ClickOn}"
-                                IsChecked="True"
-                                controls:ChoiceIcon.Kind="MusicNote"
-                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                IsChecked="True" />
                             <TextBlock Style="{StaticResource PaLabel}" Text="{DynamicResource Str_TTS_Volume}" />
                             <Slider
                                 x:Name="SliderClick"
@@ -305,9 +303,7 @@
                             <CheckBox
                                 x:Name="ChkLoop"
                                 Click="Loop_Changed"
-                                Content="{DynamicResource Str_PlayAlong_LoopOn}"
-                                controls:ChoiceIcon.Kind="Repeat"
-                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                Content="{DynamicResource Str_PlayAlong_LoopOn}" />
                             <Grid Margin="0,10,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />

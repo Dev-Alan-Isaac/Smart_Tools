@@ -298,9 +298,7 @@
                                     Content="{DynamicResource Str_Synth_Sustain_Pedal}"
                                     Foreground="{DynamicResource SidebarText}"
                                     ToolTip="{DynamicResource Str_Synth_SustainPedalTooltip}"
-                                    Unchecked="SustainPedalCheckBox_Unchecked"
-                                    controls:ChoiceIcon.Kind="MusicNote"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    Unchecked="SustainPedalCheckBox_Unchecked" />
                                 <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Synth_SpaceHint}" />
                             </StackPanel>
                         </Border>
@@ -319,9 +317,7 @@
                                     Foreground="{DynamicResource SidebarText}"
                                     IsChecked="True"
                                     ToolTip="{DynamicResource Str_Synth_ShowNoteNamesTooltip}"
-                                    Unchecked="KeyLabels_Changed"
-                                    controls:ChoiceIcon.Kind="MusicNote"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    Unchecked="KeyLabels_Changed" />
                                 <CheckBox
                                     x:Name="ChkShowComputerKeys"
                                     Margin="0,6,0,0"
@@ -330,9 +326,7 @@
                                     Foreground="{DynamicResource SidebarText}"
                                     IsChecked="True"
                                     ToolTip="{DynamicResource Str_Synth_ShowComputerKeysTooltip}"
-                                    Unchecked="KeyLabels_Changed"
-                                    controls:ChoiceIcon.Kind="Keyboard"
-                                    Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                    Unchecked="KeyLabels_Changed" />
                                 <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Synth_KeyLayoutHint}" />
                             </StackPanel>
                         </Border>

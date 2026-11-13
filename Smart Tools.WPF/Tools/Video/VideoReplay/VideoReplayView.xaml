@@ -442,9 +442,7 @@
                                         Content="{DynamicResource Str_VideoReplay_RepeatThePlaylist}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_VideoReplay_StartAgainFromThe}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="Repeat"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock
                                         FontSize="11"
                                         Foreground="{DynamicResource SidebarTextMuted}"

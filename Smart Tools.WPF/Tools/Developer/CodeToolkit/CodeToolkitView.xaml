@@ -660,18 +660,14 @@
                                         Content="{DynamicResource Str_CodeToolkit_IgnoreWhitespaceChanges}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_CodeToolkit_IndentationAndRunsOf}"
-                                        Unchecked="DiffOption_Changed"
-                                        controls:ChoiceIcon.Kind="KeyboardSpace"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="DiffOption_Changed" />
                                     <CheckBox
                                         x:Name="ChkIgnoreCase"
                                         Checked="DiffOption_Changed"
                                         Content="{DynamicResource Str_Regex_IgnoreCase}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_CodeToolkit_ColorAndColorCount}"
-                                        Unchecked="DiffOption_Changed"
-                                        controls:ChoiceIcon.Kind="FormatLetterCase"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="DiffOption_Changed" />
                                 </StackPanel>
                             </Border>
 
@@ -689,9 +685,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_CodeToolkit_ReRunAutomaticallyA}"
-                                        Unchecked="LiveUpdate_Changed"
-                                        controls:ChoiceIcon.Kind="Update"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="LiveUpdate_Changed" />
                                     <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                                         <materialDesign:PackIcon
                                             Width="12"

@@ -604,9 +604,7 @@
                                             Foreground="{DynamicResource SidebarText}"
                                             IsChecked="True"
                                             ToolTip="{DynamicResource Str_Dup_CompareContentsTooltip}"
-                                            Unchecked="Option_Changed"
-                                            controls:ChoiceIcon.Kind="FileCompare"
-                                            Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                            Unchecked="Option_Changed" />
 
                                         <!--  Same content, any format: how much a copy may differ  -->
                                         <StackPanel x:Name="SameContentPanel" Margin="0,12,0,0" Visibility="Collapsed">
@@ -879,9 +877,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Dup_IncludeSubfoldersTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="FolderMultipleOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <CheckBox
                                         x:Name="ChkIgnoreHiddenFiles"
                                         Margin="0,8,0,0"
@@ -889,9 +885,7 @@
                                         Content="{DynamicResource Str_Dup_IgnoreHiddenFiles}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_Dup_IgnoreHiddenFilesTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="EyeOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <CheckBox
                                         x:Name="ChkIgnoreSystemFiles"
                                         Margin="0,8,0,0"
@@ -900,9 +894,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_Dup_IgnoreSystemFilesTooltip}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                 </StackPanel>
                             </Border>
 
@@ -936,9 +928,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_DuplicateFinder_DeletedDuplicatesCanBe}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="DeleteOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

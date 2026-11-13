@@ -45,9 +45,7 @@
                                 Margin="0,12,0,0"
                                 Click="Accent_Click"
                                 Content="{DynamicResource Str_Metronome_AccentTheFirstBeat}"
-                                IsChecked="True"
-                                controls:ChoiceIcon.Kind="MusicNote"
-                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                IsChecked="True" />
                         </StackPanel>
                     </Border>
 

@@ -213,10 +213,9 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_KbMouse_BlockKeysTip}"
-                                        Unchecked="Option_Changed"
-                                        Content="{DynamicResource Str_KbMouse_BlockKeys}"
-                                        controls:ChoiceIcon.Kind="KeyboardOff"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed">
+                                        <TextBlock Text="{DynamicResource Str_KbMouse_BlockKeys}" TextWrapping="Wrap" />
+                                    </CheckBox>
 
                                     <Button
                                         Margin="0,12,0,0"

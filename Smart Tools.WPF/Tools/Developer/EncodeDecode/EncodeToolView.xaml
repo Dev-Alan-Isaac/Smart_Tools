@@ -378,18 +378,16 @@
                                         Margin="0,12,0,0"
                                         Click="Option_Click"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        Content="{DynamicResource Str_EncTool_Padding}"
-                                        controls:ChoiceIcon.Kind="Equal"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True">
+                                        <TextBlock Text="{DynamicResource Str_EncTool_Padding}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                     <CheckBox
                                         x:Name="ChkWrap"
                                         Margin="0,8,0,0"
                                         Click="Option_Click"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Content="{DynamicResource Str_EncTool_Wrap}"
-                                        controls:ChoiceIcon.Kind="FormatAlignJustify"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Foreground="{DynamicResource SidebarText}">
+                                        <TextBlock Text="{DynamicResource Str_EncTool_Wrap}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                     <TextBlock x:Name="TxtB64Hint" Style="{StaticResource EncSideHint}" />
                                 </StackPanel>
                             </Border>
@@ -427,10 +425,9 @@
                                         x:Name="ChkSpaceAsPlus"
                                         Margin="0,12,0,0"
                                         Click="Option_Click"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Content="{DynamicResource Str_EncTool_SpacePlus}"
-                                        controls:ChoiceIcon.Kind="Plus"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Foreground="{DynamicResource SidebarText}">
+                                        <TextBlock Text="{DynamicResource Str_EncTool_SpacePlus}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                     <TextBlock Style="{StaticResource EncSideHint}" Text="{DynamicResource Str_EncTool_SpacePlusHint}" />
                                 </StackPanel>
                             </Border>
@@ -448,10 +445,9 @@
                                     <CheckBox
                                         x:Name="ChkHtmlAll"
                                         Click="Option_Click"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Content="{DynamicResource Str_EncTool_HtmlAll}"
-                                        controls:ChoiceIcon.Kind="CodeTags"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Foreground="{DynamicResource SidebarText}">
+                                        <TextBlock Text="{DynamicResource Str_EncTool_HtmlAll}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                     <TextBlock x:Name="TxtHtmlHint" Style="{StaticResource EncSideHint}" />
                                 </StackPanel>
                             </Border>
@@ -469,10 +465,9 @@
                                     <CheckBox
                                         x:Name="ChkDataUri"
                                         Click="Option_Click"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Content="{DynamicResource Str_EncTool_DataUri}"
-                                        controls:ChoiceIcon.Kind="Link"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Foreground="{DynamicResource SidebarText}">
+                                        <TextBlock Text="{DynamicResource Str_EncTool_DataUri}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                     <TextBlock x:Name="TxtFileHint" Style="{StaticResource EncSideHint}" />
                                 </StackPanel>
                             </Border>
@@ -487,10 +482,9 @@
                                     <CheckBox
                                         x:Name="ChkShowHex"
                                         Click="ChkShowHex_Click"
-                                        Foreground="{DynamicResource SidebarText}"
-                                        Content="{DynamicResource Str_EncTool_ShowHex}"
-                                        controls:ChoiceIcon.Kind="Pound"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Foreground="{DynamicResource SidebarText}">
+                                        <TextBlock Text="{DynamicResource Str_EncTool_ShowHex}" TextWrapping="Wrap" />
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
 

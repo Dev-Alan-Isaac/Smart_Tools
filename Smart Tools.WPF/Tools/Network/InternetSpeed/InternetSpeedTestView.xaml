@@ -467,9 +467,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_InternetSpeedTest_OnlyCloudflareTakesUploads}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="Upload"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock
                                         x:Name="TxtTestHint"
                                         Margin="2,10,0,0"

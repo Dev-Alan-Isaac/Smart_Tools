@@ -388,9 +388,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_JunkFileCleaner_ProgramsThatAreRunning}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="CalendarClock"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                     <TextBlock
                                         Margin="2,8,0,0"
                                         FontSize="11"

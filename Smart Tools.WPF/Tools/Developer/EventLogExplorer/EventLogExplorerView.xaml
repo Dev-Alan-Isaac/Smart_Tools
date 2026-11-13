@@ -313,9 +313,7 @@
                                         Click="ChkHideEmpty_Click"
                                         Content="{DynamicResource Str_EventExplorer_HideEmpty}"
                                         Foreground="{DynamicResource SidebarText}"
-                                        IsChecked="True"
-                                        controls:ChoiceIcon.Kind="EyeOffOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        IsChecked="True" />
                                 </StackPanel>
                             </Border>
 

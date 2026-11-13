@@ -151,9 +151,7 @@
                                         Content="{DynamicResource Str_MicRecorder_HearYourselfWhileRecording}"
                                         Foreground="{DynamicResource SidebarText}"
                                         ToolTip="{DynamicResource Str_MicRecorder_PlaysTheMicrophoneThrough}"
-                                        Unchecked="MonitorInput_Changed"
-                                        controls:ChoiceIcon.Kind="Headphones"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="MonitorInput_Changed" />
                                     <TextBlock
                                         x:Name="TxtDeviceHint"
                                         Style="{StaticResource SidebarHint}"

@@ -382,9 +382,7 @@
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
                                         ToolTip="{DynamicResource Str_ImageViewerControl_WhenAddingAFolder}"
-                                        Unchecked="Option_Changed"
-                                        controls:ChoiceIcon.Kind="FolderMultipleOutline"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        Unchecked="Option_Changed" />
                                 </StackPanel>
                             </Border>
 

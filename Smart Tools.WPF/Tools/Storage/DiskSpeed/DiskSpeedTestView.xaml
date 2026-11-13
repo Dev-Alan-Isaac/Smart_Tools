@@ -350,9 +350,7 @@
                                         Content="{DynamicResource Str_DiskSpeedTest_BypassTheWindowsFile}"
                                         Foreground="{DynamicResource SidebarText}"
                                         IsChecked="True"
-                                        ToolTip="{DynamicResource Str_DiskSpeedTest_ReadsAndWritesGo}"
-                                        controls:ChoiceIcon.Kind="SpeedometerSlow"
-                                        Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                        ToolTip="{DynamicResource Str_DiskSpeedTest_ReadsAndWritesGo}" />
                                     <TextBlock
                                         Margin="0,8,0,0"
                                         FontSize="11"

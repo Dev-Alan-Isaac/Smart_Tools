@@ -85,9 +85,7 @@
                                 Content="{DynamicResource Str_MicTest_Hear}"
                                 Foreground="{DynamicResource SidebarText}"
                                 ToolTip="{DynamicResource Str_MicTest_HearTip}"
-                                Unchecked="ChkHear_Changed"
-                                controls:ChoiceIcon.Kind="Headphones"
-                                Style="{StaticResource ToggleChipCheckBoxStyle}" />
+                                Unchecked="ChkHear_Changed" />
                             <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MicTest_HearHint}" />
                         </StackPanel>
                     </Border>
