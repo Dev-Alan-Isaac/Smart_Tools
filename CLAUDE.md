@@ -48,6 +48,12 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Alan wants both: bring tools to the style guide automatically, and *propose* extra UX improvements for approval before applying them.
 - Shell tool gotchas on this machine: apostrophes and `\\` inside inline `python - <<EOF` scripts break; write the script to a file in the scratchpad and run it. Edit files with CRLF-aware code (read, normalise `\r\n`, write back).
 
+## Where we left off (updated 2026-11-13, shell.json merge on save)
+**Built OK, tested in the app, uncommitted.** `ToolCatalogManager.SaveSettings` no longer blindly overwrites `shell.json`: it remembers what the file held when this copy read/wrote it (`_baseline`) and, on save, keeps the disk value for every field this copy did not change (recent, favorites, expanded sections, last-seen version), then writes. Test: edited favorites on disk while the app ran, opened a tool, favorites survived. Only `shell.json` has this; other per-tool JSON files still overwrite whole (a second copy of the app could still undo them).
+
+## Where we left off (updated 2026-11-13, Home pills)
+**Built OK, Home seen in the app, uncommitted.** Home's Favorites and Recent rows each sit in a rounded card (`Border` named `FavoritesPanel` / `RecentPanel`, CardBg + CardBorder, radius 16). `ToolCatalogManager.MaxRecent` 5 -> 10 (Home shows all; the sidebar Recent still shows 4, `SidebarRecentCount`). Favorites were never capped. With 10 chips the wrap on a narrow window was not looked at.
+
 ## Where we left off (updated 2026-11-13, Back button, no sidebar follow, stable Recent)
 **Built OK, run in the real app (clicked with the mouse, screenshots), uncommitted.** (1) Back button `BtnBack` in the header card (`MainWindow.xaml`), history `_history` (30 pages, `GoBack`); hidden on the first page. (2) Removed `RevealInSidebar` and the `TrackActiveTool` setting (property, Settings checkbox, keys); sections now open/close only when clicked. (3) `Open(id, keepRecentOrder)`: a tool opened from the sidebar's Recent list or via Back keeps the Recent order; opened from anywhere else it moves to the top (checked: Services from Recent stayed 3rd, Screen OCR from its section went first). Home's Recent chips still move the tool to the top (not changed). Not checked: Back in light theme, Alt+Left / mouse Back (not added), a tool whose view fails to open.
 

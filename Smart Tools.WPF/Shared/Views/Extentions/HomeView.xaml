@@ -390,7 +390,15 @@
             <StackPanel Grid.Row="1">
 
             <!--  Favorites (right-click any tool to pin it)  -->
-            <StackPanel x:Name="FavoritesPanel" Margin="2,0,0,6">
+            <Border
+                x:Name="FavoritesPanel"
+                Margin="0,0,0,10"
+                Padding="14,10,14,4"
+                Background="{DynamicResource CardBg}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <StackPanel>
                 <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
                     <materialDesign:PackIcon
                         Width="14"
@@ -422,13 +430,20 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
-            </StackPanel>
+                </StackPanel>
+            </Border>
 
             <!--  Recent  -->
-            <StackPanel
+            <Border
                 x:Name="RecentPanel"
-                Margin="2,0,0,6"
+                Margin="0,0,0,10"
+                Padding="14,10,14,4"
+                Background="{DynamicResource CardBg}"
+                BorderBrush="{DynamicResource CardBorder}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Visibility="Collapsed">
+                <StackPanel>
                 <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
                     <materialDesign:PackIcon
                         Width="14"
@@ -454,7 +469,8 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
-            </StackPanel>
+                </StackPanel>
+            </Border>
             </StackPanel>
 
             <!--  Section cards (columns filled from code) / search results  -->

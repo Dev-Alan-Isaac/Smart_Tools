@@ -16,7 +16,7 @@ namespace Smart_Tools.WPF.Controllers
     {
         public const string HomeId = "home";
         public const string SettingsId = "settings";
-        public const int MaxRecent = 5;
+        public const int MaxRecent = 10;
 
 
         // =================================================================
@@ -358,6 +358,7 @@ namespace Smart_Tools.WPF.Controllers
                 s.RecentToolIds = RecentTools(s.RecentToolIds ?? new()).Select(t => t.Id).ToList();
                 s.FavoriteToolIds = FavoriteTools(s.FavoriteToolIds ?? new()).Select(t => t.Id).ToList();
                 s.ExpandedCategories = (s.ExpandedCategories ?? new()).Where(id => Categories.Any(c => c.Id == id)).Distinct().ToList();
+                _baseline[file] = Snapshot(s);
                 return s;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
@@ -366,15 +367,45 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        // What each file held when this copy of the app last read or wrote it. Another copy of the app (or a second
+        // build) shares the same file; a plain overwrite from here would undo what that copy saved.
+        private static readonly Dictionary<string, ShellSettings> _baseline = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly object _saveLock = new();
+
+        private static ShellSettings Snapshot(ShellSettings s) => new()
+        {
+            RecentToolIds = new(s.RecentToolIds),
+            FavoriteToolIds = new(s.FavoriteToolIds),
+            ExpandedCategories = new(s.ExpandedCategories),
+            LastSeenVersion = s.LastSeenVersion,
+        };
+
+        /// <summary>
+        /// Saves, but only the fields this copy changed since it last read the file; the others keep what is on disk now.
+        /// The merged result is also put back into <paramref name="settings"/> so this copy picks up the other's changes.
+        /// </summary>
         public static void SaveSettings(ShellSettings settings, string? path = null)
         {
-            try
+            string file = path ?? SettingsPath;
+            lock (_saveLock)
             {
-                AtomicFile.WriteAllText(path ?? SettingsPath, JsonSerializer.Serialize(settings, Json));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // Non-fatal: the recent list and open sections just aren't remembered this time.
+                try
+                {
+                    if (_baseline.TryGetValue(file, out var mine) && File.Exists(file))
+                    {
+                        var disk = LoadSettings(file);   // also resets the baseline; set again below
+                        if (settings.RecentToolIds.SequenceEqual(mine.RecentToolIds)) settings.RecentToolIds = disk.RecentToolIds;
+                        if (settings.FavoriteToolIds.SequenceEqual(mine.FavoriteToolIds)) settings.FavoriteToolIds = disk.FavoriteToolIds;
+                        if (settings.ExpandedCategories.SequenceEqual(mine.ExpandedCategories)) settings.ExpandedCategories = disk.ExpandedCategories;
+                        if (settings.LastSeenVersion == mine.LastSeenVersion) settings.LastSeenVersion = disk.LastSeenVersion;
+                    }
+                    AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, Json));
+                    _baseline[file] = Snapshot(settings);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // Non-fatal: the recent list and open sections just aren't remembered this time.
+                }
             }
         }
     }
