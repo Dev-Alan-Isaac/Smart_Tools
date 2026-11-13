@@ -503,72 +503,80 @@
                                         Content="{DynamicResource Str_Dup_DetectionMethodHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.Fingerprint}" />
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="4" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="4" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <RadioButton
-                                            x:Name="RadioMatchContent"
-                                            Checked="RadioMatch_Checked"
-                                            GroupName="MatchBy"
-                                            IsChecked="True"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            ToolTip="{DynamicResource Str_DuplicateFinder_SameContentsTrueDuplicates}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="Fingerprint" />
-                                                <TextBlock
-                                                    Margin="0,3,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Text="{DynamicResource Str_DuplicateFinder_Contents}" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioMatchNameSize"
-                                            Grid.Column="2"
-                                            Checked="RadioMatch_Checked"
-                                            GroupName="MatchBy"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            ToolTip="{DynamicResource Str_DuplicateFinder_SameNameAndSize}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FileCompare" />
-                                                <TextBlock
-                                                    Margin="0,3,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Text="{DynamicResource Str_DuplicateFinder_NameSize}" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioMatchName"
-                                            Grid.Column="4"
-                                            Checked="RadioMatch_Checked"
-                                            GroupName="MatchBy"
-                                            Style="{StaticResource ModeToggleTallStyle}"
-                                            ToolTip="{DynamicResource Str_DuplicateFinder_SameFileNameOnly}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon
-                                                    Width="17"
-                                                    Height="17"
-                                                    HorizontalAlignment="Center"
-                                                    Kind="FormTextbox" />
-                                                <TextBlock
-                                                    Margin="0,3,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Text="{DynamicResource Str_Common_ColHeaderName}" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                    </Grid>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <RadioButton
+                                                x:Name="RadioMatchContent"
+                                                Grid.Row="0"
+                                                Grid.ColumnSpan="2"
+                                                Margin="0,0,0,4"
+                                                Checked="RadioMatch_Checked"
+                                                GroupName="MatchBy"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                ToolTip="{DynamicResource Str_DuplicateFinder_SameContentsTrueDuplicates}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="Fingerprint" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_DuplicateFinder_Contents}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton
+                                                x:Name="RadioMatchNameSize"
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                Margin="0,0,2,0"
+                                                Checked="RadioMatch_Checked"
+                                                GroupName="MatchBy"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                ToolTip="{DynamicResource Str_DuplicateFinder_SameNameAndSize}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FileCompare" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_DuplicateFinder_NameSize}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                            <RadioButton
+                                                x:Name="RadioMatchName"
+                                                Grid.Row="1"
+                                                Grid.Column="1"
+                                                Margin="2,0,0,0"
+                                                Checked="RadioMatch_Checked"
+                                                GroupName="MatchBy"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                ToolTip="{DynamicResource Str_DuplicateFinder_SameFileNameOnly}">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FormTextbox" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_Common_ColHeaderName}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </Grid>
 
                                     <!--  Contents: how to compare  -->
                                     <StackPanel x:Name="ContentOptionsPanel" Margin="0,12,0,0">
@@ -670,52 +678,124 @@
                                         Style="{StaticResource FieldLabel}"
                                         Text="{DynamicResource Str_DuplicateFinder_FileTypes}" />
                                     <StackPanel>
-                                        <!--  Full-width top button  -->
-                                        <RadioButton
-                                            x:Name="RadioTypeAll"
-                                            Margin="0,0,0,4"
-                                            Checked="Option_Changed"
-                                            Content="{DynamicResource Str_DiskSpaceAnalyzer_All}"
-                                            GroupName="FileTypes"
-                                            IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="All" />
-
-                                        <!--  2x2 grid for the remaining 4 items  -->
-                                        <UniformGrid Columns="2">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <RadioButton
+                                                x:Name="RadioTypeAll"
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2"
+                                                Margin="0,0,0,4"
+                                                Checked="Option_Changed"
+                                                GroupName="FileTypes"
+                                                IsChecked="True"
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="All">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FileMultipleOutline" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_DiskSpaceAnalyzer_All}" />
+                                                </StackPanel>
+                                            </RadioButton>
                                             <RadioButton
                                                 x:Name="RadioTypeImages"
+                                                Grid.Row="1"
+                                                Grid.Column="0"
                                                 Margin="0,0,2,4"
                                                 Checked="Option_Changed"
-                                                Content="{DynamicResource Str_ImgPdf_ImagesHeader}"
                                                 GroupName="FileTypes"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="Images" />
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Images">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FileImageOutline" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_ImgPdf_ImagesHeader}" />
+                                                </StackPanel>
+                                            </RadioButton>
                                             <RadioButton
                                                 x:Name="RadioTypeVideos"
+                                                Grid.Row="1"
+                                                Grid.Column="1"
                                                 Margin="2,0,0,4"
                                                 Checked="Option_Changed"
-                                                Content="{DynamicResource Str_DuplicateFinder_Videos}"
                                                 GroupName="FileTypes"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="Videos" />
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Videos">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FileVideoOutline" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_DuplicateFinder_Videos}" />
+                                                </StackPanel>
+                                            </RadioButton>
                                             <RadioButton
                                                 x:Name="RadioTypeAudio"
+                                                Grid.Row="2"
+                                                Grid.Column="0"
                                                 Margin="0,0,2,0"
                                                 Checked="Option_Changed"
-                                                Content="{DynamicResource Str_DuplicateFinder_Audio}"
                                                 GroupName="FileTypes"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="Audio" />
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Audio">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FileMusicOutline" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_DuplicateFinder_Audio}" />
+                                                </StackPanel>
+                                            </RadioButton>
                                             <RadioButton
                                                 x:Name="RadioTypeDocuments"
+                                                Grid.Row="2"
+                                                Grid.Column="1"
                                                 Margin="2,0,0,0"
                                                 Checked="Option_Changed"
-                                                Content="{DynamicResource Str_DuplicateFinder_Docs}"
                                                 GroupName="FileTypes"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
-                                                Tag="Documents" />
-                                        </UniformGrid>
+                                                Style="{StaticResource ModeToggleTallStyle}"
+                                                Tag="Documents">
+                                                <StackPanel>
+                                                    <materialDesign:PackIcon
+                                                        Width="17"
+                                                        Height="17"
+                                                        HorizontalAlignment="Center"
+                                                        Kind="FileDocumentOutline" />
+                                                    <TextBlock
+                                                        Margin="0,3,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Text="{DynamicResource Str_DuplicateFinder_Docs}" />
+                                                </StackPanel>
+                                            </RadioButton>
+                                        </Grid>
                                     </StackPanel>
                                     <TextBlock
                                         Margin="0,12,0,6"

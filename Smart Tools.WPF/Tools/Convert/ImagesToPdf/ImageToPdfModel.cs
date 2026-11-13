@@ -256,7 +256,7 @@ namespace Smart_Tools.WPF.Models
     public sealed class ImagePdfSettings
     {
         public ImagePdfPageSize PageSize { get; set; } = ImagePdfPageSize.A4;
-        public ImagePdfOrientation Orientation { get; set; } = ImagePdfOrientation.Portrait;
+        public ImagePdfOrientation Orientation { get; set; } = ImagePdfOrientation.Auto;
         public ImagePdfMargins Margins { get; set; } = ImagePdfMargins.Normal;
         public ImagePdfQuality Quality { get; set; } = ImagePdfQuality.Balanced;
         public bool FitImageToPage { get; set; } = true;

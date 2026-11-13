@@ -3974,6 +3974,8 @@
             Style="{StaticResource SidebarGroupHeader}"
             Tag="{x:Static materialDesign:PackIconKind.RepeatVariant}" />
     -->
+    <presetchips:UpperCaseConverter x:Key="UpperCaseConverter" />
+
     <Style x:Key="SidebarGroupHeader" TargetType="ContentControl">
         <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="Focusable" Value="False" />
@@ -4002,7 +4004,7 @@
                             FontSize="12"
                             FontWeight="Bold"
                             Foreground="{DynamicResource SidebarTextMuted}"
-                            Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+                            Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource UpperCaseConverter}}" />
                     </StackPanel>
                 </ControlTemplate>
             </Setter.Value>

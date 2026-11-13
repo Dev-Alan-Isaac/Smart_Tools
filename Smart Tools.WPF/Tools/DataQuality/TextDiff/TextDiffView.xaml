@@ -294,20 +294,42 @@
                                             x:Name="RadSideBySide"
                                             Margin="0,0,2,0"
                                             Click="ViewMode_Click"
-                                            Content="{DynamicResource Str_FileDiff_SideBySide}"
                                             GroupName="TextDiffView"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="SideBySide"
-                                            ToolTip="{DynamicResource Str_FileDiff_SideBySideTooltip}" />
+                                            ToolTip="{DynamicResource Str_FileDiff_SideBySideTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ViewSplitVertical" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_FileDiff_SideBySide}" />
+                                            </StackPanel>
+                                        </RadioButton>
                                         <RadioButton
                                             x:Name="RadInline"
                                             Margin="2,0,0,0"
                                             Click="ViewMode_Click"
-                                            Content="{DynamicResource Str_FileDiff_Inline}"
                                             GroupName="TextDiffView"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Inline"
-                                            ToolTip="{DynamicResource Str_FileDiff_InlineTooltip}" />
+                                            ToolTip="{DynamicResource Str_FileDiff_InlineTooltip}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="ViewSequential" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_FileDiff_Inline}" />
+                                            </StackPanel>
+                                        </RadioButton>
                                     </UniformGrid>
                                     <CheckBox
                                         x:Name="ChkOnlyChanges"

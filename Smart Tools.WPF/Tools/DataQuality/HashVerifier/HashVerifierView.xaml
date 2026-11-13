@@ -343,33 +343,80 @@
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.ShieldCheckOutline}" />
 
-                                    <UniformGrid Columns="3" ToolTip="{DynamicResource Str_Hash_ModeTooltip}">
+                                    <Grid ToolTip="{DynamicResource Str_Hash_ModeTooltip}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
                                         <RadioButton
                                             x:Name="RadioModeCompute"
-                                            Margin="0,0,2,0"
+                                            Grid.Row="0"
+                                            Grid.ColumnSpan="2"
+                                            Margin="0,0,0,4"
                                             Click="Mode_Click"
-                                            Content="{DynamicResource Str_Hash_ModeCompute}"
                                             GroupName="HashMode"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="Compute" />
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Compute">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Pound" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Hash_ModeCompute}" />
+                                            </StackPanel>
+                                        </RadioButton>
                                         <RadioButton
                                             x:Name="RadioModeExpected"
-                                            Margin="2,0,2,0"
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Margin="0,0,2,0"
                                             Click="Mode_Click"
-                                            Content="{DynamicResource Str_Hash_ModeExpected}"
                                             GroupName="HashMode"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="Expected" />
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="Expected">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="CheckCircleOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Hash_ModeExpected}" />
+                                            </StackPanel>
+                                        </RadioButton>
                                         <RadioButton
                                             x:Name="RadioModeList"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
                                             Margin="2,0,0,0"
                                             Click="Mode_Click"
-                                            Content="{DynamicResource Str_Hash_ModeList}"
                                             GroupName="HashMode"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="ChecksumList" />
-                                    </UniformGrid>
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="ChecksumList">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="FormatListChecks" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Hash_ModeList}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </Grid>
 
                                     <!--  Expected hash  -->
                                     <StackPanel

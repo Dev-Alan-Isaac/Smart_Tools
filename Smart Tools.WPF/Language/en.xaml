@@ -530,13 +530,13 @@
     <!--  ============ RENAME FILES ============  -->
     <system:String x:Key="Str_Rename_Title">Rename Files</system:String>
     <system:String x:Key="Str_Rename_Subtitle">Rename files with custom patterns or based on metadata.</system:String>
-    <system:String x:Key="Str_Rename_SourceFolderHeader">SOURCE FOLDER</system:String>
+    <system:String x:Key="Str_Rename_SourceFolderHeader">Source folder</system:String>
     <system:String x:Key="Str_Rename_FolderListTooltip">Folders whose files will be renamed - select one and click Remove to take it out</system:String>
     <system:String x:Key="Str_Rename_AddFolderTooltip">Add a folder of files to rename</system:String>
     <system:String x:Key="Str_Rename_RemoveFolderTooltip">Remove the selected folder(s) from the list</system:String>
-    <system:String x:Key="Str_Rename_MethodHeader">RENAME METHOD</system:String>
+    <system:String x:Key="Str_Rename_MethodHeader">Rename method</system:String>
     <system:String x:Key="Str_Rename_MethodTooltip">How to transform each file name - changes which settings are shown below</system:String>
-    <system:String x:Key="Str_Rename_MethodSettingsHeader">METHOD SETTINGS</system:String>
+    <system:String x:Key="Str_Rename_MethodSettingsHeader">Method settings</system:String>
     <system:String x:Key="Str_Rename_Find">Find</system:String>
     <system:String x:Key="Str_Rename_FindTooltip">Text to search for in each file name</system:String>
     <system:String x:Key="Str_Rename_ReplaceWith">Replace With</system:String>
@@ -584,13 +584,13 @@
     <system:String x:Key="Str_Rename_RemoveSpacesTooltip">Remove all spaces from each file name</system:String>
     <system:String x:Key="Str_Rename_RemoveDiacritics">Remove Accents / Diacritics</system:String>
     <system:String x:Key="Str_Rename_RemoveDiacriticsTooltip">Replace accented characters (é, ñ, etc.) with their plain equivalents</system:String>
-    <system:String x:Key="Str_Rename_ExtensionHeader">EXTENSION</system:String>
+    <system:String x:Key="Str_Rename_ExtensionHeader">Extension</system:String>
     <system:String x:Key="Str_Rename_ExtensionTooltip">Change the file extension, or keep each file's original</system:String>
-    <system:String x:Key="Str_Rename_OptionsHeader">OPTIONS</system:String>
+    <system:String x:Key="Str_Rename_OptionsHeader">Options</system:String>
     <system:String x:Key="Str_Rename_IncludeSubfoldersTooltip">Also rename files inside subfolders of each folder above</system:String>
     <system:String x:Key="Str_Rename_AutoPreview">Preview Changes Automatically</system:String>
     <system:String x:Key="Str_Rename_AutoPreviewTooltip">Regenerate the preview automatically whenever a setting changes</system:String>
-    <system:String x:Key="Str_Rename_ProgressHeader">RENAMING PROGRESS</system:String>
+    <system:String x:Key="Str_Rename_ProgressHeader">Renaming progress</system:String>
     <system:String x:Key="Str_Rename_ProgressTooltip">Renaming progress</system:String>
     <system:String x:Key="Str_Rename_RenameButtonTooltip">Apply the rename method and settings above to every file</system:String>
     <system:String x:Key="Str_Rename_RenameButton">Rename Files</system:String>
@@ -2316,8 +2316,8 @@
     <system:String x:Key="Str_BackgroundRemover_FailedHoverARow">Failed - hover a row's status for the reason</system:String>
     <system:String x:Key="Str_BackgroundRemover_0Failed">0 failed</system:String>
     <system:String x:Key="Str_BackgroundRemover_TimeRemainingEstimatedTotal">Time remaining (estimated) / total time</system:String>
-    <system:String x:Key="Str_BackgroundRemover_Before">BEFORE</system:String>
-    <system:String x:Key="Str_BackgroundRemover_After">AFTER</system:String>
+    <system:String x:Key="Str_BackgroundRemover_Before">Before</system:String>
+    <system:String x:Key="Str_BackgroundRemover_After">After</system:String>
     <system:String x:Key="Str_BackgroundRemover_ClickAFileTo">Click a file to preview it</system:String>
     <system:String x:Key="Str_BackgroundRemover_RemoveSolidBackgroundsIn">Remove solid backgrounds in bulk</system:String>
     <system:String x:Key="Str_BackgroundRemover_AddImages">Add Images…</system:String>
@@ -6094,7 +6094,7 @@
     <system:String x:Key="Str_Vault_WidgetNoMatch">No matches.</system:String>
     <system:String x:Key="Str_Vault_WidgetEmpty">No entries yet.</system:String>
     <system:String x:Key="Str_Vault_WidgetMore">{0} more - keep typing to narrow it down.</system:String>
-    <!-- Screen OCR -->
+    <!--  Screen OCR  -->
     <system:String x:Key="Str_Ocr_Capture">Capture</system:String>
     <system:String x:Key="Str_Ocr_SelectArea">Select screen area</system:String>
     <system:String x:Key="Str_Ocr_SelectAreaTip">Drag over any part of your screen to read its text (Ctrl+Shift+X while this page is open)</system:String>
@@ -6179,7 +6179,7 @@
     <system:String x:Key="Str_Ocr_SaveFailed">Couldn't save the text</system:String>
     <system:String x:Key="Str_Ocr_SelectionTitle">Select the text to read</system:String>
     <system:String x:Key="Str_Ocr_SelectionHint">Drag over the text you want to read  ·  Esc or right-click to cancel</system:String>
-    <!-- Tool catalog, shell, and Home -->
+    <!--  Tool catalog, shell, and Home  -->
     <system:String x:Key="Str_Cat_data-quality_Title">Data Quality</system:String>
     <system:String x:Key="Str_Cat_data-quality_Blurb">Check, de-duplicate and compare</system:String>
     <system:String x:Key="Str_Cat_files_Title">Files</system:String>
@@ -6265,7 +6265,7 @@
     <system:String x:Key="Str_MediaViewer_Widget_Placeholder">The player is in the floating mini window.</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_BringBack">Bring it back here</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_Tooltip">Move the player to a floating mini window (W)</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Widget"> mini player: move the player to a small window</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Widget">mini player: move the player to a small window</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_Nothing">Nothing playing</system:String>
     <system:String x:Key="Str_MediaViewer_Widget_Close">Close the mini player</system:String>
     <system:String x:Key="Str_Settings_NavMediaViewer">Media Viewer</system:String>
@@ -6294,7 +6294,7 @@
     <system:String x:Key="Str_MediaViewer_Hint_Shuffle">Plays everything once, in a random order.</system:String>
     <system:String x:Key="Str_MediaViewer_Hint_ShuffleRepeat">Plays everything in a random order, then shuffles again.</system:String>
     <system:String x:Key="Str_MediaViewer_Hint_RepeatOne">Repeats the current item until you pick another one.</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Speed"> faster / slower (Shift)</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Speed">faster / slower (Shift)</system:String>
     <system:String x:Key="Str_MediaViewer_OrderHeader">Play order</system:String>
     <system:String x:Key="Str_MediaViewer_SkipBack">Back 10 seconds</system:String>
     <system:String x:Key="Str_MediaViewer_SkipForward">Forward 10 seconds</system:String>
@@ -6310,9 +6310,9 @@
     <system:String x:Key="Str_MediaViewer_MenuShowInFolder">Show in folder</system:String>
     <system:String x:Key="Str_MediaViewer_MenuDeleteFile">Delete file</system:String>
     <system:String x:Key="Str_MediaViewer_Key_ShiftDelete">Shift+Del</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Theater"> theater mode</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Rotate"> turn a picture (Shift: the other way)</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_DeleteFile"> delete the file from the computer</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Theater">theater mode</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Rotate">turn a picture (Shift: the other way)</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_DeleteFile">delete the file from the computer</system:String>
     <system:String x:Key="Str_MediaViewer_NoLongerThere">"{0}" is no longer there.</system:String>
     <system:String x:Key="Str_MediaViewer_DeleteBinOne">Move "{0}" to the Recycle Bin?&#10;&#10;This deletes the file from your computer, not just from the list.</system:String>
     <system:String x:Key="Str_MediaViewer_DeletePermOne">Delete "{0}" PERMANENTLY?&#10;&#10;It's on a drive without a Recycle Bin, so it can't be undone.</system:String>
@@ -6326,12 +6326,12 @@
     <system:String x:Key="Str_MediaViewer_KeyboardHeader">Keyboard</system:String>
     <system:String x:Key="Str_MediaViewer_Key_Space">Space</system:String>
     <system:String x:Key="Str_MediaViewer_Key_Delete">Del</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_PlayPause"> play / pause (slideshow on pictures)</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Seek"> skip 5 s (video, music) or previous / next picture</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Item"> previous / next item</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Volume"> volume</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Mute"> mute</system:String>
-    <system:String x:Key="Str_MediaViewer_Kbd_Remove"> remove from the list (the file stays)</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_PlayPause">play / pause (slideshow on pictures)</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Seek">skip 5 s (video, music) or previous / next picture</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Item">previous / next item</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Volume">volume</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Mute">mute</system:String>
+    <system:String x:Key="Str_MediaViewer_Kbd_Remove">remove from the list (the file stays)</system:String>
     <system:String x:Key="Str_MediaViewer_TogglePlaylist">Show or hide the playlist</system:String>
     <system:String x:Key="Str_MediaViewer_PlaylistTooltip">Double-click or press Enter to play</system:String>
     <system:String x:Key="Str_MediaViewer_RemoveFromList">Remove from the list</system:String>
@@ -6459,7 +6459,7 @@
     <system:String x:Key="Str_Vc_SaveFrame">Save frame...</system:String>
     <system:String x:Key="Str_Vc_TrimLength">Keeps {0} of {1}</system:String>
     <system:String x:Key="Str_Vc_FrameFailed">There is no frame at that moment.</system:String>
-    <system:String x:Key="Str_Vc_FrameSaved">Saved </system:String>
+    <system:String x:Key="Str_Vc_FrameSaved">Saved</system:String>
     <system:String x:Key="Str_Common_SaveNextToOriginals">Save next to the originals</system:String>
     <system:String x:Key="Str_BackgroundRemover_MsgFoldersAgain">Couldn't read the folders again: {0}</system:String>
     <system:String x:Key="Str_BackgroundRemover_MsgChooseBackground">Choose a replacement background image</system:String>
@@ -7066,7 +7066,7 @@
     <system:String x:Key="Str_Formatter_IdleDetail">Paste or open JSON, YAML, or XML on the left.</system:String>
     <system:String x:Key="Str_Formatter_Valid">Valid {0}</system:String>
     <system:String x:Key="Str_Formatter_Invalid">Invalid {0}</system:String>
-    <system:String x:Key="Str_Formatter_At">Line {0}, column {1}: </system:String>
+    <system:String x:Key="Str_Formatter_At">Line {0}, column {1}:</system:String>
     <system:String x:Key="Str_Formatter_DetailFormatted">Formatted</system:String>
     <system:String x:Key="Str_Formatter_DetailMinified">Minified</system:String>
     <system:String x:Key="Str_Formatter_DetailConverted">Converted to {0}</system:String>
@@ -7176,7 +7176,7 @@
     <system:String x:Key="Str_BulkResize_Saved">Saved {0}</system:String>
     <system:String x:Key="Str_BulkResize_Larger">{0} larger</system:String>
     <system:String x:Key="Str_BulkResize_SeeRows">Point at a status to see why.</system:String>
-    <system:String x:Key="Str_BulkResize_CantSave">Can't save there: </system:String>
+    <system:String x:Key="Str_BulkResize_CantSave">Can't save there:</system:String>
     <system:String x:Key="Str_BulkResize_ColName">Picture</system:String>
     <system:String x:Key="Str_BulkResize_ColBefore">Before</system:String>
     <system:String x:Key="Str_BulkResize_ColAfter">After</system:String>
@@ -7203,7 +7203,7 @@
     <system:String x:Key="Str_Recorder_NoArea">No area chosen yet.</system:String>
     <system:String x:Key="Str_Recorder_AreaText">{0} × {1} pixels</system:String>
     <system:String x:Key="Str_Recorder_AreaTooSmall">That area is too small. Drag a larger one.</system:String>
-    <system:String x:Key="Str_Recorder_PickFailed">Couldn't show the screen to choose from: </system:String>
+    <system:String x:Key="Str_Recorder_PickFailed">Couldn't show the screen to choose from:</system:String>
     <system:String x:Key="Str_Recorder_VideoHeader">Video</system:String>
     <system:String x:Key="Str_Recorder_Fps">Frames per second</system:String>
     <system:String x:Key="Str_Recorder_Quality">Quality</system:String>
@@ -7234,18 +7234,18 @@
     <system:String x:Key="Str_Recorder_SwitchScreen">Switch the screen being recorded</system:String>
     <system:String x:Key="Str_Recorder_SwitchHint">With more than one screen, you can switch screens (or record all of them) from the recording bar while recording. About a second is skipped each time.</system:String>
     <system:String x:Key="Str_Recorder_SwitchingScreen">Switching screen…</system:String>
-    <system:String x:Key="Str_Recorder_SwitchFailed">Couldn't switch screens: </system:String>
+    <system:String x:Key="Str_Recorder_SwitchFailed">Couldn't switch screens:</system:String>
     <system:String x:Key="Str_Recorder_ReadyHint">Choose what to record, then press Start recording.</system:String>
     <system:String x:Key="Str_Recorder_RecordingNow">Recording… press Stop on the bar when you're done.</system:String>
     <system:String x:Key="Str_Recorder_Starting">Starting…</system:String>
-    <system:String x:Key="Str_Recorder_StartFailed">Couldn't start recording: </system:String>
+    <system:String x:Key="Str_Recorder_StartFailed">Couldn't start recording:</system:String>
     <system:String x:Key="Str_Recorder_NoFfmpeg">FFmpeg isn't installed with this copy of Smart Tools, so recording isn't available.</system:String>
     <system:String x:Key="Str_Recorder_PickWindow">Choose an open window that isn't minimized.</system:String>
-    <system:String x:Key="Str_Recorder_CantSave">Can't save there: </system:String>
+    <system:String x:Key="Str_Recorder_CantSave">Can't save there:</system:String>
     <system:String x:Key="Str_Recorder_LowSpace">There is only {0} free where recordings are saved. Recording could fill the drive. Record anyway?</system:String>
     <system:String x:Key="Str_Recorder_Saved">Saved.</system:String>
     <system:String x:Key="Str_Recorder_EndedByItself">Recording ended by itself and was saved.</system:String>
-    <system:String x:Key="Str_Recorder_Failed">The recording wasn't saved. </system:String>
+    <system:String x:Key="Str_Recorder_Failed">The recording wasn't saved.</system:String>
     <system:String x:Key="Str_Recorder_ListHeader">Recordings from this session</system:String>
     <system:String x:Key="Str_Recorder_ColName">File</system:String>
     <system:String x:Key="Str_Recorder_ColLength">Length</system:String>
@@ -7256,7 +7256,7 @@
     <system:String x:Key="Str_Recorder_EmptyTitle">No recordings yet</system:String>
     <system:String x:Key="Str_Recorder_EmptyHint">Your recordings appear here as soon as you stop. They are saved as MP4 files and stay on disk.</system:String>
 
-    <!-- Unit & currency converter -->
+    <!--  Unit & currency converter  -->
     <system:String x:Key="Str_Conv_From">From</system:String>
     <system:String x:Key="Str_Conv_To">To</system:String>
     <system:String x:Key="Str_Conv_Swap">Swap the units</system:String>
@@ -7373,11 +7373,11 @@
     <system:String x:Key="Str_Conv_U_pressure_psi">Pound per square inch</system:String>
     <system:String x:Key="Str_Conv_U_pressure_mmHg">Millimeter of mercury</system:String>
 
-    <!-- Catalog: new tools -->
+    <!--  Catalog: new tools  -->
     <system:String x:Key="Str_Tool_unit-converter_Name">Unit &amp; Currency Converter</system:String>
     <system:String x:Key="Str_Tool_unit-converter_Description">Convert length, weight, temperature, data size, money, and more</system:String>
 
-    <!-- Text Diff -->
+    <!--  Text Diff  -->
     <system:String x:Key="Str_TextDiff_Paste">Paste from the clipboard</system:String>
     <system:String x:Key="Str_TextDiff_OpenFile">Open a text file</system:String>
     <system:String x:Key="Str_TextDiff_Clear">Clear</system:String>
@@ -7394,7 +7394,7 @@
     <system:String x:Key="Str_Tool_text-diff_Name">Text Difference</system:String>
     <system:String x:Key="Str_Tool_text-diff_Description">Paste two texts and see what changed, line by line</system:String>
 
-    <!-- DNS lookup, WHOIS, and traceroute -->
+    <!--  DNS lookup, WHOIS, and traceroute  -->
     <system:String x:Key="Str_Tool_dns-tools_Name">DNS, WHOIS &amp; Traceroute</system:String>
     <system:String x:Key="Str_Tool_dns-tools_Description">Look up DNS records, see who owns a name, and trace the path to a host</system:String>
     <system:String x:Key="Str_Dns_ModeDns">DNS lookup</system:String>
@@ -7498,7 +7498,7 @@
     <system:String x:Key="Str_Dns_NotReachedTip">The last routers may block this kind of test. That doesn't always mean the host is down.</system:String>
     <system:String x:Key="Str_Dns_HopCount">{0} hops</system:String>
 
-    <!-- PDF Extras -->
+    <!--  PDF Extras  -->
     <system:String x:Key="Str_PdfX_ActionHeader">ACTION</system:String>
     <system:String x:Key="Str_PdfX_OpRotate">Rotate</system:String>
     <system:String x:Key="Str_PdfX_OpPages">Pages</system:String>
@@ -7607,7 +7607,7 @@
     <system:String x:Key="Str_PdfX_PlanDropsProtection">The new PDF will not have the original's password or restrictions.</system:String>
     <system:String x:Key="Str_PdfX_DoneUnprotected">The original's password and restrictions were not kept.</system:String>
 
-    <!-- Sidebars: Unit converter, DNS tools, Text Diff -->
+    <!--  Sidebars: Unit converter, DNS tools, Text Diff  -->
     <system:String x:Key="Str_Conv_CategoryHeader">CATEGORY</system:String>
     <system:String x:Key="Str_Conv_CategoryNote">Pick what you want to convert.</system:String>
     <system:String x:Key="Str_Conv_RatesHeader">EXCHANGE RATES</system:String>
@@ -7623,7 +7623,7 @@
     <system:String x:Key="Str_TextDiff_ShortcutsHint">F8 / Shift+F8 next / previous change</system:String>
     <system:String x:Key="Str_Conv_UpdateNow">Update now</system:String>
 
-    <!-- Unit converter: favorites and recent -->
+    <!--  Unit converter: favorites and recent  -->
     <system:String x:Key="Str_Conv_FavoritesHeader">FAVORITES</system:String>
     <system:String x:Key="Str_Conv_NoFavorites">Tap the star next to Copy to keep a pair of units here.</system:String>
     <system:String x:Key="Str_Conv_RecentHeader">RECENT</system:String>
@@ -7633,13 +7633,13 @@
     <system:String x:Key="Str_Conv_RemoveFavorite">Remove this pair of units from favorites</system:String>
     <system:String x:Key="Str_Conv_ResultLabel">RESULT</system:String>
 
-    <!-- PDF Extras: clean details -->
+    <!--  PDF Extras: clean details  -->
     <system:String x:Key="Str_PdfX_CleanAll">Remove every detail</system:String>
     <system:String x:Key="Str_PdfX_CleanAllTip">Clears the title, author, subject, keywords, dates, and the hidden metadata some programs add. The name of this tool is written into the new file.</system:String>
     <system:String x:Key="Str_PdfX_PlanClean">Removes the title, author, subject, keywords, dates, and hidden metadata.</system:String>
     <system:String x:Key="Str_PdfX_Nothing_Clean">This PDF has no details to remove.</system:String>
 
-    <!-- PDF Extras: crop and page size -->
+    <!--  PDF Extras: crop and page size  -->
     <system:String x:Key="Str_PdfX_OpCrop">Crop</system:String>
     <system:String x:Key="Str_PdfX_OpSize">Size</system:String>
     <system:String x:Key="Str_PdfX_Hint_Crop">Hide the edges of the pages, such as scanner borders or wide margins.</system:String>
@@ -7667,7 +7667,7 @@
     <system:String x:Key="Str_PdfX_Nothing_Crop">Type how much to hide first.</system:String>
     <system:String x:Key="Str_PdfX_Nothing_PageSize">There are no pages to resize.</system:String>
 
-    <!-- PDF Extras: batch -->
+    <!--  PDF Extras: batch  -->
     <system:String x:Key="Str_PdfX_SharedPasswordHeader">PROTECTED PDFS</system:String>
     <system:String x:Key="Str_PdfX_SharedPasswordToggle">Show or hide this card. It opens by itself when a PDF needs a password.</system:String>
     <system:String x:Key="Str_PdfX_SharedPasswordNote">If some PDFs ask for a password, type it here. A PDF with restrictions needs its owner password to be changed. It is tried on every PDF that needs one, and it is not saved.</system:String>
@@ -7705,7 +7705,7 @@
     <system:String x:Key="Str_PdfX_PillCanceled">{0} canceled</system:String>
     <system:String x:Key="Str_PdfX_StatusWorkingOn">Working on PDF {0} of {1}...</system:String>
 
-    <!-- PDF Extras: page editor -->
+    <!--  PDF Extras: page editor  -->
     <system:String x:Key="Str_PdfX_OpArrange">Arrange</system:String>
     <system:String x:Key="Str_PdfX_Hint_Arrange">See every page, drag them into a new order, turn, copy, or remove them, and add pages from other PDFs.</system:String>
     <system:String x:Key="Str_PdfX_Nothing_Arrange">The pages are already in this order.</system:String>
@@ -8004,150 +8004,150 @@
     <system:String x:Key="Str_Tour_ValidateFiles_Results_Title">Results</system:String>
     <system:String x:Key="Str_Tour_ValidateFiles_Results_Text">See which files are fine and which have problems.</system:String>
 
-<!-- Tour: Audio Output Test -->
-<system:String x:Key="Str_Tour_AudioOut_Device_Title">Output device</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Device_Text">Pick which speakers or headphones to test. Use refresh if you just plugged something in.</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Level_Title">Volume level</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Level_Text">Set how loud the test sounds play. Start low to protect your ears and your speakers.</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Signal_Title">Signal options</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Signal_Text">Adjust the pitch, wave shape, sweep, noise, and phase settings for the selected test.</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Play_Title">Play</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Play_Text">Start or stop the selected test sound on your chosen device.</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Test_Title">Choose a test</system:String>
-<system:String x:Key="Str_Tour_AudioOut_Test_Text">Switch between channel, phase, tone, sweep, and noise tests, then pick the channels to listen to.</system:String>
-<!-- Tour: Game Controller -->
-<system:String x:Key="Str_Tour_GameCtl_Controller_Title">Controller</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Controller_Text">Choose which connected gamepad to test.</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Deadzone_Title">Dead zones</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Deadzone_Text">Set how far the sticks must move before input registers, to spot drift.</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Vibration_Title">Vibration</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Vibration_Text">Try the rumble motors at different strengths.</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Pad_Title">Live gamepad</system:String>
-<system:String x:Key="Str_Tour_GameCtl_Pad_Text">Press buttons and move sticks and triggers to see every input react in real time.</system:String>
-<!-- Tour: Keyboard and Mouse Test -->
-<system:String x:Key="Str_Tour_KbMouse_Options_Title">Options</system:String>
-<system:String x:Key="Str_Tour_KbMouse_Options_Text">Choose which tests to show and adjust how the inputs are displayed.</system:String>
-<system:String x:Key="Str_Tour_KbMouse_Tests_Title">Test area</system:String>
-<system:String x:Key="Str_Tour_KbMouse_Tests_Text">Press keys and click, scroll, or move the mouse to check that every input is detected.</system:String>
-<!-- Tour: Monitor HDR Test -->
-<system:String x:Key="Str_Tour_MonitorHdr_Screen_Title">Screen</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Screen_Text">Pick the monitor to test.</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Play_Title">Playback options</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Play_Text">Control how the full-screen HDR patterns are shown.</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Start_Title">Start</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Start_Text">Open the full-screen HDR test patterns on the selected monitor.</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Results_Title">Readings and verdict</system:String>
-<system:String x:Key="Str_Tour_MonitorHdr_Results_Text">See what Windows reports about your display's HDR support, plus a plain-language verdict.</system:String>
-<!-- Tour: Monitor Test -->
-<system:String x:Key="Str_Tour_MonitorTest_Screen_Title">Screen</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Screen_Text">Pick the monitor to test.</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Play_Title">Playback options</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Play_Text">Control how the full-screen test patterns are shown.</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Start_Title">Start</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Start_Text">Open the full-screen test patterns to look for dead pixels, uneven color, and backlight bleed.</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Results_Title">Refresh rate and marks</system:String>
-<system:String x:Key="Str_Tour_MonitorTest_Results_Text">Measure your real refresh rate and keep notes on any problems you find.</system:String>
-<!-- Tour: Background Remover -->
-<system:String x:Key="Str_Tour_BgRemove_Input_Title">Input</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Input_Text">Add the images or folders you want to remove a background from.</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Color_Title">Color to remove</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Color_Text">Pick the background color to make transparent, or sample it from an image.</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Background_Title">Background</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Background_Text">Fine-tune how closely colors must match and how soft the edges are.</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Output_Title">Output</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Output_Text">Choose the folder where the finished images are saved.</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Run_Title">Remove backgrounds</system:String>
-<system:String x:Key="Str_Tour_BgRemove_Run_Text">Process every image in the queue and save the results.</system:String>
-<!-- Tour: Bulk Image Resizer -->
-<system:String x:Key="Str_Tour_BulkResize_Input_Title">Input</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Input_Text">Add the pictures or folders you want to resize.</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Resize_Title">Resize</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Resize_Text">Choose the new size by pixels, percentage, or fit, and how to handle aspect ratio.</system:String>
-<system:String x:Key="Str_Tour_BulkResize_SaveAs_Title">Save as</system:String>
-<system:String x:Key="Str_Tour_BulkResize_SaveAs_Text">Pick the file format, quality, and naming for the resized copies.</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Output_Title">Output</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Output_Text">Choose the folder where the resized pictures are saved.</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Run_Title">Resize pictures</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Run_Text">Resize everything in the list in one go.</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Results_Title">Picture list</system:String>
-<system:String x:Key="Str_Tour_BulkResize_Results_Text">Review the queued pictures and see the result for each one.</system:String>
-<!-- Tour: Image Editor -->
-<system:String x:Key="Str_Tour_ImageEditor_Input_Title">Input</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Input_Text">Add the images or folders you want to edit.</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Rotate_Title">Rotate and flip</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Rotate_Text">Turn the image left or right, or mirror it horizontally or vertically.</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Crop_Title">Crop</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Crop_Text">Turn on cropping, drag a box over the preview, and apply it.</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Output_Title">Output</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Output_Text">Choose the folder where edited images are saved.</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Run_Title">Apply edits</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Run_Text">Apply your edits and save the images.</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Preview_Title">Preview</system:String>
-<system:String x:Key="Str_Tour_ImageEditor_Preview_Text">See your changes live and step through the images in the queue. Undo and Redo (top right, or Ctrl+Z and Ctrl+Y) step back through your rotations, flips and crops; the third button resets them.</system:String>
-<!-- Tour: SVG Tool -->
-<system:String x:Key="Str_Tour_SvgTool_Background_Title">Background</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Background_Text">Change the preview background to check how the SVG looks on light, dark, or transparent surfaces.</system:String>
-<system:String x:Key="Str_Tour_SvgTool_CleanUp_Title">Clean up</system:String>
-<system:String x:Key="Str_Tour_SvgTool_CleanUp_Text">Remove metadata, comments, and other clutter from the SVG code.</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Shrink_Title">Shrink</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Shrink_Text">Make the file smaller by simplifying numbers and paths.</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Export_Title">Export</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Export_Text">Choose the size and options for exporting the SVG as a PNG.</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Preview_Title">Preview</system:String>
-<system:String x:Key="Str_Tour_SvgTool_Preview_Text">Open an SVG, zoom in, and see the result of your changes.</system:String>
-<!-- Tour: Instrument Tuner -->
-<system:String x:Key="Str_Tour_Tuner_Instrument_Title">Instrument</system:String>
-<system:String x:Key="Str_Tour_Tuner_Instrument_Text">Choose your instrument to see its standard string notes.</system:String>
-<system:String x:Key="Str_Tour_Tuner_Mic_Title">Microphone</system:String>
-<system:String x:Key="Str_Tour_Tuner_Mic_Text">Pick the microphone used to hear your instrument.</system:String>
-<system:String x:Key="Str_Tour_Tuner_Reference_Title">Reference pitch</system:String>
-<system:String x:Key="Str_Tour_Tuner_Reference_Text">Set the frequency for A4, which is 440 Hz in standard tuning.</system:String>
-<system:String x:Key="Str_Tour_Tuner_Listen_Title">Start tuning</system:String>
-<system:String x:Key="Str_Tour_Tuner_Listen_Text">Start listening, then play a single note on your instrument.</system:String>
-<system:String x:Key="Str_Tour_Tuner_Meter_Title">Tuning meter</system:String>
-<system:String x:Key="Str_Tour_Tuner_Meter_Text">See the detected note and how many cents sharp or flat it is.</system:String>
-<!-- Tour: MIDI Instruments -->
-<system:String x:Key="Str_Tour_Midi_Instrument_Title">Instrument</system:String>
-<system:String x:Key="Str_Tour_Midi_Instrument_Text">Choose which instrument to play.</system:String>
-<system:String x:Key="Str_Tour_Midi_Sound_Title">Sound</system:String>
-<system:String x:Key="Str_Tour_Midi_Sound_Text">Shape the volume and tone of the instrument.</system:String>
-<system:String x:Key="Str_Tour_Midi_Record_Title">Record</system:String>
-<system:String x:Key="Str_Tour_Midi_Record_Text">Record what you play and save it as a file.</system:String>
-<system:String x:Key="Str_Tour_Midi_Piano_Title">Keyboard</system:String>
-<system:String x:Key="Str_Tour_Midi_Piano_Text">Play with your mouse, your computer keyboard, or a connected MIDI keyboard.</system:String>
-<!-- Tour: Synthesizer -->
-<system:String x:Key="Str_Tour_Synth_Oscillator_Title">Oscillator</system:String>
-<system:String x:Key="Str_Tour_Synth_Oscillator_Text">Choose the wave shape that defines the basic character of the sound.</system:String>
-<system:String x:Key="Str_Tour_Synth_Envelope_Title">Envelope</system:String>
-<system:String x:Key="Str_Tour_Synth_Envelope_Text">Shape how each note fades in and out with attack, decay, sustain, and release.</system:String>
-<system:String x:Key="Str_Tour_Synth_Record_Title">Record</system:String>
-<system:String x:Key="Str_Tour_Synth_Record_Text">Record what you play and save it to a file.</system:String>
-<system:String x:Key="Str_Tour_Synth_Piano_Title">Keyboard</system:String>
-<system:String x:Key="Str_Tour_Synth_Piano_Text">Play notes with your mouse or your computer keyboard.</system:String>
-<!-- Tour: Pixel Art -->
-<system:String x:Key="Str_Tour_PixelArt_Tools_Title">Tools</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Tools_Text">Pick a drawing tool, such as pencil, eraser, fill, or picker.</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Color_Title">Color</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Color_Text">Choose your drawing color and manage the palette.</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Brush_Title">Brush</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Brush_Text">Set the size of your brush.</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Canvas_Title">Canvas</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Canvas_Text">Start a new canvas, resize the current one, or open an existing image.</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Drawing_Title">Drawing area</system:String>
-<system:String x:Key="Str_Tour_PixelArt_Drawing_Text">Draw your pixel art here, then save or export it.</system:String>
-<!-- Tour: Sprite Packer -->
-<system:String x:Key="Str_Tour_SpritePacker_Mode_Title">Mode</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Mode_Text">Choose whether to pack separate images into one sheet or split a sheet into frames.</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Input_Title">Input</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Input_Text">Add the sprite images or folders to work with.</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Output_Title">Output</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Output_Text">Choose the folder where the results are saved.</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Run_Title">Run</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Run_Text">Build the sprite sheet or export the frames.</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Preview_Title">Preview</system:String>
-<system:String x:Key="Str_Tour_SpritePacker_Preview_Text">See the sprite sheet layout and how the frames will be cut.</system:String>
+    <!--  Tour: Audio Output Test  -->
+    <system:String x:Key="Str_Tour_AudioOut_Device_Title">Output device</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Device_Text">Pick which speakers or headphones to test. Use refresh if you just plugged something in.</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Level_Title">Volume level</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Level_Text">Set how loud the test sounds play. Start low to protect your ears and your speakers.</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Signal_Title">Signal options</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Signal_Text">Adjust the pitch, wave shape, sweep, noise, and phase settings for the selected test.</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Play_Title">Play</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Play_Text">Start or stop the selected test sound on your chosen device.</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Test_Title">Choose a test</system:String>
+    <system:String x:Key="Str_Tour_AudioOut_Test_Text">Switch between channel, phase, tone, sweep, and noise tests, then pick the channels to listen to.</system:String>
+    <!--  Tour: Game Controller  -->
+    <system:String x:Key="Str_Tour_GameCtl_Controller_Title">Controller</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Controller_Text">Choose which connected gamepad to test.</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Deadzone_Title">Dead zones</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Deadzone_Text">Set how far the sticks must move before input registers, to spot drift.</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Vibration_Title">Vibration</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Vibration_Text">Try the rumble motors at different strengths.</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Pad_Title">Live gamepad</system:String>
+    <system:String x:Key="Str_Tour_GameCtl_Pad_Text">Press buttons and move sticks and triggers to see every input react in real time.</system:String>
+    <!--  Tour: Keyboard and Mouse Test  -->
+    <system:String x:Key="Str_Tour_KbMouse_Options_Title">Options</system:String>
+    <system:String x:Key="Str_Tour_KbMouse_Options_Text">Choose which tests to show and adjust how the inputs are displayed.</system:String>
+    <system:String x:Key="Str_Tour_KbMouse_Tests_Title">Test area</system:String>
+    <system:String x:Key="Str_Tour_KbMouse_Tests_Text">Press keys and click, scroll, or move the mouse to check that every input is detected.</system:String>
+    <!--  Tour: Monitor HDR Test  -->
+    <system:String x:Key="Str_Tour_MonitorHdr_Screen_Title">Screen</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Screen_Text">Pick the monitor to test.</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Play_Title">Playback options</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Play_Text">Control how the full-screen HDR patterns are shown.</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Start_Title">Start</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Start_Text">Open the full-screen HDR test patterns on the selected monitor.</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Results_Title">Readings and verdict</system:String>
+    <system:String x:Key="Str_Tour_MonitorHdr_Results_Text">See what Windows reports about your display's HDR support, plus a plain-language verdict.</system:String>
+    <!--  Tour: Monitor Test  -->
+    <system:String x:Key="Str_Tour_MonitorTest_Screen_Title">Screen</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Screen_Text">Pick the monitor to test.</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Play_Title">Playback options</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Play_Text">Control how the full-screen test patterns are shown.</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Start_Title">Start</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Start_Text">Open the full-screen test patterns to look for dead pixels, uneven color, and backlight bleed.</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Results_Title">Refresh rate and marks</system:String>
+    <system:String x:Key="Str_Tour_MonitorTest_Results_Text">Measure your real refresh rate and keep notes on any problems you find.</system:String>
+    <!--  Tour: Background Remover  -->
+    <system:String x:Key="Str_Tour_BgRemove_Input_Title">Input</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Input_Text">Add the images or folders you want to remove a background from.</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Color_Title">Color to remove</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Color_Text">Pick the background color to make transparent, or sample it from an image.</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Background_Title">Background</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Background_Text">Fine-tune how closely colors must match and how soft the edges are.</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Output_Title">Output</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Output_Text">Choose the folder where the finished images are saved.</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Run_Title">Remove backgrounds</system:String>
+    <system:String x:Key="Str_Tour_BgRemove_Run_Text">Process every image in the queue and save the results.</system:String>
+    <!--  Tour: Bulk Image Resizer  -->
+    <system:String x:Key="Str_Tour_BulkResize_Input_Title">Input</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Input_Text">Add the pictures or folders you want to resize.</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Resize_Title">Resize</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Resize_Text">Choose the new size by pixels, percentage, or fit, and how to handle aspect ratio.</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_SaveAs_Title">Save as</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_SaveAs_Text">Pick the file format, quality, and naming for the resized copies.</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Output_Title">Output</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Output_Text">Choose the folder where the resized pictures are saved.</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Run_Title">Resize pictures</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Run_Text">Resize everything in the list in one go.</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Results_Title">Picture list</system:String>
+    <system:String x:Key="Str_Tour_BulkResize_Results_Text">Review the queued pictures and see the result for each one.</system:String>
+    <!--  Tour: Image Editor  -->
+    <system:String x:Key="Str_Tour_ImageEditor_Input_Title">Input</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Input_Text">Add the images or folders you want to edit.</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Rotate_Title">Rotate and flip</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Rotate_Text">Turn the image left or right, or mirror it horizontally or vertically.</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Crop_Title">Crop</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Crop_Text">Turn on cropping, drag a box over the preview, and apply it.</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Output_Title">Output</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Output_Text">Choose the folder where edited images are saved.</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Run_Title">Apply edits</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Run_Text">Apply your edits and save the images.</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Preview_Title">Preview</system:String>
+    <system:String x:Key="Str_Tour_ImageEditor_Preview_Text">See your changes live and step through the images in the queue. Undo and Redo (top right, or Ctrl+Z and Ctrl+Y) step back through your rotations, flips and crops; the third button resets them.</system:String>
+    <!--  Tour: SVG Tool  -->
+    <system:String x:Key="Str_Tour_SvgTool_Background_Title">Background</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Background_Text">Change the preview background to check how the SVG looks on light, dark, or transparent surfaces.</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_CleanUp_Title">Clean up</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_CleanUp_Text">Remove metadata, comments, and other clutter from the SVG code.</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Shrink_Title">Shrink</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Shrink_Text">Make the file smaller by simplifying numbers and paths.</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Export_Title">Export</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Export_Text">Choose the size and options for exporting the SVG as a PNG.</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Preview_Title">Preview</system:String>
+    <system:String x:Key="Str_Tour_SvgTool_Preview_Text">Open an SVG, zoom in, and see the result of your changes.</system:String>
+    <!--  Tour: Instrument Tuner  -->
+    <system:String x:Key="Str_Tour_Tuner_Instrument_Title">Instrument</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Instrument_Text">Choose your instrument to see its standard string notes.</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Mic_Title">Microphone</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Mic_Text">Pick the microphone used to hear your instrument.</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Reference_Title">Reference pitch</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Reference_Text">Set the frequency for A4, which is 440 Hz in standard tuning.</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Listen_Title">Start tuning</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Listen_Text">Start listening, then play a single note on your instrument.</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Meter_Title">Tuning meter</system:String>
+    <system:String x:Key="Str_Tour_Tuner_Meter_Text">See the detected note and how many cents sharp or flat it is.</system:String>
+    <!--  Tour: MIDI Instruments  -->
+    <system:String x:Key="Str_Tour_Midi_Instrument_Title">Instrument</system:String>
+    <system:String x:Key="Str_Tour_Midi_Instrument_Text">Choose which instrument to play.</system:String>
+    <system:String x:Key="Str_Tour_Midi_Sound_Title">Sound</system:String>
+    <system:String x:Key="Str_Tour_Midi_Sound_Text">Shape the volume and tone of the instrument.</system:String>
+    <system:String x:Key="Str_Tour_Midi_Record_Title">Record</system:String>
+    <system:String x:Key="Str_Tour_Midi_Record_Text">Record what you play and save it as a file.</system:String>
+    <system:String x:Key="Str_Tour_Midi_Piano_Title">Keyboard</system:String>
+    <system:String x:Key="Str_Tour_Midi_Piano_Text">Play with your mouse, your computer keyboard, or a connected MIDI keyboard.</system:String>
+    <!--  Tour: Synthesizer  -->
+    <system:String x:Key="Str_Tour_Synth_Oscillator_Title">Oscillator</system:String>
+    <system:String x:Key="Str_Tour_Synth_Oscillator_Text">Choose the wave shape that defines the basic character of the sound.</system:String>
+    <system:String x:Key="Str_Tour_Synth_Envelope_Title">Envelope</system:String>
+    <system:String x:Key="Str_Tour_Synth_Envelope_Text">Shape how each note fades in and out with attack, decay, sustain, and release.</system:String>
+    <system:String x:Key="Str_Tour_Synth_Record_Title">Record</system:String>
+    <system:String x:Key="Str_Tour_Synth_Record_Text">Record what you play and save it to a file.</system:String>
+    <system:String x:Key="Str_Tour_Synth_Piano_Title">Keyboard</system:String>
+    <system:String x:Key="Str_Tour_Synth_Piano_Text">Play notes with your mouse or your computer keyboard.</system:String>
+    <!--  Tour: Pixel Art  -->
+    <system:String x:Key="Str_Tour_PixelArt_Tools_Title">Tools</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Tools_Text">Pick a drawing tool, such as pencil, eraser, fill, or picker.</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Color_Title">Color</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Color_Text">Choose your drawing color and manage the palette.</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Brush_Title">Brush</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Brush_Text">Set the size of your brush.</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Canvas_Title">Canvas</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Canvas_Text">Start a new canvas, resize the current one, or open an existing image.</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Drawing_Title">Drawing area</system:String>
+    <system:String x:Key="Str_Tour_PixelArt_Drawing_Text">Draw your pixel art here, then save or export it.</system:String>
+    <!--  Tour: Sprite Packer  -->
+    <system:String x:Key="Str_Tour_SpritePacker_Mode_Title">Mode</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Mode_Text">Choose whether to pack separate images into one sheet or split a sheet into frames.</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Input_Title">Input</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Input_Text">Add the sprite images or folders to work with.</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Output_Title">Output</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Output_Text">Choose the folder where the results are saved.</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Run_Title">Run</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Run_Text">Build the sprite sheet or export the frames.</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Preview_Title">Preview</system:String>
+    <system:String x:Key="Str_Tour_SpritePacker_Preview_Text">See the sprite sheet layout and how the frames will be cut.</system:String>
 
-    <!-- Tour: Device scanner -->
+    <!--  Tour: Device scanner  -->
     <system:String x:Key="Str_Tour_DeviceScanner_Network_Title">Network</system:String>
     <system:String x:Key="Str_Tour_DeviceScanner_Network_Text">Pick which network to scan, or enter a custom address range.</system:String>
     <system:String x:Key="Str_Tour_DeviceScanner_Speed_Title">Scan speed</system:String>
@@ -8158,7 +8158,7 @@
     <system:String x:Key="Str_Tour_DeviceScanner_Scan_Text">Start looking for devices on the chosen network. Progress shows beside the button.</system:String>
     <system:String x:Key="Str_Tour_DeviceScanner_Results_Title">Devices found</system:String>
     <system:String x:Key="Str_Tour_DeviceScanner_Results_Text">Every device that answered is listed with its address, name, and maker. Filter or export the list from here.</system:String>
-    <!-- Tour: DNS tools -->
+    <!--  Tour: DNS tools  -->
     <system:String x:Key="Str_Tour_Dns_Mode_Title">Tool</system:String>
     <system:String x:Key="Str_Tour_Dns_Mode_Text">Switch between DNS lookup, WHOIS, and traceroute.</system:String>
     <system:String x:Key="Str_Tour_Dns_Settings_Title">Settings</system:String>
@@ -8169,7 +8169,7 @@
     <system:String x:Key="Str_Tour_Dns_Run_Text">Run the lookup, or stop it while it is still working.</system:String>
     <system:String x:Key="Str_Tour_Dns_Results_Title">Answer</system:String>
     <system:String x:Key="Str_Tour_Dns_Results_Text">Records, WHOIS details, or traceroute hops appear here as they come in.</system:String>
-    <!-- Tour: Hosts editor -->
+    <!--  Tour: Hosts editor  -->
     <system:String x:Key="Str_Tour_Hosts_Search_Title">Search and save</system:String>
     <system:String x:Key="Str_Tour_Hosts_Search_Text">Filter the entries, flush the DNS cache, and save your changes to the hosts file.</system:String>
     <system:String x:Key="Str_Tour_Hosts_Add_Title">New entry</system:String>
@@ -8178,7 +8178,7 @@
     <system:String x:Key="Str_Tour_Hosts_Entries_Text">Every line of the hosts file. Turn entries on or off, edit them, or remove them.</system:String>
     <system:String x:Key="Str_Tour_Hosts_Save_Title">Save</system:String>
     <system:String x:Key="Str_Tour_Hosts_Save_Text">Write your changes to the hosts file. This needs administrator rights.</system:String>
-    <!-- Tour: Internet speed test -->
+    <!--  Tour: Internet speed test  -->
     <system:String x:Key="Str_Tour_InternetSpeed_Server_Title">Server</system:String>
     <system:String x:Key="Str_Tour_InternetSpeed_Server_Text">Choose the test server, or let the tool pick the closest one.</system:String>
     <system:String x:Key="Str_Tour_InternetSpeed_Test_Title">Test size</system:String>
@@ -8189,7 +8189,7 @@
     <system:String x:Key="Str_Tour_InternetSpeed_Results_Text">Speeds, ping, and a live chart appear here, along with what the numbers mean.</system:String>
     <system:String x:Key="Str_Tour_InternetSpeed_History_Title">History</system:String>
     <system:String x:Key="Str_Tour_InternetSpeed_History_Text">Earlier tests are saved here so you can compare them.</system:String>
-    <!-- Tour: Network speed widget -->
+    <!--  Tour: Network speed widget  -->
     <system:String x:Key="Str_Tour_Connections_Summary_Title">Outside summary</system:String>
     <system:String x:Key="Str_Tour_Connections_Summary_Text">How many apps are connected outside your PC, and how many connections they have open right now.</system:String>
     <system:String x:Key="Str_Tour_Connections_Search_Title">Search</system:String>
@@ -8202,7 +8202,7 @@
     <system:String x:Key="Str_Tour_Connections_LookUp_Text">Ask your DNS server for the name behind each address. It is off by default because every lookup is a network request.</system:String>
     <system:String x:Key="Str_Tour_Connections_Export_Title">Export</system:String>
     <system:String x:Key="Str_Tour_Connections_Export_Text">Save the rows you see to a CSV file.</system:String>
-    <!-- Tour: Network adapters -->
+    <!--  Tour: Network adapters  -->
     <system:String x:Key="Str_Tour_NetworkAdapters_MyIp_Title">Your connection</system:String>
     <system:String x:Key="Str_Tour_NetworkAdapters_MyIp_Text">See your local and public addresses at a glance.</system:String>
     <system:String x:Key="Str_Tour_NetworkAdapters_Refresh_Title">Refresh</system:String>
@@ -8211,7 +8211,7 @@
     <system:String x:Key="Str_Tour_NetworkAdapters_List_Text">Every network adapter on this PC. Select one to see its details or change its settings.</system:String>
     <system:String x:Key="Str_Tour_NetworkAdapters_Log_Title">Log</system:String>
     <system:String x:Key="Str_Tour_NetworkAdapters_Log_Text">Messages about what the tool is doing appear here. You can copy or save them.</system:String>
-    <!-- Tour: Ping -->
+    <!--  Tour: Ping  -->
     <system:String x:Key="Str_Tour_Ping_Target_Title">Host</system:String>
     <system:String x:Key="Str_Tour_Ping_Target_Text">Enter the host to ping and how many times to send the request.</system:String>
     <system:String x:Key="Str_Tour_Ping_Source_Title">Send from</system:String>
@@ -8220,7 +8220,7 @@
     <system:String x:Key="Str_Tour_Ping_Run_Text">Start pinging, or stop a run that is in progress.</system:String>
     <system:String x:Key="Str_Tour_Ping_Replies_Title">Replies</system:String>
     <system:String x:Key="Str_Tour_Ping_Replies_Text">Each reply is listed with its time. Copy or save the log when you are done.</system:String>
-    <!-- Tour: Port scanner -->
+    <!--  Tour: Port scanner  -->
     <system:String x:Key="Str_Tour_PortScanner_Target_Title">Host and ports</system:String>
     <system:String x:Key="Str_Tour_PortScanner_Target_Text">Enter the host to check and the ports to try, as single ports, lists, or ranges.</system:String>
     <system:String x:Key="Str_Tour_PortScanner_Source_Title">Send from</system:String>
@@ -8229,7 +8229,7 @@
     <system:String x:Key="Str_Tour_PortScanner_Run_Text">Start the scan, or stop it before it finishes.</system:String>
     <system:String x:Key="Str_Tour_PortScanner_Results_Title">Open ports</system:String>
     <system:String x:Key="Str_Tour_PortScanner_Results_Text">Ports that answered are listed here as the scan runs.</system:String>
-    <!-- Tour: TCP and UDP client -->
+    <!--  Tour: TCP and UDP client  -->
     <system:String x:Key="Str_Tour_SocketClient_Connection_Title">Connection</system:String>
     <system:String x:Key="Str_Tour_SocketClient_Connection_Text">Pick TCP or UDP, then enter the host and port to talk to.</system:String>
     <system:String x:Key="Str_Tour_SocketClient_Source_Title">Send from</system:String>
@@ -8240,7 +8240,7 @@
     <system:String x:Key="Str_Tour_SocketClient_Send_Text">Type a message and send it. Press Enter as a shortcut.</system:String>
     <system:String x:Key="Str_Tour_SocketClient_Traffic_Title">Traffic</system:String>
     <system:String x:Key="Str_Tour_SocketClient_Traffic_Text">Everything you send and receive is listed here, with running byte counts above.</system:String>
-    <!-- Tour: Process killer -->
+    <!--  Tour: Process killer  -->
     <system:String x:Key="Str_Tour_ProcessKiller_Search_Title">Search</system:String>
     <system:String x:Key="Str_Tour_ProcessKiller_Search_Text">Find a process by name or ID, or look up which process is using a port.</system:String>
     <system:String x:Key="Str_Tour_ProcessKiller_Filter_Title">Filter</system:String>
@@ -8251,7 +8251,7 @@
     <system:String x:Key="Str_Tour_ProcessKiller_List_Text">Running processes with live CPU and memory use. Select one to see its details.</system:String>
     <system:String x:Key="Str_Tour_ProcessKiller_End_Title">End process</system:String>
     <system:String x:Key="Str_Tour_ProcessKiller_End_Text">End the selected process. Protected system processes cannot be ended.</system:String>
-    <!-- Tour: System monitor -->
+    <!--  Tour: System monitor  -->
     <system:String x:Key="Str_Tour_SystemMonitor_Sections_Title">Sections</system:String>
     <system:String x:Key="Str_Tour_SystemMonitor_Sections_Text">Choose a part of your PC, such as CPU, memory, disks, or network. Each shows a mini graph.</system:String>
     <system:String x:Key="Str_Tour_SystemMonitor_Detail_Title">Details</system:String>
@@ -8260,7 +8260,7 @@
     <system:String x:Key="Str_Tour_SystemMonitor_Refresh_Text">Set how often readings update, or pause them.</system:String>
     <system:String x:Key="Str_Tour_SystemMonitor_Report_Title">Report</system:String>
     <system:String x:Key="Str_Tour_SystemMonitor_Report_Text">Save or copy a report of the current readings.</system:String>
-    <!-- Tour: Hardware sensors -->
+    <!--  Tour: Hardware sensors  -->
     <system:String x:Key="Str_Tour_HardwareSensors_Parts_Title">Parts</system:String>
     <system:String x:Key="Str_Tour_HardwareSensors_Parts_Text">Pick a hardware part, such as the processor, graphics card, or drives.</system:String>
     <system:String x:Key="Str_Tour_HardwareSensors_Detail_Title">Sensors</system:String>
@@ -8271,21 +8271,21 @@
     <system:String x:Key="Str_Tour_HardwareSensors_Units_Text">Show temperatures in degrees Celsius or Fahrenheit.</system:String>
     <system:String x:Key="Str_Tour_HardwareSensors_Report_Title">Report</system:String>
     <system:String x:Key="Str_Tour_HardwareSensors_Report_Text">Save or copy a report of the current sensor readings.</system:String>
-    <!-- Tour: Startup apps -->
+    <!--  Tour: Startup apps  -->
     <system:String x:Key="Str_Tour_StartupApps_Search_Title">Search</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Search_Text">Filter the list, see how many entries there are, and see which are enabled.</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Refresh_Title">Refresh</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Refresh_Text">Read the startup entries again.</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Entries_Title">Startup entries</system:String>
     <system:String x:Key="Str_Tour_StartupApps_Entries_Text">Programs that start with Windows. Turn each one on or off to speed up sign-in.</system:String>
-    <!-- Tour: Services -->
+    <!--  Tour: Services  -->
     <system:String x:Key="Str_Tour_Services_Search_Title">Search and filter</system:String>
     <system:String x:Key="Str_Tour_Services_Search_Text">Find a service by name or description, and show only the ones that are running or stopped.</system:String>
     <system:String x:Key="Str_Tour_Services_Refresh_Title">Scan again</system:String>
     <system:String x:Key="Str_Tour_Services_Refresh_Text">Read the services again to see changes made outside this tool.</system:String>
     <system:String x:Key="Str_Tour_Services_List_Title">Services</system:String>
     <system:String x:Key="Str_Tour_Services_List_Text">Start, stop, or restart a service. The three-dot menu pauses it and changes its startup type.</system:String>
-    <!-- Tour: File encryption -->
+    <!--  Tour: File encryption  -->
     <system:String x:Key="Str_Tour_FileEncrypt_Mode_Title">Mode</system:String>
     <system:String x:Key="Str_Tour_FileEncrypt_Mode_Text">Choose whether to encrypt files or decrypt files you encrypted earlier.</system:String>
     <system:String x:Key="Str_Tour_FileEncrypt_Files_Title">Add your files</system:String>
@@ -8296,7 +8296,7 @@
     <system:String x:Key="Str_Tour_FileEncrypt_Run_Text">Encrypt or decrypt every file in the list.</system:String>
     <system:String x:Key="Str_Tour_FileEncrypt_List_Title">Files</system:String>
     <system:String x:Key="Str_Tour_FileEncrypt_List_Text">Your files and the result for each one appear here.</system:String>
-    <!-- Tour: File shredder -->
+    <!--  Tour: File shredder  -->
     <system:String x:Key="Str_Tour_Shredder_Files_Title">Add your files</system:String>
     <system:String x:Key="Str_Tour_Shredder_Files_Text">Drop the files or folders you want to destroy, or browse for them.</system:String>
     <system:String x:Key="Str_Tour_Shredder_Method_Title">Method</system:String>
@@ -8307,7 +8307,7 @@
     <system:String x:Key="Str_Tour_Shredder_Run_Text">Permanently destroy the selected files. This cannot be undone.</system:String>
     <system:String x:Key="Str_Tour_Shredder_List_Title">Files</system:String>
     <system:String x:Key="Str_Tour_Shredder_List_Text">Everything queued for shredding, with a result for each one.</system:String>
-    <!-- Tour: Password generator -->
+    <!--  Tour: Password generator  -->
     <system:String x:Key="Str_Tour_PasswordGen_Mode_Title">Type</system:String>
     <system:String x:Key="Str_Tour_PasswordGen_Mode_Text">Choose random characters or a passphrase made of words.</system:String>
     <system:String x:Key="Str_Tour_PasswordGen_Random_Title">Characters</system:String>
@@ -8318,7 +8318,7 @@
     <system:String x:Key="Str_Tour_PasswordGen_Generate_Text">Create new passwords with your settings.</system:String>
     <system:String x:Key="Str_Tour_PasswordGen_Results_Title">Passwords</system:String>
     <system:String x:Key="Str_Tour_PasswordGen_Results_Text">Your new passwords and their strength. Copy one, or copy or export them all.</system:String>
-    <!-- Tour: Password vault -->
+    <!--  Tour: Password vault  -->
     <system:String x:Key="Str_Tour_Vault_Setup_Title">Create your vault</system:String>
     <system:String x:Key="Str_Tour_Vault_Setup_Text">Choose a master password to create the vault. It cannot be recovered if you forget it.</system:String>
     <system:String x:Key="Str_Tour_Vault_Unlock_Title">Unlock</system:String>
@@ -8332,7 +8332,7 @@
     <system:String x:Key="Str_Tour_Vault_New_Title">New entry</system:String>
     <system:String x:Key="Str_Tour_Vault_New_Text">Add a new login to the vault.</system:String>
 
-    <!-- Tour: DiskSpace -->
+    <!--  Tour: DiskSpace  -->
     <system:String x:Key="Str_Tour_DiskSpace_Scope_Title">What to scan</system:String>
     <system:String x:Key="Str_Tour_DiskSpace_Scope_Text">Pick a drive or a folder to analyze.</system:String>
     <system:String x:Key="Str_Tour_DiskSpace_Options_Title">Scan options</system:String>
@@ -8341,7 +8341,7 @@
     <system:String x:Key="Str_Tour_DiskSpace_Scan_Text">Start the scan to see what is using your space.</system:String>
     <system:String x:Key="Str_Tour_DiskSpace_Results_Title">Space usage</system:String>
     <system:String x:Key="Str_Tour_DiskSpace_Results_Text">Browse the biggest folders and files as a list or a treemap.</system:String>
-    <!-- Tour: DiskSpeed -->
+    <!--  Tour: DiskSpeed  -->
     <system:String x:Key="Str_Tour_DiskSpeed_Target_Title">Test target</system:String>
     <system:String x:Key="Str_Tour_DiskSpeed_Target_Text">Choose the drive to test.</system:String>
     <system:String x:Key="Str_Tour_DiskSpeed_Size_Title">Test size</system:String>
@@ -8354,12 +8354,12 @@
     <system:String x:Key="Str_Tour_DiskSpeed_Results_Text">See the read and write speeds once the test finishes.</system:String>
     <system:String x:Key="Str_Tour_DiskSpeed_History_Title">History</system:String>
     <system:String x:Key="Str_Tour_DiskSpeed_History_Text">Compare this run with your earlier tests.</system:String>
-    <!-- Tour: DriveHealth -->
+    <!--  Tour: DriveHealth  -->
     <system:String x:Key="Str_Tour_DriveHealth_Refresh_Title">Check drives</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_Refresh_Text">Reads the health, temperature, and wear of your drives.</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_Drives_Title">Your drives</system:String>
     <system:String x:Key="Str_Tour_DriveHealth_Drives_Text">Each card shows the health status and details for one drive.</system:String>
-    <!-- Tour: JunkCleaner -->
+    <!--  Tour: JunkCleaner  -->
     <system:String x:Key="Str_Tour_JunkCleaner_Categories_Title">What to clean</system:String>
     <system:String x:Key="Str_Tour_JunkCleaner_Categories_Text">Choose which kinds of junk files to look for.</system:String>
     <system:String x:Key="Str_Tour_JunkCleaner_Safety_Title">Safety</system:String>
@@ -8370,7 +8370,7 @@
     <system:String x:Key="Str_Tour_JunkCleaner_Clean_Text">Removes the items you checked to free up space.</system:String>
     <system:String x:Key="Str_Tour_JunkCleaner_Results_Title">Scan results</system:String>
     <system:String x:Key="Str_Tour_JunkCleaner_Results_Text">Review what was found and how much space you can reclaim.</system:String>
-    <!-- Tour: LargeFiles -->
+    <!--  Tour: LargeFiles  -->
     <system:String x:Key="Str_Tour_LargeFiles_Where_Title">Where to look</system:String>
     <system:String x:Key="Str_Tour_LargeFiles_Where_Text">Search a whole drive or one folder.</system:String>
     <system:String x:Key="Str_Tour_LargeFiles_Size_Title">Size and count</system:String>
@@ -8381,19 +8381,19 @@
     <system:String x:Key="Str_Tour_LargeFiles_Find_Text">Scans for the biggest files in the chosen location.</system:String>
     <system:String x:Key="Str_Tour_LargeFiles_Results_Title">Largest files</system:String>
     <system:String x:Key="Str_Tour_LargeFiles_Results_Text">Sort, open, move, export, or delete the files you find.</system:String>
-    <!-- Tour: Clipboard -->
+    <!--  Tour: Clipboard  -->
     <system:String x:Key="Str_Tour_Clipboard_Search_Title">Search and control</system:String>
     <system:String x:Key="Str_Tour_Clipboard_Search_Text">Filter your history, pause recording, or clear it.</system:String>
     <system:String x:Key="Str_Tour_Clipboard_History_Title">Clipboard history</system:String>
     <system:String x:Key="Str_Tour_Clipboard_History_Text">Everything you copy appears here so you can paste it again.</system:String>
-    <!-- Tour: Notes -->
+    <!--  Tour: Notes  -->
     <system:String x:Key="Str_Tour_Notes_List_Title">Your notes</system:String>
     <system:String x:Key="Str_Tour_Notes_List_Text">Search and pick a note from the list.</system:String>
     <system:String x:Key="Str_Tour_Notes_New_Title">New note</system:String>
     <system:String x:Key="Str_Tour_Notes_New_Text">Create a fresh note.</system:String>
     <system:String x:Key="Str_Tour_Notes_Editor_Title">Editor</system:String>
     <system:String x:Key="Str_Tour_Notes_Editor_Text">Write your note here. Changes are saved automatically.</system:String>
-    <!-- Tour: ScreenOcr -->
+    <!--  Tour: ScreenOcr  -->
     <system:String x:Key="Str_Tour_ScreenOcr_Capture_Title">Get an image</system:String>
     <system:String x:Key="Str_Tour_ScreenOcr_Capture_Text">Capture part of the screen, open an image, or paste one.</system:String>
     <system:String x:Key="Str_Tour_ScreenOcr_Reading_Title">Reading language</system:String>
@@ -8402,7 +8402,7 @@
     <system:String x:Key="Str_Tour_ScreenOcr_Picture_Text">The image the text is read from.</system:String>
     <system:String x:Key="Str_Tour_ScreenOcr_Text_Title">Recognized text</system:String>
     <system:String x:Key="Str_Tour_ScreenOcr_Text_Text">Copy, save, or clear the text found in the image.</system:String>
-    <!-- Tour: EnvVars -->
+    <!--  Tour: EnvVars  -->
     <system:String x:Key="Str_Tour_EnvVars_Scope_Title">Scope</system:String>
     <system:String x:Key="Str_Tour_EnvVars_Scope_Text">Switch between your user variables and the system-wide ones.</system:String>
     <system:String x:Key="Str_Tour_EnvVars_Changes_Title">Changes</system:String>
@@ -8411,7 +8411,7 @@
     <system:String x:Key="Str_Tour_EnvVars_Variables_Text">Browse and search the variables in the chosen scope.</system:String>
     <system:String x:Key="Str_Tour_EnvVars_Editor_Title">Editor</system:String>
     <system:String x:Key="Str_Tour_EnvVars_Editor_Text">Edit the selected variable, then save or delete it.</system:String>
-    <!-- Tour: UnitConverter -->
+    <!--  Tour: UnitConverter  -->
     <system:String x:Key="Str_Tour_UnitConverter_Category_Title">Category</system:String>
     <system:String x:Key="Str_Tour_UnitConverter_Category_Text">Pick what you are measuring, such as length, weight, or currency.</system:String>
     <system:String x:Key="Str_Tour_UnitConverter_Favorites_Title">Favorites</system:String>
@@ -8420,14 +8420,14 @@
     <system:String x:Key="Str_Tour_UnitConverter_Convert_Text">Enter a value and choose the units to convert between.</system:String>
     <system:String x:Key="Str_Tour_UnitConverter_Table_Title">All units</system:String>
     <system:String x:Key="Str_Tour_UnitConverter_Table_Text">See the same value in every unit of the category.</system:String>
-    <!-- Tour: DateTime -->
+    <!--  Tour: DateTime  -->
     <system:String x:Key="Str_Tour_DateTime_Mode_Title">Mode</system:String>
     <system:String x:Key="Str_Tour_DateTime_Mode_Text">Choose the date and time calculation you need.</system:String>
     <system:String x:Key="Str_Tour_DateTime_Options_Title">Options</system:String>
     <system:String x:Key="Str_Tour_DateTime_Options_Text">Adjust the settings for the selected mode.</system:String>
     <system:String x:Key="Str_Tour_DateTime_Results_Title">Results</system:String>
     <system:String x:Key="Str_Tour_DateTime_Results_Text">Your conversions and calculations appear here, ready to copy.</system:String>
-    <!-- Tour: GifMaker -->
+    <!--  Tour: GifMaker  -->
     <system:String x:Key="Str_Tour_GifMaker_Source_Title">Source</system:String>
     <system:String x:Key="Str_Tour_GifMaker_Source_Text">Make a GIF from a video or from a set of images.</system:String>
     <system:String x:Key="Str_Tour_GifMaker_Settings_Title">GIF settings</system:String>
@@ -8440,7 +8440,7 @@
     <system:String x:Key="Str_Tour_GifMaker_Create_Text">Builds the animated GIF from your source.</system:String>
     <system:String x:Key="Str_Tour_GifMaker_Result_Title">Your GIF</system:String>
     <system:String x:Key="Str_Tour_GifMaker_Result_Text">Preview the finished animation here.</system:String>
-    <!-- Tour: ScreenRecorder -->
+    <!--  Tour: ScreenRecorder  -->
     <system:String x:Key="Str_Tour_ScreenRecorder_What_Title">What to record</system:String>
     <system:String x:Key="Str_Tour_ScreenRecorder_What_Text">Pick the full screen, a window, or a region.</system:String>
     <system:String x:Key="Str_Tour_ScreenRecorder_Video_Title">Video</system:String>
@@ -8453,7 +8453,7 @@
     <system:String x:Key="Str_Tour_ScreenRecorder_Record_Text">Start and stop recording your screen.</system:String>
     <system:String x:Key="Str_Tour_ScreenRecorder_Recordings_Title">Recordings</system:String>
     <system:String x:Key="Str_Tour_ScreenRecorder_Recordings_Text">Recordings from this session appear here. Double-click one to play it.</system:String>
-    <!-- Tour: VideoEditor -->
+    <!--  Tour: VideoEditor  -->
     <system:String x:Key="Str_Tour_VideoEditor_Input_Title">Add videos</system:String>
     <system:String x:Key="Str_Tour_VideoEditor_Input_Text">Drop in the clips you want to combine, or browse for them.</system:String>
     <system:String x:Key="Str_Tour_VideoEditor_Transition_Title">Transition</system:String>
@@ -8466,7 +8466,7 @@
     <system:String x:Key="Str_Tour_VideoEditor_Run_Text">Joins your clips into one video.</system:String>
     <system:String x:Key="Str_Tour_VideoEditor_Player_Title">Preview</system:String>
     <system:String x:Key="Str_Tour_VideoEditor_Player_Text">Play your clips and check them before you export.</system:String>
-    <!-- Tour: VideoToAudio -->
+    <!--  Tour: VideoToAudio  -->
     <system:String x:Key="Str_Tour_VideoToAudio_Input_Title">Add videos</system:String>
     <system:String x:Key="Str_Tour_VideoToAudio_Input_Text">Drop in videos or browse for them.</system:String>
     <system:String x:Key="Str_Tour_VideoToAudio_Format_Title">Audio format</system:String>
@@ -9457,7 +9457,7 @@
     <system:String x:Key="Str_MetaClean_WithLocation">{0} with location</system:String>
     <system:String x:Key="Str_MetaClean_Idle">Add pictures, choose what to remove, and press Clean.</system:String>
     <system:String x:Key="Str_MetaClean_IdleDetail">Your originals are never changed. Clean copies are saved as new files.</system:String>
-    <system:String x:Key="Str_MetaClean_CantSave">Can't save there: </system:String>
+    <system:String x:Key="Str_MetaClean_CantSave">Can't save there:</system:String>
     <system:String x:Key="Str_MetaClean_Working">Cleaning…</system:String>
     <system:String x:Key="Str_MetaClean_Progress">{0} of {1} done</system:String>
     <system:String x:Key="Str_MetaClean_Canceled">Canceled. What was finished is kept.</system:String>
@@ -9514,7 +9514,7 @@
     <system:String x:Key="Str_PdfReader_Pages">{0} pages</system:String>
     <system:String x:Key="Str_PdfReader_CantOpen">This PDF could not be opened.</system:String>
     <system:String x:Key="Str_PdfReader_CantOpenDetail">If it has a password, type it in the sidebar and press Unlock.</system:String>
-    <system:String x:Key="Str_PdfReader_CantOpenOther">Windows could not read this file: </system:String>
+    <system:String x:Key="Str_PdfReader_CantOpenOther">Windows could not read this file:</system:String>
     <system:String x:Key="Str_PdfReader_Idle">Open a PDF to read it, sign it or fill it in.</system:String>
     <system:String x:Key="Str_PdfReader_IdleOpen">Add your signature, text, a date or a check mark, then save a copy.</system:String>
     <system:String x:Key="Str_PdfReader_IdleDetail">Your original is never changed. The signed PDF is saved as a new file.</system:String>
@@ -9527,7 +9527,7 @@
     <system:String x:Key="Str_PdfReader_TypeLabel">Type your name</system:String>
     <system:String x:Key="Str_PdfReader_PictureTitle">Choose a picture of your signature</system:String>
     <system:String x:Key="Str_PdfReader_PictureFilter">Pictures</system:String>
-    <system:String x:Key="Str_PdfReader_PictureFailed">That picture could not be used: </system:String>
+    <system:String x:Key="Str_PdfReader_PictureFailed">That picture could not be used:</system:String>
     <system:String x:Key="Str_PdfReader_Clear">Clear</system:String>
     <system:String x:Key="Str_PdfReader_Cancel">Cancel</system:String>
     <system:String x:Key="Str_PdfReader_Use">Use</system:String>
@@ -10072,7 +10072,8 @@
     <system:String x:Key="Str_TexturePack_ChooseAPng">Choose a PNG</system:String>
     <system:String x:Key="Str_TexturePack_NoIcon">No icon</system:String>
     <system:String x:Key="Str_TexturePack_ZipFile">.zip file</system:String>
-    <system:String x:Key="Str_TexturePack_CopyTheZipOr">Copy the .zip (or folder) into .minecraft/resourcepacks, then turn it on in Options > Resource Packs.</system:String>
+    <system:String x:Key="Str_TexturePack_CopyTheZipOr">
+        Copy the .zip (or folder) into .minecraft/resourcepacks, then turn it on in Options >Resource Packs.</system:String>
     <system:String x:Key="Str_TexturePack_ShowTheSavedPack">Show the saved pack</system:String>
     <system:String x:Key="Str_TexturePack_CreateTexturePack">Create texture pack</system:String>
     <system:String x:Key="Str_TexturePack_MinecraftTexturePack">MINECRAFT TEXTURE PACK</system:String>
@@ -10209,15 +10210,15 @@
     <system:String x:Key="Str_Install_HintDev">This is a build from Visual Studio, so installing is turned off.</system:String>
     <system:String x:Key="Str_Install_ConfirmInstall">Install Smart Tools on this PC? It is copied to your user folder and a Start menu shortcut is added. No administrator rights are needed, and your current settings are copied over.</system:String>
     <system:String x:Key="Str_Install_Installing">Installing Smart Tools...</system:String>
-    <system:String x:Key="Str_Install_Failed">Could not install: </system:String>
+    <system:String x:Key="Str_Install_Failed">Could not install:</system:String>
     <system:String x:Key="Str_Install_DoneRestart">Smart Tools is installed. Start the installed copy now? This window will close.</system:String>
     <system:String x:Key="Str_Install_ChooseFolder">Choose an empty folder (or a USB drive) for the portable copy.</system:String>
     <system:String x:Key="Str_Install_Copying">Making a portable copy...</system:String>
-    <system:String x:Key="Str_Install_PortableFailed">Could not make the portable copy: </system:String>
+    <system:String x:Key="Str_Install_PortableFailed">Could not make the portable copy:</system:String>
     <system:String x:Key="Str_Install_PortableDone">Done. The portable copy is in {0}. Run SmartTools.exe there; it starts with a copy of your settings.</system:String>
     <system:String x:Key="Str_Install_ConfirmUninstall">Uninstall Smart Tools from this PC?</system:String>
     <system:String x:Key="Str_Install_DeleteData">Also delete your settings and downloaded models?&#10;&#10;{0}&#10;&#10;Choose No to keep them in case you install again.</system:String>
-    <!-- System Snapshot -->
+    <!--  System Snapshot  -->
     <system:String x:Key="Str_Tool_system-snapshot_Name">System Snapshot</system:String>
     <system:String x:Key="Str_Tool_system-snapshot_Description">Read your PC's setup (Windows, network, firewall, services, software) into tables you can export, to rebuild it on another PC</system:String>
     <system:String x:Key="Str_SysSnap_Scan">Scan this PC</system:String>
@@ -10943,7 +10944,7 @@
     <system:String x:Key="Str_IdGen_SeparatorLabel">Between values</system:String>
     <system:String x:Key="Str_IdGen_SepNewLine">New line</system:String>
     <system:String x:Key="Str_IdGen_SepComma">Comma ,</system:String>
-    <system:String x:Key="Str_IdGen_SepCommaSpace">Comma and space , </system:String>
+    <system:String x:Key="Str_IdGen_SepCommaSpace">Comma and space ,</system:String>
     <system:String x:Key="Str_IdGen_SepSpace">Space</system:String>
     <system:String x:Key="Str_IdGen_SepSemicolon">Semicolon ;</system:String>
     <system:String x:Key="Str_IdGen_SepTab">Tab</system:String>
@@ -11121,12 +11122,14 @@
     <system:String x:Key="Str_DataQuality_MsgMoved">Moved {0:N0} file(s) · {1} to {2}</system:String>
     <system:String x:Key="Str_DataQuality_MsgChooseMoveFolder">Choose where to move {0} selected file(s)</system:String>
     <system:String x:Key="Str_DataQuality_MsgAskMoveToBin">Move {0} to the Recycle Bin?</system:String>
-    <system:String x:Key="Str_DataQuality_MsgAskDeleteNoBin">Permanently delete {0}?
-
-{1} has no Recycle Bin, so this can't be undone.</system:String>
-    <system:String x:Key="Str_DataQuality_MsgAskDelete">Permanently delete {0}?
-
-This can't be undone.</system:String>
+    <system:String x:Key="Str_DataQuality_MsgAskDeleteNoBin">
+        Permanently delete {0}?
+        {1} has no Recycle Bin, so this can't be undone.
+    </system:String>
+    <system:String x:Key="Str_DataQuality_MsgAskDelete">
+        Permanently delete {0}?
+        This can't be undone.
+    </system:String>
     <system:String x:Key="Str_DataQuality_MsgCsvFilter">CSV file (*.csv)|*.csv</system:String>
     <system:String x:Key="Str_Dup_MsgToastTitle">Duplicate Scan Complete</system:String>
     <system:String x:Key="Str_Dup_MsgToastFound">{0} files in {1} groups · {2} reclaimable.</system:String>
@@ -11273,7 +11276,7 @@ This can't be undone.</system:String>
     <system:String x:Key="Str_Validate_HintDoc">Only documents are listed (PDF, Office, OpenDocument, RTF, text).</system:String>
     <system:String x:Key="Str_Validate_HintArchive">Only archives are listed. ZIP, GZIP and TAR are fully tested; 7Z and RAR by header.</system:String>
     <system:String x:Key="Str_Validate_HintAll">Every file is checked. Each kind uses its own settings - pick a kind to fine-tune them.</system:String>
-    <system:String x:Key="Str_Validate_DetQuarantined">Moved to quarantine: {0}. </system:String>
+    <system:String x:Key="Str_Validate_DetQuarantined">Moved to quarantine: {0}.</system:String>
     <system:String x:Key="Str_Validate_DetNotChecked">Not checked - the scan was cancelled.</system:String>
     <system:String x:Key="Str_Validate_CantGone">the file no longer exists (moved or deleted since it was listed)</system:String>
     <system:String x:Key="Str_Validate_ProbEmpty">the file is empty (0 bytes)</system:String>
@@ -11282,7 +11285,7 @@ This can't be undone.</system:String>
     <system:String x:Key="Str_Validate_ProbDiskRead">it can't be read from the disk ({0})</system:String>
     <system:String x:Key="Str_Validate_DetReadableNoChecks">Readable. There are no format checks for this kind of file</system:String>
     <system:String x:Key="Str_Validate_DetReadableOff">Readable. {0} checks are turned off</system:String>
-    <system:String x:Key="Str_Validate_WarnRename"> - rename it so programs open it correctly</system:String>
+    <system:String x:Key="Str_Validate_WarnRename">- rename it so programs open it correctly</system:String>
     <system:String x:Key="Str_Validate_ProbBadHeader">the start of the file isn't a valid {0} header - it's damaged or not really a {0} file</system:String>
     <system:String x:Key="Str_Validate_CantDeniedMid">access denied part-way through</system:String>
     <system:String x:Key="Str_Validate_CantOpenedMid">it was opened by another program during the check</system:String>
