@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
@@ -23,6 +23,9 @@ namespace Smart_Tools.WPF.Controllers
         public const int MinRows = 1, MaxRows = 1_000_000;
         public const int MaxFields = 50;
         public const int PreviewRows = 25;
+
+        /// <summary>The preview shows every row up to this many (so the small row presets are shown in full, not as a sample).</summary>
+        public const int PreviewMaxRows = PreviewRows * 40;
 
         /// <summary>Largest output that is copied to the clipboard; bigger ones are saved to a file.</summary>
         public const int MaxClipboardRows = 20_000;

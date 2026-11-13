@@ -538,7 +538,7 @@ namespace Smart_Tools.WPF.Views
             string text;
             try
             {
-                text = MockDataManager.Preview(_fields, settings);
+                text = MockDataManager.Preview(_fields, settings, MockDataManager.PreviewMaxRows);
             }
             catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException or InvalidOperationException)
             {
@@ -548,8 +548,10 @@ namespace Smart_Tools.WPF.Views
             }
 
             TxtPreview.Text = text;
-            int shown = Math.Min(MockDataManager.PreviewRows, settings.RowCount);
-            TxtPreviewSubtitle.Text = string.Format(Str("Str_Mock_PreviewSubtitle", "First {0} of {1} rows"), shown, settings.RowCount.ToString("N0"));
+            int shown = Math.Min(MockDataManager.PreviewMaxRows, settings.RowCount);
+            TxtPreviewSubtitle.Text = shown == settings.RowCount
+                ? string.Format(Str("Str_Mock_PreviewAll", "All {0} rows"), shown.ToString("N0"))
+                : string.Format(Str("Str_Mock_PreviewSubtitle", "First {0} of {1} rows"), shown.ToString("N0"), settings.RowCount.ToString("N0"));
 
             // Rough file size: the preview's bytes per row, times the rows.
             double perRow = Encoding.UTF8.GetByteCount(text) / (double)Math.Max(1, shown);

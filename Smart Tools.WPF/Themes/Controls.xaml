@@ -2302,6 +2302,7 @@
         (IsDirectionReversed). Now each orientation has its own template.
         Thumb uses ScrollThumb (CardBorder was ~1.25:1 - nearly invisible),
         is slim at rest and widens on hover, turning accent while dragged.
+        The thumb never gets shorter than 40 px (MinHeight / MinWidth), so a very long list still has a grabbable handle.
     -->
     <Style TargetType="ScrollBar">
         <Setter Property="Background" Value="Transparent" />
@@ -2323,6 +2324,7 @@
                                 <Thumb
                                     x:Name="Thumb"
                                     Width="4"
+                                    MinHeight="40"
                                     HorizontalAlignment="Center"
                                     Background="{TemplateBinding Foreground}">
                                     <Thumb.Template>
@@ -2405,6 +2407,7 @@
                                         <Thumb
                                             x:Name="Thumb"
                                             Height="4"
+                                            MinWidth="40"
                                             VerticalAlignment="Center"
                                             Background="{TemplateBinding Foreground}">
                                             <Thumb.Template>
