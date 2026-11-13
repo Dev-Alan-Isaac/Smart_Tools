@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -470,22 +470,12 @@ namespace Smart_Tools.WPF.Views
             ScheduleSave();
         }
 
-        private bool _syncingRows;
-
-        private void RowsPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_syncingRows || !_viewConstructed) return;
-            if ((CmbRowsPreset.SelectedItem as ComboBoxItem)?.Tag is string rows && rows.Length > 0) TxtRows.Text = rows;
-        }
+        private void RowsPreset_Chosen(object? sender, string rows) => TxtRows.Text = rows;
 
         private void Rows_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (_viewConstructed)
             {
-                _syncingRows = true;
-                string digits = new string(TxtRows.Text.Where(char.IsAsciiDigit).ToArray());
-                CmbRowsPreset.SelectedItem = CmbRowsPreset.Items.OfType<ComboBoxItem>().FirstOrDefault(i => i.Tag as string == digits) ?? CmbRowsPreset.Items[0];
-                _syncingRows = false;
             }
             Setting_Changed(sender, e);
         }

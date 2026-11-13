@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -98,7 +98,6 @@ namespace Smart_Tools.WPF.Views
             _doneTimer.Tick += (_, _) => { _doneTimer.Stop(); UiMotion.FadeVisibility(DonePill, false); };
 
             _viewConstructed = true;
-            SyncPaddingPreset();
         }
 
         // =================================================================
@@ -271,35 +270,11 @@ namespace Smart_Tools.WPF.Views
             if (!_viewConstructed) return;
             bool bad = !string.IsNullOrWhiteSpace(TxtPadding.Text) && ParseInt(TxtPadding.Text, 0, 32) == null;
             TxtPaddingError.Visibility = bad ? Visibility.Visible : Visibility.Collapsed;
-            SyncPaddingPreset();
             if (!bad) SchedulePack();
             ScheduleSave();
         }
 
-        private bool _syncingPadding;
-
-        /// <summary>The list shows the matching common value, or "Custom" when the box says something else.</summary>
-        private void SyncPaddingPreset()
-        {
-            if (CmbPaddingPreset == null) return;
-            _syncingPadding = true;
-            try
-            {
-                string text = TxtPadding.Text.Trim();
-                CmbPaddingPreset.SelectedItem = CmbPaddingPreset.Items.OfType<ComboBoxItem>()
-                    .FirstOrDefault(i => i.Tag is string t && t.Length > 0 && t == text) ?? CmbPaddingPreset.Items[0];
-            }
-            finally
-            {
-                _syncingPadding = false;
-            }
-        }
-
-        private void CmbPaddingPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_viewConstructed || _syncingPadding) return;
-            if (CmbPaddingPreset.SelectedItem is ComboBoxItem { Tag: string n } && n.Length > 0) TxtPadding.Text = n;
-        }
+        private void PaddingPreset_Chosen(object? sender, string padding) => TxtPadding.Text = padding;
 
         private void SchedulePack()
         {

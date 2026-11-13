@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -90,7 +90,6 @@ namespace Smart_Tools.WPF.Views
 
             _manager.Changed += OnManagerChanged;
             _viewConstructed = true;
-            SyncSizePreset();
         }
 
         // =================================================================
@@ -724,34 +723,10 @@ namespace Smart_Tools.WPF.Views
             bool bad = (!string.IsNullOrWhiteSpace(TxtNewWidth.Text) && ParseSize(TxtNewWidth.Text) == null)
                        || (!string.IsNullOrWhiteSpace(TxtNewHeight.Text) && ParseSize(TxtNewHeight.Text) == null);
             TxtSizeError.Visibility = bad ? Visibility.Visible : Visibility.Collapsed;
-            SyncSizePreset();
             ScheduleSave();
         }
 
-        private bool _syncingPreset;
-
-        /// <summary>The list shows the matching common size, or "Custom" when the two boxes say something else.</summary>
-        private void SyncSizePreset()
-        {
-            _syncingPreset = true;
-            try
-            {
-                string w = TxtNewWidth.Text.Trim(), h = TxtNewHeight.Text.Trim();
-                CmbSizePreset.SelectedItem = CmbSizePreset.Items.OfType<ComboBoxItem>()
-                    .FirstOrDefault(i => i.Tag is string t && t.Length > 0 && t == w && t == h) ?? CmbSizePreset.Items[0];
-            }
-            finally
-            {
-                _syncingPreset = false;
-            }
-        }
-
-        private void CmbSizePreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_viewConstructed || _syncingPreset) return;
-            if (CmbSizePreset.SelectedItem is ComboBoxItem { Tag: string size } && size.Length > 0)
-                TxtNewWidth.Text = TxtNewHeight.Text = size;
-        }
+        private void SizePreset_Chosen(object? sender, string size) => TxtNewWidth.Text = TxtNewHeight.Text = size;
 
         private (int W, int H)? ReadSize()
         {

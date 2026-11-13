@@ -412,84 +412,80 @@
                                         Content="{DynamicResource Str_ImgEdit_RotateFlipHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.RotateRight}" />
-                                    <UniformGrid x:Name="TransformTools" Columns="4">
+                                    <UniformGrid x:Name="TransformTools" Columns="2">
                                         <Button
                                             x:Name="BtnRotateLeft"
-                                            Width="40"
-                                            Margin="0,0,3,0"
+                                            Margin="0,0,6,6"
                                             Click="BtnRotateLeft_Click"
                                             Style="{StaticResource ToolTileStyle}"
                                             ToolTip="{DynamicResource Str_ImgEdit_RotateLeftTooltip}">
                                             <StackPanel>
                                                 <materialDesign:PackIcon
-                                                    Width="18"
-                                                    Height="18"
+                                                    Width="20"
+                                                    Height="20"
                                                     HorizontalAlignment="Center"
                                                     Kind="RotateLeft" />
                                                 <TextBlock
                                                     Margin="0,3,0,0"
                                                     HorizontalAlignment="Center"
-                                                    FontSize="10"
+                                                    FontSize="12"
                                                     Text="{DynamicResource Str_ImageEditor_Left}" />
                                             </StackPanel>
                                         </Button>
                                         <Button
                                             x:Name="BtnRotateRight"
-                                            Width="40"
-                                            Margin="3,0"
+                                            Margin="0,0,6,6"
                                             Click="BtnRotateRight_Click"
                                             Style="{StaticResource ToolTileStyle}"
                                             ToolTip="{DynamicResource Str_ImgEdit_RotateRightTooltip}">
                                             <StackPanel>
                                                 <materialDesign:PackIcon
-                                                    Width="18"
-                                                    Height="18"
+                                                    Width="20"
+                                                    Height="20"
                                                     HorizontalAlignment="Center"
                                                     Kind="RotateRight" />
                                                 <TextBlock
                                                     Margin="0,3,0,0"
                                                     HorizontalAlignment="Center"
-                                                    FontSize="10"
+                                                    FontSize="12"
                                                     Text="{DynamicResource Str_ImageEditor_Right}" />
                                             </StackPanel>
                                         </Button>
                                         <Button
                                             x:Name="BtnFlipHorizontal"
-                                            Width="40"
-                                            Margin="3,0"
+                                            Margin="0,0,6,6"
                                             Click="BtnFlipHorizontal_Click"
                                             Style="{StaticResource ToolTileStyle}"
                                             ToolTip="{DynamicResource Str_ImgEdit_FlipHorizontalTooltip}">
                                             <StackPanel>
                                                 <materialDesign:PackIcon
-                                                    Width="18"
-                                                    Height="18"
+                                                    Width="20"
+                                                    Height="20"
                                                     HorizontalAlignment="Center"
                                                     Kind="FlipHorizontal" />
                                                 <TextBlock
                                                     Margin="0,3,0,0"
                                                     HorizontalAlignment="Center"
-                                                    FontSize="10"
+                                                    FontSize="12"
                                                     Text="{DynamicResource Str_ImageEditor_Mirror}" />
                                             </StackPanel>
                                         </Button>
                                         <Button
                                             x:Name="BtnFlipVertical"
-                                            Width="40"
-                                            Margin="3,0,0,0"
+                                            Margin="0,0,6,6"
                                             Click="BtnFlipVertical_Click"
                                             Style="{StaticResource ToolTileStyle}"
                                             ToolTip="{DynamicResource Str_ImgEdit_FlipVerticalTooltip}">
                                             <StackPanel>
                                                 <materialDesign:PackIcon
-                                                    Width="18"
-                                                    Height="18"
+                                                    Width="20"
+                                                    Height="20"
                                                     HorizontalAlignment="Center"
                                                     Kind="FlipVertical" />
                                                 <TextBlock
                                                     Margin="0,3,0,0"
                                                     HorizontalAlignment="Center"
-                                                    FontSize="10"
+                                                    FontSize="12"
                                                     Text="{DynamicResource Str_ImageEditor_Flip}" />
                                             </StackPanel>
                                         </Button>

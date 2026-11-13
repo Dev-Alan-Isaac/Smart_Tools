@@ -18,42 +18,6 @@
     -->
 
     <UserControl.Resources>
-
-        <!--  Small one-click preset  -->
-        <Style x:Key="WmChipStyle" TargetType="Button">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="0,0,4,4" />
-            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border
-                            x:Name="Bd"
-                            Padding="8,3"
-                            Background="{DynamicResource SidebarInputBg}"
-                            BorderBrush="{DynamicResource SidebarInputBorder}"
-                            BorderThickness="1"
-                            CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!--  A round colour swatch button (the colour is the data, so the fixed colours are allowed)  -->
         <Style x:Key="WmSwatchStyle" TargetType="Button">
             <Setter Property="Width" Value="22" />
@@ -359,8 +323,6 @@
                                 IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
                                 ItemTemplate="{StaticResource GroupTemplate}"
                                 PathsAdded="InputCard_PathsAdded" />
-
-
                             <!--  ============ MARK ============  -->
                             <Border ctl:Tour.Key="Str_Tour_Watermark_Mark" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
@@ -882,7 +844,7 @@
                                             Margin="0,0,6,0"
                                             Click="BtnRotationReset_Click"
                                             Content="0°"
-                                            Style="{StaticResource WmChipStyle}"
+                                            Style="{StaticResource PresetChipStyle}"
                                             ToolTip="{DynamicResource Str_Watermark_RotationReset}" />
                                         <Border
                                             Grid.Column="2"

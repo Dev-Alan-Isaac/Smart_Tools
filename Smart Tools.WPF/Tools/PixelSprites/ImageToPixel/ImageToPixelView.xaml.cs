@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -67,7 +67,6 @@ namespace Smart_Tools.WPF.Views
             _doneTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
             _doneTimer.Tick += (_, _) => { _doneTimer.Stop(); DonePill.Visibility = Visibility.Collapsed; };
             _viewConstructed = true;
-            SyncGridPreset();
         }
 
         // =================================================================
@@ -151,36 +150,13 @@ namespace Smart_Tools.WPF.Views
         private void Option_SelectionChanged(object sender, SelectionChangedEventArgs e) => Changed();
         private void Option_Click(object sender, RoutedEventArgs e) => Changed();
 
-        private bool _syncingGridPreset;
+        
 
         private void GridText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            SyncGridPreset();
             Changed();
         }
-
-        /// <summary>The list shows the matching common width, or "Custom" when the box says something else.</summary>
-        private void SyncGridPreset()
-        {
-            if (CmbGridPreset == null) return;
-            _syncingGridPreset = true;
-            try
-            {
-                string text = TxtGrid.Text.Trim();
-                CmbGridPreset.SelectedItem = CmbGridPreset.Items.OfType<ComboBoxItem>()
-                    .FirstOrDefault(i => i.Tag is string t && t.Length > 0 && t == text) ?? CmbGridPreset.Items[0];
-            }
-            finally
-            {
-                _syncingGridPreset = false;
-            }
-        }
-
-        private void GridPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_viewConstructed || _syncingGridPreset) return;
-            if (CmbGridPreset.SelectedItem is ComboBoxItem { Tag: string t } && t.Length > 0) TxtGrid.Text = t;
-        }
+        private void GridPreset_Chosen(object? sender, string size) => TxtGrid.Text = size;
 
         // =================================================================
         //  Pictures in (the Input card, or dropped on the page)

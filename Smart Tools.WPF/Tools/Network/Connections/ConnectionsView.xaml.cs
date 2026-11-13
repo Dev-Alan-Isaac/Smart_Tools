@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Controllers;
+﻿using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
@@ -293,15 +293,26 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnExport_Click(object sender, RoutedEventArgs e)
         {
+            var rows = _view.Cast<ConnectionRow>().ToList();
+            string kind = (sender as System.Windows.Controls.MenuItem)?.Tag as string ?? "csv";
             var dialog = new SaveFileDialog
             {
-                Filter = "CSV|*.csv",
-                FileName = "connections-" + DateTime.Now.ToString("yyyy-MM-dd-HHmm", CultureInfo.InvariantCulture) + ".csv",
+                Filter = "CSV (*.csv)|*.csv|PDF (*.pdf)|*.pdf|HTML (*.html)|*.html|Text (*.txt)|*.txt",
+                FilterIndex = Math.Max(1, Array.IndexOf(new[] { "csv", "pdf", "html", "txt" }, kind) + 1),
+                FileName = "connections-" + DateTime.Now.ToString("yyyy-MM-dd-HHmm", CultureInfo.InvariantCulture),
+                AddExtension = true,
             };
             if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+            string title = T("Str_Tool_network-connections_Name", "Network Connections");
             try
             {
-                AtomicFile.WriteAllText(dialog.FileName, ConnectionsManager.ToCsv(_view.Cast<ConnectionRow>()), new UTF8Encoding(true));
+                switch (Path.GetExtension(dialog.FileName).ToLowerInvariant())
+                {
+                    case ".pdf": AtomicFile.WriteAllBytes(dialog.FileName, ConnectionsExport.ToPdf(rows, title)); break;
+                    case ".html": AtomicFile.WriteAllText(dialog.FileName, ConnectionsExport.ToHtml(rows, title), new UTF8Encoding(false)); break;
+                    case ".txt": AtomicFile.WriteAllText(dialog.FileName, ConnectionsExport.ToText(rows), new UTF8Encoding(true)); break;
+                    default: AtomicFile.WriteAllText(dialog.FileName, ConnectionsManager.ToCsv(rows), new UTF8Encoding(true)); break;
+                }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

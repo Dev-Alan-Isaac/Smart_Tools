@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.ConnectionsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -282,32 +282,32 @@
 <Border Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
 <StackPanel>
 <ContentControl Content="{DynamicResource Str_Connections_ExportHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.FileExportOutline}" />
-<Button
-                        Margin="0,0,0,0"
-                        HorizontalAlignment="Left"
-                        ctl:Tour.Key="Str_Tour_Connections_Export" ctl:Tour.Order="6" 
-                        Click="BtnExport_Click"
-                        Style="{StaticResource NeutralIconButtonStyle}"
-                        ToolTip="{DynamicResource Str_Connections_ExportTip}">
-                        <Grid Margin="8,0" HorizontalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon
-                                Grid.Column="0"
-                                Width="15"
-                                Height="15"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                Kind="FileExportOutline" />
-                            <TextBlock
-                                Grid.Column="1"
-                                VerticalAlignment="Center"
-                                FontSize="12"
-                                Text="{DynamicResource Str_Connections_Export}" />
-                        </Grid>
-                    </Button>
+<controls:ExportButton ctl:Tour.Key="Str_Tour_Connections_Export" ctl:Tour.Order="6" ToolTip="{DynamicResource Str_Connections_ExportTip}">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Click="BtnExport_Click" Header="{DynamicResource Str_Common_ExportAsCsv}" Tag="csv">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="FileDelimitedOutline" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Click="BtnExport_Click" Header="{DynamicResource Str_Common_ExportAsPdf}" Tag="pdf">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="FilePdfBox" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Click="BtnExport_Click" Header="{DynamicResource Str_Common_ExportAsHtml}" Tag="html">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="Web" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Click="BtnExport_Click" Header="{DynamicResource Str_Common_ExportAsText}" Tag="txt">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="FileDocumentOutline" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </controls:ExportButton>
 </StackPanel>
 </Border>
 <TextBlock
