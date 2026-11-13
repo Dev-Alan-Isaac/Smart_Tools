@@ -261,7 +261,7 @@
                                     <TextBox x:Name="TxtBg" VerticalContentAlignment="Center" FontFamily="Consolas" Style="{StaticResource BareTextBox}" TextChanged="Color_TextChanged" ToolTip="#RRGGBB, rgb(), hsl() or a name like white" />
                                 </Border>
 
-                                <Button x:Name="BtnSwap" Grid.RowSpan="3" Grid.Column="3" Width="34" Height="34" Margin="8,0,0,0" Click="BtnSwap_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_ContrastChecker_SwapTheTwoColors}">
+                                <Button Padding="0" x:Name="BtnSwap" Grid.RowSpan="3" Grid.Column="3" Width="34" Height="34" Margin="8,0,0,0" Click="BtnSwap_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_ContrastChecker_SwapTheTwoColors}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="SwapVertical" />
                                 </Button>
                             </Grid>

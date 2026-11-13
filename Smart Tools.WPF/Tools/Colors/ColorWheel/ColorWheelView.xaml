@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.ColorWheelView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -277,7 +278,8 @@
                                             Content="{DynamicResource Str_ColorWheel_Complementary}"
                                             GroupName="Harmony"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="ContrastCircle"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Complementary" />
 
                                         <!--  Row 1: Analogous & Triadic  -->
@@ -291,7 +293,8 @@
                                                 Checked="Harmony_Checked"
                                                 Content="{DynamicResource Str_ColorWheel_Analogous}"
                                                 GroupName="Harmony"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="GradientHorizontal"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="Analogous" />
                                             <RadioButton
                                                 x:Name="RadioHarmonyTriadic"
@@ -299,7 +302,8 @@
                                                 Checked="Harmony_Checked"
                                                 Content="{DynamicResource Str_ColorWheel_Triadic}"
                                                 GroupName="Harmony"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="TriangleOutline"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="Triadic" />
                                         </UniformGrid>
 
@@ -311,7 +315,8 @@
                                                 Checked="Harmony_Checked"
                                                 Content="{DynamicResource Str_Pdf_OpSplit}"
                                                 GroupName="Harmony"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="CallSplit"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="SplitComplementary"
                                                 ToolTip="{DynamicResource Str_ColorWheel_SplitComplementary}" />
                                             <RadioButton
@@ -320,7 +325,8 @@
                                                 Checked="Harmony_Checked"
                                                 Content="{DynamicResource Str_ColorWheel_Tetradic}"
                                                 GroupName="Harmony"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="SquareOutline"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="Tetradic" />
                                         </UniformGrid>
                                     </Grid>
@@ -629,7 +635,7 @@
                                                 MinHeight="28"
                                                 Click="BtnUseAsEnd_Click"
                                                 Content="{DynamicResource Str_ColorWheel_SetAsEnd}" />
-                                            <Button
+                                            <Button Padding="0"
                                                 x:Name="BtnFavoriteSelected"
                                                 Width="28"
                                                 Height="28"
@@ -748,7 +754,8 @@
                                     Content="{DynamicResource Str_ColorWheel_ModeHsl}"
                                     GroupName="GradientMode"
                                     IsChecked="True"
-                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    controls:ChoiceIcon.Kind="Palette"
+                                    Style="{StaticResource ModeToggleTallStyle}"
                                     ToolTip="{DynamicResource Str_ColorWheel_ModeHslTooltip}" />
                                 <RadioButton
                                     x:Name="RadioModeRgb"
@@ -756,7 +763,8 @@
                                     Checked="GradientOption_Changed"
                                     Content="{DynamicResource Str_ColorWheel_ModeRgb}"
                                     GroupName="GradientMode"
-                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    controls:ChoiceIcon.Kind="PaletteSwatchOutline"
+                                    Style="{StaticResource ModeToggleTallStyle}"
                                     ToolTip="{DynamicResource Str_ColorWheel_ModeRgbTooltip}" />
                             </Grid>
                             <Button

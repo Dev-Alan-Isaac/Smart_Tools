@@ -232,7 +232,8 @@
                                             Content="{DynamicResource Str_Formatter_Auto}"
                                             GroupName="FormatterFrom"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="AutoFix"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Auto"
                                             ToolTip="{DynamicResource Str_Formatter_AutoTip}" />
                                         <RadioButton
@@ -240,21 +241,24 @@
                                             Click="Option_Click"
                                             Content="JSON"
                                             GroupName="FormatterFrom"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="CodeJson"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Json" />
                                         <RadioButton
                                             Margin="0,0,2,0"
                                             Click="Option_Click"
                                             Content="YAML"
                                             GroupName="FormatterFrom"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="FormatListBulleted"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Yaml" />
                                         <RadioButton
                                             Margin="2,0,0,0"
                                             Click="Option_Click"
                                             Content="XML"
                                             GroupName="FormatterFrom"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Xml"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Xml" />
                                     </UniformGrid>
                                 </StackPanel>
@@ -278,21 +282,24 @@
                                             Content="JSON"
                                             GroupName="FormatterTo"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="CodeJson"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Json" />
                                         <RadioButton
                                             Margin="2,0,2,0"
                                             Click="Option_Click"
                                             Content="YAML"
                                             GroupName="FormatterTo"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="FormatListBulleted"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Yaml" />
                                         <RadioButton
                                             Margin="2,0,0,0"
                                             Click="Option_Click"
                                             Content="XML"
                                             GroupName="FormatterTo"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Xml"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Xml" />
                                     </UniformGrid>
 
@@ -307,7 +314,8 @@
                                             Content="{DynamicResource Str_Formatter_Pretty}"
                                             GroupName="FormatterAction"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="FormatAlignLeft"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Pretty" />
                                         <RadioButton
                                             x:Name="ActionMinify"
@@ -315,7 +323,8 @@
                                             Click="Option_Click"
                                             Content="{DynamicResource Str_Formatter_Minify}"
                                             GroupName="FormatterAction"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="ArrowCollapseHorizontal"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Minify" />
                                     </UniformGrid>
 

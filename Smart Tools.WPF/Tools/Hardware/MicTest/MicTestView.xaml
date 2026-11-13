@@ -72,23 +72,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!--  ============ LOOK ============  -->
-                    <Border ctl:Tour.Key="Str_Tour_MicTest_Look" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
-                        <StackPanel>
-                            <ContentControl
-                                Content="{DynamicResource Str_MicTest_MicrophoneType}"
-                                Style="{StaticResource SidebarGroupHeader}"
-                                Tag="{x:Static materialDesign:PackIconKind.MicrophoneVariant}" />
-                            <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="LookStand" Margin="0,0,2,4" Checked="Look_Checked" Content="{DynamicResource Str_MicTest_Stand}" GroupName="MtLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="MicrophoneVariant" ToolTip="{DynamicResource Str_MicTest_ADeskOrStand}" />
-                                <RadioButton x:Name="LookHandheld" Margin="2,0,0,4" Checked="Look_Checked" Content="{DynamicResource Str_MicTest_Handheld}" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Microphone" ToolTip="{DynamicResource Str_MicTest_AHandheldOrStudio}" />
-                                <RadioButton x:Name="LookHeadset" Margin="0,0,2,0" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Headset}" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="{DynamicResource Str_MicTest_AHeadsetWithA}" />
-                                <RadioButton x:Name="LookEarbuds" Margin="2,0,0,0" Checked="Look_Checked" Content="{DynamicResource Str_MicTest_Earbuds}" GroupName="MtLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="{DynamicResource Str_MicTest_EarphonesWithAnIn}" />
-                            </UniformGrid>
-                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_MicTest_OnlyChangesThePicture}" />
-                        </StackPanel>
-                    </Border>
-
                     <!--  ============ HEAR ============  -->
                     <Border ctl:Tour.Key="Str_Tour_MicTest_Listen" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
@@ -169,7 +152,8 @@
                     </Grid>
 
                     <!--  The hero, like Battery Health: the picture and the level bar on the left, the big reading on the right  -->
-                    <Grid Grid.Row="1">
+                    <ContentControl Grid.Row="1" Style="{StaticResource DepthHero}">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="3*" />
                             <ColumnDefinition Width="20" />
@@ -190,23 +174,19 @@
                                 MinHeight="100"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
-                                Kind="MicrophoneVariant" />
+                                Kind="Microphone" />
 
                             <!--  The level bar drawn as an outlined gauge, the same look as the battery  -->
                             <Border
                                 ctl:Tour.Key="Str_Tour_MicTest_Meter"
                                 ctl:Tour.Order="6"
                                 Grid.Row="1"
-                                Margin="0,12,0,0"
-                                Padding="5"
-                                Background="{DynamicResource RowBg}"
-                                BorderBrush="{DynamicResource TextSecondary}"
-                                BorderThickness="3"
-                                CornerRadius="16"
+                                Margin="0,14,0,0"
+                                Style="{StaticResource DepthMeterShell}"
                                 ToolTip="{DynamicResource Str_MicTest_MeterTip}">
                                 <Border
                                     x:Name="MeterTrack"
-                                    Height="18"
+                                    Height="20"
                                     CornerRadius="10"
                                     SizeChanged="MeterTrack_SizeChanged">
                                     <Grid>
@@ -218,6 +198,7 @@
                                             <Border.RenderTransform>
                                                 <ScaleTransform x:Name="LevelScale" ScaleX="0" />
                                             </Border.RenderTransform>
+                                            <Border Background="{StaticResource DepthGlossBrush}" CornerRadius="10" IsHitTestVisible="False" />
                                         </Border>
                                         <Border
                                             x:Name="PeakMarker"
@@ -233,15 +214,16 @@
 
                         <Viewbox Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
                             <StackPanel>
-                                <TextBlock x:Name="TxtDb" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-∞ dB" />
+                                <TextBlock x:Name="TxtDb" FontSize="64" Style="{StaticResource GlowReadout}" Text="-∞ dB" />
                                 <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_MicrophoneLevel}" />
                             </StackPanel>
                         </Viewbox>
                     </Grid>
+                    </ContentControl>
 
                     <!--  Verdict pill, coloured by how it went  -->
                     <StackPanel Grid.Row="2" Margin="0,14,0,14">
-                        <Border x:Name="VerdictPill" Padding="12,7" HorizontalAlignment="Left" Background="{DynamicResource RowBg}" CornerRadius="9">
+                        <Border x:Name="VerdictPill" Padding="14,8" HorizontalAlignment="Left" Background="{DynamicResource RowBg}" BorderBrush="{StaticResource DepthEdgeBrush}" BorderThickness="1" CornerRadius="10" Effect="{StaticResource DepthShadow}">
                             <TextBlock
                                 x:Name="TxtVerdict"
                                 FontSize="14"
@@ -268,32 +250,68 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!--  Numbers as tiles  -->
+                    <!--  Numbers as raised tiles, each with an icon chip  -->
                     <UniformGrid Grid.Row="3" Columns="4">
-                        <Border MinHeight="64" Margin="0,0,10,0" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Peak}" />
-                                <TextBlock ctl:Tour.Key="Str_Tour_MicTest_Readings" ctl:Tour.Order="6" x:Name="TxtPeak" Margin="0,3,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
-                            </StackPanel>
-                        </Border>
-                        <Border MinHeight="64" Margin="0,0,10,0" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Quietest}" />
-                                <TextBlock x:Name="TxtQuietest" Margin="0,3,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
-                            </StackPanel>
-                        </Border>
-                        <Border MinHeight="64" Margin="0,0,10,0" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Clipped}" />
-                                <TextBlock x:Name="TxtClipped" Margin="0,3,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0" />
-                            </StackPanel>
-                        </Border>
-                        <Border MinHeight="64" Padding="14,10" Background="{DynamicResource RowBg}" CornerRadius="12">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Time}" />
-                                <TextBlock x:Name="TxtTime" Margin="0,3,0,0" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0:00" />
-                            </StackPanel>
-                        </Border>
+                        <ContentControl Margin="0,0,12,0" MinHeight="70" Style="{StaticResource DepthCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center" Background="{DynamicResource AccentGradient}" CornerRadius="11">
+                                    <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="ChartLineVariant" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Peak}" />
+                                    <TextBlock ctl:Tour.Key="Str_Tour_MicTest_Readings" ctl:Tour.Order="6" x:Name="TxtPeak" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                                </StackPanel>
+                            </Grid>
+                        </ContentControl>
+                        <ContentControl Margin="0,0,12,0" MinHeight="70" Style="{StaticResource DepthCard}" ToolTip="{DynamicResource Str_MicTest_QuietestTip}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center" Background="{DynamicResource AccentGradient}" CornerRadius="11">
+                                    <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="VolumeLow" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Quietest}" />
+                                    <TextBlock x:Name="TxtQuietest" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="—" />
+                                </StackPanel>
+                            </Grid>
+                        </ContentControl>
+                        <ContentControl Margin="0,0,12,0" MinHeight="70" Style="{StaticResource DepthCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center" Background="{DynamicResource AccentGradient}" CornerRadius="11">
+                                    <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="AlertOutline" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Clipped}" />
+                                    <TextBlock x:Name="TxtClipped" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0" />
+                                </StackPanel>
+                            </Grid>
+                        </ContentControl>
+                        <ContentControl Margin="0" MinHeight="70" Style="{StaticResource DepthCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center" Background="{DynamicResource AccentGradient}" CornerRadius="11">
+                                    <materialDesign:PackIcon Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="TimerOutline" />
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_MicTest_Time}" />
+                                    <TextBlock x:Name="TxtTime" Margin="0,3,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="0:00" />
+                                </StackPanel>
+                            </Grid>
+                        </ContentControl>
                     </UniformGrid>
                 </Grid>
             </Border>

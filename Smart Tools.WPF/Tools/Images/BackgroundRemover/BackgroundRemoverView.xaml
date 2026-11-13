@@ -664,18 +664,21 @@
                                         Tag="{x:Static materialDesign:PackIconKind.LayersOutline}" />
 
                                     <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="4" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="4" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
                                         <RadioButton
                                             x:Name="RadioBgTransparent"
+                                            Grid.Row="0"
                                             Grid.Column="0"
-                                            MinHeight="62"
+                                            Grid.ColumnSpan="2"
+                                            Margin="0,0,0,4"
                                             Checked="RadioBackgroundMode_Checked"
                                             GroupName="BgRemoverMode"
                                             IsChecked="True"
@@ -698,8 +701,9 @@
 
                                         <RadioButton
                                             x:Name="RadioBgSolid"
-                                            Grid.Column="2"
-                                            MinHeight="62"
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Margin="0,0,2,0"
                                             Checked="RadioBackgroundMode_Checked"
                                             GroupName="BgRemoverMode"
                                             Style="{StaticResource ModeToggleTallStyle}"
@@ -721,8 +725,9 @@
 
                                         <RadioButton
                                             x:Name="RadioBgImage"
-                                            Grid.Column="4"
-                                            MinHeight="62"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            Margin="2,0,0,0"
                                             Checked="RadioBackgroundMode_Checked"
                                             GroupName="BgRemoverMode"
                                             Style="{StaticResource ModeToggleTallStyle}"
@@ -881,21 +886,24 @@
                                             Content="{DynamicResource Str_BgRemove_OutputFormatPng}"
                                             GroupName="BgRemoverFormat"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                            controls:ChoiceIcon.Kind="Checkerboard"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                         <RadioButton
                                             x:Name="RadioFormatJpg"
                                             Grid.Column="2"
                                             Checked="RadioOutputFormat_Checked"
                                             Content="{DynamicResource Str_BackgroundRemover_Jpg}"
                                             GroupName="BgRemoverFormat"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                            controls:ChoiceIcon.Kind="FileImageOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                         <RadioButton
                                             x:Name="RadioFormatWebp"
                                             Grid.Column="4"
                                             Checked="RadioOutputFormat_Checked"
                                             Content="{DynamicResource Str_BackgroundRemover_Webp}"
                                             GroupName="BgRemoverFormat"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                            controls:ChoiceIcon.Kind="Web"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                     </Grid>
 
                                     <TextBlock

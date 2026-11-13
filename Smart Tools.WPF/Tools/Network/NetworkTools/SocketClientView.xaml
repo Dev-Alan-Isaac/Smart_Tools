@@ -118,7 +118,8 @@
                                             Content="{DynamicResource Str_NetworkTools_Tcp}"
                                             GroupName="SocketProtocol"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="LanConnect"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Tcp"
                                             ToolTip="{DynamicResource Str_Network_TcpTooltip}" />
                                         <RadioButton
@@ -126,7 +127,8 @@
                                             Click="Protocol_Click"
                                             Content="{DynamicResource Str_NetworkTools_Udp}"
                                             GroupName="SocketProtocol"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Send"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Udp"
                                             ToolTip="{DynamicResource Str_Network_UdpTooltip}" />
                                     </UniformGrid>

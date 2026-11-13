@@ -29,6 +29,7 @@
             x:Key="EditorToolButton"
             BasedOn="{StaticResource NeutralIconButtonStyle}"
             TargetType="Button">
+            <Setter Property="Padding" Value="0" />
             <Setter Property="Width" Value="30" />
             <Setter Property="Height" Value="30" />
             <Setter Property="Margin" Value="0,0,2,0" />
@@ -335,12 +336,14 @@
                                             x:Name="ChkHtmlParts"
                                             Click="ChkHtmlParts_Click"
                                             Content="{DynamicResource Str_MdHtml_HtmlParts}"
+                                            controls:ChoiceIcon.Kind="CodeTags"
                                             Style="{StaticResource ToggleChipCheckBoxStyle}"
                                             ToolTip="{DynamicResource Str_MdHtml_HtmlPartsTip}" />
                                         <CheckBox
                                             x:Name="ChkRunScripts"
                                             Click="ChkRunScripts_Click"
                                             Content="{DynamicResource Str_MdHtml_RunScripts}"
+                                            controls:ChoiceIcon.Kind="PlayOutline"
                                             Style="{StaticResource ToggleChipCheckBoxStyle}"
                                             ToolTip="{DynamicResource Str_MdHtml_RunScriptsTip}" />
                                     </WrapPanel>
@@ -379,21 +382,24 @@
                                             Content="{DynamicResource Str_MdHtml_ThemeApp}"
                                             GroupName="MdHtmlTheme"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                            controls:ChoiceIcon.Kind="ThemeLightDark"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                         <RadioButton
                                             x:Name="RadioThemeLight"
                                             Grid.Column="2"
                                             Checked="RadioTheme_Checked"
                                             Content="{DynamicResource Str_SvgTool_BgLight}"
                                             GroupName="MdHtmlTheme"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                            controls:ChoiceIcon.Kind="WhiteBalanceSunny"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                         <RadioButton
                                             x:Name="RadioThemeDark"
                                             Grid.Column="4"
                                             Checked="RadioTheme_Checked"
                                             Content="{DynamicResource Str_SvgTool_BgDark}"
                                             GroupName="MdHtmlTheme"
-                                            Style="{StaticResource ModeToggleButtonStyle}" />
+                                            controls:ChoiceIcon.Kind="WeatherNight"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                     </Grid>
 
                                     <CheckBox
@@ -753,21 +759,24 @@
                                     Content="HTML"
                                     GroupName="MdHtmlPart"
                                     IsChecked="True"
-                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                    controls:ChoiceIcon.Kind="LanguageHtml5"
+                                    Style="{StaticResource ModeToggleTallStyle}" />
                                 <RadioButton
                                     x:Name="TabCss"
                                     Margin="3,0"
                                     Checked="PartTab_Checked"
                                     Content="CSS"
                                     GroupName="MdHtmlPart"
-                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                    controls:ChoiceIcon.Kind="LanguageCss3"
+                                    Style="{StaticResource ModeToggleTallStyle}" />
                                 <RadioButton
                                     x:Name="TabJs"
                                     Margin="3,0,0,0"
                                     Checked="PartTab_Checked"
                                     Content="JavaScript"
                                     GroupName="MdHtmlPart"
-                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                    controls:ChoiceIcon.Kind="LanguageJavascript"
+                                    Style="{StaticResource ModeToggleTallStyle}" />
                             </UniformGrid>
 
                             <TextBox

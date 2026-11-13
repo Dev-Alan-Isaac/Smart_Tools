@@ -62,6 +62,5 @@ namespace Smart_Tools.WPF.Models
         public AudioNoiseColor Noise { get; set; } = AudioNoiseColor.Pink;
         public bool SidebarCollapsed { get; set; }
         /// <summary>What you listen with: Speakers, Headphones, Earbuds or Headset (only changes the picture).</summary>
-        public string Look { get; set; } = "Speakers";
     }
 }

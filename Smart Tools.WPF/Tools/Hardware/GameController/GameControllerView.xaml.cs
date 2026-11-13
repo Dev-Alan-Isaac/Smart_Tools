@@ -305,13 +305,7 @@ namespace Smart_Tools.WPF.Views
 
             BuildExtraAxes(info);
 
-            // Start from what the pad looks like to Windows; the Controller type card lets the user change it.
-            _settingControls = true;
-            FamXbox.IsChecked = info.Family == ControllerFamily.Xbox;
-            FamPlayStation.IsChecked = info.Family == ControllerFamily.PlayStation;
-            FamExtra.IsChecked = info.Family == ControllerFamily.ExtraButtons;
-            FamGeneric.IsChecked = info.Family == ControllerFamily.Generic;
-            _settingControls = false;
+            // The layout is taken from what the pad looks like to Windows; there is nothing to pick.
             ApplyFamily(info.Family);
 
             if (IsVisible)
@@ -322,14 +316,8 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Controller type: the icon and the names of the buttons
+        //  Detected layout: the icon, the names of the buttons and what this app cannot see
         // =================================================================
-
-        private void Family_Checked(object sender, RoutedEventArgs e)
-        {
-            if (!_viewConstructed || _settingControls || _current == null) return;
-            if (sender is RadioButton { Tag: string tag } && Enum.TryParse(tag, out ControllerFamily family)) ApplyFamily(family);
-        }
 
         private static PackIconKind IconFor(ControllerFamily family) => family switch
         {
@@ -344,6 +332,25 @@ namespace Smart_Tools.WPF.Views
         {
             _family = family;
             HeaderCard.Tag = IconFor(family);
+            IconLayout.Kind = IconFor(family);
+            TxtLayoutName.Text = Str(family switch
+            {
+                ControllerFamily.Xbox => "Str_GameCtl_LayoutXbox",
+                ControllerFamily.PlayStation => "Str_GameCtl_LayoutPlayStation",
+                ControllerFamily.ExtraButtons => "Str_GameCtl_LayoutExtra",
+                _ => "Str_GameCtl_LayoutGeneric",
+            });
+
+            // Extra buttons (paddles, levers, back buttons) are not part of what Windows reports, so say so plainly.
+            bool extra = family == ControllerFamily.ExtraButtons;
+            TxtExtraTitle.Text = Str(extra ? "Str_GameCtl_ExtraWarnTitle" : "Str_GameCtl_ExtraStdTitle");
+            TxtExtraBody.Text = Str(extra ? "Str_GameCtl_ExtraWarnBody" : "Str_GameCtl_ExtraStdBody");
+            ExtraNotice.SetResourceReference(Border.BackgroundProperty, extra ? "StatusWarningBg" : "StatusInfoBg");
+            IconExtraNotice.Kind = extra ? PackIconKind.AlertOutline : PackIconKind.InformationOutline;
+            string fg = extra ? "StatusWarningFg" : "StatusInfoFg";
+            IconExtraNotice.SetResourceReference(PackIcon.ForegroundProperty, fg);
+            TxtExtraTitle.SetResourceReference(TextBlock.ForegroundProperty, fg);
+            TxtExtraBody.SetResourceReference(TextBlock.ForegroundProperty, fg);
 
             bool ps = family == ControllerFamily.PlayStation;
             TxtLTName.Text = ps ? "L2" : "LT";
@@ -380,8 +387,10 @@ namespace Smart_Tools.WPF.Views
             {
                 var text = new TextBlock { Text = label, FontSize = 12, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
                 text.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
-                var chip = new Border { MinWidth = 40, Height = 32, Margin = new Thickness(0, 0, 6, 6), Padding = new Thickness(8, 0, 8, 0), CornerRadius = new CornerRadius(8), Child = text };
-                chip.SetResourceReference(Border.BackgroundProperty, "RowBg");
+                var chip = new Border { MinWidth = 42, Height = 34, Margin = new Thickness(0, 0, 8, 8), Padding = new Thickness(9, 0, 9, 0), CornerRadius = new CornerRadius(10), BorderThickness = new Thickness(1), Child = text };
+                chip.SetResourceReference(Border.BackgroundProperty, "ContentBg");
+                chip.SetResourceReference(Border.BorderBrushProperty, "DepthEdgeBrush");
+                chip.Effect = (System.Windows.Media.Effects.Effect)TryFindResource("DepthShadow");
                 ButtonsPanel.Children.Add(chip);
                 _buttonChips.Add((bit, chip, text));
             }
@@ -537,7 +546,10 @@ namespace Smart_Tools.WPF.Views
                 foreach (var (bit, chip, text) in _buttonChips)
                 {
                     bool down = s.IsDown(bit);
-                    chip.SetResourceReference(Border.BackgroundProperty, down ? "AccentFill" : "RowBg");
+                    chip.SetResourceReference(Border.BackgroundProperty, down ? "AccentFill" : "ContentBg");
+                    chip.Effect = down && TryFindResource("AccentColor") is SolidColorBrush accent
+                        ? new System.Windows.Media.Effects.DropShadowEffect { Color = accent.Color, BlurRadius = 18, ShadowDepth = 0, Opacity = 0.7 }
+                        : (System.Windows.Media.Effects.Effect)TryFindResource("DepthShadow");
                     if (down) text.Foreground = Brushes.White;
                     else text.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
                 }

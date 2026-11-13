@@ -266,7 +266,8 @@
                                             Content="{DynamicResource Str_Palette_KMeans}"
                                             GroupName="PaletteMethod"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="ChartScatterPlot"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="KMeans" />
                                         <RadioButton
                                             x:Name="RadioMedianCut"
@@ -274,7 +275,8 @@
                                             Click="Method_Click"
                                             Content="{DynamicResource Str_Palette_MedianCut}"
                                             GroupName="PaletteMethod"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="ContentCut"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="MedianCut" />
                                     </UniformGrid>
                                     <TextBlock

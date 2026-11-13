@@ -111,10 +111,6 @@ namespace Smart_Tools.WPF.Views
             RadioTestTone.IsChecked = _settings.Kind == AudioTestKind.Tone;
             RadioTestSweep.IsChecked = _settings.Kind == AudioTestKind.Sweep;
             RadioTestNoise.IsChecked = _settings.Kind == AudioTestKind.Noise;
-            LookSpeakers.IsChecked = _settings.Look is not ("Headphones" or "Earbuds" or "Headset");
-            LookHeadphones.IsChecked = _settings.Look == "Headphones";
-            LookEarphones.IsChecked = _settings.Look == "Earbuds";
-            LookHeadset.IsChecked = _settings.Look == "Headset";
 
             SliderLevel.Value = _settings.LevelDb;
             SliderFreq.Value = AudioOutputTestManager.FrequencyToSlider(_settings.Frequency);
@@ -169,7 +165,6 @@ namespace Smart_Tools.WPF.Views
                 _settings.Phase = c.Phase;
                 _settings.Noise = c.Noise;
                 _settings.SidebarCollapsed = Sidebar.IsCollapsed;
-                _settings.Look = CurrentLook;
                 AudioOutputTestManager.SaveSettings(_settings);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -299,29 +294,17 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  What you listen with: the picture that fills with each side's sound
+        //  The picture that fills with each side's sound
         // =================================================================
 
-        private string CurrentLook => LookHeadphones.IsChecked == true ? "Headphones" : LookEarphones.IsChecked == true ? "Earbuds" : LookHeadset.IsChecked == true ? "Headset" : "Speakers";
-
-        private void Look_Checked(object sender, RoutedEventArgs e)
-        {
-            if (!_viewConstructed || _settingControls) return;
-            ApplyLook();
-            SaveSettings();
-        }
-
         /// <summary>
-        /// Shows the picture for headphones, earphones or a headset when the device has two channels; speakers (and
-        /// anything with more channels) keep the per-channel tiles, which become shorter to make room for the picture.
+        /// Any device with one or two channels (speakers, headphones, earphones, a headset) gets the picture, each side filling with
+        /// the sound that side plays; devices with more channels keep only the per-channel tiles, which become taller to use the room.
         /// </summary>
-        private void ApplyLook()
+        private void ApplyStage()
         {
-            string look = CurrentLook;
-            bool picture = look != "Speakers" && _device?.Channels is 1 or 2;
+            bool picture = _device?.Channels is 1 or 2;
             HeroStage.Visibility = picture ? Visibility.Visible : Visibility.Collapsed;
-            if (Enum.TryParse(look == "Speakers" ? "Headphones" : look, out PackIconKind kind))
-                HeroLeft.Kind = HeroRight.Kind = kind;
             HeroLeft.SetFillResource("AccentColor");
             HeroRight.SetFillResource("AccentColor");
             foreach (var tile in _tiles) tile.Frame.MinHeight = picture ? 96 : 170;
@@ -342,19 +325,21 @@ namespace Smart_Tools.WPF.Views
             {
                 var (englishName, shortName) = names[i];
                 string name = TryFindResource("Str_AudioOut_Spk_" + shortName) as string ?? englishName;
-                var shortText = new TextBlock { Text = shortName, FontSize = 32, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center };
-                shortText.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
+                var shortText = new TextBlock { Text = shortName, FontSize = 32, HorizontalAlignment = HorizontalAlignment.Center };
+                shortText.SetResourceReference(FrameworkElement.StyleProperty, "GlowReadout");
                 var nameText = new TextBlock { Text = name, FontSize = 12.5, HorizontalAlignment = HorizontalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
                 nameText.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
                 var number = new TextBlock { Text = (i + 1).ToString(CultureInfo.CurrentCulture), FontSize = 10.5, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 1, 0, 0) };
                 number.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
 
                 // Like the battery bar on Battery Health: a rounded outline with the fill inside
-                var meter = new Border { Height = 10, CornerRadius = new CornerRadius(5), HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
+                var gloss = new Border { CornerRadius = new CornerRadius(6), IsHitTestVisible = false };
+                gloss.SetResourceReference(Border.BackgroundProperty, "DepthGlossBrush");
+                var meter = new Border { Height = 12, CornerRadius = new CornerRadius(6), HorizontalAlignment = HorizontalAlignment.Left, Width = 0, Child = gloss };
                 meter.SetResourceReference(Border.BackgroundProperty, "AccentFill");
-                var track = new Border { Height = 10, CornerRadius = new CornerRadius(5), Child = meter };
-                var outline = new Border { Margin = new Thickness(0, 14, 0, 0), Padding = new Thickness(3), BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(10), Child = track };
-                outline.SetResourceReference(Border.BorderBrushProperty, "TextSecondary");
+                var track = new Border { Height = 12, CornerRadius = new CornerRadius(6), Child = meter };
+                var outline = new Border { Margin = new Thickness(0, 14, 0, 0), Padding = new Thickness(4), BorderThickness = new Thickness(1.5), CornerRadius = new CornerRadius(11), Child = track };
+                outline.SetResourceReference(Border.BorderBrushProperty, "DepthEdgeBrush");
                 outline.SetResourceReference(Border.BackgroundProperty, "ContentBg");
 
                 var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -369,8 +354,8 @@ namespace Smart_Tools.WPF.Views
                     MaxHeight = 320,
                     Margin = new Thickness(0, 0, 8, 8),
                     Padding = new Thickness(14, 12, 14, 12),
-                    CornerRadius = new CornerRadius(12),
-                    BorderThickness = new Thickness(2),
+                    CornerRadius = new CornerRadius(14),
+                    BorderThickness = new Thickness(1.5),
                     Cursor = Cursors.Hand,
                     Child = stack,
                     Tag = i,
@@ -381,7 +366,7 @@ namespace Smart_Tools.WPF.Views
                 ChannelPanel.Children.Add(frame);
             }
             RefreshTileSelection();
-            ApplyLook();
+            ApplyStage();
         }
 
         private void Tile_Click(object sender, MouseButtonEventArgs e)
@@ -407,8 +392,12 @@ namespace Smart_Tools.WPF.Views
             {
                 bool on = (_mask & (1u << t.Index)) != 0;
                 t.Frame.SetResourceReference(Border.BackgroundProperty, on ? "RowBg" : "ContentBg");
-                t.Frame.SetResourceReference(Border.BorderBrushProperty, on ? "AccentColor" : "CardBorder");
-                t.Frame.Opacity = on ? 1 : 0.55;
+                t.Frame.SetResourceReference(Border.BorderBrushProperty, on ? "AccentColor" : "DepthEdgeBrush");
+                t.Frame.Opacity = on ? 1 : 0.6;
+                // A selected channel glows in the accent colour; the others sit raised on a soft shadow.
+                t.Frame.Effect = on && TryFindResource("AccentColor") is SolidColorBrush accent
+                    ? new System.Windows.Media.Effects.DropShadowEffect { Color = accent.Color, BlurRadius = 20, ShadowDepth = 0, Opacity = 0.45 }
+                    : (System.Windows.Media.Effects.Effect)TryFindResource("DepthShadow");
             }
         }
 

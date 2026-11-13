@@ -254,7 +254,8 @@
                                             Content="{DynamicResource Str_ProcessKiller_FilterAll}"
                                             GroupName="PkFilter"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="FormatListBulleted"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             ToolTip="{DynamicResource Str_ProcessKiller_FilterAllTooltip}" />
                                         <RadioButton
                                             x:Name="RadioFilterApps"
@@ -262,7 +263,8 @@
                                             Checked="RadioFilter_Checked"
                                             Content="{DynamicResource Str_ProcessKiller_FilterApps}"
                                             GroupName="PkFilter"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="ApplicationOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             ToolTip="{DynamicResource Str_ProcessKiller_FilterAppsTooltip}" />
                                         <RadioButton
                                             x:Name="RadioFilterBackground"
@@ -270,7 +272,8 @@
                                             Checked="RadioFilter_Checked"
                                             Content="{DynamicResource Str_ProcessKiller_FilterBackground}"
                                             GroupName="PkFilter"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="CogOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             ToolTip="{DynamicResource Str_ProcessKiller_FilterBackgroundTooltip}" />
                                         <RadioButton
                                             x:Name="RadioFilterWindows"
@@ -278,7 +281,8 @@
                                             Checked="RadioFilter_Checked"
                                             Content="{DynamicResource Str_ProcessKiller_FilterWindows}"
                                             GroupName="PkFilter"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="MicrosoftWindows"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             ToolTip="{DynamicResource Str_ProcessKiller_FilterWindowsTooltip}" />
                                     </UniformGrid>
                                 </StackPanel>

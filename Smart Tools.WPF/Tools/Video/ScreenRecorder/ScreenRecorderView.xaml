@@ -112,7 +112,8 @@
                                             Content="{DynamicResource Str_Recorder_TargetScreen}"
                                             GroupName="RecTarget"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Monitor"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Screen" />
                                         <RadioButton
                                             x:Name="TargetWindow"
@@ -120,7 +121,8 @@
                                             Click="Target_Click"
                                             Content="{DynamicResource Str_Recorder_TargetWindow}"
                                             GroupName="RecTarget"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="WindowMaximize"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Window" />
                                         <RadioButton
                                             x:Name="TargetArea"
@@ -128,7 +130,8 @@
                                             Click="Target_Click"
                                             Content="{DynamicResource Str_Recorder_TargetArea}"
                                             GroupName="RecTarget"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="SelectDrag"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Area" />
                                     </UniformGrid>
 
@@ -238,7 +241,8 @@
                                             Click="Option_Click"
                                             Content="{DynamicResource Str_Recorder_QualitySmall}"
                                             GroupName="RecQuality"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="EmailFastOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Small"
                                             ToolTip="{DynamicResource Str_Recorder_QualitySmallTip}" />
                                         <RadioButton
@@ -248,7 +252,8 @@
                                             Content="{DynamicResource Str_Recorder_QualityBalanced}"
                                             GroupName="RecQuality"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="ScaleBalance"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Balanced" />
                                         <RadioButton
                                             x:Name="QualHigh"
@@ -256,7 +261,8 @@
                                             Click="Option_Click"
                                             Content="{DynamicResource Str_Recorder_QualityHigh}"
                                             GroupName="RecQuality"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Diamond"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="High"
                                             ToolTip="{DynamicResource Str_Recorder_QualityHighTip}" />
                                     </UniformGrid>

@@ -533,21 +533,24 @@
                                                 Content="{DynamicResource Str_GifMaker_FillTransparent}"
                                                 GroupName="GifFill"
                                                 IsChecked="True"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="Checkerboard"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="Transparent" />
                                             <RadioButton
                                                 Margin="2,0"
                                                 Click="Setting_Click"
                                                 Content="{DynamicResource Str_GifMaker_FillWhite}"
                                                 GroupName="GifFill"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="CircleOutline"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="White" />
                                             <RadioButton
                                                 Margin="2,0,0,0"
                                                 Click="Setting_Click"
                                                 Content="{DynamicResource Str_GifMaker_FillBlack}"
                                                 GroupName="GifFill"
-                                                Style="{StaticResource ModeToggleButtonStyle}"
+                                                controls:ChoiceIcon.Kind="Circle"
+                                                Style="{StaticResource ModeToggleTallStyle}"
                                                 Tag="Black" />
                                         </UniformGrid>
                                     </StackPanel>
@@ -605,30 +608,48 @@
                                         Content="{DynamicResource Str_GifMaker_QualityHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.PaletteOutline}" />
-                                    <UniformGrid x:Name="QualityChips" Columns="3">
+                                    <Grid x:Name="QualityChips">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
                                         <RadioButton
-                                            Margin="0,0,2,0"
-                                            Click="Setting_Click"
-                                            Content="{DynamicResource Str_GifMaker_QualitySmall}"
-                                            GroupName="GifQuality"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="Small" />
-                                        <RadioButton
-                                            Margin="2,0"
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2"
+                                            Margin="0,0,0,4"
                                             Click="Setting_Click"
                                             Content="{DynamicResource Str_GifMaker_QualityBalanced}"
                                             GroupName="GifQuality"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="Balanced" />
+                                            Tag="Balanced"
+                                            controls:ChoiceIcon.Kind="ScaleBalance"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
                                         <RadioButton
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Margin="0,0,2,0"
+                                            Click="Setting_Click"
+                                            Content="{DynamicResource Str_GifMaker_QualitySmall}"
+                                            GroupName="GifQuality"
+                                            Tag="Small"
+                                            controls:ChoiceIcon.Kind="EmailFastOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
+                                        <RadioButton
+                                            Grid.Row="1"
+                                            Grid.Column="1"
                                             Margin="2,0,0,0"
                                             Click="Setting_Click"
                                             Content="{DynamicResource Str_GifMaker_QualityBest}"
                                             GroupName="GifQuality"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
-                                            Tag="Best" />
-                                    </UniformGrid>
+                                            Tag="Best"
+                                            controls:ChoiceIcon.Kind="Diamond"
+                                            Style="{StaticResource ModeToggleTallStyle}" />
+                                    </Grid>
                                     <TextBlock
                                         x:Name="TxtQualityNote"
                                         Margin="0,8,0,0"

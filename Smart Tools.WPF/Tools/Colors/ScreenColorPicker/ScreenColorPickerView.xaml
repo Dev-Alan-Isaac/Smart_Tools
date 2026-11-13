@@ -509,7 +509,7 @@
                                     FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextSecondary}"
                                     Text="{DynamicResource Str_ScreenColor_SessionHeader}" />
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnClearSession"
                                     Width="32"
                                     Height="32"

@@ -189,7 +189,8 @@
                                             Click="ScanSpeed_Click"
                                             Content="{DynamicResource Str_NetworkTools_Fast}"
                                             GroupName="ScanSpeed"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Flash"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="300"
                                             ToolTip="{DynamicResource Str_NetworkTools_300MsFineOn}" />
                                         <RadioButton
@@ -198,7 +199,8 @@
                                             Content="{DynamicResource Str_ImageConvertPDF_Normal}"
                                             GroupName="ScanSpeed"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Speedometer"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="800"
                                             ToolTip="800 ms" />
                                         <RadioButton
@@ -206,7 +208,8 @@
                                             Click="ScanSpeed_Click"
                                             Content="{DynamicResource Str_NetworkTools_Careful}"
                                             GroupName="ScanSpeed"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Turtle"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="2000"
                                             ToolTip="{DynamicResource Str_NetworkTools_2SForSlow}" />
                                     </UniformGrid>

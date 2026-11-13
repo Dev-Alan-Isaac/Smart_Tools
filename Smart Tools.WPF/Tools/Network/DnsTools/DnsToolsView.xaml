@@ -120,7 +120,8 @@
                                             Click="Mode_Click"
                                             Content="{DynamicResource Str_Dns_ModeDns}"
                                             GroupName="DnsMode"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Dns"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Dns"
                                             ToolTip="{DynamicResource Str_Dns_Hint_Dns}" />
                                         <RadioButton
@@ -129,7 +130,8 @@
                                             Click="Mode_Click"
                                             Content="{DynamicResource Str_Dns_ModeWhois}"
                                             GroupName="DnsMode"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="CardAccountDetailsOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Whois"
                                             ToolTip="{DynamicResource Str_Dns_Hint_Whois}" />
                                         <RadioButton
@@ -137,7 +139,8 @@
                                             Click="Mode_Click"
                                             Content="{DynamicResource Str_Dns_ModeTrace}"
                                             GroupName="DnsMode"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="MapMarkerPath"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Trace"
                                             ToolTip="{DynamicResource Str_Dns_Hint_Trace}" />
                                     </UniformGrid>

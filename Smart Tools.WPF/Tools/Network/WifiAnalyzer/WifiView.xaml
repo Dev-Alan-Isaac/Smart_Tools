@@ -85,8 +85,25 @@
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_FileDiff_ViewHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.EyeOutline}" />
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <RadioButton x:Name="RadioNearby" Margin="0,0,2,0" Checked="View_Changed" Content="{DynamicResource Str_WifiAnalyzer_Nearby}" GroupName="WfView" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_NetworksYourPcCan}" />
-                                <RadioButton x:Name="RadioSaved" Margin="2,0,0,0" Checked="View_Changed" Content="{DynamicResource Str_Settings_Saved}" GroupName="WfView" Style="{StaticResource ModeToggleButtonStyle}" ToolTip="{DynamicResource Str_WifiAnalyzer_NetworksWindowsRemembers}" />
+                                <RadioButton
+                                    x:Name="RadioNearby"
+                                    Margin="0,0,2,0"
+                                    Checked="View_Changed"
+                                    Content="{DynamicResource Str_WifiAnalyzer_Nearby}"
+                                    GroupName="WfView"
+                                    IsChecked="True"
+                                    controls:ChoiceIcon.Kind="Wifi"
+                                    Style="{StaticResource ModeToggleTallStyle}"
+                                    ToolTip="{DynamicResource Str_WifiAnalyzer_NetworksYourPcCan}" />
+                                <RadioButton
+                                    x:Name="RadioSaved"
+                                    Margin="2,0,0,0"
+                                    Checked="View_Changed"
+                                    Content="{DynamicResource Str_Settings_Saved}"
+                                    GroupName="WfView"
+                                    controls:ChoiceIcon.Kind="BookmarkOutline"
+                                    Style="{StaticResource ModeToggleTallStyle}"
+                                    ToolTip="{DynamicResource Str_WifiAnalyzer_NetworksWindowsRemembers}" />
                             </UniformGrid>
 
                             <StackPanel x:Name="BandPanel">

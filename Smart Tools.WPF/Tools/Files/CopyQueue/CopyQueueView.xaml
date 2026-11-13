@@ -169,7 +169,7 @@
                             <materialDesign:PackIcon x:Name="IconPause" Width="17" Height="17" Kind="Pause" />
                         </Button>
 
-                        <Button x:Name="BtnUndo" Grid.Column="2" Width="36" Height="36" Margin="6,0,16,0" VerticalAlignment="Center" Click="BtnUndo_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_UndoTheLastMove}" Visibility="Collapsed">
+                        <Button Padding="0" x:Name="BtnUndo" Grid.Column="2" Width="36" Height="36" Margin="6,0,16,0" VerticalAlignment="Center" Click="BtnUndo_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_CopyQueue_UndoTheLastMove}" Visibility="Collapsed">
                             <materialDesign:PackIcon Width="17" Height="17" Kind="Undo" />
                         </Button>
 

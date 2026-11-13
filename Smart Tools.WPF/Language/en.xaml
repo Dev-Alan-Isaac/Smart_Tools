@@ -12027,4 +12027,13 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_ImageEditor_Undo">Undo (Ctrl+Z)</system:String>
     <system:String x:Key="Str_ImageEditor_Redo">Redo (Ctrl+Y)</system:String>
     <system:String x:Key="Str_Shell_Back">Back</system:String>
+    <system:String x:Key="Str_GameCtl_LayoutHeader">Detected layout</system:String>
+    <system:String x:Key="Str_GameCtl_LayoutXbox">Xbox layout</system:String>
+    <system:String x:Key="Str_GameCtl_LayoutPlayStation">PlayStation layout</system:String>
+    <system:String x:Key="Str_GameCtl_LayoutGeneric">Standard layout</system:String>
+    <system:String x:Key="Str_GameCtl_LayoutExtra">Standard layout + extra buttons</system:String>
+    <system:String x:Key="Str_GameCtl_ExtraStdTitle">Standard buttons only</system:String>
+    <system:String x:Key="Str_GameCtl_ExtraStdBody">This test reads the sticks, triggers, bumpers, D-pad and the usual face buttons of Xbox pads, PlayStation pads and generic pads with the same layout. Extra controls such as back paddles or levers on the underside (Xbox Elite, DualSense Edge, many pro pads) are not reported by Windows, so this app cannot detect them.</system:String>
+    <system:String x:Key="Str_GameCtl_ExtraWarnTitle">Extra buttons cannot be tested</system:String>
+    <system:String x:Key="Str_GameCtl_ExtraWarnBody">This looks like a pad with extra buttons (paddles, back buttons or levers). This app cannot detect those, only the standard buttons will light up. To test one, give it the job of a normal button in the maker's app (for example Xbox Accessories), then press it here.</system:String>
 </ResourceDictionary>

@@ -116,23 +116,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <!--  ============ WHAT YOU LISTEN WITH ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_AudioOut_Look" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_AudioOutputTest_ListeningWith}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.HeadphonesBox}" />
-                                    <UniformGrid Margin="0,8,0,0" Columns="2">
-                                        <RadioButton x:Name="LookSpeakers" Margin="0,0,2,4" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Speakers}" GroupName="AoLook" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Speakers" ToolTip="{DynamicResource Str_AudioOutputTest_SpeakersOneTilePer}" />
-                                        <RadioButton x:Name="LookHeadphones" Margin="2,0,0,4" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Headphones}" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headphones" ToolTip="{DynamicResource Str_AudioOutputTest_WiredHeadphonesJackOr}" />
-                                        <RadioButton x:Name="LookEarphones" Margin="0,0,2,0" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Earphones}" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Earbuds" ToolTip="{DynamicResource Str_AudioOutputTest_EarphonesOrEarbuds}" />
-                                        <RadioButton x:Name="LookHeadset" Margin="2,0,0,0" Checked="Look_Checked" Content="{DynamicResource Str_AudioOutputTest_Headset}" GroupName="AoLook" Style="{StaticResource ModeToggleButtonStyle}" Tag="Headset" ToolTip="{DynamicResource Str_AudioOutputTest_AHeadsetWithA}" />
-                                    </UniformGrid>
-                                    <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_AudioOutputTest_WithTwoChannelsHeadphones}" />
-                                </StackPanel>
-                            </Border>
-
                             <!--  ============ SIGNAL (changes with the test) ============  -->
                             <Border ctl:Tour.Key="Str_Tour_AudioOut_Signal" ctl:Tour.Order="3" x:Name="SignalCard" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
@@ -447,7 +430,8 @@
                         Tag="{x:Static materialDesign:PackIconKind.Headphones}" />
 
                     <!--  Which test  -->
-                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                    <ContentControl Grid.Row="1" Margin="0,0,0,14" Padding="6" Style="{StaticResource DepthCard}">
+                    <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="6" />
@@ -555,6 +539,7 @@
                             </StackPanel>
                         </RadioButton>
                     </Grid>
+                    </ContentControl>
 
                     <!--  Channels + what to listen for  -->
                     <Grid Grid.Row="2">
@@ -574,7 +559,7 @@
                         <!--  The big reading, like the percentage on Battery Health: the output level you set  -->
                         <Viewbox Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform">
                             <StackPanel>
-                                <TextBlock x:Name="TxtHeroLevel" FontSize="64" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="-30 dB" />
+                                <TextBlock x:Name="TxtHeroLevel" FontSize="64" Style="{StaticResource GlowReadout}" Text="-30 dB" />
                                 <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_AudioOutputTest_OutputLevel}" />
                             </StackPanel>
                         </Viewbox>
@@ -588,12 +573,14 @@
                                 Text="{DynamicResource Str_AudioOut_ChannelsHeader}" />
                         </Grid>
                         <!--  Headphones / earphones / headset: each side fills with the sound that side plays  -->
-                        <Grid x:Name="HeroStage" ctl:Tour.Key="Str_Tour_AudioOut_Picture" ctl:Tour.Order="6" Grid.Row="1" Height="220" Margin="0,0,0,12" Visibility="Collapsed">
+                        <ContentControl x:Name="HeroStage" ctl:Tour.Key="Str_Tour_AudioOut_Picture" ctl:Tour.Order="6" Grid.Row="1" Height="240" Margin="0,0,0,16" Padding="14" Style="{StaticResource DepthHero}" Visibility="Collapsed">
+                        <Grid>
                             <controls:LevelGlyph x:Name="HeroLeft" Side="Left" Kind="Headphones" />
                             <controls:LevelGlyph x:Name="HeroRight" Side="Right" ShowTrack="False" Kind="Headphones" />
                             <TextBlock Margin="6,0,0,4" HorizontalAlignment="Left" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ImageEditor_Left}" />
                             <TextBlock Margin="0,0,6,4" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_ImageEditor_Right}" />
                         </Grid>
+                        </ContentControl>
 
                         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                             <UniformGrid
@@ -632,7 +619,10 @@
                             Margin="0,14,0,0"
                             Padding="14,10"
                             Background="{DynamicResource StatusInfoBg}"
-                            CornerRadius="12">
+                            BorderBrush="{StaticResource DepthEdgeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Effect="{StaticResource DepthShadow}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />

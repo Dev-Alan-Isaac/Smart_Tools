@@ -59,8 +59,6 @@ namespace Smart_Tools.WPF.Views
             _settings = MicTestManager.LoadSettings();
             _applying = true;
             ChkHear.IsChecked = _settings.HearYourself;
-            (_settings.Look switch { "Handheld" => LookHandheld, "Headset" => LookHeadset, "Earbuds" => LookEarbuds, _ => LookStand }).IsChecked = true;
-            ApplyLook();
             _applying = false;
             LoadDevices();
         }
@@ -125,20 +123,6 @@ namespace Smart_Tools.WPF.Views
 
         private bool _restartAfterStop;
 
-        private void Look_Checked(object sender, RoutedEventArgs e)
-        {
-            if (!_viewConstructed || _applying) return;
-            ApplyLook();
-            SaveSettings();
-        }
-
-        /// <summary>Shows the chosen microphone picture (the tag of the radio is the icon).</summary>
-        private void ApplyLook()
-        {
-            var radio = new[] { LookStand, LookHandheld, LookHeadset, LookEarbuds }.FirstOrDefault(r => r.IsChecked == true) ?? LookStand;
-            if (radio.Tag is string tag && Enum.TryParse(tag, out MaterialDesignThemes.Wpf.PackIconKind kind)) MicGlyph.Kind = kind;
-        }
-
         private void ChkHear_Changed(object sender, RoutedEventArgs e)
         {
             if (!_viewConstructed || _applying) return;
@@ -150,7 +134,6 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_loadedOnce) return;
             _settings.HearYourself = ChkHear.IsChecked == true;
-            _settings.Look = LookHandheld.IsChecked == true ? "Handheld" : LookHeadset.IsChecked == true ? "Headset" : LookEarbuds.IsChecked == true ? "Earbuds" : "Stand";
             if (DeviceCombo.SelectedItem is MicRecorderDevice device) _settings.DeviceName = device.Name;
             MicTestManager.SaveSettings(_settings);
         }

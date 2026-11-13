@@ -238,7 +238,8 @@
                             Checked="Scope_Checked"
                             Content="{DynamicResource Str_Connections_ScopeOutside}"
                             GroupName="ConnectionsScope"
-                            Style="{StaticResource ModeToggleButtonStyle}"
+                            controls:ChoiceIcon.Kind="Web"
+                            Style="{StaticResource ModeToggleTallStyle}"
                             Tag="Outside" />
                         <RadioButton
                             x:Name="RadioLocal"
@@ -246,7 +247,8 @@
                             Checked="Scope_Checked"
                             Content="{DynamicResource Str_Connections_ScopeLocal}"
                             GroupName="ConnectionsScope"
-                            Style="{StaticResource ModeToggleButtonStyle}"
+                            controls:ChoiceIcon.Kind="Lan"
+                            Style="{StaticResource ModeToggleTallStyle}"
                             Tag="Local" />
                         <RadioButton
                             x:Name="RadioAll"
@@ -254,7 +256,8 @@
                             Checked="Scope_Checked"
                             Content="{DynamicResource Str_Connections_ScopeAll}"
                             GroupName="ConnectionsScope"
-                            Style="{StaticResource ModeToggleButtonStyle}"
+                            controls:ChoiceIcon.Kind="FormatListBulleted"
+                            Style="{StaticResource ModeToggleTallStyle}"
                             Tag="All" />
                     </UniformGrid>
 <CheckBox

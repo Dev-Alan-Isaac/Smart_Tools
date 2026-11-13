@@ -325,48 +325,6 @@
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="16,4,16,16">
 
-                            <!--  ============ MODE ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_EncodeDecode_Format" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_EncTool_ModeHeader}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.SwapHorizontal}" />
-                                    <RadioButton
-                                        x:Name="RadioModeBase64"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_EncTool_ModeBase64}"
-                                        GroupName="EncMode"
-                                        IsChecked="True"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Base64" />
-                                    <RadioButton
-                                        x:Name="RadioModeUrl"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_EncTool_ModeUrl}"
-                                        GroupName="EncMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Url" />
-                                    <RadioButton
-                                        x:Name="RadioModeHtml"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_EncTool_ModeHtml}"
-                                        GroupName="EncMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="Html" />
-                                    <RadioButton
-                                        x:Name="RadioModeFile"
-                                        Margin="0,4,0,0"
-                                        Click="Mode_Click"
-                                        Content="{DynamicResource Str_EncTool_ModeFile}"
-                                        GroupName="EncMode"
-                                        Style="{StaticResource ModeToggleButtonStyle}"
-                                        Tag="File" />
-                                </StackPanel>
-                            </Border>
-
                             <!--  ============ TEXT ENCODING ============  -->
                             <Border x:Name="TextEncodingPanel" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
@@ -540,11 +498,52 @@
             <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="0,0,0,12">
+                    <!--  Mode tabs: Base64 / URL / HTML / File  -->
+                    <Border Grid.Row="0" Margin="0,0,0,12" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
+                        <StackPanel ctl:Tour.Key="Str_Tour_EncodeDecode_Format" ctl:Tour.Order="1" Orientation="Horizontal">
+                            <RadioButton
+                                x:Name="RadioModeBase64"
+                                Click="Mode_Click"
+                                Content="{DynamicResource Str_EncTool_ModeBase64}"
+                                GroupName="EncMode"
+                                IsChecked="True"
+                                Tag="Base64"
+                                controls:ChoiceIcon.Kind="FileCodeOutline"
+                                Style="{StaticResource ModeTabStyle}" />
+                            <RadioButton
+                                x:Name="RadioModeUrl"
+                                Click="Mode_Click"
+                                Content="{DynamicResource Str_EncTool_ModeUrl}"
+                                GroupName="EncMode"
+                                Tag="Url"
+                                controls:ChoiceIcon.Kind="Link"
+                                Style="{StaticResource ModeTabStyle}" />
+                            <RadioButton
+                                x:Name="RadioModeHtml"
+                                Click="Mode_Click"
+                                Content="{DynamicResource Str_EncTool_ModeHtml}"
+                                GroupName="EncMode"
+                                Tag="Html"
+                                controls:ChoiceIcon.Kind="CodeTags"
+                                Style="{StaticResource ModeTabStyle}" />
+                            <RadioButton
+                                x:Name="RadioModeFile"
+                                Click="Mode_Click"
+                                Content="{DynamicResource Str_EncTool_ModeFile}"
+                                GroupName="EncMode"
+                                Tag="File"
+                                controls:ChoiceIcon.Kind="FileOutline"
+                                Style="{StaticResource ModeTabStyle}" />
+                        </StackPanel>
+                    </Border>
+
+
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
@@ -582,7 +581,7 @@
                     </Grid>
 
                     <ScrollViewer
-                        Grid.Row="1"
+                        Grid.Row="2"
                         HorizontalScrollBarVisibility="Disabled"
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="0,0,10,0">

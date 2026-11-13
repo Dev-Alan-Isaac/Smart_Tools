@@ -5,6 +5,8 @@ using System.Windows.Media;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Grid = System.Windows.Controls.Grid;
+using Color = System.Windows.Media.Color;
+using Colors = System.Windows.Media.Colors;
 using Rect = System.Windows.Rect;
 
 namespace Smart_Tools.WPF.Controls
@@ -69,7 +71,8 @@ namespace Smart_Tools.WPF.Controls
         public void SetFillResource(string key)
         {
             AutoColor = false;
-            _fill.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, key);
+            _fillKey = key;
+            ApplyFillLook();
         }
 
         private void ApplyKind()
@@ -105,7 +108,29 @@ namespace Smart_Tools.WPF.Controls
             if (peak > 0) _peakHost.Clip = new RectangleGeometry(new Rect(x, Math.Max(top, top + s * (1 - peak) - 1.5), width, 3));
 
             if (AutoColor)
-                _fill.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, level >= 0.95 ? "StatusErrorFg" : level >= 0.8 ? "StatusWarningFg" : "StatusSuccessFg");
+                _fillKey = level >= 0.95 ? "StatusErrorFg" : level >= 0.8 ? "StatusWarningFg" : "StatusSuccessFg";
+            ApplyFillLook();
+        }
+
+        private string _fillKey = "StatusSuccessFg";
+
+        /// <summary>
+        /// The fill is a vertical gradient (lighter at the top) with a glow in its own colour, and the empty icon underneath gets a
+        /// soft drop shadow, so the picture looks lit and raised instead of a flat silhouette. Re-read on every update, so a theme
+        /// change is picked up the next time the level moves.
+        /// </summary>
+        private void ApplyFillLook()
+        {
+            if (TryFindResource(_fillKey) is not SolidColorBrush brush) { _fill.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, _fillKey); return; }
+            var c = brush.Color;
+            var light = Color.FromRgb((byte)(c.R + (255 - c.R) * 0.38), (byte)(c.G + (255 - c.G) * 0.38), (byte)(c.B + (255 - c.B) * 0.38));
+            var dark = Color.FromRgb((byte)(c.R * 0.78), (byte)(c.G * 0.78), (byte)(c.B * 0.78));
+            var gradient = new LinearGradientBrush(light, dark, 90);
+            gradient.GradientStops.Insert(1, new GradientStop(c, 0.45));
+            gradient.Freeze();
+            _fill.Foreground = gradient;
+            _fillHost.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = c, BlurRadius = 26, ShadowDepth = 0, Opacity = 0.65 };
+            _track.Effect = new System.Windows.Media.Effects.DropShadowEffect { Color = Colors.Black, BlurRadius = 12, ShadowDepth = 3, Direction = 270, Opacity = 0.35 };
         }
     }
 }

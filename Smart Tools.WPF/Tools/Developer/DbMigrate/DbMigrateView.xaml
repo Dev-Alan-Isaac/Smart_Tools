@@ -611,7 +611,7 @@
                                 Grid.Column="3"
                                 VerticalAlignment="Center"
                                 Orientation="Horizontal">
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSaveScript"
                                     Width="32"
                                     Height="32"
@@ -621,7 +621,7 @@
                                     ToolTip="{DynamicResource Str_DbMigrate_SaveScript}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="FileCodeOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnCopyReport"
                                     Width="32"
                                     Height="32"
@@ -632,7 +632,7 @@
                                     ToolTip="{DynamicResource Str_DbMigrate_CopyReport}">
                                     <materialDesign:PackIcon x:Name="IconCopyReport" Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     x:Name="BtnSaveReport"
                                     Width="32"
                                     Height="32"
@@ -915,7 +915,7 @@
                                 Grid.Column="2"
                                 Orientation="Horizontal"
                                 Visibility="Collapsed">
-                                <Button
+                                <Button Padding="0"
                                     Width="32"
                                     Height="32"
                                     Click="BtnCopyLog_Click"
@@ -923,7 +923,7 @@
                                     ToolTip="{DynamicResource Str_DbMigrate_CopyLog}">
                                     <materialDesign:PackIcon x:Name="IconCopyLog" Width="16" Height="16" Kind="ContentCopy" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     Width="32"
                                     Height="32"
                                     Margin="6,0,0,0"
@@ -932,7 +932,7 @@
                                     ToolTip="{DynamicResource Str_DbMigrate_SaveLog}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
                                 </Button>
-                                <Button
+                                <Button Padding="0"
                                     Width="32"
                                     Height="32"
                                     Margin="6,0,0,0"

@@ -193,7 +193,8 @@
                                             Content="{DynamicResource Str_MetaClean_ModeEverything}"
                                             GroupName="CleanMode"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Eraser"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="Everything" />
                                         <RadioButton
                                             x:Name="ModeLocation"
@@ -201,7 +202,8 @@
                                             Click="Mode_Click"
                                             Content="{DynamicResource Str_MetaClean_ModeLocation}"
                                             GroupName="CleanMode"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="MapMarkerOff"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="LocationOnly" />
                                     </UniformGrid>
                                     <TextBlock

@@ -88,40 +88,52 @@
                                 </StackPanel>
                             </Border>
 
-                            <!--  ============ CONTROLLER TYPE ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <!--  ============ DETECTED LAYOUT ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_GameCtl_Layout" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
-                                        Content="{DynamicResource Str_GameController_ControllerType}"
+                                        Content="{DynamicResource Str_GameCtl_LayoutHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.GamepadVariant}" />
-                                    <UniformGrid Margin="0,8,0,0" Columns="2">
-                                        <RadioButton x:Name="FamXbox" Margin="0,0,2,4" Checked="Family_Checked" GroupName="GcFamily" IsChecked="True" Style="{StaticResource ModeToggleTallStyle}" Tag="Xbox" ToolTip="{DynamicResource Str_GameController_XboxXboxAndOther}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="MicrosoftXboxController" />
-                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="{DynamicResource Str_GameController_Xbox}" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton x:Name="FamPlayStation" Margin="2,0,0,4" Checked="Family_Checked" GroupName="GcFamily" Style="{StaticResource ModeToggleTallStyle}" Tag="PlayStation" ToolTip="{DynamicResource Str_GameController_DualshockDualsenseAndOther}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="SonyPlaystation" />
-                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="{DynamicResource Str_GameController_Playstation}" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton x:Name="FamExtra" Margin="0,0,2,0" Checked="Family_Checked" GroupName="GcFamily" Style="{StaticResource ModeToggleTallStyle}" Tag="ExtraButtons" ToolTip="{DynamicResource Str_GameController_XboxEliteStylePads}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="GamepadSquare" />
-                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="{DynamicResource Str_GameController_ExtraButtons}" TextAlignment="Center" TextWrapping="Wrap" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                        <RadioButton x:Name="FamGeneric" Margin="2,0,0,0" Checked="Family_Checked" GroupName="GcFamily" Style="{StaticResource ModeToggleTallStyle}" Tag="Generic" ToolTip="{DynamicResource Str_GameController_AnyOtherGamepadOr}">
-                                            <StackPanel>
-                                                <materialDesign:PackIcon Width="26" Height="26" HorizontalAlignment="Center" Kind="GamepadVariantOutline" />
-                                                <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" Text="{DynamicResource Str_GameController_Generic}" />
-                                            </StackPanel>
-                                        </RadioButton>
-                                    </UniformGrid>
+                                    <Border
+                                        Padding="12,10"
+                                        Background="{DynamicResource SidebarInputBg}"
+                                        BorderBrush="{StaticResource DepthEdgeBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Effect="{StaticResource DepthShadow}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="44" Height="44" Margin="0,0,12,0" Background="{DynamicResource AccentGradient}" CornerRadius="13">
+                                                <materialDesign:PackIcon x:Name="IconLayout" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Kind="GamepadVariant" />
+                                            </Border>
+                                            <TextBlock x:Name="TxtLayoutName" Grid.Column="1" Text="{DynamicResource Str_GameCtl_LayoutGeneric}" VerticalAlignment="Center" FontSize="13.5" FontWeight="SemiBold" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Border>
                                     <TextBlock x:Name="TxtFamilyNote" Style="{StaticResource SidebarHint}" />
+
+                                    <!--  What this app cannot see: paddles, levers and other extra buttons  -->
+                                    <Border
+                                        x:Name="ExtraNotice"
+                                        Margin="0,12,0,0"
+                                        Padding="11,9"
+                                        Background="{DynamicResource StatusInfoBg}"
+                                        CornerRadius="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <materialDesign:PackIcon x:Name="IconExtraNotice" Width="16" Height="16" Margin="0,1,9,0" VerticalAlignment="Top" Foreground="{DynamicResource StatusInfoFg}" Kind="InformationOutline" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock x:Name="TxtExtraTitle" Text="{DynamicResource Str_GameCtl_ExtraStdTitle}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" TextWrapping="Wrap" />
+                                                <TextBlock x:Name="TxtExtraBody" Text="{DynamicResource Str_GameCtl_ExtraStdBody}" Margin="0,3,0,0" FontSize="11" Foreground="{DynamicResource StatusInfoFg}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </StackPanel>
                             </Border>
 
@@ -433,6 +445,8 @@
                             Tag="{x:Static materialDesign:PackIconKind.Gamepad}" />
                         <Border
                             x:Name="PillRate"
+                            BorderBrush="{StaticResource DepthEdgeBrush}"
+                            BorderThickness="1"
                             Grid.Column="1"
                             Margin="12,0,0,0"
                             VerticalAlignment="Center"
@@ -457,6 +471,8 @@
                         </Border>
                         <Border
                             x:Name="BorderStatus"
+                            BorderBrush="{StaticResource DepthEdgeBrush}"
+                            BorderThickness="1"
                             Grid.Column="3"
                             MaxWidth="420"
                             VerticalAlignment="Center"
@@ -632,6 +648,7 @@
                                         <ColumnDefinition Width="16" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
+                                    <ContentControl Padding="16,12" Style="{StaticResource DepthCard}">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -658,7 +675,9 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource TextPrimary}" />
                                     </Grid>
-                                    <Grid Grid.Column="2">
+                                    </ContentControl>
+                                    <ContentControl Grid.Column="2" Padding="16,12" Style="{StaticResource DepthCard}">
+                                    <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="*" />
@@ -684,6 +703,7 @@
                                             FontSize="12"
                                             Foreground="{DynamicResource TextPrimary}" />
                                     </Grid>
+                                    </ContentControl>
                                 </Grid>
 
                                 <TextBlock
@@ -695,10 +715,13 @@
                                     TextWrapping="Wrap" />
 
                                 <!--  Triggers (Xbox-style)  -->
-                                <StackPanel
+                                <ContentControl
                                     x:Name="TriggerBars"
                                     Grid.Row="2"
-                                    Margin="0,16,0,0">
+                                    Margin="0,16,0,0"
+                                    Padding="16,12"
+                                    Style="{StaticResource DepthCard}">
+                                <StackPanel>
                                     <TextBlock
                                         FontSize="12"
                                         FontWeight="SemiBold"
@@ -718,7 +741,8 @@
                                         <ProgressBar
                                             x:Name="BarLT"
                                             Grid.Column="1"
-                                            Height="10"
+                                            Height="14"
+                                            Style="{StaticResource DepthProgressBar}"
                                             Maximum="1"
                                             Minimum="0" />
                                         <TextBlock
@@ -743,7 +767,8 @@
                                         <ProgressBar
                                             x:Name="BarRT"
                                             Grid.Column="1"
-                                            Height="10"
+                                            Height="14"
+                                            Style="{StaticResource DepthProgressBar}"
                                             Maximum="1"
                                             Minimum="0" />
                                         <TextBlock
@@ -755,6 +780,7 @@
                                             Foreground="{DynamicResource TextPrimary}" />
                                     </Grid>
                                 </StackPanel>
+                                </ContentControl>
 
                                 <!--  Other axes (generic controllers)  -->
                                 <StackPanel
@@ -770,21 +796,28 @@
                                     <StackPanel x:Name="ExtraAxesRows" Margin="0,6,0,0" />
                                 </StackPanel>
 
-                                <TextBlock
+                                <ContentControl
                                     Grid.Row="4"
-                                    Margin="0,16,0,6"
+                                    Grid.RowSpan="3"
+                                    Margin="0,16,0,0"
+                                    Padding="16,12"
+                                    Style="{StaticResource DepthCard}">
+                                <StackPanel>
+                                    <TextBlock
+                                    Margin="0,0,0,8"
                                     FontSize="12"
                                     FontWeight="SemiBold"
                                     Foreground="{DynamicResource TextSecondary}"
                                     Text="{DynamicResource Str_GameCtl_Buttons}" />
-                                <WrapPanel x:Name="ButtonsPanel" Grid.Row="5" />
-                                <TextBlock
+                                <WrapPanel x:Name="ButtonsPanel" />
+                                    <TextBlock
                                     x:Name="TxtPov"
-                                    Grid.Row="6"
                                     Margin="0,8,0,0"
                                     FontFamily="Consolas"
                                     FontSize="12"
                                     Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                                </ContentControl>
                             </Grid>
                         </ScrollViewer>
 

@@ -911,7 +911,7 @@
                                     <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_VoiceChanger_SaveAll}" TextWrapping="Wrap" />
                                 </Grid>
                             </Button>
-                            <Button
+                            <Button Padding="0"
                                 x:Name="BtnClearTakes"
                                 Grid.Column="3"
                                 Width="36"

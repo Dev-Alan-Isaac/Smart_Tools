@@ -72,8 +72,23 @@
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_ImageEditor_Shape}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.CropSquare}" />
                             <UniformGrid Margin="0,6,0,0" Columns="2">
-                                <RadioButton x:Name="RadioFit" Margin="0,0,2,0" Click="Option_Click" Content="{DynamicResource Str_SvgTool_ZoomFitLabel}" GroupName="ImFit" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" />
-                                <RadioButton x:Name="RadioFill" Margin="2,0,0,0" Click="Option_Click" Content="{DynamicResource Str_IconMaker_Fill}" GroupName="ImFit" Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton
+                                    x:Name="RadioFit"
+                                    Margin="0,0,2,0"
+                                    Click="Option_Click"
+                                    Content="{DynamicResource Str_SvgTool_ZoomFitLabel}"
+                                    GroupName="ImFit"
+                                    IsChecked="True"
+                                    controls:ChoiceIcon.Kind="ArrowCollapseAll"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
+                                <RadioButton
+                                    x:Name="RadioFill"
+                                    Margin="2,0,0,0"
+                                    Click="Option_Click"
+                                    Content="{DynamicResource Str_IconMaker_Fill}"
+                                    GroupName="ImFit"
+                                    controls:ChoiceIcon.Kind="ArrowExpandAll"
+                                    Style="{StaticResource ModeToggleButtonStyle}" />
                             </UniformGrid>
                             <TextBlock x:Name="TxtFitHint" Style="{StaticResource ImHint}" />
                         </StackPanel>
@@ -83,13 +98,55 @@
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_Rest_IcoSizes}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ResizeBottomRight}" />
                             <WrapPanel Margin="0,8,0,0">
-                                <CheckBox x:Name="Size16" Click="Option_Click" Content="16" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="16" />
-                                <CheckBox x:Name="Size24" Click="Option_Click" Content="24" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="24" />
-                                <CheckBox x:Name="Size32" Click="Option_Click" Content="32" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="32" />
-                                <CheckBox x:Name="Size48" Click="Option_Click" Content="48" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="48" />
-                                <CheckBox x:Name="Size64" Click="Option_Click" Content="64" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="64" />
-                                <CheckBox x:Name="Size128" Click="Option_Click" Content="128" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="128" />
-                                <CheckBox x:Name="Size256" Click="Option_Click" Content="256" Style="{StaticResource ToggleChipCheckBoxStyle}" Tag="256" />
+                                <CheckBox
+                                    x:Name="Size16"
+                                    Click="Option_Click"
+                                    Content="16"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectSmall"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="16" />
+                                <CheckBox
+                                    x:Name="Size24"
+                                    Click="Option_Click"
+                                    Content="24"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectSmall"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="24" />
+                                <CheckBox
+                                    x:Name="Size32"
+                                    Click="Option_Click"
+                                    Content="32"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectActual"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="32" />
+                                <CheckBox
+                                    x:Name="Size48"
+                                    Click="Option_Click"
+                                    Content="48"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectActual"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="48" />
+                                <CheckBox
+                                    x:Name="Size64"
+                                    Click="Option_Click"
+                                    Content="64"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectLarge"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="64" />
+                                <CheckBox
+                                    x:Name="Size128"
+                                    Click="Option_Click"
+                                    Content="128"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectLarge"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="128" />
+                                <CheckBox
+                                    x:Name="Size256"
+                                    Click="Option_Click"
+                                    Content="256"
+                                    controls:ChoiceIcon.Kind="ImageSizeSelectLarge"
+                                    Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                    Tag="256" />
                             </WrapPanel>
                             <TextBlock Style="{StaticResource ImHint}" Text="{DynamicResource Str_IconMaker_WindowsPicksTheBest}" />
                         </StackPanel>
@@ -113,11 +170,11 @@
                                 <TextBlock x:Name="TxtDonePill" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" />
                             </Border>
                             <StackPanel x:Name="PictureNav" Margin="0,0,12,0" VerticalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                                <Button x:Name="BtnPrev" Width="32" Height="32" Click="BtnPrev_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_PrevPicture}">
+                                <Button Padding="0" x:Name="BtnPrev" Width="32" Height="32" Click="BtnPrev_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_PrevPicture}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ChevronLeft" />
                                 </Button>
                                 <TextBlock x:Name="TxtPictureCount" MinWidth="44" Margin="4,0" VerticalAlignment="Center" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextAlignment="Center" />
-                                <Button x:Name="BtnNext" Width="32" Height="32" Click="BtnNext_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_NextPicture}">
+                                <Button Padding="0" x:Name="BtnNext" Width="32" Height="32" Click="BtnNext_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_NextPicture}">
                                     <materialDesign:PackIcon Width="16" Height="16" Kind="ChevronRight" />
                                 </Button>
                             </StackPanel>
@@ -171,7 +228,7 @@
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
                                 <DockPanel>
-                                    <Button Width="32" Height="32" Margin="12,0,0,0" Click="BtnSaveStage_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_SaveThisSizeAs}">
+                                    <Button Padding="0" Width="32" Height="32" Margin="12,0,0,0" Click="BtnSaveStage_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_IconMaker_SaveThisSizeAs}">
                                         <materialDesign:PackIcon Width="16" Height="16" Kind="ContentSaveOutline" />
                                     </Button>
                                     <StackPanel VerticalAlignment="Center">
@@ -203,7 +260,7 @@
                                         <DataTemplate>
                                             <Border x:Name="Tile" Margin="0,0,0,8" Padding="10,8" Background="Transparent" BorderBrush="Transparent" BorderThickness="1.5" Cursor="Hand" CornerRadius="10" MouseLeftButtonDown="Tile_MouseLeftButtonDown" Tag="{Binding Size}">
                                                 <DockPanel>
-                                                    <Button Width="28" Height="28" Margin="10,0,0,0" VerticalAlignment="Top" Click="BtnSavePng_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding Size}" ToolTip="{DynamicResource Str_IconMaker_SaveThisSizeAs}">
+                                                    <Button Padding="0" Width="28" Height="28" Margin="10,0,0,0" VerticalAlignment="Top" Click="BtnSavePng_Click" DockPanel.Dock="Right" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding Size}" ToolTip="{DynamicResource Str_IconMaker_SaveThisSizeAs}">
                                                         <materialDesign:PackIcon Width="14" Height="14" Kind="ContentSaveOutline" />
                                                     </Button>
                                                     <Border Width="{Binding Box}" Height="{Binding Box}" Margin="0,0,12,0" VerticalAlignment="Center" DockPanel.Dock="Left" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="4">

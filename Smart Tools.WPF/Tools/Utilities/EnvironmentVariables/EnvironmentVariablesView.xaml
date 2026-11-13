@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.EnvironmentVariablesView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -175,14 +176,16 @@
                                             Content="{DynamicResource Str_EnvVars_User}"
                                             GroupName="EnvScope"
                                             IsChecked="True"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="AccountOutline"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="User" />
                                         <RadioButton
                                             Margin="2,0,0,0"
                                             Click="Scope_Click"
                                             Content="{DynamicResource Str_EnvVars_System}"
                                             GroupName="EnvScope"
-                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            controls:ChoiceIcon.Kind="Laptop"
+                                            Style="{StaticResource ModeToggleTallStyle}"
                                             Tag="System" />
                                     </UniformGrid>
                                     <TextBlock x:Name="TxtScopeHint" Style="{StaticResource SidebarHint}" />

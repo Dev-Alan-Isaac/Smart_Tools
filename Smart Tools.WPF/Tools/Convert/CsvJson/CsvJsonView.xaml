@@ -56,7 +56,8 @@
                                     Content="{DynamicResource Str_CsvJson_CsvJson}"
                                     GroupName="CjDir"
                                     IsChecked="True"
-                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    controls:ChoiceIcon.Kind="FileDelimited"
+                                    Style="{StaticResource ModeToggleTallStyle}"
                                     Tag="CsvToJson" />
                                 <RadioButton
                                     x:Name="RadioJsonToCsv"
@@ -64,7 +65,8 @@
                                     Click="Direction_Click"
                                     Content="{DynamicResource Str_CsvJson_JsonCsv}"
                                     GroupName="CjDir"
-                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    controls:ChoiceIcon.Kind="CodeJson"
+                                    Style="{StaticResource ModeToggleTallStyle}"
                                     Tag="JsonToCsv" />
                             </UniformGrid>
                         </StackPanel>
