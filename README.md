@@ -14,7 +14,7 @@ A Windows desktop app with **118 everyday tools** in one place: manage and clean
 
 - **Data Quality** (6): Validate Data, Duplicate Data, Find Similar Files, File Differences, Text Diff, Hash & Checksum Verifier
 - **Files** (6): Rename Files, Organize Files, Search Files, Copy Queue, Folder Tree Exporter, Metadata Extractor
-- **Convert** (3): Convert Files, Watermarker, CSV / JSON Converter
+- **Convert** (4): Convert Files, Watermarker, CSV / JSON Converter, Unit & Currency Converter
 - **PDF** (4): Images to PDF, PDF Merge & Split, PDF Pages & Protect, PDF Reader & Signer
 - **Media** (1): Media Viewer
 - **Video** (6): Video Stitcher, Video to Audio, Video Compressor, GIF Maker, Screen Recorder, Video Frame Extractor
@@ -29,7 +29,7 @@ A Windows desktop app with **118 everyday tools** in one place: manage and clean
 - **Security** (6): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator, Image Metadata Cleaner
 - **Network** (11): Wi-Fi Analyzer, Ping, Port Scanner, Network Connections, DNS, WHOIS & Traceroute, Hosts File Editor, TCP / UDP Client, Device Scanner, Internet Speed Test, Network Speed, Bandwidth per App
 - **Developer** (9): API Tester, Regex Tester, JWT Decoder, JSON / YAML / XML Formatter, Log Viewer, Code Toolkit, MD & HTML Editor, Database Migrator, Base64 & URL Encoder
-- **Calculators** (3): Subnet Calculator, Unit & Currency Converter, Date & Time Toolkit
+- **Calculators** (2): Subnet Calculator, Date & Time Toolkit
 - **Generators** (5): File Generator, Barcode Generator, QR Code Generator, Mock Data Generator, ID & Lorem Generator
 - **Utilities** (6): Notes, Clipboard History, Screen OCR, Translate, Timer & Stopwatch, Send to Phone
 - **Art** (5): Pixel Art Editor, Sprite Sheet Packer, Texture Pack Builder, Image to Pixel Art, ASCII Art Maker

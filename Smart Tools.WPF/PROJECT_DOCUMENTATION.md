@@ -1,4 +1,4 @@
-﻿# Smart Tools
+# Smart Tools
 
 A comprehensive, feature-rich Windows desktop application built with **WPF** and **.NET 10** that provides a suite of utilities for file management, media processing, system monitoring, and much more.
 
@@ -44,13 +44,14 @@ Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside 
 | **Metadata Extractor** | `metadata-extract` | Read the hidden details in files |
 
 ### Convert
-*Change file formats*
+*Change file formats, units and currencies*
 
 | Tool | Id | What it does |
 |---|---|---|
 | **Convert Files** | `convert-files` | Convert files between formats |
 | **Watermarker** | `watermark` | Stamp text or a logo on many pictures, videos and PDFs |
 | **CSV / JSON Converter** | `csv-json` | Turn CSV into JSON and JSON back into CSV, with quotes and separators handled |
+| **Unit & Currency Converter** | `unit-converter` | Convert length, weight, temperature, data size, money, and more |
 
 ### PDF
 *Make, edit and protect PDFs*
@@ -226,7 +227,6 @@ Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside 
 | Tool | Id | What it does |
 |---|---|---|
 | **Subnet Calculator** | `subnet-calc` | Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets |
-| **Unit & Currency Converter** | `unit-converter` | Convert length, weight, temperature, data size, money, and more |
 | **Date & Time Toolkit** | `date-time` | Timestamps, time zones and date maths in one place |
 
 ### Generators

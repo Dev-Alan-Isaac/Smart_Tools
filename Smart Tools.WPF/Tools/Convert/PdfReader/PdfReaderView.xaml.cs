@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Controllers;
+﻿using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Diagnostics;
@@ -280,6 +280,7 @@ namespace Smart_Tools.WPF.Views
             if (!sameFile && !ConfirmDiscard()) return;
 
             _busy = true;
+            bool askPassword = false;
             TxtProgress.Text = T("Str_PdfReader_Opening", "Opening…");
             TxtProgressDetail.Text = "";
             try
@@ -332,11 +333,19 @@ namespace Smart_Tools.WPF.Views
                 TxtProgressDetail.Text = needsPassword
                     ? T("Str_PdfReader_CantOpenDetail", "If it has a password, type it in the sidebar and press Unlock.")
                     : T("Str_PdfReader_CantOpenOther", "Windows could not read this file: ") + ex.Message;
+                askPassword = needsPassword;
             }
             finally
             {
                 _busy = false;
                 UpdateSaveEnabled();
+            }
+
+            // Ask for the password right away instead of waiting for the sidebar card; a wrong one asks again, Cancel stops.
+            if (askPassword)
+            {
+                string? typed = PdfPasswordDialog.Ask(DialogTitle, System.IO.Path.GetFileName(path), wrong: !string.IsNullOrEmpty(password));
+                if (typed != null) await OpenAsync(path, typed);
             }
         }
 

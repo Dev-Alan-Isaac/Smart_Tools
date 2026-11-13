@@ -12,6 +12,8 @@ using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
 using Orientation = System.Windows.Controls.Orientation;
 using ComboBox = System.Windows.Controls.ComboBox;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
+using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
@@ -57,7 +59,7 @@ namespace Smart_Tools.WPF.Views
                 _recentTimer.Stop();
                 RememberCurrent();
             };
-            GridAll.ItemsSource = _rows;
+            TileList.ItemsSource = _rows;
             _viewConstructed = true;
         }
 
@@ -94,16 +96,19 @@ namespace Smart_Tools.WPF.Views
             {
                 var kind = Enum.TryParse<PackIconKind>(icon, out var k) ? k : PackIconKind.Help;
                 var content = new StackPanel { Orientation = Orientation.Horizontal };
-                content.Children.Add(new PackIcon { Kind = kind, Width = 16, Height = 16, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center });
+                content.Children.Add(new PackIcon { Kind = kind, Width = 18, Height = 18, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
                 content.Children.Add(new TextBlock { Text = T("Str_Conv_Cat_" + id, english), VerticalAlignment = VerticalAlignment.Center });
-                CmbCategory.Items.Add(new ComboBoxItem { Content = content, Tag = id });
+                var tile = new RadioButton { GroupName = "ConvCategory", Tag = id, Content = content };
+                tile.SetResourceReference(StyleProperty, "ConvTabStyle");
+                tile.Checked += CategoryTile_Checked;
+                PanelCategories.Children.Add(tile);
             }
         }
 
-        private void Category_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CategoryTile_Checked(object sender, RoutedEventArgs e)
         {
             if (!_viewConstructed || _selectingCategory) return;
-            if (CmbCategory.SelectedItem is ComboBoxItem { Tag: string id }) SelectCategory(id);
+            if (sender is RadioButton { Tag: string id }) SelectCategory(id);
         }
 
         private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
@@ -123,8 +128,8 @@ namespace Smart_Tools.WPF.Views
             _selectingCategory = true;
             try
             {
-                foreach (ComboBoxItem item in CmbCategory.Items)
-                    if ((string)item.Tag == id) CmbCategory.SelectedItem = item;
+                foreach (RadioButton tile in PanelCategories.Children)
+                    tile.IsChecked = (string)tile.Tag == id;
             }
             finally
             {
@@ -172,7 +177,7 @@ namespace Smart_Tools.WPF.Views
 
             _rows.Clear();
             _rows.AddRange(units.Select(u => new ConvRow(u)));
-            GridAll.Items.Refresh();
+            TileList.Items.Refresh();
             Recalculate();
             UpdateFavoriteButton();
         }
@@ -234,19 +239,18 @@ namespace Smart_Tools.WPF.Views
             TxtProblem.Visibility = !empty && !ok ? Visibility.Visible : Visibility.Collapsed;
             TxtProblem.Text = T("Str_Conv_BadNumber", "That isn't a number. Use digits with an optional decimal mark, like 12.5.");
 
+            foreach (var row in _rows) row.IsTarget = row.Unit.Id == to.Id;
+
             if (!ok)
             {
                 TxtResult.Clear();
-                TxtBigResult.Text = "-";
-                TxtBigUnit.Text = "";
                 TxtFormula.Text = "";
                 foreach (var row in _rows) row.Value = "";
                 return;
             }
 
             TxtResult.Text = UnitConverterManager.Format(UnitConverterManager.Convert(value, from, to));
-            TxtBigResult.Text = TxtResult.Text + " " + to.Symbol;
-            TxtBigUnit.Text = to.Name;
+
             TxtFormula.Text = UnitConverterManager.Formula(from, to);
             foreach (var row in _rows) row.Value = UnitConverterManager.Format(UnitConverterManager.Convert(value, from, row.Unit));
         }
@@ -282,16 +286,32 @@ namespace Smart_Tools.WPF.Views
             RememberCurrent();
         }
 
-        private void GridAll_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        /// <summary>A unit tile was clicked: convert to that unit.</summary>
+        private void Tile_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsInsideRow(e.OriginalSource as DependencyObject)) return;
-            if (GridAll.SelectedItem is ConvRow row) CmbTo.SelectedItem = row.Unit;
+            if (sender is FrameworkElement { Tag: ConvRow row }) CmbTo.SelectedItem = row.Unit;
         }
 
-        private static bool IsInsideRow(DependencyObject? source)
+        private void Preset_Click(object sender, RoutedEventArgs e)
         {
-            while (source != null && source is not DataGridRow) source = System.Windows.Media.VisualTreeHelper.GetParent(source);
-            return source != null;
+            if (sender is FrameworkElement { Tag: string amount }) TxtValue.Text = amount;
+        }
+
+        private System.Windows.Controls.Primitives.UniformGrid? _tilePanel;
+
+        private void TilePanel_Loaded(object sender, RoutedEventArgs e)
+        {
+            _tilePanel = (System.Windows.Controls.Primitives.UniformGrid)sender;
+            FitTileColumns();
+        }
+
+        private void TileScroller_SizeChanged(object sender, SizeChangedEventArgs e) => FitTileColumns();
+
+        /// <summary>As many tiles per row as fit (at least 2 wide each ~200 px), so the card is always filled.</summary>
+        private void FitTileColumns()
+        {
+            if (_tilePanel == null) return;
+            _tilePanel.Columns = Math.Clamp((int)(TileScroller.ActualWidth / 200), 1, 6);
         }
 
         private void BtnCopy_Click(object sender, RoutedEventArgs e)
@@ -486,7 +506,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 _rows.Clear();
                 _rows.AddRange(category.Units.Select(u => new ConvRow(u)));
-                GridAll.Items.Refresh();
+                TileList.Items.Refresh();
                 Recalculate();
             }
 

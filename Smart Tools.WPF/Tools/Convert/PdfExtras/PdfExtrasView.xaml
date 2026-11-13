@@ -949,7 +949,7 @@
                             </Border>
 
                             <!--  ============ PASSWORD FOR PROTECTED PDFs ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border Style="{StaticResource SidebarGroupCardStyle}" Visibility="Collapsed">
                                 <StackPanel>
                                     <Grid
                                         Background="Transparent"

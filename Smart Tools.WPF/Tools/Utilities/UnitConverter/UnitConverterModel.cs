@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace Smart_Tools.WPF.Models
 {
@@ -19,6 +19,7 @@ namespace Smart_Tools.WPF.Models
     public sealed class ConvRow : INotifyPropertyChanged
     {
         private string _value = "";
+        private bool _isTarget;
 
         public ConvRow(ConvUnit unit) => Unit = unit;
 
@@ -27,6 +28,9 @@ namespace Smart_Tools.WPF.Models
         public string Name => Unit.Name;
 
         public string Value { get => _value; set => Set(ref _value, value, nameof(Value)); }
+
+        /// <summary>True for the unit the answer is in (its tile is outlined).</summary>
+        public bool IsTarget { get => _isTarget; set => Set(ref _isTarget, value, nameof(IsTarget)); }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

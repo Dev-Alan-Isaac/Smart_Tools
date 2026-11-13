@@ -88,7 +88,7 @@ namespace Smart_Tools.WPF.Controllers
 
             // Calculators
             new ToolInfo { Id = "subnet-calc", Name = "Subnet Calculator", Title = "Subnet / CIDR Calculator", Icon = "Calculator", CategoryId = "calculators", Description = "Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets", Keywords = "subnet cidr mask netmask wildcard broadcast ip ipv4 ipv6 prefix range hosts calculadora subred mascara" },
-            new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "calculators", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
+            new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "convert", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
             new ToolInfo { Id = "date-time", Name = "Date & Time Toolkit", Icon = "CalendarClock", CategoryId = "calculators", Description = "Timestamps, time zones and date maths in one place", Keywords = "unix timestamp epoch timezone time zone date difference duration add subtract days business utc iso fecha hora" },
 
             // PDF

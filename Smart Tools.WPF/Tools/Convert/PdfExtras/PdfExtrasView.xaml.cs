@@ -335,17 +335,19 @@ namespace Smart_Tools.WPF.Views
         private async Task LoadInfoAsync(PdfToolItem item)
         {
             var token = _lifetimeCts.Token;
+            bool ask = false;
             try
             {
                 await _infoGate.WaitAsync(token);
                 try
                 {
                     string password = PwdShared.Password;
+                    
                     var info = await Task.Run(() => PdfExtrasManager.ReadInfo(item.FullPath, password), token);
                     if (token.IsCancellationRequested) return;
 
                     _infos[item.FullPath] = info;
-                    if (info.NeedsPassword || info.Problem == "WrongPassword") SetSharedOpen(true);   // the card is closed until a PDF actually needs it
+                    ask = info.NeedsPassword || info.Problem == "WrongPassword";
                     item.PageCount = info.PageCount > 0 ? info.PageCount : -1;
                     if (item.Status == PdfItemStatus.Ready)
                     {
@@ -359,11 +361,34 @@ namespace Smart_Tools.WPF.Views
                 {
                     _infoGate.Release();
                 }
+                if (ask) AskPassword(item, _infos.TryGetValue(item.FullPath, out var asked) && asked.Problem == "WrongPassword");
             }
             catch (OperationCanceledException)
             {
                 item.InfoRequested = false;
             }
+        }
+
+        private bool _askingPassword;
+        private readonly HashSet<string> _declinedPassword = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>A PDF needs a password: ask for it now (one box at a time; a PDF the person cancelled is not asked again until the password changes).</summary>
+        private void AskPassword(PdfToolItem item, bool wrong)
+        {
+            if (_askingPassword || _declinedPassword.Contains(item.FullPath)) return;
+            _askingPassword = true;
+            string? typed;
+            try
+            {
+                typed = PdfPasswordDialog.Ask(T("Str_Tool_pdf-pages_Name"), item.Name, wrong);
+            }
+            finally
+            {
+                _askingPassword = false;
+            }
+
+            if (typed == null) { _declinedPassword.Add(item.FullPath); return; }
+            PwdShared.Password = typed;   // PasswordChanged re-reads every PDF that was waiting
         }
 
         /// <summary>What is in the way of changing a PDF, in a few words; empty when nothing is.</summary>
@@ -393,6 +418,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>The password changed: read again the PDFs that were waiting for one.</summary>
         private void ReadLockedAgain()
         {
+            _declinedPassword.Clear();
             if (Arranging && _tiles.Count == 0) _ = LoadEditorForSelectionAsync(force: true);
             foreach (var item in _items.Where(i => i.Status == PdfItemStatus.Ready && _infos.TryGetValue(i.FullPath, out var info) && LockNote(info).Length > 0).ToList())
             {
