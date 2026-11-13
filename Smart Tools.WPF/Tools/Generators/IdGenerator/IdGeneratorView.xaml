@@ -154,9 +154,9 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="14" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="14" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <!--  ========== Actions ==========  -->
@@ -190,8 +190,8 @@
                     </DockPanel>
                 </Border>
 
-                <!--  ========== Output ==========  -->
-                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                <!--  ========== Output (the Inspect card sits above it, right under the actions) ==========  -->
+                <Border Grid.Row="4" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -205,7 +205,7 @@
                 </Border>
 
                 <!--  ========== Inspect an ID ==========  -->
-                <Border Grid.Row="4" ctl:Tour.Key="Str_Tour_IdGenerator_Inspect" ctl:Tour.Order="5" Style="{StaticResource CardStyle}">
+                <Border Grid.Row="2" ctl:Tour.Key="Str_Tour_IdGenerator_Inspect" ctl:Tour.Order="5" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_IdGen_InspectHeader}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.MagnifyScan}" />
                         <Border Padding="0,0,4,0" Style="{StaticResource InputBarStyle}">

@@ -48,6 +48,9 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Alan wants both: bring tools to the style guide automatically, and *propose* extra UX improvements for approval before applying them.
 - Shell tool gotchas on this machine: apostrophes and `\\` inside inline `python - <<EOF` scripts break; write the script to a file in the scratchpad and run it. Edit files with CRLF-aware code (read, normalise `\r\n`, write back).
 
+## Where we left off (updated 2026-11-12, Mock Data layout + ID inspect)
+**Built OK (scratch folder), UI NOT run, uncommitted.** Mock Data: the Columns and Preview cards are side by side (1.25* / *, min widths 360/260) filling the page under the run bar; the page ScrollViewer and the fixed heights were removed. ID & Lorem Generator: the Inspect card moved directly under the actions bar (above the Values card).
+
 ## Where we left off (updated 2026-11-12, preset chips standardised)
 **Built OK (scratch folder), UI NOT run, uncommitted.** Quick-pick values are now the Barcode size look everywhere: new shared control `Controls/PresetChips.cs` (`Items="label:value;.."`, `Columns`, event `PresetChosen`; buttons use the shared `PresetChipStyle`). Replaced the drop-downs in Mock Data (rows), Image to Pixel Art (pixels across), Sprite Packer (padding), Pixel Art (canvas size). Deleted the local look-alike styles (Mock Data `PresetChipStyle`/`SidebarChipStyle` which overrode the shared one, `PxChipStyle`, `SpChipStyle`, Watermark `WmChipStyle`). Left alone on purpose: Watermark saved presets, Regex pattern examples, Instrument Tuner instrument (lists of named choices, not quick numbers). The active chip is not highlighted (same as Barcode).
 

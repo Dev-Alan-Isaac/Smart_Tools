@@ -647,17 +647,11 @@
 
             <!--  ================= MAIN =================  -->
 
-            <!--  The page scrolls instead of squeezing the cards: columns get a capped height (they scroll inside), the preview keeps a readable height.  -->
-            <ScrollViewer
-                Grid.Column="2"
-                HorizontalScrollBarVisibility="Disabled"
-                VerticalScrollBarVisibility="Auto">
-                <Grid Margin="0,0,4,0">
+            <!--  Run bar on top; the Columns card and the Preview card sit side by side and fill the rest of the page (each scrolls inside).  -->
+            <Grid Grid.Column="2" Margin="0,0,4,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="14" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <!--  Run bar  -->
@@ -823,11 +817,16 @@
                     </Border>
 
                     <!--  Columns  -->
+                    <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.25*" MinWidth="360" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" MinWidth="260" />
+                    </Grid.ColumnDefinitions>
                     <Border
                         x:Name="FieldsCard"
-                        Grid.Row="1"
+                        Grid.Column="0"
                         MinHeight="240"
-                        MaxHeight="420"
                         Style="{StaticResource CardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -928,8 +927,8 @@
 
                     <!--  Preview  -->
                     <Border
-                        Grid.Row="3"
-                        Height="380"
+                        Grid.Column="2"
+                        MinHeight="240"
                         Style="{StaticResource CardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -975,8 +974,8 @@
                             </Border>
                         </Grid>
                     </Border>
+                    </Grid>
                 </Grid>
-            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>
