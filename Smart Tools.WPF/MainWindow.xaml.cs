@@ -110,6 +110,30 @@ namespace Smart_Tools.WPF
             Open(ToolCatalogManager.HomeId);
             LanguageManager.Changed += OnLanguageChanged;
             Loaded += (_, _) => RestoreStartupWidgets();
+            ContentRendered += (_, _) => ShowWhatsNewIfUpdated();
+        }
+
+        /// <summary>
+        /// After an update, shows the patch notes once. A fresh install (no recent tools, never seen a version) only
+        /// records the version. The version is saved before the window opens so a crash never makes it repeat.
+        /// </summary>
+        private void ShowWhatsNewIfUpdated()
+        {
+            try
+            {
+                string current = AppMode.VersionText();
+                if (string.IsNullOrWhiteSpace(current) || _shell.LastSeenVersion == current) return;
+                bool freshInstall = _shell.LastSeenVersion.Length == 0 && _shell.RecentToolIds.Count == 0;
+                var pending = freshInstall ? new List<ReleaseEntry>() : ReleaseNotes.Pending(_shell.LastSeenVersion, current);
+                if (pending.Count > 0 && !IsVisible) return; // started hidden in the tray: show it next time
+                _shell.LastSeenVersion = current;
+                ToolCatalogManager.SaveSettings(_shell);
+                if (pending.Count > 0) WhatsNewDialog.Show(pending);
+            }
+            catch (Exception ex)
+            {
+                Log.Info($"What's new not shown: {ex.Message}");
+            }
         }
 
         /// <summary>

@@ -101,5 +101,8 @@
         /// <summary>Tools the person pinned (star), in the order they were pinned.</summary>
         public List<string> FavoriteToolIds { get; set; } = new();
         public List<string> ExpandedCategories { get; set; } = new();
+
+        /// <summary>The app version whose "What's new" window was already shown (empty = never).</summary>
+        public string LastSeenVersion { get; set; } = "";
     }
 }
