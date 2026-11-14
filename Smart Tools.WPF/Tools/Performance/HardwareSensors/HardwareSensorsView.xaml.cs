@@ -510,6 +510,31 @@ namespace Smart_Tools.WPF.Views
                 Loc.T("Str_HardwareSensors_ReportNote", "Charts show the readings taken while this page was open."), sections);
         }
 
+        /// <summary>Writes sensors_dump.txt (every sensor with its source, null values included); a taken name gets " (2)".</summary>
+        private void BtnDump_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = Loc.T("Str_HardwareSensors_DumpTitle", "Save sensor dump"),
+                Filter = Loc.T("Str_SystemMonitor_ReportFilterTxt", "Text file (*.txt)|*.txt"),
+                FileName = HardwareSensorsManager.DumpFileName,
+                AddExtension = true,
+                OverwritePrompt = false,
+            };
+            if (dialog.ShowDialog() != true) return;
+            string path = OutputFolderManager.UniquePath(dialog.FileName);
+            try
+            {
+                var readings = _last?.Readings ?? Array.Empty<HardwareReading>();
+                AtomicFile.WriteAllText(path, HardwareSensorsManager.BuildDump(readings, DateTime.Now), new System.Text.UTF8Encoding(false));
+                SavedFileDialog.Show(DialogTitle, path, path != dialog.FileName ? "\n\n" + Loc.F("Str_HardwareSensors_KeptExisting", "{0} already exists, so it was kept and this report got its own name.", Path.GetFileName(dialog.FileName)) : "");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
+            {
+                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
         /// <summary>Dated name, and a taken name gets " (2)": a saved report never replaces another. HTML and PDF carry the charts; text is the plain list.</summary>
         private void BtnSaveReport_Click(object sender, RoutedEventArgs e)
         {

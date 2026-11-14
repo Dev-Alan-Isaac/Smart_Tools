@@ -167,18 +167,36 @@ namespace Smart_Tools.WPF.Controllers
 
         private static IEnumerable<IHardware> AllHardware(IComputer computer)
         {
+            // Parents before their sub-parts, at any depth (Super I/O chips sit under the motherboard,
+            // and some boards nest an embedded controller one level further down).
             foreach (var hw in computer.Hardware)
-            {
-                yield return hw;
-                foreach (var sub in hw.SubHardware) yield return sub;
-            }
+                foreach (var part in Flatten(hw)) yield return part;
         }
+
+        private static IEnumerable<IHardware> Flatten(IHardware hw)
+        {
+            yield return hw;
+            foreach (var sub in hw.SubHardware)
+                foreach (var inner in Flatten(sub)) yield return inner;
+        }
+
+        /// <summary>Parts whose sensors LibreHardwareMonitor reads through the PawnIO driver.</summary>
+        private static bool UsesPawnIo(string hardwareType) =>
+            hardwareType is "Cpu" or "Motherboard" or "SuperIO" or "EmbeddedController";
+
+        /// <summary>NaN and infinity (a sensor that answers nothing) become "no value" so the page shows a dash.</summary>
+        private static float? Clean(float? v) => v is float f && !float.IsNaN(f) && !float.IsInfinity(f) ? f : null;
 
         private List<HardwareReading> Read()
         {
             var list = new List<HardwareReading>();
             var computer = _computer;
-            if (computer == null) return list;
+            if (computer == null)
+            {
+                AddWmiLayer(list);   // the library failed to open: WMI may still know something
+                return list;
+            }
+            bool pawnIo = _pawnIo ??= IsSensorDriverInstalled();
             try
             {
                 lock (SharedSensorHost.Gate)
@@ -195,8 +213,10 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         Log.Info($"Hardware Sensors: updating {hw.Name} failed: {ex.Message}");
                     }
-                    var part = PartFrom(hw.HardwareType.ToString());
+                    string hwType = hw.HardwareType.ToString();
+                    var part = PartFrom(hwType);
                     string partId = hw.Identifier.ToString();
+                    var source = pawnIo && UsesPawnIo(hwType) ? HardwareSensorSource.PawnIo : HardwareSensorSource.Lhm;
                     foreach (var sensor in hw.Sensors)
                     {
                         list.Add(new HardwareReading(
@@ -204,11 +224,12 @@ namespace Smart_Tools.WPF.Controllers
                             hw.Name,
                             part,
                             sensor.Identifier.ToString(),
-                            sensor.Name,
+                            sensor.Name ?? "",
                             KindFrom(sensor.SensorType.ToString()),
-                            sensor.Value,
-                            sensor.Min,
-                            sensor.Max));
+                            Clean(sensor.Value),
+                            Clean(sensor.Min),
+                            Clean(sensor.Max),
+                            source));
                     }
                 }
                 _readFailures = 0;
@@ -223,8 +244,26 @@ namespace Smart_Tools.WPF.Controllers
                     Close();
                 }
             }
+
+            AddWmiLayer(list);
             return list;
         }
+
+        /// <summary>Second layer: WMI / ACPI. Never allowed to break the first layer's readings.</summary>
+        private static void AddWmiLayer(List<HardwareReading> list)
+        {
+            try
+            {
+                bool libreHasFans = list.Any(r => r.Kind == HardwareSensorKind.Fan && r.Value is > 0);
+                list.AddRange(HardwareWmiSource.Read(libreHasFans));
+            }
+            catch (Exception ex)
+            {
+                Log.Info($"Hardware Sensors: WMI layer failed: {ex.Message}");
+            }
+        }
+
+        private bool? _pawnIo;
 
         private DateTime _closedAt = DateTime.MinValue;
 

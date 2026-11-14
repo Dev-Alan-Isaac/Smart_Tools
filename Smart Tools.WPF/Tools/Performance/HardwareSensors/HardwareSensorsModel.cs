@@ -63,6 +63,19 @@ namespace Smart_Tools.WPF.Models
         Hot,
     }
 
+    /// <summary>Where a reading came from (shown in the sensor dump).</summary>
+    public enum HardwareSensorSource
+    {
+        /// <summary>LibreHardwareMonitorLib, no kernel driver needed.</summary>
+        Lhm,
+
+        /// <summary>LibreHardwareMonitorLib through the PawnIO driver (CPU MSRs, Super I/O, embedded controller).</summary>
+        PawnIo,
+
+        /// <summary>Windows WMI / ACPI classes (manufacturer or generic Win32).</summary>
+        Wmi,
+    }
+
     /// <summary>One sensor reading, already in our units: temperatures in °C, clocks in MHz, small data in MB.</summary>
     public sealed record HardwareReading(
         string PartId,
@@ -73,7 +86,8 @@ namespace Smart_Tools.WPF.Models
         HardwareSensorKind Kind,
         float? Value,
         float? Min,
-        float? Max);
+        float? Max,
+        HardwareSensorSource Source = HardwareSensorSource.Lhm);
 
     /// <summary>Everything read once per refresh. Error says why there's nothing (the library couldn't start).</summary>
     public sealed record HardwareSnapshot(DateTime TakenUtc, IReadOnlyList<HardwareReading> Readings, string? Error);

@@ -695,6 +695,7 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <controls:ExportButton
                                             x:Name="BtnSaveReport"
@@ -733,6 +734,18 @@
                                                 Width="16"
                                                 Height="16"
                                                 Kind="ContentCopy" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnDump"
+                                            Grid.Column="2"
+                                            Margin="6,0,0,0"
+                                            Click="BtnDump_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_HardwareSensors_DumpTip}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="BugOutline" />
                                         </Button>
                                     </Grid>
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_HardwareSensors_EveryPartAndSensor}" />
