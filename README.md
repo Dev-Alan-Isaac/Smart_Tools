@@ -2,6 +2,37 @@
 
 A Windows desktop app with **118 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
 
+## Download and start
+
+1. Go to the **Releases** page of this repository and download the latest `SmartTools-<version>-win-x64.zip`.
+2. Unzip it anywhere and run `SmartTools.exe`. It needs **Windows 10 (1809) or later, 64-bit**. .NET is included, so there is nothing else to install.
+3. The first time it starts from a new folder it asks:
+   - **Install**: per user, no administrator needed, adds a Start menu shortcut and an Apps & features entry.
+   - **Run**: portable. Settings are kept in a `UserData` folder beside the exe, so you can carry it on a USB drive.
+4. Pick a tool from the sidebar or the Home page. Press **Ctrl+K** to search tools and actions, and use the **Help** button on any page for a guided tour.
+
+Some tools need administrator rights to read protected data (for example Bandwidth per App, Services, Hardware Sensors); they tell you when that is the case.
+
+## Privacy and security
+
+Smart Tools is built to work **on your PC, not in the cloud**.
+
+- **Almost everything is 100 % local.** Your files, text, images, audio, video, passwords and notes are processed on your machine and never uploaded. Speech to text (Whisper), OCR (Tesseract), and translation run offline once their models are downloaded.
+- **No account, no telemetry, no ads, no automatic update check.** The app does not send usage data anywhere.
+- **Network is used only when a tool is about the network or needs a one-time download:**
+  - Internet Speed Test (downloads and uploads test data to speed servers such as Cloudflare).
+  - Network tools: Ping, DNS, WHOIS, Port Scanner, API Tester, TCP/UDP Client, Device Scanner talk to the hosts you type or to your local network. "My public IP" asks `api.ipify.org` only when you press the button.
+  - Currency conversion downloads exchange rates (`api.frankfurter.dev`). Unit conversion stays offline.
+  - Downloading language models the first time you choose one: Whisper models and the translation models (Hugging Face), OCR languages (GitHub). After that they work offline.
+  - Texture Pack Builder reads Minecraft version data online.
+  - Send to Phone starts a small server on your Wi-Fi/LAN, protected by a one-time link and token, so a phone can send or receive files. It is not reachable from the internet.
+- **Your data stays yours.** Settings and history are saved as files in `%AppData%\Smart Tools` (or `UserData` in portable mode). Delete that folder to remove everything.
+- **Safe with your files.** Tools never overwrite an original, write through a temporary file and keep the source until the result is verified. Copy Queue verifies copies with SHA-256.
+- **Security tools** (File Encryption, Password Vault, Secure File Shredder, 2FA Codes) work locally. Keep your master password safe: there is no way to recover an encrypted file or vault without it. Shredding is permanent and, on SSDs, cannot be guaranteed to overwrite every physical cell.
+- Tools that look at your PC (Network Connections, Resource Hogs History, System Snapshot) only read information and show it to you; reports are created only when you export them.
+
+Found a security problem? Please open an issue on GitHub, or contact the author through the link at the bottom.
+
 ## Highlights
 
 - One window, one layout: options on the left, results on the right, a **Help** button on every page with a guided tour.
