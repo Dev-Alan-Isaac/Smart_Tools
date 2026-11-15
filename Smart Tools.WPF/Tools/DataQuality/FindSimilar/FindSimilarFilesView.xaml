@@ -1988,13 +1988,13 @@
                                     Margin="14,0,0,0"
                                     VerticalAlignment="Center"
                                     Orientation="Horizontal">
-                                    <materialDesign:PackIcon
-                                        x:Name="IconMute"
-                                        Width="18"
-                                        Height="18"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource MediaStageText}"
-                                        Kind="VolumeOff" />
+                                    <Button
+                                        x:Name="BtnCompareMute"
+                                        Click="BtnCompareMute_Click"
+                                        Style="{StaticResource PlayerIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_MediaViewer_Mute}">
+                                        <materialDesign:PackIcon x:Name="IconMute" Kind="VolumeOff" />
+                                    </Button>
                                     <Slider
                                         x:Name="SliderCompareVolume"
                                         Width="96"

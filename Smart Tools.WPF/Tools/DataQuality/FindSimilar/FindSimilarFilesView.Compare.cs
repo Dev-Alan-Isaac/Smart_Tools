@@ -38,7 +38,8 @@ namespace Smart_Tools.WPF.Views
         private List<SimilarFileItem> _compareOthers = new();
         private int _compareIndex;
         private bool _comparePlaying = true;
-        private double _compareVolume;   // 0..1, both sides; videos start at 0 (two soundtracks at once is noise)
+        private bool _compareMuted;
+        private double _compareVolume;  // 0..1, both sides; videos start at 0 (two soundtracks at once is noise)
         private double _compareSpeed = 1.0;
         private bool _draggingLeft;
         private bool _draggingRight;
@@ -510,7 +511,7 @@ namespace Smart_Tools.WPF.Views
 
         private void StartPlayer(IReplayBackend player, string path)
         {
-            player.SetMute(false);
+            player.SetMute(_compareMuted);
             player.SetVolume(_compareVolume);
             player.SetSpeed(_compareSpeed);
             try
@@ -632,7 +633,7 @@ namespace Smart_Tools.WPF.Views
         {
             IconPlayPause.Kind = _comparePlaying ? PackIconKind.Pause : PackIconKind.Play;
             BtnPlayPauseBoth.ToolTip = _comparePlaying ? Loc.T("Str_Similar_PauseBoth", "Pause both") : Loc.T("Str_Similar_PlayBoth", "Play both");
-            IconMute.Kind = _compareVolume <= 0 ? PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
+            IconMute.Kind = _compareMuted || _compareVolume <= 0 ?PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
             TxtSpeed.Text = $"{_compareSpeed:0.##}x";
         }
 
@@ -660,11 +661,20 @@ namespace Smart_Tools.WPF.Views
         private void SliderCompareVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             _compareVolume = e.NewValue;
+            if (_compareVolume > 0) _compareMuted = false;
             foreach (var player in ActiveComparePlayers())
             {
-                player.SetMute(false);
+                player.SetMute(_compareMuted);
                 player.SetVolume(_compareVolume);
             }
+            UpdatePlayPauseIcon();
+        }
+
+        /// <summary>Mute / unmute both sides without moving the slider (same as the Media Viewer's button).</summary>
+        private void BtnCompareMute_Click(object sender, RoutedEventArgs e)
+        {
+            _compareMuted = !_compareMuted;
+            foreach (var player in ActiveComparePlayers()) player.SetMute(_compareMuted);
             UpdatePlayPauseIcon();
         }
 
