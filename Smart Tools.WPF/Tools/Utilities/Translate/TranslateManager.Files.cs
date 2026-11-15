@@ -21,6 +21,9 @@ namespace Smart_Tools.WPF.Controllers
 
         private static readonly Regex OnlyDigits = new(@"^\d+$", RegexOptions.Compiled);
 
+        /// <summary>Numbers, separators and only a date/time marker (T, Z, AM, PM, UTC, GMT): not words.</summary>
+        private static readonly Regex DateOrTime = new(@"^[\d\s:\-/.,+]*\d[\d\s:\-/.,+]*(T|Z|AM|PM|UTC|GMT|[\d\s:\-/.,+])*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public static bool IsSupportedFile(string path) =>
             FileExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 
@@ -199,6 +202,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             string t = s.Trim();
             if (t.Length == 0 || !t.Any(char.IsLetter)) return false;
+            if (DateOrTime.IsMatch(t)) return false;   // 2026-11-15T10:30:00Z, 10:30 PM, 2026-11-15 10:30
             if (t.Contains("://") || t.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) return false;
             if (!t.Contains(' ') && (t.Contains('@') || t.Contains('/') || t.Contains('\\') || t.Contains('_') || t.Contains('.'))) return false;   // identifiers, paths, e-mails, file names
             return true;
