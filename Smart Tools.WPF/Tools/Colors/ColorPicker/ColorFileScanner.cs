@@ -129,13 +129,11 @@ namespace Smart_Tools.WPF.Controllers
         {
             var files = new List<string>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var options = new EnumerationOptions { RecurseSubdirectories = subfolders, IgnoreInaccessible = true };
-
             foreach (string path in paths)
             {
                 if (Directory.Exists(path))
                 {
-                    foreach (string f in Directory.EnumerateFiles(path, "*", options)
+                    foreach (string f in SafeIo.EnumerateFiles(path, subfolders, attributesToSkip: 0)
                                  .Where(f => TextExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
                                  .OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
                     {

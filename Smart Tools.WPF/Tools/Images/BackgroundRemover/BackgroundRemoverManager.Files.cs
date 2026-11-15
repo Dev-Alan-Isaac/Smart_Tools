@@ -32,12 +32,8 @@ namespace Smart_Tools.WPF.Controllers
         /// </summary>
         public Task<List<string>> FindImagesAsync(string folder, bool includeSubfolders) => Task.Run(() =>
         {
-            var options = new EnumerationOptions
-            {
-                RecurseSubdirectories = includeSubfolders,
-                IgnoreInaccessible = true,
-            };
-            return Directory.EnumerateFiles(folder, "*", options)
+            // a folder deleted since it was picked gives an empty list, not an exception
+            return SafeIo.EnumerateFiles(folder, includeSubfolders, attributesToSkip: 0)
                 .Where(IsSupported)
                 .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                 .ToList();

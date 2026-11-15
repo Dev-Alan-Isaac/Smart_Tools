@@ -237,7 +237,7 @@ namespace Smart_Tools.WPF.Controllers
             folder ??= PreviewFolder;
             int deleted = 0;
             if (!Directory.Exists(folder)) return 0;
-            foreach (string file in Directory.EnumerateFiles(folder))
+            foreach (string file in SafeIo.EnumerateFiles(folder, false, attributesToSkip: 0).ToList())
             {
                 try
                 {

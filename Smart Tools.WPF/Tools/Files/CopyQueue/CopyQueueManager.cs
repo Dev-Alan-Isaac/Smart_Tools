@@ -41,12 +41,6 @@ namespace Smart_Tools.WPF.Controllers
             var plan = new CopyQueuePlan();
             string destRoot = Path.GetFullPath(o.DestinationFolder);
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var enumeration = new EnumerationOptions
-            {
-                RecurseSubdirectories = true,
-                IgnoreInaccessible = true,
-                AttributesToSkip = FileAttributes.ReparsePoint,   // hidden and system files are still files of the user's
-            };
 
             foreach (string raw in sources)
             {
@@ -61,14 +55,17 @@ namespace Smart_Tools.WPF.Controllers
                     }
                     string targetRoot = Path.Combine(destRoot, Path.GetFileName(source.TrimEnd('\\', '/')));
                     plan.Folders.Add(targetRoot);
-                    foreach (string dir in Directory.EnumerateDirectories(source, "*", enumeration))
+                    bool vanished = false;
+                    foreach (string dir in SafeIo.EnumerateDirectories(source, true, () => vanished = true))
                         plan.Folders.Add(Path.Combine(targetRoot, Path.GetRelativePath(source, dir)));
-                    foreach (string file in Directory.EnumerateFiles(source, "*", enumeration))
+                    foreach (string file in SafeIo.EnumerateFiles(source, true, () => vanished = true))
                     {
                         token.ThrowIfCancellationRequested();
                         if (file.EndsWith(TempMarker, StringComparison.OrdinalIgnoreCase) || !seen.Add(file)) continue;
                         Add(plan, file, Path.Combine(targetRoot, Path.GetRelativePath(source, file)));
                     }
+                    if (vanished)
+                        plan.Notes.Add(Loc.F("Str_CopyQueue_NoteGone", "{0} is no longer there.", Path.GetFileName(source)));
                 }
                 else if (File.Exists(source))
                 {
@@ -192,6 +189,13 @@ namespace Smart_Tools.WPF.Controllers
                         item.Status = CopyQueueStatus.Cancelled;
                         item.Message = "Stopped - the original was not touched.";
                         result.Cancelled++;
+                    }
+                    catch (Exception ex) when (SafeIo.IsGone(ex) && !item.Moved && !File.Exists(item.Source))
+                    {
+                        // deleted or moved by the user after the plan was made: skip it and go on, not a failure
+                        item.Status = CopyQueueStatus.Skipped;
+                        item.Message = Describe(item, ex);
+                        result.Skipped++;
                     }
                     catch (Exception ex)
                     {

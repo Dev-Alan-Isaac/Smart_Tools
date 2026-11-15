@@ -537,10 +537,17 @@ namespace Smart_Tools.WPF.Controllers
 
         private static void DeleteFolderAndJunk(string folder)
         {
-            foreach (string junk in Directory.EnumerateFiles(folder))
+            foreach (string junk in SafeIo.EnumerateFiles(folder, false, attributesToSkip: 0).ToList())
             {
-                File.SetAttributes(junk, FileAttributes.Normal);   // desktop.ini is hidden + system, often read-only
-                File.Delete(junk);
+                try
+                {
+                    File.SetAttributes(junk, FileAttributes.Normal);   // desktop.ini is hidden + system, often read-only
+                    File.Delete(junk);
+                }
+                catch (Exception ex) when (SafeIo.IsGone(ex))
+                {
+                    // already gone: nothing to delete
+                }
             }
             Directory.Delete(folder);
         }

@@ -309,14 +309,12 @@ namespace Smart_Tools.WPF.Views
         {
             var found = new List<string>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var options = new EnumerationOptions { RecurseSubdirectories = subfolders, IgnoreInaccessible = true };
-
             foreach (string path in paths)
             {
                 if (found.Count > MaxPictures) break;
                 if (Directory.Exists(path))
                 {
-                    foreach (string file in Directory.EnumerateFiles(path, "*", options).Where(IsImageFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
+                    foreach (string file in SafeIo.EnumerateFiles(path, subfolders, attributesToSkip: 0).Where(IsImageFile).OrderBy(f => f, StringComparer.OrdinalIgnoreCase))
                     {
                         if (found.Count > MaxPictures) break;
                         if (seen.Add(file)) found.Add(file);

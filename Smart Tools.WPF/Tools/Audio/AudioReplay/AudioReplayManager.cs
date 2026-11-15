@@ -206,13 +206,8 @@ namespace Smart_Tools.WPF.Controllers
         private static Task<List<string>> ListAudioFilesAsync(string folderPath, bool includeSubfolders) =>
             Task.Run(() =>
             {
-                var options = new EnumerationOptions
-                {
-                    RecurseSubdirectories = includeSubfolders,
-                    IgnoreInaccessible = true,
-                    AttributesToSkip = FileAttributes.System,
-                };
-                return Directory.EnumerateFiles(folderPath, "*", options)
+                // a folder deleted since it was added gives an empty list, not an exception
+                return SafeIo.EnumerateFiles(folderPath, includeSubfolders, attributesToSkip: FileAttributes.System)
                     .Where(IsAudioFile)
                     .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                     .ToList();

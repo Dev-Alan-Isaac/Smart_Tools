@@ -82,23 +82,11 @@ namespace Smart_Tools.WPF.Controllers
                 if (File.Exists(path)) { Add(path); continue; }
                 if (!Directory.Exists(path)) continue;
 
-                var options = new EnumerationOptions
+                foreach (string file in SafeIo.EnumerateFiles(path, includeSubfolders, () => inaccessible++,
+                             attributesToSkip: FileAttributes.System | FileAttributes.ReparsePoint))
                 {
-                    RecurseSubdirectories = includeSubfolders,
-                    IgnoreInaccessible = true,
-                    AttributesToSkip = FileAttributes.System | FileAttributes.ReparsePoint,
-                };
-                try
-                {
-                    foreach (string file in Directory.EnumerateFiles(path, "*", options))
-                    {
-                        if (found.Count >= max) break;
-                        Add(file);
-                    }
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    inaccessible++;
+                    if (found.Count >= max) break;
+                    Add(file);
                 }
             }
             return (found, inaccessible);
