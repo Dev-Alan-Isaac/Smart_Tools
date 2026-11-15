@@ -752,10 +752,58 @@ namespace Smart_Tools.WPF.Views
                 }
             });
 
-            BulkCheckMenu.Append(menu, DataGridDuplicates, () => _rows, f => f.IsSelected, (f, v) => f.IsSelected = v,
+            AppendGroupCheckMenu(menu);
+
+            BulkCheckMenu.Append(menu, DataGridDuplicates, () => _rows,f => f.IsSelected, (f, v) => f.IsSelected = v,
                 UpdateSummary, canRun: () => !_isScanning);
 
             DataGridDuplicates.ContextMenu = menu;
+        }
+
+        /// <summary>"This group" submenu: check / uncheck / invert only the groups of the highlighted rows (the right-clicked row counts as highlighted).</summary>
+        private void AppendGroupCheckMenu(ContextMenu menu)
+        {
+            if (menu.Items.Count > 0) menu.Items.Add(new Separator());
+
+            var parent = new MenuItem { Header = MenuHeader(Loc.T("Str_Similar_GroupMenu", "This group"), PackIconKind.ViewAgendaOutline) };
+            var parentText = (TextBlock)((StackPanel)parent.Header).Children[1];
+
+            List<SimilarGroup> TargetGroups() => DataGridDuplicates.SelectedItems.OfType<SimilarFileItem>()
+                .Select(i => i.GroupInfo).OfType<SimilarGroup>().Distinct().ToList();
+
+            void Add(string key, string fallback, PackIconKind icon, Action<SimilarGroup> apply)
+            {
+                var item = new MenuItem { Header = MenuHeader(Loc.T(key, fallback), icon) };
+                item.Click += (_, _) =>
+                {
+                    if (_isScanning) return;
+                    var groups = TargetGroups();
+                    foreach (var g in groups)
+                    {
+                        apply(g);
+                        g.Refresh();
+                    }
+                    if (groups.Count > 0) UpdateSummary();
+                };
+                parent.Items.Add(item);
+            }
+
+            Add("Str_Similar_GroupCheckAll", "Check all copies", PackIconKind.CheckboxMultipleMarkedOutline,
+                g => { foreach (var i in g.Items) i.IsSelected = true; });
+            Add("Str_Similar_GroupUncheckAll", "Uncheck all copies", PackIconKind.CheckboxMultipleBlankOutline,
+                g => { foreach (var i in g.Items) i.IsSelected = false; });
+            Add("Str_Similar_GroupInvert", "Invert checks", PackIconKind.SwapHorizontal,
+                g => { foreach (var i in g.Items) i.IsSelected = !i.IsSelected; });
+            Add("Str_Similar_GroupCheckOthers", "Check all except the kept copy", PackIconKind.CheckboxMarkedCircleOutline,
+                g => { foreach (var i in g.Items) i.IsSelected = !i.IsKeep; });
+
+            menu.Opened += (_, _) =>
+            {
+                int count = TargetGroups().Count;
+                parentText.Text = count > 1 ? Loc.T("Str_Similar_GroupMenuMany", "These groups") : Loc.T("Str_Similar_GroupMenu", "This group");
+                parent.IsEnabled = count > 0 && !_isScanning;
+            };
+            menu.Items.Add(parent);
         }
 
         private static StackPanel MenuHeader(string text, PackIconKind icon)

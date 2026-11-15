@@ -648,6 +648,7 @@ namespace Smart_Tools.WPF.Views
             BtnPlayPauseBoth.ToolTip = _comparePlaying ? Loc.T("Str_Similar_PauseBoth", "Pause both") : Loc.T("Str_Similar_PlayBoth", "Play both");
             IconMute.Kind = _compareMuted || _compareVolume <= 0 ?PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
             TxtSpeed.Text = $"{_compareSpeed:0.##}x";
+            UpdateLinkIcon();
         }
 
         private void BtnRestartBoth_Click(object sender, RoutedEventArgs e)
@@ -712,8 +713,8 @@ namespace Smart_Tools.WPF.Views
                 {
                     _playerLeft?.Poll();
                     _playerRight?.Poll();
-                    UpdateScrubber(_playerLeft, SliderLeft, TxtLeftTime, _draggingLeft);
-                    UpdateScrubber(_playerRight, SliderRight, TxtRightTime, _draggingRight);
+                    UpdateScrubber(_playerLeft, SliderLeft, TxtLeftTime, _draggingLeft, ref _holdLeft);
+                    UpdateScrubber(_playerRight, SliderRight, TxtRightTime, _draggingRight, ref _holdRight);
                 };
             }
             _compareTimer.Start();
@@ -721,10 +722,21 @@ namespace Smart_Tools.WPF.Views
 
         private void StopCompareTimer() => _compareTimer?.Stop();
 
-        private static void UpdateScrubber(IReplayBackend? player, System.Windows.Controls.Slider slider, TextBlock timeText, bool dragging)
+        // A seek is not instant (VLC applies it on its own thread and keeps reporting the old time for a moment).
+        // Until the player reports a time near the target, the scrubber shows the target, so it does not jump forward and back.
+        private (double Target, DateTime Until)? _holdLeft, _holdRight;
+        private bool _linkScrub = true;
+
+        private static void UpdateScrubber(IReplayBackend? player, System.Windows.Controls.Slider slider, TextBlock timeText, bool dragging,
+            ref (double Target, DateTime Until)? hold)
         {
             if (player is not { HasMedia: true }) return;
             double position = player.Position.TotalSeconds;
+            if (hold is { } h)
+            {
+                if (DateTime.UtcNow > h.Until || Math.Abs(position - h.Target) < 1.5) hold = null;
+                else position = h.Target;
+            }
             if (player.Duration is not TimeSpan duration || duration.TotalSeconds <= 0)
             {
                 timeText.Text = SimilarText.FormatDuration(position);   // no length stored (common for browser-recorded WebM)
@@ -741,7 +753,7 @@ namespace Smart_Tools.WPF.Views
         private void SliderLeft_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             _draggingLeft = false;
-            Seek(_playerLeft, SliderLeft.Value);
+            SeekFromSlider(true, SliderLeft.Value);
         }
 
         private void SliderRight_PreviewMouseDown(object sender, MouseButtonEventArgs e) => _draggingRight = true;
@@ -749,12 +761,45 @@ namespace Smart_Tools.WPF.Views
         private void SliderRight_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             _draggingRight = false;
-            Seek(_playerRight, SliderRight.Value);
+            SeekFromSlider(false, SliderRight.Value);
         }
 
-        private static void Seek(IReplayBackend? player, double seconds)
+        /// <summary>Seeks the side that was scrubbed; with the link on, the other side goes to the same time (limited to its own length).</summary>
+        private void SeekFromSlider(bool fromLeft, double seconds)
         {
-            if (player is { HasMedia: true, Duration: not null }) player.Position = TimeSpan.FromSeconds(seconds);
+            if (fromLeft) _holdLeft = Seek(_playerLeft, seconds);
+            else _holdRight = Seek(_playerRight, seconds);
+
+            if (!_linkScrub) return;
+            var other = fromLeft ? _playerRight : _playerLeft;
+            var hold = Seek(other, seconds);
+            if (fromLeft) _holdRight = hold;
+            else _holdLeft = hold;
+        }
+
+        private static (double Target, DateTime Until)? Seek(IReplayBackend? player, double seconds)
+        {
+            if (player is not { HasMedia: true, Duration: { } length }) return null;
+            seconds = Math.Clamp(seconds, 0, Math.Max(0, length.TotalSeconds - 0.1));
+            player.Position = TimeSpan.FromSeconds(seconds);
+            return (seconds, DateTime.UtcNow.AddSeconds(2));
+        }
+
+        private void BtnLinkScrub_Click(object sender, RoutedEventArgs e)
+        {
+            _linkScrub = !_linkScrub;
+            UpdateLinkIcon();
+            if (!_linkScrub) return;
+            // Turning the link on lines the right video up with the left one straight away.
+            if (_playerLeft is { HasMedia: true }) SeekFromSlider(true, _playerLeft.Position.TotalSeconds);
+        }
+
+        private void UpdateLinkIcon()
+        {
+            IconLinkScrub.Kind = _linkScrub ? PackIconKind.LinkVariant : PackIconKind.LinkVariantOff;
+            BtnLinkScrub.ToolTip = _linkScrub
+                ? Loc.T("Str_Similar_LinkOnTip", "Linked: moving one video moves both to the same time. Click to unlink.")
+                : Loc.T("Str_Similar_LinkOffTip", "Not linked: each video moves on its own. Click to link.");
         }
     }
 }

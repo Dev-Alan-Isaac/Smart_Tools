@@ -1983,6 +1983,13 @@
                                         FontWeight="SemiBold"
                                         Text="1x" />
                                 </Button>
+                                <Button
+                                    x:Name="BtnLinkScrub"
+                                    Margin="6,0,0,0"
+                                    Click="BtnLinkScrub_Click"
+                                    Style="{StaticResource PlayerIconButtonStyle}">
+                                    <materialDesign:PackIcon x:Name="IconLinkScrub" Kind="LinkVariant" />
+                                </Button>
                                 <StackPanel
                                     x:Name="VolumePanel"
                                     Margin="14,0,0,0"
