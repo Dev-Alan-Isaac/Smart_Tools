@@ -38,7 +38,16 @@ namespace Smart_Tools.WPF.Views
         private List<SimilarFileItem> _compareOthers = new();
         private int _compareIndex;
         private bool _comparePlaying = true;
-        private bool _compareMuted;
+        private bool _compareMuted = true;
+        private bool _applyingCompareVolume;
+
+        private void RememberCompareVolume()
+        {
+            _settings.CompareVolume = _compareVolume;
+            _settings.CompareMuted = _compareMuted;
+            SaveSettings();
+        }
+
         private double _compareVolume;  // 0..1, both sides; videos start at 0 (two soundtracks at once is noise)
         private double _compareSpeed = 1.0;
         private bool _draggingLeft;
@@ -222,9 +231,13 @@ namespace Smart_Tools.WPF.Views
             if (!wasOpen)
             {
                 _comparePlaying = true;
-                // Two videos start muted (two soundtracks at once is noise); audio compare is for listening.
-                _compareVolume = group.Kind == MediaKind.Video ? 0 : 1;
+                // Starts muted (two soundtracks at once is noise) until the user sets a volume or mute; then that is remembered.
+                _compareVolume = _settings.CompareVolume ?? 1;
+                _compareMuted = _settings.CompareMuted ?? true;
+                _applyingCompareVolume = true;
                 SliderCompareVolume.Value = _compareVolume;
+                _applyingCompareVolume = false;
+                UpdatePlayPauseIcon();
                 CompareScrim.Visibility = Visibility.Visible;
                 ComparePanel.Visibility = Visibility.Visible;
                 UiMotion.Pop(ComparePanel, 0.96);
@@ -660,8 +673,10 @@ namespace Smart_Tools.WPF.Views
         /// <summary>One volume for both sides; the slider at 0 is silence.</summary>
         private void SliderCompareVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_applyingCompareVolume) return;
             _compareVolume = e.NewValue;
             if (_compareVolume > 0) _compareMuted = false;
+            RememberCompareVolume();
             foreach (var player in ActiveComparePlayers())
             {
                 player.SetMute(_compareMuted);
@@ -674,6 +689,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnCompareMute_Click(object sender, RoutedEventArgs e)
         {
             _compareMuted = !_compareMuted;
+            RememberCompareVolume();
             foreach (var player in ActiveComparePlayers()) player.SetMute(_compareMuted);
             UpdatePlayPauseIcon();
         }

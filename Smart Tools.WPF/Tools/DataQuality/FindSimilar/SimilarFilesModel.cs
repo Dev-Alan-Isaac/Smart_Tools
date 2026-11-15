@@ -294,6 +294,9 @@ namespace Smart_Tools.WPF.Models
         public bool IgnoreSystemFiles { get; set; } = true;
         public SimilarKeepRule KeepRule { get; set; } = SimilarKeepRule.BestQuality;
         public bool SendToRecycleBin { get; set; } = true;
+        /// <summary>Compare player volume/mute; null until the user changes them (then the compare starts muted).</summary>
+        public double? CompareVolume { get; set; }
+        public bool? CompareMuted { get; set; }
     }
 
     public static class SimilarText
