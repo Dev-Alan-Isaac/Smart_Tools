@@ -103,7 +103,7 @@ namespace Smart_Tools.WPF.Controllers
                 $"{Path.GetFileNameWithoutExtension(path)}.{route[^1].ToCode}{Path.GetExtension(path)}"));
             try
             {
-                AtomicFile.WriteAllText(target, output, encoding);
+                AtomicFile.WriteAllText(target, output, FitEncoding(output, encoding));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -204,19 +204,104 @@ namespace Smart_Tools.WPF.Controllers
             return true;
         }
 
-        /// <summary>UTF-8 (with or without a BOM) when the bytes are valid UTF-8, otherwise Latin-1; the same encoding is used to save.</summary>
-        private static (string Text, Encoding Encoding) Decode(byte[] bytes)
+        private static bool _codePagesRegistered;
+
+        private static Encoding? Strict(int codePage)
         {
-            bool bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
             try
             {
-                string text = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes, bom ? 3 : 0, bytes.Length - (bom ? 3 : 0));
-                return (text, new UTF8Encoding(bom));
+                if (!_codePagesRegistered) { Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); _codePagesRegistered = true; }
+                return Encoding.GetEncoding(codePage, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
             }
-            catch (DecoderFallbackException)
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
             {
-                return (Encoding.Latin1.GetString(bytes), Encoding.Latin1);
+                return null;
             }
+        }
+
+        private static string? TryStrict(Encoding? encoding, byte[] bytes, int start = 0)
+        {
+            if (encoding == null) return null;
+            try { return encoding.GetString(bytes, start, bytes.Length - start); }
+            catch (DecoderFallbackException) { return null; }
+        }
+
+        /// <summary>
+        /// Finds the file's encoding: a BOM (UTF-8, UTF-16), valid UTF-8, then the legacy East Asian code pages
+        /// (Shift-JIS, Korean, GBK, Big5) when the high bytes come in pairs, else Windows-1252. The same encoding is
+        /// used to save, unless the translated text no longer fits it (see <see cref="FitEncoding"/>).
+        /// </summary>
+        private static (string Text, Encoding Encoding) Decode(byte[] bytes)
+        {
+            if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE) return (new UnicodeEncoding(false, true).GetString(bytes, 2, bytes.Length - 2), new UnicodeEncoding(false, true));
+            if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF) return (new UnicodeEncoding(true, true).GetString(bytes, 2, bytes.Length - 2), new UnicodeEncoding(true, true));
+
+            bool bom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+            string? utf8 = TryStrict(new UTF8Encoding(false, throwOnInvalidBytes: true), bytes, bom ? 3 : 0);
+            if (utf8 != null) return (utf8, new UTF8Encoding(bom));
+
+            // Legacy code pages. Only when most high bytes sit next to another high byte (double-byte text);
+            // Spanish/French text in Windows-1252 has isolated ones, and would be misread as kanji otherwise.
+            if (HighBytesArePaired(bytes))
+            {
+                var sjis = Strict(932);
+                string? t = TryStrict(sjis, bytes);
+                if (t != null && Share(t, c => (c >= '぀' && c <= 'ヿ') || (c >= '｡' && c <= 'ﾟ')) >= 0.2) return (t, sjis!);
+
+                var korean = Strict(949);
+                t = TryStrict(korean, bytes);
+                if (t != null && Share(t, c => c >= '가' && c <= '힯') >= 0.5) return (t, korean!);
+
+                var gbk = Strict(936);
+                if ((t = TryStrict(gbk, bytes)) != null) return (t, gbk!);
+
+                var big5 = Strict(950);
+                if ((t = TryStrict(big5, bytes)) != null) return (t, big5!);
+            }
+
+            var win = Strict(1252) ?? Encoding.Latin1;
+            return (win.GetString(bytes), win);
+        }
+
+        private static bool HighBytesArePaired(byte[] bytes)
+        {
+            int high = 0, paired = 0;
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                if (bytes[i] < 0x80) continue;
+                high++;
+                if ((i > 0 && bytes[i - 1] >= 0x80) || (i + 1 < bytes.Length && bytes[i + 1] >= 0x80)) paired++;
+            }
+            return high > 0 && paired * 2 >= high;
+        }
+
+        /// <summary>Share of the non-ASCII characters in <paramref name="text"/> that satisfy <paramref name="test"/>.</summary>
+        private static double Share(string text, Func<char, bool> test)
+        {
+            int other = 0, hit = 0;
+            foreach (char c in text)
+            {
+                if (c < 0x80) continue;
+                other++;
+                if (test(c)) hit++;
+            }
+            return other == 0 ? 0 : (double)hit / other;
+        }
+
+        /// <summary>
+        /// The encoding to save with: the file's own when every character fits (accents in Windows-1252, kanji in Shift-JIS),
+        /// otherwise UTF-8 with a BOM. A character is never replaced by "?".
+        /// </summary>
+        private static Encoding FitEncoding(string text, Encoding original)
+        {
+            if (original is UTF8Encoding || original is UnicodeEncoding) return original;
+            var strict = Strict(original.CodePage);
+            if (strict != null)
+            {
+                try { strict.GetByteCount(text); return original; }
+                catch (EncoderFallbackException) { /* does not fit: fall through */ }
+            }
+            return new UTF8Encoding(true);
         }
 
         /// <summary>Which lines are words to translate: not blank, and (subtitles) not an index, a time code or a header; (Markdown) not inside a code fence.</summary>

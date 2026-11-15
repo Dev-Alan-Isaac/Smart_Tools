@@ -42,6 +42,13 @@ namespace Smart_Tools.WPF.Controllers
             public int HeadDim { get; init; }
             public int MaxLength { get; init; }
 
+            /// <summary>True when the model's vocabulary has this character (alone or at the start of a word).</summary>
+            public bool Knows(System.Text.Rune rune)
+            {
+                string s = rune.ToString();
+                return Vocab.ContainsKey(s) || Vocab.ContainsKey("▁" + s);
+            }
+
             public void Dispose()
             {
                 Encoder.Dispose();
@@ -175,7 +182,7 @@ namespace Smart_Tools.WPF.Controllers
                         if (token.IsCancellationRequested) { canceled = true; break; }
                         try
                         {
-                            translated.Add(TranslatePart(model, part, token));
+                            translated.Add(TranslateMixed(model, part, token));
                         }
                         catch (OperationCanceledException)
                         {
@@ -220,6 +227,48 @@ namespace Smart_Tools.WPF.Controllers
                 if (rest.Length > 0) parts.Add(rest);
             }
             return parts;
+        }
+
+        /// <summary>
+        /// A sentence that mixes words the model knows with characters it has no vocabulary for (Japanese, Chinese, Korean
+        /// in an English-Spanish model) is cut into runs: the unknown runs stay exactly as written, only the rest is
+        /// translated. Before, the model got the whole sentence, turned the unknown part into nothing, and files saved it as "?".
+        /// A model that does know those characters (a custom Japanese or Chinese pair) still translates them.
+        /// </summary>
+        private static string TranslateMixed(LoadedModel m, string sentence, CancellationToken token)
+        {
+            var runs = new List<(string Text, bool Keep)>();
+            var current = new StringBuilder();
+            bool keep = false;
+            foreach (var rune in sentence.EnumerateRunes())
+            {
+                bool k = rune.Value >= 0x2E80 && !m.Knows(rune);   // CJK, kana, hangul, full-width forms: only those can be missing
+                if (current.Length > 0 && k != keep)
+                {
+                    runs.Add((current.ToString(), keep));
+                    current.Clear();
+                }
+                keep = k;
+                current.Append(rune.ToString());
+            }
+            if (current.Length > 0) runs.Add((current.ToString(), keep));
+
+            if (!runs.Any(r => r.Keep)) return TranslatePart(m, sentence, token);
+
+            var result = new StringBuilder();
+            foreach (var (text, kept) in runs)
+            {
+                string trimmed = text.Trim();
+                if (kept || !trimmed.Any(char.IsLetter))
+                {
+                    result.Append(text);   // unknown script, or just spaces/digits/punctuation
+                    continue;
+                }
+                string leading = text[..(text.Length - text.TrimStart().Length)];
+                string trailing = text[text.TrimEnd().Length..];
+                result.Append(leading).Append(TranslatePart(m, trimmed, token)).Append(trailing);
+            }
+            return result.ToString().Trim();
         }
 
         /// <summary>Greedy decoding: no beam search and no key/value cache, which keeps it simple and fast enough for sentences.</summary>
