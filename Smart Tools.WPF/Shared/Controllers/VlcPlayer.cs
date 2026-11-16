@@ -569,6 +569,27 @@ namespace Smart_Tools.WPF.Controllers
 
         public void SetMute(bool mute) => Post(p => Native.libvlc_audio_set_mute(p, mute ? 1 : 0));
 
+        private int _savedAudioTrack = int.MinValue;
+
+        /// <summary>
+        /// Silences only this player by switching its audio track off. libvlc's mute/volume
+        /// act on the app-wide Windows audio session, so they would silence every player.
+        /// </summary>
+        public void SetAudioTrackOff(bool off) => Post(p =>
+        {
+            if (off)
+            {
+                int current = Native.libvlc_audio_get_track(p);
+                if (current >= 0) _savedAudioTrack = current;
+                Native.libvlc_audio_set_track(p, -1);
+            }
+            else if (_savedAudioTrack != int.MinValue)
+            {
+                Native.libvlc_audio_set_track(p, _savedAudioTrack);
+                _savedAudioTrack = int.MinValue;
+            }
+        });
+
         public static string? ErrorMessage => _instance == IntPtr.Zero ? null : LastError();
 
         /// <summary>
@@ -664,6 +685,12 @@ namespace Smart_Tools.WPF.Controllers
 
             [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
             public static extern void libvlc_audio_set_mute(IntPtr player, int mute);
+
+            [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int libvlc_audio_get_track(IntPtr player);
+
+            [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int libvlc_audio_set_track(IntPtr player, int track);
 
             [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
             public static extern void libvlc_video_set_mouse_input(IntPtr player, uint on);

@@ -526,6 +526,7 @@ namespace Smart_Tools.WPF.Views
         private void StartPlayer(IReplayBackend player, string path)
         {
             player.SetMute(MuteFor(player));
+            ApplySilenced(player);
             player.SetVolume(_compareVolume);
             player.SetSpeed(_compareSpeed);
             try
@@ -703,22 +704,25 @@ namespace Smart_Tools.WPF.Views
         // Silence one side only (not saved): handy to hear a single soundtrack while both play.
         private bool _muteLeft, _muteRight;
 
-        private bool MuteFor(IReplayBackend player) =>
-            _compareMuted
-            || (ReferenceEquals(player, _playerLeft) && _muteLeft)
-            || (ReferenceEquals(player, _playerRight) && _muteRight);
+        // The global mute is app-wide in VLC, so a single side is silenced with SetSilenced instead.
+        private bool MuteFor(IReplayBackend player) => _compareMuted;
+
+        private void ApplySilenced(IReplayBackend player) =>
+            player.SetSilenced(
+                (ReferenceEquals(player, _playerLeft) && _muteLeft)
+                || (ReferenceEquals(player, _playerRight) && _muteRight));
 
         private void BtnMuteLeft_Click(object sender, RoutedEventArgs e)
         {
             _muteLeft = !_muteLeft;
-            if (_playerLeft is { } p) p.SetMute(MuteFor(p));
+            if (_playerLeft is { } p) ApplySilenced(p);
             UpdatePlayPauseIcon();
         }
 
         private void BtnMuteRight_Click(object sender, RoutedEventArgs e)
         {
             _muteRight = !_muteRight;
-            if (_playerRight is { } p) p.SetMute(MuteFor(p));
+            if (_playerRight is { } p) ApplySilenced(p);
             UpdatePlayPauseIcon();
         }
 

@@ -37,6 +37,9 @@ namespace Smart_Tools.WPF.Views
         void SetVolume(double volume);
         void SetMute(bool mute);
 
+        /// <summary>Silences just this player (other players in the app keep their sound).</summary>
+        void SetSilenced(bool silenced);
+
         /// <summary>Called by the view's 250 ms timer (VLC reports its state this way).</summary>
         void Poll();
 
@@ -102,7 +105,9 @@ namespace Smart_Tools.WPF.Views
         }
 
         public void SetVolume(double volume) => _player.Volume = volume;
-        public void SetMute(bool mute) => _player.IsMuted = mute;
+        private bool _mute, _silenced;
+        public void SetMute(bool mute) { _mute = mute; _player.IsMuted = _mute || _silenced; }
+        public void SetSilenced(bool silenced) { _silenced = silenced; _player.IsMuted = _mute || _silenced; }
         public void Poll() { }
 
         public event Action? Opened;
@@ -124,7 +129,7 @@ namespace Smart_Tools.WPF.Views
         private bool _openedRaised;
         private bool _endRaised;
         private double _speed = 1, _volume = 1;
-        private bool _mute;
+        private bool _mute, _silenced;
         private long? _pendingSeekMs;
         private int _playingPolls;
 
@@ -230,6 +235,12 @@ namespace Smart_Tools.WPF.Views
             _vlc.SetMute(mute);
         }
 
+        public void SetSilenced(bool silenced)
+        {
+            _silenced = silenced;
+            _vlc.SetAudioTrackOff(silenced);
+        }
+
         /// <summary>
         /// Turns VLC's state into Opened / Ended / Failed, once each. Opened
         /// waits for the length, or 1 s of playing - WebM recorded in a
@@ -283,6 +294,7 @@ namespace Smart_Tools.WPF.Views
                     _vlc.SetRate(_speed);
                     _vlc.SetVolume(_volume);
                     _vlc.SetMute(_mute);
+                    if (_silenced) _vlc.SetAudioTrackOff(true);
                     if (_pendingSeekMs is long ms)
                     {
                         _vlc.TimeMs = ms;
