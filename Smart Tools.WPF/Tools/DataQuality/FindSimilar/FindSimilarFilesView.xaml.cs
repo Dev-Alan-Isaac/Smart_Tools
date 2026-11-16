@@ -256,11 +256,18 @@ namespace Smart_Tools.WPF.Views
             if (!_applyingSettings) SaveSettings();
         }
 
+        private string? _lastThresholdTier;
+
         private void UpdateThresholdUi(double rawValue)
         {
             if (TxtThresholdValue == null || TxtThresholdHint == null) return;
             int value = (int)Math.Round(rawValue);
             TxtThresholdValue.Text = $"{value}%";
+            // Colour = how strict: loose (amber), normal (accent), near-identical (green).
+            var (bg, fg) = value >= 95 ? ("StatusSuccessBg", "StatusSuccessFg") : value >= 70 ? ("AccentColorSubtle", "AccentColor") : ("StatusWarningBg", "StatusWarningFg");
+            ThresholdBadge.SetResourceReference(Border.BackgroundProperty, bg);
+            TxtThresholdValue.SetResourceReference(TextBlock.ForegroundProperty, fg);
+            if (_lastThresholdTier != bg) { _lastThresholdTier = bg; UiMotion.Pop(ThresholdBadge, 0.9); }
             TxtThresholdHint.Text = value >= 95 ? Loc.T("Str_FindSimilar_ThresholdHint95", "Only near-identical copies (resized or re-saved).")
                 : value >= 85 ? Loc.T("Str_FindSimilar_ThresholdHint85", "Copies and lightly edited versions. A good default.")
                 : value >= 70 ? Loc.T("Str_FindSimilar_ThresholdHint70", "Also finds bigger edits and shorter clips - expect some look-alikes.")
@@ -672,7 +679,7 @@ namespace Smart_Tools.WPF.Views
 
         private void AttachShortcuts()
         {
-            ShortcutManager.Attach("similar.scan", () => BtnScanForSimilar_Click(this, new RoutedEventArgs()));
+            ShortcutManager.AttachCommon("find-similar", ShortcutManager.RunId, () => BtnScanForSimilar_Click(this, new RoutedEventArgs()));
             ShortcutManager.Attach("similar.collapseAll", () => SetAllGroupsExpanded(false));
             ShortcutManager.Attach("similar.expandAll", () => SetAllGroupsExpanded(true));
             ShortcutManager.Attach("similar.nextGroup", () => JumpToGroup(+1));

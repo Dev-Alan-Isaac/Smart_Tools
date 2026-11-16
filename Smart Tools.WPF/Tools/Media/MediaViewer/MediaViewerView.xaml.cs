@@ -1144,7 +1144,7 @@ namespace Smart_Tools.WPF.Views
             bool media = Current is { Kind: not ViewerMediaKind.Image };
             switch (e.Key)
             {
-                case Key.Space:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "media-viewer") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId:
                     TogglePlay();
                     break;
                 case Key.PageDown:
@@ -1167,7 +1167,7 @@ namespace Smart_Tools.WPF.Views
                 case Key.Down:
                     VolumeSlider.Value = Math.Max(0, VolumeSlider.Value - 0.05);
                     break;
-                case Key.M:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "media-viewer") == Smart_Tools.WPF.Controllers.ShortcutManager.MuteId:
                     BtnMute_Click(this, new RoutedEventArgs());
                     break;
                 case Key.Delete when Keyboard.Modifiers.HasFlag(ModifierKeys.Shift):
@@ -1183,7 +1183,7 @@ namespace Smart_Tools.WPF.Views
                 case Key.P:
                     GoPrevious();
                     break;
-                case Key.T:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "media-viewer") == Smart_Tools.WPF.Controllers.ShortcutManager.TheaterId:
                     ToggleTheater();
                     break;
                 case Key.Escape when _widget != null:

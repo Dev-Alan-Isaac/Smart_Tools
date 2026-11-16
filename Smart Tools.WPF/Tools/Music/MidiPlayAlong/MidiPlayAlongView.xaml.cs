@@ -392,7 +392,7 @@ namespace Smart_Tools.WPF.Views
 
         private void Root_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Space || e.OriginalSource is TextBox or ComboBox or CheckBox || _song == null) return;
+            if (Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "midi-playalong") != Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId || e.OriginalSource is TextBox or ComboBox or CheckBox || _song == null) return;
             BtnPlay_Click(sender, e);
             e.Handled = true;
         }

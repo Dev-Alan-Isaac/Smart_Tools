@@ -1,6 +1,7 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 using Smart_Tools.WPF.Modules;
 using System.Collections.ObjectModel;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace Smart_Tools.WPF.Controllers
 {
@@ -45,31 +46,100 @@ namespace Smart_Tools.WPF.Controllers
             Define(new ShortcutAction("notes.new", "Str_Shortcut_NotesNew", "New note", ShortcutScope.InApp, "Ctrl+N", "notes"));
             Define(new ShortcutAction("notes.search", "Str_Shortcut_NotesSearch", "Search notes", ShortcutScope.InApp, "Ctrl+F", "notes"));
             Define(new ShortcutAction("notes.widget", "Str_Shortcut_NotesWidget", "Show or close the note as a widget", ShortcutScope.InApp, "Ctrl+Shift+W", "notes"));
-            Define(new ShortcutAction("password.generate", "Str_Shortcut_PasswordGenerate", "Generate passwords", ShortcutScope.InApp, "F5", "password-generator"));
             Define(new ShortcutAction("password.generateAlt", "Str_Shortcut_PasswordGenerate", "Generate passwords", ShortcutScope.InApp, "Ctrl+G", "password-generator"));
             Define(new ShortcutAction("vault.lock", "Str_Shortcut_VaultLock", "Lock the vault", ShortcutScope.InApp, "Ctrl+Shift+L", "password-vault"));
-            Define(new ShortcutAction("regex.run", "Str_Shortcut_RegexRun", "Run the test", ShortcutScope.InApp, "F5", "regex-tester"));
             // No default key: a global key that Windows or another app already uses would just fail to register. Set one in Settings.
             Define(new ShortcutAction(ScreenshotCaptureActionId, "Str_Shortcut_ScreenshotCapture", "Take a screenshot", ShortcutScope.Global, null, "screenshot"));
             Define(new ShortcutAction("ocr.capture", "Str_Shortcut_OcrCapture", "Capture a screen area", ShortcutScope.InApp, "Ctrl+Shift+X", "screen-ocr"));
-            Define(new ShortcutAction("ocr.open", "Str_Shortcut_OcrOpen", "Open an image", ShortcutScope.InApp, "Ctrl+O", "screen-ocr"));
-
-            Define(new ShortcutAction("dup.scan", "Str_Shortcut_GroupsScan", "Start or stop the scan", ShortcutScope.InApp, "F5", "duplicate-data"));
             Define(new ShortcutAction("dup.collapseAll", "Str_Shortcut_GroupsCollapseAll", "Fold every group", ShortcutScope.InApp, "Ctrl+Shift+Left", "duplicate-data"));
             Define(new ShortcutAction("dup.expandAll", "Str_Shortcut_GroupsExpandAll", "Unfold every group", ShortcutScope.InApp, "Ctrl+Shift+Right", "duplicate-data"));
             Define(new ShortcutAction("dup.nextGroup", "Str_Shortcut_GroupsNextGroup", "Go to the next group", ShortcutScope.InApp, "Ctrl+Down", "duplicate-data"));
             Define(new ShortcutAction("dup.prevGroup", "Str_Shortcut_GroupsPrevGroup", "Go to the previous group", ShortcutScope.InApp, "Ctrl+Up", "duplicate-data"));
             Define(new ShortcutAction("dup.deleteMarked", "Str_Shortcut_GroupsDeleteMarked", "Delete the marked files", ShortcutScope.InApp, "Ctrl+Delete", "duplicate-data"));
-            Define(new ShortcutAction("similar.scan", "Str_Shortcut_GroupsScan", "Start or stop the scan", ShortcutScope.InApp, "F5", "find-similar"));
             Define(new ShortcutAction("similar.collapseAll", "Str_Shortcut_GroupsCollapseAll", "Fold every group", ShortcutScope.InApp, "Ctrl+Shift+Left", "find-similar"));
             Define(new ShortcutAction("similar.expandAll", "Str_Shortcut_GroupsExpandAll", "Unfold every group", ShortcutScope.InApp, "Ctrl+Shift+Right", "find-similar"));
             Define(new ShortcutAction("similar.nextGroup", "Str_Shortcut_GroupsNextGroup", "Go to the next group", ShortcutScope.InApp, "Ctrl+Down", "find-similar"));
             Define(new ShortcutAction("similar.prevGroup", "Str_Shortcut_GroupsPrevGroup", "Go to the previous group", ShortcutScope.InApp, "Ctrl+Up", "find-similar"));
             Define(new ShortcutAction("similar.deleteMarked", "Str_Shortcut_GroupsDeleteMarked", "Delete the marked files", ShortcutScope.InApp, "Ctrl+Delete", "find-similar"));
 
-            Define(new ShortcutAction("loudness.measure", "Str_Shortcut_LoudnessMeasure", "Measure or stop", ShortcutScope.InApp, "F5", "loudness-meter"));
+            DefineCommon();
 
             Revalidate();
+        }
+
+        // =================================================================
+        //  Common actions: the same key in every tool that has the action
+        // =================================================================
+
+        public const string CommonPrefix = "common.";
+        public const string RunId = "common.run", StopId = "common.stop", SaveId = "common.save", OpenId = "common.open",
+            PlayPauseId = "common.playPause", MuteId = "common.mute", TheaterId = "common.theater";
+
+        // id, title key, fallback title, default key, tools that can give it their own key (the others just follow the common one)
+        private static readonly (string Id, string TitleKey, string Fallback, string Key, string[] Tools)[] CommonDefs =
+        {
+            (RunId, "Str_Shortcut_CommonRun", "Start / run / scan / generate", "F5", new[] { "password-generator", "regex-tester", "duplicate-data", "find-similar", "loudness-meter" }),
+            (StopId, "Str_Shortcut_CommonStop", "Cancel / stop", "Escape", Array.Empty<string>()),
+            (SaveId, "Str_Shortcut_CommonSave", "Save / export", "Ctrl+S", Array.Empty<string>()),
+            (OpenId, "Str_Shortcut_CommonOpen", "Open a file", "Ctrl+O", new[] { "screen-ocr" }),
+            (PlayPauseId, "Str_Shortcut_CommonPlayPause", "Play / pause", "Space", new[] { "media-viewer", "video-editor", "audio-trimmer", "metronome", "midi-playalong" }),
+            (MuteId, "Str_Shortcut_CommonMute", "Mute / unmute", "M", new[] { "media-viewer", "video-editor" }),
+            (TheaterId, "Str_Shortcut_CommonTheater", "Theater (full view)", "T", new[] { "media-viewer" }),
+        };
+
+        // Keys these actions had before they became common: copied to the tool's own override so nothing a user set is lost.
+        private static readonly (string OldId, string NewId)[] OldIds =
+        {
+            ("password.generate", RunId + "@password-generator"), ("regex.run", RunId + "@regex-tester"),
+            ("dup.scan", RunId + "@duplicate-data"), ("similar.scan", RunId + "@find-similar"),
+            ("loudness.measure", RunId + "@loudness-meter"), ("ocr.open", OpenId + "@screen-ocr"),
+        };
+
+        private static string OverrideId(string commonId, string toolId) => commonId + "@" + toolId;
+
+        private static void DefineCommon()
+        {
+            bool changed = false;
+            foreach (var (oldId, newId) in OldIds)
+            {
+                if (AppSettingsStore.Shortcuts.Remove(oldId, out var key)) { AppSettingsStore.Shortcuts[newId] = key; changed = true; }
+                if (AppSettingsStore.DisabledShortcuts.Remove(oldId)) { AppSettingsStore.DisabledShortcuts.Add(newId); changed = true; }
+            }
+            if (changed) AppSettingsStore.Save();
+
+            foreach (var c in CommonDefs)
+            {
+                Define(new ShortcutAction(c.Id, c.TitleKey, c.Fallback, ShortcutScope.InApp, c.Key));
+                foreach (var tool in c.Tools)
+                    Define(new ShortcutAction(OverrideId(c.Id, tool), c.TitleKey, c.Fallback, ShortcutScope.InApp, null, tool));
+            }
+        }
+
+        private static readonly Dictionary<(string Tool, string Id), Action> CommonHandlers = new();
+
+        /// <summary>A tool makes a common action do its own thing (the tool id is the catalog id).</summary>
+        public static void AttachCommon(string toolId, string commonId, Action handler) => CommonHandlers[(toolId, commonId)] = handler;
+
+        /// <summary>The key a common action has in this tool: the tool's own key if it set one, else the common key; null when off.</summary>
+        public static KeyChord? EffectiveChord(string commonId, string? toolId)
+        {
+            if (toolId != null && ById.TryGetValue(OverrideId(commonId, toolId), out var own) && own.Enabled && own.Chord is { HasKey: true } oc) return oc;
+            return ById.TryGetValue(commonId, out var b) && b.Enabled && b.Chord is { HasKey: true } c ? c : null;
+        }
+
+        public static bool IsCommon(string commonId, KeyChord chord, string? toolId) =>
+            EffectiveChord(commonId, toolId) is { } k && string.Equals(k.ToString(), chord.ToString(), StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// For a view's own key handler: which common action (<see cref="PlayPauseId"/>, <see cref="MuteId"/>, ...) this key stands for in the tool, or null.
+        /// The view keeps its own focus checks and runs the action itself.
+        /// </summary>
+        public static string? CommonAction(KeyEventArgs e, string toolId)
+        {
+            if (IsRecording || FromKeyEvent(e) is not { } chord) return null;
+            foreach (var c in CommonDefs)
+                if (IsCommon(c.Id, chord, toolId)) return c.Id;
+            return null;
         }
 
         private static void Define(ShortcutAction action)
@@ -217,9 +287,29 @@ namespace Smart_Tools.WPF.Controllers
                 if (b.Chord is not { } c || !string.Equals(c.ToString(), text, StringComparison.OrdinalIgnoreCase)) continue;
                 if (b.Action.OwnerToolId != null
                     && !string.Equals(b.Action.OwnerToolId, currentToolId, StringComparison.OrdinalIgnoreCase)) continue;
+                if (b.Action.Id.StartsWith(CommonPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (InvokeCommon(b, currentToolId)) return true;
+                    continue;
+                }
                 if (Invoke(b)) return true;
             }
             return false;
+        }
+
+        /// <summary>A common action (or a tool's own key for it) runs the handler the current tool attached; tools without one fall back to the shell's button search.</summary>
+        private static bool InvokeCommon(ShortcutBinding b, string? currentToolId)
+        {
+            if (currentToolId == null) return false;
+            string id = b.Action.Id;
+            int at = id.IndexOf('@');
+            string commonId = at < 0 ? id : id[..at];
+            // The common key stays quiet in a tool that has its own key for this action.
+            if (at < 0 && EffectiveChord(commonId, currentToolId) is { } eff && b.Chord is { } mine
+                && !string.Equals(eff.ToString(), mine.ToString(), StringComparison.OrdinalIgnoreCase)) return false;
+            if (!CommonHandlers.TryGetValue((currentToolId, commonId), out var handler)) return false;
+            try { handler(); return true; }
+            catch (Exception ex) { Log.Info($"Shortcut {id}: {ex.Message}"); return false; }
         }
 
         private static bool Invoke(ShortcutBinding b)

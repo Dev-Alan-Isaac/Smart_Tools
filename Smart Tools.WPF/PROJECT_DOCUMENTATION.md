@@ -1,4 +1,4 @@
-# Smart Tools
+﻿# Smart Tools
 
 A comprehensive, feature-rich Windows desktop application built with **WPF** and **.NET 10** that provides a suite of utilities for file management, media processing, system monitoring, and much more.
 
@@ -473,7 +473,7 @@ To give a tool a shortcut:
 2. Add the `Str_Shortcut_X` title to `en.xaml` and `es.xaml`.
 3. In the view, attach the handler: `ShortcutManager.Attach("tool.action", () => ...)`. `ShortcutManager.ChordText("tool.action")` gives the current key for tooltips.
 
-**Default keys for every tool** (MainWindow.TryDefaultToolKey, used only when a tool has not bound the key itself): **F5** presses the page's main accent button, **Ctrl+S** its Save / Export button (or the ExportButton), **Esc** its BtnCancel* / BtnStop* button - only a visible, enabled button is pressed. **Ctrl+K** opens the launcher popup (Shared/Views/CommandPalette.cs: tools, favorites and recent first, plus Home, Settings, theme switch, open log folder). Right-click a tool on Home to pin it to Favorites. After saving a file, tools call SavedFileDialog.Show(title, path, note) (Open file / Show in folder).
+**Common keys (the same in every tool):** defined once in `ShortcutManager` (`common.*`, group "Every tool" in Settings): Run **F5**, Stop **Esc**, Save **Ctrl+S**, Open **Ctrl+O**, Play/pause **Space**, Mute **M**, Theater **T**. Run / Save / Stop work in every tool without code: `MainWindow.TryDefaultToolKey` presses the page's accent button, its Save / Export button (or the ExportButton) and its BtnCancel* / BtnStop* button (only a visible, enabled one). A tool that needs its own behaviour calls `ShortcutManager.AttachCommon("tool-id", ShortcutManager.RunId, ...)`; a view with its own KeyDown asks `ShortcutManager.CommonAction(e, "tool-id")` (returns the common id for the key, e.g. `PlayPauseId`) instead of checking `Key.Space`. A tool listed in `CommonDefs` also gets an optional "(this tool only)" row in Settings to give it a different key. Old ids (`dup.scan`, `regex.run`, ...) are migrated to those overrides. **Ctrl+K** opens the launcher popup (Shared/Views/CommandPalette.cs). Right-click a tool on Home to pin it to Favorites. After saving a file, tools call SavedFileDialog.Show(title, path, note).
 
 Tools with shortcuts today: Notes, Password Generator, Password Vault, Regex Tester, Screenshot, Screen OCR, Loudness Meter, Duplicate Data and Find Similar Files (scan, fold/unfold groups, next/previous group, delete marked).
 

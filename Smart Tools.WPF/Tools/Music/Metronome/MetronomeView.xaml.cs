@@ -191,7 +191,7 @@ namespace Smart_Tools.WPF.Views
             int step = Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 10 : 1;
             switch (e.Key)
             {
-                case Key.Space: BtnStart_Click(sender, e); e.Handled = true; break;
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "metronome") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId: BtnStart_Click(sender, e); e.Handled = true; break;
                 case Key.Up: SetBpm(_bpm + step); e.Handled = true; break;
                 case Key.Down: SetBpm(_bpm - step); e.Handled = true; break;
             }

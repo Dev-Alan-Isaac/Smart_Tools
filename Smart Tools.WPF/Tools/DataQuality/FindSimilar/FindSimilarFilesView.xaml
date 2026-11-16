@@ -799,6 +799,7 @@
                                             Style="{StaticResource SidebarGroupHeader}"
                                             Tag="{x:Static materialDesign:PackIconKind.ScaleBalance}" />
                                         <Border
+                                            x:Name="ThresholdBadge"
                                             Grid.Column="1"
                                             Margin="0,0,0,10"
                                             VerticalAlignment="Center"
@@ -1317,7 +1318,7 @@
             <Border
                 x:Name="KeepSidebarBorder"
                 Grid.Column="2"
-                Width="420"
+                Width="620"
                 HorizontalAlignment="Right"
                 Background="{DynamicResource CardBg}"
                 BorderBrush="{DynamicResource CardBorder}"
@@ -1713,13 +1714,30 @@
                                     </Border>
                                 </Grid>
                             </Border>
-                            <Slider
-                                x:Name="SliderLeft"
-                                Grid.Row="1"
-                                Margin="4,8,4,0"
-                                PreviewMouseDown="SliderLeft_PreviewMouseDown"
-                                PreviewMouseUp="SliderLeft_PreviewMouseUp"
-                                Style="{StaticResource PlayerSliderStyle}" />
+                            <Grid Grid.Row="1" Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Name="BtnMuteLeft"
+                                    Margin="0,0,6,0"
+                                    Click="BtnMuteLeft_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    Width="30"
+                                    Height="30"
+                                    Padding="0"
+                                    ToolTip="{DynamicResource Str_Similar_MuteLeftTip}">
+                                    <materialDesign:PackIcon x:Name="IconMuteLeft" Width="16" Height="16" Kind="VolumeHigh" />
+                                </Button>
+                                <Slider
+                                    x:Name="SliderLeft"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    PreviewMouseDown="SliderLeft_PreviewMouseDown"
+                                    PreviewMouseUp="SliderLeft_PreviewMouseUp"
+                                    Style="{StaticResource PlayerSliderStyle}" />
+                                </Grid>
                             <Grid Grid.Row="2" Margin="2,8,2,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1844,13 +1862,30 @@
                                     </Border>
                                 </Grid>
                             </Border>
-                            <Slider
-                                x:Name="SliderRight"
-                                Grid.Row="1"
-                                Margin="4,8,4,0"
-                                PreviewMouseDown="SliderRight_PreviewMouseDown"
-                                PreviewMouseUp="SliderRight_PreviewMouseUp"
-                                Style="{StaticResource PlayerSliderStyle}" />
+                            <Grid Grid.Row="1" Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button
+                                    x:Name="BtnMuteRight"
+                                    Margin="0,0,6,0"
+                                    Click="BtnMuteRight_Click"
+                                    Style="{StaticResource NeutralIconButtonStyle}"
+                                    Width="30"
+                                    Height="30"
+                                    Padding="0"
+                                    ToolTip="{DynamicResource Str_Similar_MuteRightTip}">
+                                    <materialDesign:PackIcon x:Name="IconMuteRight" Width="16" Height="16" Kind="VolumeHigh" />
+                                </Button>
+                                <Slider
+                                    x:Name="SliderRight"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    PreviewMouseDown="SliderRight_PreviewMouseDown"
+                                    PreviewMouseUp="SliderRight_PreviewMouseUp"
+                                    Style="{StaticResource PlayerSliderStyle}" />
+                                </Grid>
                             <Grid Grid.Row="2" Margin="2,8,2,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -1964,21 +1999,6 @@
                                         Style="{StaticResource PlayerIconButtonStyle}"
                                         ToolTip="{DynamicResource Str_MediaViewer_Mute}">
                                         <materialDesign:PackIcon x:Name="IconMute" Kind="VolumeOff" />
-                                    </Button>
-                                    <Button
-                                        x:Name="BtnMuteLeft"
-                                        Margin="10,0,0,0"
-                                        Click="BtnMuteLeft_Click"
-                                        Style="{StaticResource PlayerIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_Similar_MuteLeftTip}">
-                                        <materialDesign:PackIcon x:Name="IconMuteLeft" Kind="VolumeHigh" />
-                                    </Button>
-                                    <Button
-                                        x:Name="BtnMuteRight"
-                                        Click="BtnMuteRight_Click"
-                                        Style="{StaticResource PlayerIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_Similar_MuteRightTip}">
-                                        <materialDesign:PackIcon x:Name="IconMuteRight" Kind="VolumeHigh" />
                                     </Button>
                                     <Slider
                                         x:Name="SliderCompareVolume"

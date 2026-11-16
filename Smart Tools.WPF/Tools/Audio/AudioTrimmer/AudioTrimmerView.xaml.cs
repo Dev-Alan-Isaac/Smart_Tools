@@ -821,7 +821,7 @@ namespace Smart_Tools.WPF.Views
             bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
             switch (e.Key)
             {
-                case Key.Space when !ctrl:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "audio-trimmer") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId:
                     BtnPlay_Click(this, new RoutedEventArgs());
                     e.Handled = true;
                     break;

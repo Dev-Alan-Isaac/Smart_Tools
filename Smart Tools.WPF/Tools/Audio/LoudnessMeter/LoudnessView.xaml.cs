@@ -49,7 +49,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_loadedOnce) return;
             _loadedOnce = true;
-            ShortcutManager.Attach("loudness.measure", () => BtnMeasure_Click(this, new RoutedEventArgs()));
+            ShortcutManager.AttachCommon("loudness-meter", ShortcutManager.RunId, () => BtnMeasure_Click(this, new RoutedEventArgs()));
             UpdateState();
         }
 

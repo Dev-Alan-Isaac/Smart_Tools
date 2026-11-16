@@ -1541,7 +1541,7 @@ namespace Smart_Tools.WPF.Views
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
             switch (e.Key)
             {
-                case Key.Space when e.OriginalSource is not ButtonBase:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "video-editor") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId && e.OriginalSource is not ButtonBase:
                     TogglePlay();
                     break;
                 case Key.Left when e.OriginalSource is not DataGridCell:
@@ -1562,7 +1562,7 @@ namespace Smart_Tools.WPF.Views
                 case Key.P:
                     PlayNeighbour(-1);
                     break;
-                case Key.M:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "video-editor") == Smart_Tools.WPF.Controllers.ShortcutManager.MuteId:
                     ToggleMute();
                     break;
                 default:

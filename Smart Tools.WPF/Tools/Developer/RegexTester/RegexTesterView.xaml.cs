@@ -109,7 +109,7 @@ namespace Smart_Tools.WPF.Views
             _viewConstructed = true;
 
             // F5 by default; the key can be changed in Settings.
-            ShortcutManager.Attach("regex.run", () => BtnRunTest_Click(this, new RoutedEventArgs()));
+            ShortcutManager.AttachCommon("regex-tester", ShortcutManager.RunId, () => BtnRunTest_Click(this, new RoutedEventArgs()));
         }
 
         /// <summary>Called from MainWindow.Window_Closing: stops a folder search and live matching, and saves the options.</summary>

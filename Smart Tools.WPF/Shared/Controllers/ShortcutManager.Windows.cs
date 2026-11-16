@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using Smart_Tools.WPF.Models;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -211,13 +211,14 @@ namespace Smart_Tools.WPF.Controllers
                 else if (a.OwnerToolId == null)
                 {
                     b.Title = Str(a.TitleKey, a.FallbackTitle);
-                    b.GroupTitle = groupApp;
-                    b.SortKey = "0";
+                    bool common = a.Id.StartsWith(CommonPrefix, StringComparison.OrdinalIgnoreCase);
+                    b.GroupTitle = common ? Str("Str_Shortcuts_GroupCommon", "Every tool") : groupApp;
+                    b.SortKey = common ? "0c" : "0";
                 }
                 else
                 {
                     string tool = ToolCatalogManager.Find(a.OwnerToolId)?.Name ?? a.OwnerToolId;
-                    b.Title = Str(a.TitleKey, a.FallbackTitle);
+                    b.Title = Str(a.TitleKey, a.FallbackTitle) + (a.Id.Contains('@') ? Str("Str_Shortcut_OverrideSuffix", " (this tool only)") : "");
                     b.GroupTitle = tool;
                     b.SortKey = "2" + tool;
                 }

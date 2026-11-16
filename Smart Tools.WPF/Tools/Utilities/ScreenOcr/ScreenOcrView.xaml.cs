@@ -77,7 +77,7 @@ namespace Smart_Tools.WPF.Views
 
             // Ctrl+Shift+X / Ctrl+O by default; the keys can be changed in Settings.
             ShortcutManager.Attach("ocr.capture", async () => await CaptureAsync());
-            ShortcutManager.Attach("ocr.open", () => BtnOpenImage_Click(this, new RoutedEventArgs()));
+            ShortcutManager.AttachCommon("screen-ocr", ShortcutManager.OpenId, () => BtnOpenImage_Click(this, new RoutedEventArgs()));
         }
 
         /// <summary>Called from MainWindow.Window_Closing: stops a read in progress.</summary>

@@ -269,6 +269,7 @@ namespace Smart_Tools.WPF.Views
             SliderLeft.Visibility = SliderRight.Visibility = media;
             TransportBar.Visibility = media;
             VolumePanel.Visibility = kind == MediaKind.Video ? Visibility.Visible : Visibility.Collapsed;
+            BtnMuteLeft.Visibility = BtnMuteRight.Visibility = VolumePanel.Visibility;
             TxtLeftTime.Text = TxtRightTime.Text = "";
 
             (string key, PackIconKind icon) = kind switch

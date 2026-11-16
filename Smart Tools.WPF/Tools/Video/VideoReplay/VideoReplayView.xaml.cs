@@ -1334,7 +1334,7 @@ namespace Smart_Tools.WPF.Views
                 case Key.Escape when ErrorBanner.Visibility == Visibility.Visible && !_theater:
                     UiMotion.FadeVisibility(ErrorBanner, false);
                     break;
-                case Key.Space when e.OriginalSource is not ButtonBase:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "media-viewer") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId && e.OriginalSource is not ButtonBase:
                     TogglePlay();
                     break;
                 case Key.Left when e.OriginalSource is not DataGridCell:
@@ -1349,10 +1349,10 @@ namespace Smart_Tools.WPF.Views
                 case Key.P:
                     PlayPrevious();
                     break;
-                case Key.M:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "media-viewer") == Smart_Tools.WPF.Controllers.ShortcutManager.MuteId:
                     ToggleMute();
                     break;
-                case Key.T:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "media-viewer") == Smart_Tools.WPF.Controllers.ShortcutManager.TheaterId:
                     ToggleTheater();
                     break;
                 case Key.Delete when _current != null && e.OriginalSource is not DataGridCell:

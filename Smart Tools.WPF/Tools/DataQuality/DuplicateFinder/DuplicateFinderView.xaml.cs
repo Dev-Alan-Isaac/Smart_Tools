@@ -668,7 +668,7 @@ namespace Smart_Tools.WPF.Views
 
         private void AttachShortcuts()
         {
-            ShortcutManager.Attach("dup.scan", () => ButtonScan_Click(this, new RoutedEventArgs()));
+            ShortcutManager.AttachCommon("duplicate-data", ShortcutManager.RunId, () => ButtonScan_Click(this, new RoutedEventArgs()));
             ShortcutManager.Attach("dup.collapseAll", () => SetAllGroupsExpanded(false));
             ShortcutManager.Attach("dup.expandAll", () => SetAllGroupsExpanded(true));
             ShortcutManager.Attach("dup.nextGroup", () => JumpToGroup(+1));

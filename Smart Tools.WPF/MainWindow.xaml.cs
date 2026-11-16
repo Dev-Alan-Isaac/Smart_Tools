@@ -631,7 +631,7 @@ namespace Smart_Tools.WPF
 
         /// <summary>
         /// Keys every tool answers to without defining them (a key a tool binds itself in ShortcutManager wins):
-        /// F5 presses the page's main (accent) button, Ctrl+S its Save / Export button, Esc its Cancel / Stop button.
+        /// the common Run (F5), Save (Ctrl+S) and Stop (Esc) keys (ShortcutManager, rebindable in Settings) press the page's main (accent), Save / Export and Cancel / Stop button.
         /// Only a visible, enabled button is pressed, so nothing happens while a tool has that action switched off.
         /// </summary>
         private bool TryDefaultToolKey(KeyEventArgs e)
@@ -639,15 +639,18 @@ namespace Smart_Tools.WPF
             if (_currentId is null || _currentId == ToolCatalogManager.HomeId || _currentId == ToolCatalogManager.SettingsId || _currentId == ContactId) return false;
             if (!_views.TryGetValue(_currentId, out var view)) return false;
 
-            var mods = Keyboard.Modifiers;
+            if (ShortcutManager.FromKeyEvent(e) is not { } chord) return false;
+            // A plain letter key (a rebound common key) must not fire while the user types.
+            bool plain = chord.Modifiers is ChordModifiers.None or ChordModifiers.Shift && !(e.Key is >= Key.F1 and <= Key.F24);
+            if (plain && e.Key != Key.Escape && Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase or PasswordBox) return false;
+
             Func<Button, bool>? match = null;
-            if (e.Key == Key.F5 && mods == ModifierKeys.None)
+            if (ShortcutManager.IsCommon(ShortcutManager.RunId, chord, _currentId))
                 match = b => b.TryFindResource("AccentPrimaryButtonStyle") is Style s && ReferenceEquals(b.Style, s);
-            else if (e.Key == Key.S && mods == ModifierKeys.Control)
+            else if (ShortcutManager.IsCommon(ShortcutManager.SaveId, chord, _currentId))
                 match = b => b is ExportButton || b.Name is "BtnSave" or "BtnSaveAll" or "BtnExport" or "BtnSaveAs";
-            else if (e.Key == Key.Escape && mods == ModifierKeys.None && Keyboard.FocusedElement is not (System.Windows.Controls.ComboBox or ComboBoxItem))
-                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);
-            if (match == null) return false;
+            else if (ShortcutManager.IsCommon(ShortcutManager.StopId, chord, _currentId) && Keyboard.FocusedElement is not (System.Windows.Controls.ComboBox or ComboBoxItem))
+                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);            if (match == null) return false;
 
             var target = FindButton(view, match);
             if (target == null) return false;

@@ -77,7 +77,7 @@ namespace Smart_Tools.WPF.Views
             _viewConstructed = true;
 
             // F5 / Ctrl+G by default; the keys can be changed in Settings.
-            ShortcutManager.Attach("password.generate", () => Generate(animate: true));
+            ShortcutManager.AttachCommon("password-generator", ShortcutManager.RunId, () => Generate(animate: true));
             ShortcutManager.Attach("password.generateAlt", () => Generate(animate: true));
         }
 
