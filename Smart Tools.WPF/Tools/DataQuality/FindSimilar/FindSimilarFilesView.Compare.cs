@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
@@ -524,7 +524,7 @@ namespace Smart_Tools.WPF.Views
 
         private void StartPlayer(IReplayBackend player, string path)
         {
-            player.SetMute(_compareMuted);
+            player.SetMute(MuteFor(player));
             player.SetVolume(_compareVolume);
             player.SetSpeed(_compareSpeed);
             try
@@ -647,6 +647,10 @@ namespace Smart_Tools.WPF.Views
             IconPlayPause.Kind = _comparePlaying ? PackIconKind.Pause : PackIconKind.Play;
             BtnPlayPauseBoth.ToolTip = _comparePlaying ? Loc.T("Str_Similar_PauseBoth", "Pause both") : Loc.T("Str_Similar_PlayBoth", "Play both");
             IconMute.Kind = _compareMuted || _compareVolume <= 0 ?PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
+            IconMuteLeft.Kind = _muteLeft ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
+            IconMuteRight.Kind = _muteRight ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
+            BtnMuteLeft.Opacity = _muteLeft ? 0.55 : 1;
+            BtnMuteRight.Opacity = _muteRight ? 0.55 : 1;
             TxtSpeed.Text = $"{_compareSpeed:0.##}x";
             UpdateLinkIcon();
         }
@@ -680,7 +684,7 @@ namespace Smart_Tools.WPF.Views
             RememberCompareVolume();
             foreach (var player in ActiveComparePlayers())
             {
-                player.SetMute(_compareMuted);
+                player.SetMute(MuteFor(player));
                 player.SetVolume(_compareVolume);
             }
             UpdatePlayPauseIcon();
@@ -691,7 +695,29 @@ namespace Smart_Tools.WPF.Views
         {
             _compareMuted = !_compareMuted;
             RememberCompareVolume();
-            foreach (var player in ActiveComparePlayers()) player.SetMute(_compareMuted);
+            foreach (var player in ActiveComparePlayers()) player.SetMute(MuteFor(player));
+            UpdatePlayPauseIcon();
+        }
+
+        // Silence one side only (not saved): handy to hear a single soundtrack while both play.
+        private bool _muteLeft, _muteRight;
+
+        private bool MuteFor(IReplayBackend player) =>
+            _compareMuted
+            || (ReferenceEquals(player, _playerLeft) && _muteLeft)
+            || (ReferenceEquals(player, _playerRight) && _muteRight);
+
+        private void BtnMuteLeft_Click(object sender, RoutedEventArgs e)
+        {
+            _muteLeft = !_muteLeft;
+            if (_playerLeft is { } p) p.SetMute(MuteFor(p));
+            UpdatePlayPauseIcon();
+        }
+
+        private void BtnMuteRight_Click(object sender, RoutedEventArgs e)
+        {
+            _muteRight = !_muteRight;
+            if (_playerRight is { } p) p.SetMute(MuteFor(p));
             UpdatePlayPauseIcon();
         }
 
@@ -753,7 +779,7 @@ namespace Smart_Tools.WPF.Views
         private void SliderLeft_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             _draggingLeft = false;
-            SeekFromSlider(true, SliderLeft.Value);
+            SeekFromSlider(true, ReleasedValue(SliderLeft, e));
         }
 
         private void SliderRight_PreviewMouseDown(object sender, MouseButtonEventArgs e) => _draggingRight = true;
@@ -761,9 +787,21 @@ namespace Smart_Tools.WPF.Views
         private void SliderRight_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             _draggingRight = false;
-            SeekFromSlider(false, SliderRight.Value);
+            SeekFromSlider(false, ReleasedValue(SliderRight, e));
         }
 
+        /// <summary>
+        /// Value to seek to when the mouse is released. A drag already moved the slider; a click on the bar is
+        /// read from the pointer (the slider's own value can be overwritten by the 200 ms poll before this runs,
+        /// which sent the video back to where it was).
+        /// </summary>
+        private static double ReleasedValue(System.Windows.Controls.Slider slider, MouseButtonEventArgs e)
+        {
+            if (slider.IsMouseCaptureWithin || slider.ActualWidth <= 12) return slider.Value;
+            double x = e.GetPosition(slider).X;
+            double ratio = Math.Clamp((x - 6) / (slider.ActualWidth - 12), 0, 1);
+            return slider.Minimum + ratio * (slider.Maximum - slider.Minimum);
+        }
         /// <summary>Seeks the side that was scrubbed; with the link on, the other side goes to the same time (limited to its own length).</summary>
         private void SeekFromSlider(bool fromLeft, double seconds)
         {
@@ -782,7 +820,7 @@ namespace Smart_Tools.WPF.Views
             if (player is not { HasMedia: true, Duration: { } length }) return null;
             seconds = Math.Clamp(seconds, 0, Math.Max(0, length.TotalSeconds - 0.1));
             player.Position = TimeSpan.FromSeconds(seconds);
-            return (seconds, DateTime.UtcNow.AddSeconds(2));
+            return (seconds, DateTime.UtcNow.AddSeconds(4));
         }
 
         private void BtnLinkScrub_Click(object sender, RoutedEventArgs e)

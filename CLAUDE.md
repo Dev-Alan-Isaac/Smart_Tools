@@ -1,4 +1,4 @@
-﻿# Smart Tools - context for Claude
+# Smart Tools - context for Claude
 
 ## First thing, every session (standing rule from Alan)
 1. **Read this file first**, including "Where we left off" at the bottom, before doing anything else.
@@ -48,6 +48,9 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Keep answers short and say plainly what was and wasn't verified. Commits end with the Co-Authored-By line; commit only when asked.
 - Alan wants both: bring tools to the style guide automatically, and *propose* extra UX improvements for approval before applying them.
 - Shell tool gotchas on this machine: apostrophes and `\\` inside inline `python - <<EOF` scripts break; write the script to a file in the scratchpad and run it. Edit files with CRLF-aware code (read, normalise `\r\n`, write back).
+
+## Where we left off (updated 2026-11-15, Find Similar compare: wider, equal stages, side audio mute)
+**Built OK (0 errors), keys en=es, uncommitted, NOT run in the app.** Compare panel (FindSimilarFilesView.xaml): card MaxWidth 1180 -> 1600, margin 14. Both stages get the same height (the Keep row under the right pane is gone; slider and info rows use SharedSizeGroup CmpSlider/CmpInfo with Grid.IsSharedSizeScope). Keep this one instead + Remove this copy moved to the right end of the transport row (column 2, beside the pill bar). New buttons BtnMuteLeft/BtnMuteRight in the bar's volume panel silence one side (_muteLeft/_muteRight, MuteFor(player); not saved, stay on across groups); keys Str_Similar_MuteLeftTip/MuteRightTip. Not checked: narrow window (status text, pill bar and the buttons share one row), VLC and MediaElement per-side mute.
 
 ## Where we left off (updated 2026-11-15, Translate: CJK "?????" fix)
 **Built OK (0 errors), uncommitted, NOT run in the app, no sample file tried.** Alan's report: a file mixing English words with Japanese/Chinese came out as `?????`. Causes: `TranslateManager.Files.cs` `Decode` fell back to Latin-1 and saved in Latin-1 (any kanji became `?`), and the en<->es model dropped characters it has no vocabulary for. Now: `Decode` detects UTF-8/UTF-16 BOMs, UTF-8, legacy Shift-JIS/Korean/GBK/Big5 (only when high bytes come in pairs, so Spanish Windows-1252 is not misread) and Windows-1252; `FitEncoding` saves in UTF-8 BOM when the text no longer fits the original encoding. `TranslateMixed` (Engine.cs) keeps runs of characters the model's vocab lacks (`LoadedModel.Knows`, code points >= U+2E80) verbatim and translates only the words around them (this also affects Text mode). Encoding guess for GBK vs Shift-JIS is a heuristic (kana share >= 20 % = Shift-JIS). **Next (approved plan `~/.claude/plans/i-need-to-make-snappy-waffle.md`, Part 1, NOT started):** Files mode for .docx/.xlsx/.pptx, PDF (PdfPig, .txt out), .html/.xml/.xaml/.resx/.csv/.yaml/.po/.ini and any plain-text file. Test first: "hello 你好 world" / "こんにちは hello" in UTF-8, UTF-16, Shift-JIS, GBK.
