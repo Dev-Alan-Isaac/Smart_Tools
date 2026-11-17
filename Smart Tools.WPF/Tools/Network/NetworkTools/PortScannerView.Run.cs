@@ -80,11 +80,12 @@ namespace Smart_Tools.WPF.Views
                         group.Ports.Insert(at, r);
                         group.Status = Loc.F("Str_PortScanner_OpenCount", "{0} open", group.Ports.Count);
                         Results.Log(ConsoleKind.Success, "SCAN", Loc.F("Str_PortScanner_LogOpen", "{0}: port {1} is open ({2} ms)", group.Host, r.Label, r.LatencyMs));
-                    });
+                    }, System.Windows.Threading.DispatcherPriority.Background);
 
                     try
                     {
-                        var open = await NetworkToolsManager.ScanPortsAsync(group.Host, ports, timeout, progress, OnOpen, token, source: host.Source);
+                        var open = await NetworkToolsManager.ScanPortsAsync(group.Host, ports, timeout, progress, OnOpen, token,
+                            concurrency: hosts.Count > 1 ? NetworkToolsManager.NetworkScanConcurrency : NetworkToolsManager.DefaultScanConcurrency, source: host.Source);
                         openTotal += open.Count;
                         group.Status = open.Count == 0 ? Loc.T("Str_PortScanner_NoOpen", "no open ports") : Loc.F("Str_PortScanner_OpenCount", "{0} open", open.Count);
                         hostsDone++;
@@ -188,7 +189,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressScan.Value = p.Total == 0 ? 0 : p.Checked * SweepShare / p.Total;
                 TxtToolDetail.Text = Loc.F("Str_PortScanner_DevicesFound", "{0} of {1} addresses checked · {2} devices found", p.Checked.ToString("N0"), p.Total.ToString("N0"), p.Found);
             });
-            void OnFound(IPAddress ip) => Dispatcher.InvokeAsync(() => Results.Log(ConsoleKind.Info, "SCAN", Loc.F("Str_PortScanner_LogDevice", "Device found: {0}", ip)));
+            void OnFound(IPAddress ip) => Dispatcher.InvokeAsync(() => Results.Log(ConsoleKind.Info, "SCAN", Loc.F("Str_PortScanner_LogDevice", "Device found: {0}", ip)), System.Windows.Threading.DispatcherPriority.Background);
 
             var found = await NetworkToolsManager.FindLiveHostsAsync(plan.Sweep!, plan.SweepSource, timeoutMs, progress, OnFound, token);
             TxtToolTitle.Text = Loc.F("Str_PortScanner_TitleScanning", "Scanning {0}", plan.Title);

@@ -11,7 +11,10 @@ namespace Smart_Tools.WPF.Controllers
         public const int MaxSweepHosts = 1024;
 
         /// <summary>Hosts checked at once while looking for live devices.</summary>
-        public const int SweepConcurrency = 64;
+        public const int SweepConcurrency = 32;
+
+        /// <summary>Blocking pings at once. Each one holds a thread-pool thread until it answers, so many at a time would starve the rest of the app.</summary>
+        private static readonly SemaphoreSlim PingGate = new(6);
 
         /// <summary>Ports tried on a device that does not answer a ping (many firewalls block it): web, file sharing, SSH, remote desktop, DNS, printers.</summary>
         public static readonly int[] DiscoveryPorts = { 80, 443, 445, 22, 135, 139, 3389, 8080, 53, 9100 };
@@ -98,6 +101,13 @@ namespace Smart_Tools.WPF.Controllers
             return hosts;
         }
 
+        private static async Task<bool> PingAsync(IPAddress source, IPAddress ip, int waitMs, CancellationToken token)
+        {
+            await PingGate.WaitAsync(token).ConfigureAwait(false);
+            try { return await Task.Run(() => PingFrom(source, ip, 0, waitMs).Success, token).ConfigureAwait(false); }
+            finally { PingGate.Release(); }
+        }
+
         // =================================================================
         //  Finding the devices that answer
         // =================================================================
@@ -123,7 +133,7 @@ namespace Smart_Tools.WPF.Controllers
 
             async Task<bool> Answers(IPAddress ip)
             {
-                if (source != null && (await Task.Run(() => PingFrom(source, ip, 0, wait), token).ConfigureAwait(false)).Success) return true;
+                if (source != null && await PingAsync(source, ip, wait, token).ConfigureAwait(false)) return true;
                 foreach (int port in DiscoveryPorts)
                 {
                     if (token.IsCancellationRequested) return false;
