@@ -34,6 +34,7 @@ namespace Smart_Tools.WPF.Models
     public sealed class HostPorts : INotifyPropertyChanged
     {
         private string _status = "";
+        private bool _isExpanded = true;
 
         public HostPorts(string host, string label)
         {
@@ -57,6 +58,18 @@ namespace Smart_Tools.WPF.Models
                 if (_status == value) return;
                 _status = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Status)));
+            }
+        }
+
+        /// <summary>Whether the host's open ports are shown (the Expander in the results; "Collapse all" sets it for every host).</summary>
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                if (_isExpanded == value) return;
+                _isExpanded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
             }
         }
 

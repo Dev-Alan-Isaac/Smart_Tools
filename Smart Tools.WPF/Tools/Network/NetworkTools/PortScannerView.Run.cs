@@ -35,6 +35,7 @@ namespace Smart_Tools.WPF.Views
             var token = cts.Token;
             _sentFrom = _target.Kind == ScanTargetKind.Custom ? SourcePicker.Selected : NetworkToolsManager.AutomaticSource;
             _hosts.Clear();
+            UpdateResultButtons();
             ProgressScan.Value = 0;
             TxtNoOpenPorts.Visibility = Visibility.Visible;
             SourcePicker.IsEnabled = false;
@@ -50,6 +51,7 @@ namespace Smart_Tools.WPF.Views
                 var plan = await BuildPlanAsync(token);
                 if (plan == null) return;
                 title = plan.Title;
+                _lastTitle = title;
                 TxtToolTitle.Text = Loc.F("Str_PortScanner_TitleScanning", "Scanning {0}", title);
                 TxtToolDetail.Text = Loc.F("Str_PortScanner_PortsToCheck", "{0} ports to check", ports.Count.ToString("N0"));
                 Results.Log(ConsoleKind.Info, "SCAN", Loc.F("Str_PortScanner_LogStart", "Scanning {0}: {1} ports per host...", title, ports.Count.ToString("N0")));
@@ -64,6 +66,8 @@ namespace Smart_Tools.WPF.Views
                     var host = hosts[i];
                     var group = new HostPorts(host.Address.ToString(), host.Label) { Status = Loc.T("Str_PortScanner_Scanning", "scanning...") };
                     _hosts.Add(group);
+                    group.PropertyChanged += (_, a) => { if (a.PropertyName == nameof(HostPorts.IsExpanded)) UpdateResultButtons(); };
+                    UpdateResultButtons();
                     TxtNoOpenPorts.Visibility = Visibility.Collapsed;
                     double share = (100 - baseValue) / hosts.Count;
                     int index = i;
@@ -121,6 +125,7 @@ namespace Smart_Tools.WPF.Views
             {
                 _scanCts = null;
                 cts.Dispose();
+                UpdateResultButtons();
                 SourcePicker.IsEnabled = true;
                 UpdateUi();
                 UiMotion.Pop(BtnAction, 0.96);

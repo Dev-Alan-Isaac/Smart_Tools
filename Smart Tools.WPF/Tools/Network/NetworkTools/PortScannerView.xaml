@@ -398,35 +398,94 @@
                             Height="8"
                             Margin="0,14,0,0"
                             Maximum="100" />
-                        <TextBlock
-                            Margin="0,12,0,6"
-                            Style="{StaticResource FieldLabel}"
-                            Text="{DynamicResource Str_NetworkTools_OpenPorts}" />
+                        <Grid Margin="0,12,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource FieldLabel}"
+                                Text="{DynamicResource Str_NetworkTools_OpenPorts}" />
+                            <Button
+                                x:Name="BtnCollapseAll"
+                                Grid.Column="1"
+                                Margin="0,0,8,0"
+                                Click="BtnCollapseAll_Click"
+                                IsEnabled="False"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_PortScanner_CollapseAllTip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconCollapseAll"
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,6,0"
+                                        VerticalAlignment="Center"
+                                        Kind="UnfoldLessHorizontal" />
+                                    <TextBlock
+                                        x:Name="TxtCollapseAll"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_PortScanner_CollapseAll}" />
+                                </StackPanel>
+                            </Button>
+                            <controls:ExportButton
+                                x:Name="BtnExport"
+                                Grid.Column="2"
+                                IsEnabled="False"
+                                ToolTip="{DynamicResource Str_PortScanner_ExportTip}">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Common_ExportAsHtml}" Tag="html">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="Web" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Common_ExportAsPdf}" Tag="pdf">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FilePdfBox" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Common_ExportAsText}" Tag="txt">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="FileDocumentOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </controls:ExportButton>
+                        </Grid>
                         <Grid MinHeight="34">
                             <ScrollViewer MaxHeight="280" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl x:Name="HostsList">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:HostPorts}">
-                                            <StackPanel Margin="0,0,0,8">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock
-                                                        FontFamily="Cascadia Mono, Consolas"
-                                                        FontSize="12.5"
-                                                        FontWeight="SemiBold"
-                                                        Foreground="{DynamicResource TextPrimary}"
-                                                        Text="{Binding Host}" />
-                                                    <TextBlock
-                                                        Margin="8,0,0,0"
-                                                        FontSize="11.5"
-                                                        Foreground="{DynamicResource TextSecondary}"
-                                                        Text="{Binding Label}" />
-                                                    <TextBlock
-                                                        Margin="8,0,0,0"
-                                                        FontSize="11.5"
-                                                        Foreground="{DynamicResource TextSecondary}"
-                                                        Text="{Binding Status}" />
-                                                </StackPanel>
-                                                <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Ports}">
+                                            <Expander
+                                                Margin="0,0,0,6"
+                                                IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+                                                <Expander.Header>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock
+                                                            FontFamily="Cascadia Mono, Consolas"
+                                                            FontSize="12.5"
+                                                            FontWeight="SemiBold"
+                                                            Foreground="{DynamicResource TextPrimary}"
+                                                            Text="{Binding Host}" />
+                                                        <TextBlock
+                                                            Margin="8,0,0,0"
+                                                            FontSize="11.5"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            Text="{Binding Label}" />
+                                                        <TextBlock
+                                                            Margin="8,0,0,0"
+                                                            FontSize="11.5"
+                                                            Foreground="{DynamicResource TextSecondary}"
+                                                            Text="{Binding Status}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+                                                <Grid Margin="22,2,0,0">
+                                                    <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Ports}">
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
                                                             <WrapPanel />
@@ -457,7 +516,8 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-                                            </StackPanel>
+                                                </Grid>
+                                            </Expander>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

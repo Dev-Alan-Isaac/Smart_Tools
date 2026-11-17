@@ -14,6 +14,7 @@ using Border = System.Windows.Controls.Border;
 using Clipboard = System.Windows.Clipboard;
 using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using MenuItem = System.Windows.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -489,6 +490,34 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
         //  Export
         // =================================================================
+
+        /// <summary>HTML, PDF or text report of the devices shown (respects the filter), same columns as the grid.</summary>
+        private void MenuExportReport_Click(object sender, RoutedEventArgs e)
+        {
+            if (_results.Count == 0)
+            {
+                MessageBox.Show(Loc.T("Str_MB_NothingToExportYet3", "Nothing to export yet - run a scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (sender is not MenuItem { Tag: string kind }) return;
+            var devices = _resultsView.Cast<DeviceScanResult>().ToList();
+            string noReply = Loc.T("Str_DeviceScan_NoReply", "no reply");
+            var rows = devices.Select(d => new[]
+            {
+                d.IPAddress, d.HostNameDisplay, d.MacAddressDisplay, d.VendorDisplay, d.ResponseTimeMs is null ? noReply : d.ResponseDisplay,
+                d.IsThisDevice ? Loc.T("Str_PortScanner_ThisPc", "This PC") : d.IsGateway ? Loc.T("Str_DeviceScan_Router", "Router") : "",
+            }).ToList();
+            string title = Loc.T("Str_Tool_device-scanner_Name", "Network Device Scanner");
+            string note = Loc.F("Str_DeviceScan_ReportNote", "{0} devices", devices.Count);
+            var headers = new[]
+            {
+                Loc.T("Str_DeviceScan_ColIp", "IP address"), Loc.T("Str_DeviceScan_ColName", "Name"), Loc.T("Str_DeviceScan_ColMac", "MAC address"),
+                Loc.T("Str_DeviceScan_ColVendor", "Manufacturer"), Loc.T("Str_DeviceScan_ColResponse", "Response"), Loc.T("Str_DeviceScan_ColRole", "Role"),
+            };
+            var report = new TableReport(title, note, headers, rows, new[] { 0.14, 0.24, 0.16, 0.24, 0.12, 0.10 });
+            if (TableReportSaver.Save(Window.GetWindow(this), report, kind, "network-scan"))
+                TxtScanProgress.Text = Loc.F("Str_DeviceScan_ExportedN", "Exported {0} device(s)", devices.Count);
+        }
 
         private void MenuExportCsv_Click(object sender, RoutedEventArgs e)
         {
