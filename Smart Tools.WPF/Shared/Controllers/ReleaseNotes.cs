@@ -13,6 +13,11 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Newest first. Item keys are language keys (text lives in en.xaml / es.xaml).</summary>
         public static readonly ReleaseEntry[] All =
         {
+            new("2.2.0", new[]
+            {
+                "Str_Rel_2_2_0_a", "Str_Rel_2_2_0_b", "Str_Rel_2_2_0_c", "Str_Rel_2_2_0_d", "Str_Rel_2_2_0_e",
+                "Str_Rel_2_2_0_f", "Str_Rel_2_2_0_g", "Str_Rel_2_2_0_h", "Str_Rel_2_2_0_i", "Str_Rel_2_2_0_j",
+            }),
             new("2.1.0", new[]
             {
                 "Str_Rel_2_1_0_a", "Str_Rel_2_1_0_b", "Str_Rel_2_1_0_c", "Str_Rel_2_1_0_d",
