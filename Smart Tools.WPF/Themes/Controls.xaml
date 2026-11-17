@@ -1798,7 +1798,8 @@
                                 Cursor="Hand"
                                 Focusable="False"
                                 IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                                OverridesDefaultStyle="True">
+                                OverridesDefaultStyle="True"
+                                Padding="10,6,8,6">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border

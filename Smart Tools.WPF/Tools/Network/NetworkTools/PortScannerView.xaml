@@ -310,13 +310,19 @@
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition x:Name="CardRow" Height="Auto" />
+                    <RowDefinition x:Name="ConsoleRow" Height="*" MinHeight="130" />
                 </Grid.RowDefinitions>
 
                 <!--  Tool card: action, progress, open ports  -->
-                <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
-                    <StackPanel>
+                <Border x:Name="ToolCard" Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -395,10 +401,11 @@
 
                         <ProgressBar
                             x:Name="ProgressScan"
+                            Grid.Row="1"
                             Height="8"
                             Margin="0,14,0,0"
                             Maximum="100" />
-                        <Grid Margin="0,12,0,6">
+                        <Grid Grid.Row="2" Margin="0,12,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -456,8 +463,8 @@
                                 </Button.ContextMenu>
                             </controls:ExportButton>
                         </Grid>
-                        <Grid MinHeight="34">
-                            <ScrollViewer MaxHeight="280" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <Grid Grid.Row="3" MinHeight="34">
+                            <ScrollViewer x:Name="HostsScroll" MaxHeight="280" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl x:Name="HostsList">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:HostPorts}">
@@ -529,13 +536,15 @@
                                 Foreground="{DynamicResource TextSecondary}"
                                 Text="{DynamicResource Str_NetworkTools_OpenPortsAppearHere}" />
                         </Grid>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <controls:NetworkConsole
                     ctl:Tour.Key="Str_Tour_PortScanner_Results"
                     ctl:Tour.Order="6"
                     x:Name="Results"
+                    CollapsedChanged="Results_CollapsedChanged"
+                    OpenOnNewLine="False"
                     Title="{DynamicResource Str_PortScanner_ScanLog}"
                     Grid.Row="1"
                     EmptyText="Each open port and the scan summary are listed here."

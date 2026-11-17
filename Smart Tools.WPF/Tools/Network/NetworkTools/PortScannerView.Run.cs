@@ -65,6 +65,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     var host = hosts[i];
                     var group = new HostPorts(host.Address.ToString(), host.Label) { Status = Loc.T("Str_PortScanner_Scanning", "scanning...") };
+                    group.IsExpanded = !_hostsCollapsed;   // respect Collapse all for hosts found later
                     _hosts.Add(group);
                     group.PropertyChanged += (_, a) => { if (a.PropertyName == nameof(HostPorts.IsExpanded)) UpdateResultButtons(); };
                     UpdateResultButtons();

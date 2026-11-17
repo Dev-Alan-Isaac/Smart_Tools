@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml;
@@ -192,7 +193,7 @@ namespace Smart_Tools.WPF.Views
                     case LineBreak:
                         sb.Append("<br/>");
                         break;
-                    case InlineUIContainer { Child: StackPanel { Tag: NoteImageInfo info } }:
+                    case InlineUIContainer { Child: StackPanel imagePanel } when ImageInfos.TryGetValue(imagePanel, out var info):
                         sb.Append("<img f=\"").Append(Escape(info.File)).Append("\" w=\"").Append(info.Width.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))
                           .Append("\" h=\"").Append(info.Height.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))
                           .Append("\" s=\"").Append(Escape(info.Source)).Append("\"/>");
@@ -293,9 +294,16 @@ namespace Smart_Tools.WPF.Views
         /// <summary>A picture in the editor: the image, and the source under it when there is one. Right-click removes it.</summary>
         public static InlineUIContainer MakeImage(NoteImageInfo info) => new(MakePanel(info));
 
+        /// <summary>
+        /// What each picture panel shows (file, size, source). Kept beside the panel, not in its Tag: cut, copy and drag turn the
+        /// selection into XAML, and a Tag holding this internal type made that throw "Cannot serialize a non-public type".
+        /// </summary>
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<StackPanel, NoteImageInfo> ImageInfos = new();
+
         private static StackPanel MakePanel(NoteImageInfo info)
         {
-            var panel = new StackPanel { Tag = info, Margin = new Thickness(0, 4, 0, 4), HorizontalAlignment = HorizontalAlignment.Left };
+            var panel = new StackPanel { Margin = new Thickness(0, 4, 0, 4), HorizontalAlignment = HorizontalAlignment.Left };
+            ImageInfos.Add(panel, info);
             var bitmap = LoadBitmap(info.File);
             if (bitmap != null)
             {
@@ -325,10 +333,48 @@ namespace Smart_Tools.WPF.Views
             var remove = new MenuItem { Header = Loc.T("Str_Notes_RemovePicture", "Remove picture") };
             remove.Click += (_, _) =>
             {
-                if (panel.Parent is InlineUIContainer container) container.SiblingInlines.Remove(container);
+                if (LogicalTreeHelper.GetParent(panel) is InlineUIContainer container) RemoveContainer(container);
+            };
+            // A click selects the picture (Delete / Backspace then remove it like any selected text).
+            panel.MouseLeftButtonDown += (_, e) =>
+            {
+                if (FindBox(panel) is not { } box || LogicalTreeHelper.GetParent(panel) is not InlineUIContainer container) return;
+                box.Focus();
+                box.Selection.Select(container.ElementStart, container.ElementEnd);
+                e.Handled = true;
             };
             panel.ContextMenu = new System.Windows.Controls.ContextMenu { Items = { remove } };
             return panel;
+        }
+
+        /// <summary>The picture directly before or after the caret, looking past the edges of the text runs around it; null when text comes first.</summary>
+        internal static InlineUIContainer? PictureNextTo(TextPointer caret, LogicalDirection direction)
+        {
+            var p = caret;
+            for (int step = 0; step < 6 && p != null; step++)
+            {
+                var context = p.GetPointerContext(direction);
+                if (context is TextPointerContext.Text or TextPointerContext.None) return null;
+                if (p.GetAdjacentElement(direction) is InlineUIContainer container) return container;
+                p = p.GetNextContextPosition(direction);
+            }
+            return null;
+        }
+
+        internal static bool ContainsPicture(TextRange range)
+        {
+            for (var p = range.Start; p != null && p.CompareTo(range.End) < 0; p = p.GetNextContextPosition(LogicalDirection.Forward))
+                if (p.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.ElementStart && p.GetAdjacentElement(LogicalDirection.Forward) is InlineUIContainer) return true;
+            return false;
+        }
+
+        private static void RemoveContainer(InlineUIContainer container) => new TextRange(container.ElementStart, container.ElementEnd).Text = "";
+
+        private static RichTextBox? FindBox(DependencyObject from)
+        {
+            for (var d = from; d != null; d = VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d))
+                if (d is RichTextBox box) return box;
+            return null;
         }
 
         private static BitmapSource? LoadBitmap(string file)
@@ -371,6 +417,33 @@ namespace Smart_Tools.WPF.Views
         /// <summary>A copied picture (a screenshot, an image from a web page) is pasted as a picture, with its source; anything with text pastes as usual.</summary>
         public static void AttachPaste(RichTextBox box)
         {
+            // Pictures are UI elements: with IsDocumentEnabled off they are disabled (no click, no right-click menu), so they could not be removed.
+            box.IsDocumentEnabled = true;
+            // Cut / Copy turn the selection into XAML, which cannot carry a picture (it would paste as an empty box and the note
+            // would lose it): with a picture selected, Copy puts only the text on the clipboard and Cut just removes the selection.
+            CommandManager.AddPreviewExecutedHandler(box, (_, e) =>
+            {
+                if (e.Command != ApplicationCommands.Cut && e.Command != ApplicationCommands.Copy) return;
+                if (box.Selection.IsEmpty || !ContainsPicture(box.Selection)) return;
+                e.Handled = true;
+                try
+                {
+                    if (box.Selection.Text.Length > 0) System.Windows.Clipboard.SetText(box.Selection.Text);
+                }
+                catch (System.Runtime.InteropServices.ExternalException)
+                {
+                    // the clipboard was busy: nothing is copied, but Cut still removes
+                }
+                if (e.Command == ApplicationCommands.Cut) box.Selection.Text = "";
+            });
+            box.PreviewKeyDown += (_, e) =>
+            {
+                if (e.Key is not (Key.Back or Key.Delete) || !box.Selection.IsEmpty) return;
+                var direction = e.Key == Key.Back ? LogicalDirection.Backward : LogicalDirection.Forward;
+                if (PictureNextTo(box.CaretPosition, direction) is not { } container) return;
+                RemoveContainer(container);
+                e.Handled = true;
+            };
             DataObject.AddPastingHandler(box, (_, e) =>
             {
                 try

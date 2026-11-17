@@ -9,7 +9,22 @@ namespace Smart_Tools.WPF.Views
     /// <summary>Port Scanner - collapse / expand every host in the results, and export them as HTML, PDF or text.</summary>
     public partial class PortScannerView
     {
+        private const double HostsListMaxHeight = 280;
         private string _lastTitle = "";
+
+        /// <summary>The last Collapse all / Expand all the user chose: hosts found later start in that state instead of opening on their own.</summary>
+        private bool _hostsCollapsed;
+
+        /// <summary>Folded: the scan log is only its header, so the whole card shrinks and the results get the room; open: it takes the rest of the page.</summary>
+        private void Results_CollapsedChanged(object? sender, bool collapsed)
+        {
+            if (ConsoleRow == null) return;
+            ConsoleRow.Height = collapsed ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
+            ConsoleRow.MinHeight = collapsed ? 0 : 130;
+            // Folded: the open-ports card takes the room the log gave up (its list fills it and scrolls); open: back to a short list.
+            CardRow.Height = collapsed ? new GridLength(1, GridUnitType.Star) : GridLength.Auto;
+            HostsScroll.MaxHeight = collapsed ? double.PositiveInfinity : HostsListMaxHeight;
+        }
 
         /// <summary>Enables the buttons that need results and keeps the collapse button's label in step.</summary>
         private void UpdateResultButtons()
@@ -25,6 +40,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnCollapseAll_Click(object sender, RoutedEventArgs e)
         {
             bool expand = _hosts.Count > 0 && _hosts.All(h => !h.IsExpanded);
+            _hostsCollapsed = !expand;
             foreach (var h in _hosts) h.IsExpanded = expand;
             UpdateResultButtons();
         }
