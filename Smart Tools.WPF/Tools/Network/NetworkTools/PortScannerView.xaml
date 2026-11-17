@@ -403,63 +403,65 @@
                             Style="{StaticResource FieldLabel}"
                             Text="{DynamicResource Str_NetworkTools_OpenPorts}" />
                         <Grid MinHeight="34">
-                            <ItemsControl x:Name="HostsList">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:HostPorts}">
-                                        <StackPanel Margin="0,0,0,8">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock
-                                                    FontFamily="Cascadia Mono, Consolas"
-                                                    FontSize="12.5"
-                                                    FontWeight="SemiBold"
-                                                    Foreground="{DynamicResource TextPrimary}"
-                                                    Text="{Binding Host}" />
-                                                <TextBlock
-                                                    Margin="8,0,0,0"
-                                                    FontSize="11.5"
-                                                    Foreground="{DynamicResource TextSecondary}"
-                                                    Text="{Binding Label}" />
-                                                <TextBlock
-                                                    Margin="8,0,0,0"
-                                                    FontSize="11.5"
-                                                    Foreground="{DynamicResource TextSecondary}"
-                                                    Text="{Binding Status}" />
+                            <ScrollViewer MaxHeight="280" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="HostsList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:HostPorts}">
+                                            <StackPanel Margin="0,0,0,8">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock
+                                                        FontFamily="Cascadia Mono, Consolas"
+                                                        FontSize="12.5"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource TextPrimary}"
+                                                        Text="{Binding Host}" />
+                                                    <TextBlock
+                                                        Margin="8,0,0,0"
+                                                        FontSize="11.5"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Text="{Binding Label}" />
+                                                    <TextBlock
+                                                        Margin="8,0,0,0"
+                                                        FontSize="11.5"
+                                                        Foreground="{DynamicResource TextSecondary}"
+                                                        Text="{Binding Status}" />
+                                                </StackPanel>
+                                                <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Ports}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="{x:Type models:PortResult}">
+                                                            <Border
+                                                                Margin="0,0,6,6"
+                                                                Background="{DynamicResource StatusSuccessBg}"
+                                                                Style="{StaticResource IconStatusPillStyle}"
+                                                                ToolTip="{Binding LatencyMs, StringFormat='{}{0} ms'}">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <materialDesign:PackIcon
+                                                                        Width="12"
+                                                                        Height="12"
+                                                                        Margin="0,0,5,0"
+                                                                        VerticalAlignment="Center"
+                                                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                                                        Kind="CheckCircleOutline" />
+                                                                    <TextBlock
+                                                                        FontSize="11.5"
+                                                                        FontWeight="SemiBold"
+                                                                        Foreground="{DynamicResource StatusSuccessFg}"
+                                                                        Text="{Binding Label}" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </StackPanel>
-                                            <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Ports}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <WrapPanel />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate DataType="{x:Type models:PortResult}">
-                                                        <Border
-                                                            Margin="0,0,6,6"
-                                                            Background="{DynamicResource StatusSuccessBg}"
-                                                            Style="{StaticResource IconStatusPillStyle}"
-                                                            ToolTip="{Binding LatencyMs, StringFormat='{}{0} ms'}">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <materialDesign:PackIcon
-                                                                    Width="12"
-                                                                    Height="12"
-                                                                    Margin="0,0,5,0"
-                                                                    VerticalAlignment="Center"
-                                                                    Foreground="{DynamicResource StatusSuccessFg}"
-                                                                    Kind="CheckCircleOutline" />
-                                                                <TextBlock
-                                                                    FontSize="11.5"
-                                                                    FontWeight="SemiBold"
-                                                                    Foreground="{DynamicResource StatusSuccessFg}"
-                                                                    Text="{Binding Label}" />
-                                                            </StackPanel>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
                             <TextBlock
                                 x:Name="TxtNoOpenPorts"
                                 VerticalAlignment="Center"
