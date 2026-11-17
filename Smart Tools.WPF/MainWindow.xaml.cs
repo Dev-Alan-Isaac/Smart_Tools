@@ -641,7 +641,7 @@ namespace Smart_Tools.WPF
 
             if (ShortcutManager.FromKeyEvent(e) is not { } chord) return false;
             // A plain letter key (a rebound common key) must not fire while the user types.
-            bool plain = chord.Modifiers is ChordModifiers.None or ChordModifiers.Shift && !(e.Key is >= Key.F1 and <= Key.F24);
+            bool plain = (chord.Modifiers is ChordModifiers.None or ChordModifiers.Shift) && !(e.Key is >= Key.F1 and <= Key.F24);
             if (plain && e.Key != Key.Escape && Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase or PasswordBox) return false;
 
             Func<Button, bool>? match = null;
@@ -650,7 +650,8 @@ namespace Smart_Tools.WPF
             else if (ShortcutManager.IsCommon(ShortcutManager.SaveId, chord, _currentId))
                 match = b => b is ExportButton || b.Name is "BtnSave" or "BtnSaveAll" or "BtnExport" or "BtnSaveAs";
             else if (ShortcutManager.IsCommon(ShortcutManager.StopId, chord, _currentId) && Keyboard.FocusedElement is not (System.Windows.Controls.ComboBox or ComboBoxItem))
-                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);            if (match == null) return false;
+                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);
+            if (match == null) return false;
 
             var target = FindButton(view, match);
             if (target == null) return false;

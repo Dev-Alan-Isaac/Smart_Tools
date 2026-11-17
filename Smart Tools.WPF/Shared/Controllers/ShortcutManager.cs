@@ -102,7 +102,14 @@ namespace Smart_Tools.WPF.Controllers
             bool changed = false;
             foreach (var (oldId, newId) in OldIds)
             {
-                if (AppSettingsStore.Shortcuts.Remove(oldId, out var key)) { AppSettingsStore.Shortcuts[newId] = key; changed = true; }
+                // A key the user cleared or switched off must stay off in that tool: the tool's override is then switched off
+                // (EffectiveChord reads that as "no key here"), instead of falling back to the common key.
+                if (AppSettingsStore.Shortcuts.Remove(oldId, out var key))
+                {
+                    if (string.IsNullOrWhiteSpace(key) || KeyChord.Parse(key) is not { HasKey: true }) AppSettingsStore.DisabledShortcuts.Add(newId);
+                    else AppSettingsStore.Shortcuts[newId] = key;
+                    changed = true;
+                }
                 if (AppSettingsStore.DisabledShortcuts.Remove(oldId)) { AppSettingsStore.DisabledShortcuts.Add(newId); changed = true; }
             }
             if (changed) AppSettingsStore.Save();
@@ -120,10 +127,14 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>A tool makes a common action do its own thing (the tool id is the catalog id).</summary>
         public static void AttachCommon(string toolId, string commonId, Action handler) => CommonHandlers[(toolId, commonId)] = handler;
 
-        /// <summary>The key a common action has in this tool: the tool's own key if it set one, else the common key; null when off.</summary>
+        /// <summary>The key a common action has in this tool: the tool's own key if it set one, else the common key; null when off (the tool's override switched off turns the key off in that tool only).</summary>
         public static KeyChord? EffectiveChord(string commonId, string? toolId)
         {
-            if (toolId != null && ById.TryGetValue(OverrideId(commonId, toolId), out var own) && own.Enabled && own.Chord is { HasKey: true } oc) return oc;
+            if (toolId != null && ById.TryGetValue(OverrideId(commonId, toolId), out var own))
+            {
+                if (!own.Enabled) return null;   // switched off for this tool
+                if (own.Chord is { HasKey: true } oc) return oc;
+            }
             return ById.TryGetValue(commonId, out var b) && b.Enabled && b.Chord is { HasKey: true } c ? c : null;
         }
 

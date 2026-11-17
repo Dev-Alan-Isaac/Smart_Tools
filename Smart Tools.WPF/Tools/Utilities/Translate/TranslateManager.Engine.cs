@@ -253,7 +253,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             if (current.Length > 0) runs.Add((current.ToString(), keep));
 
-            if (!runs.Any(r => r.Keep)) return TranslatePart(m, sentence, token);
+            if (!runs.Any(r => r.Keep)) return TranslateClean(m, sentence, token);
 
             var result = new StringBuilder();
             foreach (var (text, kept) in runs)
@@ -266,10 +266,38 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 string leading = text[..(text.Length - text.TrimStart().Length)];
                 string trailing = text[text.TrimEnd().Length..];
-                result.Append(leading).Append(TranslatePart(m, trimmed, token)).Append(trailing);
+                result.Append(leading).Append(TranslateClean(m, trimmed, token)).Append(trailing);
             }
             return result.ToString().Trim();
         }
+
+        private static bool IsNote(char c) => c is >= '♩' and <= '♯';
+
+        private static bool HasNote(string s) => s.Any(IsNote);
+
+        /// <summary>
+        /// Opus-MT models were trained on subtitles and write a music note (♪) in place of a word or letter they cannot
+        /// handle (names, rare symbols). When the source has no note, the part is translated again in short chunks, and
+        /// a chunk that still comes out with a note is kept as written. Any note left over is removed.
+        /// </summary>
+        private static string TranslateClean(LoadedModel m, string text, CancellationToken token)
+        {
+            string output = TranslatePart(m, text, token);
+            if (!HasNote(output) || HasNote(text)) return output;
+
+            var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var pieces = new List<string>();
+            for (int i = 0; i < words.Length; i += NoteRetryWords)
+            {
+                string chunk = string.Join(' ', words.Skip(i).Take(NoteRetryWords));
+                token.ThrowIfCancellationRequested();
+                string t = IsWords(chunk) ? TranslatePart(m, chunk, token) : chunk;
+                pieces.Add(HasNote(t) ? chunk : t);
+            }
+            return new string(string.Join(' ', pieces).Where(c => !IsNote(c)).ToArray()).Trim();
+        }
+
+        private const int NoteRetryWords = 3;
 
         /// <summary>Greedy decoding: no beam search and no key/value cache, which keeps it simple and fast enough for sentences.</summary>
         private static string TranslatePart(LoadedModel m, string sentence, CancellationToken token)
