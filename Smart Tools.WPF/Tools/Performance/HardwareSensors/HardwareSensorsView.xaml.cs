@@ -442,7 +442,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
             {
-                MessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -531,7 +531,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -561,7 +561,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                MessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

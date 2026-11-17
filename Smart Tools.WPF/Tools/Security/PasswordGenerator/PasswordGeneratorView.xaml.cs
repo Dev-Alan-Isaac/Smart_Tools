@@ -481,7 +481,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(Owner!, "Couldn't save the file: " + PasswordGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Owner!, "Couldn't save the file: " + PasswordGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

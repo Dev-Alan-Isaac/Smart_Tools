@@ -423,7 +423,7 @@ namespace Smart_Tools.WPF.Views
         {
             TxtProgress.Text = message;
             TxtProgressDetail.Text = "";
-            MessageBox.Show(message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemedMessageBox.Show(message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

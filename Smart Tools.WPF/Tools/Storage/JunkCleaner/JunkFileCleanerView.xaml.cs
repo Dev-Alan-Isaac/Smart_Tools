@@ -354,7 +354,7 @@ namespace Smart_Tools.WPF.Views
             if (_groups.Any(g => g.IsRecycleBin && g.SelectedCount > 0)) lines.Add("• The Recycle Bin is emptied on every drive.");
             foreach (var g in _groups.Where(g => g.SelectedCount > 0 && g.Location.ProcessName is string p && JunkCleanerManager.IsProcessRunning(p)))
                 lines.Add($"• {g.Title} is open - files it's using will be skipped. Close it first for a full clean.");
-            if (MessageBox.Show(string.Join("\n\n", lines), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (ThemedMessageBox.Show(string.Join("\n\n", lines), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             var cts = new CancellationTokenSource();

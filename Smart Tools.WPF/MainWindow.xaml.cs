@@ -440,7 +440,7 @@ namespace Smart_Tools.WPF
             catch (Exception ex)
             {
                 // One broken tool no longer stops the whole app from starting (all views used to be built at startup).
-                MessageBox.Show(this, string.Format(Str("Str_Shell_OpenFailed", "\"{0}\" couldn't be opened:"), tool.HeaderTitle) + $"\n\n{ex.Message}", "Smart Tools", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(this, string.Format(Str("Str_Shell_OpenFailed", "\"{0}\" couldn't be opened:"), tool.HeaderTitle) + $"\n\n{ex.Message}", "Smart Tools", MessageBoxButton.OK, MessageBoxImage.Error);
                 SelectNav(_currentId);
                 return;
             }
@@ -1099,7 +1099,7 @@ namespace Smart_Tools.WPF
             // Closing because the elevated copy is taking over: already confirmed, don't ask again.
             if (!AppRestartManager.IsRestarting && !_sessionEnding)
             {
-                var result = MessageBox.Show(
+                var result = ThemedMessageBox.Show(
                     this,
                     Str("Str_Shell_ConfirmExitText", "Are you sure you want to close Smart Tools?"),
                     Str("Str_Shell_ConfirmExitTitle", "Confirm exit"),

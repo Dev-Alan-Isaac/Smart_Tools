@@ -321,7 +321,7 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
-            var answer = MessageBox.Show(Loc.T("Str_Synth_UnfinishedTake", "You were still recording when you left. Save the recording?"),
+            var answer = ThemedMessageBox.Show(Loc.T("Str_Synth_UnfinishedTake", "You were still recording when you left. Save the recording?"),
                 Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
             if (answer == MessageBoxResult.Yes) OfferToSave(path);
             else DeleteScratch(path);
@@ -436,7 +436,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_MB_CouldnTStartRecording", "Couldn't start recording: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
+                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTStartRecording", "Couldn't start recording: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -488,7 +488,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
-                    MessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
+                    ThemedMessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

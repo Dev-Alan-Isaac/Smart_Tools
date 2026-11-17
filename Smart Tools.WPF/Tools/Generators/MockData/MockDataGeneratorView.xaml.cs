@@ -392,7 +392,7 @@ namespace Smart_Tools.WPF.Views
             if (_isSaving) return;
             if (_fields.Count >= MockDataManager.MaxFields)
             {
-                MessageBox.Show(string.Format(Str("Str_Mock_Err_TooManyFields", "Up to {0} columns."), MockDataManager.MaxFields),
+                ThemedMessageBox.Show(string.Format(Str("Str_Mock_Err_TooManyFields", "Up to {0} columns."), MockDataManager.MaxFields),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }

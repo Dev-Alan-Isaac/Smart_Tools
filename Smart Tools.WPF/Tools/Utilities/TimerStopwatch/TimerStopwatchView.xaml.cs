@@ -190,7 +190,7 @@ namespace Smart_Tools.WPF.Views
         {
             if ((sender as FrameworkElement)?.Tag is not string tag || !Enum.TryParse(tag, out TimerMode mode)) return;
             if (mode == _mode) return;
-            if (_state != RunState.Idle && System.Windows.MessageBox.Show(Loc.T("Str_MB_SwitchingModesStopsWhat", "Switching modes stops what is running. Switch?"), Loc.T("Str_Tool_timer-stopwatch_Name", "Timer & Stopwatch"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            if (_state != RunState.Idle && ThemedMessageBox.Show(Loc.T("Str_MB_SwitchingModesStopsWhat", "Switching modes stops what is running. Switch?"), Loc.T("Str_Tool_timer-stopwatch_Name", "Timer & Stopwatch"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
             {
                 (_mode switch { TimerMode.Countdown => RadioCountdown, TimerMode.Pomodoro => RadioPomodoro, _ => RadioStopwatch }).IsChecked = true;
                 return;

@@ -240,7 +240,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (DriveList.SelectedItem is not LargeFileDrive drive)
                 {
-                    MessageBox.Show(Owner!, "Choose a drive to search first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThemedMessageBox.Show(Owner!, "Choose a drive to search first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return null;
                 }
                 root = drive.RootPath;
@@ -257,7 +257,7 @@ namespace Smart_Tools.WPF.Views
 
             if (!Directory.Exists(root))
             {
-                MessageBox.Show(Owner!, DiskScope ? "That drive isn't ready (unplugged, or no disc in it)." : "That folder isn't there any more. Choose it again.",
+                ThemedMessageBox.Show(Owner!, DiskScope ? "That drive isn't ready (unplugged, or no disc in it)." : "That folder isn't there any more. Choose it again.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
@@ -309,7 +309,7 @@ namespace Smart_Tools.WPF.Views
             if (IsBusy || _lastOptions == null) return;
             if (!Directory.Exists(_lastOptions.RootPath))
             {
-                MessageBox.Show(Owner!, "That folder or drive isn't there any more.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Owner!, "That folder or drive isn't there any more.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             await RunScanAsync(_lastOptions);
@@ -685,7 +685,7 @@ namespace Smart_Tools.WPF.Views
                     : $"Delete {what}?\n\n{toBin:N0} go to the Recycle Bin. {forGood:N0} {LargeFileText.Plural(forGood, "is", "are")} on a drive without one and will be deleted permanently.";
             string names = string.Join("\n", items.Take(5).Select(i => "• " + i.Name)) + (items.Count > 5 ? $"\n…and {items.Count - 5:N0} more" : "");
 
-            if (MessageBox.Show(Owner!, $"{question}\n\n{names}", DialogTitle, MessageBoxButton.YesNo,
+            if (ThemedMessageBox.Show(Owner!, $"{question}\n\n{names}", DialogTitle, MessageBoxButton.YesNo,
                     forGood > 0 ? MessageBoxImage.Warning : MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -733,7 +733,7 @@ namespace Smart_Tools.WPF.Views
             string? problem = await Task.Run(() => LargeFileFinderManager.CheckMove(items, destination));
             if (problem != null)
             {
-                MessageBox.Show(Owner!, problem, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Owner!, problem, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -803,7 +803,7 @@ namespace Smart_Tools.WPF.Views
             if (failures.Count == 0) return;
             string lines = string.Join("\n", failures.Take(8).Select(f => $"• {f.Item.Name}: {f.Error}"));
             if (failures.Count > 8) lines += $"\n…and {failures.Count - 8:N0} more";
-            MessageBox.Show(Owner!, $"{heading}\n\n{lines}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            ThemedMessageBox.Show(Owner!, $"{heading}\n\n{lines}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // =================================================================
@@ -833,7 +833,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(Owner!, "Couldn't save the list: " + LargeFileFinderManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Owner!, "Couldn't save the list: " + LargeFileFinderManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

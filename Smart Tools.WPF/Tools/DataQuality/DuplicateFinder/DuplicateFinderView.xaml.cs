@@ -355,7 +355,7 @@ namespace Smart_Tools.WPF.Views
             if (_folders.Count == 0)
             {
                 InputCard.PopDropArea();
-                MessageBox.Show(Loc.T("Str_MB_AddAtLeastOne", "Add at least one folder to search first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Loc.T("Str_MB_AddAtLeastOne", "Add at least one folder to search first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -415,7 +415,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 TxtProgress.Text = Loc.T("Str_DataQuality_MsgScanFailed", "Scan failed.");
-                MessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -612,7 +612,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_lastScanVerified)
             {
-                var answer = MessageBox.Show(Loc.T("Str_MB_TheseResultsWereMatched", "These results were matched by name only, so the files may have different contents.\n\nSelect all copies but one anyway?"),
+                var answer = ThemedMessageBox.Show(Loc.T("Str_MB_TheseResultsWereMatched", "These results were matched by name only, so the files may have different contents.\n\nSelect all copies but one anyway?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
                 if (answer != MessageBoxResult.Yes) return;
             }
@@ -791,7 +791,7 @@ namespace Smart_Tools.WPF.Views
         private static void ShowInFolder(string path)
         {
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                MessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder", "That file or folder no longer exists. Rescan to refresh the results."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder", "That file or folder no longer exists. Rescan to refresh the results."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -965,7 +965,7 @@ namespace Smart_Tools.WPF.Views
 
             string which = string.Join(", ", emptied.Take(5).Select(g => g.Number));
             if (emptied.Count > 5) which += ", ...";
-            var answer = MessageBox.Show(Loc.F("Str_MB_InGroupSGroup", "In {0} group(s) (group {1}) every copy is selected, so {2} would leave no copy behind.\n\nContinue anyway?", emptied.Count, which, verb),
+            var answer = ThemedMessageBox.Show(Loc.F("Str_MB_InGroupSGroup", "In {0} group(s) (group {1}) every copy is selected, so {2} would leave no copy behind.\n\nContinue anyway?", emptied.Count, which, verb),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
             return answer == MessageBoxResult.Yes;
         }
@@ -988,7 +988,7 @@ namespace Smart_Tools.WPF.Views
                     ? Loc.F("Str_DataQuality_MsgAskDeleteNoBin", "Permanently delete {0}?\n\n{1} has no Recycle Bin, so this can't be undone.", what, string.Join(", ", rootsWithoutBin))
                     : Loc.F("Str_DataQuality_MsgAskDelete", "Permanently delete {0}?\n\nThis can't be undone.", what);
 
-            var answer = MessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
+            var answer = ThemedMessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
                 recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 
@@ -1013,7 +1013,7 @@ namespace Smart_Tools.WPF.Views
             // Moving into a scanned folder would just create new duplicates there.
             if (_folders.Any(f => destination.StartsWith(f.FullPath.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase)))
             {
-                var answer = MessageBox.Show(Loc.T("Str_MB_ThatFolderIsInside", "That folder is inside one of the folders being scanned, so the moved files would show up as duplicates again next scan.\n\nMove there anyway?"),
+                var answer = ThemedMessageBox.Show(Loc.T("Str_MB_ThatFolderIsInside", "That folder is inside one of the folders being scanned, so the moved files would show up as duplicates again next scan.\n\nMove there anyway?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
                 if (answer != MessageBoxResult.Yes) return;
             }
@@ -1062,12 +1062,12 @@ namespace Smart_Tools.WPF.Views
                     var sb = new StringBuilder($"{result.Failed.Count} file(s) couldn't be processed:\n\n");
                     foreach (var (item, error) in result.Failed.Take(8)) sb.AppendLine($"• {item.Name}: {error}");
                     if (result.Failed.Count > 8) sb.AppendLine($"...and {result.Failed.Count - 8} more.");
-                    MessageBox.Show(sb.ToString(), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThemedMessageBox.Show(sb.ToString(), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_Err_DidntWork", "That didn't work: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_Err_DidntWork", "That didn't work: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -1099,7 +1099,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

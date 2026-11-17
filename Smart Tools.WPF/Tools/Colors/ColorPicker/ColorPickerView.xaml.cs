@@ -598,7 +598,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_Err_ImageLoad", "Couldn't load that image: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_Err_ImageLoad", "Couldn't load that image: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -622,12 +622,12 @@ namespace Smart_Tools.WPF.Views
                     }
                 }
 
-                MessageBox.Show(Loc.T("Str_MB_TheClipboardHasNo", "The clipboard has no image. Copy a screenshot or an image first."), DialogTitle,
+                ThemedMessageBox.Show(Loc.T("Str_MB_TheClipboardHasNo", "The clipboard has no image. Copy a screenshot or an image first."), DialogTitle,
                     MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_Err_ClipboardRead", "Couldn't read the clipboard: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_Err_ClipboardRead", "Couldn't read the clipboard: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -828,7 +828,7 @@ namespace Smart_Tools.WPF.Views
                 _scanPaths = list;
                 if (result.Rows.Count == 0)
                 {
-                    MessageBox.Show(
+                    ThemedMessageBox.Show(
                         result.FilesRead == 0
                             ? Loc.T("Str_Color_MsgScanNoFiles", "None of those files could be read as text (they may be binary, empty or over 5 MB).")
                             : Loc.F("Str_Color_MsgScanNone", "No colors were found in {0:N0} file(s).", result.FilesRead),
@@ -846,7 +846,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(Loc.F("Str_MB_CouldnTReadThat", "Couldn't read that file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTReadThat", "Couldn't read that file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -890,7 +890,7 @@ namespace Smart_Tools.WPF.Views
             var rows = ColorManager.ConvertBatch(ColorManager.SplitLines(TxtBatchInput.Text));
             if (rows.Count == 0)
             {
-                MessageBox.Show(Loc.T("Str_MB_PasteAtLeastOne", "Paste at least one color first - one per line."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Loc.T("Str_MB_PasteAtLeastOne", "Paste at least one color first - one per line."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 TxtBatchInput.Focus();
                 return;
             }
@@ -912,7 +912,7 @@ namespace Smart_Tools.WPF.Views
             if (sender is not MenuItem { Tag: string tag } || !Enum.TryParse(tag, out ColorExportFormat format)) return;
             if (_batchRows is not { Count: > 0 } rows)
             {
-                MessageBox.Show(Loc.T("Str_MB_NothingToExportYet", "Nothing to export yet - click Convert All first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Loc.T("Str_MB_NothingToExportYet", "Nothing to export yet - click Convert All first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -934,7 +934,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_MB_CouldnTExport", "Couldn't export: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTExport", "Couldn't export: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

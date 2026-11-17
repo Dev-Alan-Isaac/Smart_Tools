@@ -682,7 +682,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(Loc.T("Str_MB_TheExportCouldnT", "The export couldn't be saved.\n\n") + MetadataExtractManager.PlainExportError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Loc.T("Str_MB_TheExportCouldnT", "The export couldn't be saved.\n\n") + MetadataExtractManager.PlainExportError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 TxtProgress.Text = "Export failed: " + MetadataExtractManager.PlainExportError(ex);
             }
             finally

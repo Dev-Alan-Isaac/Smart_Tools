@@ -37,7 +37,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnClipboardDelete_Click(object sender, RoutedEventArgs e)
         {
-            var answer = MessageBox.Show(
+            var answer = ThemedMessageBox.Show(
                 Window.GetWindow(this),
                 Str("Str_Settings_ClipboardDeleteText", "Delete the whole clipboard history, including pinned items and the saved copy?"),
                 Str("Str_Settings_ClipboardDelete", "Delete history"),

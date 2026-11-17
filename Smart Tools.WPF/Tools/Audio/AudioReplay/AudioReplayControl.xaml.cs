@@ -1,3 +1,4 @@
+using Smart_Tools.WPF.Views;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using Smart_Tools.WPF.Controllers;
@@ -735,9 +736,9 @@ namespace Smart_Tools.WPF.Controls
         {
             var owner = Window.GetWindow(this);
             if (owner != null)
-                MessageBox.Show(owner, text, title, MessageBoxButton.OK, icon);
+                ThemedMessageBox.Show(owner, text, title, MessageBoxButton.OK, icon);
             else
-                MessageBox.Show(text, title, MessageBoxButton.OK, icon);
+                ThemedMessageBox.Show(text, title, MessageBoxButton.OK, icon);
         }
     }
 }
