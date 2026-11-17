@@ -4462,6 +4462,24 @@
         </Setter>
     </Style>
 
+        <!--  The pill chip, in a monospaced face (addresses and prefixes): used by the examples and the split prefixes alike  -->
+        <Style
+            x:Key="ScChip"
+            BasedOn="{StaticResource PillChipStyle}"
+            TargetType="Button">
+            <Setter Property="FontFamily" Value="Consolas" />
+        </Style>
+
+        <!--  Prefix chips (/25 ... none): equal-width cells in a 3-column grid, so they line up in rows  -->
+        <Style
+            x:Key="ScPrefixChip"
+            BasedOn="{StaticResource ScChip}"
+            TargetType="Button">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+
     <!--
         Choice tile for the dark options sidebar (icon over label), the Settings page's ChoiceTileStyle in sidebar colours:
         input fill, accent border and tinted fill when checked, small press scale. Content is whatever the tile shows.

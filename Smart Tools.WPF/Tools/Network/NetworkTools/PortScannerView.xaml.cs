@@ -3,7 +3,6 @@ using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
 using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,9 +15,9 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace Smart_Tools.WPF.Views
 {
     /// <summary>
-    /// Port Scanner - UI only. Scanning (and sending from a chosen adapter) is
-    /// in NetworkToolsManager.Scan.cs; the console and the adapter picker are
-    /// shared controls. Settings are saved field by field.
+    /// Port Scanner - UI only. What can be scanned (this PC, each adapter's network, another host) is built in
+    /// PortScannerView.Targets.cs, the scan itself runs in PortScannerView.Run.cs; the sweep and the port tests are in
+    /// NetworkToolsManager.Sweep.cs / .Scan.cs. Settings are saved field by field.
     /// </summary>
     public partial class PortScannerView : UserControl
     {
@@ -26,7 +25,7 @@ namespace Smart_Tools.WPF.Views
         private const double OptionsCollapsedWidth = 56;
 
         private CancellationTokenSource? _scanCts;
-        private readonly ObservableCollection<PortResult> _openPorts = new();
+        private readonly ObservableCollection<HostPorts> _hosts = new();
         private SourceChoice _sentFrom = NetworkToolsManager.AutomaticSource;
         private bool _loadedOnce;
         private bool _applying;
@@ -36,7 +35,7 @@ namespace Smart_Tools.WPF.Views
         public PortScannerView()
         {
             InitializeComponent();
-            OpenPortsList.ItemsSource = _openPorts;
+            HostsList.ItemsSource = _hosts;
             SourcePicker.SelectionChanged += SourcePicker_SelectionChanged;
             _constructed = true;
         }
@@ -57,11 +56,14 @@ namespace Smart_Tools.WPF.Views
                     TxtScanPorts.Text = s.ScanPorts;
                     foreach (var r in ScanSpeedChips.Children.OfType<RadioButton>()) r.IsChecked = (string)r.Tag == s.ScanTimeoutMs.ToString(CultureInfo.InvariantCulture);
                     SourcePicker.SavedId = s.ScanSourceId;
+                    _savedTargetId = s.ScanTargetId;
+                    _prefix = s.ScanPrefix;
                 }
                 finally
                 {
                     _applying = false;
                 }
+                _ = RefreshTargetsAsync();
             }
             UpdatePortsHint();
             UpdateUi();
@@ -138,6 +140,7 @@ namespace Smart_Tools.WPF.Views
         private void ScanSpeed_Click(object sender, RoutedEventArgs e)
         {
             UpdatePortsHint();
+            UpdateRangeHint();
             SaveFields();
         }
 
@@ -156,113 +159,50 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
             double worst = Math.Ceiling(ports.Count / (double)NetworkToolsManager.DefaultScanConcurrency) * TimeoutMs / 1000.0;
-            TxtPortsHint.Text = $"{ports.Count:N0} port{(ports.Count == 1 ? "" : "s")} · up to about {(worst < 60 ? $"{Math.Max(1, worst):0} s" : $"{worst / 60:0.#} min")} (less when ports answer quickly)";
+            TxtPortsHint.Text = Loc.F("Str_PortScanner_PortsHint", "{0} ports · up to about {1} per host (less when ports answer quickly)", ports.Count.ToString("N0"), FormatSeconds(worst));
         }
 
-        // =================================================================
-        //  Scan
-        // =================================================================
-
-        private async Task ToggleAsync()
-        {
-            if (_scanCts != null)
-            {
-                _scanCts.Cancel();
-                return;
-            }
-            string? host = NetworkToolsManager.CleanHost(TxtScanHost.Text);
-            var (ports, error) = NetworkToolsManager.ParsePorts(TxtScanPorts.Text);
-            if (host == null || error != null)
-            {
-                Results.Log(ConsoleKind.Warning, "SCAN", host == null ? "Enter a host name or IP address first." : error!);
-                (host == null ? TxtScanHost : TxtScanPorts).Focus();
-                return;
-            }
-            TxtScanHost.Text = host;
-            SaveFields();
-
-            int timeout = TimeoutMs;
-            _sentFrom = SourcePicker.Selected;
-            _openPorts.Clear();
-            ProgressScan.Value = 0;
-            TxtNoOpenPorts.Visibility = Visibility.Visible;
-            string from = _sentFrom.IsAutomatic ? "" : " " + _sentFrom.FromText;
-            TxtToolTitle.Text = $"Scanning {host}{from}";
-            TxtToolDetail.Text = $"0 of {ports.Count:N0} ports checked";
-
-            var cts = _scanCts = new CancellationTokenSource();
-            SourcePicker.IsEnabled = false;
-            UpdateUi();
-            UiMotion.Pop(BtnAction, 0.96);
-            Results.Log(ConsoleKind.Info, "SCAN", $"Scanning {host}{from}: {ports.Count:N0} port{(ports.Count == 1 ? "" : "s")}...");
-
-            int lastChecked = 0;
-            var clock = Stopwatch.StartNew();
-            var progress = new Progress<PortScanProgress>(p =>
-            {
-                lastChecked = p.Checked;
-                ProgressScan.Value = p.Total == 0 ? 0 : p.Checked * 100.0 / p.Total;
-                TxtToolDetail.Text = $"{p.Checked:N0} of {p.Total:N0} ports checked · {p.Open} open";
-            });
-
-            void OnOpen(PortResult r) => Dispatcher.InvokeAsync(() =>
-            {
-                int i = 0;
-                while (i < _openPorts.Count && _openPorts[i].Port < r.Port) i++;
-                _openPorts.Insert(i, r);
-                TxtNoOpenPorts.Visibility = Visibility.Collapsed;
-                Results.Log(ConsoleKind.Success, "SCAN", $"Port {r.Label} is open ({r.LatencyMs} ms)");
-            });
-
-            try
-            {
-                var open = await NetworkToolsManager.ScanPortsAsync(host, ports, timeout, progress, OnOpen, cts.Token, source: _sentFrom.Address);
-                bool cancelled = cts.IsCancellationRequested;
-                string summary = NetworkToolsManager.DescribeScan(host, ports.Count, cancelled ? lastChecked : ports.Count, open, clock.Elapsed, cancelled);
-                Results.Log(open.Count > 0 ? ConsoleKind.Success : ConsoleKind.Info, "SCAN", summary + (_sentFrom.IsAutomatic ? "" : $" · {_sentFrom.FromText}"));
-                TxtToolTitle.Text = (cancelled ? $"Scan of {host} stopped" : $"Scanned {host}") + from;
-                TxtToolDetail.Text = $"{(cancelled ? lastChecked : ports.Count):N0} of {ports.Count:N0} ports checked · {open.Count} open";
-                if (!cancelled) ProgressScan.Value = 100;
-            }
-            catch (OperationCanceledException)
-            {
-                Results.Log(ConsoleKind.Info, "SCAN", "Stopped.");
-            }
-            catch (Exception ex)
-            {
-                Results.Log(ConsoleKind.Error, "SCAN", ex.Message);
-                TxtToolTitle.Text = "Port scan";
-                TxtToolDetail.Text = ex.Message;
-            }
-            finally
-            {
-                _scanCts = null;
-                cts.Dispose();
-                SourcePicker.IsEnabled = true;
-                UpdateUi();
-                UiMotion.Pop(BtnAction, 0.96);
-            }
-        }
+        private static string FormatSeconds(double seconds) =>
+            seconds < 60 ? $"{Math.Max(1, seconds):0} s" : $"{seconds / 60:0.#} min";
 
         private void UpdateUi()
         {
             bool running = _scanCts != null;
             IconAction.Kind = running ? PackIconKind.StopCircleOutline : PackIconKind.MagnifyScan;
-            TxtActionLabel.Text = running ? "Stop" : "Scan";
-            BtnAction.ToolTip = running ? "Stop the scan (keeps what was found)" : "Check which ports are open";
+            TxtActionLabel.Text = running ? Loc.T("Str_PortScanner_Stop", "Stop") : Loc.T("Str_Network_ScanButton", "Scan");
+            BtnAction.ToolTip = running
+                ? Loc.T("Str_PortScanner_StopTip", "Stop the scan (keeps what was found)")
+                : Loc.T("Str_PortScanner_ScanTip", "Check which ports are open");
 
-            var source = running ? _sentFrom : SourcePicker.Selected;
-            TxtSource.Text = source.IsAutomatic ? "Automatic" : $"{source.Label} · {source.Address}";
-            IconSource.Kind = source.IsAutomatic ? PackIconKind.AutoFix
-                : source.Kind.Contains("Wi-Fi", StringComparison.Ordinal) ? PackIconKind.Wifi
-                : source.Kind.StartsWith("USB", StringComparison.Ordinal) ? PackIconKind.Usb
-                : PackIconKind.Ethernet;
+            ShowSource(running);
 
             if (!running && ProgressScan.Value == 0)
             {
-                TxtToolTitle.Text = "Port scan";
-                TxtToolDetail.Text = "Finds open TCP ports - only scan machines you own or may test.";
+                TxtToolTitle.Text = Loc.T("Str_PortScanner_Idle", "Port scan");
+                TxtToolDetail.Text = Loc.T("Str_PortScanner_IdleDetail", "Finds open TCP ports - only scan machines you own or may test.");
             }
         }
+
+        /// <summary>The pill on the tool card: where the connections leave from.</summary>
+        private void ShowSource(bool running)
+        {
+            var t = _target;
+            if (t?.Kind == ScanTargetKind.ThisPc)
+            {
+                TxtSource.Text = Loc.T("Str_PortScanner_ThisPc", "This PC");
+                IconSource.Kind = PackIconKind.Laptop;
+                return;
+            }
+            var source = running ? _sentFrom : t?.Kind == ScanTargetKind.Network ? new SourceChoice(t.Id, t.Label, "", t.Address, t.Adapter) : SourcePicker.Selected;
+            TxtSource.Text = source.IsAutomatic ? Loc.T("Str_NetworkAdapters_Automatic", "Automatic") : $"{source.Label} · {source.Address}";
+            IconSource.Kind = AdapterIcon(source.IsAutomatic ? "" : source.Kind, source.IsAutomatic);
+        }
+
+        private static PackIconKind AdapterIcon(string kind, bool automatic) =>
+            automatic ? PackIconKind.AutoFix
+            : kind.Contains("Wi-Fi", StringComparison.Ordinal) ? PackIconKind.Wifi
+            : kind.StartsWith("USB", StringComparison.Ordinal) ? PackIconKind.Usb
+            : kind == "VPN" ? PackIconKind.Vpn
+            : PackIconKind.Ethernet;
     }
 }

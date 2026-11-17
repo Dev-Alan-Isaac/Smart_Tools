@@ -101,13 +101,82 @@
                         HorizontalScrollBarVisibility="Disabled"
                         VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="16,4,16,16">
-                            <!--  ============ PORT SCAN ============  -->
+                            <!--  ============ TARGET: this PC, each adapter network, or another host ============  -->
                             <Border ctl:Tour.Key="Str_Tour_PortScanner_Target" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_PortScanner_TargetHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.LanConnect}" />
+                                        <Button
+                                            x:Name="BtnRefreshTargets"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Click="BtnRefreshTargets_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_SourceAdapterPicker_LookForAdaptersAgain}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="Refresh" />
+                                        </Button>
+                                    </Grid>
+                                    <StackPanel x:Name="TargetPanel" Margin="0,6,0,0" />
+                                    <TextBlock
+                                        x:Name="TxtTargetHint"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_PortScanner_TargetsLooking}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ RANGE: prefix chips, same look as the Subnet Calculator ============  -->
+                            <Border
+                                x:Name="RangeCard"
+                                ctl:Tour.Key="Str_Tour_PortScanner_Range"
+                                ctl:Tour.Order="2"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
                                     <ContentControl
-                                        Content="{DynamicResource Str_Network_PortScannerHeader}"
+                                        Content="{DynamicResource Str_PortScanner_RangeHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.LanConnect}" />
+                                        Tag="{x:Static materialDesign:PackIconKind.CallSplit}" />
+                                    <TextBlock
+                                        Margin="2,4,0,4"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_PortScanner_RangeLabel}" />
+                                    <UniformGrid x:Name="PrefixChips" Margin="-3,4,-3,0" Columns="3">
+                                        <Button Click="PrefixChip_Click" Content="/24" Style="{StaticResource ScPrefixChip}" Tag="24" />
+                                        <Button Click="PrefixChip_Click" Content="/25" Style="{StaticResource ScPrefixChip}" Tag="25" />
+                                        <Button Click="PrefixChip_Click" Content="/26" Style="{StaticResource ScPrefixChip}" Tag="26" />
+                                        <Button Click="PrefixChip_Click" Content="/27" Style="{StaticResource ScPrefixChip}" Tag="27" />
+                                        <Button Click="PrefixChip_Click" Content="/28" Style="{StaticResource ScPrefixChip}" Tag="28" />
+                                        <Button Click="PrefixChip_Click" Content="/30" Style="{StaticResource ScPrefixChip}" Tag="30" />
+                                    </UniformGrid>
+                                    <Button
+                                        x:Name="BtnPrefixWhole"
+                                        Margin="0,0,0,0"
+                                        Click="PrefixChip_Click"
+                                        Content="{DynamicResource Str_PortScanner_RangeWhole}"
+                                        Style="{StaticResource ScPrefixChip}"
+                                        Tag="0" />
+                                    <TextBlock x:Name="TxtRangeHint" Style="{StaticResource SidebarHint}" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ ANOTHER HOST ============  -->
+                            <Border
+                                x:Name="CustomCard"
+                                ctl:Tour.Key="Str_Tour_PortScanner_Source"
+                                ctl:Tour.Order="3"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_PortScanner_AnotherHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Server}" />
                                     <TextBlock
                                         Margin="0,4,0,6"
                                         Style="{StaticResource FieldLabel}"
@@ -116,13 +185,29 @@
                                         <TextBox
                                             x:Name="TxtScanHost"
                                             KeyDown="HostBox_KeyDown"
+                                            TextChanged="TxtScanHost_TextChanged"
                                             LostFocus="Setting_LostFocus"
                                             Style="{StaticResource BareTextBox}"
                                             Tag="192.168.1.1"
                                             ToolTip="{DynamicResource Str_Network_ScanHostTooltip}" />
                                     </Border>
                                     <TextBlock
-                                        Margin="0,12,0,6"
+                                        Margin="0,12,0,0"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Ping_Adapter}" />
+                                    <controls:SourceAdapterPicker x:Name="SourcePicker" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ PORTS ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_PortScanner_Ports" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_PortScanner_PortsHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Ethernet}" />
+                                    <TextBlock
+                                        Margin="0,4,0,6"
                                         Style="{StaticResource FieldLabel}"
                                         Text="{DynamicResource Str_NetworkTools_Ports}" />
                                     <Border Style="{StaticResource InputBarStyle}">
@@ -216,17 +301,6 @@
                                     <TextBlock x:Name="TxtPortsHint" Style="{StaticResource SidebarHint}" />
                                 </StackPanel>
                             </Border>
-
-                            <!--  ============ SEND FROM ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_PortScanner_Source" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
-                                <StackPanel>
-                                    <ContentControl
-                                        Content="{DynamicResource Str_Ping_Adapter}"
-                                        Style="{StaticResource SidebarGroupHeader}"
-                                        Tag="{x:Static materialDesign:PackIconKind.Ethernet}" />
-                                    <controls:SourceAdapterPicker x:Name="SourcePicker" />
-                                </StackPanel>
-                            </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
@@ -251,7 +325,7 @@
                             </Grid.ColumnDefinitions>
                             <Button
                                 ctl:Tour.Key="Str_Tour_PortScanner_Run"
-                                ctl:Tour.Order="3"
+                                ctl:Tour.Order="5"
                                 x:Name="BtnAction"
                                 MinWidth="150"
                                 Margin="0,0,16,0"
@@ -329,34 +403,60 @@
                             Style="{StaticResource FieldLabel}"
                             Text="{DynamicResource Str_NetworkTools_OpenPorts}" />
                         <Grid MinHeight="34">
-                            <ItemsControl x:Name="OpenPortsList">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
+                            <ItemsControl x:Name="HostsList">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:PortResult}">
-                                        <Border
-                                            Margin="0,0,6,6"
-                                            Background="{DynamicResource StatusSuccessBg}"
-                                            Style="{StaticResource IconStatusPillStyle}"
-                                            ToolTip="{Binding LatencyMs, StringFormat='Answered in {0} ms'}">
+                                    <DataTemplate DataType="{x:Type models:HostPorts}">
+                                        <StackPanel Margin="0,0,0,8">
                                             <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon
-                                                    Width="12"
-                                                    Height="12"
-                                                    Margin="0,0,5,0"
-                                                    VerticalAlignment="Center"
-                                                    Foreground="{DynamicResource StatusSuccessFg}"
-                                                    Kind="CheckCircleOutline" />
                                                 <TextBlock
-                                                    FontSize="11.5"
+                                                    FontFamily="Cascadia Mono, Consolas"
+                                                    FontSize="12.5"
                                                     FontWeight="SemiBold"
-                                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    Text="{Binding Host}" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    FontSize="11.5"
+                                                    Foreground="{DynamicResource TextSecondary}"
                                                     Text="{Binding Label}" />
+                                                <TextBlock
+                                                    Margin="8,0,0,0"
+                                                    FontSize="11.5"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding Status}" />
                                             </StackPanel>
-                                        </Border>
+                                            <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Ports}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type models:PortResult}">
+                                                        <Border
+                                                            Margin="0,0,6,6"
+                                                            Background="{DynamicResource StatusSuccessBg}"
+                                                            Style="{StaticResource IconStatusPillStyle}"
+                                                            ToolTip="{Binding LatencyMs, StringFormat='{}{0} ms'}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon
+                                                                    Width="12"
+                                                                    Height="12"
+                                                                    Margin="0,0,5,0"
+                                                                    VerticalAlignment="Center"
+                                                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                                                    Kind="CheckCircleOutline" />
+                                                                <TextBlock
+                                                                    FontSize="11.5"
+                                                                    FontWeight="SemiBold"
+                                                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                                                    Text="{Binding Label}" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -372,7 +472,7 @@
 
                 <controls:NetworkConsole
                     ctl:Tour.Key="Str_Tour_PortScanner_Results"
-                    ctl:Tour.Order="4"
+                    ctl:Tour.Order="6"
                     x:Name="Results"
                     Title="{DynamicResource Str_PortScanner_ScanLog}"
                     Grid.Row="1"

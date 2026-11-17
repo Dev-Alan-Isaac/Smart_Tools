@@ -220,6 +220,10 @@ namespace Smart_Tools.WPF.Models
         /// <summary>The adapter each tool sends from (its GUID; "" = automatic). Not a path.</summary>
         public string PingSourceId { get; set; } = "";
         public string ScanSourceId { get; set; } = "";
+
+        /// <summary>The Port Scanner target ("pc", "custom" or "net|adapter|address") and the prefix the range was narrowed to (0 = the adapter's own).</summary>
+        public string ScanTargetId { get; set; } = "pc";
+        public int ScanPrefix { get; set; }
         public string SocketSourceId { get; set; } = "";
     }
 
