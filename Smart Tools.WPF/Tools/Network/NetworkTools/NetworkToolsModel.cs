@@ -168,7 +168,7 @@ namespace Smart_Tools.WPF.Models
         public bool IsReadOnly => IsBluetoothRadio || IsHardwareOnly;
 
         /// <summary>The filter group: Network, Bluetooth, Display, Audio, Storage or USB.</summary>
-        public string Category => IsHardwareOnly ? HardwareCategory : Kind == "Bluetooth" ? "Bluetooth" : "Network";
+        public string Category => IsHardwareOnly ? HardwareCategory : IsBluetoothRadio ? "Bluetooth" : "Network";
 
         /// <summary>Replaces the state wording ("On" / "Off" for a Bluetooth radio).</summary>
         public string? StatusOverride { get; init; }

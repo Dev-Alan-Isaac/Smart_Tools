@@ -253,7 +253,7 @@ namespace Smart_Tools.WPF.Views
         private List<AdapterInfo> WithBluetooth(List<AdapterInfo> real)
         {
             var list = new List<AdapterInfo>(real);
-            if (_bt != null && _bt.Radios.Count > 0 && !real.Any(a => a.Kind == "Bluetooth")) AddRadios(list);
+            if (_bt != null && _bt.Radios.Count > 0) AddRadios(list);
             list.AddRange(_hardware.OrderBy(h => Array.IndexOf(NetworkToolsManager.HardwareCategories, h.HardwareCategory)).ThenBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase));
             return list;
         }
@@ -556,7 +556,7 @@ namespace Smart_Tools.WPF.Views
             bool radio = a.IsBluetoothRadio;
             NetTiles.Visibility = a.IsReadOnly ? Visibility.Collapsed : Visibility.Visible;
             BtTiles.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
-            BtSection.Visibility = a.Kind == "Bluetooth" ? Visibility.Visible : Visibility.Collapsed;
+            BtSection.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
             if (!radio) return;
             TxtBtState.Text = a.StatusText;
             TxtBtPairedCount.Text = (_bt?.Devices.Count ?? 0).ToString();
