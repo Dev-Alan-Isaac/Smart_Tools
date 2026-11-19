@@ -75,7 +75,6 @@ namespace Smart_Tools.WPF
 
         private ShellSettings _shell = new();
         private string _currentId = ToolCatalogManager.HomeId;
-        private string? _beforeMemorialId;
         private const int MaxHistory = 30;
         private readonly List<string> _history = new();   // pages visited before the current one, newest last (the Back button)
         private bool _navigatingBack;
@@ -1058,16 +1057,10 @@ namespace Smart_Tools.WPF
             if (_memorialView == null)
             {
                 _memorialView = new MemorialView();
-                _memorialView.BackRequested += MemorialView_BackRequested;
             }
-            if (_currentId != MemorialId) _beforeMemorialId = _currentId;
             var memorial = HeaderTexts(MemorialId);
             Show(MemorialId, _memorialView, memorial.Label, PackIconKind.HeartOutline, memorial.Section);
         }
-
-        // Back to whatever was showing before the memorial (Home if nothing was).
-        private void MemorialView_BackRequested(object? sender, EventArgs e) =>
-            Open(_beforeMemorialId ?? ToolCatalogManager.HomeId);
 
         // =================================================================
         //  Closing
