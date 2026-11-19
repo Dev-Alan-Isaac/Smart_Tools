@@ -153,11 +153,36 @@ namespace Smart_Tools.WPF.Models
         public string ConfiguredMask { get; init; } = "";
         public string ConfiguredGateway { get; init; } = "";
 
+        /// <summary>True for the entry made from a Bluetooth radio (no IP settings, nothing to edit or disable here).</summary>
+        public bool IsBluetoothRadio { get; init; }
+
+        /// <summary>"Display", "Audio", "Storage" or "USB" for an adapter that is not a network one (read-only); empty for network and Bluetooth.</summary>
+        public string HardwareCategory { get; init; } = "";
+
+        /// <summary>The detail rows of a hardware-only adapter (the network ones are described by <c>DescribeAdapter</c>).</summary>
+        public List<NetworkInfoRow> ExtraRows { get; init; } = new();
+
+        public bool IsHardwareOnly => HardwareCategory.Length > 0;
+
+        /// <summary>Nothing to edit, enable or disable here: Bluetooth radios and non-network hardware.</summary>
+        public bool IsReadOnly => IsBluetoothRadio || IsHardwareOnly;
+
+        /// <summary>The filter group: Network, Bluetooth, Display, Audio, Storage or USB.</summary>
+        public string Category => IsHardwareOnly ? HardwareCategory : Kind == "Bluetooth" ? "Bluetooth" : "Network";
+
+        /// <summary>Replaces the state wording ("On" / "Off" for a Bluetooth radio).</summary>
+        public string? StatusOverride { get; init; }
+
         public bool IsEnabled => State != AdapterState.Disabled;
+
+        /// <summary>The adapter's own first address, gateway and DNS server - the tiles in its detail panel.</summary>
+        public string PrimaryIp => IPv4.Count > 0 ? IPv4[0].Address : "–";
+        public string PrimaryGateway => Gateways.FirstOrDefault() ?? "–";
+        public string PrimaryDns => Dns.FirstOrDefault() ?? "–";
 
         public string AddressText => IPv4.Count > 0 ? string.Join(", ", IPv4.Select(a => a.Address)) : IPv6.FirstOrDefault() ?? "No address";
 
-        public string StatusText => State switch
+        public string StatusText => StatusOverride ?? State switch
         {
             AdapterState.Connected => "Connected",
             AdapterState.Connecting => "Connecting…",
@@ -167,7 +192,7 @@ namespace Smart_Tools.WPF.Models
         };
 
         /// <summary>The second line in the list: the address when connected, else the state.</summary>
-        public string ListLine => State == AdapterState.Connected ? $"{Kind} · {AddressText}" : $"{Kind} · {StatusText}";
+        public string ListLine => State == AdapterState.Connected && !IsReadOnly ? $"{Kind} · {AddressText}" : $"{Kind} · {StatusText}";
     }
 
     /// <summary>What the edit form asks Windows to set. Empty strings = not given.</summary>
