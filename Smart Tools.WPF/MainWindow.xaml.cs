@@ -111,6 +111,8 @@ namespace Smart_Tools.WPF
             RefreshRecent();
             Open(ToolCatalogManager.HomeId);
             LanguageManager.Changed += OnLanguageChanged;
+            Activated += (_, _) => MemoryTrim.Cancel();
+            Deactivated += (_, _) => MemoryTrim.Schedule();
             Loaded += (_, _) => RestoreStartupWidgets();
             ContentRendered += (_, _) => ShowWhatsNewIfUpdated();
         }

@@ -19,23 +19,26 @@
         Opacity="0">
 
         <!--
-            Optional full-page background image. Both this and the dimming
-            overlay below start Collapsed - the code-behind only shows them
-            if BackgroundImagePath actually points to a real file, so an
-            empty/missing path just leaves the plain ContentBg showing.
+            Optional background picture. It is a rounded panel inset from the page
+            edges (so it never touches the navigation bar or the window border):
+            the picture is the panel's brush, set from code, so the corners clip it.
+            Both panels start Collapsed and are shown only if the file loads.
         -->
-        <Image
-            x:Name="ImgBackground"
-            Stretch="UniformToFill"
+        <Border
+            x:Name="BackdropImage"
+            Margin="16"
+            CornerRadius="20"
             Visibility="Collapsed" />
 
         <Border
             x:Name="BackgroundOverlay"
+            Margin="16"
             Background="#B3000000"
+            CornerRadius="20"
             Visibility="Collapsed" />
 
         <Viewbox
-            Margin="32"
+            Margin="40"
             Stretch="Uniform"
             StretchDirection="Both">
             <Border
@@ -49,13 +52,7 @@
                 CornerRadius="4"
                 SnapsToDevicePixels="True">
 
-                <Border.Effect>
-                    <DropShadowEffect
-                        BlurRadius="60"
-                        Opacity="0.35"
-                        ShadowDepth="0"
-                        Color="Black" />
-                </Border.Effect>
+                <!--  No DropShadowEffect on purpose: WPF draws blur effects in software on offscreen surfaces as big as the card (about 100 MB maximized).  -->
 
                 <!--  Second, finer line inside the card: the classic memorial-card frame  -->
                 <Border

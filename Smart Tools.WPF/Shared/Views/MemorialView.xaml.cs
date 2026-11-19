@@ -34,8 +34,9 @@ namespace Smart_Tools.WPF.Views
             EllipsePhoto.Visibility = hasPhoto ? Visibility.Visible : Visibility.Collapsed;
             IconFallback.Visibility = hasPhoto ? Visibility.Collapsed : Visibility.Visible;
 
-            bool hasBackground = TryLoadImage(BackgroundImagePath, bitmap => ImgBackground.Source = bitmap);
-            ImgBackground.Visibility = hasBackground ? Visibility.Visible : Visibility.Collapsed;
+            bool hasBackground = TryLoadImage(BackgroundImagePath, bitmap =>
+                BackdropImage.Background = new ImageBrush(bitmap) { Stretch = Stretch.UniformToFill });
+            BackdropImage.Visibility = hasBackground ? Visibility.Visible : Visibility.Collapsed;
             BackgroundOverlay.Visibility = hasBackground ? Visibility.Visible : Visibility.Collapsed;
 
             // Loaded fires every time this view re-enters the visual tree
@@ -46,6 +47,13 @@ namespace Smart_Tools.WPF.Views
                 var fadeIn = new DoubleAnimation(0, 1, FadeInDuration)
                 {
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+                };
+                // Once finished, drop the animation and keep the plain value: a held animation keeps the
+                // whole page on a separate render surface.
+                fadeIn.Completed += (_, _) =>
+                {
+                    RootGrid.Opacity = 1;
+                    RootGrid.BeginAnimation(OpacityProperty, null);
                 };
                 RootGrid.BeginAnimation(OpacityProperty, fadeIn);
             };
