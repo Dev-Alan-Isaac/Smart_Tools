@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.MediaHubView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     x:Name="Root"
@@ -30,11 +31,11 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <UniformGrid Width="470" Columns="4">
-                    <RadioButton x:Name="RadioMixed" Margin="0,0,2,0" Checked="Mode_Checked" Content="{DynamicResource Str_MediaHub_Mixed}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Mixed" ToolTip="{DynamicResource Str_MediaHub_PicturesVideosAndMusic}" />
-                    <RadioButton x:Name="RadioPhotos" Margin="2,0,2,0" Checked="Mode_Checked" Content="{DynamicResource Str_MediaHub_Photos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Photos" ToolTip="{DynamicResource Str_MediaHub_PictureViewerZoomRotate}" />
-                    <RadioButton x:Name="RadioVideos" Margin="2,0,2,0" Checked="Mode_Checked" Content="{DynamicResource Str_DuplicateFinder_Videos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Videos" ToolTip="{DynamicResource Str_MediaHub_VideoPlayerForAlmost}" />
-                    <RadioButton x:Name="RadioMusic" Margin="2,0,0,0" Checked="Mode_Checked" Content="{DynamicResource Str_MediaViewer_Audio}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Music" ToolTip="{DynamicResource Str_MediaHub_AudioPlayerWithThe}" />
+                <UniformGrid Width="560" Columns="4">
+                    <RadioButton x:Name="RadioMixed" Margin="0,0,2,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="ViewDashboardOutline" Content="{DynamicResource Str_MediaHub_Mixed}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Mixed" ToolTip="{DynamicResource Str_MediaHub_PicturesVideosAndMusic}" />
+                    <RadioButton x:Name="RadioPhotos" Margin="2,0,2,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="ImageMultipleOutline" Content="{DynamicResource Str_MediaHub_Photos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Photos" ToolTip="{DynamicResource Str_MediaHub_PictureViewerZoomRotate}" />
+                    <RadioButton x:Name="RadioVideos" Margin="2,0,2,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="MovieOpenOutline" Content="{DynamicResource Str_DuplicateFinder_Videos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Videos" ToolTip="{DynamicResource Str_MediaHub_VideoPlayerForAlmost}" />
+                    <RadioButton x:Name="RadioMusic" Margin="2,0,0,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="MusicNote" Content="{DynamicResource Str_MediaViewer_Audio}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Music" ToolTip="{DynamicResource Str_MediaHub_AudioPlayerWithThe}" />
                 </UniformGrid>
 
                 <TextBlock x:Name="TxtHint" Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
