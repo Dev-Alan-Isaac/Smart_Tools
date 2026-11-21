@@ -123,6 +123,7 @@ namespace Smart_Tools.WPF.Views
             var tools = ToolCatalogManager.FavoriteTools(ids);
             FavoritesList.ItemsSource = tools;
             TxtNoFavorites.Visibility = tools.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            ShowRecent();
         }
 
         /// <summary>
@@ -164,10 +165,20 @@ namespace Smart_Tools.WPF.Views
                 FavoriteToggled?.Invoke(tool.Id);
         }
 
+        private IReadOnlyList<ToolInfo> _recent = Array.Empty<ToolInfo>();
+
         public void SetRecent(IReadOnlyList<ToolInfo> recent)
         {
-            RecentList.ItemsSource = recent;
-            RecentPanel.Visibility = recent.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            _recent = recent;
+            ShowRecent();
+        }
+
+        /// <summary>Recent leaves out what is already a favorite: the same tool twice in two rows is noise (Hick's Law).</summary>
+        private void ShowRecent()
+        {
+            var shown = _recent.Where(t => !_favoriteIds.Contains(t.Id)).ToList();
+            RecentList.ItemsSource = shown;
+            RecentPanel.Visibility = shown.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // =================================================================

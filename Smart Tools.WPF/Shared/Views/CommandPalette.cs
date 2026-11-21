@@ -103,9 +103,12 @@ namespace Smart_Tools.WPF.Views
                 var t = tool;
                 rows.Add(new PaletteAction(t.Name, t.CategoryTitle, ParseIcon(t.Icon), () => _openTool(t.Id)));
             }
-            foreach (var action in _actions)
-                if (query.Length == 0 || action.Title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
-                    rows.Add(action);
+            // An action whose title starts with what was typed ("Home", "Settings") comes first: Enter then does what the words say.
+            // Other matching actions stay after the tools.
+            var matching = _actions.Where(a => query.Length == 0 || a.Title.Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToList();
+            var exact = matching.Where(a => query.Length > 0 && a.Title.StartsWith(query, StringComparison.CurrentCultureIgnoreCase)).ToList();
+            rows.InsertRange(0, exact);
+            rows.AddRange(matching.Except(exact));
 
             _list.Items.Clear();
             foreach (var row in rows) _list.Items.Add(Build(row));
