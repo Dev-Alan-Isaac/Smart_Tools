@@ -13,7 +13,12 @@
     -->
 
     <!--  Page / content area background (behind cards)  -->
-    <SolidColorBrush x:Key="ContentBg" Color="#40101826" />
+    <!--
+        Fully clear on purpose: ~140 views, the title bar and the content column all paint ContentBg, and translucent layers stack
+        (each extra #40 made that area darker, so title bar / body / sidebar showed three different greys with hard seams). The one
+        frost layer is now painted once by the main window (GlassWindow.FrostBrush); everything on top of it is clear.
+    -->
+    <SolidColorBrush x:Key="ContentBg" Color="#00000000" />
 
     <!--  Card / panel surfaces  -->
     <SolidColorBrush x:Key="CardBg" Color="#40FFFFFF" />
@@ -203,10 +208,13 @@
     <SolidColorBrush x:Key="ScrollThumbHover" Color="#B3FFFFFF" />
 
 
-    <!--  Glass sidebar: translucent so the blurred backdrop shows through  -->
+    <!--  Shadow-caster layer under the sidebar: nearly clear, so it does not add a second frost layer under the sidebar  -->
+    <SolidColorBrush x:Key="GlassHostBase" Color="#05101826" />
+
+    <!--  Glass sidebar: only a faint sheen over the window's frost, so it keeps the same base colour as the title bar and content  -->
     <LinearGradientBrush x:Key="SidebarBg" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#A61B2540" />
-        <GradientStop Offset="1" Color="#8C0F1526" />
+        <GradientStop Offset="0" Color="#12FFFFFF" />
+        <GradientStop Offset="1" Color="#08FFFFFF" />
     </LinearGradientBrush>
 
 </ResourceDictionary>

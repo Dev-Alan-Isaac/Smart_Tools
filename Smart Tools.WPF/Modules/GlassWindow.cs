@@ -107,7 +107,7 @@ namespace Smart_Tools.WPF.Controllers
             var margins = new Margins { Left = -1, Right = -1, Top = -1, Bottom = -1 };
             DwmExtendFrameIntoClientArea(hwnd, ref margins);
             if (WindowChrome.GetWindowChrome(window) is { } chrome) chrome.GlassFrameThickness = new Thickness(-1);
-            window.Background = Brushes.Transparent;
+            window.Background = FrostBrush;   // the single frost layer; ContentBg is clear in Glass so nothing stacks on it
             return true;
         }
 
@@ -145,6 +145,8 @@ namespace Smart_Tools.WPF.Controllers
 
         private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Window, object> Patched = new();
         private static readonly SolidColorBrush SecondaryBrush = Freeze(new SolidColorBrush(Color.FromRgb(0x14, 0x1A, 0x28)));
+
+        private static readonly SolidColorBrush FrostBrush = Freeze(new SolidColorBrush(Color.FromArgb(0x59, 0x10, 0x18, 0x26)));
 
         private static SolidColorBrush Freeze(SolidColorBrush brush) { brush.Freeze(); return brush; }
 
