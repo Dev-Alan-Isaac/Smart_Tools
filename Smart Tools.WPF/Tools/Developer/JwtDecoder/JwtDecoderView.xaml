@@ -28,165 +28,163 @@
         <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
 
         <Grid Margin="16,8,16,16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!--  Token in, status pills out  -->
-            <Border Margin="0,0,0,12" ctl:Tour.Key="Str_Tour_JwtDecoder_Token" ctl:Tour.Order="1" Style="{StaticResource CardStyle}">
+            <!--  ================= OPTIONS SIDEBAR: the token and the key go in, the status comes out =================  -->
+            <controls:ToolSidebar ExpandedWidth="340">
                 <StackPanel>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ContentControl
-                            Content="{DynamicResource Str_Jwt_TokenHeader}"
-                            Style="{StaticResource CardHeader}"
-                            Tag="{x:Static materialDesign:PackIconKind.KeyChainVariant}" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button
-                                Margin="0,0,4,0"
-                                Click="BtnPaste_Click"
-                                Style="{StaticResource ListToolButtonStyle}"
-                                ToolTip="{DynamicResource Str_Jwt_Paste}">
-                                <materialDesign:PackIcon
-                                    Width="16"
-                                    Height="16"
-                                    Kind="ContentPaste" />
-                            </Button>
-                            <Button
-                                Click="BtnClear_Click"
-                                Style="{StaticResource ListToolDangerButtonStyle}"
-                                ToolTip="{DynamicResource Str_Jwt_Clear}">
-                                <materialDesign:PackIcon
-                                    Width="16"
-                                    Height="16"
-                                    Kind="DeleteSweepOutline" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                    <Border Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_JwtDecoder_Token" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button
+                                        Margin="0,0,4,0"
+                                        Click="BtnPaste_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Jwt_Paste}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="ContentPaste" />
+                                    </Button>
+                                    <Button
+                                        Click="BtnClear_Click"
+                                        Style="{StaticResource ListToolDangerButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Jwt_Clear}">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Kind="DeleteSweepOutline" />
+                                    </Button>
+                                </StackPanel>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Jwt_TokenHeader}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.KeyChainVariant}" />
+                            </DockPanel>
 
-                    <TextBox
-                        x:Name="TxtToken"
-                        Height="84"
-                        Margin="0,10,0,0"
-                        VerticalContentAlignment="Top"
-                        AcceptsReturn="True"
-                        FontFamily="{StaticResource JwtMono}"
-                        FontSize="12"
-                        TextChanged="TxtToken_TextChanged"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Auto"
-                        Tag="{DynamicResource Str_Jwt_TokenHint}" />
+                            <TextBox
+                                x:Name="TxtToken"
+                                Height="190"
+                                VerticalContentAlignment="Top"
+                                AcceptsReturn="True"
+                                FontFamily="{StaticResource JwtMono}"
+                                FontSize="12"
+                                TextChanged="TxtToken_TextChanged"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto"
+                                Tag="{DynamicResource Str_Jwt_TokenHint}" />
+
+                        <WrapPanel x:Name="PillRow" Margin="0,10,0,0" Visibility="Collapsed">
+                            <Border x:Name="PillTime" Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconTime"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Kind="ClockOutline" />
+                                    <TextBlock
+                                        x:Name="TxtTime"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="PillAlg" Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconAlg"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Function" />
+                                    <TextBlock
+                                        x:Name="TxtAlg"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                            <Border
+                                x:Name="PillVerify"
+                                Background="{DynamicResource StatusInfoBg}"
+                                Style="{StaticResource IconStatusPillStyle}"
+                                ToolTip="{DynamicResource Str_Jwt_NotVerifiedTip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        x:Name="IconVerify"
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Kind="ShieldOffOutline" />
+                                    <TextBlock
+                                        x:Name="TxtVerify"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource StatusInfoFg}"
+                                        Text="{DynamicResource Str_Jwt_NotVerified}" />
+                                </StackPanel>
+                            </Border>
+                        </WrapPanel>
+                        </StackPanel>
+                    </Border>
 
                     <!--  The key that checks the signature: a secret (HS), or a PEM public key / certificate / JWK (RS, PS, ES)  -->
-                    <Grid Margin="0,14,0,0" ctl:Tour.Key="Str_Tour_JwtDecoder_Key" ctl:Tour.Order="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ContentControl
-                            Content="{DynamicResource Str_Jwt_KeyHeader}"
-                            Style="{StaticResource CardHeader}"
-                            Tag="{x:Static materialDesign:PackIconKind.KeyOutline}" />
-                        <CheckBox
-                            x:Name="ChkBase64"
-                            Grid.Column="1"
-                            Margin="0,0,8,0"
-                            Click="ChkBase64_Click"
-                            Content="{DynamicResource Str_Jwt_SecretBase64}"
-                            controls:ChoiceIcon.Kind="KeyOutline"
-                            Style="{StaticResource ToggleChipCheckBoxStyle}"
-                            ToolTip="{DynamicResource Str_Jwt_SecretBase64Tip}" />
-                        <Button
-                            Grid.Column="2"
-                            Click="BtnClearKey_Click"
-                            Style="{StaticResource ListToolDangerButtonStyle}"
-                            ToolTip="{DynamicResource Str_Jwt_ClearKey}">
-                            <materialDesign:PackIcon
-                                Width="16"
-                                Height="16"
-                                Kind="DeleteSweepOutline" />
-                        </Button>
-                    </Grid>
-                    <TextBox
-                        x:Name="TxtKey"
-                        Height="72"
-                        Margin="0,10,0,0"
-                        VerticalContentAlignment="Top"
-                        AcceptsReturn="True"
-                        FontFamily="{StaticResource JwtMono}"
-                        FontSize="12"
-                        TextChanged="TxtKey_TextChanged"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Auto"
-                        Tag="{DynamicResource Str_Jwt_KeyHint}" />
-
-                    <WrapPanel x:Name="PillRow" Margin="0,10,0,0" Visibility="Collapsed">
-                        <Border x:Name="PillTime" Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="IconTime"
-                                    Width="13"
-                                    Height="13"
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    Kind="ClockOutline" />
-                                <TextBlock
-                                    x:Name="TxtTime"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
-                        <Border x:Name="PillAlg" Margin="0,0,8,0" Style="{StaticResource IconStatusPillStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="IconAlg"
-                                    Width="13"
-                                    Height="13"
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    Kind="Function" />
-                                <TextBlock
-                                    x:Name="TxtAlg"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
-                        <Border
-                            x:Name="PillVerify"
-                            Background="{DynamicResource StatusInfoBg}"
-                            Style="{StaticResource IconStatusPillStyle}"
-                            ToolTip="{DynamicResource Str_Jwt_NotVerifiedTip}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="IconVerify"
-                                    Width="13"
-                                    Height="13"
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource StatusInfoFg}"
-                                    Kind="ShieldOffOutline" />
-                                <TextBlock
-                                    x:Name="TxtVerify"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource StatusInfoFg}"
-                                    Text="{DynamicResource Str_Jwt_NotVerified}" />
-                            </StackPanel>
-                        </Border>
-                    </WrapPanel>
+                    <Border Margin="0,0,0,4" ctl:Tour.Key="Str_Tour_JwtDecoder_Key" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button
+                                    DockPanel.Dock="Right"
+                                    Click="BtnClearKey_Click"
+                                    Style="{StaticResource ListToolDangerButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Jwt_ClearKey}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="DeleteSweepOutline" />
+                                </Button>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Jwt_KeyHeader}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.KeyOutline}" />
+                            </DockPanel>
+                            <CheckBox
+                                x:Name="ChkBase64"
+                                Margin="0,0,0,8"
+                                HorizontalAlignment="Left"
+                                Click="ChkBase64_Click"
+                                Content="{DynamicResource Str_Jwt_SecretBase64}"
+                                controls:ChoiceIcon.Kind="KeyOutline"
+                                Style="{StaticResource ToggleChipCheckBoxStyle}"
+                                ToolTip="{DynamicResource Str_Jwt_SecretBase64Tip}" />
+                            <TextBox
+                                x:Name="TxtKey"
+                                Height="110"
+                                VerticalContentAlignment="Top"
+                                AcceptsReturn="True"
+                                FontFamily="{StaticResource JwtMono}"
+                                FontSize="12"
+                                TextChanged="TxtKey_TextChanged"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto"
+                                Tag="{DynamicResource Str_Jwt_KeyHint}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
-            </Border>
+            </controls:ToolSidebar>
 
-            <!--  Decoded parts  -->
-            <Grid Grid.Row="1">
+            <!--  ================= MAIN AREA: decoded parts =================  -->
+            <Grid Grid.Column="2">
                 <Grid x:Name="PanelContent" d:Visibility="Visible" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
