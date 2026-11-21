@@ -23,12 +23,12 @@
 
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
-        <!--  One rule card in the sidebar  -->
+        <!--  One rule card in the Sort plan (main area)  -->
         <DataTemplate x:Key="StepTemplate" DataType="{x:Type models:OrganizeStepRow}">
             <Border
-                Margin="0,0,0,8"
-                Padding="8"
-                Background="{DynamicResource SidebarSubPanelBg}"
+                Width="300" Margin="0,0,10,10"
+                Padding="10"
+                Background="{DynamicResource RowBg}"
                 CornerRadius="8">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -96,7 +96,7 @@
                         Grid.Column="1"
                         Margin="0,5,0,0"
                         FontSize="11"
-                        Foreground="{DynamicResource SidebarTextMuted}"
+                        Foreground="{DynamicResource TextSecondary}"
                         Text="{Binding Hint}"
                         TextWrapping="Wrap"
                         Visibility="{Binding HasHint, Converter={StaticResource BoolToVisibility}}" />
@@ -567,7 +567,7 @@
                             <Border ctl:Tour.Key="Str_Tour_OrganizeFiles_Steps" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
-                                        Content="{DynamicResource Str_Organize_StepsHeader}"
+                                        Content="{DynamicResource Str_Organize_LayoutHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
 
@@ -666,50 +666,6 @@
                                         </Grid>
                                     </Border>
 
-                                    <!--  Steps Panel  -->
-                                    <StackPanel x:Name="PanelSteps" Margin="0,12,0,0">
-                                        <ItemsControl
-                                            x:Name="StepsList"
-                                            Focusable="False"
-                                            ItemTemplate="{StaticResource StepTemplate}"
-                                            ToolTip="{DynamicResource Str_Organize_StepsListTooltip}" />
-
-                                        <!--  Add Step Button Container  -->
-                                        <Grid Margin="0,4,0,0">
-                                            <Button Padding="0"
-                                                x:Name="BtnAddStep"
-                                                Width="40"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Click="BtnAddStep_Click"
-                                                Style="{StaticResource NeutralIconButtonStyle}"
-                                                ToolTip="{DynamicResource Str_Organize_AddStepTooltip}">
-                                                <materialDesign:PackIcon
-                                                    Width="18"
-                                                    Height="18"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Kind="Plus" />
-                                            </Button>
-
-                                            <TextBlock
-                                                x:Name="TxtStepsHint"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Center"
-                                                FontSize="11"
-                                                Foreground="{DynamicResource SidebarTextMuted}" />
-                                        </Grid>
-
-                                        <CheckBox
-                                            x:Name="ChkEmoji"
-                                            Margin="0,10,0,0"
-                                            Checked="PlanOption_Changed"
-                                            Content="{DynamicResource Str_OrganizeFiles_EmojiOnCategoryFolders}"
-                                            Foreground="{DynamicResource SidebarText}"
-                                            IsChecked="True"
-                                            ToolTip="{DynamicResource Str_OrganizeFiles_NameCategoryFoldersLike}"
-                                            Unchecked="PlanOption_Changed" />
-                                    </StackPanel>
                                 </StackPanel>
                             </Border>
 
@@ -785,6 +741,7 @@
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -893,8 +850,66 @@
                     </Grid>
                 </Border>
 
+                <!--
+                    Sort plan: the rules, side by side across the page (they were stacked in the 280 px sidebar, too narrow for a
+                    drop-down plus its options). Shown only for "By rules"; code toggles this Border through PanelSteps.
+                -->
+                <Border
+                    x:Name="PanelSteps"
+                    Grid.Row="1"
+                    Margin="0,0,0,14"
+                    Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock
+                                x:Name="TxtStepsHint"
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Right"
+                                FontSize="11.5"
+                                Foreground="{DynamicResource TextSecondary}" />
+                            <ContentControl
+                                VerticalAlignment="Center"
+                                Content="{DynamicResource Str_Organize_StepsHeader}"
+                                Style="{StaticResource CardHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.FileTreeOutline}" />
+                        </DockPanel>
+
+                        <ItemsControl
+                            x:Name="StepsList"
+                            Focusable="False"
+                            ItemTemplate="{StaticResource StepTemplate}"
+                            ToolTip="{DynamicResource Str_Organize_StepsListTooltip}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <DockPanel Margin="0,2,0,0">
+                            <Button
+                                x:Name="BtnAddStep"
+                                MinHeight="36"
+                                Margin="0,0,16,0"
+                                Click="BtnAddStep_Click"
+                                Style="{StaticResource NeutralIconButtonStyle}"
+                                ToolTip="{DynamicResource Str_Organize_AddStepTooltip}">
+                                <TextBlock Margin="6,0" VerticalAlignment="Center" Text="{DynamicResource Str_Organize_AddStep}" />
+                            </Button>
+                            <CheckBox
+                                x:Name="ChkEmoji"
+                                VerticalAlignment="Center"
+                                Checked="PlanOption_Changed"
+                                Content="{DynamicResource Str_OrganizeFiles_EmojiOnCategoryFolders}"
+                                IsChecked="True"
+                                ToolTip="{DynamicResource Str_OrganizeFiles_NameCategoryFoldersLike}"
+                                Unchecked="PlanOption_Changed" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+
                 <!--  Preview  -->
-                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
