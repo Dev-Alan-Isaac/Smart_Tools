@@ -48,6 +48,26 @@ namespace Smart_Tools.WPF.Controllers
         [DllImport("user32.dll")]
         private static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
 
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+        private static extern IntPtr GetWindowLongPtr(IntPtr hwnd, int index);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+        private static extern IntPtr SetWindowLongPtr(IntPtr hwnd, int index, IntPtr value);
+
+        private const int GWL_STYLE = -16;
+        private const long WS_SYSMENU = 0x00080000L;
+
+        /// <summary>
+        /// With the frame extended over the client area Windows draws its own minimize/maximize/close on top of the app's custom ones.
+        /// Without WS_SYSMENU it draws none (the app's buttons, Alt+F4 and WindowState still work).
+        /// </summary>
+        private static void SetNativeCaptionButtons(IntPtr hwnd, bool show)
+        {
+            long style = GetWindowLongPtr(hwnd, GWL_STYLE).ToInt64();
+            long wanted = show ? style | WS_SYSMENU : style & ~WS_SYSMENU;
+            if (wanted != style) SetWindowLongPtr(hwnd, GWL_STYLE, new IntPtr(wanted));
+        }
+
         private const int WCA_ACCENT_POLICY = 19;
         private const int ACCENT_DISABLED = 0;
         private const int ACCENT_ENABLE_ACRYLICBLURBEHIND = 4;
@@ -107,6 +127,7 @@ namespace Smart_Tools.WPF.Controllers
             var margins = new Margins { Left = -1, Right = -1, Top = -1, Bottom = -1 };
             DwmExtendFrameIntoClientArea(hwnd, ref margins);
             if (WindowChrome.GetWindowChrome(window) is { } chrome) chrome.GlassFrameThickness = new Thickness(-1);
+            SetNativeCaptionButtons(hwnd, false);
             window.Background = FrostBrush;   // the single frost layer; ContentBg is clear in Glass so nothing stacks on it
             return true;
         }
@@ -119,6 +140,7 @@ namespace Smart_Tools.WPF.Controllers
             var margins = new Margins();
             DwmExtendFrameIntoClientArea(hwnd, ref margins);
             if (WindowChrome.GetWindowChrome(window) is { } chrome) chrome.GlassFrameThickness = new Thickness(0);
+            SetNativeCaptionButtons(hwnd, true);
             source.CompositionTarget.BackgroundColor = Colors.White;
             window.SetResourceReference(Window.BackgroundProperty, "ContentBg");
             return true;
