@@ -783,11 +783,25 @@ namespace Smart_Tools.WPF
         /// Test copy only (--test-instance): an off-screen window is not drawn by Windows, so screenshots are made from inside.
         /// A file "shot.request" beside the exe holding a target .png path makes the window render itself to that file.
         /// </summary>
+        /// <summary>Test copy only: the element with this x:Name anywhere under <paramref name="parent"/> (visual tree), or null.</summary>
+        private static FrameworkElement? FindByName(DependencyObject parent, string name)
+        {
+            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                if (child is FrameworkElement element && element.Name == name) return element;
+                if (FindByName(child, name) is { } found) return found;
+            }
+            return null;
+        }
+
         private void StartTestSnapshotWatcher()
         {
             string request = System.IO.Path.Combine(AppContext.BaseDirectory, "shot.request");
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
             string? pending = null;
+            string[]? clicks = null;
             int wait = 0;
             timer.Tick += (_, _) =>
             {
@@ -799,18 +813,33 @@ namespace Smart_Tools.WPF
                     try { text = System.IO.File.ReadAllText(request).Trim(); System.IO.File.Delete(request); }
                     catch (System.IO.IOException) { return; }
                     // "tool-id|path.png" opens that tool first (the catalog id, e.g. hosts-editor); "path.png" just renders.
-                    int bar = text.IndexOf('|');
+                    // "tool-id|click=NameA,NameB|path.png" also clicks those named buttons / radios (x:Name) after the page has loaded.
+                    var parts = text.Split('|');
                     wait = 0;
-                    if (bar >= 0)
+                    clicks = null;
+                    if (parts.Length > 1)
                     {
-                        string toolId = text[..bar].Trim();
-                        text = text[(bar + 1)..].Trim();
+                        string toolId = parts[0].Trim();
+                        if (parts.Length > 2 && parts[1].Trim().StartsWith("click=", StringComparison.OrdinalIgnoreCase))
+                            clicks = parts[1].Trim()[6..].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         if (toolId.Length > 0) { Open(toolId); wait = 4; }   // let the page load and lay out
                     }
-                    pending = text;
+                    pending = parts[^1].Trim();
                     return;
                 }
                 if (wait-- > 0) return;
+                if (clicks != null)
+                {
+                    foreach (string name in clicks)
+                        if (FindByName(root, name) is System.Windows.Controls.Primitives.ButtonBase button)
+                        {
+                            if (button is System.Windows.Controls.Primitives.ToggleButton toggle && toggle.IsChecked != true && button is System.Windows.Controls.RadioButton) toggle.IsChecked = true;
+                            button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, button));
+                        }
+                    clicks = null;
+                    wait = 3;   // let the page react before it is drawn
+                    return;
+                }
                 string target = pending;
                 pending = null;
                 try

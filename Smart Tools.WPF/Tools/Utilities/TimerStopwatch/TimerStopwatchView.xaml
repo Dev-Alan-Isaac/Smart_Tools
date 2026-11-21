@@ -101,101 +101,110 @@
 
     <Grid Background="{DynamicResource ContentBg}">
         <Grid Margin="16,8,16,16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!--  ================= MODE TABS =================  -->
-            <Border Padding="14,8,14,0" ctl:Tour.Key="Str_Tour_TimerStopwatch_Mode" ctl:Tour.Order="1" Style="{StaticResource CardStyle}">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="RadioStopwatch" Click="Mode_Click" GroupName="TsMode" IsChecked="True" Style="{StaticResource TsTabStyle}" Tag="Stopwatch">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="TimerOutline" />
-                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TimerStopwatch_Stopwatch}" />
+            <!--  ================= OPTIONS SIDEBAR: mode, then that mode's settings and the sound =================  -->
+            <controls:ToolSidebar ExpandedWidth="300">
+                <StackPanel>
+
+                    <!--  Mode  -->
+                    <Border Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_TimerStopwatch_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_Timer_ModeHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.TimerCogOutline}" />
+                            <RadioButton x:Name="RadioStopwatch" Margin="0,0,0,4" Click="Mode_Click" GroupName="TsMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Stopwatch">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="TimerOutline" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TimerStopwatch_Stopwatch}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="RadioCountdown" Margin="0,0,0,4" Click="Mode_Click" GroupName="TsMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Countdown">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="TimerSand" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TimerStopwatch_TimerCountdown}" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="RadioPomodoro" Click="Mode_Click" GroupName="TsMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Pomodoro">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="TimerCogOutline" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TimerStopwatch_Pomodoro}" />
+                                </StackPanel>
+                            </RadioButton>
                         </StackPanel>
-                    </RadioButton>
-                    <RadioButton x:Name="RadioCountdown" Click="Mode_Click" GroupName="TsMode" Style="{StaticResource TsTabStyle}" Tag="Countdown">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="TimerSand" />
-                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TimerStopwatch_TimerCountdown}" />
+                    </Border>
+
+                    <!--  Settings of the chosen mode (hidden for the stopwatch); greyed out while it runs  -->
+                    <StackPanel x:Name="OptionsCard" Visibility="Collapsed">
+                        <StackPanel x:Name="SidebarStack">
+
+                            <Border x:Name="CardCountdown" Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_TimerStopwatch_Timer" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}" Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Timer_CountdownHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.TimerSand}" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_TimerStopwatch_TimeSHM}" />
+                                    <TextBox x:Name="TxtCountdown" VerticalContentAlignment="Center" TextChanged="Setting_TextChanged" />
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min}" Tag="1:00" Style="{StaticResource PillChipStyle}" />
+                                        <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min2}" Tag="5:00" Style="{StaticResource PillChipStyle}" />
+                                        <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min3}" Tag="10:00" Style="{StaticResource PillChipStyle}" />
+                                        <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min4}" Tag="25:00" Style="{StaticResource PillChipStyle}" />
+                                        <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Hour}" Tag="1:00:00" Style="{StaticResource PillChipStyle}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border x:Name="CardPomodoro" Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_TimerStopwatch_Pomodoro" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}" Visibility="Collapsed">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Timer_PomodoroHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.TimerCogOutline}" />
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_TimerStopwatch_WorkMinutes}" />
+                                    <TextBox x:Name="TxtWork" VerticalContentAlignment="Center" TextChanged="Setting_TextChanged" />
+                                    <TextBlock Margin="0,10,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_TimerStopwatch_ShortBreakMinutes}" />
+                                    <TextBox x:Name="TxtShort" VerticalContentAlignment="Center" TextChanged="Setting_TextChanged" />
+                                    <TextBlock Margin="0,10,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_TimerStopwatch_LongBreakMinutes}" />
+                                    <TextBox x:Name="TxtLong" VerticalContentAlignment="Center" TextChanged="Setting_TextChanged" />
+                                    <TextBlock Margin="0,10,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_TimerStopwatch_LongBreakAfterHow}" />
+                                    <TextBox x:Name="TxtEvery" VerticalContentAlignment="Center" TextChanged="Setting_TextChanged" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  The sound played when a timer or a phase ends  -->
+                            <Border Margin="0,0,0,4" ctl:Tour.Key="Str_Tour_TimerStopwatch_Sound" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Timer_SoundHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.VolumeHigh}" />
+                                    <CheckBox x:Name="ChkSound" Margin="0,0,0,8" Click="Setting_Click" Content="{DynamicResource Str_TimerStopwatch_PlayASoundWhen}" Foreground="{DynamicResource SidebarText}" IsChecked="True" />
+                                    <DockPanel>
+                                        <Button x:Name="BtnTestSound" Width="32" Height="32" Padding="0" Margin="6,0,0,0" Click="BtnTestSound_Click" DockPanel.Dock="Right" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Timer_SndTest}">
+                                            <materialDesign:PackIcon x:Name="IconTestSound" Width="16" Height="16" Kind="VolumeHigh" />
+                                        </Button>
+                                        <Button x:Name="BtnPickSound" Width="32" Height="32" Padding="0" Margin="6,0,0,0" Click="BtnPickSound_Click" DockPanel.Dock="Right" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Timer_SndPick}" Visibility="Collapsed">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="FolderMusicOutline" />
+                                        </Button>
+                                        <ComboBox x:Name="CmbSound" VerticalContentAlignment="Center" SelectionChanged="Sound_Changed" />
+                                    </DockPanel>
+                                    <TextBlock x:Name="TxtSoundFile" Margin="2,6,0,0" FontSize="11.5" Foreground="{DynamicResource SidebarTextMuted}" TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </RadioButton>
-                    <RadioButton x:Name="RadioPomodoro" Click="Mode_Click" GroupName="TsMode" Style="{StaticResource TsTabStyle}" Tag="Pomodoro">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="TimerCogOutline" />
-                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_TimerStopwatch_Pomodoro}" />
-                        </StackPanel>
-                    </RadioButton>
+                    </StackPanel>
                 </StackPanel>
-            </Border>
-
-            <!--  ================= OPTIONS (timer and Pomodoro) =================  -->
-            <Border x:Name="OptionsCard" Grid.Row="1" Margin="0,14,0,0" Padding="22,16" Style="{StaticResource CardStyle}" Visibility="Collapsed">
-                <Grid x:Name="SidebarStack">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="40" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel ctl:Tour.Key="Str_Tour_TimerStopwatch_Timer" ctl:Tour.Order="2" x:Name="CardCountdown" Visibility="Collapsed">
-                        <TextBlock Style="{StaticResource TsLabel}" Text="{DynamicResource Str_TimerStopwatch_TimeSHM}" />
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="200" Style="{StaticResource InputBarStyle}">
-                                <TextBox x:Name="TxtCountdown" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_TextChanged" />
-                            </Border>
-                            <WrapPanel Margin="16,0,0,0" VerticalAlignment="Center">
-                            <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min}" Tag="1:00" Style="{StaticResource PillChipStyle}" />
-                            <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min2}" Tag="5:00" Style="{StaticResource PillChipStyle}" />
-                            <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min3}" Tag="10:00" Style="{StaticResource PillChipStyle}" />
-                            <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Min4}" Tag="25:00" Style="{StaticResource PillChipStyle}" />
-                            <Button Click="Preset_Click" Content="{DynamicResource Str_TimerStopwatch_Hour}" Tag="1:00:00" Style="{StaticResource PillChipStyle}" />
-                            </WrapPanel>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <UniformGrid ctl:Tour.Key="Str_Tour_TimerStopwatch_Pomodoro" ctl:Tour.Order="3" x:Name="CardPomodoro" Columns="4" Visibility="Collapsed">
-                        <StackPanel Margin="0,0,14,0">
-                            <TextBlock Style="{StaticResource TsLabel}" Text="{DynamicResource Str_TimerStopwatch_WorkMinutes}" />
-                            <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtWork" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_TextChanged" /></Border>
-                        </StackPanel>
-                        <StackPanel Margin="0,0,14,0">
-                            <TextBlock Style="{StaticResource TsLabel}" Text="{DynamicResource Str_TimerStopwatch_ShortBreakMinutes}" />
-                            <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtShort" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_TextChanged" /></Border>
-                        </StackPanel>
-                        <StackPanel Margin="0,0,14,0">
-                            <TextBlock Style="{StaticResource TsLabel}" Text="{DynamicResource Str_TimerStopwatch_LongBreakMinutes}" />
-                            <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtLong" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_TextChanged" /></Border>
-                        </StackPanel>
-                        <StackPanel Margin="0,0,14,0">
-                            <TextBlock Style="{StaticResource TsLabel}" Text="{DynamicResource Str_TimerStopwatch_LongBreakAfterHow}" />
-                            <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtEvery" VerticalContentAlignment="Center" Style="{StaticResource BareTextBox}" TextChanged="Setting_TextChanged" /></Border>
-                        </StackPanel>
-                    </UniformGrid>
-
-                    <!--  The sound played when a timer or a phase ends  -->
-                    <StackPanel ctl:Tour.Key="Str_Tour_TimerStopwatch_Sound" ctl:Tour.Order="4" Grid.Column="2" Width="400">
-                        <CheckBox x:Name="ChkSound" Margin="0,0,0,8" Click="Setting_Click" Content="{DynamicResource Str_TimerStopwatch_PlayASoundWhen}" IsChecked="True" />
-                        <DockPanel>
-                            <Button x:Name="BtnTestSound" Width="38" Height="36" Padding="0" Margin="8,0,0,0" Click="BtnTestSound_Click" DockPanel.Dock="Right" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Timer_SndTest}">
-                                <materialDesign:PackIcon x:Name="IconTestSound" Width="18" Height="18" Kind="VolumeHigh" />
-                            </Button>
-                            <Button x:Name="BtnPickSound" Width="38" Height="36" Padding="0" Margin="8,0,0,0" Click="BtnPickSound_Click" DockPanel.Dock="Right" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Timer_SndPick}" Visibility="Collapsed">
-                                <materialDesign:PackIcon Width="18" Height="18" Kind="FolderMusicOutline" />
-                            </Button>
-                            <Border Style="{StaticResource InputBarStyle}">
-                                <ComboBox x:Name="CmbSound" VerticalContentAlignment="Center" SelectionChanged="Sound_Changed" Style="{StaticResource BareComboBox}" />
-                            </Border>
-                        </DockPanel>
-                        <TextBlock x:Name="TxtSoundFile" Margin="2,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+            </controls:ToolSidebar>
 
             <!--  ================= MAIN AREA: the clock, and laps or help beside it =================  -->
-            <Grid Grid.Row="2" Margin="0,14,0,0">
+            <Grid Grid.Column="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="3*" MinWidth="380" />
                     <ColumnDefinition Width="14" />
