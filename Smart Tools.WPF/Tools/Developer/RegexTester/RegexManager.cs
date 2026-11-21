@@ -59,6 +59,15 @@ namespace Smart_Tools.WPF.Controllers
             new RegexPreset("Capitalised words", @"\b[A-Z][a-z]*\b", "The Quick Brown Fox jumps over the Lazy Dog."),
             new RegexPreset("Log lines with ERROR (multiline)", @"^.*\bERROR\b.*$", "10:01 INFO start\n10:02 ERROR disk full\n10:03 INFO retry\n10:04 ERROR timeout"),
             new RegexPreset("Repeated word", @"\b(\w+)\s+\1\b", "This is is a test of the the repeated words."),
+
+            // Emojis and special characters. Sample text uses \u escapes so the file stays plain ASCII. An emoji above U+FFFF is two
+            // UTF-16 characters (a surrogate pair), so it is matched as a pair; the older single-character ones (✔ ⭐ ❤) have their own ranges.
+            new RegexPreset("Emoji", @"[\uD83C-\uD83E][\uDC00-\uDFFF]|[☀-➿⬀-⯿]", "Great job 🎉 ship it 🚀 ✔ done ⭐ ❤️ love it 👍"),
+            new RegexPreset("Any non-ASCII character", @"[^\x00-\x7F]", "café, naïve, ☃ snowman, 日本, and plain ascii."),
+            new RegexPreset("Symbols (math, arrows, shapes, currency)", @"\p{S}", "5 ≥ 3, a → b, ▶ play, ∟ angle, 2 × 3 = 6, $9 and €9."),
+            new RegexPreset("Right angle and angle quotes", @"[∟⊾›»⟩〉〉]", "Next › page », the ⟨x⟩ pair, a ∟ right angle and ⊾ with an arc."),
+            new RegexPreset("Right-pointing triangles and arrows", @"[▶►▸←-⇿]", "Play ▶ then ► or ▸, go → right, ⇒ implies, ↦ maps to."),
+            new RegexPreset("Invisible characters (zero-width, BOM)", @"[​-‏‪-‮⁠﻿]", "hid​den zero‍width and a stray ﻿BOM in this line."),
         };
 
         // =================================================================

@@ -484,6 +484,7 @@ namespace Smart_Tools.WPF.Modules
                         ClipboardKeepHistory = ClipboardKeepHistory,
                         FileCategories = FileCategories.ToList(),
                         SavedPatterns = SavedPatterns.ToList(),
+                        PatternSeed = PatternSeedVersion,
                         LogHighlightRules = LogHighlightRules.ToList(),
                         MockLists = MockLists.ToList(),
                         EventDays = EventDays.ToList(),
@@ -531,6 +532,12 @@ namespace Smart_Tools.WPF.Modules
                 SavedPatterns.Clear();
                 foreach (var p in dto.SavedPatterns ?? DefaultPatterns())
                     if (p != null) SavedPatterns.Add(p);
+
+                // A list saved before the emoji / special-character patterns existed gets them once (by name, so a pattern the person
+                // already has or renamed is not doubled); after that the list is theirs and a deleted one stays deleted.
+                if ((dto.PatternSeed ?? 1) < PatternSeedVersion)
+                    foreach (var p in SpecialCharacterPatterns())
+                        if (!SavedPatterns.Any(x => string.Equals(x.Name, p.Name, StringComparison.OrdinalIgnoreCase))) SavedPatterns.Add(p);
 
                 if (dto.LogHighlightRules != null)
                 {
@@ -590,6 +597,8 @@ namespace Smart_Tools.WPF.Modules
             public bool? ClipboardKeepHistory { get; set; }
             public List<FileCategory>? FileCategories { get; set; }
             public List<SavedSearchPattern>? SavedPatterns { get; set; }
+            /// <summary>Which built-in pattern set the saved list already got (1 = original eight, 2 = plus emoji and special characters).</summary>
+            public int? PatternSeed { get; set; }
             public List<LogHighlightRule>? LogHighlightRules { get; set; }
             public List<MockDataList>? MockLists { get; set; }
             public List<EventDay>? EventDays { get; set; }
@@ -619,7 +628,19 @@ namespace Smart_Tools.WPF.Modules
             new SavedSearchPattern { Name = "Date (YYYY-MM-DD)", Pattern = @"\b(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})\b", Type = "Regex" },
             new SavedSearchPattern { Name = "Windows File Path", Pattern = @"(?<drive>[a-zA-Z]):\\(?<folders>(?:[^\\/:*?""<>|\r\n]+\\)*)(?<name>[^\\/:*?""<>|\r\n]*)", Type = "Regex" },
             new SavedSearchPattern { Name = "MD5 / SHA Hash", Pattern = @"\b[a-fA-F0-9]{32,64}\b", Type = "Regex" },
+            new SavedSearchPattern { Name = "Emoji", Pattern = @"[\uD83C-\uD83E][\uDC00-\uDFFF]|[☀-➿⬀-⯿]", Type = "Regex" },
+            new SavedSearchPattern { Name = "Any non-ASCII character", Pattern = @"[^\x00-\x7F]", Type = "Regex" },
+            new SavedSearchPattern { Name = "Symbols (math, arrows, shapes, currency)", Pattern = @"\p{S}", Type = "Regex" },
+            new SavedSearchPattern { Name = "Right angle and angle quotes", Pattern = @"[∟⊾›»⟩〉〉]", Type = "Regex" },
+            new SavedSearchPattern { Name = "Right-pointing triangles and arrows", Pattern = @"[▶►▸←-⇿]", Type = "Regex" },
+            new SavedSearchPattern { Name = "Invisible characters (zero-width, BOM)", Pattern = @"[​-‏‪-‮⁠﻿]", Type = "Regex" },
         };
+
+        /// <summary>Bump when new built-in patterns are added: saved lists made before it get them once on load (see Load).</summary>
+        private const int PatternSeedVersion = 2;
+
+        /// <summary>The emoji and special-character patterns (the last six of <see cref="DefaultPatterns"/>).</summary>
+        private static IEnumerable<SavedSearchPattern> SpecialCharacterPatterns() => DefaultPatterns().Skip(8);
 
         public static List<MockDataList> DefaultMockLists() => new()
         {
