@@ -16,7 +16,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -973,7 +972,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe", "Couldn't save the CSV: ") + RegexManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.T("Str_MB_CouldnTSaveThe", "Couldn't save the CSV: ") + RegexManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

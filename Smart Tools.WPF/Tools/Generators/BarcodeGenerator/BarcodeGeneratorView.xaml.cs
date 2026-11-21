@@ -15,7 +15,6 @@ using Clipboard = System.Windows.Clipboard;
 using Color = System.Windows.Media.Color;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using OpenFolderDialog = Microsoft.Win32.OpenFolderDialog;
 using Path = System.IO.Path;
@@ -477,7 +476,7 @@ InputCard.ItemsSource = _sources;
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_CouldntCopy", "Couldn't copy: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_CouldntCopy", "Couldn't copy: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -503,7 +502,7 @@ InputCard.ItemsSource = _sources;
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -571,13 +570,13 @@ InputCard.ItemsSource = _sources;
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_ClipboardRead", "Couldn't read the clipboard: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_ClipboardRead", "Couldn't read the clipboard: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (text.Length == 0)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_TheClipboardHasNo2", "The clipboard has no text. Copy a column from Excel or a list of lines first."),
+                AppModal.Show(Loc.T("Str_MB_TheClipboardHasNo2", "The clipboard has no text. Copy a column from Excel or a list of lines first."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
@@ -642,7 +641,7 @@ InputCard.ItemsSource = _sources;
 
             if (added > 0) TxtBatchProgress.Text = Loc.F("Str_Generators_MsgAddedCodes", "Added {0:N0} codes", added);
             if (problems.Count > 0)
-                ThemedMessageBox.Show(string.Join(Environment.NewLine, problems), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(string.Join(Environment.NewLine, problems), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnRemoveBatchEntry_Click(object sender, RoutedEventArgs e)
@@ -663,7 +662,7 @@ InputCard.ItemsSource = _sources;
             if (_batchEntries.Count == 0) return;
 
             if (_batchEntries.Count > 20 &&
-                ThemedMessageBox.Show(Loc.F("Str_MB_RemoveAllEntries", "Remove all {0:N0} entries?", _batchEntries.Count), DialogTitle,
+                AppModal.Show(Loc.F("Str_MB_RemoveAllEntries", "Remove all {0:N0} entries?", _batchEntries.Count), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
@@ -686,13 +685,13 @@ InputCard.ItemsSource = _sources;
 
             if (_batchEntries.Count == 0)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_AddOrLoadAt", "Add or load at least one value first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_AddOrLoadAt", "Add or load at least one value first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             if (TryBuildOptions(out string optionsError) is not BarcodeOptions options)
             {
-                ThemedMessageBox.Show(optionsError, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(optionsError, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -719,7 +718,7 @@ InputCard.ItemsSource = _sources;
             catch (Exception ex)
             {
                 TxtBatchProgress.Text = Loc.T("Str_Generators_MsgBatchFailed", "Batch failed");
-                ThemedMessageBox.Show(Loc.F("Str_MB_BatchGenerationFailed", "Batch generation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_BatchGenerationFailed", "Batch generation failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -784,7 +783,7 @@ InputCard.ItemsSource = _sources;
             if (!TryGetExportFormat(sender, out BarcodeExportFormat format)) return;
             if (_batchRows is null || !HasExportableRows())
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_NothingToExportYet2", "Nothing to export yet - click Generate All first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_NothingToExportYet2", "Nothing to export yet - click Generate All first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -815,7 +814,7 @@ InputCard.ItemsSource = _sources;
             catch (Exception ex)
             {
                 TxtBatchProgress.Text = Loc.T("Str_Generators_MsgExportFailed", "Export failed");
-                ThemedMessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

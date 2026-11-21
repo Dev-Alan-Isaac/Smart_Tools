@@ -12,7 +12,6 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UserControl = System.Windows.Controls.UserControl;
@@ -442,7 +441,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_CouldnTOpenThe4", "Couldn't open the browser. The driver is at https://pawnio.eu"), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -531,7 +530,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -561,7 +560,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

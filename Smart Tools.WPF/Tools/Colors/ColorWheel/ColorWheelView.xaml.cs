@@ -13,7 +13,6 @@ using Clipboard = System.Windows.Clipboard;
 using Color = System.Windows.Media.Color;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
-using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Path = System.IO.Path;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -555,7 +554,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(string.Format(TryString("Str_ColorWheel_SaveFailed", "Couldn't save: {0}"), ex.Message),
+                AppModal.Show(string.Format(TryString("Str_ColorWheel_SaveFailed", "Couldn't save: {0}"), ex.Message),
                     TryString("Str_ColorWheel_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

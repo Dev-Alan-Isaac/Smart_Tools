@@ -18,7 +18,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Panel = System.Windows.Controls.Panel;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -862,7 +861,7 @@ namespace Smart_Tools.WPF.Views
             if (DataGridFiles.SelectedItem is not ConvertFileItem item) return;
             string path = item.Status == ConvertStatus.Converted && File.Exists(item.OutputPath) ? item.OutputPath! : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileNoLonger", "That file no longer exists."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ThatFileNoLonger", "That file no longer exists."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnOpenOutput_Click(object sender, RoutedEventArgs e) => OpenOutput(BuildOptions(), quiet: false);
@@ -876,7 +875,7 @@ namespace Smart_Tools.WPF.Views
 
             if (target != null && ShellExplorer.Show(target) == ShellExplorer.ShowResult.Shown) return;
             if (!quiet)
-                ThemedMessageBox.Show(o.OutputMode == ConvertOutputMode.Folder
+                AppModal.Show(o.OutputMode == ConvertOutputMode.Folder
                         ? $"Nothing has been saved to {o.OutputFolder} yet."
                         : "Converted files are saved next to their originals - convert something first.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -906,7 +905,7 @@ namespace Smart_Tools.WPF.Views
             {
                 Log.Info($"File Converter: {ex.Message}");
                 if (_isConverting) SetConverting(false);
-                ThemedMessageBox.Show(Loc.F("Str_Convert_StartFailed", "Couldn't start the conversion: {0}", ex.Message),
+                AppModal.Show(Loc.F("Str_Convert_StartFailed", "Couldn't start the conversion: {0}", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
@@ -930,7 +929,7 @@ namespace Smart_Tools.WPF.Views
             if (pending.Count == 0)
             {
                 InputCard.PopDropArea();
-                ThemedMessageBox.Show(_rows.Count == 0
+                AppModal.Show(_rows.Count == 0
                         ? Loc.T("Str_Convert_AddFirst", "Add some files or a folder first (left side, or drop them there).")
                         : Loc.T("Str_Convert_NothingLeft", "Nothing left to convert - every file is already converted or doesn't need it."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -941,7 +940,7 @@ namespace Smart_Tools.WPF.Views
             if (options.FileType != ConvertFileType.Image && ConverterManager.FfmpegExe == null)
             {
                 bool isVideo = options.FileType == ConvertFileType.Video;
-                ThemedMessageBox.Show(isVideo
+                AppModal.Show(isVideo
                         ? Loc.F("Str_MB_FfmpegNeededVideo", "Converting videos needs ffmpeg.exe in {0}. It wasn't found there.", ConverterManager.FfmpegFolder)
                         : Loc.F("Str_MB_FfmpegNeededAudio", "Converting audio needs ffmpeg.exe in {0}. It wasn't found there.", ConverterManager.FfmpegFolder),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -953,7 +952,7 @@ namespace Smart_Tools.WPF.Views
                 if (OutputCard.Status.State is OutputFolderState.Missing or OutputFolderState.NotWritable)
                 {
                     UiMotion.Pop(OutputCard, 0.95);
-                    ThemedMessageBox.Show(Loc.F("Str_MB_CanTSaveTo", "Can't save to {0}: {1}.\n\nChoose another folder in Save to.", options.OutputFolder, OutputCard.Status.Text),
+                    AppModal.Show(Loc.F("Str_MB_CanTSaveTo", "Can't save to {0}: {1}.\n\nChoose another folder in Save to.", options.OutputFolder, OutputCard.Status.Text),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -963,7 +962,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                 {
-                    ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTCreate", "Couldn't create {0}: {1}", options.OutputFolder, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(Loc.F("Str_MB_CouldnTCreate", "Couldn't create {0}: {1}", options.OutputFolder, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
@@ -974,7 +973,7 @@ namespace Smart_Tools.WPF.Views
                 string question = plan.WillReplace == 1
                     ? Loc.F("Str_Convert_ConfirmReplaceOne", "\"{0}\" already exists and will be REPLACED by the converted file.\n\nContinue?", plan.FirstReplaced ?? "")
                     : Loc.F("Str_Convert_ConfirmReplaceMany", "{0} existing files will be REPLACED, for example \"{1}\".\n\nThis can't be undone. Continue?", plan.WillReplace.ToString("N0"), plan.FirstReplaced ?? "");
-                if (ThemedMessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+                if (AppModal.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             }
 
             if (options.DeleteOriginalAfterConversion && !ConfirmDeleteOriginals(pending)) return;
@@ -1016,7 +1015,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetConverting(false);
                 TxtProgress.Text = "Conversion failed.";
-                ThemedMessageBox.Show(Loc.F("Str_MB_ConversionFailed", "Conversion failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_ConversionFailed", "Conversion failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -1031,7 +1030,7 @@ namespace Smart_Tools.WPF.Views
             string text = noBin == 0
                 ? $"After each file converts, its original will be moved to the Recycle Bin ({pending.Count:N0} files).\n\nContinue?"
                 : $"After each file converts, its original will be deleted.\n\n{noBin:N0} of them are on a drive without a Recycle Bin (network or removable) and will be deleted PERMANENTLY.\n\nContinue?";
-            return ThemedMessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo, noBin == 0 ? MessageBoxImage.Question : MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            return AppModal.Show(text, DialogTitle, MessageBoxButton.YesNo, noBin == 0 ? MessageBoxImage.Question : MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
         private void ReportProgress(ConvertProgress p)

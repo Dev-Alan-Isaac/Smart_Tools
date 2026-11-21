@@ -18,7 +18,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
 using Rectangle = System.Windows.Shapes.Rectangle;
@@ -736,9 +735,9 @@ namespace Smart_Tools.WPF.Controls
         {
             var owner = Window.GetWindow(this);
             if (owner != null)
-                ThemedMessageBox.Show(owner, text, title, MessageBoxButton.OK, icon);
+                AppModal.Show(owner, text, title, MessageBoxButton.OK, icon);
             else
-                ThemedMessageBox.Show(text, title, MessageBoxButton.OK, icon);
+                AppModal.Show(text, title, MessageBoxButton.OK, icon);
         }
     }
 }

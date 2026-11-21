@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Application = System.Windows.Application;
 using CheckBox = System.Windows.Controls.CheckBox;
-using MessageBox = System.Windows.MessageBox;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
@@ -126,7 +125,7 @@ namespace Smart_Tools.WPF.Views
         {
             if ((sender as FrameworkElement)?.DataContext is not StartupApp app) return;
             string question = string.Format(T("Str_Startup_RemoveConfirm", "Remove \"{0}\" from startup? The program itself is not uninstalled. To keep it and just stop it starting, turn its switch off instead."), app.Name);
-            if (ThemedMessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
 
             var result = _startup.Remove(app);
             if (result != StartupChangeResult.Done)
@@ -161,7 +160,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Relaunches Smart Tools elevated (UAC prompt) and closes this instance - asks first.</summary>
         private void BtnRestartAdmin_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(T("Str_Startup_RestartConfirm", "Restart Smart Tools as administrator?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(T("Str_Startup_RestartConfirm", "Restart Smart Tools as administrator?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
 
             switch (AppRestartManager.StartElevatedCopy(out string? error))
@@ -170,7 +169,7 @@ namespace Smart_Tools.WPF.Views
                     Application.Current.Shutdown();
                     break;
                 case AppRestartResult.Failed:
-                    ThemedMessageBox.Show(string.Format(T("Str_Startup_RestartFailed", "Couldn't restart as administrator: {0}"), error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppModal.Show(string.Format(T("Str_Startup_RestartFailed", "Couldn't restart as administrator: {0}"), error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     break;
                 // Declined: UAC said no - stay as we are.
             }

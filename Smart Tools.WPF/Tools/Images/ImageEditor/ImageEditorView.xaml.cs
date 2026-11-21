@@ -18,7 +18,6 @@ using DataGridCell = System.Windows.Controls.DataGridCell;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Point = System.Windows.Point;
@@ -395,7 +394,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (HighlightedItem is not { } item) return;
             if (ShellExplorer.Show(item.FullPath) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.Name), Loc.T("Str_Tool_image-editor_Name", "Image Editor"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.Name), Loc.T("Str_Tool_image-editor_Name", "Image Editor"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void MenuDeleteFile_Click(object sender, RoutedEventArgs e)
@@ -405,7 +404,7 @@ namespace Smart_Tools.WPF.Views
             string text = bin
                 ? $"Move \"{item.Name}\" to the Recycle Bin?\n\nThis deletes the file from your computer, not just from the list."
                 : $"Delete \"{item.Name}\" PERMANENTLY?\n\nIt's on a drive without a Recycle Bin, so it can't be undone.";
-            if (ThemedMessageBox.Show(text, Loc.T("Str_Tool_image-editor_Name", "Image Editor"), MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (AppModal.Show(text, Loc.T("Str_Tool_image-editor_Name", "Image Editor"), MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
             try
             {
@@ -413,7 +412,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.Name, ex.Message), Loc.T("Str_Tool_image-editor_Name", "Image Editor"), MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.Name, ex.Message), Loc.T("Str_Tool_image-editor_Name", "Image Editor"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             RemoveItems(new[] { item });
@@ -945,7 +944,7 @@ namespace Smart_Tools.WPF.Views
         {
             string folder = _lastOutputFolder ?? EffectiveOutputFolder;
             if (ShellExplorer.Show(folder) != ShellExplorer.ShowResult.Shown)
-                ThemedMessageBox.Show(Loc.F("Str_MB_NothingHasBeenSaved", "Nothing has been saved to {0} yet.", folder), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.F("Str_MB_NothingHasBeenSaved", "Nothing has been saved to {0} yet.", folder), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // ---------------- Settings ----------------
@@ -1018,7 +1017,7 @@ namespace Smart_Tools.WPF.Views
             var targets = _queue.Where(i => i.IsSelected && i.Status != ImageItemStatus.Unreadable).ToList();
             if (targets.Count == 0)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_TickAtLeastOne", "Tick at least one image to save."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_TickAtLeastOne", "Tick at least one image to save."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1026,7 +1025,7 @@ namespace Smart_Tools.WPF.Views
             var options = BuildOptions();
             if (OutputCard.Status.IsError)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CanTSaveThere", "Can't save there: ") + OutputCard.Status.Text + ". Choose another folder in Save to.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CanTSaveThere", "Can't save there: ") + OutputCard.Status.Text + ". Choose another folder in Save to.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             try
@@ -1035,7 +1034,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CanTSaveTo2", "Can't save to {0}: {1}", options.OutputFolder, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_MB_CanTSaveTo2", "Can't save to {0}: {1}", options.OutputFolder, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1077,7 +1076,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetRunning(false);
                 TxtProgress.Text = Loc.T("Str_ImageEditor_MsgExportFailed", "Export failed.");
-                ThemedMessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

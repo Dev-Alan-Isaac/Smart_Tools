@@ -176,7 +176,7 @@ namespace Smart_Tools.WPF.Views
             if (count > NetworkToolsManager.MaxSweepHosts)
             {
                 string message = Loc.F("Str_PortScanner_ConfirmBig", "{0} has {1} addresses. Looking for devices on all of them can take a long time. Continue?", cidr, count.ToString("N0"));
-                var answer = ThemedMessageBox.Show(Window.GetWindow(this), message, Loc.T("Str_Tool_port-scanner_Name", "Port Scanner"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var answer = AppModal.Show(Window.GetWindow(this), message, Loc.T("Str_Tool_port-scanner_Name", "Port Scanner"), MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (answer != MessageBoxResult.Yes) return null;
             }
             var own = await Task.Run(() => NetworkToolsManager.LocalHosts("").Select(h => h.Address).ToList(), token);

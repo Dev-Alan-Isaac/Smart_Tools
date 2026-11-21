@@ -15,7 +15,6 @@ using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -253,7 +252,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private static bool Ask(string question) =>
-            ThemedMessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+            AppModal.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
 
         /// <summary>"A", "A and B", "A, B, and C", or "A, B, C, and 4 more" - Oxford comma in English.</summary>
         private static string JoinNames(List<WinService> services)

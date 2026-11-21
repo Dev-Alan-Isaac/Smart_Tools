@@ -114,20 +114,20 @@ namespace Smart_Tools.WPF
 
             if (mode != AppRunMode.Installed)
             {
-                ThemedMessageBox.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
+                AppModal.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
                                                  "Esta copia de Smart Tools no fue instalada por la aplicación, así que no hay nada que desinstalar aquí."),
                     AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else if (AppInstaller.IsAnotherCopyRunning())
             {
-                ThemedMessageBox.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
+                AppModal.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
                                                  "Cierra Smart Tools primero (revisa el ícono de la bandeja) y vuelve a desinstalar."),
                     AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            else if (ThemedMessageBox.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
+            else if (AppModal.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
                          AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                bool deleteData = ThemedMessageBox.Show(
+                bool deleteData = AppModal.Show(
                     T("Also delete your settings and downloaded models?\n\n" + AppMode.InstalledDataFolder + "\n\nChoose No to keep them in case you install again.",
                       "¿Borrar también tus ajustes y modelos descargados?\n\n" + AppMode.InstalledDataFolder + "\n\nElige No para conservarlos por si vuelves a instalar."),
                     AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;

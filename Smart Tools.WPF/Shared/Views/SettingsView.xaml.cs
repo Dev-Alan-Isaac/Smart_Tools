@@ -14,7 +14,6 @@ using System.Windows.Threading;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -484,7 +483,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnInstallHere_Click(object sender, RoutedEventArgs e)
         {
             bool fromPortable = AppMode.Current == AppRunMode.Portable;
-            if (ThemedMessageBox.Show(InstallStr("Str_Install_ConfirmInstall", "Install Smart Tools on this PC? It is copied to your user folder and a Start menu shortcut is added. No administrator rights are needed."),
+            if (AppModal.Show(InstallStr("Str_Install_ConfirmInstall", "Install Smart Tools on this PC? It is copied to your user folder and a Start menu shortcut is added. No administrator rights are needed."),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             // The settings are saved first so the copy of them is the current one.
@@ -494,11 +493,11 @@ namespace Smart_Tools.WPF.Views
             if (result.Cancelled) return;
             if (!result.Ok || result.ExePath == null)
             {
-                ThemedMessageBox.Show(InstallStr("Str_Install_Failed", "Could not install: ") + result.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(InstallStr("Str_Install_Failed", "Could not install: ") + result.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (ThemedMessageBox.Show(InstallStr("Str_Install_DoneRestart", "Smart Tools is installed. Start the installed copy now? This window will close."),
+            if (AppModal.Show(InstallStr("Str_Install_DoneRestart", "Smart Tools is installed. Start the installed copy now? This window will close."),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             RestartInto(result.ExePath);
         }
@@ -519,19 +518,19 @@ namespace Smart_Tools.WPF.Views
             if (result.Cancelled) return;
             if (!result.Ok)
             {
-                ThemedMessageBox.Show(InstallStr("Str_Install_PortableFailed", "Could not make the portable copy: ") + result.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(InstallStr("Str_Install_PortableFailed", "Could not make the portable copy: ") + result.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            ThemedMessageBox.Show(string.Format(InstallStr("Str_Install_PortableDone", "Done. The portable copy is in {0}. Run SmartTools.exe there; it starts with a copy of your settings."), target),
+            AppModal.Show(string.Format(InstallStr("Str_Install_PortableDone", "Done. The portable copy is in {0}. Run SmartTools.exe there; it starts with a copy of your settings."), target),
                 DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             ShellExplorer.Show(result.ExePath!);
         }
 
         private void BtnUninstall_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(InstallStr("Str_Install_ConfirmUninstall", "Uninstall Smart Tools from this PC?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
-            bool deleteData = ThemedMessageBox.Show(string.Format(InstallStr("Str_Install_DeleteData", "Also delete your settings and downloaded models?\n\n{0}\n\nChoose No to keep them in case you install again."), AppMode.InstalledDataFolder),
+            if (AppModal.Show(InstallStr("Str_Install_ConfirmUninstall", "Uninstall Smart Tools from this PC?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            bool deleteData = AppModal.Show(string.Format(InstallStr("Str_Install_DeleteData", "Also delete your settings and downloaded models?\n\n{0}\n\nChoose No to keep them in case you install again."), AppMode.InstalledDataFolder),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
 
             if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
@@ -605,7 +604,7 @@ namespace Smart_Tools.WPF.Views
             System.IO.Directory.CreateDirectory(AppSettingsStore.SettingsDirectory);
             string target = System.IO.File.Exists(AppSettingsStore.SettingsFilePath) ? AppSettingsStore.SettingsFilePath : AppSettingsStore.SettingsDirectory;
             if (ShellExplorer.Show(target) != ShellExplorer.ShowResult.Shown)
-                ThemedMessageBox.Show(string.Format(Str("Str_Settings_MsgCantOpenFolder", "Couldn't open {0}."), AppSettingsStore.SettingsDirectory), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(string.Format(Str("Str_Settings_MsgCantOpenFolder", "Couldn't open {0}."), AppSettingsStore.SettingsDirectory), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void SaveAndConfirm()
@@ -623,7 +622,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmRemove(string what)
         {
             if (!AppSettingsStore.ConfirmBeforeDeleting) return true;
-            return ThemedMessageBox.Show(what, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            return AppModal.Show(what, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
 
         // =================================================================
@@ -863,7 +862,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnResetCategories_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(Loc.T("Str_Settings_MsgResetCategories", "Replace your categories with the six built-in ones (Documents, Images, Videos, Audio, Archives, Other)?"),
+            if (AppModal.Show(Loc.T("Str_Settings_MsgResetCategories", "Replace your categories with the six built-in ones (Documents, Images, Videos, Audio, Archives, Other)?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             AppSettingsStore.ResetCategories();
             SaveAndConfirm();
@@ -913,7 +912,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnResetPatterns_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(Loc.T("Str_Settings_MsgResetPatterns", "Replace your saved patterns with the built-in ones?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(Loc.T("Str_Settings_MsgResetPatterns", "Replace your saved patterns with the built-in ones?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             AppSettingsStore.ResetPatterns();
             SaveAndConfirm();
         }
@@ -1137,7 +1136,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnResetEventDays_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(Str("Str_Settings_ResetEventDaysConfirm", "Replace your event days with the built-in ones (New Year's Day, Labour Day, Christmas Day)?"),
+            if (AppModal.Show(Str("Str_Settings_ResetEventDaysConfirm", "Replace your event days with the built-in ones (New Year's Day, Labour Day, Christmas Day)?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             AppSettingsStore.ResetEventDays();
             SaveAndConfirm();
@@ -1300,7 +1299,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnResetMockLists_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(Str("Str_Settings_ResetMockListsConfirm", "Replace your Mock Data lists with the built-in ones (Departments, Order status, Payment method, Priority)?"),
+            if (AppModal.Show(Str("Str_Settings_ResetMockListsConfirm", "Replace your Mock Data lists with the built-in ones (Departments, Order status, Payment method, Priority)?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             AppSettingsStore.ResetMockLists();
             SaveAndConfirm();

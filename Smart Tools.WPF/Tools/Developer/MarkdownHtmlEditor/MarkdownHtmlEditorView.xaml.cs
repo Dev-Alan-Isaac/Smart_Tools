@@ -19,7 +19,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -596,7 +595,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!IsDirty) return true;
 
-            var answer = ThemedMessageBox.Show(
+            var answer = AppModal.Show(
                 Window.GetWindow(this)!,
                 string.Format(Str("Str_MdHtml_SaveChangesPrompt"), DisplayName),
                 Str("Str_MdHtml_SaveChangesTitle"),

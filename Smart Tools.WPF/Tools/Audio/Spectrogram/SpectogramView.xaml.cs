@@ -19,7 +19,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -691,7 +690,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThePictureCouldnT", "The picture couldn't be saved.\n\n") + SpectrogramManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_ThePictureCouldnT", "The picture couldn't be saved.\n\n") + SpectrogramManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

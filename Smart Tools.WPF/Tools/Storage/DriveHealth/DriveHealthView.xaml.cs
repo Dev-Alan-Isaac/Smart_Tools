@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
 using Point = System.Windows.Point;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -265,7 +264,7 @@ namespace Smart_Tools.WPF.Views
         /// </summary>
         private void BtnRestartAsAdmin_Click(object sender, RoutedEventArgs e)
         {
-            var answer = ThemedMessageBox.Show(Loc.T("Str_MB_SmartToolsWillClose", "Smart Tools will close and reopen as administrator so it can read SMART details.\n\nAnything unsaved in other tools will be lost. Continue?"),
+            var answer = AppModal.Show(Loc.T("Str_MB_SmartToolsWillClose", "Smart Tools will close and reopen as administrator so it can read SMART details.\n\nAnything unsaved in other tools will be lost. Continue?"),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 
@@ -274,7 +273,7 @@ namespace Smart_Tools.WPF.Views
                 string? exePath = Environment.ProcessPath;
                 if (string.IsNullOrEmpty(exePath))
                 {
-                    ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTFindThis", "Couldn't find this app's executable to restart it."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppModal.Show(Loc.T("Str_MB_CouldnTFindThis", "Couldn't find this app's executable to restart it."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -287,7 +286,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTRestartAs", "Couldn't restart as administrator: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTRestartAs", "Couldn't restart as administrator: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

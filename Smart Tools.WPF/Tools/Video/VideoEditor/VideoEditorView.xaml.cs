@@ -19,7 +19,6 @@ using DataGridCell = System.Windows.Controls.DataGridCell;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -1346,7 +1345,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressEdit.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgress.Text = Loc.F("Str_VideoEditor_MsgSaveFailed", "The video couldn't be saved: {0}", ex.Message.Split('\n')[0]);
-                ThemedMessageBox.Show(Loc.F("Str_MB_TheVideoCouldnT", "The video couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and there's enough free space.", ex.Message),
+                AppModal.Show(Loc.F("Str_MB_TheVideoCouldnT", "The video couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and there's enough free space.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
@@ -1480,7 +1479,7 @@ namespace Smart_Tools.WPF.Views
             }
             else if (!result.Cancelled && result.Error != null)
             {
-                ThemedMessageBox.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

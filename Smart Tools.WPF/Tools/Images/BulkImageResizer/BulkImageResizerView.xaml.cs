@@ -13,7 +13,6 @@ using System.Windows.Data;
 using System.Windows.Media;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -405,7 +404,7 @@ namespace Smart_Tools.WPF.Views
         {
             TxtProgress.Text = message;
             TxtProgressDetail.Text = "";
-            ThemedMessageBox.Show(message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            AppModal.Show(message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

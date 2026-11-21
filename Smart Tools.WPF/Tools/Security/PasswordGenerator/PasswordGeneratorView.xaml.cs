@@ -14,7 +14,6 @@ using Clipboard = System.Windows.Clipboard;
 using DataObject = System.Windows.DataObject;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
-using MessageBox = System.Windows.MessageBox;
 using ProgressBar = System.Windows.Controls.ProgressBar;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -481,7 +480,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Owner!, "Couldn't save the file: " + PasswordGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Owner!, "Couldn't save the file: " + PasswordGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

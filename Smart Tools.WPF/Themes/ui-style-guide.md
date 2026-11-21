@@ -66,7 +66,7 @@ Standing instruction from Alan: **every view gets this treatment** – friendly,
 - `MainWindow` uses `WindowChrome` with its own 40px title bar (`TitleBar` row, caption buttons via `TitleBarButtonStyle`). While maximized, `RootGrid.Margin` is set to `SystemParameters.WindowResizeBorderThickness` so content isn't clipped by the frame. New dialogs should keep the standard Windows chrome.
 
 ## Dialogs and message boxes
-- Messages (info, warning, error, Yes/No questions) use `ThemedMessageBox.Show(...)` (`Shared/Views/ThemedMessageBox.cs`, same overloads and results as `MessageBox.Show`), never `System.Windows.MessageBox`: it is modal and follows the theme (`ContentBg`, `TextPrimary`, status icon colours). It falls back to the Windows box only before the theme is loaded.
+- Messages (info, warning, error, Yes/No questions) use `AppModal.Show(...)` (`Shared/Views/Modal/AppModal.cs`, same overloads and results as `MessageBox.Show`), never `System.Windows.MessageBox`: it is an in-window modal (dimmed layer + card, `ModalLayer`), never a separate OS window, and follows the theme (`PopupBg`, `TextPrimary`, status icon colours). Other dialogs go through `AppModal.Present`. It falls back to the Windows box only when no window can host it (start-up, no visible window).
 - Custom dialogs: `ShowDialog()` with an owner, `SetResourceReference(BackgroundProperty, "ContentBg")`, standard Windows chrome; see `SavedFileDialog.cs`. Floating widgets, the Ctrl+K palette and the recorder bar stay non-modal on purpose. Windows Open/Save/Folder pickers cannot be themed.
 
 ## Shared view styles (do not redefine per view)

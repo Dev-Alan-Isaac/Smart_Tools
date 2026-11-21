@@ -19,7 +19,6 @@ using ComboBox = System.Windows.Controls.ComboBox;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -513,7 +512,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmLargePreview(int count)
         {
             if (count < LargePreviewFiles) return true;
-            _largeAnswer ??= ThemedMessageBox.Show(Loc.F("Str_Files_AskLargePreview", "This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.\n\nShow them all anyway?", count),
+            _largeAnswer ??= AppModal.Show(Loc.F("Str_Files_AskLargePreview", "This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.\n\nShow them all anyway?", count),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
             return _largeAnswer.Value;
         }
@@ -624,7 +623,7 @@ namespace Smart_Tools.WPF.Views
             if (FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject)?.Item is not RenamePreviewItem item) return;
             string path = item.Status == RenameStatus.Renamed ? item.NewFullPath : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileIsNo", "That file is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ThatFileIsNo", "That file is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
@@ -668,7 +667,7 @@ namespace Smart_Tools.WPF.Views
             if (_rows.Count == 0)
             {
                 InputCard.PopDropArea();
-                ThemedMessageBox.Show(Loc.T("Str_MB_AddAFolderWith", "Add a folder with files in it first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_AddAFolderWith", "Add a folder with files in it first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             if (TxtPlanError.Text.Length > 0)
@@ -680,7 +679,7 @@ namespace Smart_Tools.WPF.Views
             var ready = _rows.Where(i => i.Status == RenameStatus.Ready).ToList();
             if (ready.Count == 0)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_NoneOfTheseNames", "None of these names change with the current settings."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_NoneOfTheseNames", "None of these names change with the current settings."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -688,7 +687,7 @@ namespace Smart_Tools.WPF.Views
             string question = Loc.N(ready.Count, "Str_Rename_AskOne", "Rename {0:N0} file?", "Str_Rename_AskMany", "Rename {0:N0} files?", ready.Count) +
                 (adjusted > 0 ? "\n\n" + Loc.F("Str_Rename_AskTaken", "{0:N0} of them get \" (2)\" because their new name is taken.", adjusted) : "") +
                 "\n\n" + Loc.T("Str_Rename_AskUndo", "You can undo this afterwards.");
-            if (ThemedMessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             _runCts?.Dispose();
             _runCts = new CancellationTokenSource();
@@ -735,7 +734,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetBusy(false, undo: false);
                 TxtProgress.Text = Loc.T("Str_Rename_MsgFailed", "Rename failed.");
-                ThemedMessageBox.Show(Loc.F("Str_MB_RenameFailed", "Rename failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_RenameFailed", "Rename failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -760,7 +759,7 @@ namespace Smart_Tools.WPF.Views
             }
 
             int files = Math.Max(journal.FileCount, journal.Steps.Count(s => !RenameManager.IsTempName(s.From)));
-            if (ThemedMessageBox.Show(Loc.N(files,
+            if (AppModal.Show(Loc.N(files,
                         "Str_MB_RenUndoOne", "Give the {0:N0} file renamed on {1:g} its old name back?",
                         "Str_MB_RenUndoMany", "Give the {0:N0} files renamed on {1:g} their old names back?", files, journal.When),
                     Loc.T("Str_MB_UndoRenameTitle", "Undo Rename"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
@@ -795,13 +794,13 @@ namespace Smart_Tools.WPF.Views
                 TxtProgress.Text = string.Join(" · ", parts);
 
                 if (result.Errors.Count > 0)
-                    ThemedMessageBox.Show(Loc.T("Str_MB_SomeFilesCouldnT", "Some files couldn't be undone:\n\n") + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? Loc.F("Str_MB_AndNMore", "\n...and {0} more", result.Errors.Count - 12) : ""),
+                    AppModal.Show(Loc.T("Str_MB_SomeFilesCouldnT", "Some files couldn't be undone:\n\n") + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? Loc.F("Str_MB_AndNMore", "\n...and {0} more", result.Errors.Count - 12) : ""),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
                 SetBusy(false, undo: true);
-                ThemedMessageBox.Show(Loc.F("Str_Err_UndoFailed", "Undo failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_UndoFailed", "Undo failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

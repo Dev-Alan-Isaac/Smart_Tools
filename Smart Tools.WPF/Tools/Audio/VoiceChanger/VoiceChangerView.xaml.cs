@@ -13,7 +13,6 @@ using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UserControl = System.Windows.Controls.UserControl;
@@ -752,7 +751,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Window.GetWindow(this)!, "Couldn't save: " + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Window.GetWindow(this)!, "Couldn't save: " + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -797,7 +796,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (TakeOf(sender) is not { } take) return;
             if (!take.IsSaved &&
-                ThemedMessageBox.Show(Window.GetWindow(this)!, $"\"{take.DisplayName}\" hasn't been saved. Throw it away?", DialogTitle,
+                AppModal.Show(Window.GetWindow(this)!, $"\"{take.DisplayName}\" hasn't been saved. Throw it away?", DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
             _manager.Release(take);
@@ -812,7 +811,7 @@ namespace Smart_Tools.WPF.Views
             string question = unsaved == 0
                 ? "Empty the list? The saved files stay where they are."
                 : $"{unsaved:N0} {(unsaved == 1 ? "result hasn't" : "results haven't")} been saved and will be thrown away. Empty the list?";
-            if (ThemedMessageBox.Show(Window.GetWindow(this)!, question, DialogTitle, MessageBoxButton.YesNo,
+            if (AppModal.Show(Window.GetWindow(this)!, question, DialogTitle, MessageBoxButton.YesNo,
                     unsaved == 0 ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
             _manager.StopPlayback();

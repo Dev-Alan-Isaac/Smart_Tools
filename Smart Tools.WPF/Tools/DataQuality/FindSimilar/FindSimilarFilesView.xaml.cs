@@ -28,7 +28,6 @@ using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
-using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -350,7 +349,7 @@ namespace Smart_Tools.WPF.Views
             if (_folders.Count == 0)
             {
                 InputCard.PopDropArea();
-                ThemedMessageBox.Show(Loc.T("Str_MB_AddAtLeastOne2", "Add at least one folder to scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_AddAtLeastOne2", "Add at least one folder to scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -415,12 +414,12 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex) when (ex is NotSupportedException or InvalidOperationException)
             {
                 TxtProgress.Text = ex.Message;
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 TxtProgress.Text = "Scan failed.";
-                ThemedMessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -847,7 +846,7 @@ namespace Smart_Tools.WPF.Views
         private static void ShowInFolder(string path)
         {
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileNoLonger2", "That file no longer exists. Rescan to refresh the results."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ThatFileNoLonger2", "That file no longer exists. Rescan to refresh the results."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -972,7 +971,7 @@ namespace Smart_Tools.WPF.Views
             var emptied = SimilarManager.GroupsLosingEveryCopy(_groups);
             if (emptied.Count == 0) return true;
             string which = string.Join(", ", emptied.Take(5).Select(g => g.Id)) + (emptied.Count > 5 ? ", ..." : "");
-            return ThemedMessageBox.Show(Loc.F("Str_MB_InGroupSGroup2", "In {0} group(s) (group {1}) every file is selected, so {2} would leave none of them.\n\nContinue anyway?", emptied.Count, which, verb),
+            return AppModal.Show(Loc.F("Str_MB_InGroupSGroup2", "In {0} group(s) (group {1}) every file is selected, so {2} would leave none of them.\n\nContinue anyway?", emptied.Count, which, verb),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
 
@@ -1010,7 +1009,7 @@ namespace Smart_Tools.WPF.Views
                 : ChkRecycleBin.IsChecked == true
                     ? $"Permanently delete {what}?\n\n{string.Join(", ", rootsWithoutBin)} has no Recycle Bin, so this can't be undone."
                     : $"Permanently delete {what}?\n\nThis can't be undone.";
-            if (ThemedMessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
+            if (AppModal.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"), MessageBoxButton.YesNo,
                     recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -1033,7 +1032,7 @@ namespace Smart_Tools.WPF.Views
             string destination = dialog.FolderName;
 
             if (_folders.Any(f => destination.StartsWith(f.FullPath.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase))
-                && ThemedMessageBox.Show(Loc.T("Str_MB_ThatFolderIsInside2", "That folder is inside one of the scanned folders, so the moved files would be found again next scan.\n\nMove there anyway?"),
+                && AppModal.Show(Loc.T("Str_MB_ThatFolderIsInside2", "That folder is inside one of the scanned folders, so the moved files would be found again next scan.\n\nMove there anyway?"),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -1085,12 +1084,12 @@ namespace Smart_Tools.WPF.Views
                     var sb = new StringBuilder($"{result.Failed.Count} file(s) couldn't be processed:\n\n");
                     foreach (var (item, error) in result.Failed.Take(8)) sb.AppendLine($"• {item.Name}: {error}");
                     if (result.Failed.Count > 8) sb.AppendLine($"...and {result.Failed.Count - 8} more.");
-                    ThemedMessageBox.Show(sb.ToString(), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(sb.ToString(), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_DidntWork", "That didn't work: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_DidntWork", "That didn't work: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

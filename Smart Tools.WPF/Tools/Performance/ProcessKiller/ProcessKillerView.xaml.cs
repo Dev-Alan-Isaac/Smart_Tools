@@ -22,7 +22,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Path = System.IO.Path;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -566,7 +565,7 @@ namespace Smart_Tools.WPF.Views
 
             if (!single)
             {
-                return ThemedMessageBox.Show(
+                return AppModal.Show(
                     Window.GetWindow(this)!,
                     sb.ToString().TrimEnd(),
                     Str("Str_ProcessKiller_ConfirmTitle"),

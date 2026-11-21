@@ -15,7 +15,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using IOPath = System.IO.Path;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Windows.Point;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -321,7 +320,7 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
 
-            var answer = ThemedMessageBox.Show(Loc.T("Str_Synth_UnfinishedTake", "You were still recording when you left. Save the recording?"),
+            var answer = AppModal.Show(Loc.T("Str_Synth_UnfinishedTake", "You were still recording when you left. Save the recording?"),
                 Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
             if (answer == MessageBoxResult.Yes) OfferToSave(path);
             else DeleteScratch(path);
@@ -436,7 +435,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTStartRecording", "Couldn't start recording: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
+                AppModal.Show(Loc.F("Str_MB_CouldnTStartRecording", "Couldn't start recording: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -488,7 +487,7 @@ namespace Smart_Tools.WPF.Views
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
-                    ThemedMessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
+                    AppModal.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), Loc.T("Str_Tool_synthesizer_Name", "Synthesizer"),
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

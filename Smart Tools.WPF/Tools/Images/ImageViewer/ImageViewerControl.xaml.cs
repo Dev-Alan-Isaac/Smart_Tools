@@ -18,7 +18,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Point = System.Windows.Point;
@@ -365,7 +364,7 @@ namespace Smart_Tools.WPF.Controls
             if (addedCount > 0) UiMotion.Pop(DropArea, 0.97);
             SummaryPill.ToolTip = notes.Count > 0 ? "Last add: " + string.Join(" · ", notes) : "Images in the list";
             if (addedCount == 0 && notes.Count > 0)
-                ThemedMessageBox.Show(Loc.T("Str_MB_NothingWasAdded", "Nothing was added: ") + string.Join("; ", notes) + ".", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_NothingWasAdded", "Nothing was added: ") + string.Join("; ", notes) + ".", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
 
             if (_current == null && first != null) await ShowAsync(first);
         }
@@ -601,7 +600,7 @@ namespace Smart_Tools.WPF.Controls
         {
             if (MenuTarget() is not { } item) return;
             if (ShellExplorer.Show(item.FullPath) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.Name), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.Name), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void MenuDeleteFile_Click(object sender, RoutedEventArgs e)
@@ -611,7 +610,7 @@ namespace Smart_Tools.WPF.Controls
             string text = bin
                 ? $"Move \"{item.Name}\" to the Recycle Bin?\n\nThis deletes the file from your computer, not just from the list."
                 : $"Delete \"{item.Name}\" PERMANENTLY?\n\nIt's on a drive without a Recycle Bin, so it can't be undone.";
-            if (ThemedMessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (AppModal.Show(text, DialogTitle, MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             try
@@ -620,7 +619,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.Name, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.Name, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             RemoveItems(new[] { item });
@@ -962,7 +961,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_CouldntSave", "Couldn't save: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

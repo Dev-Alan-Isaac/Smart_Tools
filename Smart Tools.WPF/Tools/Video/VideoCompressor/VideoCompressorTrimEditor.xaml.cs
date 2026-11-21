@@ -9,7 +9,6 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -231,7 +230,7 @@ namespace Smart_Tools.WPF.Controls
                 var png = await GifMakerManager.GrabFrameAsync(item.FullPath, at, 100_000, CancellationToken.None);
                 if (png == null)
                 {
-                    ThemedMessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    AppModal.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -242,7 +241,7 @@ namespace Smart_Tools.WPF.Controls
                     var bitmap = GifMakerManager.ToBitmap(png);
                     if (bitmap == null)
                     {
-                        ThemedMessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                        AppModal.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
                     var encoder = new JpegBitmapEncoder { QualityLevel = 92 };
@@ -258,7 +257,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
             {
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

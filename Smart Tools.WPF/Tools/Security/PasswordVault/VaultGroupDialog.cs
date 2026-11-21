@@ -1,63 +1,64 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Application = System.Windows.Application;
-using Button = System.Windows.Controls.Button;
 using ComboBox = System.Windows.Controls.ComboBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using Orientation = System.Windows.Controls.Orientation;
 
 namespace Smart_Tools.WPF.Views
 {
-    /// <summary>Asks for the group an entry should move to: pick an existing one or type a new path (Games/Launchers). Empty = ungrouped.</summary>
-    internal sealed class VaultGroupDialog : Window
+    /// <summary>
+    /// An in-window modal asking for the group an entry should move to: pick an existing one or type a new path (Games/Launchers). Empty = ungrouped.
+    /// Use: <c>var d = new VaultGroupDialog(...); d.ShowDialog(); var group = d.Result;</c>
+    /// </summary>
+    internal sealed class VaultGroupDialog
     {
-        private readonly ComboBox _box = new() { IsEditable = true };
+        private readonly string _title;
+        private readonly string _intro;
+        private readonly List<string> _groups;
+        private readonly string _current;
 
         /// <summary>The chosen group path (may be empty = ungrouped), or null if cancelled.</summary>
         public string? Result { get; private set; }
 
         public VaultGroupDialog(string title, string intro, IEnumerable<string> groups, string current)
         {
-            Title = title;
-            Width = 400;
-            SizeToContent = SizeToContent.Height;
-            ResizeMode = ResizeMode.NoResize;
-            ShowInTaskbar = false;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            Owner = Application.Current?.MainWindow;
-            this.SetResourceReference(BackgroundProperty, "ContentBg");
-
-            var stack = new StackPanel { Margin = new Thickness(20) };
-            var t = new TextBlock { Text = intro, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 10) };
-            t.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
-            stack.Children.Add(t);
-
-            foreach (string g in groups) _box.Items.Add(g);
-            _box.Text = current;
-            _box.KeyDown += (_, e) => { if (e.Key == Key.Enter) Accept(); };
-            stack.Children.Add(_box);
-
-            var ok = new Button { Content = Text("Str_Vault_DlgOk", "OK"), Padding = new Thickness(18, 6, 18, 6) };
-            ok.SetResourceReference(StyleProperty, "PrimaryButtonStyle");
-            ok.Click += (_, _) => Accept();
-            var cancel = new Button { Content = Text("Str_Vault_Cancel", "Cancel"), Padding = new Thickness(18, 6, 18, 6), Margin = new Thickness(0, 0, 8, 0), IsCancel = true };
-            cancel.Click += (_, _) => { Result = null; Close(); };
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
-            buttons.Children.Add(cancel);
-            buttons.Children.Add(ok);
-            stack.Children.Add(buttons);
-            Content = stack;
-
-            Loaded += (_, _) => _box.Focus();
+            _title = title;
+            _intro = intro;
+            _groups = groups.ToList();
+            _current = current;
         }
 
-        private static string Text(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
-
-        private void Accept()
+        public void ShowDialog()
         {
-            Result = _box.Text.Trim();
-            Close();
+            Result = null;
+            AppModal.Present(null, close =>
+            {
+                var stack = new StackPanel();
+                stack.Children.Add(AppModal.Heading(_title, 6));
+                var t = new TextBlock { Text = _intro, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 10) };
+                t.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondary");
+                stack.Children.Add(t);
+
+                var box = new ComboBox { IsEditable = true };
+                foreach (string g in _groups) box.Items.Add(g);
+                box.Text = _current;
+                void Accept() { Result = box.Text.Trim(); close(); }
+                box.KeyDown += (_, e) => { if (e.Key == Key.Enter && !box.IsDropDownOpen) { Accept(); e.Handled = true; } };
+                stack.Children.Add(box);
+
+                var ok = AppModal.MakeButton(AppModal.Text("Str_Vault_DlgOk", "OK"), primary: true);
+                ok.Click += (_, _) => Accept();
+                var cancel = AppModal.MakeButton(AppModal.Text("Str_Vault_Cancel", "Cancel"), primary: false);
+                cancel.Click += (_, _) => close();
+                var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
+                buttons.Children.Add(cancel);
+                buttons.Children.Add(ok);
+                stack.Children.Add(buttons);
+
+                AppModal.CancelOnEscape(stack, close);
+                return (stack, box);
+            }, 400, 520);
         }
     }
 }

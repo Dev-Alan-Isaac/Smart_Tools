@@ -11,7 +11,6 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using Border = System.Windows.Controls.Border;
 using Brushes = System.Windows.Media.Brushes;
-using MessageBox = System.Windows.MessageBox;
 using Point = System.Windows.Point;
 using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
@@ -655,7 +654,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
         {
             if (_history.Count == 0) return;
-            var answer = ThemedMessageBox.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
+            var answer = AppModal.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 

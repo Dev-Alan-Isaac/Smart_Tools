@@ -12,7 +12,6 @@ using System.Windows.Data;
 using RadioButton = System.Windows.Controls.RadioButton;
 using Border = System.Windows.Controls.Border;
 using Clipboard = System.Windows.Clipboard;
-using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using MenuItem = System.Windows.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
@@ -272,7 +271,7 @@ namespace Smart_Tools.WPF.Views
 
             if (ValidateRange() is not ScanRange range)
             {
-                ThemedMessageBox.Show(_networks.Count == 0 && ChkSubnetOverride.IsChecked != true
+                AppModal.Show(_networks.Count == 0 && ChkSubnetOverride.IsChecked != true
                         ? "No network to scan - connect to a network or enter a custom range."
                         : TxtRangeInfo.Text, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -280,7 +279,7 @@ namespace Smart_Tools.WPF.Views
 
             if (!ValidateSpeed(out int timeout, out int concurrency))
             {
-                ThemedMessageBox.Show(TxtSpeedError.Text, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(TxtSpeedError.Text, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -315,7 +314,7 @@ namespace Smart_Tools.WPF.Views
             {
                 // The manager handles per-address failures itself; anything here is unexpected.
                 TxtScanProgress.Text = "Scan failed";
-                ThemedMessageBox.Show(Loc.F("Str_MB_TheScanStoppedUnexpectedly", "The scan stopped unexpectedly: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_TheScanStoppedUnexpectedly", "The scan stopped unexpectedly: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -483,7 +482,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTOpenThe3", "Couldn't open the browser: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTOpenThe3", "Couldn't open the browser: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -496,7 +495,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_results.Count == 0)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_NothingToExportYet3", "Nothing to export yet - run a scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_NothingToExportYet3", "Nothing to export yet - run a scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             if (sender is not MenuItem { Tag: string kind }) return;
@@ -523,7 +522,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_results.Count == 0)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_NothingToExportYet3", "Nothing to export yet - run a scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_NothingToExportYet3", "Nothing to export yet - run a scan first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -545,7 +544,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_ExportFailed", "Export failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

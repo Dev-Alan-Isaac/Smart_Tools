@@ -22,7 +22,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using ProgressBar = System.Windows.Controls.ProgressBar;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -292,7 +291,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (CmbDrive.SelectedItem is not DriveSummary drive)
                 {
-                    ThemedMessageBox.Show(Loc.T("Str_MB_ChooseADriveTo", "Choose a drive to analyze first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(Loc.T("Str_MB_ChooseADriveTo", "Choose a drive to analyze first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return null;
                 }
                 root = drive.RootPath;
@@ -303,7 +302,7 @@ namespace Smart_Tools.WPF.Views
                 root = InputCard.FolderPath;
                 if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
                 {
-                    ThemedMessageBox.Show(Loc.T("Str_MB_ChooseAFolderTo", "Choose a folder to analyze first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(Loc.T("Str_MB_ChooseAFolderTo", "Choose a folder to analyze first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     InputCard.PopDropArea();
                     return null;
                 }
@@ -340,7 +339,7 @@ namespace Smart_Tools.WPF.Views
                 if (!result.Success)
                 {
                     TxtProgress.Text = result.ErrorMessage ?? "Scan failed.";
-                    ThemedMessageBox.Show(result.ErrorMessage ?? "Scan failed.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppModal.Show(result.ErrorMessage ?? "Scan failed.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -355,7 +354,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 TxtProgress.Text = "Scan failed.";
-                ThemedMessageBox.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_ScanFailed", "Scan failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -921,11 +920,11 @@ namespace Smart_Tools.WPF.Views
                 else if (Directory.Exists(path))
                     Process.Start("explorer.exe", $"\"{path}\"");
                 else
-                    ThemedMessageBox.Show(Loc.F("Str_MB_NoLongerExistsRescan", "\"{0}\" no longer exists. Rescan to refresh.", path), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    AppModal.Show(Loc.F("Str_MB_NoLongerExistsRescan", "\"{0}\" no longer exists. Rescan to refresh.", path), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTOpenExplorer", "Couldn't open Explorer: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTOpenExplorer", "Couldn't open Explorer: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -956,7 +955,7 @@ namespace Smart_Tools.WPF.Views
                 ? $"Move {what} to the Recycle Bin?"
                 : $"Permanently delete {what}?\n\nThis drive has no Recycle Bin, so this can't be undone.";
 
-            var answer = ThemedMessageBox.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"),
+            var answer = AppModal.Show(message, recycle ? Loc.T("Str_Dlg_Delete", "Delete") : Loc.T("Str_Dlg_DeletePermanently", "Delete permanently"),
                 MessageBoxButton.YesNo, recycle ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 
@@ -992,13 +991,13 @@ namespace Smart_Tools.WPF.Views
                 {
                     var lines = result.Failed.Take(8).Select(f => $"• {f.Node.Name}: {f.Error}");
                     string more = result.Failed.Count > 8 ? Loc.F("Str_MB_AndNMoreDot", "\n...and {0} more.", result.Failed.Count - 8) : "";
-                    ThemedMessageBox.Show(Loc.F("Str_MB_CouldntDeleteItems", "Couldn't delete {0} item(s):\n\n{1}{2}", result.Failed.Count, string.Join("\n", lines), more),
+                    AppModal.Show(Loc.F("Str_MB_CouldntDeleteItems", "Couldn't delete {0} item(s):\n\n{1}{2}", result.Failed.Count, string.Join("\n", lines), more),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_DeleteFailed", "Delete failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_DeleteFailed", "Delete failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

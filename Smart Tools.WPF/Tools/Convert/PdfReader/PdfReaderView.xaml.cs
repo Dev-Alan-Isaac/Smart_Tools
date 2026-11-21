@@ -11,7 +11,6 @@ using Application = System.Windows.Application;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using Path = System.IO.Path;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UserControl = System.Windows.Controls.UserControl;
@@ -223,7 +222,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmDiscard()
         {
             if (!_unsaved) return true;
-            return ThemedMessageBox.Show(T("Str_PdfReader_DiscardMarks", "You have marks on the open PDF that are not saved. Open another PDF anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            return AppModal.Show(T("Str_PdfReader_DiscardMarks", "You have marks on the open PDF that are not saved. Open another PDF anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
 
         // =================================================================
@@ -536,7 +535,7 @@ namespace Smart_Tools.WPF.Views
             string output = dialog.FileName;
             if (string.Equals(Path.GetFullPath(output), Path.GetFullPath(_path), StringComparison.OrdinalIgnoreCase))
             {
-                ThemedMessageBox.Show(T("Str_PdfReader_NotOriginal", "Choose a different name: the original PDF is never replaced."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(T("Str_PdfReader_NotOriginal", "Choose a different name: the original PDF is never replaced."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 

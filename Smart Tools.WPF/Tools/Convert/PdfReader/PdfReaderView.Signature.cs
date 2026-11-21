@@ -13,7 +13,6 @@ using Color = System.Windows.Media.Color;
 using FlowDirection = System.Windows.FlowDirection;
 using FontFamily = System.Windows.Media.FontFamily;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Point = System.Windows.Point;
 using TextBox = System.Windows.Controls.TextBox;
@@ -136,7 +135,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is MagickException or IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(T("Str_PdfReader_PictureFailed", "That picture could not be used: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(T("Str_PdfReader_PictureFailed", "That picture could not be used: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

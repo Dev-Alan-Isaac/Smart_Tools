@@ -22,7 +22,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -240,7 +239,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (DriveList.SelectedItem is not LargeFileDrive drive)
                 {
-                    ThemedMessageBox.Show(Owner!, "Choose a drive to search first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    AppModal.Show(Owner!, "Choose a drive to search first.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return null;
                 }
                 root = drive.RootPath;
@@ -257,7 +256,7 @@ namespace Smart_Tools.WPF.Views
 
             if (!Directory.Exists(root))
             {
-                ThemedMessageBox.Show(Owner!, DiskScope ? "That drive isn't ready (unplugged, or no disc in it)." : "That folder isn't there any more. Choose it again.",
+                AppModal.Show(Owner!, DiskScope ? "That drive isn't ready (unplugged, or no disc in it)." : "That folder isn't there any more. Choose it again.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
@@ -309,7 +308,7 @@ namespace Smart_Tools.WPF.Views
             if (IsBusy || _lastOptions == null) return;
             if (!Directory.Exists(_lastOptions.RootPath))
             {
-                ThemedMessageBox.Show(Owner!, "That folder or drive isn't there any more.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Owner!, "That folder or drive isn't there any more.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             await RunScanAsync(_lastOptions);
@@ -685,7 +684,7 @@ namespace Smart_Tools.WPF.Views
                     : $"Delete {what}?\n\n{toBin:N0} go to the Recycle Bin. {forGood:N0} {LargeFileText.Plural(forGood, "is", "are")} on a drive without one and will be deleted permanently.";
             string names = string.Join("\n", items.Take(5).Select(i => "• " + i.Name)) + (items.Count > 5 ? $"\n…and {items.Count - 5:N0} more" : "");
 
-            if (ThemedMessageBox.Show(Owner!, $"{question}\n\n{names}", DialogTitle, MessageBoxButton.YesNo,
+            if (AppModal.Show(Owner!, $"{question}\n\n{names}", DialogTitle, MessageBoxButton.YesNo,
                     forGood > 0 ? MessageBoxImage.Warning : MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -733,7 +732,7 @@ namespace Smart_Tools.WPF.Views
             string? problem = await Task.Run(() => LargeFileFinderManager.CheckMove(items, destination));
             if (problem != null)
             {
-                ThemedMessageBox.Show(Owner!, problem, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Owner!, problem, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -803,7 +802,7 @@ namespace Smart_Tools.WPF.Views
             if (failures.Count == 0) return;
             string lines = string.Join("\n", failures.Take(8).Select(f => $"• {f.Item.Name}: {f.Error}"));
             if (failures.Count > 8) lines += $"\n…and {failures.Count - 8:N0} more";
-            ThemedMessageBox.Show(Owner!, $"{heading}\n\n{lines}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+            AppModal.Show(Owner!, $"{heading}\n\n{lines}", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         // =================================================================
@@ -833,7 +832,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Owner!, "Couldn't save the list: " + LargeFileFinderManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Owner!, "Couldn't save the list: " + LargeFileFinderManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

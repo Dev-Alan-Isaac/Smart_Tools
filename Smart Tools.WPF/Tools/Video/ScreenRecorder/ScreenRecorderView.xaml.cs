@@ -11,7 +11,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -299,7 +298,7 @@ namespace Smart_Tools.WPF.Views
 
             long? free = OutputFolderManager.FreeSpace(folder);
             if (free is long left && left < OutputFolderManager.LowSpaceBytes &&
-                ThemedMessageBox.Show(string.Format(T("Str_Recorder_LowSpace", "There is only {0} free where recordings are saved. Recording could fill the drive. Record anyway?"), OutputFolderManager.FormatBytes(left)), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                AppModal.Show(string.Format(T("Str_Recorder_LowSpace", "There is only {0} free where recordings are saved. Recording could fill the drive. Record anyway?"), OutputFolderManager.FormatBytes(left)), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             string mic = CmbMic.SelectedIndex > 0 ? (CmbMic.SelectedItem as string ?? "") : "";
@@ -532,7 +531,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
             {
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

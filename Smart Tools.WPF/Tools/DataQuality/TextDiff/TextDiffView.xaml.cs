@@ -196,7 +196,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private void ShowReadProblem(string text) =>
-            ThemedMessageBox.Show(Window.GetWindow(this), text, T("Str_TextDiff_ReadTitle", "Text Difference"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            AppModal.Show(Window.GetWindow(this), text, T("Str_TextDiff_ReadTitle", "Text Difference"), MessageBoxButton.OK, MessageBoxImage.Warning);
 
         // =================================================================
         //  Options

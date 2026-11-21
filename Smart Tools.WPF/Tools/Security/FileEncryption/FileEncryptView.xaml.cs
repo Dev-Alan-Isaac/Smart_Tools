@@ -17,7 +17,6 @@ using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using Size = System.Windows.Size;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -536,7 +535,7 @@ namespace Smart_Tools.WPF.Views
             string path = item.Status == EncryptStatus.Done && File.Exists(item.OutputPath) ? item.OutputPath! : item.FullPath;
             var shown = ShellExplorer.Show(File.Exists(path) ? path : item.Folder);
             if (shown != ShellExplorer.ShowResult.Shown && !quiet)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder3", "That file or folder no longer exists."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ThatFileOrFolder3", "That file or folder no longer exists."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -559,7 +558,7 @@ namespace Smart_Tools.WPF.Views
             if (pending.Count == 0)
             {
                 InputCard.PopDropArea();
-                ThemedMessageBox.Show(_rows.Count == 0
+                AppModal.Show(_rows.Count == 0
                         ? "Add some files or a folder first (left side, or drop them anywhere here)."
                         : $"Nothing left to {(mode == EncryptMode.Encrypt ? "encrypt" : "decrypt")} - every file is done or doesn't fit this mode.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -568,13 +567,13 @@ namespace Smart_Tools.WPF.Views
 
             if (EncryptManager.PasswordProblem(mode, PwdPassword.Password, PwdConfirmPassword.Password) is string problem)
             {
-                ThemedMessageBox.Show(problem, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(problem, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 (string.IsNullOrEmpty(PwdPassword.Password) ? PwdPassword : PwdConfirmPassword).Focus();
                 return;
             }
 
             if (mode == EncryptMode.Encrypt && EncryptManager.RatePassword(PwdPassword.Password).Strength == PasswordStrength.Weak
-                && ThemedMessageBox.Show(Loc.T("Str_MB_ThisPasswordIsWeak", "This password is weak and could be guessed.\n\nEncrypt with it anyway?"), DialogTitle,
+                && AppModal.Show(Loc.T("Str_MB_ThisPasswordIsWeak", "This password is weak and could be guessed.\n\nEncrypt with it anyway?"), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
             {
                 PwdPassword.Focus();
@@ -626,7 +625,7 @@ namespace Smart_Tools.WPF.Views
                 if (mode == EncryptMode.Decrypt && result.Done == 0 && result.Failed > 0
                     && _rows.Where(i => i.Status == EncryptStatus.Failed).All(i => i.Message.StartsWith("Wrong password", StringComparison.Ordinal)))
                 {
-                    ThemedMessageBox.Show(Loc.T("Str_MB_ThePasswordDidnT", "The password didn't open any of the files. Check it (and Caps Lock) and try again."),
+                    AppModal.Show(Loc.T("Str_MB_ThePasswordDidnT", "The password didn't open any of the files. Check it (and Caps Lock) and try again."),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     PwdPassword.Focus();
                     PwdPassword.SelectAll();
@@ -636,7 +635,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetRunning(false);
                 TxtProgress.Text = "Stopped - something went wrong.";
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTFinish", "Couldn't finish: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTFinish", "Couldn't finish: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -654,7 +653,7 @@ namespace Smart_Tools.WPF.Views
                   + (mode == EncryptMode.Encrypt ? "\n\nThe unencrypted originals stay readable in the Recycle Bin until you empty it." : "")
                   + "\n\nContinue?"
                 : $"After each file {what}, its original will be deleted.\n\n{noBin:N0} of them are on a drive without a Recycle Bin (network or removable) and will be deleted PERMANENTLY.\n\nContinue?";
-            return ThemedMessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo, noBin == 0 ? MessageBoxImage.Question : MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            return AppModal.Show(text, DialogTitle, MessageBoxButton.YesNo, noBin == 0 ? MessageBoxImage.Question : MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
         private void ReportProgress(EncryptProgress p)

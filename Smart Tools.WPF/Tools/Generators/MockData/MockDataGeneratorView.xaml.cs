@@ -13,7 +13,6 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UserControl = System.Windows.Controls.UserControl;
@@ -392,7 +391,7 @@ namespace Smart_Tools.WPF.Views
             if (_isSaving) return;
             if (_fields.Count >= MockDataManager.MaxFields)
             {
-                ThemedMessageBox.Show(string.Format(Str("Str_Mock_Err_TooManyFields", "Up to {0} columns."), MockDataManager.MaxFields),
+                AppModal.Show(string.Format(Str("Str_Mock_Err_TooManyFields", "Up to {0} columns."), MockDataManager.MaxFields),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }

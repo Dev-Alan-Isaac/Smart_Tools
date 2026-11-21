@@ -16,7 +16,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using Panel = System.Windows.Controls.Panel;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
@@ -306,7 +305,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -327,7 +326,7 @@ namespace Smart_Tools.WPF.Views
             string? target = OutputCard.IsSameAsSource ? firstResult : firstResult ?? OutputCard.EffectiveFolder;
             if (target != null && ShellExplorer.Show(target) == ShellExplorer.ShowResult.Shown) return;
             if (!quiet)
-                ThemedMessageBox.Show(OutputCard.IsSameAsSource
+                AppModal.Show(OutputCard.IsSameAsSource
                         ? S("NothingSavedSource", "The videos are saved next to the originals - compress something first.")
                         : $"Nothing has been saved to {OutputCard.EffectiveFolder} yet.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);

@@ -18,7 +18,6 @@ using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using DragEventArgs = System.Windows.DragEventArgs;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using RadioButton = System.Windows.Controls.RadioButton;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -635,7 +634,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressConversion.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgress.Text = Loc.F("Str_ImageConvertPDF_StatusSaveFailed", "The PDF couldn't be saved: {0}", ImageToPdfManager.PlainError(ex));
-                ThemedMessageBox.Show(Loc.F("Str_MB_ThePdfCouldnT", "The PDF couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
+                AppModal.Show(Loc.F("Str_MB_ThePdfCouldnT", "The PDF couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
@@ -670,7 +669,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressConversion.Value = 0;
                 TxtProgressPercent.Text = "";
                 if (!result.Cancelled && result.Error != null)
-                    ThemedMessageBox.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

@@ -200,7 +200,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearDrive_Click(object sender, RoutedEventArgs e)
         {
             if (CmbDrive.SelectedItem is not SmartDriveHistory d) return;
-            var answer = ThemedMessageBox.Show(Loc.F("Str_MB_ForgetAllReadingsOf", "Forget all {0:N0} readings of {1}?\n\nThe drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.", d.Readings.Count, d.Name),
+            var answer = AppModal.Show(Loc.F("Str_MB_ForgetAllReadingsOf", "Forget all {0:N0} readings of {1}?\n\nThe drive itself isn't touched; only this history is removed. It starts again the next time Drive Health reads your drives.", d.Readings.Count, d.Name),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (answer != MessageBoxResult.Yes) return;
             _file.Drives.Remove(d);

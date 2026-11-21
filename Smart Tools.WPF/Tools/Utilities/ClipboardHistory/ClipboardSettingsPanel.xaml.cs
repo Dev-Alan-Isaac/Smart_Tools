@@ -1,7 +1,6 @@
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Modules;
 using System.Windows;
-using MessageBox = System.Windows.MessageBox;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
@@ -37,7 +36,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnClipboardDelete_Click(object sender, RoutedEventArgs e)
         {
-            var answer = ThemedMessageBox.Show(
+            var answer = AppModal.Show(
                 Window.GetWindow(this),
                 Str("Str_Settings_ClipboardDeleteText", "Delete the whole clipboard history, including pinned items and the saved copy?"),
                 Str("Str_Settings_ClipboardDelete", "Delete history"),

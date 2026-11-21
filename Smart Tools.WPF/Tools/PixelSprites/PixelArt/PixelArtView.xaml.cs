@@ -16,7 +16,6 @@ using Clipboard = System.Windows.Clipboard;
 using Color = System.Windows.Media.Color;
 using ComboBox = System.Windows.Controls.ComboBox;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -744,7 +743,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmDiscard()
         {
             if (!_manager.IsDirty) return true;
-            return ThemedMessageBox.Show(Window.GetWindow(this), Str("Str_PixelArt_DiscardBody", "Start over? The drawing hasn't been exported."),
+            return AppModal.Show(Window.GetWindow(this), Str("Str_PixelArt_DiscardBody", "Start over? The drawing hasn't been exported."),
                 Str("Str_PixelArt_DiscardTitle", "Pixel Art Editor"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
 

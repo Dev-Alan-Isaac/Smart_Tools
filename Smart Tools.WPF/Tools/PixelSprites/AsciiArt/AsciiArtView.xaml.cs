@@ -13,7 +13,6 @@ using System.Windows.Threading;
 using Border = System.Windows.Controls.Border;
 using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
-using MessageBox = System.Windows.MessageBox;
 using UserControl = System.Windows.Controls.UserControl;
 using Clipboard = System.Windows.Clipboard;
 using ComboBox = System.Windows.Controls.ComboBox;
@@ -859,6 +858,6 @@ namespace Smart_Tools.WPF.Views
         private void HideStatus() => StatusBanner.Visibility = Visibility.Collapsed;
 
         private static bool Confirm(string text) =>
-            ThemedMessageBox.Show(text, Loc.T("Str_Tool_ascii-art_Name", "ASCII Art Maker"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            AppModal.Show(text, Loc.T("Str_Tool_ascii-art_Name", "ASCII Art Maker"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
     }
 }

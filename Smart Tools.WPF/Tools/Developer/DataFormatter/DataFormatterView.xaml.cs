@@ -9,7 +9,6 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using RadioButton = System.Windows.Controls.RadioButton;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -151,7 +150,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (new FileInfo(path).Length > MaxFileBytes)
                 {
-                    ThemedMessageBox.Show(T("Str_Formatter_TooBig", "That file is larger than 20 MB, which is too big to format here."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    AppModal.Show(T("Str_Formatter_TooBig", "That file is larger than 20 MB, which is too big to format here."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
                 TxtInput.Text = File.ReadAllText(path);
@@ -159,7 +158,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -287,7 +286,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }
