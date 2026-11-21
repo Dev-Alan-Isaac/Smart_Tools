@@ -479,6 +479,7 @@ namespace Smart_Tools.WPF.Controllers
             Post(p =>
             {
                 Native.libvlc_media_player_stop(p);
+                _savedAudioTrack = int.MinValue; _trackIsOff = false;   // a track id from the previous file means nothing for this one
                 IntPtr media = Native.libvlc_media_new_path(_instance, path);
                 if (media == IntPtr.Zero) throw new InvalidOperationException("VLC couldn't open the file: " + (LastError() ?? "unknown error"));
                 Native.libvlc_media_player_set_media(p, media);
@@ -570,6 +571,7 @@ namespace Smart_Tools.WPF.Controllers
         public void SetMute(bool mute) => Post(p => Native.libvlc_audio_set_mute(p, mute ? 1 : 0));
 
         private int _savedAudioTrack = int.MinValue;
+        private bool _trackIsOff;
 
         /// <summary>
         /// Silences only this player by switching its audio track off. libvlc's mute/volume
@@ -582,13 +584,33 @@ namespace Smart_Tools.WPF.Controllers
                 int current = Native.libvlc_audio_get_track(p);
                 if (current >= 0) _savedAudioTrack = current;
                 Native.libvlc_audio_set_track(p, -1);
+                _trackIsOff = true;
             }
-            else if (_savedAudioTrack != int.MinValue)
+            else if (_trackIsOff)
             {
-                Native.libvlc_audio_set_track(p, _savedAudioTrack);
+                _trackIsOff = false;
+                int track = _savedAudioTrack != int.MinValue ? _savedAudioTrack : FirstAudioTrack(p);
                 _savedAudioTrack = int.MinValue;
+                if (track >= 0) Native.libvlc_audio_set_track(p, track);
             }
         });
+
+        /// <summary>First real audio track of the current media (id >= 0), or -1. Used when nothing was saved before the track was switched off.</summary>
+        private static int FirstAudioTrack(IntPtr p)
+        {
+            IntPtr head = Native.libvlc_audio_get_track_description(p);
+            if (head == IntPtr.Zero) return -1;
+            try
+            {
+                for (IntPtr node = head; node != IntPtr.Zero; node = Marshal.ReadIntPtr(node, IntPtr.Size == 8 ? 16 : 8))
+                {
+                    int id = Marshal.ReadInt32(node);   // libvlc_track_description_t: int i_id; char* psz_name; next*
+                    if (id >= 0) return id;
+                }
+                return -1;
+            }
+            finally { Native.libvlc_track_description_list_release(head); }
+        }
 
         public static string? ErrorMessage => _instance == IntPtr.Zero ? null : LastError();
 
@@ -691,6 +713,12 @@ namespace Smart_Tools.WPF.Controllers
 
             [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
             public static extern int libvlc_audio_set_track(IntPtr player, int track);
+
+            [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr libvlc_audio_get_track_description(IntPtr player);
+
+            [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void libvlc_track_description_list_release(IntPtr list);
 
             [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
             public static extern void libvlc_video_set_mouse_input(IntPtr player, uint on);

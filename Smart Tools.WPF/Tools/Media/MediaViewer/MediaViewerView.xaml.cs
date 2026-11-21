@@ -583,7 +583,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (DataGridQueue.SelectedItem is not MediaItem item) return;
             if (ShellExplorer.Show(item.Path) == ShellExplorer.ShowResult.NotFound)
-                System.Windows.MessageBox.Show(string.Format(S("Str_MediaViewer_NoLongerThere", "\"{0}\" is no longer there."), item.Name),
+                ThemedMessageBox.Show(string.Format(S("Str_MediaViewer_NoLongerThere", "\"{0}\" is no longer there."), item.Name),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
@@ -605,7 +605,7 @@ namespace Smart_Tools.WPF.Views
                 : string.Format(S(bin ? "Str_MediaViewer_DeleteBinMany" : "Str_MediaViewer_DeletePermMany",
                     bin ? "Move {0} files to the Recycle Bin?\n\nThis deletes them from your computer, not just from the list."
                         : "Delete {0} files PERMANENTLY?\n\nSome are on a drive without a Recycle Bin, so this can't be undone."), targets.Count);
-            if (System.Windows.MessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo,
+            if (ThemedMessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo,
                     bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -648,7 +648,7 @@ namespace Smart_Tools.WPF.Views
             if (deleted.Count > 0) RemoveItems(deleted);
             else if (stoppedCurrent && current != null && _items.Contains(current)) Show(_items.IndexOf(current));   // nothing deleted - carry on playing
             if (failure != null)
-                System.Windows.MessageBox.Show(failure, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(failure, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void BtnMoveUp_Click(object sender, RoutedEventArgs e) => MoveSelected(-1);

@@ -648,7 +648,7 @@ namespace Smart_Tools.WPF.Views
         {
             IconPlayPause.Kind = _comparePlaying ? PackIconKind.Pause : PackIconKind.Play;
             BtnPlayPauseBoth.ToolTip = _comparePlaying ? Loc.T("Str_Similar_PauseBoth", "Pause both") : Loc.T("Str_Similar_PlayBoth", "Play both");
-            IconMute.Kind = _compareMuted || _compareVolume <= 0 ?PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
+            IconMute.Kind = _compareMuted || _compareVolume <= 0 ? PackIconKind.VolumeOff : _compareVolume < 0.4 ? PackIconKind.VolumeLow : _compareVolume < 0.75 ? PackIconKind.VolumeMedium : PackIconKind.VolumeHigh;
             IconMuteLeft.Kind = _muteLeft ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
             IconMuteRight.Kind = _muteRight ? PackIconKind.VolumeOff : PackIconKind.VolumeHigh;
             BtnMuteLeft.Opacity = _muteLeft ? 0.55 : 1;
@@ -802,11 +802,15 @@ namespace Smart_Tools.WPF.Views
         /// </summary>
         private static double ReleasedValue(System.Windows.Controls.Slider slider, MouseButtonEventArgs e)
         {
-            if (slider.IsMouseCaptureWithin || slider.ActualWidth <= 12) return slider.Value;
+            if (slider.IsMouseCaptureWithin || slider.ActualWidth <= 2 * ThumbHalfWidth) return slider.Value;
             double x = e.GetPosition(slider).X;
-            double ratio = Math.Clamp((x - 6) / (slider.ActualWidth - 12), 0, 1);
+            double ratio = Math.Clamp((x - ThumbHalfWidth) / (slider.ActualWidth - 2 * ThumbHalfWidth), 0, 1);
             return slider.Minimum + ratio * (slider.Maximum - slider.Minimum);
         }
+
+        /// <summary>Half the scrubber thumb's width: the bar's ends sit this far inside the control.</summary>
+        private const double ThumbHalfWidth = 6;
+
         /// <summary>Seeks the side that was scrubbed; with the link on, the other side goes to the same time (limited to its own length).</summary>
         private void SeekFromSlider(bool fromLeft, double seconds)
         {

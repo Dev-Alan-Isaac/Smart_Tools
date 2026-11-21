@@ -11,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Border = System.Windows.Controls.Border;
 using MessageBox = System.Windows.MessageBox;
+using RadioButton = System.Windows.Controls.RadioButton;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
@@ -29,7 +30,11 @@ namespace Smart_Tools.WPF.Views
         private CancellationTokenSource? _ipCts;
         private CancellationTokenSource? _btCts;
         private bool _ipLoadedOnce;
-        private List<AdapterInfo> _adapters = new();
+        private List<AdapterInfo> _adapters = new();        // what the list shows: the real adapters plus the Bluetooth radio
+        private List<AdapterInfo> _realAdapters = new();    // as read from Windows
+        private BluetoothInfo? _bt;
+        private List<AdapterInfo> _hardware = new();       // display, audio, storage and USB adapters (read-only)
+        private string _category = "All";
         private string? _selectedAdapterId;
         private bool _adapterBusy;
         private bool _adaptersStale;
@@ -48,8 +53,8 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             _networkChangedTimer.Tick += NetworkChangedTimer_Tick;
-            TxtToolTitle.Text = "This computer";
-            TxtToolDetail.Text = "Every network adapter - pick one to see its addresses, change its IP settings, or turn it off and on.";
+            TxtToolTitle.Text = Dns.GetHostName();
+            TxtToolDetail.Text = "Every adapter on this computer - Wi-Fi, Ethernet, Bluetooth... pick one to see its own details.";
             BtnAction.ToolTip = "Read this computer's adapters and addresses again";
             _viewConstructed = true;
         }
@@ -190,7 +195,8 @@ namespace Smart_Tools.WPF.Views
             _adaptersStale = false;
             try
             {
-                TxtHostname.Text = Dns.GetHostName();
+                TxtToolTitle.Text = Dns.GetHostName();
+                _ = RefreshHardwareAsync();
                 _ = RefreshBluetoothAsync();   // independent of the adapter list: its own token and error handling
                 bool includeVirtual = ChkShowVirtual.IsChecked == true;
                 var adapters = await Task.Run(() => NetworkToolsManager.GetAdapters(includeVirtual), cts.Token);
@@ -198,7 +204,7 @@ namespace Smart_Tools.WPF.Views
                 ShowAdapters(adapters);
                 if (log)
                 {
-                    Results.Log(ConsoleKind.Info, "IP", $"{TxtHostname.Text} · " + (adapters.Count == 0 ? "no adapters" :
+                    Results.Log(ConsoleKind.Info, "IP", $"{TxtToolTitle.Text} · " + (adapters.Count == 0 ? "no adapters" :
                         string.Join(" · ", adapters.Select(a => a.State == AdapterState.Connected ? $"{a.Name} {a.AddressText}" : $"{a.Name} ({a.StatusText.ToLowerInvariant()})"))));
                 }
             }
@@ -222,18 +228,151 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>New list, same adapter still chosen (by its id, so a rename doesn't lose it). An open edit form is left as typed.</summary>
-        private void ShowAdapters(List<AdapterInfo> adapters)
+        private void ShowAdapters(List<AdapterInfo> real)
         {
-            _adapters = adapters;
-            int connected = adapters.Count(a => a.State == AdapterState.Connected);
-            TxtAdapterCount.Text = adapters.Count == 0 ? "0" : Loc.F("Str_NetworkAdapters_CountOn", "{0} of {1} on", connected, adapters.Count);
-            // The connection in use: the connected adapter that has a gateway (it reaches the internet), else the first connected one
-            var main = adapters.FirstOrDefault(a => a.State == AdapterState.Connected && a.Gateways.Count > 0) ?? adapters.FirstOrDefault(a => a.State == AdapterState.Connected);
-            TxtMainAdapter.Text = main?.Name ?? "–";
-            TxtLocalIp.Text = main == null ? "–" : main.IPv4.Count > 0 ? main.IPv4[0].Address : main.AddressText;
-            TxtGateway.Text = main?.Gateways.FirstOrDefault() ?? "–";
-            TxtDnsMain.Text = main?.Dns.FirstOrDefault() ?? "–";
-            TxtNoAdapters.Text = "No network adapters found." + (ChkShowVirtual.IsChecked == true ? "" : " Tick \"Show virtual adapters\" on the left to list VPN and Hyper-V ones.");
+            _realAdapters = real;
+            ApplyList();
+        }
+
+        private async Task RefreshHardwareAsync()
+        {
+            try
+            {
+                var found = await Task.Run(NetworkToolsManager.GetHardwareAdapters);
+                if (_closed) return;
+                _hardware = found;
+                if (_realAdapters.Count > 0) ApplyList();
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+            {
+                Log.Info($"Hardware adapters: {ex.Message}");
+            }
+        }
+
+        /// <summary>A Bluetooth radio is an adapter like the others: it gets its own list entry (unless Windows already lists a Bluetooth network adapter).</summary>
+        private List<AdapterInfo> WithBluetooth(List<AdapterInfo> real)
+        {
+            var list = new List<AdapterInfo>(real);
+            if (_bt != null && _bt.Radios.Count > 0) AddRadios(list);
+            list.AddRange(_hardware.OrderBy(h => Array.IndexOf(NetworkToolsManager.HardwareCategories, h.HardwareCategory)).ThenBy(h => h.Name, StringComparer.CurrentCultureIgnoreCase));
+            return list;
+        }
+
+        private void AddRadios(List<AdapterInfo> list)
+        {
+            foreach (var r in _bt!.Radios)
+            {
+                list.Add(new AdapterInfo
+                {
+                    Name = r.Name,
+                    Id = "bt:" + r.Name,
+                    Description = Loc.T("Str_NetworkAdapters_BtRadio", "Bluetooth adapter"),
+                    Kind = "Bluetooth",
+                    IsBluetoothRadio = true,
+                    State = r.State switch
+                    {
+                        BluetoothRadioState.On => AdapterState.Connected,
+                        BluetoothRadioState.Off => AdapterState.Disconnected,
+                        BluetoothRadioState.Disabled => AdapterState.Disabled,
+                        _ => AdapterState.Unknown,
+                    },
+                    StatusOverride = BtStateText(r.State),
+                    ExtraRows = BtRadioRows(r),
+                });
+            }
+        }
+
+        private static readonly string[] CategoryOrder = { "Network", "Bluetooth", "Display", "Audio", "Storage", "USB" };
+
+        private static string CategoryName(string c) => c switch
+        {
+            "All" => Loc.T("Str_NetworkAdapters_CatAll", "All"),
+            "Network" => Loc.T("Str_NetworkAdapters_CatNetwork", "Network"),
+            "Bluetooth" => Loc.T("Str_NetworkAdapters_CatBluetooth", "Bluetooth"),
+            "Display" => Loc.T("Str_NetworkAdapters_CatDisplay", "Display"),
+            "Audio" => Loc.T("Str_NetworkAdapters_CatAudio", "Audio"),
+            "Storage" => Loc.T("Str_NetworkAdapters_CatStorage", "Storage"),
+            _ => Loc.T("Str_NetworkAdapters_CatUsb", "USB"),
+        };
+
+        /// <summary>One tab per kind of adapter this PC has, with how many. A kind that has gone falls back to All.</summary>
+        private void BuildCategoryBar(List<AdapterInfo> all)
+        {
+            var present = CategoryOrder.Where(c => all.Any(a => a.Category == c)).ToList();
+            if (_category != "All" && !present.Contains(_category)) _category = "All";
+            CategoryBar.Children.Clear();
+            var style = (Style)FindResource("ModeTabStyle");
+            foreach (var c in new[] { "All" }.Concat(present))
+            {
+                int n = c == "All" ? all.Count : all.Count(a => a.Category == c);
+                var tab = new RadioButton
+                {
+                    Content = $"{CategoryName(c)} ({n})",
+                    Tag = c,
+                    GroupName = "AdapterCategory",
+                    Style = style,
+                    IsChecked = c == _category,
+                };
+                tab.Click += CategoryTab_Click;
+                CategoryBar.Children.Add(tab);
+            }
+        }
+
+        private void CategoryTab_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not RadioButton { Tag: string c } || c == _category) return;
+            _category = c;
+            ApplyList();
+        }
+
+        /// <summary>The radio's own facts: address, what it supports, its driver. Anything Windows did not answer is left out.</summary>
+        private List<NetworkInfoRow> BtRadioRows(BluetoothRadioInfo r)
+        {
+            var rows = new List<NetworkInfoRow>();
+            void Add(string label, string? value)
+            {
+                if (!string.IsNullOrWhiteSpace(value)) rows.Add(new NetworkInfoRow(label, value));
+            }
+            string Yes(bool b) => b ? Loc.T("Str_NetworkAdapters_BtYes", "Yes") : Loc.T("Str_NetworkAdapters_BtNo", "No");
+            Add(Loc.T("Str_NetworkAdapters_BtRowType", "Type"), "Bluetooth");
+            Add(Loc.T("Str_NetworkAdapters_BtRowAdapter", "Adapter"), r.Name);
+            if (_bt?.Adapter is BluetoothAdapterDetails a)
+            {
+                Add(Loc.T("Str_NetworkAdapters_BtRowAddress", "Bluetooth address"), a.Address);
+                Add(Loc.T("Str_NetworkAdapters_BtRowClassic", "Classic Bluetooth"), Yes(a.Classic));
+                Add(Loc.T("Str_NetworkAdapters_BtRowLe", "Low Energy"), Yes(a.LowEnergy));
+                if (a.LowEnergy) Add(Loc.T("Str_NetworkAdapters_BtRowSecureLe", "Secure LE connections"), Yes(a.SecureLowEnergy));
+                Add(Loc.T("Str_NetworkAdapters_BtRowRoles", "Roles"),
+                    string.Join(", ", new[]
+                    {
+                        a.CentralRole ? Loc.T("Str_NetworkAdapters_BtRoleCentral", "connects to devices") : "",
+                        a.PeripheralRole ? Loc.T("Str_NetworkAdapters_BtRolePeripheral", "can be found by others") : "",
+                    }.Where(x => x.Length > 0)));
+                Add(Loc.T("Str_NetworkAdapters_BtRowMaker", "Driver maker"), a.DriverMaker);
+                Add(Loc.T("Str_NetworkAdapters_BtRowDriver", "Driver version"), a.DriverVersion + (a.DriverDate.Length > 0 ? $" ({a.DriverDate})" : ""));
+            }
+            return rows;
+        }
+
+        private static string BtStateText(BluetoothRadioState s) => s switch
+        {
+            BluetoothRadioState.On => Loc.T("Str_NetworkAdapters_BtOn", "On"),
+            BluetoothRadioState.Off => Loc.T("Str_NetworkAdapters_BtOff", "Off"),
+            BluetoothRadioState.Disabled => Loc.T("Str_NetworkAdapters_BtDisabled", "Disabled"),
+            _ => Loc.T("Str_NetworkAdapters_BtUnknown", "Unknown"),
+        };
+
+        /// <summary>New list, same adapter still chosen (by its id, so a rename doesn't lose it). An open edit form is left as typed.</summary>
+        private void ApplyList()
+        {
+            var all = WithBluetooth(_realAdapters);
+            int connected = all.Count(a => a.State == AdapterState.Connected);
+            TxtToolDetail.Text = all.Count == 0 ? "" : Loc.F("Str_NetworkAdapters_CountOn", "{0} of {1} on", connected, all.Count);
+            BuildCategoryBar(all);
+            var adapters = _adapters = _category == "All" ? all : all.Where(a => a.Category == _category).ToList();
+            TxtNoAdapters.Text = all.Count == 0
+                ? "No adapters found." + (ChkShowVirtual.IsChecked == true ? "" : " Tick \"Show virtual adapters\" on the left to list VPN and Hyper-V ones.")
+                : "Nothing in this group.";
             TxtNoAdapters.Visibility = adapters.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
             var keep = adapters.FirstOrDefault(a => a.Id == _selectedAdapterId) ?? adapters.FirstOrDefault();
@@ -246,7 +385,63 @@ namespace Smart_Tools.WPF.Views
         // ---------------- Bluetooth (read-only) ----------------
 
         /// <summary>One line of the Bluetooth card (a radio or a paired device); Tone is Good / Warn / Neutral.</summary>
-        private sealed record BtRow(string Title, string Detail, string Pill, string Tone);
+        private sealed record BtRow(string Title, string Detail, string Extra, string Pill, string Tone, PackIconKind Icon);
+
+        private static string BtKindName(string kind) => kind switch
+        {
+            "Headphones" => Loc.T("Str_NetworkAdapters_BtKind_Headphones", "Headphones"),
+            "Speaker" => Loc.T("Str_NetworkAdapters_BtKind_Speaker", "Speaker"),
+            "Microphone" => Loc.T("Str_NetworkAdapters_BtKind_Microphone", "Microphone"),
+            "Phone" => Loc.T("Str_NetworkAdapters_BtKind_Phone", "Phone"),
+            "Computer" => Loc.T("Str_NetworkAdapters_BtKind_Computer", "Computer"),
+            "Keyboard" => Loc.T("Str_NetworkAdapters_BtKind_Keyboard", "Keyboard"),
+            "Mouse" => Loc.T("Str_NetworkAdapters_BtKind_Mouse", "Mouse"),
+            "Gamepad" => Loc.T("Str_NetworkAdapters_BtKind_Gamepad", "Game controller"),
+            "Input" => Loc.T("Str_NetworkAdapters_BtKind_Input", "Keyboard or mouse"),
+            "Watch" => Loc.T("Str_NetworkAdapters_BtKind_Watch", "Watch"),
+            "Display" => Loc.T("Str_NetworkAdapters_BtKind_Display", "Display"),
+            "Camera" => Loc.T("Str_NetworkAdapters_BtKind_Camera", "Camera"),
+            "Car" => Loc.T("Str_NetworkAdapters_BtKind_Car", "Car audio"),
+            "Health" => Loc.T("Str_NetworkAdapters_BtKind_Health", "Health sensor"),
+            "Tag" => Loc.T("Str_NetworkAdapters_BtKind_Tag", "Tracker"),
+            _ => "",
+        };
+
+        private static PackIconKind BtKindIcon(string kind) => kind switch
+        {
+            "Headphones" => PackIconKind.Headphones,
+            "Speaker" => PackIconKind.Speaker,
+            "Microphone" => PackIconKind.Microphone,
+            "Phone" => PackIconKind.Cellphone,
+            "Computer" => PackIconKind.Laptop,
+            "Keyboard" or "Input" => PackIconKind.Keyboard,
+            "Mouse" => PackIconKind.Mouse,
+            "Gamepad" => PackIconKind.GamepadVariant,
+            "Watch" => PackIconKind.Watch,
+            "Display" => PackIconKind.Monitor,
+            "Camera" => PackIconKind.Camera,
+            "Car" => PackIconKind.Car,
+            "Health" => PackIconKind.HeartPulse,
+            "Tag" => PackIconKind.TagOutline,
+            _ => PackIconKind.Bluetooth,
+        };
+
+        /// <summary>"Battery 80 % · Encrypted · Last seen 11/19/2026 10:20" - only what this device reported.</summary>
+        private static string BtExtraLine(BluetoothDeviceInfo d)
+        {
+            var parts = new List<string>();
+            if (d.Battery is int pct) parts.Add($"{Loc.T("Str_NetworkAdapters_BtBattery", "Battery")} {pct} %");
+            string? protection = d.Protection switch
+            {
+                BluetoothProtection.None => Loc.T("Str_NetworkAdapters_BtNotEncrypted", "Not encrypted"),
+                BluetoothProtection.Encrypted => Loc.T("Str_NetworkAdapters_BtEncrypted", "Encrypted"),
+                BluetoothProtection.EncryptedAndVerified => Loc.T("Str_NetworkAdapters_BtVerified", "Encrypted and verified"),
+                _ => null,
+            };
+            if (protection != null) parts.Add(protection);
+            if (d.LastSeen is DateTimeOffset seen) parts.Add($"{Loc.T("Str_NetworkAdapters_BtLastSeen", "Last seen")} {seen.ToLocalTime():g}");
+            return string.Join(" · ", parts);
+        }
 
         private async Task RefreshBluetoothAsync()
         {
@@ -258,24 +453,19 @@ namespace Smart_Tools.WPF.Views
                 var info = await NetworkToolsManager.GetBluetoothAsync(ct);
                 if (ct.IsCancellationRequested || _closed) return;
 
-                BtRadios.ItemsSource = info.Radios.Select(r => new BtRow(
-                    r.Name,
-                    Loc.T("Str_NetworkAdapters_BtRadio", "Bluetooth adapter"),
-                    r.State switch
-                    {
-                        BluetoothRadioState.On => Loc.T("Str_NetworkAdapters_BtOn", "On"),
-                        BluetoothRadioState.Off => Loc.T("Str_NetworkAdapters_BtOff", "Off"),
-                        BluetoothRadioState.Disabled => Loc.T("Str_NetworkAdapters_BtDisabled", "Disabled"),
-                        _ => Loc.T("Str_NetworkAdapters_BtUnknown", "Unknown"),
-                    },
-                    r.State == BluetoothRadioState.On ? "Good" : "Warn")).ToList();
-
+                _bt = info;
                 BtDevices.ItemsSource = info.Devices.Select(d => new BtRow(
                     d.Name,
-                    (d.LowEnergy ? Loc.T("Str_NetworkAdapters_BtLowEnergy", "Low Energy") : Loc.T("Str_NetworkAdapters_BtClassic", "Classic"))
-                        + (d.Address.Length > 0 ? " · " + d.Address : ""),
+                    string.Join(" · ", new[]
+                    {
+                        BtKindName(d.Kind),
+                        d.LowEnergy ? Loc.T("Str_NetworkAdapters_BtLowEnergy", "Low Energy") : Loc.T("Str_NetworkAdapters_BtClassic", "Classic"),
+                        d.Address,
+                    }.Where(x => x.Length > 0)),
+                    BtExtraLine(d),
                     d.Connected ? Loc.T("Str_NetworkAdapters_BtConnected", "Connected") : Loc.T("Str_NetworkAdapters_BtNotConnected", "Not connected"),
-                    d.Connected ? "Good" : "Neutral")).ToList();
+                    d.Connected ? "Good" : "Neutral",
+                    BtKindIcon(d.Kind))).ToList();
 
                 TxtBtPairedLabel.Visibility = info.Devices.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
                 TxtBtMessage.Text = info.Problem switch
@@ -286,6 +476,7 @@ namespace Smart_Tools.WPF.Views
                     _ => "",
                 };
                 TxtBtMessage.Visibility = TxtBtMessage.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+                if (_realAdapters.Count > 0) ApplyList();   // the radio joins the list
             }
             catch (OperationCanceledException)
             {
@@ -319,7 +510,10 @@ namespace Smart_Tools.WPF.Views
             _selectedAdapterId = a.Id;
             AdapterDetail.Visibility = Visibility.Visible;
             AdapterDetailPanel.DataContext = a;
-            AdapterInfoRows.ItemsSource = NetworkToolsManager.DescribeAdapter(a);
+            AdapterInfoRows.ItemsSource = a.IsHardwareOnly ? a.ExtraRows
+                : a.IsBluetoothRadio ? a.ExtraRows
+                : NetworkToolsManager.DescribeAdapter(a);
+            ShowBluetoothParts(a);
 
             (string bg, string fg, PackIconKind icon) = a.State switch
             {
@@ -334,6 +528,14 @@ namespace Smart_Tools.WPF.Views
             IconAdapterState.SetResourceReference(ForegroundProperty, fg);
             IconAdapterState.Kind = icon;
 
+            if (a.IsHardwareOnly)
+                IconAdapterState.Kind = a.State switch
+                {
+                    AdapterState.Connected => PackIconKind.CheckCircleOutline,
+                    AdapterState.Disabled => PackIconKind.PowerPlugOff,
+                    _ => PackIconKind.AlertCircleOutline,
+                };
+            if (a.IsBluetoothRadio) IconAdapterState.Kind = a.State == AdapterState.Connected ? PackIconKind.Bluetooth : PackIconKind.BluetoothOff;
             TxtToggleAdapter.Text = a.IsEnabled ? "Disable" : "Enable";
             IconToggleAdapter.Kind = a.IsEnabled ? PackIconKind.PowerPlugOff : PackIconKind.PowerPlug;
             BtnToggleAdapter.ToolTip = a.IsEnabled
@@ -348,8 +550,24 @@ namespace Smart_Tools.WPF.Views
             }
         }
 
+        /// <summary>Bluetooth: its own tiles and the paired devices inside the adapter; every other adapter shows its network tiles.</summary>
+        private void ShowBluetoothParts(AdapterInfo a)
+        {
+            bool radio = a.IsBluetoothRadio;
+            NetTiles.Visibility = a.IsReadOnly ? Visibility.Collapsed : Visibility.Visible;
+            BtTiles.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
+            BtSection.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
+            if (!radio) return;
+            TxtBtState.Text = a.StatusText;
+            TxtBtPairedCount.Text = (_bt?.Devices.Count ?? 0).ToString();
+            TxtBtConnectedCount.Text = (_bt?.Devices.Count(d => d.Connected) ?? 0).ToString();
+        }
+
         private void UpdateAdapterButtons()
         {
+            bool radio = SelectedAdapter?.IsReadOnly == true;   // Bluetooth and the non-network adapters are read-only here
+            BtnEditIp.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
+            BtnToggleAdapter.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
             bool usable = SelectedAdapter is AdapterInfo a && NetworkToolsManager.IsUsableAdapterName(a.Name);
             BtnEditIp.IsEnabled = usable && !_adapterBusy;
             BtnToggleAdapter.IsEnabled = usable && !_adapterBusy;
@@ -444,7 +662,7 @@ namespace Smart_Tools.WPF.Views
             string risk = a.State == AdapterState.Connected && a.Gateways.Count > 0
                 ? "\n\nThis adapter is your internet connection right now: it drops for a moment, and stays off if the new settings are wrong (you can switch back to Automatic here)."
                 : "";
-            if (MessageBox.Show(Loc.F("Str_MB_ChangeNN", "Change {0}?\n\n{1}{2}", a.Name, change, risk), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (ThemedMessageBox.Show(Loc.F("Str_MB_ChangeNN", "Change {0}?\n\n{1}{2}", a.Name, change, risk), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             Results.Log(ConsoleKind.Info, "IP", "Applying: " + change);
             var result = await RunAdapterChangeAsync(NetworkToolsManager.NetshCommands(a.Name, edit));
@@ -475,7 +693,7 @@ namespace Smart_Tools.WPF.Views
                 string warn = a.State == AdapterState.Connected && a.Gateways.Count > 0
                     ? "\n\nIt's your internet connection right now - the internet stops until you enable it again (or use another adapter)."
                     : "";
-                if (MessageBox.Show(Loc.F("Str_MB_Disable", "Disable {0}?{1}", a.Name, warn), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                if (ThemedMessageBox.Show(Loc.F("Str_MB_Disable", "Disable {0}?{1}", a.Name, warn), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             }
 
             Results.Log(ConsoleKind.Info, "IP", $"{(enable ? "Enabling" : "Disabling")} {a.Name}...");

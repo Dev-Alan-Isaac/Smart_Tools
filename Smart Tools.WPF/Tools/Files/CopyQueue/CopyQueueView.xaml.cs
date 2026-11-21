@@ -147,7 +147,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnOpenDestination_Click(object sender, RoutedEventArgs e)
         {
             if (ShellExplorer.Show(ActiveDestination.FolderPath) != ShellExplorer.ShowResult.Shown)
-                System.Windows.MessageBox.Show(Loc.T("Str_MB_ChooseAFolderFirst", "Choose a folder first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(Loc.T("Str_MB_ChooseAFolderFirst", "Choose a folder first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void BtnClearQueue_Click(object sender, RoutedEventArgs e)
@@ -235,7 +235,7 @@ namespace Smart_Tools.WPF.Views
 
             if (o.Mode == CopyQueueMode.Move)
             {
-                var answer = System.Windows.MessageBox.Show(
+                var answer = ThemedMessageBox.Show(
                     Loc.N(plan.Items.Count,
                         "Str_MB_CqMoveOne", "Move {0:N0} file ({1}) to\n{2}?\n\nEach original is removed only after its copy has been checked against it. You can undo the move afterwards.",
                         "Str_MB_CqMoveMany", "Move {0:N0} files ({1}) to\n{2}?\n\nEach original is removed only after its copy has been checked against it. You can undo the move afterwards.",
@@ -339,7 +339,7 @@ namespace Smart_Tools.WPF.Views
                 ShowStatus(Loc.T("Str_CopyQueue_MsgNothingToPutBack", "Nothing left to put back - the moved files are gone from where they landed."), StatusKind.Warning);
                 return;
             }
-            if (System.Windows.MessageBox.Show(
+            if (ThemedMessageBox.Show(
                     Loc.N(plan.Items.Count,
                         "Str_MB_CqPutBackOne", "Put {0:N0} file back where it came from?\n\nIt is verified on the way, like the original move.",
                         "Str_MB_CqPutBackMany", "Put {0:N0} files back where they came from?\n\nThey are verified on the way, like the original move.",

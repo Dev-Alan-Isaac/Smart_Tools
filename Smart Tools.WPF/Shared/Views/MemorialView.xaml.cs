@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -10,16 +10,13 @@ namespace Smart_Tools.WPF.Views
     /// <summary>
     /// Interaction logic for MemorialView.xaml
     ///
-    /// PLACEHOLDER CONTENT: TxtMemorialName / TxtMemorialDates /
-    /// TxtMemorialMessage in MemorialView.xaml all show placeholder text -
-    /// replace with the actual name, dates, and dedication message.
+    /// The heading, name, dates and message come from the Str_Memorial_*
+    /// language strings (en + es). There is no back button here: the window's
+    /// header card has one.
     ///
-    /// PhotoPath / BackgroundImagePath below are both empty by default, so
-    /// the view falls back to the plain flower icon and solid background
-    /// it had before - set either one to a real file path (relative to the
-    /// app's folder, or a full absolute path - both work) to show that
-    /// image instead. Neither one crashes the view if the path is empty or
-    /// the file can't be found; it just quietly falls back.
+    /// PhotoPath / BackgroundImagePath are relative to the app's folder (or a
+    /// full path). A missing or unreadable file just falls back to the flower
+    /// icon and the plain background; it never crashes the view.
     /// </summary>
     public partial class MemorialView : UserControl
     {
@@ -27,13 +24,6 @@ namespace Smart_Tools.WPF.Views
         private const string BackgroundImagePath = @"Images\Memento-bg.png";
 
         private static readonly TimeSpan FadeInDuration = TimeSpan.FromMilliseconds(450);
-
-        /// <summary>
-        /// Raised when the back button is clicked. The parent window owns
-        /// navigation history, so this view just asks to go back rather
-        /// than deciding where "back" actually leads.
-        /// </summary>
-        public event EventHandler? BackRequested;
 
         public MemorialView()
         {
@@ -44,8 +34,10 @@ namespace Smart_Tools.WPF.Views
             EllipsePhoto.Visibility = hasPhoto ? Visibility.Visible : Visibility.Collapsed;
             IconFallback.Visibility = hasPhoto ? Visibility.Collapsed : Visibility.Visible;
 
-            TryLoadImage(BackgroundImagePath, bitmap =>
-                CardHost.Background = new ImageBrush(bitmap) { Stretch = Stretch.UniformToFill });
+            bool hasBackground = TryLoadImage(BackgroundImagePath, bitmap =>
+                BackdropImage.Background = new ImageBrush(bitmap) { Stretch = Stretch.UniformToFill });
+            BackdropImage.Visibility = hasBackground ? Visibility.Visible : Visibility.Collapsed;
+            BackgroundOverlay.Visibility = hasBackground ? Visibility.Visible : Visibility.Collapsed;
 
             // Loaded fires every time this view re-enters the visual tree
             // (i.e. every time someone navigates back to it), not just the
@@ -56,13 +48,15 @@ namespace Smart_Tools.WPF.Views
                 {
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
                 };
+                // Once finished, drop the animation and keep the plain value: a held animation keeps the
+                // whole page on a separate render surface.
+                fadeIn.Completed += (_, _) =>
+                {
+                    RootGrid.Opacity = 1;
+                    RootGrid.BeginAnimation(OpacityProperty, null);
+                };
                 RootGrid.BeginAnimation(OpacityProperty, fadeIn);
             };
-        }
-
-        private void BtnBack_Click(object sender, RoutedEventArgs e)
-        {
-            BackRequested?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>Loads an image from a relative or absolute path and hands
@@ -89,7 +83,7 @@ namespace Smart_Tools.WPF.Views
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.DecodePixelWidth = 1000;
+                bitmap.DecodePixelWidth = 1600;
                 bitmap.UriSource = new Uri(fullPath, UriKind.Absolute);
                 bitmap.EndInit();
                 bitmap.Freeze();

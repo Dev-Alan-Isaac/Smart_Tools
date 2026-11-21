@@ -744,7 +744,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmDiscard()
         {
             if (!_manager.IsDirty) return true;
-            return MessageBox.Show(Window.GetWindow(this), Str("Str_PixelArt_DiscardBody", "Start over? The drawing hasn't been exported."),
+            return ThemedMessageBox.Show(Window.GetWindow(this), Str("Str_PixelArt_DiscardBody", "Start over? The drawing hasn't been exported."),
                 Str("Str_PixelArt_DiscardTitle", "Pixel Art Editor"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
 

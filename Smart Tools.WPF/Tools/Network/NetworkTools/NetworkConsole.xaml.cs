@@ -76,6 +76,12 @@ namespace Smart_Tools.WPF.Controls
 
         private bool _collapseUntilFirstLog;
 
+        /// <summary>
+        /// True (default): a new line opens a folded console. False: it stays folded until the user opens it
+        /// (a page whose results need the room, such as the Port Scanner, sets this).
+        /// </summary>
+        public bool OpenOnNewLine { get; set; } = true;
+
         private void ApplyCollapsed(bool collapsed)
         {
             if (BodyBorder == null) return;
@@ -113,7 +119,7 @@ namespace Smart_Tools.WPF.Controls
 
             TxtLastActivity.Text = $"Last activity {line.TimeText}";
             ConsoleEmpty.Visibility = Visibility.Collapsed;
-            if (IsCollapsed) IsCollapsed = false;   // something new to read: open it
+            if (IsCollapsed && OpenOnNewLine) IsCollapsed = false;   // something new to read: open it
             if (atBottom) ConsoleList.ScrollIntoView(line);
         }
 

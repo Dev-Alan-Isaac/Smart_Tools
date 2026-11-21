@@ -1141,7 +1141,7 @@ namespace Smart_Tools.WPF.Views
             string risk = a.State == AdapterState.Connected && a.Gateways.Count > 0
                 ? "\n\nThis adapter is your internet connection right now: it drops for a moment, and stays off if the new settings are wrong (you can switch back to Automatic here)."
                 : "";
-            if (MessageBox.Show(Loc.F("Str_MB_ChangeNN", "Change {0}?\n\n{1}{2}", a.Name, change, risk), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (ThemedMessageBox.Show(Loc.F("Str_MB_ChangeNN", "Change {0}?\n\n{1}{2}", a.Name, change, risk), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             Log(ConsoleKind.Info, "IP", "Applying: " + change);
             var result = await RunAdapterChangeAsync(NetworkToolsManager.NetshCommands(a.Name, edit));
@@ -1172,7 +1172,7 @@ namespace Smart_Tools.WPF.Views
                 string warn = a.State == AdapterState.Connected && a.Gateways.Count > 0
                     ? "\n\nIt's your internet connection right now - the internet stops until you enable it again (or use another adapter)."
                     : "";
-                if (MessageBox.Show(Loc.F("Str_MB_Disable", "Disable {0}?{1}", a.Name, warn), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                if (ThemedMessageBox.Show(Loc.F("Str_MB_Disable", "Disable {0}?{1}", a.Name, warn), Loc.T("Str_Dlg_NetworkTools", "Network Tools"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             }
 
             Log(ConsoleKind.Info, "IP", $"{(enable ? "Enabling" : "Disabling")} {a.Name}...");

@@ -253,7 +253,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private static bool Ask(string question) =>
-            MessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+            ThemedMessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
 
         /// <summary>"A", "A and B", "A, B, and C", or "A, B, C, and 4 more" - Oxford comma in English.</summary>
         private static string JoinNames(List<WinService> services)

@@ -325,12 +325,12 @@ namespace Smart_Tools.WPF.Views
             var options = ReadOptions();
             if (string.IsNullOrWhiteSpace(source.Server) || string.IsNullOrWhiteSpace(target.Server))
             {
-                MessageBox.Show(S("Str_DbMigrate_NeedServers"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(S("Str_DbMigrate_NeedServers"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             if (string.IsNullOrWhiteSpace(source.Database))
             {
-                MessageBox.Show(S("Str_DbMigrate_NeedSourceDb"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(S("Str_DbMigrate_NeedSourceDb"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -419,7 +419,7 @@ namespace Smart_Tools.WPF.Views
 
             if (_planSignature != Signature())
             {
-                MessageBox.Show(S("Str_DbMigrate_StaleBody"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(S("Str_DbMigrate_StaleBody"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -443,7 +443,7 @@ namespace Smart_Tools.WPF.Views
             body.AppendLine();
             body.Append(S("Str_DbMigrate_ConfirmSourceSafe"));
 
-            if (MessageBox.Show(body.ToString(), S("Str_DbMigrate_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (ThemedMessageBox.Show(body.ToString(), S("Str_DbMigrate_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             SaveSettings();
@@ -500,21 +500,21 @@ namespace Smart_Tools.WPF.Views
 
             if (result.Success)
             {
-                MessageBox.Show(S("Str_DbMigrate_DoneBody", result.TablesCopied, result.RowsCopied.ToString("N0"), result.ObjectsCreated, result.Elapsed.ToString(@"hh\:mm\:ss")),
+                ThemedMessageBox.Show(S("Str_DbMigrate_DoneBody", result.TablesCopied, result.RowsCopied.ToString("N0"), result.ObjectsCreated, result.Elapsed.ToString(@"hh\:mm\:ss")),
                     S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             ShowTab(result.Failures.Count > 0 ? "console" : "tables");
             if (result.Cancelled)
-                MessageBox.Show(S("Str_DbMigrate_CancelledBody"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(S("Str_DbMigrate_CancelledBody"), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Information);
             else
-                MessageBox.Show(S("Str_DbMigrate_ProblemsBody", result.Failures.Count), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(S("Str_DbMigrate_ProblemsBody", result.Failures.Count), S("Str_DbMigrate_Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
 
             // a database this run created and left half-filled: offer to remove it (default No)
             if (result.DatabaseCreated && !result.DatabaseDropped)
             {
-                var drop = MessageBox.Show(S("Str_DbMigrate_DropAsk", target.Database), S("Str_DbMigrate_Title"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                var drop = ThemedMessageBox.Show(S("Str_DbMigrate_DropAsk", target.Database), S("Str_DbMigrate_Title"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
                 if (drop == MessageBoxResult.Yes) result.DatabaseDropped = await _manager.DropCreatedDatabaseAsync();
             }
         }

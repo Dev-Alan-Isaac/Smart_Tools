@@ -136,7 +136,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is MagickException or IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(T("Str_PdfReader_PictureFailed", "That picture could not be used: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(T("Str_PdfReader_PictureFailed", "That picture could not be used: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

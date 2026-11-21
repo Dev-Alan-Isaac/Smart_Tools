@@ -196,7 +196,7 @@ Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside 
 |---|---|---|
 | **Wi-Fi Analyzer** | `wifi-analyzer` | See nearby networks, signal and channels, and which channel is least crowded |
 | **Ping** | `ping` | Is a host reachable, and how fast - from the adapter you choose |
-| **Port Scanner** | `port-scanner` | Find which TCP ports are open on a host |
+| **Port Scanner** | `port-scanner` | Find which TCP ports are open on this PC (loopback + every adapter address), on the other devices of each connected adapter network (finds live devices by ping + common ports, narrowed with /24../30 prefix chips), or on any host or range |
 | **Network Connections** | `network-connections` | See which apps are connected outside your PC, and to where |
 | **DNS, WHOIS & Traceroute** | `dns-tools` | Look up DNS records, see who owns a name, and trace the path to a host |
 | **Hosts File Editor** | `hosts-editor` | Edit the hosts file safely: switch lines on and off, with a backup on every save |

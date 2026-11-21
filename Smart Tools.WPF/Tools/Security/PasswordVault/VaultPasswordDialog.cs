@@ -94,7 +94,7 @@ namespace Smart_Tools.WPF.Views
                 if (!a.AsSpan().SequenceEqual(b)) problem = Text("Str_Vault_NoMatch", "The passwords don't match.");
                 else if (a.Length < 10) problem = Text("Str_Vault_TooShort", "Use at least 10 characters.");
                 else if (_checkStrengthOfFirstNew && PasswordVaultManager.EstimateBits(a) < PasswordVaultManager.WeakBelowBits &&
-                         MessageBox.Show(this, Text("Str_Vault_WeakWarn", "This password is weak and could be guessed. Use it anyway?"), Title, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                         ThemedMessageBox.Show(this, Text("Str_Vault_WeakWarn", "This password is weak and could be guessed. Use it anyway?"), Title, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     problem = "";
             }
             if (problem != null)

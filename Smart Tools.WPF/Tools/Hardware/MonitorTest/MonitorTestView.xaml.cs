@@ -298,7 +298,7 @@ namespace Smart_Tools.WPF.Views
             // The slideshow runs through every picture, the flashing one included.
             if (patterns[index].Flashing || SliderSlideshow.Value > 0)
             {
-                var answer = MessageBox.Show(Window.GetWindow(this), Str("Str_Monitor_FlashWarning"), Str("Str_Monitor_FlashTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                var answer = ThemedMessageBox.Show(Window.GetWindow(this), Str("Str_Monitor_FlashWarning"), Str("Str_Monitor_FlashTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (answer != MessageBoxResult.Yes) return;
             }
 

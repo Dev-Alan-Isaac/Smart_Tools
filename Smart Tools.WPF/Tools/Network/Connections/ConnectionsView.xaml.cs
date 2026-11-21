@@ -309,7 +309,7 @@ namespace Smart_Tools.WPF.Views
             var c = row.Info;
             string title = T("Str_Tool_network-connections_Name", "Network Connections");
             string target = $"{c.AppName}  {c.LocalAddress}:{c.LocalPort} -> {c.RemoteAddress}:{c.RemotePort}";
-            if (MessageBox.Show(Window.GetWindow(this), string.Format(T("Str_Connections_CloseAsk", "Close this connection?\n\n{0}\n\nThe program may open a new one."), target),
+            if (ThemedMessageBox.Show(Window.GetWindow(this), string.Format(T("Str_Connections_CloseAsk", "Close this connection?\n\n{0}\n\nThe program may open a new one."), target),
                     title, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
 
             var result = TcpUdpTable.CloseConnection(c.LocalAddress, c.LocalPort, c.RemoteAddress, c.RemotePort);
@@ -320,7 +320,7 @@ namespace Smart_Tools.WPF.Views
                 TcpUdpTable.CloseResult.NotSupported => T("Str_Connections_CloseUnsupported", "Only IPv4 TCP connections can be closed."),
                 _ => T("Str_Connections_CloseFailed", "Windows could not close the connection (it may already be gone)."),
             };
-            MessageBox.Show(Window.GetWindow(this), message, title, MessageBoxButton.OK,
+            ThemedMessageBox.Show(Window.GetWindow(this), message, title, MessageBoxButton.OK,
                 result == TcpUdpTable.CloseResult.Closed ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
 
@@ -350,7 +350,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(Window.GetWindow(this), ex.Message, T("Str_Connections_Export", "Export"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Window.GetWindow(this), ex.Message, T("Str_Connections_Export", "Export"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

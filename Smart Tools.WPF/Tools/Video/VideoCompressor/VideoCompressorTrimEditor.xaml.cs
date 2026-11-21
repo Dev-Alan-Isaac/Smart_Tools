@@ -1,3 +1,4 @@
+using Smart_Tools.WPF.Views;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
 using System.Globalization;
@@ -230,7 +231,7 @@ namespace Smart_Tools.WPF.Controls
                 var png = await GifMakerManager.GrabFrameAsync(item.FullPath, at, 100_000, CancellationToken.None);
                 if (png == null)
                 {
-                    MessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThemedMessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -241,7 +242,7 @@ namespace Smart_Tools.WPF.Controls
                     var bitmap = GifMakerManager.ToBitmap(png);
                     if (bitmap == null)
                     {
-                        MessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                        ThemedMessageBox.Show(T("Str_Vc_FrameFailed", "There is no frame at that moment."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
                     var encoder = new JpegBitmapEncoder { QualityLevel = 92 };
@@ -257,7 +258,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException or InvalidOperationException)
             {
-                MessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

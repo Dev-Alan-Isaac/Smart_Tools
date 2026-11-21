@@ -14,24 +14,6 @@
     <!--  Backend: Controllers/SubnetCalculatorManager.cs (parsing, subnet maths, splitting). UI only here.  -->
 
     <UserControl.Resources>
-        <!--  The pill chip, in a monospaced face (addresses and prefixes): used by the examples and the split prefixes alike  -->
-        <Style
-            x:Key="ScChip"
-            BasedOn="{StaticResource PillChipStyle}"
-            TargetType="Button">
-            <Setter Property="FontFamily" Value="Consolas" />
-        </Style>
-
-        <!--  Prefix chips (/25 ... none): equal-width cells in a 3-column grid, so they line up in rows  -->
-        <Style
-            x:Key="ScPrefixChip"
-            BasedOn="{StaticResource ScChip}"
-            TargetType="Button">
-            <Setter Property="Margin" Value="3" />
-            <Setter Property="MinHeight" Value="32" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
-
         <Style x:Key="ScLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />

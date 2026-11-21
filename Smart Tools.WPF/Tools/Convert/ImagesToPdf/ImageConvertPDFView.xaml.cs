@@ -635,7 +635,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressConversion.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgress.Text = Loc.F("Str_ImageConvertPDF_StatusSaveFailed", "The PDF couldn't be saved: {0}", ImageToPdfManager.PlainError(ex));
-                MessageBox.Show(Loc.F("Str_MB_ThePdfCouldnT", "The PDF couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
+                ThemedMessageBox.Show(Loc.F("Str_MB_ThePdfCouldnT", "The PDF couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
@@ -670,7 +670,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressConversion.Value = 0;
                 TxtProgressPercent.Text = "";
                 if (!result.Cancelled && result.Error != null)
-                    MessageBox.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ThemedMessageBox.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

@@ -223,7 +223,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmDiscard()
         {
             if (!_unsaved) return true;
-            return MessageBox.Show(T("Str_PdfReader_DiscardMarks", "You have marks on the open PDF that are not saved. Open another PDF anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            return ThemedMessageBox.Show(T("Str_PdfReader_DiscardMarks", "You have marks on the open PDF that are not saved. Open another PDF anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
 
         // =================================================================
@@ -536,7 +536,7 @@ namespace Smart_Tools.WPF.Views
             string output = dialog.FileName;
             if (string.Equals(Path.GetFullPath(output), Path.GetFullPath(_path), StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show(T("Str_PdfReader_NotOriginal", "Choose a different name: the original PDF is never replaced."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(T("Str_PdfReader_NotOriginal", "Choose a different name: the original PDF is never replaced."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 

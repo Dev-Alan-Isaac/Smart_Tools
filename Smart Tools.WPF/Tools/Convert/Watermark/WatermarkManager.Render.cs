@@ -193,6 +193,12 @@ namespace Smart_Tools.WPF.Controllers
                 try { tcs.SetResult(work()); }
                 catch (OperationCanceledException oce) { tcs.SetCanceled(oce.CancellationToken); }
                 catch (Exception ex) { tcs.SetException(ex); }
+                finally
+                {
+                    // WPF makes a Dispatcher for any thread that touches a WPF object. Left running it keeps this thread's
+                    // event and thread handles alive for good (about 8 per file in a batch), so shut it down with the work.
+                    System.Windows.Threading.Dispatcher.CurrentDispatcher.InvokeShutdown();
+                }
             });
             thread.SetApartmentState(ApartmentState.STA);
             thread.IsBackground = true;

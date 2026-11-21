@@ -325,7 +325,7 @@ namespace Smart_Tools.WPF.Views
                 if (!a.AsSpan().SequenceEqual(b)) { TxtSetupError.Text = T("Str_Vault_NoMatch", "The passwords don't match."); return; }
                 if (a.Length < 10) { TxtSetupError.Text = T("Str_Vault_TooShort", "Use at least 10 characters."); return; }
                 if (PasswordVaultManager.EstimateBits(a) < PasswordVaultManager.WeakBelowBits &&
-                    MessageBox.Show(T("Str_Vault_WeakWarn", "This password is weak and could be guessed. Use it anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    ThemedMessageBox.Show(T("Str_Vault_WeakWarn", "This password is weak and could be guessed. Use it anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                     return;
 
                 BtnCreate.IsEnabled = false;
@@ -407,7 +407,7 @@ namespace Smart_Tools.WPF.Views
 
         private void BtnRestoreFile_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show(T("Str_Vault_RestoreConfirm", "Put the last good copy of the vault back? The unreadable file is kept next to it, not deleted."), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (ThemedMessageBox.Show(T("Str_Vault_RestoreConfirm", "Put the last good copy of the vault back? The unreadable file is kept next to it, not deleted."), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             bool ok = _vault.RestoreFromBackupFile();
             TxtUnlockError.SetResourceReference(TextBlock.ForegroundProperty, ok ? "StatusSuccessFg" : "StatusErrorFg");
             TxtUnlockError.Text = ok ? T("Str_Vault_Restored", "Restored. Enter your password to unlock.") : T("Str_Vault_RestoreFailed", "Couldn't restore the copy.");
@@ -538,7 +538,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private bool ConfirmDiscard() =>
-            !_dirty || MessageBox.Show(T("Str_Vault_DiscardChanges", "Discard the changes you haven't saved?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            !_dirty || ThemedMessageBox.Show(T("Str_Vault_DiscardChanges", "Discard the changes you haven't saved?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
         // =================================================================
         //  Editor
@@ -657,7 +657,7 @@ namespace Smart_Tools.WPF.Views
             try { _vault.Upsert(moved); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (_editing?.Id == entry.Id) { _editing = moved.Clone(); _loadingEditor = true; TxtTags.Text = moved.Tags; _loadingEditor = false; _dirty = false; }
@@ -874,7 +874,7 @@ namespace Smart_Tools.WPF.Views
             try { _vault.Remove(victim.Id); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 _undoEntry = null;
                 return;
             }
@@ -893,7 +893,7 @@ namespace Smart_Tools.WPF.Views
             try { _vault.Upsert(back); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1037,11 +1037,11 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 bool ok = await _vault.ChangeMasterPasswordAsync(values[0], values[1]);
-                MessageBox.Show(ok ? T("Str_Vault_ChangedOk", "Master password changed.") : T("Str_Vault_WrongCurrent", "The current master password is wrong."), DialogTitle, MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                ThemedMessageBox.Show(ok ? T("Str_Vault_ChangedOk", "Master password changed.") : T("Str_Vault_WrongCurrent", "The current master password is wrong."), DialogTitle, MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or OutOfMemoryException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
             {
@@ -1056,23 +1056,23 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 int added = _vault.ImportCsv(open.FileName);
-                MessageBox.Show(string.Format(T("Str_Vault_ImportDone", "Added {0} entries."), added) + "\n\n" + T("Str_Vault_DeleteCsvHint", "The CSV file is not encrypted - delete it now that it's imported."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(string.Format(T("Str_Vault_ImportDone", "Added {0} entries."), added) + "\n\n" + T("Str_Vault_DeleteCsvHint", "The CSV file is not encrypted - delete it now that it's imported."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
         private void BtnExportCsv_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show(T("Str_Vault_CsvWarning", "The CSV file is NOT encrypted. Anyone who gets it can read every password. Delete it when you are done. Export anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            if (ThemedMessageBox.Show(T("Str_Vault_CsvWarning", "The CSV file is NOT encrypted. Anyone who gets it can read every password. Delete it when you are done. Export anyway?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             var save = new SaveFileDialog { Filter = "CSV (*.csv)|*.csv", FileName = "passwords.csv", Title = T("Str_Vault_ExportCsv", "Export CSV") };
             if (save.ShowDialog() != true) return;
             try { _vault.ExportCsv(save.FileName); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1088,11 +1088,11 @@ namespace Smart_Tools.WPF.Views
                 var save = new SaveFileDialog { Filter = "Smart Tools vault (*.svlt)|*.svlt", FileName = $"vault-backup-{DateTime.Now:yyyyMMdd}.svlt", Title = T("Str_Vault_ExportBackup", "Encrypted backup") };
                 if (save.ShowDialog() != true) return;
                 await _vault.ExportBackupAsync(save.FileName, values[0]);
-                MessageBox.Show(T("Str_Vault_BackupSaved", "Backup saved."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                ThemedMessageBox.Show(T("Str_Vault_BackupSaved", "Backup saved."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or OutOfMemoryException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
             {
@@ -1112,12 +1112,12 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 int? added = await _vault.ImportBackupAsync(open.FileName, values[0]);
-                MessageBox.Show(added == null ? T("Str_Vault_BackupWrong", "Wrong password, or that isn't a vault backup.") : string.Format(T("Str_Vault_ImportDone", "Added {0} entries."), added),
+                ThemedMessageBox.Show(added == null ? T("Str_Vault_BackupWrong", "Wrong password, or that isn't a vault backup.") : string.Format(T("Str_Vault_ImportDone", "Added {0} entries."), added),
                     DialogTitle, MessageBoxButton.OK, added == null ? MessageBoxImage.Warning : MessageBoxImage.Information);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or OutOfMemoryException)
             {
-                MessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(PasswordVaultManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
             {

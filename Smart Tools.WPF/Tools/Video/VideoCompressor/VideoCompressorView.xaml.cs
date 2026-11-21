@@ -306,7 +306,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -327,7 +327,7 @@ namespace Smart_Tools.WPF.Views
             string? target = OutputCard.IsSameAsSource ? firstResult : firstResult ?? OutputCard.EffectiveFolder;
             if (target != null && ShellExplorer.Show(target) == ShellExplorer.ShowResult.Shown) return;
             if (!quiet)
-                MessageBox.Show(OutputCard.IsSameAsSource
+                ThemedMessageBox.Show(OutputCard.IsSameAsSource
                         ? S("NothingSavedSource", "The videos are saved next to the originals - compress something first.")
                         : $"Nothing has been saved to {OutputCard.EffectiveFolder} yet.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);

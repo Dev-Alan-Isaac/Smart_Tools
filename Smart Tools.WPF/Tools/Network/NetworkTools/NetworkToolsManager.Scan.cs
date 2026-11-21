@@ -11,6 +11,9 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Connection attempts at once. The old scanner started every port at the same time (1,000 sockets).</summary>
         public const int DefaultScanConcurrency = 200;
 
+        /// <summary>Connection attempts at once when several hosts are scanned in a row (a network): gentler on the CPU and on Wi-Fi.</summary>
+        public const int NetworkScanConcurrency = 64;
+
         /// <summary>
         /// Tries a TCP connection to each port, a limited number at a time.
         /// Open ports are reported as they're found (<paramref name="onOpen"/>)
@@ -91,27 +94,32 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        /// <summary>Milliseconds to connect, or null when closed, filtered or timed out.</summary>
+        /// <summary>
+        /// Milliseconds to connect, or null when closed, filtered or timed out. Uses SocketAsyncEventArgs and closes the
+        /// socket on timeout: a closed port is a result code, not an exception (a scan of thousands of ports used to throw
+        /// and catch one exception per port, which kept the CPU busy).
+        /// </summary>
         public static async Task<long?> TryConnectAsync(IPAddress address, int port, int timeoutMs, CancellationToken token, IPAddress? source = null)
         {
+            if (token.IsCancellationRequested) return null;
             using var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             if (source != null) socket.Bind(new IPEndPoint(source, 0));   // leave from that adapter; a bad source throws once, up front
+            var done = new TaskCompletionSource<SocketError>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var args = new SocketAsyncEventArgs { RemoteEndPoint = new IPEndPoint(address, port) };
+            args.Completed += (_, e) => done.TrySetResult(e.SocketError);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
             timeout.CancelAfter(timeoutMs);
+            using var stop = timeout.Token.Register(() => { try { socket.Close(); } catch (ObjectDisposedException) { } });
             var watch = Stopwatch.StartNew();
             try
             {
-                await socket.ConnectAsync(new IPEndPoint(address, port), timeout.Token).ConfigureAwait(false);
-                return watch.ElapsedMilliseconds;
+                if (!socket.ConnectAsync(args)) done.TrySetResult(args.SocketError);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex) when (ex is SocketException or ObjectDisposedException)
             {
-                return null;   // timed out (filtered) or the scan was cancelled
+                return null;
             }
-            catch (SocketException)
-            {
-                return null;   // refused / unreachable
-            }
+            return await done.Task.ConfigureAwait(false) == SocketError.Success && !timeout.IsCancellationRequested ? watch.ElapsedMilliseconds : null;
         }
 
         public static string DescribeScan(string host, int total, int checkedCount, IReadOnlyList<PortResult> open, TimeSpan elapsed, bool cancelled)

@@ -22,7 +22,17 @@ namespace Smart_Tools.WPF.Controllers
         private static readonly Regex OnlyDigits = new(@"^\d+$", RegexOptions.Compiled);
 
         /// <summary>Numbers, separators and only a date/time marker (T, Z, AM, PM, UTC, GMT): not words.</summary>
-        private static readonly Regex DateOrTime = new(@"^[\d\s:\-/.,+]*\d[\d\s:\-/.,+]*(T|Z|AM|PM|UTC|GMT|[\d\s:\-/.,+])*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // Digits and separators, optionally split by T / Z / AM / PM / UTC / GMT. The separator class has no letters, so
+        // every character can match only one part of the pattern (no catastrophic backtracking); the timeout is a safety net.
+        private static readonly Regex DateOrTime = new(@"^[\d\s:\-/.,+]+(?:(?:T|Z|AM|PM|UTC|GMT)[\d\s:\-/.,+]*)*$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(50));
+
+        private static bool IsDateOrTime(string t)
+        {
+            if (!t.Any(char.IsDigit)) return false;
+            try { return DateOrTime.IsMatch(t); }
+            catch (RegexMatchTimeoutException) { return false; }
+        }
 
         public static bool IsSupportedFile(string path) =>
             FileExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
@@ -202,19 +212,19 @@ namespace Smart_Tools.WPF.Controllers
         {
             string t = s.Trim();
             if (t.Length == 0 || !t.Any(char.IsLetter)) return false;
-            if (DateOrTime.IsMatch(t)) return false;   // 2026-11-15T10:30:00Z, 10:30 PM, 2026-11-15 10:30
+            if (IsDateOrTime(t)) return false;   // 2026-11-15T10:30:00Z, 10:30 PM, 2026-11-15 10:30
             if (t.Contains("://") || t.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) return false;
             if (!t.Contains(' ') && (t.Contains('@') || t.Contains('/') || t.Contains('\\') || t.Contains('_') || t.Contains('.'))) return false;   // identifiers, paths, e-mails, file names
             return true;
         }
 
-        private static bool _codePagesRegistered;
+        private static readonly Lazy<bool> CodePages = new(() => { Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); return true; });
 
         private static Encoding? Strict(int codePage)
         {
             try
             {
-                if (!_codePagesRegistered) { Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); _codePagesRegistered = true; }
+                _ = CodePages.Value;
                 return Encoding.GetEncoding(codePage, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
             }
             catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
@@ -250,11 +260,11 @@ namespace Smart_Tools.WPF.Controllers
             {
                 var sjis = Strict(932);
                 string? t = TryStrict(sjis, bytes);
-                if (t != null && Share(t, c => (c >= '぀' && c <= 'ヿ') || (c >= '｡' && c <= 'ﾟ')) >= 0.2) return (t, sjis!);
+                if (t != null && Share(t, IsKana) >= MinKanaShare) return (t, sjis!);
 
                 var korean = Strict(949);
                 t = TryStrict(korean, bytes);
-                if (t != null && Share(t, c => c >= '가' && c <= '힯') >= 0.5) return (t, korean!);
+                if (t != null && Share(t, IsHangul) >= MinHangulShare) return (t, korean!);
 
                 var gbk = Strict(936);
                 if ((t = TryStrict(gbk, bytes)) != null) return (t, gbk!);
@@ -266,6 +276,15 @@ namespace Smart_Tools.WPF.Controllers
             var win = Strict(1252) ?? Encoding.Latin1;
             return (win.GetString(bytes), win);
         }
+
+        // Share of the non-ASCII characters that must be kana (Shift-JIS) or Hangul (Korean) for that guess to win. GB2312 text
+        // read as Korean scores about 0.5 Hangul, real Korean nearly 1, so the bar for Korean is high.
+        private const double MinKanaShare = 0.2;
+        private const double MinHangulShare = 0.8;
+
+        private static bool IsKana(char c) => c is (>= '぀' and <= 'ヿ') or (>= '｡' and <= 'ﾟ');
+
+        private static bool IsHangul(char c) => c is >= '가' and <= '힯';
 
         private static bool HighBytesArePaired(byte[] bytes)
         {

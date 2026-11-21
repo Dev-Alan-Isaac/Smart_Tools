@@ -1,4 +1,5 @@
-﻿using Smart_Tools.WPF.Controllers;
+﻿using Smart_Tools.WPF.Views;
+using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Modules;
 using System.Windows;
 using Application = System.Windows.Application;
@@ -113,20 +114,20 @@ namespace Smart_Tools.WPF
 
             if (mode != AppRunMode.Installed)
             {
-                System.Windows.MessageBox.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
+                ThemedMessageBox.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
                                                  "Esta copia de Smart Tools no fue instalada por la aplicación, así que no hay nada que desinstalar aquí."),
                     AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else if (AppInstaller.IsAnotherCopyRunning())
             {
-                System.Windows.MessageBox.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
+                ThemedMessageBox.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
                                                  "Cierra Smart Tools primero (revisa el ícono de la bandeja) y vuelve a desinstalar."),
                     AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            else if (System.Windows.MessageBox.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
+            else if (ThemedMessageBox.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
                          AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                bool deleteData = System.Windows.MessageBox.Show(
+                bool deleteData = ThemedMessageBox.Show(
                     T("Also delete your settings and downloaded models?\n\n" + AppMode.InstalledDataFolder + "\n\nChoose No to keep them in case you install again.",
                       "¿Borrar también tus ajustes y modelos descargados?\n\n" + AppMode.InstalledDataFolder + "\n\nElige No para conservarlos por si vuelves a instalar."),
                     AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;

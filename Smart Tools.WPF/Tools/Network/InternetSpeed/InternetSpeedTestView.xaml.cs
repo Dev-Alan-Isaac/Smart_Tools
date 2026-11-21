@@ -655,7 +655,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
         {
             if (_history.Count == 0) return;
-            var answer = MessageBox.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
+            var answer = ThemedMessageBox.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 

@@ -75,7 +75,6 @@ namespace Smart_Tools.WPF
 
         private ShellSettings _shell = new();
         private string _currentId = ToolCatalogManager.HomeId;
-        private string? _beforeMemorialId;
         private const int MaxHistory = 30;
         private readonly List<string> _history = new();   // pages visited before the current one, newest last (the Back button)
         private bool _navigatingBack;
@@ -112,6 +111,8 @@ namespace Smart_Tools.WPF
             RefreshRecent();
             Open(ToolCatalogManager.HomeId);
             LanguageManager.Changed += OnLanguageChanged;
+            Activated += (_, _) => MemoryTrim.Cancel();
+            Deactivated += (_, _) => MemoryTrim.Schedule();
             Loaded += (_, _) => RestoreStartupWidgets();
             ContentRendered += (_, _) => ShowWhatsNewIfUpdated();
         }
@@ -440,7 +441,7 @@ namespace Smart_Tools.WPF
             catch (Exception ex)
             {
                 // One broken tool no longer stops the whole app from starting (all views used to be built at startup).
-                MessageBox.Show(this, string.Format(Str("Str_Shell_OpenFailed", "\"{0}\" couldn't be opened:"), tool.HeaderTitle) + $"\n\n{ex.Message}", "Smart Tools", MessageBoxButton.OK, MessageBoxImage.Error);
+                ThemedMessageBox.Show(this, string.Format(Str("Str_Shell_OpenFailed", "\"{0}\" couldn't be opened:"), tool.HeaderTitle) + $"\n\n{ex.Message}", "Smart Tools", MessageBoxButton.OK, MessageBoxImage.Error);
                 SelectNav(_currentId);
                 return;
             }
@@ -641,7 +642,7 @@ namespace Smart_Tools.WPF
 
             if (ShortcutManager.FromKeyEvent(e) is not { } chord) return false;
             // A plain letter key (a rebound common key) must not fire while the user types.
-            bool plain = chord.Modifiers is ChordModifiers.None or ChordModifiers.Shift && !(e.Key is >= Key.F1 and <= Key.F24);
+            bool plain = (chord.Modifiers is ChordModifiers.None or ChordModifiers.Shift) && !(e.Key is >= Key.F1 and <= Key.F24);
             if (plain && e.Key != Key.Escape && Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase or PasswordBox) return false;
 
             Func<Button, bool>? match = null;
@@ -650,7 +651,8 @@ namespace Smart_Tools.WPF
             else if (ShortcutManager.IsCommon(ShortcutManager.SaveId, chord, _currentId))
                 match = b => b is ExportButton || b.Name is "BtnSave" or "BtnSaveAll" or "BtnExport" or "BtnSaveAs";
             else if (ShortcutManager.IsCommon(ShortcutManager.StopId, chord, _currentId) && Keyboard.FocusedElement is not (System.Windows.Controls.ComboBox or ComboBoxItem))
-                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);            if (match == null) return false;
+                match = b => b.Name.StartsWith("BtnCancel", StringComparison.Ordinal) || b.Name.StartsWith("BtnStop", StringComparison.Ordinal);
+            if (match == null) return false;
 
             var target = FindButton(view, match);
             if (target == null) return false;
@@ -1057,16 +1059,10 @@ namespace Smart_Tools.WPF
             if (_memorialView == null)
             {
                 _memorialView = new MemorialView();
-                _memorialView.BackRequested += MemorialView_BackRequested;
             }
-            if (_currentId != MemorialId) _beforeMemorialId = _currentId;
             var memorial = HeaderTexts(MemorialId);
             Show(MemorialId, _memorialView, memorial.Label, PackIconKind.HeartOutline, memorial.Section);
         }
-
-        // Back to whatever was showing before the memorial (Home if nothing was).
-        private void MemorialView_BackRequested(object? sender, EventArgs e) =>
-            Open(_beforeMemorialId ?? ToolCatalogManager.HomeId);
 
         // =================================================================
         //  Closing
@@ -1098,7 +1094,7 @@ namespace Smart_Tools.WPF
             // Closing because the elevated copy is taking over: already confirmed, don't ask again.
             if (!AppRestartManager.IsRestarting && !_sessionEnding)
             {
-                var result = MessageBox.Show(
+                var result = ThemedMessageBox.Show(
                     this,
                     Str("Str_Shell_ConfirmExitText", "Are you sure you want to close Smart Tools?"),
                     Str("Str_Shell_ConfirmExitTitle", "Confirm exit"),

@@ -151,7 +151,7 @@ namespace Smart_Tools.WPF.Views
             {
                 if (new FileInfo(path).Length > MaxFileBytes)
                 {
-                    MessageBox.Show(T("Str_Formatter_TooBig", "That file is larger than 20 MB, which is too big to format here."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    ThemedMessageBox.Show(T("Str_Formatter_TooBig", "That file is larger than 20 MB, which is too big to format here."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
                 TxtInput.Text = File.ReadAllText(path);
@@ -159,7 +159,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -287,7 +287,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                MessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

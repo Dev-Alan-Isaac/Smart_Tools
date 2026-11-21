@@ -65,6 +65,10 @@ Standing instruction from Alan: **every view gets this treatment** – friendly,
 - Cards use a hairline `CardBorder` plus the soft `CardElevation` shadow (blur 24, depth 4, low opacity).
 - `MainWindow` uses `WindowChrome` with its own 40px title bar (`TitleBar` row, caption buttons via `TitleBarButtonStyle`). While maximized, `RootGrid.Margin` is set to `SystemParameters.WindowResizeBorderThickness` so content isn't clipped by the frame. New dialogs should keep the standard Windows chrome.
 
+## Dialogs and message boxes
+- Messages (info, warning, error, Yes/No questions) use `ThemedMessageBox.Show(...)` (`Shared/Views/ThemedMessageBox.cs`, same overloads and results as `MessageBox.Show`), never `System.Windows.MessageBox`: it is modal and follows the theme (`ContentBg`, `TextPrimary`, status icon colours). It falls back to the Windows box only before the theme is loaded.
+- Custom dialogs: `ShowDialog()` with an owner, `SetResourceReference(BackgroundProperty, "ContentBg")`, standard Windows chrome; see `SavedFileDialog.cs`. Floating widgets, the Ctrl+K palette and the recorder bar stay non-modal on purpose. Windows Open/Save/Folder pickers cannot be themed.
+
 ## Shared view styles (do not redefine per view)
 `Controls.xaml` ("HOISTED SHARED STYLES" block) now owns: `SidebarHint`, `SliderLabel`, `SliderValuePill`, `StatTileStyle`/`StatValueStyle`/`StatLabelStyle`, `MeterBarStyle`, `UnitSuffix`, `SwatchPickerStyle`, `PresetChipStyle` (sidebar chip) and `PlayerIconButtonStyle` (fixed-dark players). Use them straight from a view; only define a local style with the same key when a view really needs a different look (for example `DriveHealthView` keeps its own `StatTileStyle`, `MockDataGeneratorView` its card-coloured `PresetChipStyle`).
 - Radii in views follow 6 / 8 / 12. Off-scale values (7, 9, 10, 11, 14) were mapped onto the scale; pills, circles (fixed size of 48 or less) and joined groups (`8,0,0,8`) are deliberate and left alone.
