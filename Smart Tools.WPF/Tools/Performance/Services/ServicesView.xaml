@@ -56,282 +56,264 @@
         <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
 
         <Grid Margin="16,8,16,16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <controls:ElevationBannerCard
-                x:Name="ElevationBanner"
-                Margin="0,0,0,12"
-                MessageKey="Str_Services_AdminWarning"
-                TitleKey="Str_Services_AdminTitle" />
-
-            <!--  Search, filter, counts, refresh  -->
-            <Border
-                ctl:Tour.Key="Str_Tour_Services_Search"
-                ctl:Tour.Order="1"
-                Grid.Row="1"
-                Margin="0,0,0,12"
-                Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <Border Style="{StaticResource InputBarStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon
-                                Width="16"
-                                Height="16"
-                                Margin="10,0,0,0"
-                                VerticalAlignment="Center"
-                                Foreground="{DynamicResource TextSecondary}"
-                                Kind="Magnify" />
+            <!--  ================= OPTIONS SIDEBAR: find, show, refresh =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_Services_Search" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button
+                                    ctl:Tour.Key="Str_Tour_Services_Refresh"
+                                    ctl:Tour.Order="2"
+                                    x:Name="BtnRefresh"
+                                    DockPanel.Dock="Right"
+                                    Click="BtnRefresh_Click"
+                                    Width="32" Height="32" Padding="0" Style="{StaticResource NeutralIconButtonStyle}"
+                                    ToolTip="{DynamicResource Str_Services_Refresh}">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="Refresh" />
+                                </Button>
+                                <ContentControl
+                                    Content="{DynamicResource Str_Services_FindHeader}"
+                                    Style="{StaticResource SidebarGroupHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.Magnify}" />
+                            </DockPanel>
                             <TextBox
                                 x:Name="TxtSearch"
-                                Grid.Column="1"
-                                Margin="6,0,6,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource BareTextBox}"
                                 Tag="{DynamicResource Str_Services_SearchPlaceholder}"
                                 TextChanged="TxtSearch_TextChanged" />
-                        </Grid>
+                            <Border
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtCount}"
+                                        Kind="CogSyncOutline" />
+                                    <TextBlock
+                                        x:Name="TxtCount"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock
+                                x:Name="TxtStatus"
+                                Margin="2,8,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource SidebarTextMuted}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+                        </StackPanel>
                     </Border>
 
-                    <StackPanel
-                        Grid.Column="1"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal">
-                        <UniformGrid
-                            Width="270"
-                            Margin="0,0,10,0"
-                            VerticalAlignment="Center"
-                            Columns="3">
-                            <RadioButton
-                                x:Name="RadioFilterAll"
-                                Margin="0,0,3,0"
-                                Checked="RadioFilter_Checked"
-                                Content="{DynamicResource Str_Services_FilterAll}"
-                                GroupName="SvcFilter"
-                                IsChecked="True"
-                                Style="{StaticResource ModeToggleButtonStyle}"
-                                Tag="0"
-                                ToolTip="{DynamicResource Str_Services_FilterAllTip}" />
-                            <RadioButton
-                                x:Name="RadioFilterRunning"
-                                Margin="3,0,3,0"
-                                Checked="RadioFilter_Checked"
-                                Content="{DynamicResource Str_Services_FilterRunning}"
-                                GroupName="SvcFilter"
-                                Style="{StaticResource ModeToggleButtonStyle}"
-                                Tag="1"
-                                ToolTip="{DynamicResource Str_Services_FilterRunningTip}" />
-                            <RadioButton
-                                x:Name="RadioFilterStopped"
-                                Margin="3,0,0,0"
-                                Checked="RadioFilter_Checked"
-                                Content="{DynamicResource Str_Services_FilterStopped}"
-                                GroupName="SvcFilter"
-                                Style="{StaticResource ModeToggleButtonStyle}"
-                                Tag="2"
-                                ToolTip="{DynamicResource Str_Services_FilterStoppedTip}" />
-                        </UniformGrid>
-                        <Border
-                            Margin="0,0,10,0"
-                            Background="{DynamicResource RowBg}"
-                            Style="{StaticResource IconStatusPillStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="13"
-                                    Height="13"
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    Foreground="{Binding Foreground, ElementName=TxtCount}"
-                                    Kind="CogSyncOutline" />
-                                <TextBlock
-                                    x:Name="TxtCount"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextSecondary}" />
-                            </StackPanel>
-                        </Border>
-                        <Button
-                            ctl:Tour.Key="Str_Tour_Services_Refresh"
-                            ctl:Tour.Order="2"
-                            x:Name="BtnRefresh"
-                            Click="BtnRefresh_Click"
-                            Style="{StaticResource ListToolButtonStyle}"
-                            ToolTip="{DynamicResource Str_Services_Refresh}">
-                            <materialDesign:PackIcon
-                                Width="16"
-                                Height="16"
-                                Kind="Refresh" />
-                        </Button>
-                    </StackPanel>
+                    <Border Margin="0,0,0,4" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_Services_ShowHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.FilterVariant}" />
+                            <UniformGrid Columns="3">
+                                <RadioButton
+                                    x:Name="RadioFilterAll"
+                                    Margin="0,0,3,0"
+                                    Checked="RadioFilter_Checked"
+                                    Content="{DynamicResource Str_Services_FilterAll}"
+                                    GroupName="SvcFilter"
+                                    IsChecked="True"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="0"
+                                    ToolTip="{DynamicResource Str_Services_FilterAllTip}" />
+                                <RadioButton
+                                    x:Name="RadioFilterRunning"
+                                    Margin="3,0,3,0"
+                                    Checked="RadioFilter_Checked"
+                                    Content="{DynamicResource Str_Services_FilterRunning}"
+                                    GroupName="SvcFilter"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="1"
+                                    ToolTip="{DynamicResource Str_Services_FilterRunningTip}" />
+                                <RadioButton
+                                    x:Name="RadioFilterStopped"
+                                    Margin="3,0,0,0"
+                                    Checked="RadioFilter_Checked"
+                                    Content="{DynamicResource Str_Services_FilterStopped}"
+                                    GroupName="SvcFilter"
+                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                    Tag="2"
+                                    ToolTip="{DynamicResource Str_Services_FilterStoppedTip}" />
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
 
-                    <TextBlock
-                        x:Name="TxtStatus"
-                        Grid.Row="1"
-                        Grid.ColumnSpan="2"
-                        Margin="2,8,0,0"
-                        FontSize="12"
-                        Foreground="{DynamicResource TextSecondary}"
-                        TextWrapping="Wrap"
-                        Visibility="Collapsed" />
-                </Grid>
-            </Border>
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <!--  Services  -->
-            <Border
-                ctl:Tour.Key="Str_Tour_Services_List"
-                ctl:Tour.Order="3"
-                Grid.Row="2"
-                Style="{StaticResource CardStyle}">
-                <Grid>
-                    <DataGrid
-                        x:Name="GridServices"
-                        AutoGenerateColumns="False"
-                        CanUserAddRows="False"
-                        FontSize="12"
-                        IsReadOnly="True"
-                        MinRowHeight="46"
-                        SelectionMode="Single"
-                        VerticalScrollBarVisibility="Auto">
-                        <DataGrid.Columns>
+                <controls:ElevationBannerCard
+                    x:Name="ElevationBanner"
+                    Margin="0,0,0,12"
+                    MessageKey="Str_Services_AdminWarning"
+                    TitleKey="Str_Services_AdminTitle" />
 
-                            <DataGridTemplateColumn
-                                Width="3*"
-                                MinWidth="160"
-                                Header="{DynamicResource Str_Services_ColName}">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate DataType="{x:Type models:WinService}">
-                                        <StackPanel VerticalAlignment="Center" ToolTip="{Binding Name}">
-                                            <TextBlock
-                                                FontWeight="SemiBold"
-                                                Foreground="{DynamicResource TextPrimary}"
-                                                Text="{Binding DisplayName}"
-                                                TextTrimming="CharacterEllipsis" />
-                                            <TextBlock
-                                                FontSize="11"
-                                                Foreground="{DynamicResource TextSecondary}"
-                                                Text="{Binding Subtitle}"
-                                                TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTextColumn
-                                Width="100"
-                                Binding="{Binding State, Converter={StaticResource StateText}}"
-                                ElementStyle="{StaticResource ServiceStateTextStyle}"
-                                Header="{DynamicResource Str_Services_ColStatus}" />
-
-                            <DataGridTextColumn
-                                Width="150"
-                                Binding="{Binding StartMode, Converter={StaticResource StartModeText}}"
-                                ElementStyle="{StaticResource EllipsisCellTextStyle}"
-                                Header="{DynamicResource Str_Services_ColStartup}" />
-
-                            <DataGridTextColumn
-                                Width="*"
-                                MinWidth="100"
-                                Binding="{Binding Account}"
-                                ElementStyle="{StaticResource EllipsisCellTextStyle}"
-                                Header="{DynamicResource Str_Services_ColAccount}" />
-
-                            <DataGridTemplateColumn Width="150" CellStyle="{StaticResource CompactCellStyle}" Header="">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate DataType="{x:Type models:WinService}">
-                                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                            <Button
-                                                Margin="0,0,2,0"
-                                                Click="BtnStart_Click"
-                                                IsEnabled="{Binding CanStart}"
-                                                Style="{StaticResource ListToolButtonStyle}"
-                                                ToolTip="{DynamicResource Str_Services_Start}">
-                                                <materialDesign:PackIcon
-                                                    Width="16"
-                                                    Height="16"
-                                                    Kind="Play" />
-                                            </Button>
-                                            <Button
-                                                Margin="0,0,2,0"
-                                                Click="BtnStop_Click"
-                                                IsEnabled="{Binding CanStop}"
-                                                Style="{StaticResource ListToolButtonStyle}"
-                                                ToolTip="{DynamicResource Str_Services_Stop}">
-                                                <materialDesign:PackIcon
-                                                    Width="16"
-                                                    Height="16"
-                                                    Kind="Stop" />
-                                            </Button>
-                                            <Button
-                                                Margin="0,0,2,0"
-                                                Click="BtnRestart_Click"
-                                                IsEnabled="{Binding CanRestart}"
-                                                Style="{StaticResource ListToolButtonStyle}"
-                                                ToolTip="{DynamicResource Str_Services_Restart}">
-                                                <materialDesign:PackIcon
-                                                    Width="16"
-                                                    Height="16"
-                                                    Kind="Restart" />
-                                            </Button>
-                                            <Button
-                                                Click="BtnMore_Click"
-                                                IsEnabled="{Binding CanOpenMenu}"
-                                                Style="{StaticResource ListToolButtonStyle}"
-                                                ToolTip="{DynamicResource Str_Services_More}">
-                                                <materialDesign:PackIcon
-                                                    Width="16"
-                                                    Height="16"
-                                                    Kind="DotsVertical" />
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <StackPanel
-                        x:Name="PanelEmpty"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        IsHitTestVisible="False"
-                        Visibility="Collapsed">
-                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CogSyncOutline}" />
-                        <TextBlock
-                            x:Name="TxtEmptyTitle"
-                            Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="15"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <TextBlock
-                            x:Name="TxtEmptyHint"
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
+                <!--  Services  -->
+                <Border
+                    ctl:Tour.Key="Str_Tour_Services_List"
+                    ctl:Tour.Order="3"
+                    Grid.Row="1"
+                    Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <DataGrid
+                            x:Name="GridServices"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
                             FontSize="12"
-                            Foreground="{DynamicResource TextSecondary}"
-                            TextAlignment="Center"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+                            IsReadOnly="True"
+                            MinRowHeight="46"
+                            SelectionMode="Single"
+                            VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+    
+                                <DataGridTemplateColumn
+                                    Width="3*"
+                                    MinWidth="160"
+                                    Header="{DynamicResource Str_Services_ColName}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:WinService}">
+                                            <StackPanel VerticalAlignment="Center" ToolTip="{Binding Name}">
+                                                <TextBlock
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimary}"
+                                                    Text="{Binding DisplayName}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    Foreground="{DynamicResource TextSecondary}"
+                                                    Text="{Binding Subtitle}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+    
+                                <DataGridTextColumn
+                                    Width="100"
+                                    Binding="{Binding State, Converter={StaticResource StateText}}"
+                                    ElementStyle="{StaticResource ServiceStateTextStyle}"
+                                    Header="{DynamicResource Str_Services_ColStatus}" />
+    
+                                <DataGridTextColumn
+                                    Width="150"
+                                    Binding="{Binding StartMode, Converter={StaticResource StartModeText}}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Services_ColStartup}" />
+    
+                                <DataGridTextColumn
+                                    Width="*"
+                                    MinWidth="100"
+                                    Binding="{Binding Account}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Services_ColAccount}" />
+    
+                                <DataGridTemplateColumn Width="150" CellStyle="{StaticResource CompactCellStyle}" Header="">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:WinService}">
+                                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                                <Button
+                                                    Margin="0,0,2,0"
+                                                    Click="BtnStart_Click"
+                                                    IsEnabled="{Binding CanStart}"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Services_Start}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="Play" />
+                                                </Button>
+                                                <Button
+                                                    Margin="0,0,2,0"
+                                                    Click="BtnStop_Click"
+                                                    IsEnabled="{Binding CanStop}"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Services_Stop}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="Stop" />
+                                                </Button>
+                                                <Button
+                                                    Margin="0,0,2,0"
+                                                    Click="BtnRestart_Click"
+                                                    IsEnabled="{Binding CanRestart}"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Services_Restart}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="Restart" />
+                                                </Button>
+                                                <Button
+                                                    Click="BtnMore_Click"
+                                                    IsEnabled="{Binding CanOpenMenu}"
+                                                    Style="{StaticResource ListToolButtonStyle}"
+                                                    ToolTip="{DynamicResource Str_Services_More}">
+                                                    <materialDesign:PackIcon
+                                                        Width="16"
+                                                        Height="16"
+                                                        Kind="DotsVertical" />
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+    
+                        <StackPanel
+                            x:Name="PanelEmpty"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CogSyncOutline}" />
+                            <TextBlock
+                                x:Name="TxtEmptyTitle"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock
+                                x:Name="TxtEmptyHint"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

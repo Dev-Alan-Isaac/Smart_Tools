@@ -559,6 +559,15 @@
     <system:String x:Key="Str_Regex_QrWordEdge">el borde de una palabra</system:String>
     <system:String x:Key="Str_Regex_QrLookaround">solo si va seguido / no va seguido de</system:String>
     <system:String x:Key="Str_Regex_QrInsertTooltip">Insertar {0}</system:String>
+    <system:String x:Key="Str_Regex_QrLetter">cualquier letra, en cualquier idioma</system:String>
+    <system:String x:Key="Str_Regex_QrSymbol">cualquier símbolo / solo símbolos matemáticos (∟ ≤ ∑ → ▶ € $)</system:String>
+    <system:String x:Key="Str_Regex_QrPunct">cualquier signo de puntuación</system:String>
+    <system:String x:Key="Str_Regex_QrNonAscii">cualquier carácter que no sea ASCII simple (acentos, emojis, símbolos)</system:String>
+    <system:String x:Key="Str_Regex_QrUnicode">un carácter por su código hexadecimal (aquí U+221F, el ángulo recto ∟)</system:String>
+    <system:String x:Key="Str_Regex_QrEmojiPair">un emoji por encima de U+FFFF: son dos caracteres UTF-16, así que se busca el par (🎉 🚀 👍)</system:String>
+    <system:String x:Key="Str_Regex_QrDingbats">emojis y símbolos antiguos de un solo carácter (✔ ☀ ✨ ⭐)</system:String>
+    <system:String x:Key="Str_Regex_QrArrows">cualquier flecha (→ ⇒ ↦)</system:String>
+    <system:String x:Key="Str_Regex_QrInvisible">caracteres invisibles: espacio de ancho cero, uniones, BOM</system:String>
     <system:String x:Key="Str_Regex_CombineHint">Combina estos como piezas de Lego - por ejemplo [a-z]+ significa "una o más letras minúsculas." Consulta el Desglose del Patrón a la derecha para ver tu patrón actual explicado pieza por pieza.</system:String>
     <system:String x:Key="Str_Regex_FlagsHeader">INDICADORES</system:String>
     <system:String x:Key="Str_Regex_IgnoreCase">Ignorar Mayúsculas/Minúsculas</system:String>
@@ -6990,6 +6999,7 @@
     <system:String x:Key="Str_Startup_RestartConfirm">¿Reiniciar Smart Tools como administrador?</system:String>
     <system:String x:Key="Str_Startup_RestartFailed">No se pudo reiniciar como administrador: {0}</system:String>
     <system:String x:Key="Str_Startup_SearchPlaceholder">Buscar por nombre, editor o comando</system:String>
+    <system:String x:Key="Str_Startup_FindHeader">BUSCAR</system:String>
     <system:String x:Key="Str_Startup_Refresh">Volver a escanear</system:String>
     <system:String x:Key="Str_Startup_ColOn">Activa</system:String>
     <system:String x:Key="Str_Startup_ToggleTip">Iniciar esta aplicación con Windows</system:String>
@@ -7020,6 +7030,8 @@
     <system:String x:Key="Str_Services_AdminTitle">Se necesitan derechos de administrador</system:String>
     <system:String x:Key="Str_Services_AdminWarning">Iniciar, detener o cambiar un servicio requiere derechos de administrador. Reinicia Smart Tools como administrador para hacer cambios.</system:String>
     <system:String x:Key="Str_Services_SearchPlaceholder">Buscar por nombre o descripción</system:String>
+    <system:String x:Key="Str_Services_FindHeader">BUSCAR</system:String>
+    <system:String x:Key="Str_Services_ShowHeader">MOSTRAR</system:String>
     <system:String x:Key="Str_Services_Refresh">Volver a buscar</system:String>
     <system:String x:Key="Str_Services_FilterAll">Todos</system:String>
     <system:String x:Key="Str_Services_FilterRunning">En ejecución</system:String>
@@ -10208,6 +10220,8 @@
     <system:String x:Key="Str_TotpCode_CodeNotAccepted">¿EL CÓDIGO NO SE ACEPTA?</system:String>
     <system:String x:Key="Str_TotpCode_CheckThatThisPc">Comprueba que el reloj de este equipo es correcto (Configuración, Hora e idioma) y que los dígitos, el periodo y el algoritmo coinciden con lo que muestra el sitio.</system:String>
     <system:String x:Key="Str_DriveHealth_Drives">Unidades</system:String>
+    <system:String x:Key="Str_DriveHealth_ViewHeader">VISTA</system:String>
+    <system:String x:Key="Str_DriveHealth_SummaryHeader">RESUMEN</system:String>
     <system:String x:Key="Str_DriveHealth_EveryDriveAndIts">Cada unidad y su salud ahora mismo</system:String>
     <system:String x:Key="Str_DriveHealth_HowEachDriveS">Cómo cambiaron con el tiempo los números SMART de cada unidad</system:String>
     <system:String x:Key="Str_EmptyFolders_MoveThisFolderTo">Mover esta carpeta a la Papelera de reciclaje</system:String>

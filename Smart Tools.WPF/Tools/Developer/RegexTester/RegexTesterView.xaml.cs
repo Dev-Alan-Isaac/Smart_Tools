@@ -64,6 +64,17 @@ namespace Smart_Tools.WPF.Views
             (new[] { @"\b" }, "Str_Regex_QrWordEdge", null),
             (new[] { "(?=abc)", "(?!abc)" }, "Str_Regex_QrLookaround", null),
             (new[] { @"\." }, "Str_Regex_QrLiteral", null),
+
+            // Letters, symbols, emojis and special characters
+            (new[] { @"\p{L}" }, "Str_Regex_QrLetter", null),
+            (new[] { @"\p{S}", @"\p{Sm}" }, "Str_Regex_QrSymbol", null),
+            (new[] { @"\p{P}" }, "Str_Regex_QrPunct", null),
+            (new[] { @"[^\x00-\x7F]" }, "Str_Regex_QrNonAscii", null),
+            (new[] { @"∟" }, "Str_Regex_QrUnicode", null),
+            (new[] { @"[\uD83C-\uD83E][\uDC00-\uDFFF]" }, "Str_Regex_QrEmojiPair", null),
+            (new[] { @"[☀-➿]" }, "Str_Regex_QrDingbats", null),
+            (new[] { @"[←-⇿]" }, "Str_Regex_QrArrows", null),
+            (new[] { @"[​-‏﻿]" }, "Str_Regex_QrInvisible", null),
         };
 
         private readonly DispatcherTimer _liveTimer;

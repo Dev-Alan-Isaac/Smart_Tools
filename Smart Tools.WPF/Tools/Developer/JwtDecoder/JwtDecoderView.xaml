@@ -44,7 +44,7 @@
                                     <Button
                                         Margin="0,0,4,0"
                                         Click="BtnPaste_Click"
-                                        Style="{StaticResource ListToolButtonStyle}"
+                                        Width="32" Height="32" Padding="0" Style="{StaticResource NeutralIconButtonStyle}"
                                         ToolTip="{DynamicResource Str_Jwt_Paste}">
                                         <materialDesign:PackIcon
                                             Width="16"

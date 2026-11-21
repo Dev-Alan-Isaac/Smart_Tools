@@ -500,6 +500,15 @@
     <system:String x:Key="Str_Regex_QrWordEdge">the edge of a word</system:String>
     <system:String x:Key="Str_Regex_QrLookaround">only if followed / not followed by</system:String>
     <system:String x:Key="Str_Regex_QrInsertTooltip">Insert {0}</system:String>
+    <system:String x:Key="Str_Regex_QrLetter">any letter, in any language</system:String>
+    <system:String x:Key="Str_Regex_QrSymbol">any symbol / only math symbols (∟ ≤ ∑ → ▶ € $)</system:String>
+    <system:String x:Key="Str_Regex_QrPunct">any punctuation mark</system:String>
+    <system:String x:Key="Str_Regex_QrNonAscii">any character that is not plain ASCII (accents, emojis, symbols)</system:String>
+    <system:String x:Key="Str_Regex_QrUnicode">one character by its hex code (here U+221F, the right angle ∟)</system:String>
+    <system:String x:Key="Str_Regex_QrEmojiPair">an emoji above U+FFFF: it is two UTF-16 characters, so match the pair (🎉 🚀 👍)</system:String>
+    <system:String x:Key="Str_Regex_QrDingbats">older one-character emojis and dingbats (✔ ☀ ✨ ⭐)</system:String>
+    <system:String x:Key="Str_Regex_QrArrows">any arrow (→ ⇒ ↦)</system:String>
+    <system:String x:Key="Str_Regex_QrInvisible">invisible characters: zero-width space and joiners, BOM</system:String>
     <system:String x:Key="Str_Regex_CombineHint">Combine these like Lego pieces - e.g. [a-z]+ means "one or more lowercase letters." See Pattern Breakdown on the right for your current pattern explained piece by piece.</system:String>
     <system:String x:Key="Str_Regex_FlagsHeader">FLAGS</system:String>
     <system:String x:Key="Str_Regex_IgnoreCase">Ignore Case</system:String>
@@ -6988,6 +6997,7 @@
     <system:String x:Key="Str_Startup_RestartConfirm">Restart Smart Tools as administrator?</system:String>
     <system:String x:Key="Str_Startup_RestartFailed">Couldn't restart as administrator: {0}</system:String>
     <system:String x:Key="Str_Startup_SearchPlaceholder">Search by name, publisher, or command</system:String>
+    <system:String x:Key="Str_Startup_FindHeader">FIND</system:String>
     <system:String x:Key="Str_Startup_Refresh">Scan again</system:String>
     <system:String x:Key="Str_Startup_ColOn">On</system:String>
     <system:String x:Key="Str_Startup_ToggleTip">Start this app with Windows</system:String>
@@ -7018,6 +7028,8 @@
     <system:String x:Key="Str_Services_AdminTitle">Administrator rights needed</system:String>
     <system:String x:Key="Str_Services_AdminWarning">Starting, stopping, or changing a service needs administrator rights. Restart Smart Tools as administrator to make changes.</system:String>
     <system:String x:Key="Str_Services_SearchPlaceholder">Search by name or description</system:String>
+    <system:String x:Key="Str_Services_FindHeader">FIND</system:String>
+    <system:String x:Key="Str_Services_ShowHeader">SHOW</system:String>
     <system:String x:Key="Str_Services_Refresh">Scan again</system:String>
     <system:String x:Key="Str_Services_FilterAll">All</system:String>
     <system:String x:Key="Str_Services_FilterRunning">Running</system:String>
@@ -10207,6 +10219,8 @@
     <system:String x:Key="Str_TotpCode_CodeNotAccepted">CODE NOT ACCEPTED?</system:String>
     <system:String x:Key="Str_TotpCode_CheckThatThisPc">Check that this PC's clock is right (Settings, Time &amp; language), and that digits, period and algorithm match what the site shows.</system:String>
     <system:String x:Key="Str_DriveHealth_Drives">Drives</system:String>
+    <system:String x:Key="Str_DriveHealth_ViewHeader">VIEW</system:String>
+    <system:String x:Key="Str_DriveHealth_SummaryHeader">SUMMARY</system:String>
     <system:String x:Key="Str_DriveHealth_EveryDriveAndIts">Every drive and its health right now</system:String>
     <system:String x:Key="Str_DriveHealth_HowEachDriveS">How each drive's SMART numbers changed over time</system:String>
     <system:String x:Key="Str_EmptyFolders_MoveThisFolderTo">Move this folder to the Recycle Bin</system:String>
