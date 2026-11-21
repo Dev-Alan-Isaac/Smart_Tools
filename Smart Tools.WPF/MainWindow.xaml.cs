@@ -88,6 +88,19 @@ namespace Smart_Tools.WPF
             ApplySavedAppearance();
 
             InitializeComponent();
+            if (App.TestInstance)
+            {
+                // Test copy: far off-screen, no focus, no taskbar button, so it never covers or steals anything from the person's own copy.
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                WindowState = WindowState.Normal;
+                Left = -32000;
+                Top = -32000;
+                Width = 1936;
+                Height = 1048;
+                ShowActivated = false;
+                ShowInTaskbar = false;
+                StartTestSnapshotWatcher();
+            }
             Window_StateChanged(null, EventArgs.Empty);   // the window starts maximized
 
             SetUpShortcuts();
@@ -765,6 +778,37 @@ namespace Smart_Tools.WPF
 
         /// <summary>A second launch of the app asked this instance to come forward.</summary>
         public void ShowFromOutside() => BringToFront();
+
+        /// <summary>
+        /// Test copy only (--test-instance): an off-screen window is not drawn by Windows, so screenshots are made from inside.
+        /// A file "shot.request" beside the exe holding a target .png path makes the window render itself to that file.
+        /// </summary>
+        private void StartTestSnapshotWatcher()
+        {
+            string request = System.IO.Path.Combine(AppContext.BaseDirectory, "shot.request");
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+            timer.Tick += (_, _) =>
+            {
+                if (!System.IO.File.Exists(request) || Content is not FrameworkElement root || root.ActualWidth < 10) return;
+                string target;
+                try { target = System.IO.File.ReadAllText(request).Trim(); System.IO.File.Delete(request); }
+                catch (System.IO.IOException) { return; }
+                try
+                {
+                    var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)root.ActualWidth, (int)root.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                    bitmap.Render(root);
+                    var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                    using var file = System.IO.File.Create(target);
+                    encoder.Save(file);
+                }
+                catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                    Log.Info($"Test snapshot failed: {ex.Message}");
+                }
+            };
+            timer.Start();
+        }
 
         private System.Windows.Threading.DispatcherTimer? _trayTipTimer;
 
