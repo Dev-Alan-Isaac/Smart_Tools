@@ -22,6 +22,24 @@
     <FontFamily x:Key="AppFont">Segoe UI Variable Text, Segoe UI</FontFamily>
 
     <!--
+        ================= SPACING + TARGET TOKENS (Laws of UX pass) =================
+        One 4 px scale for gaps and padding (Law of Proximity: related things sit closer than unrelated ones), and the
+        minimum sizes of things people click (Fitts's Law). Use these in new and reworked views instead of loose numbers.
+          SpaceXs 4  : icon and its label, chip inside a chip row
+          SpaceSm 8  : between buttons of one group, label above its field
+          SpaceMd 12 : between fields of one card, card padding on small cards
+          SpaceLg 16 : between cards, page margin
+          SpaceXl 24 : between page sections
+    -->
+    <system:Double x:Key="SpaceXs" xmlns:system="clr-namespace:System;assembly=System.Runtime">4</system:Double>
+    <system:Double x:Key="SpaceSm" xmlns:system="clr-namespace:System;assembly=System.Runtime">8</system:Double>
+    <system:Double x:Key="SpaceMd" xmlns:system="clr-namespace:System;assembly=System.Runtime">12</system:Double>
+    <system:Double x:Key="SpaceLg" xmlns:system="clr-namespace:System;assembly=System.Runtime">16</system:Double>
+    <system:Double x:Key="SpaceXl" xmlns:system="clr-namespace:System;assembly=System.Runtime">24</system:Double>
+    <system:Double x:Key="TargetMin" xmlns:system="clr-namespace:System;assembly=System.Runtime">32</system:Double>
+    <system:Double x:Key="TargetPrimary" xmlns:system="clr-namespace:System;assembly=System.Runtime">36</system:Double>
+
+    <!--
         Piano keys (Synthesizer and MIDI Instruments). A piano is black and white in either
         theme, so these are fixed colours and live here, not in Light/Dark. The pressed key
         uses the theme accent (AccentColor / AccentColorPressed).

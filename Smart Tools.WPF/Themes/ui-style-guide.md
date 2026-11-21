@@ -908,3 +908,32 @@ Backend: `PasswordVaultManager*.cs` (+ `PasswordVaultWidgetWindow.cs`, `Views/Va
 - Lists that can reach 10,000+ items: bulk collection, virtualized list, no per-row picture past a cap (Barcode/QR batch keep a preview for the first 5,000 rows), caches evict the oldest entries, never "clear all".
 - Find Similar remembers fingerprints (`similar_cache.bin`, path + size + modified time + method) so a rescan only reads new or changed files.
 - Theme tokens for pictures and stages: `MediaStageBg/Text/TextMuted` (fixed dark in both themes), `ScrimBg`, `SliderTrack`, `SelectionFill`, `HoverOverlayFill/Stroke`, `CheckerLight/Dark`.
+
+
+## Laws of UX applied (the overhaul rules)
+
+Every new or reworked view follows these. Each law has one rule you can check by looking at the screen.
+
+| Law | Rule in this app |
+|---|---|
+| **Fitts's Law** (big, close targets are easy to hit) | Primary button >= 36 px high (`TargetPrimary`), icon buttons >= 32 px (`TargetMin`) with a tooltip, 8 px between buttons (`SpaceSm`). Actions sit at the right edge of the `RunBar`, the primary one last (nearest the corner). Destructive buttons are never next to the primary one without a gap and a confirm modal. |
+| **Hick's Law** (more choices = slower) | A card shows at most about 7 choices. Rarely used options go in a collapsed "More options" expander. A mode with 2 to 4 choices uses `ModeToggleButtonStyle`/tabs, not a drop-down. |
+| **Jakob's Law** (people expect it to work like elsewhere) | Same place, same look: options in the sidebar, the action in the `RunBar` under the content, results in a card, standard keys (F5 run, Esc stop, Ctrl+S save, Ctrl+O open). Do not invent a new control when a shared one exists (`InputFolderCard`, `OutputFolderCard`, `ExportButton`, `PresetChips`, `EmptyStateCard`). |
+| **Miller's Law** (about 7 items in short-term memory) | Group long lists of options into cards with a `SidebarGroupHeader`; no card with more than 7 unlabelled controls in a row; long tables get search and sort. |
+| **Doherty Threshold** (feedback within 400 ms) | Anything that can take longer than 0.4 s sets `RunBar.IsBusy` at once and shows progress; the page never looks frozen. Heavy work stays off the UI thread. |
+| **Zeigarnik Effect** (unfinished tasks are remembered) | A running job shows how far it is (`RunBar.Progress`, "3 of 12"). A stopped or failed job says what was done and what was left. |
+| **Peak-End Rule** (the end of an experience is what is remembered) | Finishing is a clear moment: `RunBarState.Success`, a result pill, and `SavedFileDialog` (Open / Show in folder) after a file is written. Errors say what happened and what to do next, in plain words. |
+| **Von Restorff Effect** (the different one is remembered) | One accent (primary) button per screen. Danger red only for destructive actions. Do not make every chip or badge colourful. |
+| **Law of Proximity** | Related controls sit closer (`SpaceSm`, 8) than unrelated ones (`SpaceLg`, 16 between cards). A label belongs to the field under it (4 to 8 px), not the one above. |
+| **Law of Similarity** | Same job = same style: choices are `ModeToggle*`/`PillChip`, actions are `Primary`/`Neutral`/`Danger` buttons, status is `StatusPillStyle`. Never restyle a shared control locally. |
+| **Law of Common Region** | Controls that belong together share one card (`CardStyle`/`SidebarGroupCardStyle`); a card has one purpose and one header. |
+| **Aesthetic-Usability Effect** | Theme tokens only, the radius scale (`RadiusSm/Md/Lg`), the 4 px spacing scale, aligned edges, the same focus ring (`FocusRingVisual`) in Light, Dark and Glass. Check contrast in all three themes. |
+| **Postel's Law** (be tolerant in what you accept) | Inputs trim spaces, accept pasted text and dropped files (`FileDrop.Attach`), understand "5 km to mi", never reject something that can be understood. Be strict only in what the tool writes (`SafeFileOps`, `AtomicFile`). |
+| **Tesler's Law** (complexity has to live somewhere) | The app absorbs complexity: sensible defaults, remembered tool setup (never remembered folders), auto-detected formats, one-click presets. Do not hand the person a decision the app can make. |
+| **Serial Position Effect** (first and last items are remembered) | The most important choice goes first in a list or row; the primary action goes last in the `RunBar` (right edge); the empty state's call to action is the one thing to do. |
+| **Pareto Principle** (80 % of use is 20 % of features) | The default screen shows the 20 % most people need; the rest is under "More options" or in a secondary card. |
+
+### Shared pieces for these rules
+- **Spacing and target tokens** (`Controls.xaml`): `SpaceXs 4`, `SpaceSm 8`, `SpaceMd 12`, `SpaceLg 16`, `SpaceXl 24`, `TargetMin 32`, `TargetPrimary 36` (doubles: `Margin="{StaticResource ...}"` does not work for a Thickness; use them for Width/Height/Spacing and as the reference values when writing a Thickness).
+- **`controls:RunBar`** (`Controls/RunBar.cs`): the one bar for a tool's main action. `Status` + `State` (`Idle/Working/Success/Warning/Error`) draw the status pill, `IsBusy` + `Progress` (0-100, negative = unknown) the progress; the view's own buttons go inside it (they keep their `x:Name`s and handlers). Replace the hand-made `ActionBar`/run-bar borders with it when a view is reworked (Step 4 of the overhaul).
+- **Modals** (`AppModal`): messages and questions are in-window cards; keep the text short, the first button the safe one for destructive questions (set the default result).
