@@ -291,28 +291,19 @@ namespace Smart_Tools.WPF.Views
             LoadShortcutSettings();
             LoadInstallation();
 
-            if (RequestedSection == "TextRecognition")
+            if (RequestedSection != null && FindName("BtnNav" + RequestedSection) is RadioButton requested)
             {
-                BtnNavTextRecognition.IsChecked = true;
-                Nav_Click(BtnNavTextRecognition, new RoutedEventArgs());
-            }
-            else if (RequestedSection == "Translate")
-            {
-                BtnNavTranslate.IsChecked = true;
-                Nav_Click(BtnNavTranslate, new RoutedEventArgs());
-            }
-            else if (RequestedSection == "UsageHistory")
-            {
-                BtnNavUsageHistory.IsChecked = true;
-                Nav_Click(BtnNavUsageHistory, new RoutedEventArgs());
-            }
-            else if (RequestedSection == "TexturePack")
-            {
-                BtnNavTexturePack.IsChecked = true;
-                Nav_Click(BtnNavTexturePack, new RoutedEventArgs());
+                requested.IsChecked = true;
+                Nav_Click(requested, new RoutedEventArgs());
             }
             RequestedSection = null;
         }
+
+        /// <summary>
+        /// Every settings section, in the order of the left nav. A section needs a nav RadioButton named BtnNav&lt;Id&gt; (Tag = Id, Click = Nav_Click)
+        /// with its label LblNav&lt;Id&gt;, and a panel named Panel&lt;Id&gt;. Add the id here and Nav_Click, the compact sidebar and deep links pick it up.
+        /// </summary>
+        private static readonly string[] SectionIds = { "General", "Categories", "Patterns", "MockData", "EventDays", "Shortcuts", "Vault", "MediaViewer", "Clipboard", "TextRecognition", "Translate", "TexturePack", "UsageHistory" };
 
         private bool Ignore => !_viewConstructed || _applying;
 
@@ -326,25 +317,15 @@ namespace Smart_Tools.WPF.Views
             var visibility = _optionsCollapsed ? Visibility.Collapsed : Visibility.Visible;
             TxtOptionsHeaderLabel.Visibility = visibility;
             SepHeader.Visibility = visibility;
-            LblNavGeneral.Visibility = visibility;
-            LblNavCategories.Visibility = visibility;
-            LblNavPatterns.Visibility = visibility;
-            LblNavMockData.Visibility = visibility;
-            LblNavEventDays.Visibility = visibility;
-            LblNavShortcuts.Visibility = visibility;
-            LblNavVault.Visibility = visibility;
-            LblNavMediaViewer.Visibility = visibility;
-            LblNavClipboard.Visibility = visibility;
-            LblNavTextRecognition.Visibility = visibility;
-            LblNavTranslate.Visibility = visibility;
-            LblNavTexturePack.Visibility = visibility;
-            LblNavUsageHistory.Visibility = visibility;
+            foreach (string id in SectionIds)
+                if (FindName("LblNav" + id) is UIElement label) label.Visibility = visibility;
             SidebarContent.Margin = _optionsCollapsed ? new Thickness(4, 4, 4, 16) : new Thickness(12, 4, 12, 16);
 
             var padding = _optionsCollapsed ? new Thickness(0, 10, 0, 10) : new Thickness(14, 10, 14, 10);
             var alignment = _optionsCollapsed ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Left;
-            foreach (var nav in new[] { BtnNavGeneral, BtnNavCategories, BtnNavPatterns, BtnNavMockData, BtnNavEventDays, BtnNavShortcuts, BtnNavVault, BtnNavMediaViewer, BtnNavClipboard, BtnNavTextRecognition, BtnNavTranslate, BtnNavTexturePack, BtnNavUsageHistory })
+            foreach (string id in SectionIds)
             {
+                if (FindName("BtnNav" + id) is not RadioButton nav) continue;
                 nav.Padding = padding;
                 nav.HorizontalContentAlignment = alignment;
             }
@@ -355,25 +336,19 @@ namespace Smart_Tools.WPF.Views
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
             string section = (sender as RadioButton)?.Tag as string ?? "General";
-            ShowSection(PanelGeneral, section == "General");
-            ShowSection(PanelCategories, section == "Categories");
-            ShowSection(PanelPatterns, section == "Patterns");
-            ShowSection(PanelMockData, section == "MockData");
-            ShowSection(PanelEventDays, section == "EventDays");
-            ShowSection(PanelShortcuts, section == "Shortcuts");
-            ShowSection(PanelVault, section == "Vault");
-            ShowSection(PanelMediaViewer, section == "MediaViewer");
-            if (section == "MediaViewer") LoadMediaViewerSettings();   // the Media Viewer may have saved since the page was built
-            ShowSection(PanelClipboard, section == "Clipboard");
-            ShowSection(PanelTextRecognition, section == "TextRecognition");
-            if (section == "TextRecognition") PanelTextRecognition.Load();   // languages may have been added since the page was built
-            ShowSection(PanelTranslate, section == "Translate");
-            if (section == "Translate") PanelTranslate.Load();
-            ShowSection(PanelTexturePack, section == "TexturePack");
-            if (section == "TexturePack") PanelTexturePack.Load();   // the Texture Pack tool may have changed the list since the page was built
-            ShowSection(PanelUsageHistory, section == "UsageHistory");
-            if (section == "UsageHistory") PanelUsageHistory.Load();   // the tools may have switched recording on or off since the page was built
-            if (section == "Vault") LoadVaultSettings();   // the vault sidebar may have saved since the page was built
+            foreach (string id in SectionIds)
+                if (FindName("Panel" + id) is FrameworkElement panel) ShowSection(panel, section == id);
+
+            // Sections that re-read their data each time they open (another tool may have changed it since the page was built)
+            switch (section)
+            {
+                case "MediaViewer": LoadMediaViewerSettings(); break;
+                case "TextRecognition": PanelTextRecognition.Load(); break;
+                case "Translate": PanelTranslate.Load(); break;
+                case "TexturePack": PanelTexturePack.Load(); break;
+                case "UsageHistory": PanelUsageHistory.Load(); break;
+                case "Vault": LoadVaultSettings(); break;
+            }
             ContentScroller.ScrollToTop();
         }
 

@@ -509,18 +509,21 @@
                     x:Name="BtnWinMinimize"
                     Click="BtnWinMinimize_Click"
                     Content="&#xE921;"
-                    Style="{StaticResource TitleBarButtonStyle}" />
+                    Style="{StaticResource TitleBarButtonStyle}"
+                    ToolTip="{DynamicResource Str_Win_Minimize}" />
                 <Button
                     x:Name="BtnWinMaximize"
                     Click="BtnWinMaximize_Click"
                     Content="&#xE922;"
-                    Style="{StaticResource TitleBarButtonStyle}" />
+                    Style="{StaticResource TitleBarButtonStyle}"
+                    ToolTip="{DynamicResource Str_Win_Maximize}" />
                 <Button
                     x:Name="BtnWinClose"
                     Click="BtnWinClose_Click"
                     Content="&#xE8BB;"
                     Style="{StaticResource TitleBarButtonStyle}"
-                    Tag="Close" />
+                    Tag="Close"
+                    ToolTip="{DynamicResource Str_Win_Close}" />
             </StackPanel>
         </Grid>
 

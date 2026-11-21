@@ -190,8 +190,8 @@
                             ToolTip="{DynamicResource Str_Settings_EventNameTooltip}" />
                         <Button
                             Grid.Column="3"
-                            Width="28"
-                            Height="28"
+                            Width="32"
+                            Height="32"
                             VerticalAlignment="Center"
                             Click="BtnRemoveEventDay_Click"
                             Style="{StaticResource IconButtonStyle}"
@@ -314,8 +314,8 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Button
-                                Width="28"
-                                Height="28"
+                                Width="32"
+                                Height="32"
                                 Click="BtnMockListUp_Click"
                                 Style="{StaticResource IconButtonStyle}"
                                 ToolTip="{DynamicResource Str_Settings_MoveUpCategoriesHigher}">
@@ -325,8 +325,8 @@
                                     Kind="ChevronUp" />
                             </Button>
                             <Button
-                                Width="28"
-                                Height="28"
+                                Width="32"
+                                Height="32"
                                 Margin="2,0"
                                 Click="BtnMockListDown_Click"
                                 Style="{StaticResource IconButtonStyle}"
@@ -337,8 +337,8 @@
                                     Kind="ChevronDown" />
                             </Button>
                             <Button
-                                Width="28"
-                                Height="28"
+                                Width="32"
+                                Height="32"
                                 Click="BtnRemoveMockList_Click"
                                 Style="{StaticResource IconButtonStyle}"
                                 ToolTip="{DynamicResource Str_Settings_RemoveThisMockList}">
@@ -394,7 +394,7 @@
                         </ItemsControl>
                         <Border
                             Width="190"
-                            Height="28"
+                            Height="32"
                             Margin="0,0,0,6"
                             Padding="8,0"
                             Style="{StaticResource InputBarStyle}">
@@ -508,8 +508,8 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                             <Button
-                                Width="28"
-                                Height="28"
+                                Width="32"
+                                Height="32"
                                 Click="BtnCategoryUp_Click"
                                 Style="{StaticResource IconButtonStyle}"
                                 ToolTip="{DynamicResource Str_Settings_MoveUpCategoriesHigher}">
@@ -519,8 +519,8 @@
                                     Kind="ChevronUp" />
                             </Button>
                             <Button
-                                Width="28"
-                                Height="28"
+                                Width="32"
+                                Height="32"
                                 Margin="2,0"
                                 Click="BtnCategoryDown_Click"
                                 Style="{StaticResource IconButtonStyle}"
@@ -531,8 +531,8 @@
                                     Kind="ChevronDown" />
                             </Button>
                             <Button
-                                Width="28"
-                                Height="28"
+                                Width="32"
+                                Height="32"
                                 Click="BtnRemoveCategory_Click"
                                 Style="{StaticResource IconButtonStyle}"
                                 ToolTip="{DynamicResource Str_Settings_RemoveThisCategory}">
@@ -589,7 +589,7 @@
                         </ItemsControl>
                         <Border
                             Width="170"
-                            Height="28"
+                            Height="32"
                             Margin="0,0,0,6"
                             Padding="8,0"
                             Style="{StaticResource InputBarStyle}">
@@ -715,8 +715,8 @@
                         </Border>
                         <Button
                             Grid.Column="6"
-                            Width="28"
-                            Height="28"
+                            Width="32"
+                            Height="32"
                             Margin="8,0,0,0"
                             VerticalAlignment="Center"
                             Click="BtnRemovePattern_Click"
@@ -2098,7 +2098,7 @@
                                                     ToolTip="{DynamicResource Str_Shortcuts_EnabledTip}" />
                                                 <Button
                                                     Grid.Column="3"
-                                                    Width="28"
+                                                    Width="32"
                                                     Margin="6,0,0,0"
                                                     Padding="0"
                                                     Click="BtnResetShortcut_Click"
