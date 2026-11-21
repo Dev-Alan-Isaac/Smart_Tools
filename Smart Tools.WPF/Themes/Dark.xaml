@@ -200,6 +200,9 @@
 
     <SolidColorBrush x:Key="DangerFill" Color="#DC2626" />
 
+    <!--  Opaque surface for dropdown lists, menus and tooltips: they float over page text, so they must not be see-through  -->
+    <SolidColorBrush x:Key="PopupBg" Color="#232B3B" />
+    <SolidColorBrush x:Key="PopupBorder" Color="#3C4864" />
     <SolidColorBrush x:Key="ScrollThumb" Color="#475269" />
     <SolidColorBrush x:Key="ScrollThumbHover" Color="#65718B" />
 

@@ -20,6 +20,12 @@ namespace Smart_Tools.WPF.Controllers
         // (e.g. control styles) that live in App.xaml.
         private const string ThemeDictionaryTagKey = "__ActiveThemeDictionary";
 
+        /// <summary>The theme on screen ("Light", "Dark" or "Glass").</summary>
+        public static string Current { get; private set; } = "Light";
+
+        /// <summary>Raised after the theme on screen changed (the main window uses it to switch the see-through backdrop).</summary>
+        public static event EventHandler? ThemeChanged;
+
         /// <summary>
         /// Applies the given theme ("Light", "Dark", or "Match System").
         /// Safe to call repeatedly (e.g. every time Settings is saved).
@@ -27,7 +33,7 @@ namespace Smart_Tools.WPF.Controllers
         public static void Apply(string theme)
         {
             string resolved = Resolve(theme);
-            string path = resolved == "Dark" ? "Themes/Dark.xaml" : "Themes/Light.xaml";
+            string path = resolved == "Dark" ? "Themes/Dark.xaml" : resolved == "Glass" ? "Themes/Glass.xaml" : "Themes/Light.xaml";
 
             var newDictionary = new ResourceDictionary { Source = new Uri(path, UriKind.Relative) };
             newDictionary[ThemeDictionaryTagKey] = true;
@@ -39,6 +45,10 @@ namespace Smart_Tools.WPF.Controllers
                 merged.Remove(previous);
 
             merged.Add(newDictionary);
+
+            bool changed = Current != resolved;
+            Current = resolved;
+            if (changed) ThemeChanged?.Invoke(null, EventArgs.Empty);
         }
 
         /// <summary>The theme actually shown: "Match System" becomes "Light" or "Dark" from the Windows app mode.</summary>

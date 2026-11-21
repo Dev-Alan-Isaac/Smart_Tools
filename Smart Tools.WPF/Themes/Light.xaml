@@ -227,6 +227,9 @@
     <SolidColorBrush x:Key="DangerFill" Color="#DC2626" />
 
     <!--  Scrollbar thumb - CardBorder was only 1.25:1 and nearly invisible  -->
+    <!--  Opaque surface for dropdown lists, menus and tooltips: they float over page text, so they must not be see-through  -->
+    <SolidColorBrush x:Key="PopupBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PopupBorder" Color="#CBD3E2" />
     <SolidColorBrush x:Key="ScrollThumb" Color="#B4BCC9" />
     <SolidColorBrush x:Key="ScrollThumbHover" Color="#8C97A8" />
 

@@ -1321,9 +1321,9 @@
                                     Text="{DynamicResource Str_Settings_Theme}" />
                                 <UniformGrid
                                     x:Name="ThemeChoices"
-                                    MaxWidth="520"
+                                    MaxWidth="660"
                                     HorizontalAlignment="Left"
-                                    Columns="3"
+                                    Columns="4"
                                     ToolTip="{DynamicResource Str_Settings_ThemeTooltip}">
                                     <!--  Swatches are fixed colours on purpose: they picture each theme.  -->
                                     <RadioButton
@@ -1421,6 +1421,61 @@
                                                     VerticalAlignment="Center"
                                                     Kind="WeatherNight" />
                                                 <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Settings_Dark}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton
+                                        Margin="4,0"
+                                        Click="RadioTheme_Click"
+                                        GroupName="Theme"
+                                        Style="{StaticResource ChoiceTileStyle}"
+                                        ToolTip="{DynamicResource Str_Settings_GlassTooltip}"
+                                        Tag="Glass">
+                                        <StackPanel>
+                                            <Border
+                                                Width="120"
+                                                Height="56"
+                                                BorderBrush="#66FFFFFF"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Offset="0" Color="#3A6FB5" />
+                                                        <GradientStop Offset="1" Color="#9B4C8A" />
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                                <StackPanel Margin="8">
+                                                    <Border
+                                                        Height="8"
+                                                        Background="#59FFFFFF"
+                                                        CornerRadius="3" />
+                                                    <Border
+                                                        Width="60"
+                                                        Height="6"
+                                                        Margin="0,6,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="#47FFFFFF"
+                                                        CornerRadius="3" />
+                                                    <Border
+                                                        Width="36"
+                                                        Height="6"
+                                                        Margin="0,4,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Background="#8CFFFFFF"
+                                                        CornerRadius="3" />
+                                                </StackPanel>
+                                            </Border>
+                                            <StackPanel
+                                                Margin="0,8,0,0"
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Blur" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Settings_Glass}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </RadioButton>
