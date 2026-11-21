@@ -49,7 +49,6 @@ namespace Smart_Tools.WPF.Views
         private const double NarrowColumnThreshold = 1100;
         private static string DialogTitle => Loc.T("Str_Tool_find-similar_Name", "Find Similar Files");
         private const int ThumbnailSize = 320;
-        private const int MaxBackgroundThumbnails = 600;
 
         private readonly SimilarManager _manager = new();
         private readonly ObservableCollection<FolderListEntry> _folders = new();
@@ -61,7 +60,7 @@ namespace Smart_Tools.WPF.Views
         private SimilarFinderSettings _settings = new();
 
         private CancellationTokenSource? _scanCts;
-        private CancellationTokenSource? _thumbnailCts;
+        private readonly ThumbnailWindow<SimilarFileItem> _thumbs;
         private bool _isScanning;
         private readonly SimilarEta _eta = new();
         private readonly Stopwatch _etaClock = Stopwatch.StartNew();
@@ -83,6 +82,7 @@ namespace Smart_Tools.WPF.Views
 
             _rowsView = CreateGroupedView(_rows);
             DataGridDuplicates.ItemsSource = _rowsView;
+            _thumbs = CreateThumbnails();
 
             BuildResultsContextMenu();
             InitComparePlayers();
@@ -94,7 +94,7 @@ namespace Smart_Tools.WPF.Views
         public void CancelActiveRun()
         {
             _scanCts?.Cancel();
-            _thumbnailCts?.Cancel();
+            _thumbs.Dispose();
             CloseCompare();
             ShutDownCompareVlc();
             _preview.Dispose();
@@ -382,7 +382,7 @@ namespace Smart_Tools.WPF.Views
 
             CloseCompare();
             CloseReview();
-            _thumbnailCts?.Cancel();
+            _thumbs.Reset();
             SetScanning(true);
 
             try
@@ -394,7 +394,7 @@ namespace Smart_Tools.WPF.Views
 
                 ShowGroups(result.Groups);
                 ShowScanSummary(result);
-                StartThumbnailLoading(_rows.Take(MaxBackgroundThumbnails).ToList());
+                _thumbs.Refresh();
 
                 try
                 {
@@ -864,7 +864,7 @@ namespace Smart_Tools.WPF.Views
             KeepSidebarItems.ItemsSource = group.Items;
             KeepSidebarScroller.ScrollToTop();
             RefreshReviewLabels();
-            StartThumbnailLoading(group.Items.Where(i => i.Thumbnail == null).ToList(), cancelPrevious: false);
+            _thumbs.Request(group.Items);
 
             if (!wasOpen)
             {
@@ -952,48 +952,14 @@ namespace Smart_Tools.WPF.Views
         //  Thumbnails
         // =================================================================
 
-        private void StartThumbnailLoading(List<SimilarFileItem> items, bool cancelPrevious = true)
+        /// <summary>Thumbnails follow the scroll position (loaded near the viewport, released far away).</summary>
+        private ThumbnailWindow<SimilarFileItem> CreateThumbnails() => new(
+            DataGridDuplicates, () => _rows, i => i.Thumbnail, (i, v) => i.Thumbnail = v,
+            async (i, token) => await ThumbnailService.GetThumbnailAsync(i.FullPath, ThumbnailSize, token))   // video previews each start ffmpeg
         {
-            if (cancelPrevious || _thumbnailCts == null || _thumbnailCts.IsCancellationRequested)
-            {
-                _thumbnailCts?.Cancel();
-                _thumbnailCts = new CancellationTokenSource();
-            }
-            var token = _thumbnailCts.Token;
-            var candidates = items.Where(i => i.Thumbnail == null && ThumbnailService.SupportsThumbnail(i.FullPath)).ToList();
-            if (candidates.Count > 0) _ = LoadThumbnailsAsync(candidates, token);
-        }
-
-        private async Task LoadThumbnailsAsync(List<SimilarFileItem> items, CancellationToken token)
-        {
-            using var throttle = new SemaphoreSlim(4);   // video previews each start ffmpeg
-            var tasks = items.Select(async item =>
-            {
-                try
-                {
-                    await throttle.WaitAsync(token);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-                try
-                {
-                    if (token.IsCancellationRequested || item.Thumbnail != null) return;
-                    var thumbnail = await ThumbnailService.GetThumbnailAsync(item.FullPath, ThumbnailSize, token);
-                    if (thumbnail != null && !token.IsCancellationRequested)
-                        await Dispatcher.InvokeAsync(() => item.Thumbnail = thumbnail);
-                }
-                catch (OperationCanceledException)
-                {
-                }
-                finally
-                {
-                    throttle.Release();
-                }
-            });
-            await Task.WhenAll(tasks);
-        }
+            Supports = i => ThumbnailService.SupportsThumbnail(i.FullPath),
+            Pinned = i => _reviewGroup != null && _reviewGroup.Items.Contains(i),
+        };
 
         // =================================================================
         //  Move / delete

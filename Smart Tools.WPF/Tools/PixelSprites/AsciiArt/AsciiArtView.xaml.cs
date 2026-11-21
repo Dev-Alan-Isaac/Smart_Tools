@@ -81,6 +81,7 @@ namespace Smart_Tools.WPF.Views
         {
             _closed = true;
             _debounce.Stop();
+            _thumbs.Dispose();
             _cts?.Cancel();
             EndTextStroke();
             SaveSettings();

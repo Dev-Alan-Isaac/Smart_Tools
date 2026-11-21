@@ -28,13 +28,13 @@ namespace Smart_Tools.WPF.Views
     {
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
-        private const int ThumbnailLimit = 300;   // thumbnails for the first pictures only: 10,000 of them would be slow and heavy
         private static string DialogTitle => Loc.T("Str_Tool_bulk-image-resizer_Name", "Bulk Image Resizer");
 
         private readonly BulkImageResizerManager _resizer = new();
         private readonly ObservableCollection<BulkImageItem> _items = new();
         private readonly HashSet<string> _known = new(StringComparer.OrdinalIgnoreCase);
-        private CancellationTokenSource? _runCts, _thumbCts;
+        private CancellationTokenSource? _runCts;
+        private readonly ThumbnailWindow<BulkImageItem> _thumbs;
         private BulkResizeSettings _settings = new();
         private bool _viewConstructed, _loadedOnce, _applying, _busy, _optionsCollapsed;
 
@@ -42,6 +42,8 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             GridItems.ItemsSource = _items;
+            _thumbs = new(GridItems, () => _items, i => i.Thumbnail, (i, v) => i.Thumbnail = v,
+                async (i, token) => await ThumbnailService.GetThumbnailAsync(i.Path, 80, token));
             InputCard.ItemsSource = _items;
             InputCard.FileFilterProvider = () => T("Str_BulkResize_FilterPictures", "Pictures") + "|*.jpg;*.jpeg;*.jpe;*.png;*.bmp;*.gif;*.webp;*.tif;*.tiff;*.heic;*.heif;*.avif;*.svg|" + T("Str_BulkResize_FilterAll", "All files") + "|*.*";
             _items.CollectionChanged += (_, _) => UpdateEmptyAndCount();
@@ -52,7 +54,7 @@ namespace Smart_Tools.WPF.Views
         public void CancelActiveRun()
         {
             _runCts?.Cancel();
-            _thumbCts?.Cancel();
+            _thumbs.Dispose();
         }
 
         private static string T(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
@@ -212,7 +214,7 @@ namespace Smart_Tools.WPF.Views
         private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
             if (_busy) return;
-            _thumbCts?.Cancel();
+            _thumbs.Reset();
             _items.Clear();
             _known.Clear();
             ShowIdle();
@@ -256,27 +258,7 @@ namespace Smart_Tools.WPF.Views
                 ? T("Str_BulkResize_NoneAdded", "No new pictures were added.")
                 : string.Format(T("Str_BulkResize_Added", "Added {0} pictures."), fresh.Count);
             TxtProgressDetail.Text = skippedDuplicates > 0 ? string.Format(T("Str_BulkResize_Duplicates", "{0} were already in the list."), skippedDuplicates) : "";
-            _ = LoadThumbnailsAsync(fresh);
-        }
-
-        private async Task LoadThumbnailsAsync(List<BulkImageItem> items)
-        {
-            _thumbCts?.Cancel();
-            _thumbCts = new CancellationTokenSource();
-            var token = _thumbCts.Token;
-            try
-            {
-                foreach (var item in items.Take(ThumbnailLimit))
-                {
-                    token.ThrowIfCancellationRequested();
-                    var thumb = await ThumbnailService.GetThumbnailAsync(item.Path, 80, token);
-                    if (thumb != null) item.Thumbnail = thumb;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // A newer batch of pictures took over, or the app is closing.
-            }
+            _thumbs.Refresh();
         }
 
         private void UpdateEmptyAndCount()

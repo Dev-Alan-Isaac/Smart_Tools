@@ -25,13 +25,13 @@ namespace Smart_Tools.WPF.Views
     {
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
-        private const int ThumbnailLimit = 300;
         private static string DialogTitle => Loc.T("Str_Tool_image-metadata-cleaner_Name", "Image Metadata Cleaner");
 
         private readonly MetadataCleanerManager _cleaner = new();
         private readonly ObservableCollection<MetaItem> _items = new();
         private readonly HashSet<string> _known = new(StringComparer.OrdinalIgnoreCase);
-        private CancellationTokenSource? _runCts, _thumbCts;
+        private CancellationTokenSource? _runCts;
+        private readonly ThumbnailWindow<MetaItem> _thumbs;
         private MetaCleanSettings _settings = new();
         private bool _viewConstructed, _loadedOnce, _applying, _busy, _optionsCollapsed;
 
@@ -39,6 +39,8 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             GridItems.ItemsSource = _items;
+            _thumbs = new(GridItems, () => _items, i => i.Thumbnail, (i, v) => i.Thumbnail = v,
+                async (i, token) => await ThumbnailService.GetThumbnailAsync(i.Path, 80, token));
             InputCard.ItemsSource = _items;
             InputCard.FileFilterProvider = () => T("Str_MetaClean_FilterPictures", "Pictures") + "|*.jpg;*.jpeg;*.jpe;*.png;*.webp;*.tif;*.tiff|" + T("Str_MetaClean_FilterAll", "All files") + "|*.*";
             _items.CollectionChanged += (_, _) => UpdateEmptyAndCount();
@@ -49,7 +51,7 @@ namespace Smart_Tools.WPF.Views
         public void CancelActiveRun()
         {
             _runCts?.Cancel();
-            _thumbCts?.Cancel();
+            _thumbs.Dispose();
         }
 
         private static string T(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
@@ -139,7 +141,7 @@ namespace Smart_Tools.WPF.Views
         private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
             if (_busy) return;
-            _thumbCts?.Cancel();
+            _thumbs.Reset();
             _items.Clear();
             _known.Clear();
             ShowIdle();
@@ -185,27 +187,7 @@ namespace Smart_Tools.WPF.Views
                 : string.Format(T("Str_MetaClean_Added", "Added {0} pictures."), fresh.Count);
             TxtProgressDetail.Text = skippedDuplicates > 0 ? string.Format(T("Str_MetaClean_Duplicates", "{0} were already in the list."), skippedDuplicates) : "";
             UpdateFoundPills();
-            _ = LoadThumbnailsAsync(fresh);
-        }
-
-        private async Task LoadThumbnailsAsync(List<MetaItem> items)
-        {
-            _thumbCts?.Cancel();
-            _thumbCts = new CancellationTokenSource();
-            var token = _thumbCts.Token;
-            try
-            {
-                foreach (var item in items.Take(ThumbnailLimit))
-                {
-                    token.ThrowIfCancellationRequested();
-                    var thumb = await ThumbnailService.GetThumbnailAsync(item.Path, 80, token);
-                    if (thumb != null) item.Thumbnail = thumb;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // A newer batch of pictures took over, or the app is closing.
-            }
+            _thumbs.Refresh();
         }
 
         private void UpdateEmptyAndCount()
