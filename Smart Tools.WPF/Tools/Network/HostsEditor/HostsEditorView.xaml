@@ -2,6 +2,7 @@
     x:Class="Smart_Tools.WPF.Views.HostsEditorView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
     xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -27,132 +28,191 @@
         <!--  No page header: MainWindow's header card shows the tool's icon and name.  -->
 
         <Grid Margin="16,8,16,16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <!--  Not an administrator: the file can be read but not saved  -->
-            <Border
-                x:Name="AdminBanner"
-                Margin="0,0,0,12"
-                Padding="14,12"
-                Background="{DynamicResource StatusWarningBg}"
-                CornerRadius="12"
-                Visibility="Collapsed">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <materialDesign:PackIcon
-                        Width="22"
-                        Height="22"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource StatusWarningFg}"
-                        Kind="ShieldAlertOutline" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource StatusWarningFg}"
-                            Text="{DynamicResource Str_Hosts_AdminTitle}" />
-                        <TextBlock
-                            Margin="0,2,0,0"
-                            FontSize="12"
-                            Foreground="{DynamicResource StatusWarningFg}"
-                            Text="{DynamicResource Str_Hosts_AdminText}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                    <Button
-                        Grid.Column="2"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        Click="BtnRestartAdmin_Click"
-                        Style="{StaticResource PrimaryButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon
-                                Width="16"
-                                Height="16"
-                                VerticalAlignment="Center"
-                                Kind="ShieldCheckOutline" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource Str_Hosts_RestartAdmin}" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-            </Border>
-
-            <!--  Search and actions  -->
-            <Border
-                ctl:Tour.Key="Str_Tour_Hosts_Search"
-                ctl:Tour.Order="1"
-                Grid.Row="1"
-                Margin="0,0,0,12"
-                Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Style="{StaticResource InputBarStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon
-                                Width="16"
-                                Height="16"
-                                Margin="10,0,0,0"
-                                VerticalAlignment="Center"
-                                Foreground="{DynamicResource TextSecondary}"
-                                Kind="Magnify" />
+            <!--  ================= OPTIONS SIDEBAR: find, add an entry =================  -->
+            <controls:ToolSidebar>
+                <StackPanel>
+                    <Border Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_Hosts_Search" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_Hosts_FindHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.Magnify}" />
                             <TextBox
                                 x:Name="TxtSearch"
-                                Grid.Column="1"
-                                Margin="6,0,6,0"
-                                VerticalAlignment="Center"
                                 Tag="{DynamicResource Str_Hosts_SearchPlaceholder}"
-                                Style="{StaticResource BareTextBox}"
                                 TextChanged="TxtSearch_TextChanged" />
-                        </Grid>
+                            <Border
+                                x:Name="PillCount"
+                                Margin="0,10,0,0"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource RowBg}"
+                                Style="{StaticResource IconStatusPillStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="13"
+                                        Height="13"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding Foreground, ElementName=TxtCount}"
+                                        Kind="FormatListBulleted" />
+                                    <TextBlock
+                                        x:Name="TxtCount"
+                                        VerticalAlignment="Center"
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextSecondary}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </Border>
 
-                    <StackPanel
-                        Grid.Column="1"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal">
-                        <Border
-                            x:Name="PillCount"
-                            Margin="0,0,10,0"
-                            Background="{DynamicResource RowBg}"
-                            Style="{StaticResource IconStatusPillStyle}">
+                    <!--  New entry: address, names, comment, one under the other  -->
+                    <Border Margin="0,0,0,4" ctl:Tour.Key="Str_Tour_Hosts_Add" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl
+                                Content="{DynamicResource Str_Hosts_NewEntryHeader}"
+                                Style="{StaticResource SidebarGroupHeader}"
+                                Tag="{x:Static materialDesign:PackIconKind.PlaylistPlus}" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Hosts_ColAddress}" />
+                            <TextBox
+                                x:Name="TxtAddAddress"
+                                KeyDown="AddBox_KeyDown"
+                                Tag="{DynamicResource Str_Hosts_AddressHint}"
+                                Text="127.0.0.1" />
+                            <TextBlock Margin="0,10,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Hosts_ColNames}" />
+                            <TextBox
+                                x:Name="TxtAddNames"
+                                KeyDown="AddBox_KeyDown"
+                                Tag="{DynamicResource Str_Hosts_NamesHint}" />
+                            <TextBlock Margin="0,10,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Hosts_ColComment}" />
+                            <TextBox
+                                x:Name="TxtAddComment"
+                                KeyDown="AddBox_KeyDown"
+                                Tag="{DynamicResource Str_Hosts_CommentHint}" />
+                            <Button
+                                Margin="0,14,0,0"
+                                MinHeight="36"
+                                Click="BtnAdd_Click"
+                                Style="{StaticResource PrimaryButtonStyle}">
+                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        VerticalAlignment="Center"
+                                        Kind="Plus" />
+                                    <TextBlock
+                                        Margin="6,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{DynamicResource Str_Hosts_Add}" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock
+                                x:Name="TxtStatus"
+                                Margin="2,8,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource SidebarTextMuted}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Not an administrator: the file can be read but not saved  -->
+                <Border
+                    x:Name="AdminBanner"
+                    Margin="0,0,0,12"
+                    Padding="14,12"
+                    Background="{DynamicResource StatusWarningBg}"
+                    CornerRadius="12"
+                    Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="22"
+                            Height="22"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource StatusWarningFg}"
+                            Kind="ShieldAlertOutline" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource StatusWarningFg}"
+                                Text="{DynamicResource Str_Hosts_AdminTitle}" />
+                            <TextBlock
+                                Margin="0,2,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource StatusWarningFg}"
+                                Text="{DynamicResource Str_Hosts_AdminText}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button
+                            Grid.Column="2"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="BtnRestartAdmin_Click"
+                            Style="{StaticResource PrimaryButtonStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon
-                                    Width="13"
-                                    Height="13"
-                                    Margin="0,0,5,0"
+                                    Width="16"
+                                    Height="16"
                                     VerticalAlignment="Center"
-                                    Foreground="{Binding Foreground, ElementName=TxtCount}"
-                                    Kind="FormatListBulleted" />
+                                    Kind="ShieldCheckOutline" />
                                 <TextBlock
-                                    x:Name="TxtCount" VerticalAlignment="Center"
-                                    FontSize="11"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextSecondary}" />
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Hosts_RestartAdmin}" />
                             </StackPanel>
-                        </Border>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!--  Action bar: save is the main action; reload, backups and DNS flush beside it  -->
+                <Border Grid.Row="1" Margin="0,0,0,12" Padding="14,10" Style="{StaticResource CardStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button
+                            ctl:Tour.Key="Str_Tour_Hosts_Save"
+                            ctl:Tour.Order="4"
+                            x:Name="BtnSave"
+                            MinWidth="150"
+                            MinHeight="36"
+                            Click="BtnSave_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource AccentPrimaryButtonStyle}">
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    VerticalAlignment="Center"
+                                    Kind="ContentSaveOutline" />
+                                <TextBlock
+                                    Margin="6,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Text="{DynamicResource Str_Hosts_Save}" />
+                            </StackPanel>
+                        </Button>
                         <Button
                             x:Name="BtnReload"
-                            Margin="0,0,4,0"
+                            Margin="12,0,4,0"
                             Click="BtnReload_Click"
                             Style="{StaticResource ListToolButtonStyle}"
                             ToolTip="{DynamicResource Str_Hosts_Reload}">
@@ -174,7 +234,6 @@
                         </Button>
                         <Button
                             x:Name="BtnFlush"
-                            Margin="0,0,10,0"
                             Click="BtnFlush_Click"
                             Style="{StaticResource ListToolButtonStyle}"
                             ToolTip="{DynamicResource Str_Hosts_FlushDns}">
@@ -183,218 +242,116 @@
                                 Height="16"
                                 Kind="Broom" />
                         </Button>
-                        <Button
-                            ctl:Tour.Key="Str_Tour_Hosts_Save"
-                            ctl:Tour.Order="4"
-                            x:Name="BtnSave"
-                            Click="BtnSave_Click"
-                            IsEnabled="False"
-                            Style="{StaticResource AccentPrimaryButtonStyle}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    Width="16"
-                                    Height="16"
-                                    VerticalAlignment="Center"
-                                    Kind="ContentSaveOutline" />
-                                <TextBlock
-                                    Margin="6,0,0,0"
-                                    VerticalAlignment="Center"
-                                    Text="{DynamicResource Str_Hosts_Save}" />
-                            </StackPanel>
-                        </Button>
                     </StackPanel>
-                </Grid>
-            </Border>
+                </Border>
 
-            <!--  New entry: address, names, comment  -->
-            <Border
-                ctl:Tour.Key="Str_Tour_Hosts_Add"
-                ctl:Tour.Order="2"
-                Grid.Row="2"
-                Margin="0,0,0,12"
-                Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Border Style="{StaticResource InputBarStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBox
-                                x:Name="TxtAddAddress"
-                                Margin="10,0,6,0"
-                                VerticalAlignment="Center"
-                                Tag="{DynamicResource Str_Hosts_AddressHint}"
-                                KeyDown="AddBox_KeyDown"
-                                Style="{StaticResource BareTextBox}"
-                                Text="127.0.0.1" />
-                            <Border Grid.Column="1" Style="{StaticResource InputBarDivider}" />
-                            <TextBox
-                                x:Name="TxtAddNames"
-                                Grid.Column="2"
-                                Margin="6,0,6,0"
-                                VerticalAlignment="Center"
-                                Tag="{DynamicResource Str_Hosts_NamesHint}"
-                                KeyDown="AddBox_KeyDown"
-                                Style="{StaticResource BareTextBox}" />
-                            <Border Grid.Column="3" Style="{StaticResource InputBarDivider}" />
-                            <TextBox
-                                x:Name="TxtAddComment"
-                                Grid.Column="4"
-                                Margin="6,0,6,0"
-                                VerticalAlignment="Center"
-                                Tag="{DynamicResource Str_Hosts_CommentHint}"
-                                KeyDown="AddBox_KeyDown"
-                                Style="{StaticResource BareTextBox}" />
-                        </Grid>
-                    </Border>
-                    <Button
-                        Grid.Column="1"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Center"
-                        Click="BtnAdd_Click"
-                        Style="{StaticResource PrimaryButtonStyle}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon
-                                Width="16"
-                                Height="16"
-                                VerticalAlignment="Center"
-                                Kind="Plus" />
-                            <TextBlock
-                                Margin="6,0,0,0"
-                                VerticalAlignment="Center"
-                                Text="{DynamicResource Str_Hosts_Add}" />
-                        </StackPanel>
-                    </Button>
-                    <TextBlock
-                        x:Name="TxtStatus"
-                        Grid.Row="1"
-                        Grid.ColumnSpan="2"
-                        Margin="2,8,0,0"
-                        FontSize="12"
-                        Foreground="{DynamicResource TextSecondary}"
-                        TextWrapping="Wrap"
-                        Visibility="Collapsed" />
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                </Grid>
-            </Border>
-
-            <!--  Entries  -->
-            <Border ctl:Tour.Key="Str_Tour_Hosts_Entries" ctl:Tour.Order="3" Grid.Row="3" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <DataGrid
-                        x:Name="GridHosts"
-                        AutoGenerateColumns="False"
-                        CanUserAddRows="False"
-                        CanUserSortColumns="False"
-                        FontSize="12"
-                        MinRowHeight="40"
-                        SelectionMode="Single"
-                        VerticalScrollBarVisibility="Auto">
-                        <DataGrid.Columns>
-
-                            <DataGridTemplateColumn Width="36" Header="">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate DataType="{x:Type models:HostsRow}">
-                                        <materialDesign:PackIcon
-                                            Width="16"
-                                            Height="16"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            Foreground="{DynamicResource StatusErrorFg}"
-                                            Kind="AlertCircleOutline"
-                                            ToolTip="{Binding ProblemText}"
-                                            Visibility="{Binding HasProblem, Converter={StaticResource BoolToVisibility}}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTemplateColumn Width="64" Header="{DynamicResource Str_Hosts_ColOn}">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate DataType="{x:Type models:HostsRow}">
-                                        <CheckBox
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
-                                            ToolTip="{DynamicResource Str_Hosts_ToggleTip}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <DataGridTextColumn
-                                Width="170"
-                                Binding="{Binding Address, UpdateSourceTrigger=LostFocus}"
-                                ElementStyle="{StaticResource EllipsisCellTextStyle}"
-                                Header="{DynamicResource Str_Hosts_ColAddress}" />
-
-                            <DataGridTextColumn
-                                Width="2*"
-                                MinWidth="90"
-                                Binding="{Binding Names, UpdateSourceTrigger=LostFocus}"
-                                ElementStyle="{StaticResource EllipsisCellTextStyle}"
-                                Header="{DynamicResource Str_Hosts_ColNames}" />
-
-                            <DataGridTextColumn
-                                Width="*"
-                                MinWidth="60"
-                                Binding="{Binding Comment, UpdateSourceTrigger=LostFocus}"
-                                ElementStyle="{StaticResource EllipsisCellTextStyle}"
-                                Header="{DynamicResource Str_Hosts_ColComment}" />
-
-                            <DataGridTemplateColumn Width="64" Header="">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate DataType="{x:Type models:HostsRow}">
-                                        <Button
-                                            HorizontalAlignment="Center"
-                                            Click="BtnDeleteRow_Click"
-                                            Style="{StaticResource ListToolDangerButtonStyle}"
-                                            ToolTip="{DynamicResource Str_Hosts_Delete}">
+                <!--  Entries  -->
+                <Border ctl:Tour.Key="Str_Tour_Hosts_Entries" ctl:Tour.Order="3" Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <DataGrid
+                            x:Name="GridHosts"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserSortColumns="False"
+                            FontSize="12"
+                            MinRowHeight="40"
+                            SelectionMode="Single"
+                            VerticalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+    
+                                <DataGridTemplateColumn Width="36" Header="">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:HostsRow}">
                                             <materialDesign:PackIcon
                                                 Width="16"
                                                 Height="16"
-                                                Kind="DeleteOutline" />
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <StackPanel
-                        x:Name="PanelEmpty"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        IsHitTestVisible="False"
-                        Visibility="Collapsed">
-                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FileDocumentEditOutline}" />
-                        <TextBlock
-                            x:Name="TxtEmptyTitle"
-                            Margin="0,12,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource StatusErrorFg}"
+                                                Kind="AlertCircleOutline"
+                                                ToolTip="{Binding ProblemText}"
+                                                Visibility="{Binding HasProblem, Converter={StaticResource BoolToVisibility}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+    
+                                <DataGridTemplateColumn Width="64" Header="{DynamicResource Str_Hosts_ColOn}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:HostsRow}">
+                                            <CheckBox
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                                ToolTip="{DynamicResource Str_Hosts_ToggleTip}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+    
+                                <DataGridTextColumn
+                                    Width="170"
+                                    Binding="{Binding Address, UpdateSourceTrigger=LostFocus}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Hosts_ColAddress}" />
+    
+                                <DataGridTextColumn
+                                    Width="2*"
+                                    MinWidth="90"
+                                    Binding="{Binding Names, UpdateSourceTrigger=LostFocus}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Hosts_ColNames}" />
+    
+                                <DataGridTextColumn
+                                    Width="*"
+                                    MinWidth="60"
+                                    Binding="{Binding Comment, UpdateSourceTrigger=LostFocus}"
+                                    ElementStyle="{StaticResource EllipsisCellTextStyle}"
+                                    Header="{DynamicResource Str_Hosts_ColComment}" />
+    
+                                <DataGridTemplateColumn Width="64" Header="">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type models:HostsRow}">
+                                            <Button
+                                                HorizontalAlignment="Center"
+                                                Click="BtnDeleteRow_Click"
+                                                Style="{StaticResource ListToolDangerButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Hosts_Delete}">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Kind="DeleteOutline" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+    
+                        <StackPanel
+                            x:Name="PanelEmpty"
                             HorizontalAlignment="Center"
-                            FontSize="15"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <TextBlock
-                            x:Name="TxtEmptyHint"
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextSecondary}"
-                            TextAlignment="Center"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </Border>
+                            VerticalAlignment="Center"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed">
+                            <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.FileDocumentEditOutline}" />
+                            <TextBlock
+                                x:Name="TxtEmptyTitle"
+                                Margin="0,12,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimary}" />
+                            <TextBlock
+                                x:Name="TxtEmptyHint"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

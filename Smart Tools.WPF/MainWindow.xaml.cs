@@ -787,12 +787,32 @@ namespace Smart_Tools.WPF
         {
             string request = System.IO.Path.Combine(AppContext.BaseDirectory, "shot.request");
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+            string? pending = null;
+            int wait = 0;
             timer.Tick += (_, _) =>
             {
-                if (!System.IO.File.Exists(request) || Content is not FrameworkElement root || root.ActualWidth < 10) return;
-                string target;
-                try { target = System.IO.File.ReadAllText(request).Trim(); System.IO.File.Delete(request); }
-                catch (System.IO.IOException) { return; }
+                if (Content is not FrameworkElement root || root.ActualWidth < 10) return;
+                if (pending == null)
+                {
+                    if (!System.IO.File.Exists(request)) return;
+                    string text;
+                    try { text = System.IO.File.ReadAllText(request).Trim(); System.IO.File.Delete(request); }
+                    catch (System.IO.IOException) { return; }
+                    // "tool-id|path.png" opens that tool first (the catalog id, e.g. hosts-editor); "path.png" just renders.
+                    int bar = text.IndexOf('|');
+                    wait = 0;
+                    if (bar >= 0)
+                    {
+                        string toolId = text[..bar].Trim();
+                        text = text[(bar + 1)..].Trim();
+                        if (toolId.Length > 0) { Open(toolId); wait = 4; }   // let the page load and lay out
+                    }
+                    pending = text;
+                    return;
+                }
+                if (wait-- > 0) return;
+                string target = pending;
+                pending = null;
                 try
                 {
                     var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)root.ActualWidth, (int)root.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
