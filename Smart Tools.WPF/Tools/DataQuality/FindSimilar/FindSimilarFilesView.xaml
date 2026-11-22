@@ -256,7 +256,17 @@
                             VerticalAlignment="Center"
                             FontSize="11.5"
                             Foreground="{DynamicResource TextSecondary}"
-                            Text="{Binding Name.Subtitle}" />
+                            Text="{Binding Name.FilesText}" />
+                        <Border
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentColorSubtle}"
+                            Style="{StaticResource StatusPillStyle}">
+                            <TextBlock FontSize="11.5" Foreground="{DynamicResource AccentColor}">
+                                <Run FontWeight="Bold" Text="{Binding Name.PercentText, Mode=OneWay}" />
+                                <Run Text="alike" />
+                            </TextBlock>
+                        </Border>
                     </StackPanel>
                     <Border
                         x:Name="SelectionPill"
@@ -789,41 +799,44 @@
                                 ctl:Tour.Order="3"
                                 Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_FindSimilar_ThresholdHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ScaleBalance}" />
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" MinWidth="54" />
                                         </Grid.ColumnDefinitions>
-                                        <ContentControl
-                                            Content="{DynamicResource Str_FindSimilar_ThresholdHeader}"
-                                            Style="{StaticResource SidebarGroupHeader}"
-                                            Tag="{x:Static materialDesign:PackIconKind.ScaleBalance}" />
+                                        <Slider
+                                            x:Name="SliderThreshold"
+                                            VerticalAlignment="Center"
+                                            IsSnapToTickEnabled="True"
+                                            LargeChange="5"
+                                            Maximum="100"
+                                            Minimum="50"
+                                            SmallChange="1"
+                                            TickFrequency="1"
+                                            ToolTip="{DynamicResource Str_FindSimilar_ThresholdTooltip}"
+                                            ValueChanged="SliderThreshold_ValueChanged"
+                                            Value="85" />
                                         <Border
                                             x:Name="ThresholdBadge"
                                             Grid.Column="1"
-                                            Margin="0,0,0,10"
+                                            Margin="10,0,0,0"
+                                            HorizontalAlignment="Right"
                                             VerticalAlignment="Center"
                                             Background="{DynamicResource AccentColorSubtle}"
                                             Style="{StaticResource IconStatusPillStyle}">
                                             <TextBlock
                                                 x:Name="TxtThresholdValue"
+                                                HorizontalAlignment="Center"
                                                 FontSize="12"
                                                 FontWeight="Bold"
                                                 Foreground="{DynamicResource AccentColor}"
                                                 Text="85%" />
                                         </Border>
                                     </Grid>
-                                    <Slider
-                                        x:Name="SliderThreshold"
-                                        IsSnapToTickEnabled="True"
-                                        LargeChange="5"
-                                        Maximum="100"
-                                        Minimum="50"
-                                        SmallChange="1"
-                                        TickFrequency="1"
-                                        ToolTip="{DynamicResource Str_FindSimilar_ThresholdTooltip}"
-                                        ValueChanged="SliderThreshold_ValueChanged"
-                                        Value="85" />
                                     <Grid Margin="0,2,0,0">
                                         <TextBlock
                                             FontSize="10"
