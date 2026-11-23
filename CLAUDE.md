@@ -45,6 +45,7 @@ in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the 
 - Language files are UTF-8 with BOM; check for mojibake (`Ã¡`) after bulk edits. Keep `en.xaml` and `es.xaml` key sets identical (script check).
 
 ## Working preferences (Alan)
+- **Never delete or remove the Memorial view (`Shared/Views/MemorialView`) and keep it as it is** (Alan's one personal condition for the project; he changes it himself). The app is free and open source; credits to the NuGet packages and Smart Tools must be kept (see `PUBLIC_RELEASE_TODO.md`, item PROJLIC).
 - Subagents that only search/read (Explore) run on `model: haiku`. Treat their reports as claims: verify in the code before fixing.
 - Keep answers short and say plainly what was and wasn't verified. Commits end with the Co-Authored-By line; commit only when asked.
 - Alan wants both: bring tools to the style guide automatically, and *propose* extra UX improvements for approval before applying them.
