@@ -9,8 +9,7 @@ namespace Smart_Tools.WPF.Controls
 {
     /// <summary>
     /// A waveform in a rounded frame with the theme's colours and an empty-state line: the look of the Audio Trimmer's waveform, ready to drop
-    /// into any view (Voice Studio's recorder and voice changer). Fixed data goes in with <see cref="Show"/>; a recording that is still growing
-    /// goes in with <see cref="ShowLive"/>, which keeps the newest seconds in view.
+    /// into any view (Voice Studio's recorder and voice changer). A finished sound goes in with <see cref="Show"/>.
     /// </summary>
     public sealed class WaveFrame : Border
     {
@@ -69,13 +68,15 @@ namespace Smart_Tools.WPF.Controls
         {
             double seconds = count / (double)Smart_Tools.WPF.Models.AudioTrimmerPeaks.PerSecond;
             _empty.Visibility = count > 0 ? Visibility.Collapsed : Visibility.Visible;
-            Wave.AutoScale = false;       // true levels while recording, not a picture stretched to the loudest part so far
+            Wave.AutoScale = false;       // true levels while recording (with a gain), not a picture stretched to the loudest part so far
+            Wave.Gain = 4;
             Wave.Playhead = double.NaN;
             if (!ReferenceEquals(Wave.Peaks, peaks)) Wave.Peaks = peaks;
             Wave.ClipStart = 0;
             Wave.ClipEnd = seconds;
             Wave.Duration = Math.Max(seconds, window);      // the empty part to the right is the time still to come (dimmed by ClipEnd)
             Wave.SetView(Math.Max(0, seconds - window), window);
+            Wave.RefreshPeaks();          // the buffer was filled in place: without this the first (empty) drawing is kept
         }
 
         public void SetPlayhead(double seconds) => Wave.Playhead = seconds;

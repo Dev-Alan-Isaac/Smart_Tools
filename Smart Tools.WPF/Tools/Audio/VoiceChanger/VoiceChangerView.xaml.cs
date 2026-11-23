@@ -72,6 +72,7 @@ namespace Smart_Tools.WPF.Views
             _manager.LiveStopped += error => Dispatcher.BeginInvoke(() => LiveEnded(error));
             _manager.PlaybackEnded += _ => { UpdateTakesUi(); ClearPlayheads(); };
             _playTimer.Tick += PlayTimer_Tick;
+            BuildTakeMenu();
             WaveOriginal.Wave.SeekRequested += (_, t) => PlayFromWave(original: true, t);
             WaveChanged.Wave.SeekRequested += (_, t) => PlayFromWave(original: false, t);
             WaveOriginal.EmptyText = Loc.T("Str_VoiceHub_WaveOriginalEmpty", "Pick a result below to see the original sound here. Click the wave to play from that spot.");
@@ -800,6 +801,43 @@ namespace Smart_Tools.WPF.Views
         {
             WaveOriginal.SetPlayhead(double.NaN);
             WaveChanged.SetPlayhead(double.NaN);
+        }
+
+        // =================================================================
+        //  Right click: delete the file
+        // =================================================================
+
+        private VoiceChangerTake? _menuTake;   // the row under the mouse when the menu was asked for
+
+        private void BuildTakeMenu()
+        {
+            var delete = new System.Windows.Controls.MenuItem { Header = Loc.T("Str_VoiceHub_DeleteFile", "Delete file"), Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.DeleteOutline, Width = 16, Height = 16 } };
+            delete.Click += (_, _) => { if (_menuTake is { } take) DeleteTakeFile(take); };
+            var menu = new System.Windows.Controls.ContextMenu();
+            menu.Items.Add(delete);
+            ListBoxTakes.ContextMenu = menu;
+            ListBoxTakes.PreviewMouseRightButtonDown += (_, e) =>
+            {
+                var row = ItemsControl.ContainerFromElement(ListBoxTakes, (DependencyObject)e.OriginalSource) as ListBoxItem;
+                _menuTake = row?.DataContext as VoiceChangerTake;
+                if (row != null) row.IsSelected = true;
+            };
+            ListBoxTakes.ContextMenuOpening += (_, e) => { if (_menuTake == null) e.Handled = true; };   // nothing under the mouse: no menu
+        }
+
+        /// <summary>Asks first, then moves the file to the Recycle Bin and takes the row off the list.</summary>
+        private void DeleteTakeFile(VoiceChangerTake take)
+        {
+            string question = Loc.F("Str_VoiceHub_DeleteFileConfirm", "Move \"{0}\" to the Recycle Bin? The file is removed from the disk.", take.DisplayName);
+            if (AppModal.Show(Window.GetWindow(this)!, question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                return;
+            _manager.Release(take);
+            if (!TakeFiles.Delete(take.FilePath, out string? error))
+            {
+                ShowStatus(Loc.F("Str_VoiceHub_DeleteFileFailed", "Couldn't delete {0}: {1}", take.DisplayName, error ?? ""), error: true);
+                return;
+            }
+            _takes.Remove(take);
         }
 
         private void TogglePlay(VoiceChangerTake take)

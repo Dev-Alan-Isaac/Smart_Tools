@@ -63,6 +63,7 @@ namespace Smart_Tools.WPF.Views
             _manager.PlaybackEnded += _ => { UpdateTakesUi(); WaveView.SetPlayhead(double.NaN); };
             _timer.Tick += Timer_Tick;
             _playTimer.Tick += PlayTimer_Tick;
+            BuildTakeMenu();
             WaveView.Wave.SeekRequested += Wave_SeekRequested;
             WaveView.EmptyText = Loc.T("Str_VoiceHub_WaveRecorderEmpty", "The waveform appears here while you record, then shows the recording you pick below. Click it to play from that spot.");
             OutputCard.DefaultFolder = MicRecorderManager.DefaultFolder;
@@ -472,6 +473,7 @@ namespace Smart_Tools.WPF.Views
         private void ShowTakeWave(MicRecorderTake? take)
         {
             _waveTake = take;
+            WaveView.EmptyText = Loc.T("Str_VoiceHub_WaveRecorderEmpty", "The waveform appears here while you record, then shows the recording you pick below. Click it to play from that spot.");
             WaveView.Show(take?.Peaks, take?.Duration.TotalSeconds ?? 0);
         }
 
@@ -502,6 +504,43 @@ namespace Smart_Tools.WPF.Views
             double t = _manager.PlaybackSeconds;
             if (double.IsNaN(t)) { _playTimer.Stop(); WaveView.SetPlayhead(double.NaN); return; }
             WaveView.SetPlayhead(t);
+        }
+
+        // =================================================================
+        //  Right click: delete the file
+        // =================================================================
+
+        private MicRecorderTake? _menuTake;   // the row under the mouse when the menu was asked for
+
+        private void BuildTakeMenu()
+        {
+            var delete = new System.Windows.Controls.MenuItem { Header = Loc.T("Str_VoiceHub_DeleteFile", "Delete file"), Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.DeleteOutline, Width = 16, Height = 16 } };
+            delete.Click += (_, _) => { if (_menuTake is { } take) DeleteTakeFile(take); };
+            var menu = new System.Windows.Controls.ContextMenu();
+            menu.Items.Add(delete);
+            ListBoxTakes.ContextMenu = menu;
+            ListBoxTakes.PreviewMouseRightButtonDown += (_, e) =>
+            {
+                var row = ItemsControl.ContainerFromElement(ListBoxTakes, (DependencyObject)e.OriginalSource) as ListBoxItem;
+                _menuTake = row?.DataContext as MicRecorderTake;
+                if (row != null) row.IsSelected = true;
+            };
+            ListBoxTakes.ContextMenuOpening += (_, e) => { if (_menuTake == null) e.Handled = true; };   // nothing under the mouse: no menu
+        }
+
+        /// <summary>Asks first, then moves the file to the Recycle Bin and takes the row off the list.</summary>
+        private void DeleteTakeFile(MicRecorderTake take)
+        {
+            string question = Loc.F("Str_VoiceHub_DeleteFileConfirm", "Move \"{0}\" to the Recycle Bin? The file is removed from the disk.", take.DisplayName);
+            if (AppModal.Show(Window.GetWindow(this)!, question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                return;
+            _manager.Release(take);
+            if (!TakeFiles.Delete(take.FilePath, out string? error))
+            {
+                ShowStatus(Loc.F("Str_VoiceHub_DeleteFileFailed", "Couldn't delete {0}: {1}", take.DisplayName, error ?? ""), error: true);
+                return;
+            }
+            _takes.Remove(take);
         }
 
         private static MicRecorderTake? TakeOf(object sender) => (sender as Button)?.Tag as MicRecorderTake;

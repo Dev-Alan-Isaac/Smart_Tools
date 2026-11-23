@@ -55,6 +55,7 @@ namespace Smart_Tools.WPF.Controls
         public static readonly DependencyProperty SelectionEndProperty = Reg(nameof(SelectionEnd), double.NaN);
         public static readonly DependencyProperty PlayheadProperty = Reg(nameof(Playhead), double.NaN);
         public static readonly DependencyProperty AutoScaleProperty = Reg(nameof(AutoScale), true, changed: ShapeChanged);
+        public static readonly DependencyProperty GainProperty = Reg(nameof(Gain), 1.0, changed: ShapeChanged);
         public static readonly DependencyProperty WaveBrushProperty = Reg<Brush?>(nameof(WaveBrush), null);
         public static readonly DependencyProperty BackBrushProperty = Reg<Brush?>(nameof(BackBrush), null);
         public static readonly DependencyProperty SelectionBrushProperty = Reg<Brush?>(nameof(SelectionBrush), null);
@@ -76,6 +77,16 @@ namespace Smart_Tools.WPF.Controls
 
         /// <summary>Draw quiet files taller (the loudest point reaches nearly the full height).</summary>
         public bool AutoScale { get => (bool)GetValue(AutoScaleProperty); set => SetValue(AutoScaleProperty, value); }
+
+        /// <summary>The height multiplier used when <see cref="AutoScale"/> is off (a live recording shows quiet speech better with a gain above 1).</summary>
+        public double Gain { get => (double)GetValue(GainProperty); set => SetValue(GainProperty, value); }
+
+        /// <summary>Call after the contents of <see cref="Peaks"/> changed without the array being replaced (a recording that is still growing): the drawn shape is rebuilt.</summary>
+        public void RefreshPeaks()
+        {
+            _shape = null;
+            InvalidateVisual();
+        }
 
         public Brush? WaveBrush { get => (Brush?)GetValue(WaveBrushProperty); set => SetValue(WaveBrushProperty, value); }
         public Brush? BackBrush { get => (Brush?)GetValue(BackBrushProperty); set => SetValue(BackBrushProperty, value); }
@@ -380,7 +391,7 @@ namespace Smart_Tools.WPF.Controls
         {
             int columns = (int)Math.Ceiling(w);
             double mid = plot / 2, half = mid - 2;
-            double scale = AutoScale ? Math.Min(12, 255.0 / _peakMax * 0.92) : 1.0;
+            double scale = AutoScale ? Math.Min(12, 255.0 / _peakMax * 0.92) : Math.Max(0.1, Gain);
             double perSecond = AudioTrimmerPeaks.PerSecond;
             var amps = new double[columns];
 

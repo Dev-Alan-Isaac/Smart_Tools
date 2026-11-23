@@ -28,7 +28,7 @@ namespace Smart_Tools.WPF.Controllers
         private long _dataBytes;
         private volatile bool _paused;
 
-        // Live waveform: the loudest sample of every 1/250 s (0-255), grown while recording; read by the view through LivePeaks.
+        // Waveform of the take: the loudest sample of every 1/250 s (0-255), grown while recording and handed to the finished take.
         private byte[] _livePeaks = new byte[AudioTrimmerPeaks.PerSecond * 120];
         private int _livePeakCount;
         private double _sliceFrames, _framesPerSlice = 1;
