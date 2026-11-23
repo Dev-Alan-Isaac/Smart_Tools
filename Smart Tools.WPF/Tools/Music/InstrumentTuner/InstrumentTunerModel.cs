@@ -53,8 +53,8 @@ namespace Smart_Tools.WPF.Models
         public string Name(InstrumentTunerNotation notation) => notation == InstrumentTunerNotation.Solfege ? Solfege : Letter;
     }
 
-    /// <summary>One analysis of the latest audio: a frequency (null when no clear note) and how loud it was (0..1 RMS).</summary>
-    public readonly record struct InstrumentTunerReading(double? FrequencyHz, double Level);
+    /// <summary>One analysis of the latest audio: a frequency (null when no clear note), how loud it was (0..1 RMS after filtering) and the level the tuner needed to listen (the gate).</summary>
+    public readonly record struct InstrumentTunerReading(double? FrequencyHz, double Level, double Gate = 0);
 
     /// <summary>Remembered between sessions (instrument_tuner.json in %AppData%\Smart Tools). No paths; enums by name.</summary>
     public sealed class InstrumentTunerSettings
