@@ -98,8 +98,8 @@
                         <Border
                             x:Name="Bd"
                             Padding="10,6,14,6"
-                            Background="{DynamicResource CardBg}"
-                            BorderBrush="{DynamicResource CardBorder}"
+                            Background="{DynamicResource CardBgGradient}"
+                            BorderBrush="{DynamicResource CardBorderGradient}"
                             BorderThickness="1"
                             CornerRadius="16">
                             <ContentPresenter VerticalAlignment="Center" />
@@ -242,8 +242,8 @@
             <Border
                 Margin="0,0,10,10"
                 Padding="4"
-                Background="{DynamicResource CardBg}"
-                BorderBrush="{DynamicResource CardBorder}"
+                Background="{DynamicResource CardBgGradient}"
+                BorderBrush="{DynamicResource CardBorderGradient}"
                 BorderThickness="1"
                 CornerRadius="12">
                 <Button
@@ -394,8 +394,8 @@
                 x:Name="FavoritesPanel"
                 Margin="0,0,0,10"
                 Padding="14,10,14,4"
-                Background="{DynamicResource CardBg}"
-                BorderBrush="{DynamicResource CardBorder}"
+                Background="{DynamicResource CardBgGradient}"
+                BorderBrush="{DynamicResource CardBorderGradient}"
                 BorderThickness="1"
                 CornerRadius="16">
                 <StackPanel>
@@ -438,8 +438,8 @@
                 x:Name="RecentPanel"
                 Margin="0,0,0,10"
                 Padding="14,10,14,4"
-                Background="{DynamicResource CardBg}"
-                BorderBrush="{DynamicResource CardBorder}"
+                Background="{DynamicResource CardBgGradient}"
+                BorderBrush="{DynamicResource CardBorderGradient}"
                 BorderThickness="1"
                 CornerRadius="16"
                 Visibility="Collapsed">

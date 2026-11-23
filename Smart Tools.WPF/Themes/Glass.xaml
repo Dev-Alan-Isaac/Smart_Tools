@@ -217,4 +217,53 @@
         <GradientStop Offset="1" Color="#08FFFFFF" />
     </LinearGradientBrush>
 
+    <!--
+        ============ MODERN LOOK (soft gradients) ============
+        Cards: faint vertical gradient + lit top edge. Primary actions: AccentFillGradient (white text stays >= 4.5:1).
+        Calm zones (inputs, rows, charts, popups) stay solid. Same keys in Light, Dark and Glass.
+    -->
+    <LinearGradientBrush x:Key="CardBgGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#4AFFFFFF" />
+        <GradientStop Offset="1" Color="#36FFFFFF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="CardBorderGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#4DFFFFFF" />
+        <GradientStop Offset="1" Color="#26FFFFFF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ContentBgGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#00000000" />
+        <GradientStop Offset="1" Color="#00000000" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SidebarCardGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#323B4F" />
+        <GradientStop Offset="1" Color="#2A3345" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="HeaderGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#4AFFFFFF" />
+        <GradientStop Offset="1" Color="#36FFFFFF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentFillGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#4F7AD6" />
+        <GradientStop Offset="1" Color="#3A5FBF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentFillGradientHover" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#6089E0" />
+        <GradientStop Offset="1" Color="#4A70CF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentFillGradientPressed" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#3F68C4" />
+        <GradientStop Offset="1" Color="#2F52AB" />
+    </LinearGradientBrush>
+
+
+    <!--  Fill of the datagrid header bar: a step stronger than the card, tinted toward the accent  -->
+    <SolidColorBrush x:Key="HeaderBarBg" Color="#66FFFFFF" />
+
+    <!--  DataGrid surface: the first 36 px (the header row, including the cell above the scroll bar) in HeaderBarBg, the rest as CardBg. Hard stop, absolute units.  -->
+    <LinearGradientBrush x:Key="DataGridBackdrop" MappingMode="Absolute" StartPoint="0,0" EndPoint="0,36">
+        <GradientStop Offset="0" Color="#66FFFFFF" />
+        <GradientStop Offset="0.999" Color="#66FFFFFF" />
+        <GradientStop Offset="1" Color="#40FFFFFF" />
+    </LinearGradientBrush>
+
 </ResourceDictionary>

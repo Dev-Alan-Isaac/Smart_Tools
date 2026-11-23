@@ -31,8 +31,8 @@
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
                         <Border
                             x:Name="Bd"
-                            Background="{DynamicResource CardBg}"
-                            BorderBrush="{DynamicResource CardBorder}"
+                            Background="{DynamicResource CardBgGradient}"
+                            BorderBrush="{DynamicResource CardBorderGradient}"
                             BorderThickness="1"
                             CornerRadius="17">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -829,8 +829,8 @@
                 Padding="14,8,8,8"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
-                Background="{DynamicResource CardBg}"
-                BorderBrush="{DynamicResource CardBorder}"
+                Background="{DynamicResource CardBgGradient}"
+                BorderBrush="{DynamicResource CardBorderGradient}"
                 BorderThickness="1"
                 CornerRadius="12"
                 Effect="{DynamicResource CardElevation}"

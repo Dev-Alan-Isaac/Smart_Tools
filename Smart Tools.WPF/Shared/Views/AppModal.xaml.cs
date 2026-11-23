@@ -208,6 +208,6 @@ namespace Smart_Tools.WPF.Views
             _ => null,
         };
 
-        private static string Text(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
+        internal static string Text(string key, string fallback) => Application.Current?.TryFindResource(key) as string ?? fallback;
     }
 }

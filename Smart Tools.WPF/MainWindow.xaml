@@ -781,7 +781,7 @@
             </Border>
 
             <!--  ================= CONTENT AREA =================  -->
-            <Border Grid.Column="1" Background="{DynamicResource ContentBg}">
+            <Border Grid.Column="1" Background="{DynamicResource ContentBgGradient}">
 
                 <Grid>
                     <Grid.RowDefinitions>
@@ -810,8 +810,8 @@
                         Grid.Row="0"
                         Margin="16,4,16,8"
                         Padding="14,10,18,10"
-                        Background="{DynamicResource CardBg}"
-                        BorderBrush="{DynamicResource CardBorder}"
+                        Background="{DynamicResource HeaderGradient}"
+                        BorderBrush="{DynamicResource CardBorderGradient}"
                         BorderThickness="1"
                         CornerRadius="12">
                         <Grid>

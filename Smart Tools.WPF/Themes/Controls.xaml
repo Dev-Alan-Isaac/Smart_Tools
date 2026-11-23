@@ -18,7 +18,7 @@
     -->
     <CornerRadius x:Key="RadiusSm">6</CornerRadius>
     <CornerRadius x:Key="RadiusMd">8</CornerRadius>
-    <CornerRadius x:Key="RadiusLg">12</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">14</CornerRadius>
     <FontFamily x:Key="AppFont">Segoe UI Variable Text, Segoe UI</FontFamily>
 
     <!--
@@ -172,8 +172,8 @@
         site, same as any other opt-in Style in this file.
     -->
     <Style x:Key="CardStyle" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource CardBg}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+        <Setter Property="Background" Value="{DynamicResource CardBgGradient}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderGradient}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
         <Setter Property="Padding" Value="18" />
@@ -488,7 +488,7 @@
         BasedOn="{StaticResource BaseButtonStyle}"
         TargetType="Button">
         <!--  AccentFill (not AccentColor): keeps white label >= 4.5:1 in Dark  -->
-        <Setter Property="Background" Value="{DynamicResource AccentFill}" />
+        <Setter Property="Background" Value="{DynamicResource AccentFillGradient}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="MinHeight" Value="36" />
@@ -1345,7 +1345,7 @@
                         </Trigger>
                         <!--  AccentFill + white: SidebarText on AccentColor was only 3.0:1 in Dark  -->
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillGradient}" />
                             <Setter Property="Foreground" Value="White" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -1474,7 +1474,7 @@
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillGradient}" />
                             <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
                             <Setter TargetName="ChoiceGlyph" Property="Visibility" Value="Collapsed" />
                             <Setter Property="Foreground" Value="White" />
@@ -1559,7 +1559,7 @@
                             </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillGradient}" />
                             <Setter Property="Foreground" Value="White" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -1962,10 +1962,13 @@
     <!--  ================= DATA GRID =================  -->
 
     <Style TargetType="DataGrid">
-        <Setter Property="Background" Value="{DynamicResource CardBg}" />
+        <!--  The grid has no border to round, so it is clipped to a rounded rectangle (same as CoinTrace)  -->
+        <Setter Property="presetchips:RoundCorners.Radius" Value="12" />
+        <Setter Property="Background" Value="{DynamicResource DataGridBackdrop}" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+        <!--  Border thickness 0: the outline is drawn by RoundCorners as a rounded adorner (a square border is cut at the corners by the clip)  -->
         <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="RowBackground" Value="Transparent" />
         <Setter Property="AlternatingRowBackground" Value="Transparent" />
         <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource CardBorder}" />
@@ -2056,6 +2059,23 @@
         </Setter>
     </Style>
 
+    <!--  The header row as one square bar; the DataGrid itself is clipped to a rounded rectangle (RoundCorners), so the header gets round top corners and stays joined to the rows.  -->
+    <Style TargetType="DataGridColumnHeadersPresenter">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeadersPresenter">
+                    <Border
+                        Background="{DynamicResource HeaderBarBg}">
+                        <Grid>
+                            <DataGridColumnHeader x:Name="PART_FillerColumnHeader" IsHitTestVisible="False" />
+                            <ItemsPresenter />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!--
         Also restores the SORT ARROW - the old template dropped it, so
         clicking a header sorted the grid with no visible indication of
@@ -2069,8 +2089,8 @@
         <Setter Property="FontSize" Value="11.5" />
         <Setter Property="Padding" Value="12,8" />
         <Setter Property="MinHeight" Value="36" />
-        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
-        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Template">
             <Setter.Value>
@@ -2078,7 +2098,9 @@
                     <Grid>
                         <Border
                             x:Name="HeaderBd"
+                            Margin="2"
                             Padding="{TemplateBinding Padding}"
+                            CornerRadius="8"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
@@ -3994,7 +4016,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="White" />
-        <Setter Property="Background" Value="{DynamicResource AccentFill}" />
+        <Setter Property="Background" Value="{DynamicResource AccentFillGradient}" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="MinHeight" Value="42" />
         <Setter Property="FontSize" Value="13.5" />
@@ -4299,7 +4321,7 @@
     <!--  AccentFill + white keeps 4.6-4.75:1 in both themes  -->
     <Style x:Key="SliderValuePill" TargetType="Border">
         <Setter Property="Padding" Value="8,2" />
-        <Setter Property="Background" Value="{DynamicResource AccentFill}" />
+        <Setter Property="Background" Value="{DynamicResource AccentFillGradient}" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
@@ -4465,7 +4487,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFill}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillGradient}" />
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentFill}" />
                             <Setter TargetName="Cp" Property="TextElement.Foreground" Value="White" />
                         </Trigger>
