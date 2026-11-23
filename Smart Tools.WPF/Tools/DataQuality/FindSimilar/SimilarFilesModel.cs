@@ -242,6 +242,8 @@ namespace Smart_Tools.WPF.Models
 
         public string Title => $"Group {Id}";
         public string Subtitle => $"{ItemCount} files · {SimilarityPercent}% alike";
+        public string FilesText => $"{ItemCount} files";
+        public string PercentText => $"{SimilarityPercent}%";
         public string SelectionText => SelectedCount == 0
             ? "nothing selected"
             : $"{SelectedCount} selected · {SimilarText.FormatBytes(SelectedReclaimableBytes)}";
@@ -277,7 +279,7 @@ namespace Smart_Tools.WPF.Models
         public void Refresh()
         {
             foreach (string name in new[] { nameof(SelectedReclaimableBytes), nameof(SelectedCount), nameof(AllSelected), nameof(SelectionText),
-                                             nameof(ItemCount), nameof(Subtitle), nameof(PotentialBytes), nameof(Title) })
+                                             nameof(ItemCount), nameof(Subtitle), nameof(FilesText), nameof(PercentText), nameof(PotentialBytes), nameof(Title) })
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }

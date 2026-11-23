@@ -18,12 +18,14 @@ namespace Smart_Tools.WPF.Controllers
 
         public const string ThemeLight = "Light";
         public const string ThemeDark = "Dark";
+        public const string ThemeGlass = "Glass";
         public const string ThemeSystem = "Match System";
 
         /// <summary>Known theme names; anything else (an old or hand-edited file) falls back to Light.</summary>
         public static string NormalizeTheme(string? theme) => theme?.Trim() switch
         {
             var t when string.Equals(t, ThemeDark, StringComparison.OrdinalIgnoreCase) => ThemeDark,
+            var t when string.Equals(t, ThemeGlass, StringComparison.OrdinalIgnoreCase) => ThemeGlass,
             var t when string.Equals(t, ThemeSystem, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(t, "System", StringComparison.OrdinalIgnoreCase) => ThemeSystem,
             _ => ThemeLight,

@@ -45,6 +45,7 @@ namespace Smart_Tools.WPF.Views
         private readonly DispatcherTimer _saveTimer;
         private readonly DispatcherTimer _doneTimer;
         private readonly SemaphoreSlim _metaGate = new(3);
+        private readonly ThumbnailWindow<SpriteItem> _thumbs;
         private readonly bool _viewConstructed;
 
         private SpriteMode _mode = SpriteMode.Pack;
@@ -83,6 +84,8 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             SpriteList.ItemsSource = _items;
+            _thumbs = new(SpriteList, () => _items, i => i.Thumbnail, (i, v) => i.Thumbnail = v,
+                (i, token) => Task.Run(() => (object?)SpritePackerManager.LoadThumbnail(i.FullPath, 64), token));
             InputCard.ItemsSource = _groups;
             InputCard.FileFilterProvider = () => Str("Str_SpritePacker_FilterImages", "Pictures") + "|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff;*.ico;*.webp|" + Str("Str_SpritePacker_FilterAll", "All files") + "|*.*";
             _items.CollectionChanged += (_, _) => UpdateListState();
@@ -319,6 +322,7 @@ namespace Smart_Tools.WPF.Views
             else HideStatus();
 
             LoadMeta(added);
+            _thumbs.Refresh();
             SchedulePack();
         }
 
@@ -333,7 +337,6 @@ namespace Smart_Tools.WPF.Views
                     try
                     {
                         bool ok = SpritePackerManager.TryReadSize(item.FullPath, out int w, out int h);
-                        var thumb = ok ? SpritePackerManager.LoadThumbnail(item.FullPath, 64) : null;
                         Dispatcher.BeginInvoke(() =>
                         {
                             if (!_items.Contains(item)) return;
@@ -341,7 +344,6 @@ namespace Smart_Tools.WPF.Views
                             {
                                 item.Width = w;
                                 item.Height = h;
-                                item.Thumbnail = thumb;
                             }
                             else
                             {
@@ -368,6 +370,7 @@ namespace Smart_Tools.WPF.Views
         private void InputCard_ClearRequested(object? sender, EventArgs e)
         {
             _items.Clear();
+            _thumbs.Reset();
             _groups.Clear();
             ClearPack();
         }
@@ -390,6 +393,7 @@ namespace Smart_Tools.WPF.Views
                 added.AddRange(SpritePackerManager.ApplyRescan(_items, _groups, group, scan.Files, include).Added);
             }
             LoadMeta(added);
+            _thumbs.Refresh();
             SchedulePack();
             ScheduleSave();
         }
@@ -1115,6 +1119,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Called when the window closes: stops a running save (finished files stay) and keeps the setup.</summary>
         public void CancelActiveRun()
         {
+            _thumbs.Dispose();
             _packRun++;
             _packTimer.Stop();
             _sliceTimer.Stop();

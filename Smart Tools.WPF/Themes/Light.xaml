@@ -88,6 +88,9 @@
         options rail feel like a designed surface rather than a filler
         block of color.
     -->
+    <!--  Fill of the empty shadow-caster layer under the floating sidebar (opaque here, faint in Glass so it does not stack with the sidebar)  -->
+    <SolidColorBrush x:Key="GlassHostBase" Color="#1E2A3B" />
+
     <LinearGradientBrush x:Key="SidebarBg" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Offset="0" Color="#2B3A4F" />
         <GradientStop Offset="1" Color="#1E2A3B" />
@@ -227,6 +230,9 @@
     <SolidColorBrush x:Key="DangerFill" Color="#DC2626" />
 
     <!--  Scrollbar thumb - CardBorder was only 1.25:1 and nearly invisible  -->
+    <!--  Opaque surface for dropdown lists, menus and tooltips: they float over page text, so they must not be see-through  -->
+    <SolidColorBrush x:Key="PopupBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PopupBorder" Color="#CBD3E2" />
     <SolidColorBrush x:Key="ScrollThumb" Color="#B4BCC9" />
     <SolidColorBrush x:Key="ScrollThumbHover" Color="#8C97A8" />
 

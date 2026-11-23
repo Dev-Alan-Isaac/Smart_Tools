@@ -23,7 +23,7 @@ namespace Smart_Tools.WPF.Views
 
         private readonly ObservableCollection<PixelSource> _sources = new();
         private readonly ObservableCollection<AsciiItem> _items = new();
-        private readonly SemaphoreSlim _thumbGate = new(3);
+        private ThumbnailWindow<AsciiItem> _thumbs = null!;
         private int _syncRun;
         private AsciiItem? _current;
         private bool _restoring;
@@ -36,6 +36,8 @@ namespace Smart_Tools.WPF.Views
             InputCard.ItemsSource = _sources;
             InputCard.FileFilterProvider = () => Loc.F("Str_AsciiArt_FilterPictures", "Pictures|{0}|All files|*.*", ImageToPixelManager.PictureFilter);
             PictureList.ItemsSource = _items;
+            _thumbs = new(PictureList, () => _items, i => i.Thumbnail, (i, v) => i.Thumbnail = (System.Windows.Media.Imaging.BitmapSource?)v,
+                (i, token) => Task.Run(() => (object?)SpritePackerManager.LoadThumbnail(i.FullPath, 76), token));
             _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
             _items.CollectionChanged += (_, _) => UpdateListState();
             StageScroll.PreviewMouseWheel += StageScroll_PreviewMouseWheel;
@@ -56,6 +58,7 @@ namespace Smart_Tools.WPF.Views
             _syncRun++;
             _sources.Clear();
             _items.Clear();
+            _thumbs.Reset();
             _current = null;
         }
 
@@ -130,28 +133,8 @@ namespace Smart_Tools.WPF.Views
             else if (_sources.Count > 0 && files.Count == 0) ShowStatus(Loc.T("Str_AsciiArt_MsgNoneFound", "No pictures were found there."), StatusKind.Info);
             else HideStatus();
 
-            LoadThumbnails(added);
+            _thumbs.Refresh();
             if (_items.Count > 0 && PictureList.SelectedItem == null) PictureList.SelectedIndex = 0;
-        }
-
-        private async void LoadThumbnails(IReadOnlyList<AsciiItem> items)
-        {
-            foreach (var item in items.Take(400))
-            {
-                await _thumbGate.WaitAsync();
-                _ = Task.Run(() =>
-                {
-                    try
-                    {
-                        var thumb = SpritePackerManager.LoadThumbnail(item.FullPath, 76);
-                        Dispatcher.InvokeAsync(() => item.Thumbnail = thumb);
-                    }
-                    finally
-                    {
-                        _thumbGate.Release();
-                    }
-                });
-            }
         }
 
         private void UpdateListState()

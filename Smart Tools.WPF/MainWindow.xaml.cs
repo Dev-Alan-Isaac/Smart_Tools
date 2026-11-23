@@ -95,6 +95,9 @@ namespace Smart_Tools.WPF
 
             System.Windows.Application.Current.SessionEnding += (_, _) => _sessionEnding = true;
 
+            SourceInitialized += (_, _) => GlassWindow.Apply(this, ThemeManager.Current == "Glass");
+            ThemeManager.ThemeChanged += ThemeManager_ThemeChanged;
+            GlassWindow.WatchNewWindows(() => ThemeManager.Current == "Glass");
             UpdateThemeToggleIcon();
             _shell = ToolCatalogManager.LoadSettings();
             RegisterTools();
@@ -719,7 +722,7 @@ namespace Smart_Tools.WPF
             {
                 new(Str("Str_Palette_Home", "Home - browse all tools"), "", PackIconKind.HomeOutline, () => { Open(ToolCatalogManager.HomeId); _homeView.FocusSearch(); }),
                 new(Str("Str_Palette_Settings", "Settings"), "", PackIconKind.CogOutline, () => Open(ToolCatalogManager.SettingsId)),
-                new(Str("Str_Palette_Theme", "Switch light / dark theme"), "", PackIconKind.ThemeLightDark, () => BtnThemeToggle_Click(this, new RoutedEventArgs())),
+                new(Str("Str_Palette_Theme", "Change theme (Light, Dark, Glass)"), "", PackIconKind.ThemeLightDark, () => BtnThemeToggle_Click(this, new RoutedEventArgs())),
                 new(Str("Str_Palette_Log", "Open the log folder"), "", PackIconKind.FolderOpenOutline, () => ShellOpen.OpenFolder(Log.Folder)),
             };
             _palette = new CommandPalette(
@@ -1019,10 +1022,9 @@ namespace Smart_Tools.WPF
 
         private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
         {
-            // A quick binary switch from what is showing now ("Match System" resolves to the Windows
-            // app mode, so the first click always visibly changes something). The full
-            // Light/Dark/Match System choice stays in Settings.
-            string newTheme = ThemeManager.Resolve(AppSettingsStore.Theme) == "Dark" ? "Light" : "Dark";
+            // Light -> Dark -> Glass -> Light, from what is showing now ("Match System" resolves to the Windows
+            // app mode, so the first click always visibly changes something). The full choice stays in Settings.
+            string newTheme = NextTheme(ThemeManager.Current);
 
             AppSettingsStore.Theme = newTheme;
             AppSettingsStore.Save();
@@ -1031,12 +1033,24 @@ namespace Smart_Tools.WPF
             UpdateThemeToggleIcon();
         }
 
-        // Shows what clicking will switch TO: a moon on Light, a sun on Dark.
+        private static string NextTheme(string current) => current == "Light" ? "Dark" : current == "Dark" ? "Glass" : "Light";
+
+        /// <summary>The theme on screen changed (button or Settings): switch the see-through window backdrop and the icon.</summary>
+        private void ThemeManager_ThemeChanged(object? sender, EventArgs e)
+        {
+            bool glass = ThemeManager.Current == "Glass";
+            GlassWindow.Apply(this, glass);
+            GlassWindow.FixSecondaryWindows(glass);
+            UpdateThemeToggleIcon();
+        }
+
+        // Shows what clicking will switch TO: a moon on Light, a blur symbol on Dark, a sun on Glass.
         private void UpdateThemeToggleIcon()
         {
-            IconThemeToggle.Kind = ThemeManager.Resolve(AppSettingsStore.Theme) == "Dark"
-                ? PackIconKind.WeatherSunny
-                : PackIconKind.WeatherNight;
+            string next = NextTheme(ThemeManager.Current);
+            IconThemeToggle.Kind = next == "Dark" ? PackIconKind.WeatherNight
+                                 : next == "Glass" ? PackIconKind.Blur
+                                 : PackIconKind.WeatherSunny;
         }
 
         // =================================================================

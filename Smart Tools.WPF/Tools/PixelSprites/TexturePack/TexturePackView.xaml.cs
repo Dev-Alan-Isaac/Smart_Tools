@@ -31,6 +31,7 @@ namespace Smart_Tools.WPF.Views
         private readonly DispatcherTimer _validateTimer;
         private readonly DispatcherTimer _doneTimer;
         private readonly SemaphoreSlim _metaGate = new(3);
+        private readonly ThumbnailWindow<PackTexture> _thumbs;
         private readonly bool _viewConstructed;
 
         private enum StatusKind { Error, Success, Warning }
@@ -49,6 +50,8 @@ namespace Smart_Tools.WPF.Views
         {
             InitializeComponent();
             TextureList.ItemsSource = _textures;
+            _thumbs = new(TextureList, () => _textures, i => i.Thumbnail, (i, v) => i.Thumbnail = (System.Windows.Media.Imaging.BitmapSource?)v,
+                (i, token) => Task.Run(() => (object?)SpritePackerManager.LoadThumbnail(i.FullPath, 80), token));
             InputCard.ItemsSource = _sources;
             InputCard.FileFilterProvider = () => Loc.T("Str_TexturePack_MsgPngFilter", "PNG pictures|*.png|All files|*.*");
             _sources.CollectionChanged += (_, _) => InputCard.SetEmpty(_sources.Count == 0);
@@ -275,6 +278,7 @@ namespace Smart_Tools.WPF.Views
             _syncRun++;
             _sources.Clear();
             _textures.Clear();
+            _thumbs.Reset();
             HideStatus();
             ScheduleValidate();
         }
@@ -331,6 +335,7 @@ namespace Smart_Tools.WPF.Views
 
             ScheduleValidate();
             LoadMeta(added);
+            _thumbs.Refresh();
         }
 
         /// <summary>Sizes and a small thumbnail, a few at a time, so adding a big folder never freezes the page.</summary>
@@ -344,12 +349,10 @@ namespace Smart_Tools.WPF.Views
                     try
                     {
                         bool ok = SpritePackerManager.TryReadSize(item.FullPath, out int w, out int h);
-                        var thumb = ok ? SpritePackerManager.LoadThumbnail(item.FullPath, 80) : null;
                         Dispatcher.InvokeAsync(() =>
                         {
                             if (!_textures.Contains(item)) return;
                             if (ok) { item.Width = w; item.Height = h; }
-                            item.Thumbnail = thumb;
                             ScheduleValidate();
                         });
                     }
@@ -548,6 +551,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Called when the window closes: stops a running save and keeps the setup.</summary>
         public void CancelActiveRun()
         {
+            _thumbs.Dispose();
             _syncRun++;
             _validateTimer.Stop();
             _doneTimer.Stop();
