@@ -392,6 +392,19 @@
                                     </Border.RenderTransform>
                                 </Border>
                             </Border>
+                            <!--  Where the tuner starts listening: the bar must pass this tick (it learns the room's noise)  -->
+                            <Grid Height="4" Margin="0,2,0,0" IsHitTestVisible="False">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition x:Name="GateBefore" Width="0*" />
+                                    <ColumnDefinition x:Name="GateAfter" Width="1*" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Grid.Column="1"
+                                    Width="2"
+                                    HorizontalAlignment="Left"
+                                    Background="{DynamicResource TextSecondary}"
+                                    CornerRadius="1" />
+                            </Grid>
                         </StackPanel>
                         <Border
                             x:Name="InTunePill"

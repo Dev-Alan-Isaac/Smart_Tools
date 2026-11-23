@@ -14,10 +14,6 @@ namespace Smart_Tools.WPF
         /// <summary>Started by Windows with "start with Windows": open straight into the tray.</summary>
         public static bool StartInTray { get; private set; }
 
-        /// <summary>Developer/test copy: runs beside the person's own copy (see OnStartup). Never used by people.</summary>
-        public const string TestInstanceArgument = "--test-instance";
-        public static bool TestInstance { get; private set; }
-
         private const string ActivateEventName = @"Local\SmartTools.Activate";
         private Mutex? _instanceMutex;
         private EventWaitHandle? _activateEvent;
@@ -58,17 +54,7 @@ namespace Smart_Tools.WPF
 
             // Only one copy may run (otherwise each puts its own icon in the tray): a second launch
             // asks the first to come forward and exits.
-            // A test instance (--test-instance) runs beside the person's own copy without touching it: no single-instance
-            // lock, no "come forward" signal to the other copy, and only with its own data (portable.txt beside the exe),
-            // so it can never read or change the real settings. It opens off-screen (see MainWindow).
-            TestInstance = e.Args.Contains(TestInstanceArgument, StringComparer.OrdinalIgnoreCase);
-            if (TestInstance && !AppPaths.IsPortable)
-            {
-                Log.Info("--test-instance needs portable.txt beside the exe (own data); refusing to run on the real data");
-                Shutdown();
-                return;
-            }
-            _instanceMutex = new Mutex(true, TestInstance ? $@"Local\SmartTools.Test.{Environment.ProcessId}" : @"Local\SmartTools.SingleInstance", out bool isFirst);
+            _instanceMutex = new Mutex(true, @"Local\SmartTools.SingleInstance", out bool isFirst);
             if (!isFirst)
             {
                 try
@@ -87,7 +73,7 @@ namespace Smart_Tools.WPF
                 return;
             }
             CheckPreviousSession();
-            if (!TestInstance) ListenForActivation();
+            ListenForActivation();
 
             // Tool and section names come from the language dictionaries (Str_Tool_*, Str_Cat_*); the model itself stays WPF-free.
             Smart_Tools.WPF.Models.CatalogText.Lookup = key => Current.TryFindResource(key) as string;
@@ -128,20 +114,20 @@ namespace Smart_Tools.WPF
 
             if (mode != AppRunMode.Installed)
             {
-                AppModal.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
+                System.Windows.MessageBox.Show(T("This copy of Smart Tools was not installed by the app, so there is nothing to uninstall here.",
                                                  "Esta copia de Smart Tools no fue instalada por la aplicación, así que no hay nada que desinstalar aquí."),
                     AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else if (AppInstaller.IsAnotherCopyRunning())
             {
-                AppModal.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
+                System.Windows.MessageBox.Show(T("Close Smart Tools first (check the tray icon), then uninstall again.",
                                                  "Cierra Smart Tools primero (revisa el ícono de la bandeja) y vuelve a desinstalar."),
                     AppMode.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            else if (AppModal.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
+            else if (System.Windows.MessageBox.Show(T("Uninstall Smart Tools from this PC?", "¿Desinstalar Smart Tools de este equipo?"),
                          AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                bool deleteData = AppModal.Show(
+                bool deleteData = System.Windows.MessageBox.Show(
                     T("Also delete your settings and downloaded models?\n\n" + AppMode.InstalledDataFolder + "\n\nChoose No to keep them in case you install again.",
                       "¿Borrar también tus ajustes y modelos descargados?\n\n" + AppMode.InstalledDataFolder + "\n\nElige No para conservarlos por si vuelves a instalar."),
                     AppMode.ProductName, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;

@@ -1,12 +1,11 @@
-using Smart_Tools.WPF.Views;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
+using Smart_Tools.WPF.Views;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;

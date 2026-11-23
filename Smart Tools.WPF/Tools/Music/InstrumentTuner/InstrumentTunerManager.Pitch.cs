@@ -134,12 +134,20 @@ namespace Smart_Tools.WPF.Controllers
             return buffer.Length == 0 ? 0 : Math.Sqrt(sum / buffer.Length);
         }
 
-        /// <summary>The quietest level (RMS) the tuner reacts to.</summary>
+        /// <summary>The quietest level (RMS) the tuner ever reacts to, however quiet the room is.</summary>
         public static double SilenceThreshold(InstrumentTunerSensitivity s) => s switch
         {
-            InstrumentTunerSensitivity.Low => 0.02,
-            InstrumentTunerSensitivity.High => 0.003,
-            _ => 0.008,
+            InstrumentTunerSensitivity.Low => 0.006,
+            InstrumentTunerSensitivity.High => 0.0008,
+            _ => 0.002,
+        };
+
+        /// <summary>How far above the measured background noise a sound must be to open the gate (a ratio of RMS).</summary>
+        public static double GateRatio(InstrumentTunerSensitivity s) => s switch
+        {
+            InstrumentTunerSensitivity.Low => 4.0,
+            InstrumentTunerSensitivity.High => 1.6,
+            _ => 2.5,
         };
 
         // =================================================================
@@ -238,20 +246,115 @@ namespace Smart_Tools.WPF.Controllers
     }
 
     /// <summary>
+    /// One second-order filter section (RBJ cookbook biquad, direct form I). Keeps its state between buffers.
+    /// </summary>
+    public sealed class InstrumentTunerBiquad
+    {
+        private readonly double _b0, _b1, _b2, _a1, _a2;
+        private double _x1, _x2, _y1, _y2;
+
+        private InstrumentTunerBiquad(double b0, double b1, double b2, double a0, double a1, double a2)
+        {
+            _b0 = b0 / a0; _b1 = b1 / a0; _b2 = b2 / a0; _a1 = a1 / a0; _a2 = a2 / a0;
+        }
+
+        public static InstrumentTunerBiquad HighPass(double hz, double sampleRate, double q = 0.7071)
+        {
+            var (cos, alpha) = Parts(hz, sampleRate, q);
+            return new((1 + cos) / 2, -(1 + cos), (1 + cos) / 2, 1 + alpha, -2 * cos, 1 - alpha);
+        }
+
+        public static InstrumentTunerBiquad LowPass(double hz, double sampleRate, double q = 0.7071)
+        {
+            var (cos, alpha) = Parts(hz, sampleRate, q);
+            return new((1 - cos) / 2, 1 - cos, (1 - cos) / 2, 1 + alpha, -2 * cos, 1 - alpha);
+        }
+
+        public static InstrumentTunerBiquad Notch(double hz, double sampleRate, double q)
+        {
+            var (cos, alpha) = Parts(hz, sampleRate, q);
+            return new(1, -2 * cos, 1, 1 + alpha, -2 * cos, 1 - alpha);
+        }
+
+        private static (double Cos, double Alpha) Parts(double hz, double sampleRate, double q)
+        {
+            double w0 = 2 * Math.PI * hz / sampleRate;
+            return (Math.Cos(w0), Math.Sin(w0) / (2 * q));
+        }
+
+        public double Process(double x)
+        {
+            double y = _b0 * x + _b1 * _x1 + _b2 * _x2 - _a1 * _y1 - _a2 * _y2;
+            _x2 = _x1; _x1 = x;
+            _y2 = _y1; _y1 = y;
+            return y;
+        }
+
+        public void Reset() => _x1 = _x2 = _y1 = _y2 = 0;
+    }
+
+    /// <summary>
+    /// What the tuner does to the microphone signal before it looks for a pitch: a high-pass at 25 Hz (rumble, DC offset),
+    /// narrow notches at the mains hum (50 and 60 Hz and their second harmonics - a guitar cable on a line input picks
+    /// this up) and a low-pass at 3 kHz (pick noise and hiss, no use for a note's pitch). The notches are only a few Hz wide,
+    /// so a note a semitone away is hardly touched.
+    /// </summary>
+    public sealed class InstrumentTunerFilter
+    {
+        private readonly InstrumentTunerBiquad[] _stages;
+
+        public InstrumentTunerFilter(int sampleRate = InstrumentTunerManager.SampleRate)
+        {
+            _stages = new[]
+            {
+                InstrumentTunerBiquad.HighPass(25, sampleRate),
+                InstrumentTunerBiquad.Notch(50, sampleRate, 30),
+                InstrumentTunerBiquad.Notch(60, sampleRate, 30),
+                InstrumentTunerBiquad.Notch(100, sampleRate, 30),
+                InstrumentTunerBiquad.Notch(120, sampleRate, 30),
+                InstrumentTunerBiquad.LowPass(3000, sampleRate),
+            };
+        }
+
+        public float Process(float sample)
+        {
+            double v = sample;
+            foreach (var stage in _stages) v = stage.Process(v);
+            return (float)v;
+        }
+
+        public void Reset()
+        {
+            foreach (var stage in _stages) stage.Reset();
+        }
+    }
+
+    /// <summary>
     /// Collects incoming samples in a rolling window and analyses it every
     /// <see cref="InstrumentTunerManager.HopSize"/> samples. The old engine
     /// shifted the whole 4096-sample window and re-ran YIN for every new
     /// sample - about 44,000 analyses a second, each raising an event that
     /// blocked on the UI thread.
+    ///
+    /// Samples go through <see cref="InstrumentTunerFilter"/> first. The loudness gate is adaptive: it learns the background
+    /// noise (falls fast when things get quieter, rises slowly, and never moves while a note is being heard), opens at
+    /// <see cref="InstrumentTunerManager.GateRatio"/> times that noise (never below <see cref="InstrumentTunerManager.SilenceThreshold"/>)
+    /// and stays open until the level drops under 60 % of that, so a plucked string is followed to the end of its decay.
     /// </summary>
     public sealed class InstrumentTunerAnalyzer
     {
+        private const double CloseRatio = 0.6;
+        private const double FloorRise = 0.02;   // per analysis (~48 ms): about a 2 s time constant
+
         private readonly float[] _ring;
         private readonly float[] _linear;
         private readonly int _hop;
+        private readonly InstrumentTunerFilter _filter = new();
         private int _write;
         private int _filled;
         private int _sinceLast;
+        private double? _floor;
+        private bool _open;
 
         public InstrumentTunerAnalyzer(int windowSize = InstrumentTunerManager.WindowSize, int hop = InstrumentTunerManager.HopSize)
         {
@@ -262,13 +365,16 @@ namespace Smart_Tools.WPF.Controllers
 
         public InstrumentTunerSensitivity Sensitivity { get; set; } = InstrumentTunerSensitivity.Normal;
 
+        /// <summary>The background level learned so far (RMS), or 0 before the first analysis.</summary>
+        public double NoiseFloor => _floor ?? 0;
+
         /// <summary>Adds samples; returns one reading per completed hop (usually 0 or 1 per audio buffer).</summary>
         public List<InstrumentTunerReading> Push(ReadOnlySpan<float> samples)
         {
             var readings = new List<InstrumentTunerReading>();
-            foreach (float s in samples)
+            foreach (float raw in samples)
             {
-                _ring[_write] = s;
+                _ring[_write] = _filter.Process(raw);
                 if (++_write == _ring.Length) _write = 0;
                 if (_filled < _ring.Length) _filled++;
                 if (++_sinceLast >= _hop && _filled == _ring.Length)
@@ -291,7 +397,10 @@ namespace Smart_Tools.WPF.Controllers
         public void Reset()
         {
             Array.Clear(_ring);
+            _filter.Reset();
             _write = _filled = _sinceLast = 0;
+            _floor = null;
+            _open = false;
         }
 
         private InstrumentTunerReading Analyze()
@@ -300,8 +409,19 @@ namespace Smart_Tools.WPF.Controllers
             Array.Copy(_ring, _write, _linear, 0, n - _write);   // oldest first
             Array.Copy(_ring, 0, _linear, n - _write, _write);
             double rms = InstrumentTunerManager.Rms(_linear);
-            if (rms < InstrumentTunerManager.SilenceThreshold(Sensitivity)) return new InstrumentTunerReading(null, rms);
-            return new InstrumentTunerReading(InstrumentTunerManager.DetectPitch(_linear), rms);
+
+            // The first window is taken as the room's noise (the user presses Start, then plays).
+            double floor = _floor ??= rms;
+            double gate = Math.Max(InstrumentTunerManager.SilenceThreshold(Sensitivity), floor * InstrumentTunerManager.GateRatio(Sensitivity));
+            _open = rms >= (_open ? gate * CloseRatio : gate);
+
+            if (!_open)
+            {
+                // Quiet: learn the noise. Quieter -> follow at once; louder -> creep up (a new fan, a busier street).
+                _floor = rms < floor ? rms : floor + (rms - floor) * FloorRise;
+                return new InstrumentTunerReading(null, rms, gate);
+            }
+            return new InstrumentTunerReading(InstrumentTunerManager.DetectPitch(_linear), rms, gate);
         }
     }
 

@@ -16,6 +16,7 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MessageBox = System.Windows.MessageBox;
 using Orientation = System.Windows.Controls.Orientation;
 using Panel = System.Windows.Controls.Panel;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -88,19 +89,7 @@ namespace Smart_Tools.WPF
             ApplySavedAppearance();
 
             InitializeComponent();
-            if (App.TestInstance)
-            {
-                // Test copy: far off-screen, no focus, no taskbar button, so it never covers or steals anything from the person's own copy.
-                WindowStartupLocation = WindowStartupLocation.Manual;
-                WindowState = WindowState.Normal;
-                Left = -32000;
-                Top = -32000;
-                Width = 1936;
-                Height = 1048;
-                ShowActivated = false;
-                ShowInTaskbar = false;
-                StartTestSnapshotWatcher();
-            }
+            AppModal.Host = ModalHost;
             Window_StateChanged(null, EventArgs.Empty);   // the window starts maximized
 
             SetUpShortcuts();
@@ -129,8 +118,7 @@ namespace Smart_Tools.WPF
             Activated += (_, _) => MemoryTrim.Cancel();
             Deactivated += (_, _) => MemoryTrim.Schedule();
             Loaded += (_, _) => RestoreStartupWidgets();
-            ContentRendered += (_, _) => ShowWhatsNewIfUpdated();
-        }
+            ContentRendered += (_, _) => ShowWhatsNewIfUpdated();        }
 
         /// <summary>
         /// After an update, shows the patch notes once. A fresh install (no recent tools, never seen a version) only
@@ -641,7 +629,6 @@ namespace Smart_Tools.WPF
         // In-app shortcuts (Ctrl+K and each tool's own keys) come from ShortcutManager, so Settings can change them.
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (ModalLayer.IsOpen(this)) return;   // a dialog is open: the page's shortcuts must not run behind it
             if (ShortcutManager.TryHandle(e, _currentId)) e.Handled = true;
             else if (TryDefaultToolKey(e)) e.Handled = true;
         }
@@ -778,86 +765,6 @@ namespace Smart_Tools.WPF
 
         /// <summary>A second launch of the app asked this instance to come forward.</summary>
         public void ShowFromOutside() => BringToFront();
-
-        /// <summary>
-        /// Test copy only (--test-instance): an off-screen window is not drawn by Windows, so screenshots are made from inside.
-        /// A file "shot.request" beside the exe holding a target .png path makes the window render itself to that file.
-        /// </summary>
-        /// <summary>Test copy only: the element with this x:Name anywhere under <paramref name="parent"/> (visual tree), or null.</summary>
-        private static FrameworkElement? FindByName(DependencyObject parent, string name)
-        {
-            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
-            for (int i = 0; i < count; i++)
-            {
-                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-                if (child is FrameworkElement element && element.Name == name) return element;
-                if (FindByName(child, name) is { } found) return found;
-            }
-            return null;
-        }
-
-        private void StartTestSnapshotWatcher()
-        {
-            string request = System.IO.Path.Combine(AppContext.BaseDirectory, "shot.request");
-            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
-            string? pending = null;
-            string[]? clicks = null;
-            int wait = 0;
-            timer.Tick += (_, _) =>
-            {
-                if (Content is not FrameworkElement root || root.ActualWidth < 10) return;
-                if (pending == null)
-                {
-                    if (!System.IO.File.Exists(request)) return;
-                    string text;
-                    try { text = System.IO.File.ReadAllText(request).Trim(); System.IO.File.Delete(request); }
-                    catch (System.IO.IOException) { return; }
-                    // "tool-id|path.png" opens that tool first (the catalog id, e.g. hosts-editor); "path.png" just renders.
-                    // "tool-id|click=NameA,NameB|path.png" also clicks those named buttons / radios (x:Name) after the page has loaded.
-                    var parts = text.Split('|');
-                    wait = 0;
-                    clicks = null;
-                    if (parts.Length > 1)
-                    {
-                        string toolId = parts[0].Trim();
-                        if (parts.Length > 2 && parts[1].Trim().StartsWith("click=", StringComparison.OrdinalIgnoreCase))
-                            clicks = parts[1].Trim()[6..].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        if (toolId.Length > 0) { Open(toolId); wait = 4; }   // let the page load and lay out
-                    }
-                    pending = parts[^1].Trim();
-                    return;
-                }
-                if (wait-- > 0) return;
-                if (clicks != null)
-                {
-                    foreach (string name in clicks)
-                        if (FindByName(root, name) is System.Windows.Controls.Primitives.ButtonBase button)
-                        {
-                            if (button is System.Windows.Controls.Primitives.ToggleButton toggle && toggle.IsChecked != true && button is System.Windows.Controls.RadioButton) toggle.IsChecked = true;
-                            button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, button));
-                        }
-                    clicks = null;
-                    wait = 3;   // let the page react before it is drawn
-                    return;
-                }
-                string target = pending;
-                pending = null;
-                try
-                {
-                    var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)root.ActualWidth, (int)root.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
-                    bitmap.Render(root);
-                    var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
-                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
-                    using var file = System.IO.File.Create(target);
-                    encoder.Save(file);
-                }
-                catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or ArgumentException)
-                {
-                    Log.Info($"Test snapshot failed: {ex.Message}");
-                }
-            };
-            timer.Start();
-        }
 
         private System.Windows.Threading.DispatcherTimer? _trayTipTimer;
 
@@ -1201,7 +1108,7 @@ namespace Smart_Tools.WPF
             // Closing because the elevated copy is taking over: already confirmed, don't ask again.
             if (!AppRestartManager.IsRestarting && !_sessionEnding)
             {
-                var result = AppModal.Show(
+                var result = System.Windows.MessageBox.Show(
                     this,
                     Str("Str_Shell_ConfirmExitText", "Are you sure you want to close Smart Tools?"),
                     Str("Str_Shell_ConfirmExitTitle", "Confirm exit"),

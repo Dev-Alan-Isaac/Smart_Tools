@@ -11,6 +11,8 @@ Goal: make the app safe and credible for non-technical users and for developers 
 
 ```mermaid
 flowchart LR
+  PROJLIC --> SIGN
+  CI_BUILD --> SIGN
   SIGN --> AV
   SIGN --> UPDATE
   SIGN --> PORTABLE
@@ -33,10 +35,11 @@ flowchart LR
 ```
 
 ## Ready now (nothing blocks these)
-SIGN, LIC, PRIV, PROJLIC, ADMIN, DESTR, VAULT, RUNALL, SIZE, CRASH, CORE, MEM, SINGLE, UIPASS, GUIDE, ARM, DATE, ORPHAN, VDPROJ, ES_README
+PROJLIC, CI_BUILD, LIC, PRIV, ADMIN, DESTR, VAULT, RUNALL, SIZE, CRASH, CORE, MEM, SINGLE, UIPASS, GUIDE, ARM, DATE, ORPHAN, VDPROJ, ES_README
 
 ## 1. Trust and first impression
-- [ ] **SIGN** Code signing. No signing found in the notes; an unsigned MSI/exe shows the SmartScreen "unknown publisher" warning. Decide: certificate (OV/EV), Azure Trusted Signing, or SignPath (free for open source). Sign the exe, dlls and the MSI. — needs: none
+- [ ] **SIGN** Code signing. DECIDED (Alan, 2026-11-19): free project, so apply to **SignPath Foundation** (free for open source, signs from GitHub Actions). Check their current terms first: OSI-approved license, public repo, a code-signing policy page in the repo, and whether bundled third-party binaries and system-changing tools are acceptable. Sign the exe, dlls and the MSI. Fallback if refused: Microsoft Trusted Signing (~$10/month). — needs: PROJLIC, CI_BUILD
+- [ ] **CI_BUILD** SignPath signs what a GitHub Actions workflow builds, but the installer is a Visual Studio `.vdproj` that only `devenv.com` can build. Decide: move the installer to WiX (or MSIX) so CI can build it, then build + sign in a workflow. Watch the 438 MB artifact size. — needs: none
 - [ ] **AV** Antivirus false positives. Suspicious by nature: Hardware Sensors (PawnIO driver via LibreHardwareMonitor), Process Killer, Hosts Editor, File Shredder, Junk Cleaner, bundled FFmpeg/VLC. Check the signed MSI on VirusTotal; prepare a note for users and a false-positive report process. — needs: SIGN
 - [ ] **ADMIN** Admin rights explained. Bandwidth per App (ETW), Services, parts of Hardware Sensors need administrator. Each tool says why before asking and works in a reduced mode when not elevated. — needs: none
 - [ ] **MSI_TEST** Real install + upgrade test of the MSI (never done, needs administrator): clean install, upgrade over an older MSI, uninstall, Program Files behaviour (`AppRunMode.LegacyMsi`). — needs: SIZE (test the final package, not one that is about to shrink)
@@ -48,7 +51,7 @@ SIGN, LIC, PRIV, PROJLIC, ADMIN, DESTR, VAULT, RUNALL, SIZE, CRASH, CORE, MEM, S
 ## 3. Legal and privacy
 - [ ] **LIC** Third-party licenses file (FFmpeg GPL/LGPL depending on build, VLC LGPL, Tesseract, Whisper + model licenses, LibreHardwareMonitor MPL, PawnIO, TraceEvent, PdfSharp/PdfPig, MaterialDesign, etc.). Ship it in the installer and the repo; add a source offer where required. — needs: none
 - [ ] **PRIV** Privacy page listing every network call (speed test, network tools, ipify on button, frankfurter rates, Hugging Face / GitHub model downloads, Minecraft version data, Send to Phone on LAN). Confirm each is opt-in or user-triggered; README already has a "Privacy and security" section to extend. — needs: none
-- [ ] **PROJLIC** Project license decision (README/LICENSE) and a disclaimer for tools that change the system. — needs: none
+- [ ] **PROJLIC** License. Alan's wishes: free, anyone may modify and share, credits (NuGet packages and Smart Tools) must be kept, and the Memorial view must stay. Recommended: **Apache-2.0** (attribution kept through LICENSE + NOTICE) with the memorial dedication in NOTICE and README as a request. A legally binding "must keep the memorial" makes the license non-OSI, which SignPath Foundation would refuse. Add a disclaimer for tools that change the system. — needs: none
 
 ## 4. Distribution and updates
 - [ ] **SIZE** Installer is 438 MB (~920 MB installed). Look at trimming: engines on demand, Whisper models downloaded on first use, trimmed self-contained publish. — needs: none

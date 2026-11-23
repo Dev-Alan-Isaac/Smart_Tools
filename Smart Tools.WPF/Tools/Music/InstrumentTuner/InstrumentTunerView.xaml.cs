@@ -262,11 +262,23 @@ namespace Smart_Tools.WPF.Views
             TxtMicStatus.SetResourceReference(TextBlock.ForegroundProperty, error ? "StatusErrorFg" : "TextSecondary");
         }
 
-        private void SetLevel(double rms)
+        /// <summary>RMS 0.001..0.3 on a log scale feels right for a level bar.</summary>
+        private static double LevelPosition(double rms) => rms <= 0.001 ? 0 : Math.Clamp((Math.Log10(rms) + 3) / 2.5, 0, 1);
+
+        private void SetLevel(double rms, double gate = 0)
         {
-            // RMS 0.001..0.3 on a log scale feels right for a level bar.
-            double v = rms <= 0.001 ? 0 : Math.Clamp((Math.Log10(rms) + 3) / 2.5, 0, 1);
-            LevelScale.ScaleX = v;
+            LevelScale.ScaleX = LevelPosition(rms);
+            if (gate <= 0)
+            {
+                GateBefore.Width = new GridLength(0, GridUnitType.Star);
+                GateAfter.Width = new GridLength(1, GridUnitType.Star);
+                return;
+            }
+            double g = Math.Clamp(LevelPosition(gate), 0, 0.98);
+            GateBefore.Width = new GridLength(g, GridUnitType.Star);
+            GateAfter.Width = new GridLength(1 - g, GridUnitType.Star);
+            // Under the tick the tuner is not listening yet: the bar is grey, then turns to the accent colour.
+            LevelFill.SetResourceReference(Border.BackgroundProperty, rms >= gate ? "AccentColor" : "TextSecondary");
         }
 
         // =================================================================
@@ -276,7 +288,7 @@ namespace Smart_Tools.WPF.Views
         private void ShowReading(InstrumentTunerReading reading)
         {
             if (_closed || !_tuner.IsListening) return;
-            SetLevel(reading.Level);
+            SetLevel(reading.Level, reading.Gate);
             if (reading.FrequencyHz is not double freq) return;   // the hold timer clears after a moment
 
             _lastNoteUtc = DateTime.UtcNow;
