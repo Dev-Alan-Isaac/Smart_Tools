@@ -77,6 +77,9 @@ namespace Smart_Tools.WPF.Models
 
         public long SizeBytes { get; init; }
 
+        /// <summary>The loudness shape of the take, <see cref="AudioTrimmerPeaks.PerSecond"/> slices a second (0-255), for the waveform. Null for a take read back without it.</summary>
+        public byte[]? Peaks { get; set; }
+
         /// <summary>"0:42 · 44.1 kHz · mono · 16-bit · 3.6 MB · not saved yet"</summary>
         public string Details =>
             $"{MicRecorderText.Duration(Duration)} · {Format.Describe()} · {MicRecorderText.Bytes(SizeBytes)}" + (IsSaved ? "" : " · not saved yet");

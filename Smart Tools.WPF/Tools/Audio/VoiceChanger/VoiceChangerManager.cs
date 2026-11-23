@@ -154,6 +154,7 @@ namespace Smart_Tools.WPF.Controllers
             {
                 FilePath = output,
                 SourceName = Path.GetFileName(path),
+                SourcePath = path,
                 EffectSummary = summary,
                 Duration = TimeSpan.FromSeconds(total / (double)((long)format.SampleRate * format.Channels)),
                 WasLimited = gain < 1,
@@ -342,10 +343,15 @@ namespace Smart_Tools.WPF.Controllers
         //  Playback
         // =================================================================
 
-        public void Play(VoiceChangerTake take)
+        /// <summary>Where the file being played is, in seconds; NaN when nothing is playing.</summary>
+        public double PlaybackSeconds => _playReader is { } r ? r.CurrentTime.TotalSeconds : double.NaN;
+
+        /// <summary>Plays the file from <paramref name="fromSeconds"/> (0 = the start).</summary>
+        public void Play(VoiceChangerTake take, double fromSeconds = 0)
         {
             StopPlayback();
             var reader = new AudioFileReader(take.FilePath);
+            if (fromSeconds > 0 && fromSeconds < reader.TotalTime.TotalSeconds) reader.CurrentTime = TimeSpan.FromSeconds(fromSeconds);
             var output = new WaveOutEvent();
             try
             {

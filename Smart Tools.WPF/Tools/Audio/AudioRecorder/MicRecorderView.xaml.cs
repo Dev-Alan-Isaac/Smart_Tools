@@ -49,6 +49,8 @@ namespace Smart_Tools.WPF.Views
         private bool _applying;
         private bool _closed;
         private bool _optionsCollapsed;
+        private MicRecorderTake? _waveTake;    // the take whose waveform is on show
+        private readonly DispatcherTimer _playTimer = new() { Interval = TimeSpan.FromMilliseconds(40) };
 
         public MicRecorderView()
         {
@@ -58,8 +60,11 @@ namespace Smart_Tools.WPF.Views
 
             _manager.LevelChanged += level => _level = level;
             _manager.RecordingFinished += Manager_RecordingFinished;
-            _manager.PlaybackEnded += _ => UpdateTakesUi();
+            _manager.PlaybackEnded += _ => { UpdateTakesUi(); WaveView.SetPlayhead(double.NaN); };
             _timer.Tick += Timer_Tick;
+            _playTimer.Tick += PlayTimer_Tick;
+            WaveView.Wave.SeekRequested += Wave_SeekRequested;
+            WaveView.EmptyText = Loc.T("Str_VoiceHub_WaveRecorderEmpty", "The waveform appears here while you record, then shows the recording you pick below. Click it to play from that spot.");
             OutputCard.DefaultFolder = MicRecorderManager.DefaultFolder;
             BuildOutputOptions();
             _viewConstructed = true;
@@ -97,6 +102,7 @@ namespace Smart_Tools.WPF.Views
             if (_closed) return;
             _closed = true;
             _timer.Stop();
+            _playTimer.Stop();
             _manager.StopPlayback();
             var take = _manager.StopNow();
             if (take != null)
@@ -329,6 +335,8 @@ namespace Smart_Tools.WPF.Views
                 return;
             }
             _ticks = 0;
+            _playTimer.Stop();
+            _waveTake = null;
             _timer.Start();
             ShowStatus($"Recording from {device.Name}…");
             UiMotion.Pop(BtnRecord, 0.9);
@@ -376,12 +384,14 @@ namespace Smart_Tools.WPF.Views
                 }
                 _takes.Insert(0, take);
                 ListBoxTakes.SelectedItem = take;
+                ShowTakeWave(take);
                 ListBoxTakes.ScrollIntoView(take);
                 ShowStatus(error ?? message, error != null);
             }
             else
             {
                 ShowStatus(error ?? "Nothing was recorded.", error != null);
+                ShowTakeWave(ListBoxTakes.SelectedItem as MicRecorderTake);
             }
             UpdateTransport();
         }
@@ -392,6 +402,12 @@ namespace Smart_Tools.WPF.Views
             double target = _level;
             _shownLevel = target > _shownLevel ? target : Math.Max(target, _shownLevel - 3);
             SetLevel(_shownLevel);
+
+            if (_manager.State is MicRecorderState.Recording or MicRecorderState.Paused)
+            {
+                var (peaks, count) = _manager.LivePeaks;
+                WaveView.ShowLive(peaks, count);
+            }
 
             TxtElapsed.Text = MicRecorderText.Duration(_manager.Recorded);
             if (_manager.State == MicRecorderState.Recording && ++_ticks % 16 == 0)
@@ -449,6 +465,45 @@ namespace Smart_Tools.WPF.Views
             BtnClearTakes.IsEnabled = count > 0;
         }
 
+        // =================================================================
+        //  Waveform
+        // =================================================================
+
+        private void ShowTakeWave(MicRecorderTake? take)
+        {
+            _waveTake = take;
+            WaveView.Show(take?.Peaks, take?.Duration.TotalSeconds ?? 0);
+        }
+
+        private void ListBoxTakes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // While recording the wave belongs to the recording; any other time it follows the chosen take.
+            if (_manager.State != MicRecorderState.Idle || _manager.PlaybackSeconds is not double.NaN) return;
+            ShowTakeWave(ListBoxTakes.SelectedItem as MicRecorderTake);
+        }
+
+        /// <summary>A click on the wave: play the shown take from that moment.</summary>
+        private void Wave_SeekRequested(object? sender, double seconds)
+        {
+            if (_manager.State != MicRecorderState.Idle || _waveTake is not { } take || !File.Exists(take.FilePath)) return;
+            try
+            {
+                _manager.Play(take, seconds);
+                _playTimer.Start();
+            }
+            catch (Exception ex) when (ex is NAudio.MmException or IOException or InvalidOperationException or UnauthorizedAccessException)
+            {
+                ShowStatus($"Couldn't play it: {ex.Message}", error: true);
+            }
+        }
+
+        private void PlayTimer_Tick(object? sender, EventArgs e)
+        {
+            double t = _manager.PlaybackSeconds;
+            if (double.IsNaN(t)) { _playTimer.Stop(); WaveView.SetPlayhead(double.NaN); return; }
+            WaveView.SetPlayhead(t);
+        }
+
         private static MicRecorderTake? TakeOf(object sender) => (sender as Button)?.Tag as MicRecorderTake;
 
         private void BtnPlayTake_Click(object sender, RoutedEventArgs e)
@@ -476,6 +531,8 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 _manager.Play(take);
+                _waveTake = take;
+                _playTimer.Start();
             }
             catch (Exception ex) when (ex is NAudio.MmException or IOException or InvalidOperationException or UnauthorizedAccessException)
             {

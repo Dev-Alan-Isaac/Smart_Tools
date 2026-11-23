@@ -276,6 +276,8 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="14" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="14" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -433,7 +435,17 @@
                 </Border>
 
                 <!--  ============ RECORDINGS ============  -->
-                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                <!--  ============ WAVEFORM: live while recording, the chosen take afterwards; click it to play from there ============  -->
+                <Border
+                    Grid.Row="2"
+                    Padding="12"
+                    ctl:Tour.Key="Str_Tour_MicRecorder_Wave"
+                    ctl:Tour.Order="4"
+                    Style="{StaticResource CardStyle}">
+                    <controls:WaveFrame x:Name="WaveView" Height="150" />
+                </Border>
+
+                <Border Grid.Row="4" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -487,6 +499,7 @@
                                 ctl:Tour.Order="5"
                                 ItemContainerStyle="{StaticResource FileCardListItemStyle}"
                                 MouseDoubleClick="ListBoxTakes_MouseDoubleClick"
+                                SelectionChanged="ListBoxTakes_SelectionChanged"
                                 Style="{StaticResource FileCardListBoxStyle}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:MicRecorderTake}">

@@ -116,6 +116,9 @@ namespace Smart_Tools.WPF.Models
         private bool _isPlaying;
 
         public required string SourceName { get; init; }
+
+        /// <summary>The file this result was made from (empty for a take that has no source); the waveform view shows it above the result.</summary>
+        public string SourcePath { get; init; } = "";
         public required string EffectSummary { get; init; }
         public TimeSpan Duration { get; init; }
 

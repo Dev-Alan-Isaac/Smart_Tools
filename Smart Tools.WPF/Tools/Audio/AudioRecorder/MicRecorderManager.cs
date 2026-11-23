@@ -28,6 +28,12 @@ namespace Smart_Tools.WPF.Controllers
         private long _dataBytes;
         private volatile bool _paused;
 
+        // Live waveform: the loudest sample of every 1/250 s (0-255), grown while recording; read by the view through LivePeaks.
+        private byte[] _livePeaks = new byte[AudioTrimmerPeaks.PerSecond * 120];
+        private int _livePeakCount;
+        private double _sliceFrames, _framesPerSlice = 1;
+        private int _sliceMax;
+
         private BufferedWaveProvider? _monitorBuffer;
         private WaveOutEvent? _monitorOut;
 
@@ -67,6 +73,40 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>The growing waveform of the take being recorded: the buffer (only the first <c>Count</c> slices are real) and how many slices there are.</summary>
+        public (byte[] Peaks, int Count) LivePeaks
+        {
+            get { lock (_gate) return (_livePeaks, _livePeakCount); }
+        }
+
+        /// <summary>Called under the lock with the bytes just written: folds them into 1/250 s loudness slices.</summary>
+        private void AddPeaks(byte[] buffer, int count)
+        {
+            var format = _format;
+            if (format == null) return;
+            int bytesPerSample = format.BitsPerSample / 8;
+            int channels = Math.Max(1, format.Channels);
+            int frameBytes = bytesPerSample * channels;
+            for (int i = 0; i + frameBytes <= count; i += frameBytes)
+            {
+                for (int c = 0; c < channels; c++)
+                {
+                    int at = i + c * bytesPerSample;
+                    int v = bytesPerSample == 2
+                        ? Math.Abs((short)(buffer[at] | (buffer[at + 1] << 8))) * 255 / 32768
+                        : Math.Abs((buffer[at] | (buffer[at + 1] << 8) | ((sbyte)buffer[at + 2] << 16))) * 255 / 8388608;
+                    if (v > _sliceMax) _sliceMax = v;
+                }
+                if (++_sliceFrames >= _framesPerSlice)
+                {
+                    _sliceFrames -= _framesPerSlice;
+                    if (_livePeakCount == _livePeaks.Length) Array.Resize(ref _livePeaks, _livePeaks.Length * 2);
+                    _livePeaks[_livePeakCount++] = (byte)Math.Min(255, _sliceMax);
+                    _sliceMax = 0;
+                }
+            }
+        }
+
         // =================================================================
         //  Recording
         // =================================================================
@@ -87,6 +127,10 @@ namespace Smart_Tools.WPF.Controllers
                     _dataBytes = 0;
                     _limitReached = false;
                     _format = format;
+                    _livePeakCount = 0;
+                    _sliceFrames = 0;
+                    _sliceMax = 0;
+                    _framesPerSlice = format.SampleRate / (double)AudioTrimmerPeaks.PerSecond;
                 }
                 _paused = false;
                 waveIn.DataAvailable += WaveIn_DataAvailable;
@@ -177,6 +221,7 @@ namespace Smart_Tools.WPF.Controllers
                     {
                         _writer.Write(e.Buffer, 0, count);
                         _dataBytes += count;
+                        AddPeaks(e.Buffer, count);
                     }
                     if (_dataBytes >= MaxWavDataBytes) { _limitReached = true; hitLimit = true; }
                 }
@@ -211,6 +256,7 @@ namespace Smart_Tools.WPF.Controllers
         private MicRecorderTake? FinishTake()
         {
             long bytes;
+            byte[] peaks;
             MicRecorderFormat? format;
             lock (_gate)
             {
@@ -219,6 +265,7 @@ namespace Smart_Tools.WPF.Controllers
                 bytes = _dataBytes;
                 format = _format;
                 _format = null;
+                peaks = _livePeaks.AsSpan(0, _livePeakCount).ToArray();
             }
             _waveIn = null;
             State = MicRecorderState.Idle;
@@ -237,6 +284,7 @@ namespace Smart_Tools.WPF.Controllers
                 Duration = DurationOf(bytes, format),
                 Format = format,
                 SizeBytes = new FileInfo(path).Length,
+                Peaks = peaks,
             };
         }
 
@@ -275,10 +323,15 @@ namespace Smart_Tools.WPF.Controllers
         //  Playback
         // =================================================================
 
-        public void Play(MicRecorderTake take)
+        /// <summary>Where the take being played is, in seconds; NaN when nothing is playing.</summary>
+        public double PlaybackSeconds => _playReader is { } r ? r.CurrentTime.TotalSeconds : double.NaN;
+
+        /// <summary>Plays the take from <paramref name="fromSeconds"/> (0 = the start).</summary>
+        public void Play(MicRecorderTake take, double fromSeconds = 0)
         {
             StopPlayback();
             var reader = new AudioFileReader(take.FilePath);
+            if (fromSeconds > 0 && fromSeconds < reader.TotalTime.TotalSeconds) reader.CurrentTime = TimeSpan.FromSeconds(fromSeconds);
             var output = new WaveOutEvent();
             try
             {

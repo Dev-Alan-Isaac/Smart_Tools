@@ -8,6 +8,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Border = System.Windows.Controls.Border;
 using Button = System.Windows.Controls.Button;
 using DataFormats = System.Windows.DataFormats;
@@ -50,6 +51,10 @@ namespace Smart_Tools.WPF.Views
         private bool _applying;
         private bool _closed;
         private bool _optionsCollapsed;
+        private readonly Dictionary<string, (byte[] Peaks, double Seconds)> _peakCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly DispatcherTimer _playTimer = new() { Interval = TimeSpan.FromMilliseconds(40) };
+        private CancellationTokenSource? _waveCts;
+        private bool _playingOriginal;
 
         public VoiceChangerView()
         {
@@ -65,7 +70,12 @@ namespace Smart_Tools.WPF.Views
             _takes.CollectionChanged += (_, _) => UpdateTakesUi();
 
             _manager.LiveStopped += error => Dispatcher.BeginInvoke(() => LiveEnded(error));
-            _manager.PlaybackEnded += _ => UpdateTakesUi();
+            _manager.PlaybackEnded += _ => { UpdateTakesUi(); ClearPlayheads(); };
+            _playTimer.Tick += PlayTimer_Tick;
+            WaveOriginal.Wave.SeekRequested += (_, t) => PlayFromWave(original: true, t);
+            WaveChanged.Wave.SeekRequested += (_, t) => PlayFromWave(original: false, t);
+            WaveOriginal.EmptyText = Loc.T("Str_VoiceHub_WaveOriginalEmpty", "Pick a result below to see the original sound here. Click the wave to play from that spot.");
+            WaveChanged.EmptyText = Loc.T("Str_VoiceHub_WaveChangedEmpty", "The changed voice appears here after you press Change.");
             _viewConstructed = true;
         }
 
@@ -75,6 +85,8 @@ namespace Smart_Tools.WPF.Views
             if (_closed) return;
             _closed = true;
             _lifetimeCts.Cancel();
+            _waveCts?.Cancel();
+            _playTimer.Stop();
             _renderCts?.Cancel();
             _manager.Dispose();
         }
@@ -711,6 +723,85 @@ namespace Smart_Tools.WPF.Views
             if (ListBoxTakes.SelectedItem is VoiceChangerTake take) TogglePlay(take);
         }
 
+        // =================================================================
+        //  Waveforms: the original above, the changed voice below
+        // =================================================================
+
+        private async void ListBoxTakes_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+            await ShowWavesAsync(ListBoxTakes.SelectedItem as VoiceChangerTake);
+
+        private async Task ShowWavesAsync(VoiceChangerTake? take)
+        {
+            _waveCts?.Cancel();
+            _waveCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
+            var token = _waveCts.Token;
+            if (take == null)
+            {
+                WaveOriginal.Show(null, 0);
+                WaveChanged.Show(null, 0);
+                return;
+            }
+            var changed = await PeaksOfAsync(take.FilePath, take.Duration.TotalSeconds, token);
+            if (token.IsCancellationRequested || _closed) return;
+            WaveChanged.Show(changed?.Peaks, changed?.Seconds ?? 0);
+            var original = string.IsNullOrEmpty(take.SourcePath) ? null : await PeaksOfAsync(take.SourcePath, 0, token);
+            if (token.IsCancellationRequested || _closed) return;
+            WaveOriginal.Show(original?.Peaks, original?.Seconds ?? 0);
+        }
+
+        /// <summary>The loudness shape of a file (decoded by the bundled ffmpeg, like the Audio Trimmer); remembered so picking a result again is instant. Null if it can't be read.</summary>
+        private async Task<(byte[] Peaks, double Seconds)?> PeaksOfAsync(string path, double durationHint, CancellationToken token)
+        {
+            if (_peakCache.TryGetValue(path, out var cached)) return cached;
+            if (!File.Exists(path)) return null;
+            try
+            {
+                var read = await AudioTrimmerManager.ReadPeaksAsync(path, durationHint, null, token);
+                if (read is { } r) _peakCache[path] = (r.Peaks, r.Seconds);
+                return read;
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or IOException or System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>A click on a wave: play that file (the original, or the chosen result) from there.</summary>
+        private void PlayFromWave(bool original, double seconds)
+        {
+            if (ListBoxTakes.SelectedItem is not VoiceChangerTake take) return;
+            if (_manager.IsLive) { ShowStatus("Stop the live voice first - both would play at once.", error: true); return; }
+            string path = original ? take.SourcePath : take.FilePath;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+            var playable = original
+                ? new VoiceChangerTake { FilePath = path, SourceName = Path.GetFileName(path), EffectSummary = "" }
+                : take;
+            try
+            {
+                _manager.Play(playable, seconds);
+                _playingOriginal = original;
+                _playTimer.Start();
+            }
+            catch (Exception ex) when (ex is NAudio.MmException or IOException or InvalidOperationException or UnauthorizedAccessException)
+            {
+                ShowStatus("Couldn't play it: " + ex.Message, error: true);
+            }
+        }
+
+        private void PlayTimer_Tick(object? sender, EventArgs e)
+        {
+            double t = _manager.PlaybackSeconds;
+            if (double.IsNaN(t)) { _playTimer.Stop(); ClearPlayheads(); return; }
+            (_playingOriginal ? WaveOriginal : WaveChanged).SetPlayhead(t);
+            (_playingOriginal ? WaveChanged : WaveOriginal).SetPlayhead(double.NaN);
+        }
+
+        private void ClearPlayheads()
+        {
+            WaveOriginal.SetPlayhead(double.NaN);
+            WaveChanged.SetPlayhead(double.NaN);
+        }
+
         private void TogglePlay(VoiceChangerTake take)
         {
             if (take.IsPlaying)
@@ -731,6 +822,8 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 _manager.Play(take);
+                _playingOriginal = false;
+                _playTimer.Start();
             }
             catch (Exception ex) when (ex is NAudio.MmException or IOException or InvalidOperationException or UnauthorizedAccessException)
             {
