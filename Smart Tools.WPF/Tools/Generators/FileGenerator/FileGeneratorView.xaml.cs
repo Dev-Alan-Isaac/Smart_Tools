@@ -375,7 +375,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTPrepareThe", "Couldn't prepare the files: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTPrepareThe", "Couldn't prepare the files: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -408,7 +408,7 @@ namespace Smart_Tools.WPF.Views
                 TxtProgressPercent.Text = $"{ProgressGenerate.Value:0}%";
                 TxtProgress.Text = FileGeneratorManager.DescribeSummary(summary);
                 if (summary.ArchiveError != null)
-                    ThemedMessageBox.Show(summary.ArchiveError, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(summary.ArchiveError, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 if (!summary.Cancelled && summary.Elapsed > TimeSpan.FromSeconds(5)) Toast(Loc.T("Str_FileGen_MsgComplete", "File generation complete"), FileGeneratorManager.DescribeSummary(summary));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -499,7 +499,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTExport2", "Couldn't export: ") + FileGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.T("Str_MB_CouldnTExport2", "Couldn't export: ") + FileGeneratorManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -535,7 +535,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTOpenIt", "Couldn't open it: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTOpenIt", "Couldn't open it: ") + ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

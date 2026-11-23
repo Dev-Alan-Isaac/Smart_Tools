@@ -585,7 +585,7 @@ namespace Smart_Tools.WPF.Views
 
             if (!hasData)
             {
-                ThemedMessageBox.Show(
+                AppModal.Show(
                     Window.GetWindow(this)!,
                     _isRestMode ? "Send at least one request before exporting." : "There's no WebSocket traffic to export yet.",
                     "Nothing to export",
@@ -613,7 +613,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Window.GetWindow(this)!, $"Couldn't save the file:\n{ex.Message}",
+                AppModal.Show(Window.GetWindow(this)!, $"Couldn't save the file:\n{ex.Message}",
                     Loc.T("Str_Dlg_ExportFailed", "Export failed"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

@@ -555,7 +555,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(string.Format(TryString("Str_ColorWheel_SaveFailed", "Couldn't save: {0}"), ex.Message),
+                AppModal.Show(string.Format(TryString("Str_ColorWheel_SaveFailed", "Couldn't save: {0}"), ex.Message),
                     TryString("Str_ColorWheel_Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

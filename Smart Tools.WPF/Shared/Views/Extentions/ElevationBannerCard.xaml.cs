@@ -60,7 +60,7 @@ namespace Smart_Tools.WPF.Controls
         {
             string title = Window.GetWindow(this)?.Title ?? "Smart Tools";
             string question = TryFindResource("Str_HardwareSensors_RestartConfirm") as string ?? "Restart Smart Tools as administrator?";
-            if (ThemedMessageBox.Show(question, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(question, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
 
             // Unsaved work first (while cancelling is still possible), then switch: the elevated
             // copy waits for this one to close, which happens without asking again.
@@ -72,7 +72,7 @@ namespace Smart_Tools.WPF.Controls
                     System.Windows.Application.Current.Shutdown();
                     break;
                 case AppRestartResult.Failed:
-                    ThemedMessageBox.Show($"Couldn't restart as administrator: {error}", title, MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppModal.Show($"Couldn't restart as administrator: {error}", title, MessageBoxButton.OK, MessageBoxImage.Error);
                     break;
                 // Declined: UAC said no - stay as we are.
             }

@@ -216,7 +216,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     if (IsDangerousFolder(folder))
                     {
-                        ThemedMessageBox.Show(Loc.F("Str_MB_IsADriveOr", "\"{0}\" is a drive or a system folder. Shredding it would damage Windows or take everything on it, so it can't be added.\n\nAdd the specific folders or files you want to shred instead.", folder),
+                        AppModal.Show(Loc.F("Str_MB_IsADriveOr", "\"{0}\" is a drive or a system folder. Shredding it would damage Windows or take everything on it, so it can't be added.\n\nAdd the specific folders or files you want to shred instead.", folder),
                             DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                         continue;
                     }
@@ -496,7 +496,7 @@ namespace Smart_Tools.WPF.Views
             if (targets.Count > 5) first.Add($"  • …and {targets.Count - 5:N0} more");
             lines.Add("");
             lines.AddRange(first);
-            return ThemedMessageBox.Show(string.Join("\n", lines), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+            return AppModal.Show(string.Join("\n", lines), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
         }
 
         private void SetShredding(bool shredding)

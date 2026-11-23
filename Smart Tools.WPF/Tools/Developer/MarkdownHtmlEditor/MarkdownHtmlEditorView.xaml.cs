@@ -596,7 +596,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!IsDirty) return true;
 
-            var answer = ThemedMessageBox.Show(
+            var answer = AppModal.Show(
                 Window.GetWindow(this)!,
                 string.Format(Str("Str_MdHtml_SaveChangesPrompt"), DisplayName),
                 Str("Str_MdHtml_SaveChangesTitle"),

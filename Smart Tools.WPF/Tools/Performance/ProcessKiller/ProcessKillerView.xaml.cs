@@ -566,7 +566,7 @@ namespace Smart_Tools.WPF.Views
 
             if (!single)
             {
-                return ThemedMessageBox.Show(
+                return AppModal.Show(
                     Window.GetWindow(this)!,
                     sb.ToString().TrimEnd(),
                     Str("Str_ProcessKiller_ConfirmTitle"),

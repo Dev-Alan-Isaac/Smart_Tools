@@ -602,7 +602,7 @@ namespace Smart_Tools.WPF.Views
             // Every row starts checked (checked = "include in the run"), so on a
             // fresh queue Remove would silently wipe everything - confirm that case.
             if (selected == _files.Count &&
-                ThemedMessageBox.Show(Window.GetWindow(this)!,
+                AppModal.Show(Window.GetWindow(this)!,
                     $"All {selected:N0} files are checked. Remove them all from the queue?",
                     Loc.T("Str_Dlg_RemoveAllFiles", "Remove all files"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
@@ -681,7 +681,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (HighlightedItem is not { } item) return;
             if (ShellExplorer.Show(item.FullPath) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.DisplayName), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_MB_IsNoLongerThere", "\"{0}\" is no longer there.", item.DisplayName), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void MenuDeleteFile_Click(object sender, RoutedEventArgs e)
@@ -691,7 +691,7 @@ namespace Smart_Tools.WPF.Views
             string text = bin
                 ? $"Move \"{item.DisplayName}\" to the Recycle Bin?\n\nThis deletes the file from your computer, not just from the queue."
                 : $"Delete \"{item.DisplayName}\" PERMANENTLY?\n\nIt's on a drive without a Recycle Bin, so it can't be undone.";
-            if (ThemedMessageBox.Show(text, Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (AppModal.Show(text, Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
             try
             {
@@ -699,7 +699,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.DisplayName, ex.Message), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTDelete", "Couldn't delete \"{0}\": {1}", item.DisplayName, ex.Message), Loc.T("Str_Tool_background-remover_Name", "Background Remover"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             BackgroundRemoverManager.RemoveFromList(_files, _groups, new[] { item });
@@ -1052,8 +1052,8 @@ namespace Smart_Tools.WPF.Views
         private void ShowMessage(string text, string title, MessageBoxImage icon)
         {
             var owner = Window.GetWindow(this);
-            if (owner != null) ThemedMessageBox.Show(owner, text, title, MessageBoxButton.OK, icon);
-            else ThemedMessageBox.Show(text, title, MessageBoxButton.OK, icon);
+            if (owner != null) AppModal.Show(owner, text, title, MessageBoxButton.OK, icon);
+            else AppModal.Show(text, title, MessageBoxButton.OK, icon);
         }
     }
 }

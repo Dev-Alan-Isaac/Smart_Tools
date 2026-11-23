@@ -459,7 +459,7 @@ namespace Smart_Tools.WPF.Views
         private void MenuRemovePassword_Click(object sender, RoutedEventArgs e)
         {
             if (_selected is not { IsProtected: true, IsLocked: false } note) return;
-            if (ThemedMessageBox.Show(Window.GetWindow(this), Loc.T("Str_Notes_RemovePwConfirm", "Remove the password from this note? Its content will be saved without protection."),
+            if (AppModal.Show(Window.GetWindow(this), Loc.T("Str_Notes_RemovePwConfirm", "Remove the password from this note? Its content will be saved without protection."),
                     DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             _saveTimer.Stop();
             var result = NotesManager.RemovePassword(note);
@@ -892,7 +892,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Window.GetWindow(this)!, "Couldn't save the file: " + NotesManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Window.GetWindow(this)!, "Couldn't save the file: " + NotesManager.PlainError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

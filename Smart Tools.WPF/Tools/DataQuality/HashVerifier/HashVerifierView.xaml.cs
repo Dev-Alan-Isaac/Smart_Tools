@@ -393,14 +393,14 @@ namespace Smart_Tools.WPF.Views
             {
                 if (new FileInfo(dialog.FileName).Length > MaxListBytes)
                 {
-                    ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileIsToo", "That file is too large to be a checksum list."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    AppModal.Show(Loc.T("Str_MB_ThatFileIsToo", "That file is too large to be a checksum list."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 var entries = HashVerifierManager.ParseChecksumList(File.ReadAllText(dialog.FileName), Path.GetFileName(dialog.FileName), out int skipped);
                 if (entries.Count == 0)
                 {
-                    ThemedMessageBox.Show(Loc.T("Str_MB_NoChecksumsWereFound", "No checksums were found in that file."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                    AppModal.Show(Loc.T("Str_MB_NoChecksumsWereFound", "No checksums were found in that file."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -415,7 +415,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldnTReadThe", "Couldn't read the checksum file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldnTReadThe", "Couldn't read the checksum file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -511,7 +511,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetRunning(false);
                 TxtProgress.Text = Loc.T("Str_Hash_MsgStopped", "Stopped - something went wrong.");
-                ThemedMessageBox.Show(Loc.F("Str_MB_HashingFailed", "Hashing failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_HashingFailed", "Hashing failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -522,7 +522,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private void Tell(string key, string fallback) =>
-            ThemedMessageBox.Show(TryFindResource(key) as string ?? fallback, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+            AppModal.Show(TryFindResource(key) as string ?? fallback, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
 
         private void ReportProgress(HashProgress p)
         {
@@ -735,7 +735,7 @@ namespace Smart_Tools.WPF.Views
         {
             string path = File.Exists(row.FullPath) ? row.FullPath : row.Folder;
             if (ShellExplorer.Show(path) != ShellExplorer.ShowResult.Shown)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileOrFolder2", "That file or folder is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ThatFileOrFolder2", "That file or folder is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         /// <summary>Raised before the menu opens: one checksum-file item per algorithm that has hashes, plus CSV.</summary>
@@ -793,7 +793,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldNotSaveThe", "Could not save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldNotSaveThe", "Could not save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -821,7 +821,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_MB_CouldNotSaveThe", "Could not save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_CouldNotSaveThe", "Could not save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

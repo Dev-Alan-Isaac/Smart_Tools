@@ -195,7 +195,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private bool ConfirmDiscard() =>
-            !_dirty || ThemedMessageBox.Show(T("Str_Hosts_Discard", "Discard the changes you haven't saved?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            !_dirty || AppModal.Show(T("Str_Hosts_Discard", "Discard the changes you haven't saved?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
         private void BtnReload_Click(object sender, RoutedEventArgs e)
         {
@@ -256,7 +256,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Relaunches Smart Tools elevated (UAC prompt) and closes this instance - asks first.</summary>
         private void BtnRestartAdmin_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(T("Str_Hosts_RestartConfirm", "Restart Smart Tools as administrator? Unsaved changes in the editor are lost."), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(T("Str_Hosts_RestartConfirm", "Restart Smart Tools as administrator? Unsaved changes in the editor are lost."), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
 
             switch (AppRestartManager.StartElevatedCopy(out string? error))
@@ -265,7 +265,7 @@ namespace Smart_Tools.WPF.Views
                     Application.Current.Shutdown();
                     break;
                 case AppRestartResult.Failed:
-                    ThemedMessageBox.Show(string.Format(T("Str_Hosts_RestartFailed", "Couldn't restart as administrator: {0}"), error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppModal.Show(string.Format(T("Str_Hosts_RestartFailed", "Couldn't restart as administrator: {0}"), error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     break;
                 // Declined: UAC said no - stay as we are.
             }

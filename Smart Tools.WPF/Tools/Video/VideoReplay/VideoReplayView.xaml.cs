@@ -750,7 +750,7 @@ namespace Smart_Tools.WPF.Views
             string text = bin
                 ? $"Move \"{item.Name}\" to the Recycle Bin?\n\nThis deletes the file from your computer, not just from the playlist."
                 : $"Delete \"{item.Name}\" PERMANENTLY?\n\nIt's on a drive without a Recycle Bin, so it can't be undone.";
-            if (ThemedMessageBox.Show(text, DialogTitle, MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (AppModal.Show(text, DialogTitle, MessageBoxButton.YesNo, bin ? MessageBoxImage.Question : MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
             // Work out where to carry on before StopPlayback loses the position: the clip before the deleted one
@@ -1312,7 +1312,7 @@ namespace Smart_Tools.WPF.Views
                     case Key.A when shift: BtnSelectAll_Click(this, none); break;
                     case Key.D when shift: BtnDeselectAll_Click(this, none); break;
                     case Key.Delete when shift:
-                        if (_queue.Count > 0 && ThemedMessageBox.Show(Loc.T("Str_MB_RemoveEveryClipFrom", "Remove every clip from the playlist?"), DialogTitle,
+                        if (_queue.Count > 0 && AppModal.Show(Loc.T("Str_MB_RemoveEveryClipFrom", "Remove every clip from the playlist?"), DialogTitle,
                                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
                             InputCard_ClearRequested(this, EventArgs.Empty);
                         break;

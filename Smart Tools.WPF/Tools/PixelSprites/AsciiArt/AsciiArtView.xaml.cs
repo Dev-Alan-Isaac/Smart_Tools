@@ -859,6 +859,6 @@ namespace Smart_Tools.WPF.Views
         private void HideStatus() => StatusBanner.Visibility = Visibility.Collapsed;
 
         private static bool Confirm(string text) =>
-            ThemedMessageBox.Show(text, Loc.T("Str_Tool_ascii-art_Name", "ASCII Art Maker"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            AppModal.Show(text, Loc.T("Str_Tool_ascii-art_Name", "ASCII Art Maker"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
     }
 }

@@ -264,7 +264,7 @@ namespace Smart_Tools.WPF.Views
             if (!check.CanRun)
             {
                 UiMotion.Pop(TargetCheckPanel, 0.95);
-                ThemedMessageBox.Show(check.Error ?? (TryFindResource("Str_DiskSpeed_NoTargetMessage") as string ?? "Choose a drive or folder to test."),
+                AppModal.Show(check.Error ?? (TryFindResource("Str_DiskSpeed_NoTargetMessage") as string ?? "Choose a drive or folder to test."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -297,7 +297,7 @@ namespace Smart_Tools.WPF.Views
                 SetPhase(SpeedTestPhase.Failed);
                 TxtStatus.Text = $"Test failed: {ex.Message}";
                 string format = TryFindResource("Str_DiskSpeed_ErrorMessageFormat") as string ?? "The test couldn't finish: {0}";
-                ThemedMessageBox.Show(string.Format(format, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(string.Format(format, ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
             {
@@ -547,7 +547,7 @@ namespace Smart_Tools.WPF.Views
         private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
         {
             if (_history.Count == 0) return;
-            var answer = ThemedMessageBox.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
+            var answer = AppModal.Show(Loc.F("Str_MB_ClearAllSavedResults", "Clear all {0} saved results?", _history.Count), DialogTitle,
                 MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
             if (answer != MessageBoxResult.Yes) return;
 

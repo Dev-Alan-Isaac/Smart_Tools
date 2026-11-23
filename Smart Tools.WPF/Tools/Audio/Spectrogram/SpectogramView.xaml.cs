@@ -691,7 +691,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThePictureCouldnT", "The picture couldn't be saved.\n\n") + SpectrogramManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_ThePictureCouldnT", "The picture couldn't be saved.\n\n") + SpectrogramManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

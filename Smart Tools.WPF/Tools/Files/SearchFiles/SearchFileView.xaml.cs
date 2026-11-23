@@ -814,12 +814,12 @@ namespace Smart_Tools.WPF.Views
                 bool renamed = !string.Equals(saved, dialog.FileName, StringComparison.OrdinalIgnoreCase);
                 TxtProgress.Text = Loc.F("Str_SearchFiles_MsgExported", "Exported {0} to {1}.", what, Path.GetFileName(saved));
                 string note = renamed ? Loc.F("Str_SearchFiles_NoteRenamedExport", "\n\n{0} already exists, so it was kept and this export got its own name.", Path.GetFileName(dialog.FileName)) : "";
-                var open = ThemedMessageBox.Show(Loc.F("Str_MB_ExportedToNN", "Exported {0} to:\n{1}{2}\n\nOpen the file now?", what, saved, note), Loc.T("Str_Dlg_ExportComplete", "Export complete"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var open = AppModal.Show(Loc.F("Str_MB_ExportedToNN", "Exported {0} to:\n{1}{2}\n\nOpen the file now?", what, saved, note), Loc.T("Str_Dlg_ExportComplete", "Export complete"), MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (open == MessageBoxResult.Yes) OpenWithShell(saved);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTExport2", "Couldn't export: ") + FileSearchManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.T("Str_MB_CouldnTExport2", "Couldn't export: ") + FileSearchManager.PlainSaveError(ex), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -862,14 +862,14 @@ namespace Smart_Tools.WPF.Views
         private static void ShowInFolder(string path)
         {
             if (File.Exists(path) && !Smart_Tools.WPF.Controllers.ShellOpen.Reveal(path))
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe", "Couldn't open the folder."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTOpenThe", "Couldn't open the folder."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         /// <summary>Opens the file in its default program. Programs and scripts are shown in Explorer instead of being run.</summary>
         private static void OpenWithShell(string path)
         {
             if (!Smart_Tools.WPF.Controllers.ShellOpen.OpenFile(path))
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTOpenThe2", "Couldn't open the file."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTOpenThe2", "Couldn't open the file."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private static bool TrySetClipboard(string text)

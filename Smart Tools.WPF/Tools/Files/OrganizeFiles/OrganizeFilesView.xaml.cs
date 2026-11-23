@@ -530,7 +530,7 @@ namespace Smart_Tools.WPF.Views
         private bool ConfirmLargePreview(int count)
         {
             if (count < LargePreviewFiles) return true;
-            _largeAnswer ??= ThemedMessageBox.Show(Loc.F("Str_Files_AskLargePreview", "This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.\n\nShow them all anyway?", count),
+            _largeAnswer ??= AppModal.Show(Loc.F("Str_Files_AskLargePreview", "This folder has {0:N0} files. Listing every file in the preview can be slow and use a lot of memory.\n\nShow them all anyway?", count),
                 DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
             return _largeAnswer.Value;
         }
@@ -663,7 +663,7 @@ namespace Smart_Tools.WPF.Views
         {
             string folder = EffectiveDestination;
             if (ShellExplorer.Show(folder) != ShellExplorer.ShowResult.Shown)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ChooseAFolderFirst", "Choose a folder first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ChooseAFolderFirst", "Choose a folder first."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         /// <summary>Double-click: the file where it is now.</summary>
@@ -672,7 +672,7 @@ namespace Smart_Tools.WPF.Views
             if (DataGridPreview.SelectedItem is not OrganizeFileItem item) return;
             string path = item.Status is OrganizeStatus.Moved or OrganizeStatus.Copied ? item.Destination : item.FullPath;
             if (ShellExplorer.Show(path) == ShellExplorer.ShowResult.NotFound)
-                ThemedMessageBox.Show(Loc.T("Str_MB_ThatFileIsNo", "That file is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(Loc.T("Str_MB_ThatFileIsNo", "That file is no longer there."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =================================================================
@@ -705,7 +705,7 @@ namespace Smart_Tools.WPF.Views
             if (pending.Count == 0)
             {
                 InputCard.PopDropArea();
-                ThemedMessageBox.Show(_rows.Count == 0
+                AppModal.Show(_rows.Count == 0
                         ? Loc.T("Str_Organize_MsgChooseWithFiles", "Choose a folder with files in it first.")
                         : Loc.T("Str_Organize_MsgNothingToDo", "Nothing to do - every file is already where it belongs."),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -719,7 +719,7 @@ namespace Smart_Tools.WPF.Views
             {
                 string msg = OutputFolderManager.DescribeShortfalls(shortfalls);
                 TxtProgress.Text = msg;
-                ThemedMessageBox.Show(msg + "\n\nFree some space or choose another destination folder.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(msg + "\n\nFree some space or choose another destination folder.", DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -772,7 +772,7 @@ namespace Smart_Tools.WPF.Views
                 {
                     string list = string.Join("\n\n", failedRows.Take(8).Select(i => $"• {i.Message}"));
                     if (failedRows.Count > 8) list += Loc.F("Str_MB_AndMoreSeeFailed", "\n\n…and {0} more (see the Failed rows in the preview).", failedRows.Count - 8);
-                    ThemedMessageBox.Show(Loc.N(failedRows.Count,
+                    AppModal.Show(Loc.N(failedRows.Count,
                             "Str_MB_OrgFailedOne", "{0} file couldn't be moved and stayed where it was:\n\n{1}",
                             "Str_MB_OrgFailedMany", "{0} files couldn't be moved and stayed where they were:\n\n{1}",
                             failedRows.Count, list),
@@ -783,7 +783,7 @@ namespace Smart_Tools.WPF.Views
             {
                 SetBusy(false, undo: false);
                 TxtProgress.Text = Loc.T("Str_Organize_MsgFailed", "Organize failed.");
-                ThemedMessageBox.Show(Loc.F("Str_MB_OrganizeFailed", "Organize failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_MB_OrganizeFailed", "Organize failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -810,7 +810,7 @@ namespace Smart_Tools.WPF.Views
             string head = journal.Moved
                 ? Loc.N(n, "Str_MB_OrgUndoMoveOne", "Move the {0:N0} file from the run on {1:g} back?", "Str_MB_OrgUndoMoveMany", "Move the {0:N0} files from the run on {1:g} back?", n, journal.When)
                 : Loc.N(n, "Str_MB_OrgUndoCopyOne", "Remove the copy of the {0:N0} file from the run on {1:g}?", "Str_MB_OrgUndoCopyMany", "Remove the copies of the {0:N0} files from the run on {1:g}?", n, journal.When);
-            var answer = ThemedMessageBox.Show(
+            var answer = AppModal.Show(
                 head + "\n\n" +
                 (journal.Moved ? Loc.T("Str_MB_OrgUndoMovedNote", "Files go back to where they were, and the folders that run created are removed if empty.") : Loc.T("Str_MB_OrgUndoCopiedNote", "Only copies that haven't been changed since are removed.")),
                 Loc.T("Str_MB_UndoOrganizeTitle", "Undo Organize"), MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -836,7 +836,7 @@ namespace Smart_Tools.WPF.Views
                 TxtProgress.Text = string.Join(" · ", parts);
 
                 if (result.Errors.Count > 0)
-                    ThemedMessageBox.Show(Loc.T("Str_MB_SomeFilesCouldnT", "Some files couldn't be undone:\n\n") + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? Loc.F("Str_MB_AndNMore", "\n...and {0} more", result.Errors.Count - 12) : ""),
+                    AppModal.Show(Loc.T("Str_MB_SomeFilesCouldnT", "Some files couldn't be undone:\n\n") + string.Join("\n", result.Errors.Take(12)) + (result.Errors.Count > 12 ? Loc.F("Str_MB_AndNMore", "\n...and {0} more", result.Errors.Count - 12) : ""),
                         DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             catch (OperationCanceledException)
@@ -847,7 +847,7 @@ namespace Smart_Tools.WPF.Views
             catch (Exception ex)
             {
                 SetBusy(false, undo: true);
-                ThemedMessageBox.Show(Loc.F("Str_Err_UndoFailed", "Undo failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                AppModal.Show(Loc.F("Str_Err_UndoFailed", "Undo failed: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

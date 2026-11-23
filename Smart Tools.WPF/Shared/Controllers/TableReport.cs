@@ -159,7 +159,7 @@ namespace Smart_Tools.WPF.Controllers
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(owner, ex.Message, Loc.T("Str_Connections_Export", "Export"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(owner, ex.Message, Loc.T("Str_Connections_Export", "Export"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
         }

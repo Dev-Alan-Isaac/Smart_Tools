@@ -125,13 +125,13 @@ namespace Smart_Tools.WPF.Views
             if (_sources.Count == 0) return;
             if (OutputCard.Status.IsError)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Formatter_CantSaveThere", "Can't save there: {0}", OutputCard.Status.Text), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_Formatter_CantSaveThere", "Can't save there: {0}", OutputCard.Status.Text), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             try { OutputCard.EnsureFolder(); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

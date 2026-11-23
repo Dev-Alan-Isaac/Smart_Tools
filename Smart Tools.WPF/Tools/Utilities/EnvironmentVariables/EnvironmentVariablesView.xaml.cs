@@ -179,7 +179,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private bool ConfirmDiscard() =>
-            !_dirty || ThemedMessageBox.Show(T("Str_EnvVars_DiscardConfirm", "Discard the changes you haven't saved?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            !_dirty || AppModal.Show(T("Str_EnvVars_DiscardConfirm", "Discard the changes you haven't saved?"), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
         // =================================================================
         //  Editor
@@ -387,7 +387,7 @@ namespace Smart_Tools.WPF.Views
             string name = TxtName.Text.Trim();
             if (_isNew || name.Length == 0) return;
             string question = string.Format(T("Str_EnvVars_DeleteConfirm", "Delete the variable \"{0}\"? You can undo this until you close the app."), name);
-            if (ThemedMessageBox.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(question, DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             if (_scope == EnvScope.System && !ConfirmSystem(name)) return;
 
             var result = _env.Delete(_scope, name, out string? error);
@@ -425,7 +425,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         private bool ConfirmSystem(string name) =>
-            ThemedMessageBox.Show(string.Format(T("Str_EnvVars_SystemConfirm", "\"{0}\" is a system variable, so this changes it for every account on this PC. Continue?"), name), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+            AppModal.Show(string.Format(T("Str_EnvVars_SystemConfirm", "\"{0}\" is a system variable, so this changes it for every account on this PC. Continue?"), name), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
 
         private void ReportFailure(EnvChangeResult result, string? error)
         {
@@ -450,7 +450,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Relaunches Smart Tools elevated (UAC prompt) and closes this instance - asks first.</summary>
         private void BtnRestartAdmin_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(T("Str_EnvVars_RestartConfirm", "Restart Smart Tools as administrator? Unsaved changes in the editor and the undo history are lost."), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(T("Str_EnvVars_RestartConfirm", "Restart Smart Tools as administrator? Unsaved changes in the editor and the undo history are lost."), DialogTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             if (Window.GetWindow(this) is MainWindow main && !main.PrepareForRestart()) return;
 
             switch (AppRestartManager.StartElevatedCopy(out string? error))
@@ -459,7 +459,7 @@ namespace Smart_Tools.WPF.Views
                     Application.Current.Shutdown();
                     break;
                 case AppRestartResult.Failed:
-                    ThemedMessageBox.Show(string.Format(T("Str_EnvVars_RestartFailed", "Couldn't restart as administrator: {0}"), error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppModal.Show(string.Format(T("Str_EnvVars_RestartFailed", "Couldn't restart as administrator: {0}"), error), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                     break;
                 // Declined: UAC said no - stay as we are.
             }

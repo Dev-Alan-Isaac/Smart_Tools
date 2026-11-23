@@ -941,5 +941,11 @@
             </Border>
 
         </Grid>
+
+        <!--  Shared modal (AppModal): message boxes are added here, over the title bar and the page  -->
+        <Grid
+            x:Name="ModalHost"
+            Grid.RowSpan="2"
+            Panel.ZIndex="1000" />
     </Grid>
 </Window>

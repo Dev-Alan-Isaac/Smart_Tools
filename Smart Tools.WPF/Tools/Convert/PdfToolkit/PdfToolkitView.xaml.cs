@@ -774,7 +774,7 @@ namespace Smart_Tools.WPF.Views
                 ProgressBarRun.Value = 0;
                 TxtProgressPercent.Text = "";
                 TxtProgressStatus.Text = "Couldn't save the result: " + PdfToolkitManager.PlainError(ex);
-                ThemedMessageBox.Show(Loc.F("Str_MB_TheResultCouldnT", "The result couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
+                AppModal.Show(Loc.F("Str_MB_TheResultCouldnT", "The result couldn't be saved.\n\n{0}\n\nCheck that the folder exists, you can write to it, and the file isn't open in another program.", ex.Message),
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally
@@ -798,7 +798,7 @@ namespace Smart_Tools.WPF.Views
             TxtProgressPercent.Text = any && !result.Cancelled ? "100%" : "";
             if (any) UiMotion.Pop(BtnOpenOutput, 0.9);
             if (result.Error != null && !result.Cancelled)
-                ThemedMessageBox.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+                AppModal.Show(result.Error, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void ResetResults()

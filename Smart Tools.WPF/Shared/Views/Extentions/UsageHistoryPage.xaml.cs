@@ -186,7 +186,7 @@ namespace Smart_Tools.WPF.Controls
 
         private void BtnClear_Click(object sender, RoutedEventArgs e)
         {
-            if (ThemedMessageBox.Show(Loc.T(Key("ClearAsk"), "Delete all the recorded history?"), Title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (AppModal.Show(Loc.T(Key("ClearAsk"), "Delete all the recorded history?"), Title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             Recorder.Store.Clear();
             Refresh();
         }
@@ -225,7 +225,7 @@ namespace Smart_Tools.WPF.Controls
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception)
             {
-                ThemedMessageBox.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.T("Str_MB_CouldnTSaveThe2", "Couldn't save the report: ") + ex.Message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

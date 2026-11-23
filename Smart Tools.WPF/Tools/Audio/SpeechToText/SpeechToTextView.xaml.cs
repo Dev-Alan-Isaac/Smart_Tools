@@ -431,7 +431,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex)
             {
-                ThemedMessageBox.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Loc.F("Str_Err_OpenFile", "Couldn't open {0}: {1}", Path.GetFileName(path), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -444,7 +444,7 @@ namespace Smart_Tools.WPF.Views
             string? target = OutputCard.IsSameAsSource ? firstResult : firstResult ?? OutputCard.EffectiveFolder;
             if (target != null && ShellExplorer.Show(target) == ShellExplorer.ShowResult.Shown) return;
             if (!quiet)
-                ThemedMessageBox.Show(OutputCard.IsSameAsSource
+                AppModal.Show(OutputCard.IsSameAsSource
                         ? S("NothingSavedSource", "The transcripts are saved next to each file - transcribe something first.")
                         : $"Nothing has been saved to {OutputCard.EffectiveFolder} yet.",
                     DialogTitle, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -506,7 +506,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (System.Runtime.InteropServices.COMException)
             {
-                ThemedMessageBox.Show(S("ClipboardBusy", "The clipboard is in use by another program. Try again."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(S("ClipboardBusy", "The clipboard is in use by another program. Try again."), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -536,7 +536,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(ex.Message, DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

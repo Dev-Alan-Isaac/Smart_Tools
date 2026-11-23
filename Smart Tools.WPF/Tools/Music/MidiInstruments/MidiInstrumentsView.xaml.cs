@@ -710,7 +710,7 @@ namespace Smart_Tools.WPF.Views
             }
             if (_manager.IsPlaying) return;
             if (_take is { IsEmpty: false } && !_takeSaved &&
-                ThemedMessageBox.Show(Window.GetWindow(this)!, Loc.T("Str_MidiInstruments_MsgRecordOver", "Record over the last take? It hasn't been saved."), DialogTitle,
+                AppModal.Show(Window.GetWindow(this)!, Loc.T("Str_MidiInstruments_MsgRecordOver", "Record over the last take? It hasn't been saved."), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 
@@ -812,7 +812,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                ThemedMessageBox.Show(Window.GetWindow(this)!, Loc.F("Str_MidiInstruments_MsgSaveFailed", "Couldn't save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(Window.GetWindow(this)!, Loc.F("Str_MidiInstruments_MsgSaveFailed", "Couldn't save the file: {0}", ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -877,7 +877,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_manager.IsRecording || _manager.IsPlaying) return;
             if (_take is { IsEmpty: false } && !_takeSaved &&
-                ThemedMessageBox.Show(Window.GetWindow(this)!, Loc.T("Str_MidiInstruments_MsgOpenOver", "Open this file and drop the last take? It hasn't been saved."), DialogTitle,
+                AppModal.Show(Window.GetWindow(this)!, Loc.T("Str_MidiInstruments_MsgOpenOver", "Open this file and drop the last take? It hasn't been saved."), DialogTitle,
                     MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
                 return;
 

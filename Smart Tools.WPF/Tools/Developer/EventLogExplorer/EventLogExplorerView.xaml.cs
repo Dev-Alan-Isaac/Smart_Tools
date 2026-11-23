@@ -770,7 +770,7 @@ namespace Smart_Tools.WPF.Views
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or EventLogException)
             {
-                ThemedMessageBox.Show(string.Format(Str("Str_EventExplorer_SaveFailed"), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                AppModal.Show(string.Format(Str("Str_EventExplorer_SaveFailed"), ex.Message), DialogTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
