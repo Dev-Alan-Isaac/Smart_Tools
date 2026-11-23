@@ -1,6 +1,6 @@
 # Smart Tools
 
-A Windows desktop app with **118 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
+A Windows desktop app with **115 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
 
 ## Download and start
 
@@ -49,7 +49,7 @@ Found a security problem? Please open an issue on GitHub, or contact the author 
 - **PDF** (4): Images to PDF, PDF Merge & Split, PDF Pages & Protect, PDF Reader & Signer
 - **Media** (1): Media Viewer
 - **Video** (6): Video Stitcher, Video to Audio, Video Compressor, GIF Maker, Screen Recorder, Video Frame Extractor
-- **Audio** (7): Audio Recorder, Spectrogram, Voice Changer, Speech to Text, Text to Speech, Loudness Meter & Normalizer, Audio Trimmer & Joiner
+- **Audio** (4): Speech Studio (Text to Speech + Speech to Text), Audio Editor (Audio Trimmer & Joiner + Loudness Meter & Normalizer), Voice Studio (Audio Recorder + Voice Changer), Spectrogram
 - **Music** (5): Instrument Tuner, Synthesizer, MIDI Instruments, MIDI Play-Along, Metronome
 - **Images** (6): Image Editor, Bulk Image Resizer, Background Remover, SVG Viewer & Optimizer, Screenshot, Icon Maker
 - **Colors** (5): Color Picker, Screen Color Picker, Color Wheel, Palette Extractor, Contrast Checker

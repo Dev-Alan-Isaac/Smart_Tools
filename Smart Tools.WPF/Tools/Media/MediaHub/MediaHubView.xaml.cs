@@ -33,6 +33,7 @@ namespace Smart_Tools.WPF.Views
         private readonly Dictionary<Page, UIElement> _pages = new();
         private Page _current = Page.Mixed;
         private bool _switching;
+        private UIElement? _shown;
 
         public MediaHubView()
         {
@@ -80,8 +81,14 @@ namespace Smart_Tools.WPF.Views
 
             _current = page;
             _lastPage = page;
+            // The strip lives in the page's own content column (one parent at a time): take it from the old page, then hand it to the new one.
+            (_shown as IHubPage)?.SetHubTabs(null);
+            StripHome.Children.Remove(Strip);
+            var view = GetPage(page);
+            (view as IHubPage)?.SetHubTabs(Strip);
+            _shown = view;
             // Swapping the content unloads the old page (it stops its own playback, like leaving any tool) and loads the new one.
-            PageHost.Content = GetPage(page);
+            PageHost.Content = view;
             TxtHint.Text = page switch
             {
                 Page.Photos => "Pictures only. Drop videos or music anywhere to jump to the right page.",

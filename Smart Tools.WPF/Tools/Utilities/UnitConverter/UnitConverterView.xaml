@@ -44,45 +44,6 @@
             </StackPanel>
         </DataTemplate>
 
-        <!--  One category tab: icon + name, accent underline and text when selected  -->
-        <Style x:Key="ConvTabStyle" TargetType="RadioButton">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border
-                            x:Name="Bd"
-                            Margin="0,0,2,0"
-                            Padding="12,8,12,7"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            BorderThickness="0,0,0,3"
-                            CornerRadius="8,8,0,0">
-                            <ContentPresenter
-                                x:Name="Cp"
-                                VerticalAlignment="Center"
-                                TextElement.Foreground="{TemplateBinding Foreground}" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
-                                <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource TextPrimary}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
-                                <Setter TargetName="Cp" Property="TextElement.Foreground" Value="{DynamicResource AccentColor}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!--  One unit tile in "In every unit": click it to convert to that unit; the current target is outlined  -->
         <Style x:Key="UnitTileButtonStyle" TargetType="Button">
             <Setter Property="Cursor" Value="Hand" />

@@ -35,8 +35,11 @@ namespace Smart_Tools.WPF.Controls
     /// <see cref="LoadImage"/> / <see cref="LoadImages"/> stay for other
     /// code that opens images here.
     /// </summary>
-    public partial class ImageViewerControl : UserControl
+    public partial class ImageViewerControl : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double PlaylistExpandedWidth = 380;

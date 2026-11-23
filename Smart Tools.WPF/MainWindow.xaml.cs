@@ -272,13 +272,10 @@ namespace Smart_Tools.WPF
             Add<ScreenRecorderView>("screen-recorder", v => v.CancelActiveRun());   // finishes a recording in progress and closes the bar
 
             // Audio
-            Add<MicRecorderView>("audio-recorder", v => v.CancelActiveRun());   // finishes and saves a recording in progress
-            Add<LoudnessView>("loudness-meter", v => v.CancelActiveRun());   // stops measuring/writing; a half-written copy is removed, originals are never touched
-            Add<AudioTrimmerView>("audio-trimmer", v => v.CancelActiveRun());   // stops the preview and an export, keeps the setup
+            Add<SpeechStudioView>("speech-studio", v => v.CancelActiveRun());   // two pages (Text to Speech, Speech to Text): each stops its own work
+            Add<AudioEditorView>("audio-editor", v => v.CancelActiveRun());   // two pages (Audio Trimmer & Joiner, Loudness): stops a preview, measuring or writing; originals are never touched
+            Add<VoiceStudioView>("voice-studio", v => v.CancelActiveRun());   // two pages (Recorder, Voice Changer): finishes and saves a recording, stops render, live mic and playback
             Add<SpectogramView>("spectrogram", v => v.CancelActiveRun());
-            Add<VoiceChangerView>("voice-changer", v => v.CancelActiveRun());   // stops render, live mic, playback
-            Add<SpeechToTextView>("speech-to-text", v => v.CancelActiveRun());   // stops the speech engine, ffmpeg, and model downloads
-            Add<TextToSpeechView>("text-to-speech", v => v.CancelActiveRun());   // stops speech, cancels a WAV save
 
             // Music
             Add<InstrumentTunerView>("instrument-tuner", v => v.CancelActiveRun());   // lets go of the microphone, stops a reference tone

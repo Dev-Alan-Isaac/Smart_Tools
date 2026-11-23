@@ -106,13 +106,10 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "screen-recorder", Name = "Screen Recorder", Icon = "RecordCircleOutline", CategoryId = "video", Description = "Record a screen, a window, or an area to an MP4, with your microphone if you like", Keywords = "screen recorder record capture video desktop window area mp4 microphone grabar pantalla captura" },
 
             // Audio
-            new ToolInfo { Id = "audio-recorder", Name = "Audio Recorder", Icon = "Microphone", CategoryId = "audio", Description = "Record from your microphone", Keywords = "mic record voice capture" },
+            new ToolInfo { Id = "speech-studio", Name = "Speech Studio", Icon = "Speaker", CategoryId = "audio", Description = "Read text aloud or save it as audio, and turn speech in audio or video into text and subtitles, offline", Keywords = "tts speak read aloud narrator transcribe transcription subtitles captions srt vtt whisper dictation speech recognition voz transcribir subtitulos texto" },
+            new ToolInfo { Id = "audio-editor", Name = "Audio Editor", Icon = "ContentCut", CategoryId = "audio", Description = "Cut, join, fade and normalize audio, and measure loudness for YouTube, Spotify or podcasts", Keywords = "audio trim cut join merge fade normalize waveform mp3 wav flac split recortar unir loudness lufs normalize volume level peak ebu r128 replaygain podcast youtube spotify nivelar volumen sonoridad" },
+            new ToolInfo { Id = "voice-studio", Name = "Voice Studio", Icon = "Microphone", CategoryId = "audio", Description = "Record from your microphone and change how a voice sounds", Keywords = "mic record voice capture pitch effects robot voice" },
             new ToolInfo { Id = "spectrogram", Name = "Spectrogram", Title = "Spectrogram Generator", Icon = "Waveform", CategoryId = "audio", Description = "See the frequencies in a sound", Keywords = "frequency analysis waveform fft" },
-            new ToolInfo { Id = "voice-changer", Name = "Voice Changer", Icon = "Tune", CategoryId = "audio", Description = "Change how a voice sounds", Keywords = "pitch effects robot voice" },
-            new ToolInfo { Id = "speech-to-text", Name = "Speech to Text", Icon = "Subtitles", CategoryId = "audio", Description = "Turn speech in audio or video into text and subtitles, offline", Keywords = "transcribe transcription subtitles captions srt vtt whisper dictation speech recognition voz transcribir subtitulos texto" },
-            new ToolInfo { Id = "text-to-speech", Name = "Text to Speech", Icon = "Speaker", CategoryId = "audio", Description = "Read text aloud or save it as audio", Keywords = "tts speak read aloud narrator" },
-            new ToolInfo { Id = "loudness-meter", Name = "Loudness Meter & Normalizer", Icon = "Speedometer", CategoryId = "audio", Description = "Measure LUFS and peak, and make normalized copies for YouTube, Spotify or podcasts", Keywords = "loudness lufs normalize volume level peak ebu r128 replaygain podcast youtube spotify nivelar volumen sonoridad" },
-            new ToolInfo { Id = "audio-trimmer", Name = "Audio Trimmer & Joiner", Icon = "ContentCut", CategoryId = "audio", Description = "Cut, join, fade and normalize audio", Keywords = "audio trim cut join merge fade normalize waveform mp3 wav flac split recortar unir" },
 
             // Images
             new ToolInfo { Id = "screenshot", Name = "Screenshot", Title = "Screenshot & Markup", Icon = "Camera", CategoryId = "images", Description = "Capture an area, a window, or the whole screen, mark it up, then copy or save", Keywords = "screenshot screen capture snip snipping print screen grab region window annotate arrow blur pixelate highlight text copy captura pantalla recorte" },
@@ -348,6 +345,17 @@ namespace Smart_Tools.WPF.Controllers
         private static string SettingsPath => Path.Combine(AppPaths.DataRoot, "shell.json");
 
         /// <summary>Unknown ids (a tool renamed or removed) are dropped.</summary>
+        /// <summary>Tools that became a page of another tool: old id -> the tool that holds it now (saved Recent / Favorites follow it).</summary>
+        private static readonly Dictionary<string, string> MergedInto = new()
+        {
+            ["text-to-speech"] = "speech-studio", ["speech-to-text"] = "speech-studio",
+            ["audio-trimmer"] = "audio-editor", ["loudness-meter"] = "audio-editor",
+            ["audio-recorder"] = "voice-studio", ["voice-changer"] = "voice-studio",
+        };
+
+        private static List<string> FollowMerged(List<string>? ids) =>
+            (ids ?? new()).Select(id => MergedInto.TryGetValue(id, out var to) ? to : id).Distinct().ToList();
+
         public static ShellSettings LoadSettings(string? path = null)
         {
             try
@@ -355,8 +363,8 @@ namespace Smart_Tools.WPF.Controllers
                 string file = path ?? SettingsPath;
                 if (!File.Exists(file)) return new ShellSettings();
                 var s = JsonSerializer.Deserialize<ShellSettings>(File.ReadAllText(file), Json) ?? new ShellSettings();
-                s.RecentToolIds = RecentTools(s.RecentToolIds ?? new()).Select(t => t.Id).ToList();
-                s.FavoriteToolIds = FavoriteTools(s.FavoriteToolIds ?? new()).Select(t => t.Id).ToList();
+                s.RecentToolIds = RecentTools(FollowMerged(s.RecentToolIds)).Select(t => t.Id).ToList();
+                s.FavoriteToolIds = FavoriteTools(FollowMerged(s.FavoriteToolIds)).Select(t => t.Id).ToList();
                 s.ExpandedCategories = (s.ExpandedCategories ?? new()).Where(id => Categories.Any(c => c.Id == id)).Distinct().ToList();
                 _baseline[file] = Snapshot(s);
                 return s;

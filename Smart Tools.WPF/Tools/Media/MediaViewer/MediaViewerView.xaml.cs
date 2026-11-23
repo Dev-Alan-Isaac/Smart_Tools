@@ -30,8 +30,11 @@ namespace Smart_Tools.WPF.Views
     /// and an optional slideshow; video and sound play in the same window.
     /// Laid out like Video Replay and Image Viewer.
     /// </summary>
-    public partial class MediaViewerView : UserControl
+    public partial class MediaViewerView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double PlaylistExpandedWidth = 380;

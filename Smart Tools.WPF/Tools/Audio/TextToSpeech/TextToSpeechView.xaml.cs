@@ -20,8 +20,11 @@ namespace Smart_Tools.WPF.Views
     /// are in <see cref="TextToSpeechManager"/>; SSML, names and settings in
     /// TextToSpeechManager.Text.cs.
     /// </summary>
-    public partial class TextToSpeechView : UserControl
+    public partial class TextToSpeechView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private static string DialogTitle => Loc.T("Str_Tool_text-to-speech_Name", "Text to Speech");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;

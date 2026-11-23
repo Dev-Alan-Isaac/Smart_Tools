@@ -21,8 +21,11 @@ namespace Smart_Tools.WPF.Views
     /// Loudness Meter &amp; Normalizer - UI only. Measuring, the normalized copies and the report are in
     /// <see cref="LoudnessManager"/>. Originals are only ever read.
     /// </summary>
-    public partial class LoudnessView : UserControl
+    public partial class LoudnessView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private static string DialogTitle => Loc.T("Str_Tool_loudness-meter_Name", "Loudness Meter & Normalizer");
 
         private readonly BulkObservableCollection<LoudnessItem> _items = new();
@@ -49,7 +52,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_loadedOnce) return;
             _loadedOnce = true;
-            ShortcutManager.AttachCommon("loudness-meter", ShortcutManager.RunId, () => BtnMeasure_Click(this, new RoutedEventArgs()));
+            ShortcutManager.AttachCommon("audio-editor", ShortcutManager.RunId, () => BtnMeasure_Click(this, new RoutedEventArgs()));
             UpdateState();
         }
 

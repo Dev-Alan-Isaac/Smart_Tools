@@ -100,7 +100,7 @@ namespace Smart_Tools.WPF.Views
                 content.Children.Add(new PackIcon { Kind = kind, Width = 18, Height = 18, Margin = new Thickness(0, 0, 7, 0), VerticalAlignment = VerticalAlignment.Center });
                 content.Children.Add(new TextBlock { Text = T("Str_Conv_Cat_" + id, english), VerticalAlignment = VerticalAlignment.Center });
                 var tile = new RadioButton { GroupName = "ConvCategory", Tag = id, Content = content };
-                tile.SetResourceReference(StyleProperty, "ConvTabStyle");
+                tile.SetResourceReference(StyleProperty, "UnderlineTabStyle");
                 tile.Checked += CategoryTile_Checked;
                 PanelCategories.Children.Add(tile);
             }

@@ -23,8 +23,11 @@ namespace Smart_Tools.WPF.Views
     /// playback are in <see cref="MicRecorderManager"/>; names, saving and
     /// settings in MicRecorderManager.Files.cs.
     /// </summary>
-    public partial class MicRecorderView : UserControl
+    public partial class MicRecorderView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private static string DialogTitle => Loc.T("Str_Tool_audio-recorder_Name", "Audio Recorder");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;

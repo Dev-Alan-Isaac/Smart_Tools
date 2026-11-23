@@ -31,8 +31,11 @@ namespace Smart_Tools.WPF.Controls
     /// AudioReplayModel.cs. This class only wires controls to the manager
     /// and renders what it reports.
     /// </summary>
-    public partial class AudioReplayControl : UserControl
+    public partial class AudioReplayControl : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private const double OptionsExpandedWidth = 280;
         private const double OptionsCollapsedWidth = 56;
         private const double PlaylistWidth = 380;

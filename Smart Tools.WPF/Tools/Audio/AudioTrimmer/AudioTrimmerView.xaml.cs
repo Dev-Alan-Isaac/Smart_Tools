@@ -37,8 +37,11 @@ namespace Smart_Tools.WPF.Views
     /// Nothing is edited in the files: a clip is only "this part of that file". Only Export writes audio.
     /// Which files and folders were used is never saved; only the setup (format, fades, level ...).
     /// </summary>
-    public partial class AudioTrimmerView : UserControl
+    public partial class AudioTrimmerView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double ClipsExpandedWidth = 340;
@@ -820,7 +823,7 @@ namespace Smart_Tools.WPF.Views
             bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
             switch (e.Key)
             {
-                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "audio-trimmer") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId:
+                case var _ when Smart_Tools.WPF.Controllers.ShortcutManager.CommonAction(e, "audio-editor") == Smart_Tools.WPF.Controllers.ShortcutManager.PlayPauseId:
                     BtnPlay_Click(this, new RoutedEventArgs());
                     e.Handled = true;
                     break;

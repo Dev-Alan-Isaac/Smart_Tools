@@ -19,29 +19,50 @@
     -->
 
     <Grid Background="{DynamicResource ContentBg}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <!--
+            The tab strip is parked here and handed to the page that is shown: each page puts it at the top of its own content column,
+            so the page's sidebar keeps the full height (the same layout as Unit & Currency).
+        -->
+        <Grid x:Name="StripHome" Visibility="Collapsed">
+            <Border x:Name="Strip" Margin="0,0,0,12" Padding="6,6,6,0" ctl:Tour.Key="Str_Tour_MediaHub_Modes" ctl:Tour.Order="0" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="0" Margin="16,8,16,0" Style="{StaticResource CardStyle}" ctl:Tour.Key="Str_Tour_MediaHub_Modes" ctl:Tour.Order="0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+                    <WrapPanel>
+                        <RadioButton x:Name="RadioMixed" Checked="Mode_Checked" GroupName="MhMode" Style="{StaticResource UnderlineTabStyle}" Tag="Mixed" ToolTip="{DynamicResource Str_MediaHub_PicturesVideosAndMusic}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="ViewDashboardOutline" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_MediaHub_Mixed}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="RadioPhotos" Checked="Mode_Checked" GroupName="MhMode" Style="{StaticResource UnderlineTabStyle}" Tag="Photos" ToolTip="{DynamicResource Str_MediaHub_PictureViewerZoomRotate}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="ImageMultipleOutline" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_MediaHub_Photos}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="RadioVideos" Checked="Mode_Checked" GroupName="MhMode" Style="{StaticResource UnderlineTabStyle}" Tag="Videos" ToolTip="{DynamicResource Str_MediaHub_VideoPlayerForAlmost}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="MovieOpenOutline" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DuplicateFinder_Videos}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="RadioMusic" Checked="Mode_Checked" GroupName="MhMode" Style="{StaticResource UnderlineTabStyle}" Tag="Music" ToolTip="{DynamicResource Str_MediaHub_AudioPlayerWithThe}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="MusicNote" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_MediaViewer_Audio}" />
+                            </StackPanel>
+                        </RadioButton>
+                    </WrapPanel>
 
-                <UniformGrid Width="560" Columns="4">
-                    <RadioButton x:Name="RadioMixed" Margin="0,0,2,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="ViewDashboardOutline" Content="{DynamicResource Str_MediaHub_Mixed}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Mixed" ToolTip="{DynamicResource Str_MediaHub_PicturesVideosAndMusic}" />
-                    <RadioButton x:Name="RadioPhotos" Margin="2,0,2,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="ImageMultipleOutline" Content="{DynamicResource Str_MediaHub_Photos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Photos" ToolTip="{DynamicResource Str_MediaHub_PictureViewerZoomRotate}" />
-                    <RadioButton x:Name="RadioVideos" Margin="2,0,2,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="MovieOpenOutline" Content="{DynamicResource Str_DuplicateFinder_Videos}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Videos" ToolTip="{DynamicResource Str_MediaHub_VideoPlayerForAlmost}" />
-                    <RadioButton x:Name="RadioMusic" Margin="2,0,0,0" Checked="Mode_Checked" controls:ChoiceIcon.Kind="MusicNote" Content="{DynamicResource Str_MediaViewer_Audio}" GroupName="MhMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Music" ToolTip="{DynamicResource Str_MediaHub_AudioPlayerWithThe}" />
-                </UniformGrid>
+                    <TextBlock x:Name="TxtHint" Grid.Column="1" Margin="16,0,8,6" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                </Grid>
+            </Border>
+        </Grid>
 
-                <TextBlock x:Name="TxtHint" Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
-            </Grid>
-        </Border>
-
-        <ContentPresenter x:Name="PageHost" Grid.Row="1" />
+        <ContentPresenter x:Name="PageHost" />
     </Grid>
 </UserControl>

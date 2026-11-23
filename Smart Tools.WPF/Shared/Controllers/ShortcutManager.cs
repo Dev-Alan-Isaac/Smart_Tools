@@ -78,11 +78,11 @@ namespace Smart_Tools.WPF.Controllers
         // id, title key, fallback title, default key, tools that can give it their own key (the others just follow the common one)
         private static readonly (string Id, string TitleKey, string Fallback, string Key, string[] Tools)[] CommonDefs =
         {
-            (RunId, "Str_Shortcut_CommonRun", "Start / run / scan / generate", "F5", new[] { "password-generator", "regex-tester", "duplicate-data", "find-similar", "loudness-meter" }),
+            (RunId, "Str_Shortcut_CommonRun", "Start / run / scan / generate", "F5", new[] { "password-generator", "regex-tester", "duplicate-data", "find-similar", "audio-editor" }),
             (StopId, "Str_Shortcut_CommonStop", "Cancel / stop", "Escape", Array.Empty<string>()),
             (SaveId, "Str_Shortcut_CommonSave", "Save / export", "Ctrl+S", Array.Empty<string>()),
             (OpenId, "Str_Shortcut_CommonOpen", "Open a file", "Ctrl+O", new[] { "screen-ocr" }),
-            (PlayPauseId, "Str_Shortcut_CommonPlayPause", "Play / pause", "Space", new[] { "media-viewer", "video-editor", "audio-trimmer", "metronome", "midi-playalong" }),
+            (PlayPauseId, "Str_Shortcut_CommonPlayPause", "Play / pause", "Space", new[] { "media-viewer", "video-editor", "audio-editor", "metronome", "midi-playalong" }),
             (MuteId, "Str_Shortcut_CommonMute", "Mute / unmute", "M", new[] { "media-viewer", "video-editor" }),
             (TheaterId, "Str_Shortcut_CommonTheater", "Theater (full view)", "T", new[] { "media-viewer" }),
         };
@@ -92,7 +92,7 @@ namespace Smart_Tools.WPF.Controllers
         {
             ("password.generate", RunId + "@password-generator"), ("regex.run", RunId + "@regex-tester"),
             ("dup.scan", RunId + "@duplicate-data"), ("similar.scan", RunId + "@find-similar"),
-            ("loudness.measure", RunId + "@loudness-meter"), ("ocr.open", OpenId + "@screen-ocr"),
+            ("loudness.measure", RunId + "@audio-editor"), ("ocr.open", OpenId + "@screen-ocr"),
         };
 
         private static string OverrideId(string commonId, string toolId) => commonId + "@" + toolId;

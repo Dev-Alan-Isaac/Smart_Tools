@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 118 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 115 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **115 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -87,13 +87,10 @@ Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Audio Recorder** | `audio-recorder` | Record from your microphone |
+| **Speech Studio** | `speech-studio` | Two pages: Text to Speech (read text aloud or save it as audio) and Speech to Text (audio or video into text and subtitles, offline) |
+| **Audio Editor** | `audio-editor` | Two pages: Audio Trimmer & Joiner (cut, join, fade, normalize) and Loudness Meter & Normalizer (LUFS and peak, normalized copies) |
+| **Voice Studio** | `voice-studio` | Two pages: Audio Recorder (record from your microphone) and Voice Changer (change how a voice sounds) |
 | **Spectrogram** | `spectrogram` | See the frequencies in a sound |
-| **Voice Changer** | `voice-changer` | Change how a voice sounds |
-| **Speech to Text** | `speech-to-text` | Turn speech in audio or video into text and subtitles, offline |
-| **Text to Speech** | `text-to-speech` | Read text aloud or save it as audio |
-| **Loudness Meter & Normalizer** | `loudness-meter` | Measure LUFS and peak, and make normalized copies for YouTube, Spotify or podcasts |
-| **Audio Trimmer & Joiner** | `audio-trimmer` | Cut, join, fade and normalize audio |
 
 ### Music
 *Tune and play instruments*
@@ -452,7 +449,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 118 tools have one. The tour only covers the page that is open.
+All 115 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -609,7 +606,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 118 tools*
+*Currently exploring unified testing approach across all 115 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

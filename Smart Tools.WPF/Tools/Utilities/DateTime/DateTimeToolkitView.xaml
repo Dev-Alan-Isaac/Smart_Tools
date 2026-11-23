@@ -32,41 +32,6 @@
             <UniformGrid Margin="0,0,-14,0" Columns="2" />
         </ItemsPanelTemplate>
 
-        <!--  A mode tab: icon and label, an accent underline on the chosen one  -->
-        <Style x:Key="DtTabStyle" TargetType="RadioButton">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Margin" Value="0,0,6,0" />
-            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border
-                            x:Name="Bd"
-                            Padding="18,11,18,9"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
-                            BorderThickness="0,0,0,3"
-                            CornerRadius="8,8,0,0">
-                            <ContentPresenter VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style x:Key="MiniLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -573,70 +538,32 @@
             </Grid.ColumnDefinitions>
 
             <!--  ================= OPTIONS SIDEBAR: which tool, then that tool's options =================  -->
-            <controls:ToolSidebar ExpandedWidth="320">
+            <controls:ToolSidebar>
                 <StackPanel>
 
-                    <!--  Mode  -->
-                    <Border Margin="0,0,0,10" ctl:Tour.Key="Str_Tour_DateTime_Mode" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
-                        <StackPanel>
-                            <ContentControl
-                                Content="{DynamicResource Str_DateTimeTool_ModeHeader}"
-                                Style="{StaticResource SidebarGroupHeader}"
-                                Tag="{x:Static materialDesign:PackIconKind.CalendarClock}" />
-                            <RadioButton x:Name="RadioModeUnix" Margin="0,0,0,4" Click="Mode_Click" GroupName="DtMode" IsChecked="True" Style="{StaticResource ModeToggleButtonStyle}" Tag="Unix">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarClock" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeUnix}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="RadioModeZones" Margin="0,0,0,4" Click="Mode_Click" GroupName="DtMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Zones">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="EarthArrowRight" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeZones}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="RadioModeDiff" Margin="0,0,0,4" Click="Mode_Click" GroupName="DtMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Difference">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarRange" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeDiff}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="RadioModeIso" Margin="0,0,0,4" Click="Mode_Click" GroupName="DtMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Iso">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarCheck" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeIso}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="RadioModeCalendar" Click="Mode_Click" GroupName="DtMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="Calendar">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="17" Height="17" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CalendarWeek" />
-                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeCalendar}" />
-                                </StackPanel>
-                            </RadioButton>
-                            <Border
-                                x:Name="CopiedPill"
-                                Margin="0,10,0,0"
-                                HorizontalAlignment="Left"
-                                Background="{DynamicResource StatusSuccessBg}"
-                                Style="{StaticResource IconStatusPillStyle}"
-                                Visibility="Collapsed">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon
-                                        Width="13"
-                                        Height="13"
-                                        Margin="0,0,5,0"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource StatusSuccessFg}"
-                                        Kind="Check" />
-                                    <TextBlock
-                                        FontSize="11.5"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource StatusSuccessFg}"
-                                        Text="{DynamicResource Str_DateTimeTool_Copied}" />
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
+                    <!--  'Copied' confirmation (the modes themselves are the tabs above the results)  -->
+                        <Border
+                            x:Name="CopiedPill"
+                            Margin="0,0,0,10"
+                            HorizontalAlignment="Left"
+                            Background="{DynamicResource StatusSuccessBg}"
+                            Style="{StaticResource IconStatusPillStyle}"
+                            Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="13"
+                                    Height="13"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    Kind="Check" />
+                                <TextBlock
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource StatusSuccessFg}"
+                                    Text="{DynamicResource Str_DateTimeTool_Copied}" />
+                            </StackPanel>
+                        </Border>
 
                     <!--  Options of the chosen mode  -->
                     <Border Margin="0,0,0,4" ctl:Tour.Key="Str_Tour_DateTime_Options" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
@@ -748,14 +675,83 @@
             <!--  ================= MAIN AREA: the results, and "Good to know" under them =================  -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
+                <!--  Mode tabs (the same look as the Unit & Currency categories)  -->
+                <Border
+                    Grid.Row="0"
+                    Margin="0,0,0,12"
+                    Padding="6,6,6,0"
+                    ctl:Tour.Key="Str_Tour_DateTime_Mode"
+                    ctl:Tour.Order="1"
+                    Style="{StaticResource CardStyle}">
+                    <WrapPanel>
+                        <RadioButton
+                            x:Name="RadioModeUnix"
+                            Click="Mode_Click"
+                            GroupName="DtMode"
+                            IsChecked="True"
+                            Style="{StaticResource UnderlineTabStyle}"
+                            Tag="Unix">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="CalendarClock" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeUnix}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioModeZones"
+                            Click="Mode_Click"
+                            GroupName="DtMode"
+                            Style="{StaticResource UnderlineTabStyle}"
+                            Tag="Zones">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="EarthArrowRight" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeZones}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioModeDiff"
+                            Click="Mode_Click"
+                            GroupName="DtMode"
+                            Style="{StaticResource UnderlineTabStyle}"
+                            Tag="Difference">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="CalendarRange" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeDiff}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioModeIso"
+                            Click="Mode_Click"
+                            GroupName="DtMode"
+                            Style="{StaticResource UnderlineTabStyle}"
+                            Tag="Iso">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="CalendarCheck" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeIso}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton
+                            x:Name="RadioModeCalendar"
+                            Click="Mode_Click"
+                            GroupName="DtMode"
+                            Style="{StaticResource UnderlineTabStyle}"
+                            Tag="Calendar">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,7,0" VerticalAlignment="Center" Kind="CalendarWeek" />
+                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_DateTimeTool_ModeCalendar}" />
+                            </StackPanel>
+                        </RadioButton>
+                    </WrapPanel>
+                </Border>
+
                 <Border
                     ctl:Tour.Key="Str_Tour_DateTime_Results"
                     ctl:Tour.Order="3"
-                    Grid.Row="0"
+                    Grid.Row="1"
                     Padding="22,20"
                     Style="{StaticResource CardStyle}">
                     <Grid>
@@ -1898,7 +1894,7 @@
                 </Border>
                 <!--  ================= GOOD TO KNOW (footer, changes with the tab) =================  -->
                 <ScrollViewer
-                    Grid.Row="1"
+                    Grid.Row="2"
                     MaxHeight="250"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">

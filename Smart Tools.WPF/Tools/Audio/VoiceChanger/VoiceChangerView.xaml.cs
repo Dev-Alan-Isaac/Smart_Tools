@@ -25,8 +25,11 @@ namespace Smart_Tools.WPF.Views
     /// and settings in VoiceChangerManager.Files.cs; the sound processing
     /// itself in VoiceChangerDsp.cs.
     /// </summary>
-    public partial class VoiceChangerView : UserControl
+    public partial class VoiceChangerView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private static string DialogTitle => Loc.T("Str_Tool_voice-changer_Name", "Voice Changer");
         private const double SidebarExpandedWidth = 290;
         private const double SidebarCollapsedWidth = 56;

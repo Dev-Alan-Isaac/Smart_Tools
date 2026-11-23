@@ -121,8 +121,17 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!--  Filled by a tool hub (Speech / Audio Editor / Voice Studio) with its tab strip; empty and zero-height when the tool is opened alone  -->
+            <ContentPresenter x:Name="HubTabsHost" Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="1" />
+
+
             <!--  ================= OPTIONS SIDEBAR =================  -->
-            <controls:ToolSidebar>
+            <controls:ToolSidebar Grid.RowSpan="2">
                 <StackPanel x:Name="SidebarStack">
                     <controls:InputFolderCard ctl:Tour.Key="Str_Tour_Loudness_Input" ctl:Tour.Order="1"
                         x:Name="InputCard"
@@ -191,7 +200,7 @@
             </controls:ToolSidebar>
 
             <!--  ================= MAIN AREA =================  -->
-            <Grid Grid.Column="2">
+            <Grid Grid.Row="1" Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />

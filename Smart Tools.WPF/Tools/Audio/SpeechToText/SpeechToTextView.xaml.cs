@@ -27,8 +27,11 @@ namespace Smart_Tools.WPF.Views
     /// <see cref="SpeechToTextManager"/>; the engines in SpeechToTextManager.Run.cs; model downloads in
     /// <see cref="WhisperModelManager"/>.
     /// </summary>
-    public partial class SpeechToTextView : UserControl
+    public partial class SpeechToTextView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private static string DialogTitle => Loc.T("Str_Tool_speech-to-text_Name", "Speech to Text");

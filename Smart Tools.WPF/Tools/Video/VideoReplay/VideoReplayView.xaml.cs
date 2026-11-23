@@ -37,8 +37,11 @@ namespace Smart_Tools.WPF.Views
     /// MediaElement with preview copies (VideoReplayView.Players.cs).
     /// The current clip is tracked by object, never by row number.
     /// </summary>
-    public partial class VideoReplayView : UserControl
+    public partial class VideoReplayView : UserControl, IHubPage
     {
+        /// <summary>Hub tab strip slot (see <see cref="IHubPage"/>).</summary>
+        public void SetHubTabs(UIElement? strip) => HubTabsHost.Content = strip;
+
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
         private const double PlaylistExpandedWidth = 400;
