@@ -83,6 +83,7 @@ namespace Smart_Tools.WPF.Views
             if (_open++ == 0) DisableBackground(host);
             Panel.SetZIndex(modal, 1000);
             host.Children.Add(modal);
+            ModalState.Opened();
             try
             {
                 Dispatcher.PushFrame(frame);
@@ -90,6 +91,7 @@ namespace Smart_Tools.WPF.Views
             finally
             {
                 app.Dispatcher.ShutdownStarted -= OnShutdown;
+                ModalState.Closed();
                 host.Children.Remove(modal);
                 if (--_open == 0) RestoreBackground();
                 if (previousFocus is IInputElement { } element) element.Focus();

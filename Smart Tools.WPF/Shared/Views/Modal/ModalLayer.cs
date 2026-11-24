@@ -102,6 +102,7 @@ namespace Smart_Tools.WPF.Views
             _stack.Add(entry);
             Children.Add(scrim);
             Visibility = Visibility.Visible;
+            ModalState.Opened();
 
             UiMotion.FadeIn(scrim, 0, 140);
             UiMotion.Pop(host, 0.95, 200);
@@ -114,6 +115,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (entry.Closed) return;
             entry.Closed = true;
+            ModalState.Closed();
             _stack.Remove(entry);
             Children.Remove(entry.Scrim);
             if (_stack.Count == 0) Visibility = Visibility.Collapsed;

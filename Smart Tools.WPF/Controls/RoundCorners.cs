@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using Smart_Tools.WPF.Views;
 using Control = System.Windows.Controls.Control;
 using Pen = System.Windows.Media.Pen;
 
@@ -88,9 +89,18 @@ namespace Smart_Tools.WPF.Controls
             {
                 IsHitTestVisible = false;
                 _brushWatch?.AddValueChanged(element, OnBrushChanged);
+                ModalState.Changed += OnModalChanged;
+                OnModalChanged();
             }
 
-            public void Detach() => _brushWatch?.RemoveValueChanged(AdornedElement, OnBrushChanged);
+            public void Detach()
+            {
+                _brushWatch?.RemoveValueChanged(AdornedElement, OnBrushChanged);
+                ModalState.Changed -= OnModalChanged;
+            }
+
+            // The adorner layer is above every modal, so while one is open the outline steps aside instead of crossing it.
+            private void OnModalChanged() => Visibility = ModalState.AnyOpen ? Visibility.Collapsed : Visibility.Visible;
 
             private void OnBrushChanged(object? sender, EventArgs e) => InvalidateVisual();
 
