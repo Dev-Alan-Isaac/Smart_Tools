@@ -28,8 +28,9 @@ namespace Smart_Tools.WPF.Views
         /// <summary>One char[] per field, in order, or null if cancelled.</summary>
         public char[][]? Result { get; private set; }
 
+        /// <param name="allowReveal">Adds an eye to every field so the password can be seen as plain text while it is typed (it is only kept in memory while the eye is on).</param>
         /// <param name="lastTwoMustMatch">The last two fields are "new" and "confirm": they must be equal, long enough and not weak (a weak one asks first).</param>
-        public VaultPasswordDialog(string title, string intro, IReadOnlyList<string> labels, bool lastTwoMustMatch)
+        public VaultPasswordDialog(string title, string intro, IReadOnlyList<string> labels, bool lastTwoMustMatch, bool allowReveal = false)
         {
             _lastTwoMustMatch = lastTwoMustMatch;
             _checkStrengthOfFirstNew = lastTwoMustMatch;
@@ -57,7 +58,7 @@ namespace Smart_Tools.WPF.Views
                 box.KeyDown += (_, e) => { if (e.Key == Key.Enter) Accept(); };
                 _boxes.Add(box);
                 stack.Children.Add(l);
-                stack.Children.Add(box);
+                stack.Children.Add(allowReveal ? Smart_Tools.WPF.Controls.PasswordReveal.Wrap(box) : box);
             }
 
             _error.Margin = new Thickness(0, 10, 0, 0);

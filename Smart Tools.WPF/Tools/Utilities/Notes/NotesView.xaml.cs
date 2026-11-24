@@ -68,6 +68,7 @@ namespace Smart_Tools.WPF.Views
 
             BuildColorSwatches();
             NoteRichText.AttachPaste(RtbBody);
+            PasswordReveal.WrapInPlace(PwdUnlock);   // the eye on the unlock box
             NoteRichText.AttachBoldToggle(RtbBody, () => Dispatcher.BeginInvoke(UpdateFormatButtons));
 
             var load = NotesManager.EnsureLoaded();
@@ -417,7 +418,7 @@ namespace Smart_Tools.WPF.Views
             }
             var dialog = new VaultPasswordDialog(title,
                 Loc.T("Str_Notes_LockDlgIntro", "Choose a password for this note. Without it the note can't be read, and it can't be recovered if you forget it. The title stays visible in the list."),
-                new[] { Loc.T("Str_Notes_LockPassword", "Password"), Loc.T("Str_Notes_LockRepeat", "Repeat the password") }, lastTwoMustMatch: true);
+                new[] { Loc.T("Str_Notes_LockPassword", "Password"), Loc.T("Str_Notes_LockRepeat", "Repeat the password") }, lastTwoMustMatch: true, allowReveal: true);
             dialog.ShowDialog();
             if (dialog.Result is not { } fields) return;
 
