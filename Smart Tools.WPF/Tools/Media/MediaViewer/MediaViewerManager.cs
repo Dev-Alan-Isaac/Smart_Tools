@@ -65,7 +65,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     if (Directory.Exists(path))
                     {
-                        foreach (string file in Directory.EnumerateFiles(path, "*", options).OrderBy(f => Path.GetFileName(f), RenameManager.NaturalComparer.Instance))
+                        foreach (string file in Directory.EnumerateFiles(path, "*", options).OrderBy(f => Path.GetFileName(f), NaturalStringComparer.Instance))
                             AddFile(file);
                     }
                     else if (File.Exists(path))
@@ -190,11 +190,11 @@ namespace Smart_Tools.WPF.Controllers
         public static List<MediaItem> Sort(IEnumerable<MediaItem> items, bool byDate)
         {
             if (!byDate)
-                return items.OrderBy(i => i.Folder, RenameManager.NaturalComparer.Instance)
-                    .ThenBy(i => i.Name, RenameManager.NaturalComparer.Instance).ToList();
+                return items.OrderBy(i => i.Folder, NaturalStringComparer.Instance)
+                    .ThenBy(i => i.Name, NaturalStringComparer.Instance).ToList();
             return items
                 .Select(i => (Item: i, Modified: ModifiedOf(i.Path)))
-                .OrderBy(x => x.Modified).ThenBy(x => x.Item.Name, RenameManager.NaturalComparer.Instance)
+                .OrderBy(x => x.Modified).ThenBy(x => x.Item.Name, NaturalStringComparer.Instance)
                 .Select(x => x.Item).ToList();
         }
 

@@ -617,16 +617,6 @@ namespace Smart_Tools.WPF.Views
             _saveTimer.Start();
         }
 
-        private static void Toast(string title, string message)
-        {
-            try
-            {
-                ToastNotificationManager.ShowToast(title, message);
-            }
-            catch (Exception)
-            {
-                // a toast is a nice-to-have
-            }
-        }
+        private static void Toast(string title, string message) => Smart_Tools.WPF.Controllers.ToastNotificationManager.ShowToast(title, message);
     }
 }

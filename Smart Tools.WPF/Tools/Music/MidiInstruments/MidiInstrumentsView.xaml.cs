@@ -832,7 +832,7 @@ namespace Smart_Tools.WPF.Views
                     else if (Directory.Exists(path))
                     {
                         var here = Directory.EnumerateFiles(path).Where(IsMidiPath).ToList();
-                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        here.Sort(NaturalStringComparer.Instance);
                         found.AddRange(here);
                     }
                 }

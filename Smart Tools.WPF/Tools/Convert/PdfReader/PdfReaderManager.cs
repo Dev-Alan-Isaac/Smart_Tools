@@ -166,7 +166,7 @@ namespace Smart_Tools.WPF.Controllers
                     else if (Directory.Exists(path))
                     {
                         var here = Directory.EnumerateFiles(path, "*.pdf", SearchOption.TopDirectoryOnly).Where(IsPdf).ToList();
-                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        here.Sort(NaturalStringComparer.Instance);
                         foreach (string file in here)
                         {
                             if (result.Count >= limit) break;

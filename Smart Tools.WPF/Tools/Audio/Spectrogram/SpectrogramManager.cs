@@ -584,11 +584,11 @@ namespace Smart_Tools.WPF.Controllers
                     try
                     {
                         var here = Directory.EnumerateFiles(dir, "*", options).Where(IsSupported).ToList();
-                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        here.Sort(NaturalStringComparer.Instance);
                         files.AddRange(here);
                         if (!includeSubfolders) continue;
                         var subs = Directory.EnumerateDirectories(dir, "*", options).ToList();
-                        subs.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        subs.Sort(NaturalStringComparer.Instance);
                         for (int i = subs.Count - 1; i >= 0; i--) pending.Push(subs[i]);   // reversed so they come off in order
                     }
                     catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or System.Security.SecurityException)

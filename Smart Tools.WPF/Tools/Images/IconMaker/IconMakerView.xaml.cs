@@ -143,7 +143,7 @@ namespace Smart_Tools.WPF.Views
                     else if (Directory.Exists(path))
                     {
                         var here = Directory.EnumerateFiles(path).Where(f => Extensions.Contains(Path.GetExtension(f).ToLowerInvariant())).ToList();
-                        here.Sort(VideoReplayManager.NaturalComparer.Instance);
+                        here.Sort(NaturalStringComparer.Instance);
                         found.AddRange(here);
                     }
                 }
