@@ -5,7 +5,7 @@ namespace Smart_Tools.WPF.Controllers
     {
         private static readonly string[] Units = { "B", "KB", "MB", "GB", "TB" };
 
-        /// <summary>"512 B", "4 KB", "1.5 MB" (one decimal, trailing zero dropped).</summary>
+        /// <summary>"512 B", "4 KB", "1.5 MB" (one decimal, trailing zero dropped; bytes stay whole).</summary>
         public static string Format(long bytes)
         {
             double size = bytes;
@@ -15,7 +15,7 @@ namespace Smart_Tools.WPF.Controllers
                 size /= 1024;
                 unit++;
             }
-            return unit == 0 ? $"{bytes} B" : $"{size:0.#} {Units[unit]}";
+            return $"{size:0.#} {Units[unit]}";
         }
     }
 }

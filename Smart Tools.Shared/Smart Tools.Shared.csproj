@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The app's pure helpers, compiled from the same source files the app uses, so the tests and the
+    mutator can reach them without building the 900 MB self-contained app. Add a file here when it
+    has no UI in it and you want it covered. The app does NOT reference this project.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <RootNamespace>Smart_Tools.WPF</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="3.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Smart Tools.WPF\Shared\Controllers\ByteFormat.cs" Link="ByteFormat.cs" />
+    <Compile Include="..\Smart Tools.WPF\Shared\Controllers\NaturalStringComparer.cs" Link="NaturalStringComparer.cs" />
+    <Compile Include="..\Smart Tools.WPF\Shared\Controllers\SafeFileOps.cs" Link="SafeFileOps.cs" />
+    <Compile Include="..\Smart Tools.WPF\Shared\Controllers\AtomicFile.cs" Link="AtomicFile.cs" />
+    <Compile Include="..\Smart Tools.WPF\Shared\Controllers\JsonSettings.cs" Link="JsonSettings.cs" />
+    <Compile Include="..\Smart Tools.WPF\Modules\AppPaths.cs" Link="AppPaths.cs" />
+    <Compile Include="..\Smart Tools.WPF\Modules\Log.cs" Link="Log.cs" />
+  </ItemGroup>
+
+</Project>

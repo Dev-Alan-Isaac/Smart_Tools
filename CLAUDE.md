@@ -25,6 +25,10 @@ Read those before changing a view; do not repeat their content here.
   `FileDrop.Attach(view, onFile)` (`Modules/FileDrop.cs`) adds drag-and-drop of one file to a view.
 - `Engines/` - bundled FFmpeg, VLC, Tesseract, Whisper. `Modules/` - app services (paths, settings, theme, language, log, toasts).
 
+## Tests and ub-mode checks
+- `dotnet test "Smart Tools.WPF.Tests"` (xUnit, 34 tests). It covers only the pure helpers that `Smart Tools.Shared/Smart Tools.Shared.csproj` compiles from the app's own source files (ByteFormat, NaturalStringComparer, SafeFileOps, AtomicFile, JsonSettings). To cover another pure file, add a `<Compile Include=... Link=...>` line there; the app does not reference that project.
+- `.\tools\ub-check.ps1 dryer|crapper|mutator|all`: `dryer` = copied method bodies (`tools/dryer.py`, exact copies only), `crapper` = CRAP score per method from coverage (`tools/crapper.py`), `mutator` = Stryker.NET on Smart Tools.Shared (run `dotnet tool restore` first; config in `Smart Tools.WPF.Tests/stryker-config.json`; reports go to `artifacts/`, ignored by git). Crapper and mutator only see the linked helpers, not the views.
+
 ## Adding a tool (checklist)
 1. Folder with View / Manager / Model. 2. `ToolInfo` in the catalog. 3. `Add<View>` in `MainWindow`. 4. `Str_Tool_<id>_Name`/`_Description`
 in en + es. 5. Tour tags (`ctl:Tour.Key`) + `Str_Tour_*` strings. 6. Update the tool table in `PROJECT_DOCUMENTATION.md`, the counts there and in `README.md`.
