@@ -339,6 +339,7 @@ namespace Smart_Tools.WPF
             Add<JwtDecoderView>("jwt-decoder", v => v.CancelActiveRun());   // stops the expiry clock, clears the token
             Add<DataFormatterView>("data-formatter", v => v.CancelActiveRun());   // drops a result still being worked out
             Add<MetadataExtractView>("metadata-extract", v => v.CancelActiveRun());
+            Add<DimensionModelerView>("dimension-modeler", v => v.CancelActiveRun());   // saves the sliders; nothing runs in the background
             Add<LogViewerView>("log-viewer", v => v.CancelActiveRun());   // stops following every file, saves rule edits
             Add<CodeToolkitView>("code-toolkit", v => v.CancelActiveRun());
             Add<EventLogExplorerView>("event-log-explorer", v => v.CancelActiveRun());   // stops reading and live refresh, saves settings

@@ -4,7 +4,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Project Overview
 
-**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 113 specialized tools into one intuitive, theme-aware interface with multi-language support.
+**Smart Tools** is a Swiss Army knife of productivity utilities for Windows developers and power users. It combines 114 specialized tools into one intuitive, theme-aware interface with multi-language support.
 
 - **Platform**: Windows Desktop (WPF)
 - **.NET Target**: .NET 10.0-windows10.0.17763.0
@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **113 tools** in 20 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -229,6 +229,13 @@ Smart Tools has **113 tools** in 20 sidebar categories. Every tool opens inside 
 | **Mock Data Generator** | `mock-data` | Generate fake data for testing |
 | **ID & Lorem Generator** | `id-generator` | Make UUIDs (v4, v7), ULIDs, random hex and lorem ipsum text |
 
+### 3D & Design
+*Model and print things*
+
+| Tool | Id | What it does |
+|---|---|---|
+| **Dimension Modeler** | `dimension-modeler` | Model a table, chair, bookshelf or cabinet from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing |
+
 ### Utilities
 *Everyday helpers*
 
@@ -274,6 +281,7 @@ Smart Tools has **113 tools** in 20 sidebar categories. Every tool opens inside 
 - **Game Controller Test** - Reads Xbox-style pads (XInput) and other game devices (joysticks, wheels, generic and PlayStation pads) over USB or Bluetooth, with the layout detected automatically (no type to pick) and a notice that extra buttons such as back paddles or levers cannot be detected: live sticks, triggers and buttons, dead zones (axial, radial, scaled), rest drift, range and roundness, trigger response, report rate and vibration
 - **Audio Output Test** - Per-channel beeps, phase and polarity tests, tone generator, sweep and noise for speakers, headphones and IEMs, through any active output device (WASAPI shared mode, at the device's own format); no speaker/headphone type to pick, a stereo device simply gets the left/right picture
 - **Mock Data Generator** - Generate fake data for testing (Generators category): grouped type list, checksum-valid IBAN / credit card (Luhn) / ISBN-13, and your own saved lists (Settings > Mock data)
+- **Dimension Modeler** (3D & Design category) - Pick a table, chair, bookshelf or cabinet and set its dimensions in millimetres (sliders or typed values); the piece is built from boards and legs, shown in 3D (drag to turn, right-drag to move, wheel to zoom) with width / height / depth dimension lines in mm, cm or inches, and listed in a cut list (click a row to light that board up and measure it). Export: OBJ or STL of the whole piece, or every board laid flat on printable plates (print scale such as 1/10, joint clearance, your printer bed size; one file per plate). **Custom piece:** the "Custom" choice (or "Edit as custom piece" on a preset, which copies its boards) lets you build from scratch: add boards (board, leg, panel, top), name them and type their position and size in mm (Up / Down nudge a number), copy and delete them; a pill warns about overlapping or loose boards; designs are saved and opened as `.dmodel` files (readable JSON) and the custom piece is remembered. Everything else (3D, dimension lines, cut list, exports, print plates) works on it unchanged. The pure maths lives in `Tools/Design/DimensionModeler/Core/` (templates, `BoxMesh`, `OrbitCamera`, `PrintPlanner`, OBJ / STL writers) and is covered by tests in `Smart Tools.WPF.Tests`.
 
 - **Media Viewer** (`media-viewer`, `Tools/Media/MediaHub`) - one tool with four pages: **Mixed** (`MediaViewerView`: pictures, videos and music in one queue, slideshow, mini-player widget), **Photos** (`ImageViewerControl`: zoom, rotate, thumbnails, slideshow, save as), **Videos** (`VideoReplayView`: LibVLC player for almost any format, playlists, resume position) and **Music** (`AudioReplayControl`: NAudio player with the level visualizer, audio tracks, speed). It replaced the separate Image Viewer, Video Replay and Audio Replay tools; each page is the complete original tool. Only the page shown is in the visual tree (the others release their playback when you switch), and files dropped on the wrong page jump to the page that fits their type (`MediaHubView`, `AddPaths` on each page).
   - **Seek bar (Mixed page, `MediaViewerView.PosSlider`)**: pressing the bar pauses playback, dragging only scrubs a frame about every 100 ms (`ScrubbingEnabled`), and one seek plus resume happens on release (`_isUserSeeking`, `EndUserSeek`). The position timer never writes to the bar while the user is seeking, and changing `Maximum` on a new clip is guarded by `_updatingSlider`. Never seek on every `ValueChanged` while playing: it garbles the picture and crackles the audio.
@@ -440,7 +448,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 113 tools have one. The tour only covers the page that is open.
+All 114 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -597,7 +605,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 113 tools*
+*Currently exploring unified testing approach across all 114 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

@@ -1,0 +1,1039 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.DimensionModelerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    x:Name="Root"
+    Loaded="Root_Loaded"
+    Unloaded="Root_Unloaded">
+
+    <!--
+        Backend: Tools/Design/DimensionModeler/Core/*.cs (the pure maths: parts, templates, dimension lines, camera, cut list,
+        print planner, OBJ / STL writers - all tested), DimensionModelerManager.cs (settings and saving), DimensionModelerModel.cs.
+        This file and its code-behind (.xaml.cs = flow, .Params.cs = the slider rows, .Scene.cs = the 3D view and the
+        dimension-line overlay) are UI only. The piece is shown full size; the print scale only applies to what is exported.
+    -->
+
+    <UserControl.Resources>
+        <!--  One board in the list: sidebar colours, an accent outline when picked  -->
+        <Style x:Key="PartRowStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="7">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarInputBg}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarInputBg}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="OptionsColumn" Width="280" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= SIDEBAR =================  -->
+            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <Button
+                            x:Name="BtnCollapseOptions"
+                            MinHeight="45"
+                            HorizontalContentAlignment="Left"
+                            Click="BtnCollapseOptions_Click"
+                            Cursor="Hand"
+                            FocusVisualStyle="{x:Null}"
+                            Foreground="{DynamicResource SidebarText}"
+                            ToolTip="{DynamicResource Str_Common_SidebarToggleTooltip}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                    <Setter Property="OverridesDefaultStyle" Value="True" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Margin="16,0,0,0" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="20"
+                                    Height="20"
+                                    VerticalAlignment="Center"
+                                    Kind="TuneVariant" />
+                                <TextBlock
+                                    x:Name="TxtOptionsHeaderLabel"
+                                    Margin="10,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Text="{DynamicResource Str_Common_OptionsLabel}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Separator
+                            x:Name="SepHeader"
+                            Margin="16,4"
+                            Style="{StaticResource SidebarSeparatorStyle}" />
+                    </StackPanel>
+
+                    <ScrollViewer
+                        x:Name="OptionsScrollViewer"
+                        Grid.Row="1"
+                        VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="16">
+
+                            <!--  ============ PIECE ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_Piece" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Modeler_PieceHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.CubeOutline}" />
+                                    <UniformGrid Columns="2">
+                                        <RadioButton
+                                            x:Name="RadioTable"
+                                            Margin="0,0,2,4"
+                                            Click="Piece_Click"
+                                            GroupName="Piece"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="table"
+                                            AutomationProperties.Name="{DynamicResource Str_Modeler_Template_table}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="TableFurniture" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Modeler_Template_table}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioChair"
+                                            Margin="2,0,0,4"
+                                            Click="Piece_Click"
+                                            GroupName="Piece"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="chair"
+                                            AutomationProperties.Name="{DynamicResource Str_Modeler_Template_chair}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="SeatOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Modeler_Template_chair}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioBookshelf"
+                                            Margin="0,2,2,0"
+                                            Click="Piece_Click"
+                                            GroupName="Piece"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="bookshelf"
+                                            AutomationProperties.Name="{DynamicResource Str_Modeler_Template_bookshelf}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="Bookshelf" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Modeler_Template_bookshelf}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                        <RadioButton
+                                            x:Name="RadioCabinet"
+                                            Margin="2,2,0,0"
+                                            Click="Piece_Click"
+                                            GroupName="Piece"
+                                            Style="{StaticResource ModeToggleTallStyle}"
+                                            Tag="cabinet"
+                                            AutomationProperties.Name="{DynamicResource Str_Modeler_Template_cabinet}">
+                                            <StackPanel>
+                                                <materialDesign:PackIcon
+                                                    Width="20"
+                                                    Height="20"
+                                                    HorizontalAlignment="Center"
+                                                    Kind="WardrobeOutline" />
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Text="{DynamicResource Str_Modeler_Template_cabinet}" />
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                    <RadioButton
+                                        x:Name="RadioCustom"
+                                        Margin="0,6,0,0"
+                                        AutomationProperties.Name="{DynamicResource Str_Modeler_Template_custom}"
+                                        Click="Piece_Click"
+                                        GroupName="Piece"
+                                        Style="{StaticResource ModeToggleButtonStyle}"
+                                        Tag="custom"
+                                        ToolTip="{DynamicResource Str_Modeler_CustomTip}">
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="18"
+                                                Height="18"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Kind="PencilRuler" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Modeler_Template_custom}" />
+                                        </StackPanel>
+                                    </RadioButton>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ SIZES (rows are made in code from the template's sliders) ============  -->
+                            <Border x:Name="CardSize" ctl:Tour.Key="Str_Tour_DimensionModeler_Size" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_Modeler_SizeHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.RulerSquare}" />
+                                        <Button
+                                            x:Name="BtnResetSizes"
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Click="BtnResetSizes_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Modeler_ResetSizesTip}">
+                                            <materialDesign:PackIcon
+                                                Width="15"
+                                                Height="15"
+                                                Kind="Restore" />
+                                        </Button>
+                                    </Grid>
+                                    <StackPanel x:Name="PanelParams" />
+                                    <Button
+                                        x:Name="BtnMakeEditable"
+                                        Margin="0,14,0,0"
+                                        Click="BtnMakeEditable_Click"
+                                        Style="{StaticResource NeutralIconButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Modeler_MakeEditableTip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="0,0,6,0"
+                                                VerticalAlignment="Center"
+                                                Kind="Pencil" />
+                                            <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Modeler_MakeEditable}" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ BOARDS (the custom piece) ============  -->
+                            <Border
+                                x:Name="CardParts"
+                                ctl:Tour.Key="Str_Tour_DimensionModeler_Parts"
+                                ctl:Tour.Order="2"
+                                Style="{StaticResource SidebarGroupCardStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel>
+                                    <Grid>
+                                        <ContentControl
+                                            Content="{DynamicResource Str_Modeler_PartsHeader}"
+                                            Style="{StaticResource SidebarGroupHeader}"
+                                            Tag="{x:Static materialDesign:PackIconKind.ViewListOutline}" />
+                                        <StackPanel
+                                            Margin="0,-6,0,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Orientation="Horizontal">
+                                            <Button
+                                                x:Name="BtnUndo"
+                                                Click="BtnUndo_Click"
+                                                IsEnabled="False"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Modeler_UndoTip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="UndoVariant" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnRedo"
+                                                Margin="4,0,0,0"
+                                                Click="BtnRedo_Click"
+                                                IsEnabled="False"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Modeler_RedoTip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="RedoVariant" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnOpenDesign"
+                                                Margin="12,0,0,0"
+                                                Click="BtnOpenDesign_Click"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Modeler_OpenTip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="FolderOpenOutline" />
+                                            </Button>
+                                            <Button
+                                                x:Name="BtnSaveDesign"
+                                                Margin="4,0,0,0"
+                                                Click="BtnSaveDesign_Click"
+                                                Style="{StaticResource ListToolButtonStyle}"
+                                                ToolTip="{DynamicResource Str_Modeler_SaveTip}">
+                                                <materialDesign:PackIcon
+                                                    Width="15"
+                                                    Height="15"
+                                                    Kind="ContentSaveOutline" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Modeler_PieceName}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtCustomName"
+                                            KeyDown="CustomName_KeyDown"
+                                            LostFocus="CustomName_Commit"
+                                            MaxLength="60"
+                                            Style="{StaticResource BareTextBox}" />
+                                    </Border>
+
+                                    <ListBox
+                                        x:Name="ListParts"
+                                        MaxHeight="190"
+                                        Margin="0,12,0,0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        ItemContainerStyle="{StaticResource PartRowStyle}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                        SelectionChanged="ListParts_SelectionChanged"
+                                        SelectionMode="Single">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        FontWeight="SemiBold"
+                                                        Foreground="{DynamicResource SidebarText}"
+                                                        Text="{Binding Name}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock
+                                                        Grid.Column="1"
+                                                        Margin="8,0,0,0"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource SidebarText}"
+                                                        Opacity="0.7"
+                                                        Text="{Binding SizeText}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <TextBlock
+                                        x:Name="TxtPartsHint"
+                                        Style="{StaticResource SidebarHint}"
+                                        Text="{DynamicResource Str_Modeler_NoParts}"
+                                        TextWrapping="Wrap" />
+
+                                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                                        <Button
+                                            x:Name="BtnAddPart"
+                                            Click="BtnAddPart_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Modeler_AddTip}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="Plus" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Modeler_Add}" />
+                                                <materialDesign:PackIcon
+                                                    Width="14"
+                                                    Height="14"
+                                                    Margin="4,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="ChevronDown" />
+                                            </StackPanel>
+                                            <Button.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Click="AddKind_Click" Header="{DynamicResource Str_Modeler_Kind_Board}" Tag="Board" />
+                                                    <MenuItem Click="AddKind_Click" Header="{DynamicResource Str_Modeler_Kind_Leg}" Tag="Leg" />
+                                                    <MenuItem Click="AddKind_Click" Header="{DynamicResource Str_Modeler_Kind_Panel}" Tag="Panel" />
+                                                    <MenuItem Click="AddKind_Click" Header="{DynamicResource Str_Modeler_Kind_Top}" Tag="Top" />
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnDuplicatePart"
+                                            Margin="8,0,0,0"
+                                            Click="BtnDuplicatePart_Click"
+                                            Style="{StaticResource ListToolButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Modeler_DuplicateTip}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="ContentDuplicate" />
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnDeletePart"
+                                            Margin="4,0,0,0"
+                                            Click="BtnDeletePart_Click"
+                                            Style="{StaticResource ListToolDangerButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Modeler_DeleteTip}">
+                                            <materialDesign:PackIcon
+                                                Width="16"
+                                                Height="16"
+                                                Kind="DeleteOutline" />
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!--  The picked board: type its name, kind, position and size  -->
+                                    <StackPanel x:Name="PanelPartEditor" Margin="0,14,0,0" Visibility="Collapsed">
+                                        <TextBlock
+                                            Margin="0,0,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_Modeler_PartName}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtPartName"
+                                                PreviewKeyDown="PartBox_KeyDown"
+                                                LostFocus="PartBox_Commit"
+                                                MaxLength="40"
+                                                Style="{StaticResource BareTextBox}" />
+                                        </Border>
+
+                                        <TextBlock
+                                            Margin="0,10,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_Modeler_PartKind}"
+                                            ToolTip="{DynamicResource Str_Modeler_PartKindTip}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <ComboBox
+                                                x:Name="ComboPartKind"
+                                                Margin="4,0"
+                                                SelectionChanged="PartKind_Changed"
+                                                Style="{StaticResource BareComboBox}"
+                                                ToolTip="{DynamicResource Str_Modeler_PartKindTip}" />
+                                        </Border>
+
+                                        <TextBlock
+                                            x:Name="TxtPosLabel"
+                                            Margin="0,10,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            ToolTip="{DynamicResource Str_Modeler_PartPositionTip}" />
+                                        <UniformGrid Columns="3">
+                                            <StackPanel Margin="0,0,4,0">
+                                                <Border Style="{StaticResource InputBarStyle}">
+                                                    <TextBox
+                                                        x:Name="TxtPosX"
+                                                        PreviewKeyDown="PartBox_KeyDown"
+                                                        LostFocus="PartBox_Commit"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        TextAlignment="Right" />
+                                                </Border>
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Style="{StaticResource SidebarHint}"
+                                                    Text="X" />
+                                            </StackPanel>
+                                            <StackPanel Margin="2,0,2,0">
+                                                <Border Style="{StaticResource InputBarStyle}">
+                                                    <TextBox
+                                                        x:Name="TxtPosY"
+                                                        PreviewKeyDown="PartBox_KeyDown"
+                                                        LostFocus="PartBox_Commit"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        TextAlignment="Right" />
+                                                </Border>
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Style="{StaticResource SidebarHint}"
+                                                    Text="Y" />
+                                            </StackPanel>
+                                            <StackPanel Margin="4,0,0,0">
+                                                <Border Style="{StaticResource InputBarStyle}">
+                                                    <TextBox
+                                                        x:Name="TxtPosZ"
+                                                        PreviewKeyDown="PartBox_KeyDown"
+                                                        LostFocus="PartBox_Commit"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        TextAlignment="Right" />
+                                                </Border>
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Style="{StaticResource SidebarHint}"
+                                                    Text="Z" />
+                                            </StackPanel>
+                                        </UniformGrid>
+
+                                        <TextBlock
+                                            x:Name="TxtSizeLabel"
+                                            Margin="0,10,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            ToolTip="{DynamicResource Str_Modeler_PartSizeTip}" />
+                                        <UniformGrid Columns="3">
+                                            <StackPanel Margin="0,0,4,0">
+                                                <Border Style="{StaticResource InputBarStyle}">
+                                                    <TextBox
+                                                        x:Name="TxtSizeW"
+                                                        PreviewKeyDown="PartBox_KeyDown"
+                                                        LostFocus="PartBox_Commit"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        TextAlignment="Right" />
+                                                </Border>
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Style="{StaticResource SidebarHint}"
+                                                    Text="{DynamicResource Str_Modeler_BoardWidth}" />
+                                            </StackPanel>
+                                            <StackPanel Margin="2,0,2,0">
+                                                <Border Style="{StaticResource InputBarStyle}">
+                                                    <TextBox
+                                                        x:Name="TxtSizeH"
+                                                        PreviewKeyDown="PartBox_KeyDown"
+                                                        LostFocus="PartBox_Commit"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        TextAlignment="Right" />
+                                                </Border>
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Style="{StaticResource SidebarHint}"
+                                                    Text="{DynamicResource Str_Modeler_BoardHeight}" />
+                                            </StackPanel>
+                                            <StackPanel Margin="4,0,0,0">
+                                                <Border Style="{StaticResource InputBarStyle}">
+                                                    <TextBox
+                                                        x:Name="TxtSizeD"
+                                                        PreviewKeyDown="PartBox_KeyDown"
+                                                        LostFocus="PartBox_Commit"
+                                                        Style="{StaticResource BareTextBox}"
+                                                        TextAlignment="Right" />
+                                                </Border>
+                                                <TextBlock
+                                                    Margin="0,3,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Style="{StaticResource SidebarHint}"
+                                                    Text="{DynamicResource Str_Modeler_BoardDepth}" />
+                                            </StackPanel>
+                                        </UniformGrid>
+
+                                        <!--  Snap: put this board against a face of another one, like building blocks  -->
+                                        <TextBlock
+                                            Margin="0,14,0,6"
+                                            Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_Modeler_SnapHeader}"
+                                            ToolTip="{DynamicResource Str_Modeler_SnapTip}" />
+                                        <TextBlock
+                                            x:Name="TxtSnapHint"
+                                            Style="{StaticResource SidebarHint}"
+                                            Text="{DynamicResource Str_Modeler_SnapNoTarget}"
+                                            TextWrapping="Wrap" />
+                                        <StackPanel x:Name="PanelSnap">
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <ComboBox
+                                                    x:Name="ComboSnapTarget"
+                                                    Margin="4,0"
+                                                    Style="{StaticResource BareComboBox}"
+                                                    ToolTip="{DynamicResource Str_Modeler_SnapTip}" />
+                                            </Border>
+                                            <UniformGrid Margin="0,6,0,0" Columns="3">
+                                                <Button Margin="0,0,3,3" Padding="4,4" Click="SnapFace_Click" Style="{StaticResource NeutralIconButtonStyle}" Tag="Left" ToolTip="{DynamicResource Str_Modeler_SnapLeftTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,3,0" VerticalAlignment="Center" Kind="ArrowLeft" />
+                                                        <TextBlock VerticalAlignment="Center" FontSize="11" Text="{DynamicResource Str_Modeler_Snap_Left}" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Margin="1.5,0,1.5,3" Padding="4,4" Click="SnapFace_Click" Style="{StaticResource NeutralIconButtonStyle}" Tag="Right" ToolTip="{DynamicResource Str_Modeler_SnapRightTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,3,0" VerticalAlignment="Center" Kind="ArrowRight" />
+                                                        <TextBlock VerticalAlignment="Center" FontSize="11" Text="{DynamicResource Str_Modeler_Snap_Right}" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Margin="3,0,0,3" Padding="4,4" Click="SnapFace_Click" Style="{StaticResource NeutralIconButtonStyle}" Tag="Above" ToolTip="{DynamicResource Str_Modeler_SnapAboveTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,3,0" VerticalAlignment="Center" Kind="ArrowUp" />
+                                                        <TextBlock VerticalAlignment="Center" FontSize="11" Text="{DynamicResource Str_Modeler_Snap_Above}" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Margin="0,3,3,0" Padding="4,4" Click="SnapFace_Click" Style="{StaticResource NeutralIconButtonStyle}" Tag="Below" ToolTip="{DynamicResource Str_Modeler_SnapBelowTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,3,0" VerticalAlignment="Center" Kind="ArrowDown" />
+                                                        <TextBlock VerticalAlignment="Center" FontSize="11" Text="{DynamicResource Str_Modeler_Snap_Below}" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Margin="1.5,3,1.5,0" Padding="4,4" Click="SnapFace_Click" Style="{StaticResource NeutralIconButtonStyle}" Tag="InFront" ToolTip="{DynamicResource Str_Modeler_SnapFrontTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,3,0" VerticalAlignment="Center" Kind="ArrowBottomLeft" />
+                                                        <TextBlock VerticalAlignment="Center" FontSize="11" Text="{DynamicResource Str_Modeler_Snap_InFront}" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Margin="3,3,0,0" Padding="4,4" Click="SnapFace_Click" Style="{StaticResource NeutralIconButtonStyle}" Tag="Behind" ToolTip="{DynamicResource Str_Modeler_SnapBehindTip}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,3,0" VerticalAlignment="Center" Kind="ArrowTopRight" />
+                                                        <TextBlock VerticalAlignment="Center" FontSize="11" Text="{DynamicResource Str_Modeler_Snap_Behind}" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </UniformGrid>
+                                            <TextBlock
+                                                Margin="0,10,0,6"
+                                                Style="{StaticResource FieldLabel}"
+                                                Text="{DynamicResource Str_Modeler_AlignHeader}"
+                                                ToolTip="{DynamicResource Str_Modeler_AlignTip}" />
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <ComboBox
+                                                    x:Name="ComboSnapAlign"
+                                                    Margin="4,0"
+                                                    Style="{StaticResource BareComboBox}"
+                                                    ToolTip="{DynamicResource Str_Modeler_AlignTip}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <Border
+                                        x:Name="CheckPill"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Left"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="CheckIcon"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Top"
+                                                Kind="CheckCircleOutline" />
+                                            <TextBlock
+                                                x:Name="TxtCheck"
+                                                MaxWidth="190"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ VIEW ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_View" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Modeler_ViewHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.ArrowExpandHorizontal}" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Modeler_Units}" />
+                                    <UniformGrid Columns="3">
+                                        <RadioButton
+                                            x:Name="RadioMm"
+                                            Margin="0,0,2,0"
+                                            Click="Unit_Click"
+                                            GroupName="Unit"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Millimetres"
+                                            Content="{DynamicResource Str_Modeler_UnitMm}" />
+                                        <RadioButton
+                                            x:Name="RadioCm"
+                                            Margin="2,0,2,0"
+                                            Click="Unit_Click"
+                                            GroupName="Unit"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Centimetres"
+                                            Content="{DynamicResource Str_Modeler_UnitCm}" />
+                                        <RadioButton
+                                            x:Name="RadioIn"
+                                            Margin="2,0,0,0"
+                                            Click="Unit_Click"
+                                            GroupName="Unit"
+                                            Style="{StaticResource ModeToggleButtonStyle}"
+                                            Tag="Inches"
+                                            Content="{DynamicResource Str_Modeler_UnitIn}" />
+                                    </UniformGrid>
+                                    <CheckBox
+                                        x:Name="ChkDimensions"
+                                        Margin="0,12,0,0"
+                                        Checked="ChkDimensions_Changed"
+                                        Content="{DynamicResource Str_Modeler_ShowDimensions}"
+                                        Foreground="{DynamicResource SidebarText}"
+                                        IsChecked="True"
+                                        ToolTip="{DynamicResource Str_Modeler_ShowDimensionsTip}"
+                                        Unchecked="ChkDimensions_Changed" />
+                                </StackPanel>
+                            </Border>
+
+                            <!--  ============ 3D PRINTING ============  -->
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_Print" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                                <StackPanel>
+                                    <ContentControl
+                                        Content="{DynamicResource Str_Modeler_PrintHeader}"
+                                        Style="{StaticResource SidebarGroupHeader}"
+                                        Tag="{x:Static materialDesign:PackIconKind.Printer_3d}" />
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Modeler_Scale}"
+                                        ToolTip="{DynamicResource Str_Modeler_ScaleTip}" />
+                                    <controls:PresetChips
+                                        x:Name="PresetScale"
+                                        Columns="3"
+                                        Items="1/1:1;1/2:2;1/5:5;1/10:10;1/20:20"
+                                        PresetChosen="Scale_Chosen" />
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Modeler_Clearance}"
+                                        ToolTip="{DynamicResource Str_Modeler_ClearanceTip}" />
+                                    <Border Style="{StaticResource InputBarStyle}">
+                                        <TextBox
+                                            x:Name="TxtClearance"
+                                            KeyDown="PrintBox_KeyDown"
+                                            LostFocus="PrintBox_Commit"
+                                            Style="{StaticResource BareTextBox}"
+                                            TextAlignment="Right"
+                                            ToolTip="{DynamicResource Str_Modeler_ClearanceTip}" />
+                                    </Border>
+
+                                    <TextBlock
+                                        Margin="0,12,0,6"
+                                        Style="{StaticResource FieldLabel}"
+                                        Text="{DynamicResource Str_Modeler_Bed}"
+                                        ToolTip="{DynamicResource Str_Modeler_BedTip}" />
+                                    <UniformGrid Columns="3">
+                                        <StackPanel Margin="0,0,4,0">
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtBedX"
+                                                    KeyDown="PrintBox_KeyDown"
+                                                    LostFocus="PrintBox_Commit"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    TextAlignment="Right" />
+                                            </Border>
+                                            <TextBlock
+                                                Margin="0,3,0,0"
+                                                HorizontalAlignment="Center"
+                                                Style="{StaticResource SidebarHint}"
+                                                Text="X" />
+                                        </StackPanel>
+                                        <StackPanel Margin="2,0,2,0">
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtBedY"
+                                                    KeyDown="PrintBox_KeyDown"
+                                                    LostFocus="PrintBox_Commit"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    TextAlignment="Right" />
+                                            </Border>
+                                            <TextBlock
+                                                Margin="0,3,0,0"
+                                                HorizontalAlignment="Center"
+                                                Style="{StaticResource SidebarHint}"
+                                                Text="Y" />
+                                        </StackPanel>
+                                        <StackPanel Margin="4,0,0,0">
+                                            <Border Style="{StaticResource InputBarStyle}">
+                                                <TextBox
+                                                    x:Name="TxtBedHeight"
+                                                    KeyDown="PrintBox_KeyDown"
+                                                    LostFocus="PrintBox_Commit"
+                                                    Style="{StaticResource BareTextBox}"
+                                                    TextAlignment="Right" />
+                                            </Border>
+                                            <TextBlock
+                                                Margin="0,3,0,0"
+                                                HorizontalAlignment="Center"
+                                                Style="{StaticResource SidebarHint}"
+                                                Text="{DynamicResource Str_Modeler_BedHeight}" />
+                                        </StackPanel>
+                                    </UniformGrid>
+
+                                    <Border
+                                        x:Name="PlanPill"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Left"
+                                        Style="{StaticResource IconStatusPillStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon
+                                                x:Name="PlanIcon"
+                                                Width="13"
+                                                Height="13"
+                                                Margin="0,0,5,0"
+                                                VerticalAlignment="Center"
+                                                Kind="CheckCircleOutline" />
+                                            <TextBlock
+                                                x:Name="TxtPlan"
+                                                MaxWidth="190"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!--  ================= MAIN =================  -->
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  The piece, its overall size, and the buttons  -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock
+                                x:Name="TxtPieceName"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource TextPrimary}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                x:Name="TxtPieceSize"
+                                Margin="0,2,0,0"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextSecondary}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button
+                                x:Name="BtnFit"
+                                Width="32"
+                                Height="32"
+                                Padding="0"
+                                Click="BtnFit_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_Modeler_FitTip}">
+                                <materialDesign:PackIcon
+                                    Width="16"
+                                    Height="16"
+                                    Kind="FitToScreenOutline" />
+                            </Button>
+                            <controls:ExportButton
+                                x:Name="BtnExport"
+                                ctl:Tour.Key="Str_Tour_DimensionModeler_Export"
+                                ctl:Tour.Order="6"
+                                Margin="8,0,0,0"
+                                ToolTip="{DynamicResource Str_Modeler_ExportTip}">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Modeler_ExportObj}" Tag="AssembledObj">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="CubeOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Modeler_ExportStl}" Tag="AssembledStl">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="CubeOutline" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator />
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Modeler_ExportPrintStl}" Tag="PrintStl">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="Printer_3d" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Click="MenuExport_Click" Header="{DynamicResource Str_Modeler_ExportPrintObj}" Tag="PrintObj">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="Printer_3d" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </controls:ExportButton>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="300" />
+                        </Grid.ColumnDefinitions>
+
+                        <!--  The 3D view: drag to turn, right-drag to move, wheel to zoom. The lines are drawn over it from the same camera.  -->
+                        <Border
+                            ctl:Tour.Key="Str_Tour_DimensionModeler_Stage"
+                            ctl:Tour.Order="5"
+                            Background="{DynamicResource RowBg}"
+                            ClipToBounds="True"
+                            CornerRadius="12">
+                            <Grid
+                                x:Name="StageHost"
+                                Background="Transparent"
+                                ClipToBounds="True"
+                                MouseDown="Stage_MouseDown"
+                                MouseMove="Stage_MouseMove"
+                                MouseUp="Stage_MouseUp"
+                                MouseWheel="Stage_MouseWheel"
+                                SizeChanged="Stage_SizeChanged">
+                                <Viewport3D x:Name="Stage3D" ClipToBounds="True" IsHitTestVisible="False">
+                                    <Viewport3D.Camera>
+                                        <PerspectiveCamera
+                                            x:Name="Cam"
+                                            FarPlaneDistance="100000"
+                                            FieldOfView="45"
+                                            NearPlaneDistance="20" />
+                                    </Viewport3D.Camera>
+                                </Viewport3D>
+                                <Canvas
+                                    x:Name="Overlay"
+                                    ClipToBounds="True"
+                                    IsHitTestVisible="False" />
+                                <TextBlock
+                                    Margin="14,0,14,10"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Bottom"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    IsHitTestVisible="False"
+                                    Opacity="0.8"
+                                    Text="{DynamicResource Str_Modeler_StageHint}" />
+                            </Grid>
+                        </Border>
+
+                        <!--  The cut list: pick a row to see that board lit up and measured  -->
+                        <Border
+                            Grid.Column="2"
+                            Padding="12"
+                            Background="{DynamicResource RowBg}"
+                            CornerRadius="12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ContentControl
+                                    Margin="0,0,0,8"
+                                    Content="{DynamicResource Str_Modeler_CutList}"
+                                    Style="{StaticResource CardHeader}"
+                                    Tag="{x:Static materialDesign:PackIconKind.ContentCut}" />
+                                <DataGrid
+                                    x:Name="DataGridCut"
+                                    Grid.Row="1"
+                                    AutoGenerateColumns="False"
+                                    CanUserAddRows="False"
+                                    FontSize="12"
+                                    HeadersVisibility="Column"
+                                    IsReadOnly="True"
+                                    MinRowHeight="34"
+                                    SelectionChanged="DataGridCut_SelectionChanged"
+                                    SelectionMode="Single"
+                                    ToolTip="{DynamicResource Str_Modeler_CutListTip}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn
+                                            Width="*"
+                                            MinWidth="70"
+                                            Binding="{Binding Name, Mode=OneWay}"
+                                            Header="{DynamicResource Str_Modeler_ColPart}" />
+                                        <DataGridTextColumn
+                                            Width="56"
+                                            Binding="{Binding Quantity, Mode=OneWay}"
+                                            Header="{DynamicResource Str_Modeler_ColQty}" />
+                                        <DataGridTextColumn
+                                            Width="1.6*"
+                                            MinWidth="100"
+                                            Binding="{Binding SizeText, Mode=OneWay}"
+                                            Header="{DynamicResource Str_Modeler_ColSize}" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <TextBlock
+                                    x:Name="TxtCutTotals"
+                                    Grid.Row="2"
+                                    Margin="0,8,0,0"
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock
+                        x:Name="TxtStatus"
+                        Grid.Row="2"
+                        Margin="0,10,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

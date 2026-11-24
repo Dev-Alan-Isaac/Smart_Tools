@@ -44,6 +44,7 @@ namespace Smart_Tools.WPF.Controllers
             new ToolCategoryInfo { Id = "network", Keywords = "red internet wifi", Title = "Network", Icon = "Lan", AccentHex = "#06B6D4", Blurb = "Diagnose your connection" },
             new ToolCategoryInfo { Id = "developer", Keywords = "desarrollador programacion", Title = "Developer", Icon = "CodeBraces", AccentHex = "#64748B", Blurb = "Test, inspect and format" },
             new ToolCategoryInfo { Id = "generators", Keywords = "generar crear", Title = "Generators", Icon = "Creation", AccentHex = "#F97316", Blurb = "Make files and codes" },
+            new ToolCategoryInfo { Id = "design", Keywords = "diseno 3d modelar modelado imprimir impresion", Title = "3D & Design", Icon = "CubeOutline", AccentHex = "#14B8A6", Blurb = "Model and print things" },
             new ToolCategoryInfo { Id = "art", Keywords = "arte art pixel sprite juegos game dibujo", Title = "Art", Icon = "GridLarge", AccentHex = "#A855F7", Blurb = "Draw pixel art, pack sprite sheets and build texture packs" },
         };
 
@@ -199,6 +200,9 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "qr-generator", Name = "QR Code Generator", Icon = "Qrcode", CategoryId = "generators", Description = "Create QR codes", Keywords = "qr code link wifi" },
             new ToolInfo { Id = "mock-data", Name = "Mock Data Generator", Icon = "DatabaseCogOutline", CategoryId = "generators", Description = "Generate fake data for testing", Keywords = "fake data csv json sql names emails test dummy seed" },
             new ToolInfo { Id = "id-generator", Name = "ID & Lorem Generator", Icon = "Identifier", CategoryId = "generators", Description = "Make UUIDs (v4, v7), ULIDs, random hex and lorem ipsum text", Keywords = "uuid guid ulid id unique random hex lorem ipsum placeholder text generator identificador aleatorio" },
+
+            // 3D & Design
+            new ToolInfo { Id = "dimension-modeler", Name = "Dimension Modeler", Icon = "CubeOutline", CategoryId = "design", Description = "Model a table, chair, shelf or cabinet from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing", Keywords = "3d model modeling modeler dimension dimensions measure cotas parametric furniture table chair shelf bookshelf cabinet obj stl print printing printer cad wood cut list modelar modelado medidas muebles mesa silla estanteria armario impresion" },
 
             // Art
             new ToolInfo { Id = "pixel-art", Name = "Pixel Art Editor", Icon = "GridLarge", CategoryId = "art", Description = "Draw on a small grid, animate frames and export sharp PNGs", Keywords = "pixel art sprite draw png animation frames palette editor dibujar" },
