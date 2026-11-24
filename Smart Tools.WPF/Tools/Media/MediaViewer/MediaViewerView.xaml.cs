@@ -271,11 +271,32 @@ namespace Smart_Tools.WPF.Views
             var spectrum = _spectrum;
             if (spectrum == null)
             {
+                // A MIDI file is notes, not sound, so there is nothing to analyse: while it plays the bars just move.
+                if (_playing && _mediaOpen && Current is { Kind: ViewerMediaKind.Audio } midi && IsMidi(midi.Path))
+                {
+                    FillPulse(levels);
+                    return true;
+                }
                 Array.Clear(levels);
                 return false;
             }
             spectrum.Sync(Player.Position, _playing && _mediaOpen);
             return spectrum.GetLevels(levels);
+        }
+
+        private static bool IsMidi(string? path) =>
+            path != null && (path.EndsWith(".mid", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".midi", StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>Gentle moving bars (0..1) for a file that has no sound to read.</summary>
+        private static void FillPulse(float[] levels)
+        {
+            double t = Environment.TickCount64 / 1000.0;
+            for (int i = 0; i < levels.Length; i++)
+            {
+                double wave = 0.5 + 0.5 * Math.Sin(t * (2.1 + 0.17 * i) + i * 0.7);
+                double swell = 0.6 + 0.4 * Math.Sin(t * 0.9 + i * 0.3);
+                levels[i] = (float)(0.14 + 0.36 * wave * swell);
+            }
         }
 
         private void StopSpectrum()
@@ -900,7 +921,7 @@ namespace Smart_Tools.WPF.Views
             _mediaOpen = true;
             _failStreak = 0;
             // The music bars read the file a second time, so they start only once the player has opened it (never competing with it).
-            if (Current is { Kind: ViewerMediaKind.Audio } playing && _spectrum == null)
+            if (Current is { Kind: ViewerMediaKind.Audio } playing && _spectrum == null && !IsMidi(playing.Path))
             {
                 try { _spectrum = new MediaSpectrumFeeder(playing.Path); }
                 catch (Exception ex) when (ex is IOException or InvalidOperationException or OutOfMemoryException) { _spectrum = null; }

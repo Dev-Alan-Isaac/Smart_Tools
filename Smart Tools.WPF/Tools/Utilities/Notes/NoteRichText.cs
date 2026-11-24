@@ -414,6 +414,31 @@ namespace Smart_Tools.WPF.Views
             selection.ApplyPropertyValue(Inline.TextDecorationsProperty, next);
         }
 
+        /// <summary>
+        /// Bold on/off that agrees with what the note shows. WPF's own Ctrl+B only treats weight exactly Bold (700) as bold, so text
+        /// pasted from a web page (SemiBold 600, Heavy ...) looked bold but Ctrl+B "bolded" it again and it could never be switched off.
+        /// Here anything from 600 up counts as bold (the same rule the note uses when it is saved); a mixed selection becomes bold.
+        /// Works for the keyboard command and for the toolbar button alike (both run EditingCommands.ToggleBold on the box).
+        /// </summary>
+        public static void AttachBoldToggle(RichTextBox box, Action? after = null)
+        {
+            box.CommandBindings.Add(new CommandBinding(
+                EditingCommands.ToggleBold,
+                (_, e) =>
+                {
+                    var selection = box.Selection;
+                    bool bold = selection.GetPropertyValue(TextElement.FontWeightProperty) is FontWeight w && w.ToOpenTypeWeight() >= 600;
+                    selection.ApplyPropertyValue(TextElement.FontWeightProperty, bold ? FontWeights.Normal : FontWeights.Bold);
+                    e.Handled = true;
+                    after?.Invoke();
+                },
+                (_, e) =>
+                {
+                    e.CanExecute = !box.IsReadOnly && box.IsEnabled;
+                    e.Handled = true;
+                }));
+        }
+
         /// <summary>A copied picture (a screenshot, an image from a web page) is pasted as a picture, with its source; anything with text pastes as usual.</summary>
         public static void AttachPaste(RichTextBox box)
         {

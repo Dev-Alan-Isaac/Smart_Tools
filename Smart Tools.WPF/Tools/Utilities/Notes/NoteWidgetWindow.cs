@@ -104,6 +104,7 @@ namespace Smart_Tools.WPF.Views
             _box.Resources.Add(typeof(Paragraph), new Style(typeof(Paragraph)) { Setters = { new Setter(Block.MarginProperty, new Thickness(0, 0, 0, 4)) } });
             SpellCheck.SetIsEnabled(_box, true);
             NoteRichText.AttachPaste(_box);
+            NoteRichText.AttachBoldToggle(_box);
             Load();
             _box.TextChanged += (_, _) => OnEdited();
 

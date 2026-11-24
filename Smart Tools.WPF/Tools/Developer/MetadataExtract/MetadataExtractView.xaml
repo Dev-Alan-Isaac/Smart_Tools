@@ -566,6 +566,37 @@
                         <RowDefinition x:Name="DetailsRow" Height="0" />
                     </Grid.RowDefinitions>
 
+                    <!--  ================= EMPTY: one big card (it takes drops like the rest of the page) until files are added =================  -->
+                    <Border
+                        x:Name="PageEmptyCard"
+                        Grid.RowSpan="3"
+                        Grid.ColumnSpan="3"
+                        Panel.ZIndex="5"
+                        Style="{StaticResource CardStyle}">
+                            <StackPanel
+                                x:Name="EmptyStatePanel"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TagSearchOutline}" />
+                                <TextBlock
+                                    Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    FontSize="15"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_MetadataExtract_WhatDoYourFiles}" />
+                                <TextBlock
+                                    MaxWidth="420"
+                                    Margin="0,4,0,14"
+                                    HorizontalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Metadata_DragDropHint}"
+                                    TextAlignment="Center"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                    </Border>
+
                     <!--  ================= FILES =================  -->
                     <Border
                         x:Name="FilesCard"
@@ -788,29 +819,6 @@
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <StackPanel
-                                x:Name="EmptyStatePanel"
-                                Grid.Row="1"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.TagSearchOutline}" />
-                                <TextBlock
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Center"
-                                    FontSize="15"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}"
-                                    Text="{DynamicResource Str_MetadataExtract_WhatDoYourFiles}" />
-                                <TextBlock
-                                    MaxWidth="420"
-                                    Margin="0,4,0,14"
-                                    HorizontalAlignment="Center"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Text="{DynamicResource Str_Metadata_DragDropHint}"
-                                    TextAlignment="Center"
-                                    TextWrapping="Wrap" />
-                            </StackPanel>
                         </Grid>
                     </Border>
 

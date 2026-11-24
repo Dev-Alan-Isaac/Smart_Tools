@@ -68,6 +68,7 @@ namespace Smart_Tools.WPF.Views
 
             BuildColorSwatches();
             NoteRichText.AttachPaste(RtbBody);
+            NoteRichText.AttachBoldToggle(RtbBody, () => Dispatcher.BeginInvoke(UpdateFormatButtons));
 
             var load = NotesManager.EnsureLoaded();
             ListNotes.ItemsSource = NotesManager.Notes;
@@ -608,7 +609,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!IsLoaded && RtbBody.Document == null) return;
             var selection = RtbBody.Selection;
-            bool bold = selection.GetPropertyValue(TextElement.FontWeightProperty) is FontWeight w && w == FontWeights.Bold;
+            bool bold = selection.GetPropertyValue(TextElement.FontWeightProperty) is FontWeight w && w.ToOpenTypeWeight() >= 600;
             bool italic = selection.GetPropertyValue(TextElement.FontStyleProperty) is FontStyle s && s == FontStyles.Italic;
             var decorations = selection.GetPropertyValue(Inline.TextDecorationsProperty) as TextDecorationCollection;
             bool underline = decorations != null && decorations.Any(d => d.Location == TextDecorationLocation.Underline);

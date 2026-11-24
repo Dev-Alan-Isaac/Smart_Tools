@@ -288,7 +288,9 @@ namespace Smart_Tools.WPF.Views
         private void UpdateListState()
         {
             int count = _files.Count;
-            EmptyStatePanel.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            // Nothing added yet: one big empty card. Once there are files, the list and the details take its place.
+            PageEmptyCard.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            FilesCard.Visibility = DetailsCard.Visibility = count == 0 ? Visibility.Collapsed : Visibility.Visible;
             SummaryPanel.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
             TxtSummaryCount.Text = $"{count:N0} {MetadataText.Plural(count, "file", "files")}";
 

@@ -58,7 +58,19 @@
                         </RadioButton>
                     </WrapPanel>
 
-                    <TextBlock x:Name="TxtHint" Grid.Column="1" Margin="16,0,8,6" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    <Border
+                        Grid.Column="1"
+                        Margin="16,0,8,6"
+                        Padding="10,4,12,4"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource AccentColorSubtle}"
+                        CornerRadius="12">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="InformationOutline" />
+                            <TextBlock x:Name="TxtHint" VerticalAlignment="Center" FontSize="11.5" Foreground="{DynamicResource AccentColor}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>
