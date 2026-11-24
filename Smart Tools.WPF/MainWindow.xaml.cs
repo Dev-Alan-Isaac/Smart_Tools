@@ -356,7 +356,6 @@ namespace Smart_Tools.WPF
             Add<NotesView>("notes", v => v.CancelActiveRun());   // saves a note typed just before closing
             Add<EnvironmentVariablesView>("environment-variables", v => v.CancelActiveRun());
             Add<ClipboardHistoryView>("clipboard-history");   // its list lives in ClipboardHistoryService, shut down below
-            Add<DateTimeToolkitView>("date-time", v => v.CancelActiveRun());   // stops the clock, saves the setup
             Add<UnitConverterView>("unit-converter", v => v.CancelActiveRun());   // stops a rates download, saves the setup
             Add<ScreenOcrView>("screen-ocr", v => v.CancelActiveRun());
 
@@ -370,7 +369,6 @@ namespace Smart_Tools.WPF
             Add<SpritePackerView>("sprite-packer", v => v.CancelActiveRun());   // stops a running save (finished files stay), saves the setup
             Add<TexturePackView>("texture-pack", v => v.CancelActiveRun());   // stops a running save, saves the setup
             Add<ContrastCheckerView>("contrast-checker", v => v.CancelActiveRun());   // saves the two colors
-            Add<SubnetCalculatorView>("subnet-calc", v => v.CancelActiveRun());   // saves the last address
             Add<TotpCodeView>("totp-code", v => v.CancelActiveRun());   // stops the clock and forgets the secret
             Add<IdGeneratorView>("id-generator", v => v.CancelActiveRun());   // saves the setup
             Add<TimerStopwatchView>("timer-stopwatch", v => v.CancelActiveRun());   // stops the clock, saves the setup

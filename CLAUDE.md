@@ -5,7 +5,7 @@
 2. **If this file does not exist**, read the project (README, `PROJECT_DOCUMENTATION.md`, `Themes/ui-style-guide.md`, the catalog, `git log`), create it, then continue.
 3. **At the end of every piece of work**, update "Where we left off" so the next session can continue without asking (what was done, what is next, what is uncommitted).
 
-WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 115 tools in 21 sidebar categories, one window, English + Spanish, light + dark theme.
+WPF / .NET 10 Windows app (`Smart Tools.WPF/`): 113 tools in 20 sidebar categories, one window, English + Spanish, light + dark theme.
 Details live in `Smart Tools.WPF/PROJECT_DOCUMENTATION.md` (every tool, architecture, shortcuts, safe file ops, data locations) and
 `Smart Tools.WPF/Themes/ui-style-guide.md` (layout, shared styles, motion). Ideas for new tools: `Smart Tools.WPF/FUTURE_IDEAS.md`.
 Read those before changing a view; do not repeat their content here.

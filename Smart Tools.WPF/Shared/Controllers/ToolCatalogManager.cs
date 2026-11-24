@@ -29,7 +29,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolCategoryInfo { Id = "files", Keywords = "archivos carpetas", Title = "Files", Icon = "FolderOutline", AccentHex = "#F59E0B", Blurb = "Rename, sort and search" },
             new ToolCategoryInfo { Id = "media", Keywords = "multimedia reproductor visor ver reproducir fotos videos musica player viewer", Title = "Media", Icon = "PlayBoxMultipleOutline", AccentHex = "#D946EF", Blurb = "View and play pictures, videos and music" },
             new ToolCategoryInfo { Id = "utilities", Keywords = "utilidades", Title = "Utilities", Icon = "NotebookOutline", AccentHex = "#84CC16", Blurb = "Everyday helpers" },
-            new ToolCategoryInfo { Id = "calculators", Keywords = "calculadora calcular convertir unidades fecha red", Title = "Calculators", Icon = "Calculator", AccentHex = "#EAB308", Blurb = "Work things out" },
             new ToolCategoryInfo { Id = "convert", Keywords = "convertir formato", Title = "Convert", Icon = "SwapHorizontal", AccentHex = "#0EA5E9", Blurb = "Change file formats" },
             new ToolCategoryInfo { Id = "pdf", Keywords = "pdf documento documentos pdfs", Title = "PDF", Icon = "FilePdfBox", AccentHex = "#DC2626", Blurb = "Make, edit and protect PDFs" },
             new ToolCategoryInfo { Id = "video", Keywords = "videos pelicula", Title = "Video", Icon = "MovieOpenOutline", AccentHex = "#EF4444", Blurb = "Watch and edit" },
@@ -87,9 +86,6 @@ namespace Smart_Tools.WPF.Controllers
             new ToolInfo { Id = "watermark", Name = "Watermarker", Title = "Batch Watermarker", Icon = "Stamper", CategoryId = "convert", Description = "Stamp text or a logo on many pictures, videos and PDFs", Keywords = "watermark stamp logo copyright text draft confidential brand marca de agua sello pictures photos videos pdf batch" },
             new ToolInfo { Id = "unit-converter", Name = "Unit & Currency Converter", Icon = "SwapHorizontalBold", CategoryId = "convert", Description = "Convert length, weight, temperature, data size, money, and more", Keywords = "unit converter currency exchange rate length weight mass temperature volume speed energy pressure data size dollar euro metric imperial convertidor unidades divisas moneda" },
 
-            // Calculators
-            new ToolInfo { Id = "subnet-calc", Name = "Subnet Calculator", Title = "Subnet / CIDR Calculator", Icon = "Calculator", CategoryId = "calculators", Description = "Work out network, mask, range and host count for IPv4 and IPv6, and split into subnets", Keywords = "subnet cidr mask netmask wildcard broadcast ip ipv4 ipv6 prefix range hosts calculadora subred mascara" },
-            new ToolInfo { Id = "date-time", Name = "Date & Time Toolkit", Icon = "CalendarClock", CategoryId = "calculators", Description = "Timestamps, time zones and date maths in one place", Keywords = "unix timestamp epoch timezone time zone date difference duration add subtract days business utc iso fecha hora" },
 
             // PDF
             new ToolInfo { Id = "images-to-pdf", Name = "Images to PDF", Icon = "FileSwap", CategoryId = "pdf", Description = "Turn images into a PDF", Keywords = "jpg png pdf combine scan" },
