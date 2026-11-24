@@ -777,7 +777,8 @@ namespace Smart_Tools.WPF.Views
             var item = Current;
             if (item == null)
             {
-                if (_items.Count > 0) Show(0);   // a list is there but nothing chosen: start at the top
+                int start = PlayStartRules.StartIndex(_items.Count, DataGridQueue.SelectedItem is MediaItem picked ? _items.IndexOf(picked) : -1);
+                if (start >= 0) Show(start);   // a list is there but nothing chosen: the highlighted row, else the top
                 else OpenFilesDialog();
                 return;
             }
@@ -1246,7 +1247,7 @@ namespace Smart_Tools.WPF.Views
             bool running = image ? _slideshow : _playing;
             PlayIcon.Kind = running ? PackIconKind.Pause : PackIconKind.Play;
             BtnPrev.IsEnabled = BtnNext.IsEnabled = _items.Count > 1;
-            BtnPlay.IsEnabled = has;
+            BtnPlay.IsEnabled = PlayStartRules.CanPress(has, _items.Count);
 
             // In the mini window only the essentials stay (seek, previous / play / next, volume, speed, back to the tool);
             // the rest is too wide for a small window - their keys still work.
