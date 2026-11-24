@@ -19,7 +19,7 @@ namespace Smart_Tools.WPF
         // Left behind on purpose: the data of a portable copy is copied separately, and the marker must not reach an installed copy.
         private static readonly string[] SkipTopLevel = { "UserData", AppPaths.PortableMarker };
 
-        private const string InstanceMutexName = @"Local\SmartTools.SingleInstance";
+        private static readonly string InstanceMutexName = InstanceIdentity.MutexName(development: false);   // the installed kind: that is the copy an install or uninstall must not run over
 
         /// <summary>True when a copy of the app is running (it keeps files open, so an install over it would fail half-way).</summary>
         public static bool IsAnotherCopyRunning()

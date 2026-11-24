@@ -40,7 +40,8 @@ namespace Smart_Tools.WPF
         public const string UninstallKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\SmartTools";
 
         /// <summary>The mode Detect gave at start-up (Settings reads it to show the Installation card).</summary>
-        public static AppRunMode Current { get; private set; } = AppRunMode.Loose;
+        public static AppRunMode Current => _current ?? Detect(Environment.GetCommandLineArgs().Skip(1).ToArray());
+        private static AppRunMode? _current;   // read before Detect ran (a static that needs the data folder): detect now, the same way
 
         /// <summary>%LocalAppData%\Programs\Smart Tools - a per-user folder the app can write to, so no administrator prompt.</summary>
         public static string DefaultInstallFolder { get; } = Path.Combine(
@@ -104,12 +105,12 @@ namespace Smart_Tools.WPF
             else if (File.Exists(Path.Combine(InstalledDataFolder, "settings.json"))) mode = AppRunMode.Loose;
             else mode = AppRunMode.Ask;
 
-            Current = mode;
+            _current = mode;
             return mode;
         }
 
         /// <summary>Called when the Install / Run window finished with Run: the app is portable from now on.</summary>
-        public static void SetPortable() => Current = AppRunMode.Portable;
+        public static void SetPortable() => _current = AppRunMode.Portable;
 
         private static bool IsUnderProgramFiles(string folder)
         {

@@ -18,7 +18,7 @@ namespace Smart_Tools.WPF
         /// <summary>The folder for settings, logs, and caches.</summary>
         public static string DataRoot { get; } = IsPortable
             ? Path.Combine(AppContext.BaseDirectory, "UserData")   // not "Data": that folder ships oui.txt
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Smart Tools");
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), InstanceIdentity.DataFolderName(InstanceIdentity.IsDevelopment));
 
         /// <summary>Tesseract's language files (the downloaded ones live here; Engines\ stays read-only).</summary>
         public static string TesseractData { get; } = Path.Combine(DataRoot, "Tesseract", "tessdata");
@@ -32,6 +32,6 @@ namespace Smart_Tools.WPF
         /// <summary>WebView2's cache and cookies: per-user when installed, beside the app when portable.</summary>
         public static string WebViewData { get; } = IsPortable
             ? Path.Combine(DataRoot, "WebView2")
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Smart Tools", "WebView2");
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), InstanceIdentity.DataFolderName(InstanceIdentity.IsDevelopment), "WebView2");
     }
 }

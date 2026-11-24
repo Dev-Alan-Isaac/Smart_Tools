@@ -14,13 +14,12 @@ namespace Smart_Tools.WPF
         /// <summary>Started by Windows with "start with Windows": open straight into the tray.</summary>
         public static bool StartInTray { get; private set; }
 
-        private const string ActivateEventName = @"Local\SmartTools.Activate";
         private Mutex? _instanceMutex;
         private EventWaitHandle? _activateEvent;
 
         private void ListenForActivation()
         {
-            _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateEventName);
+            _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, InstanceIdentity.ActivateEventName(InstanceIdentity.IsDevelopment));
             var listener = new Thread(() =>
             {
                 while (_activateEvent.WaitOne())
@@ -52,14 +51,14 @@ namespace Smart_Tools.WPF
             // its settings) before this one reads them and opens - base.OnStartup shows the window.
             AppRestartManager.WaitForPreviousInstance(e.Args);
 
-            // Only one copy may run (otherwise each puts its own icon in the tray): a second launch
-            // asks the first to come forward and exits.
-            _instanceMutex = new Mutex(true, @"Local\SmartTools.SingleInstance", out bool isFirst);
+            // Only one copy of each kind may run (otherwise each puts its own icon in the tray): a second launch
+            // asks the first to come forward and exits. A debug copy has its own lock and data folder, so it runs beside the installed one.
+            _instanceMutex = new Mutex(true, InstanceIdentity.MutexName(InstanceIdentity.IsDevelopment), out bool isFirst);
             if (!isFirst)
             {
                 try
                 {
-                    using var activate = EventWaitHandle.OpenExisting(ActivateEventName);
+                    using var activate = EventWaitHandle.OpenExisting(InstanceIdentity.ActivateEventName(InstanceIdentity.IsDevelopment));
                     activate.Set();
                 }
                 catch (Exception ex) when (ex is WaitHandleCannotBeOpenedException or UnauthorizedAccessException or System.IO.IOException)
