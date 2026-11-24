@@ -148,6 +148,8 @@ namespace Smart_Tools.WPF.Views
                 ChkIncludeImages.IsChecked = s.IncludeImages;
                 InputCard.IncludeSubfolders = s.IncludeSubfolders;
                 _exportFormat = s.ExportFormat;
+                _detailsAsCards = s.DetailsAsCards;
+                ApplyDetailsMode();
             }
             finally
             {
@@ -163,6 +165,7 @@ namespace Smart_Tools.WPF.Views
             IncludeImages = ChkIncludeImages.IsChecked == true,
             IncludeSubfolders = InputCard.IncludeSubfolders,
             ExportFormat = SelectedExportFormat,
+            DetailsAsCards = _detailsAsCards,
         };
 
         // The last format exported (remembered in the settings and ticked in the Export menu).
@@ -478,17 +481,52 @@ namespace Smart_Tools.WPF.Views
                 _detailsView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(MetadataField.Group)));
                 _detailsView.Filter = DetailsFilter;
                 DataGridDetails.ItemsSource = _detailsView;
-                UiMotion.FadeIn(DataGridDetails, 4);
+                ItemsDetailsCards.ItemsSource = _detailsView;
             }
             else
             {
                 _detailsView = null;
                 DataGridDetails.ItemsSource = null;
+                ItemsDetailsCards.ItemsSource = null;
             }
-            DataGridDetails.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
+            ApplyDetailsMode();
             DetailsFilterBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
             DetailsEmptyStatePanel.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
             BtnCopyDetails.IsEnabled = any;
+        }
+
+        // The same grouped, filtered list is shown either as cards (default) or as the table.
+        private bool _detailsAsCards = true;
+
+        private void ApplyDetailsMode()
+        {
+            bool any = _detailsView != null;
+            DataGridDetails.Visibility = any && !_detailsAsCards ? Visibility.Visible : Visibility.Collapsed;
+            ScrollDetailsCards.Visibility = any && _detailsAsCards ? Visibility.Visible : Visibility.Collapsed;
+            DetailsViewIcon.Kind = _detailsAsCards ? MaterialDesignThemes.Wpf.PackIconKind.TableLarge : MaterialDesignThemes.Wpf.PackIconKind.ViewGridOutline;
+            if (any) UiMotion.FadeIn(_detailsAsCards ? ScrollDetailsCards : DataGridDetails, 4);
+        }
+
+        private void BtnDetailsView_Click(object sender, RoutedEventArgs e)
+        {
+            _detailsAsCards = !_detailsAsCards;
+            ApplyDetailsMode();
+            MetadataExtractManager.SaveSettings(ReadSettings());
+        }
+
+        /// <summary>A click on a card tile copies that one value.</summary>
+        private void DetailTile_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if ((sender as FrameworkElement)?.DataContext is not MetadataField field) return;
+            try
+            {
+                Clipboard.SetText(field.Value);
+                TxtProgress.Text = Smart_Tools.WPF.Loc.F("Str_MetadataExtract_CopiedValue", "Copied {0}.", field.Property);
+            }
+            catch (System.Runtime.InteropServices.ExternalException)
+            {
+                TxtProgress.Text = Smart_Tools.WPF.Loc.T("Str_MetadataExtract_CopyBusy", "Another program has the clipboard. Try again.");
+            }
         }
 
         private bool DetailsFilter(object o)

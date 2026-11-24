@@ -157,6 +157,40 @@
         </DataTemplate>
 
         <!--  Details grid: section headers (General, Video, Camera, Location…)  -->
+        <!--  One icon per kind of group: the table headers and the cards share it  -->
+        <Style x:Key="DetailsGroupIconStyle" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+            <Setter Property="Kind" Value="InformationOutline" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Name}" Value="Video">
+                    <Setter Property="Kind" Value="FilmstripBox" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}" Value="Audio">
+                    <Setter Property="Kind" Value="MusicNote" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}" Value="Image">
+                    <Setter Property="Kind" Value="ImageOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}" Value="Camera">
+                    <Setter Property="Kind" Value="CameraOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}" Value="Location">
+                    <Setter Property="Kind" Value="MapMarkerRadiusOutline" />
+                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}" Value="Tags">
+                    <Setter Property="Kind" Value="TagOutline" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}" Value="EXIF">
+                    <Setter Property="Kind" Value="CodeBraces" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!--  Details as a table: a bar per group  -->
         <DataTemplate x:Key="DetailsGroupHeaderTemplate">
             <Border
                 Margin="0,18,0,8"
@@ -164,14 +198,7 @@
                 Background="{DynamicResource RowBg}"
                 CornerRadius="10">
                 <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon
-                        x:Name="GroupIcon"
-                        Width="18"
-                        Height="18"
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentColor}"
-                        Kind="InformationOutline" />
+                    <materialDesign:PackIcon Margin="0,0,10,0" Style="{StaticResource DetailsGroupIconStyle}" />
                     <TextBlock
                         VerticalAlignment="Center"
                         FontSize="14"
@@ -186,30 +213,75 @@
                         Text="{Binding ItemCount}" />
                 </StackPanel>
             </Border>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding Name}" Value="Video">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="FilmstripBox" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Audio">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="MusicNote" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Image">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="ImageOutline" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Camera">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="CameraOutline" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Location">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="MapMarkerRadiusOutline" />
-                    <Setter TargetName="GroupIcon" Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Tags">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="TagOutline" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="EXIF">
-                    <Setter TargetName="GroupIcon" Property="Kind" Value="CodeBraces" />
-                </DataTrigger>
-            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  Details as cards: the head of one group card  -->
+        <DataTemplate x:Key="DetailsCardHeaderTemplate">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Margin="0,0,10,0" Style="{StaticResource DetailsGroupIconStyle}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{Binding Name}" />
+                <TextBlock
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextSecondary}"
+                    Text="{Binding ItemCount}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!--  Details as cards: one field = a label over its value; a click copies the value  -->
+        <DataTemplate x:Key="DetailsTileTemplate" DataType="{x:Type models:MetadataField}">
+            <Border
+                Width="224"
+                Margin="0,0,8,8"
+                Padding="12,8"
+                BorderThickness="1"
+                CornerRadius="10"
+                Cursor="Hand"
+                MouseLeftButtonUp="DetailTile_MouseLeftButtonUp">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{DynamicResource RowBg}" />
+                        <Setter Property="BorderBrush" Value="Transparent" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.ToolTip>
+                    <StackPanel MaxWidth="420">
+                        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,6,0,0"
+                            FontSize="11"
+                            Opacity="0.7"
+                            Text="{DynamicResource Str_MetadataExtract_ClickToCopy}" />
+                    </StackPanel>
+                </Border.ToolTip>
+                <StackPanel>
+                    <TextBlock
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Property}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        MaxHeight="58"
+                        Margin="0,3,0,0"
+                        FontSize="13"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Value}"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
         </DataTemplate>
 
 
@@ -956,6 +1028,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <materialDesign:PackIcon
                                         Width="16"
@@ -969,6 +1042,21 @@
                                         Style="{StaticResource BareTextBox}"
                                         Tag="Find a detail (e.g. GPS, codec, ISO)"
                                         TextChanged="TxtDetailsFilter_TextChanged" />
+                                    <Button
+                                        x:Name="BtnDetailsView"
+                                        Grid.Column="2"
+                                        Width="28"
+                                        Height="28"
+                                        Padding="0"
+                                        Click="BtnDetailsView_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_MetadataExtract_SwitchView}">
+                                        <materialDesign:PackIcon
+                                            x:Name="DetailsViewIcon"
+                                            Width="16"
+                                            Height="16"
+                                            Kind="TableLarge" />
+                                    </Button>
                                 </Grid>
                             </Border>
 
@@ -1027,6 +1115,48 @@
                                     </DataGridTextColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+
+                            <ScrollViewer
+                                x:Name="ScrollDetailsCards"
+                                Grid.Row="3"
+                                VerticalScrollBarVisibility="Auto"
+                                Visibility="Collapsed">
+                                <ItemsControl
+                                    x:Name="ItemsDetailsCards"
+                                    Focusable="False"
+                                    ItemTemplate="{StaticResource DetailsTileTemplate}">
+                                    <ItemsControl.GroupStyle>
+                                        <GroupStyle HeaderTemplate="{StaticResource DetailsCardHeaderTemplate}">
+                                            <GroupStyle.ContainerStyle>
+                                                <Style TargetType="GroupItem">
+                                                    <Setter Property="Margin" Value="0,0,0,12" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="GroupItem">
+                                                                <Border
+                                                                    Padding="14,12,6,4"
+                                                                    BorderBrush="{DynamicResource CardBorder}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="14">
+                                                                    <StackPanel>
+                                                                        <ContentPresenter Margin="0,0,0,10" />
+                                                                        <ItemsPresenter />
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </GroupStyle.ContainerStyle>
+                                            <GroupStyle.Panel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </GroupStyle.Panel>
+                                        </GroupStyle>
+                                    </ItemsControl.GroupStyle>
+                                </ItemsControl>
+                            </ScrollViewer>
 
                             <StackPanel
                                 x:Name="DetailsEmptyStatePanel"

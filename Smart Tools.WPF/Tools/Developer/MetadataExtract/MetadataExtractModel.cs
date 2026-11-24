@@ -259,6 +259,7 @@ namespace Smart_Tools.WPF.Models
         public bool IncludeImages { get; set; } = true;
         public bool IncludeSubfolders { get; set; } = true;
         public MetadataExportFormat ExportFormat { get; set; } = MetadataExportFormat.Json;
+        public bool DetailsAsCards { get; set; } = true;
     }
 
     public static class MetadataText
