@@ -163,6 +163,18 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>Delete a leftover (temp/partial) file; a locked or protected one is left for the next sweep.</summary>
+        public static void TryDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+
         public static bool HasRecycleBin(string path)
         {
             if (!OperatingSystem.IsWindows()) return false;

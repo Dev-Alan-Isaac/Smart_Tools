@@ -310,18 +310,7 @@ namespace Smart_Tools.WPF.Models
         public static double SaneSeconds(double seconds) =>
             double.IsFinite(seconds) && seconds > 0 && seconds <= MaxSaneSeconds ? seconds : 0;
 
-        public static string FormatBytes(long bytes)
-        {
-            string[] units = { "B", "KB", "MB", "GB", "TB" };
-            double size = bytes;
-            int unit = 0;
-            while (size >= 1024 && unit < units.Length - 1)
-            {
-                size /= 1024;
-                unit++;
-            }
-            return unit == 0 ? $"{bytes} B" : $"{size:0.#} {units[unit]}";
-        }
+        public static string FormatBytes(long bytes) => Smart_Tools.WPF.Controllers.ByteFormat.Format(bytes);
 
         /// <summary>"m:ss", or "h:mm:ss" past an hour - like media players.</summary>
         public static string FormatDuration(double totalSeconds)

@@ -189,16 +189,7 @@ namespace Smart_Tools.WPF.Controllers
             return name + ".wav";
         }
 
-        public static string UniquePath(string path)
-        {
-            if (!File.Exists(path)) return path;
-            string dir = Path.GetDirectoryName(path) ?? "", stem = Path.GetFileNameWithoutExtension(path), ext = Path.GetExtension(path);
-            for (int n = 2; ; n++)
-            {
-                string candidate = Path.Combine(dir, $"{stem} ({n}){ext}");
-                if (!File.Exists(candidate)) return candidate;
-            }
-        }
+        public static string UniquePath(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.UniquePath(path);
 
         // ---------------- Clipping guard ----------------
 

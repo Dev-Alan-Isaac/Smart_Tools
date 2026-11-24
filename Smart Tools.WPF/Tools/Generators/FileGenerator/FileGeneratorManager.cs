@@ -398,16 +398,7 @@ namespace Smart_Tools.WPF.Controllers
             _ => ex.Message,
         };
 
-        private static void TryDelete(string path)
-        {
-            try
-            {
-                if (File.Exists(path)) File.Delete(path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-            }
-        }
+        private static void TryDelete(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.TryDelete(path);
 
         /// <summary>ZIP (stored - test data doesn't compress, so this is fast) or TAR, written under a temporary name.</summary>
         public static string BuildArchive(IReadOnlyList<string> files, FileGenOptions o, CancellationToken token)

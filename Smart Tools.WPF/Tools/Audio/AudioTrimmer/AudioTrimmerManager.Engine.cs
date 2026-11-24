@@ -321,17 +321,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        private static void TryDelete(string path)
-        {
-            try
-            {
-                if (File.Exists(path)) File.Delete(path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // a hidden leftover .tmp is harmless
-            }
-        }
+        private static void TryDelete(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.TryDelete(path);
 
         // =================================================================
         //  ffmpeg process

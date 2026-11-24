@@ -447,20 +447,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static bool HasRecycleBin(string path)
-        {
-            if (!OperatingSystem.IsWindows()) return false;
-            try
-            {
-                string? root = Path.GetPathRoot(Path.GetFullPath(path));
-                if (string.IsNullOrEmpty(root) || root.StartsWith(@"\\", StringComparison.Ordinal)) return false;
-                return new DriveInfo(root).DriveType == DriveType.Fixed;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+        public static bool HasRecycleBin(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.HasRecycleBin(path);
 
         private static void DeleteOriginal(string path, bool toRecycleBin)
         {

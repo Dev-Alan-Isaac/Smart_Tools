@@ -403,17 +403,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        private static void TryDelete(string path)
-        {
-            try
-            {
-                if (File.Exists(path)) File.Delete(path);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // swept on the next start
-            }
-        }
+        private static void TryDelete(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.TryDelete(path);
 
         /// <summary>Tests: forget which encoders worked or failed.</summary>
         public static void ResetEncoderCache()

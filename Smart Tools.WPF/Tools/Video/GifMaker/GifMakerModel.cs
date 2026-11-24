@@ -211,18 +211,7 @@ namespace Smart_Tools.WPF.Models
     /// <summary>Small text helpers for this tool.</summary>
     public static class GifText
     {
-        public static string FormatBytes(long bytes)
-        {
-            string[] units = { "B", "KB", "MB", "GB", "TB" };
-            double size = bytes;
-            int unit = 0;
-            while (size >= 1024 && unit < units.Length - 1)
-            {
-                size /= 1024;
-                unit++;
-            }
-            return unit == 0 ? $"{bytes} B" : $"{size:0.#} {units[unit]}";
-        }
+        public static string FormatBytes(long bytes) => Smart_Tools.WPF.Controllers.ByteFormat.Format(bytes);
 
         /// <summary>"0:42", "1:02:03".</summary>
         public static string FormatTime(TimeSpan t)

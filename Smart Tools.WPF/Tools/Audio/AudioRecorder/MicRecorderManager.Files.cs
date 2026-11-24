@@ -104,16 +104,7 @@ namespace Smart_Tools.WPF.Controllers
         /// overwrote: two takes saved in the same second (or a same-named
         /// file already there) silently replaced the earlier one.
         /// </summary>
-        public static string UniquePath(string path)
-        {
-            if (!File.Exists(path)) return path;
-            string dir = Path.GetDirectoryName(path) ?? "", stem = Path.GetFileNameWithoutExtension(path), ext = Path.GetExtension(path);
-            for (int n = 2; ; n++)
-            {
-                string candidate = Path.Combine(dir, $"{stem} ({n}){ext}");
-                if (!File.Exists(candidate)) return candidate;
-            }
-        }
+        public static string UniquePath(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.UniquePath(path);
 
         /// <summary>
         /// Moves a take into a folder under a free name. A temporary take is

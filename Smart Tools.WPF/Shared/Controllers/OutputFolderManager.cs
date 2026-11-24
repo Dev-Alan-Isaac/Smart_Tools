@@ -276,18 +276,7 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         /// <summary>The path itself if free, else " (2)", " (3)"... before the extension. Results never replace a file.</summary>
-        public static string UniquePath(string path)
-        {
-            if (!File.Exists(path) && !Directory.Exists(path)) return path;
-            string folder = Path.GetDirectoryName(path) ?? "";
-            string name = Path.GetFileNameWithoutExtension(path);
-            string ext = Path.GetExtension(path);
-            for (int n = 2; ; n++)
-            {
-                string candidate = Path.Combine(folder, $"{name} ({n}){ext}");
-                if (!File.Exists(candidate) && !Directory.Exists(candidate)) return candidate;
-            }
-        }
+        public static string UniquePath(string path) => Smart_Tools.WPF.Controllers.SafeFileOps.UniquePath(path);
 
         /// <summary>
         /// Where one result goes: the chosen folder, or next to its source.
