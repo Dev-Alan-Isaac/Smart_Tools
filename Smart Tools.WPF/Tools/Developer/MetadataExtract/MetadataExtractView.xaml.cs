@@ -33,7 +33,6 @@ namespace Smart_Tools.WPF.Views
     {
         private const double SidebarExpandedWidth = 280;
         private const double SidebarCollapsedWidth = 56;
-        private const double StackDetailsBelowWidth = 1150;
         private static string DialogTitle => Loc.T("Str_Tool_metadata-extract_Name", "Metadata Extractor");
 
         private readonly BulkObservableCollection<MetadataFileItem> _files = new();
@@ -43,15 +42,12 @@ namespace Smart_Tools.WPF.Views
         private readonly bool _viewConstructed;
 
         private CancellationTokenSource? _runCts;
-        private MetadataFileItem? _shown;          // the row in the details panel
-        private ListCollectionView? _detailsView;
         private string? _lastExportFolder;         // this session only
         private bool _isRunning;
         private int _adding;
         private bool _optionsCollapsed;
         private bool _loadedOnce;
         private bool _applyingSettings;
-        private bool _detailsBelow;
 
         public MetadataExtractView()
         {
@@ -65,7 +61,6 @@ namespace Smart_Tools.WPF.Views
             _groups.CollectionChanged += (_, _) => UpdateListState();
             _viewConstructed = true;
             UpdateListState();
-            ShowDetails(null);
         }
 
         /// <summary>Called from MainWindow.Window_Closing. Reading never changes a file, so stopping is always safe.</summary>
@@ -100,27 +95,12 @@ namespace Smart_Tools.WPF.Views
 
         private void Root_SizeChanged(object sender, SizeChangedEventArgs e) => ApplyResponsiveLayout(e.NewSize.Width);
 
-        /// <summary>Details beside the list on wide windows, under it on narrow ones; less important columns go first.</summary>
+        /// <summary>The list has the whole page: the less important columns appear as the window grows.</summary>
         private void ApplyResponsiveLayout(double width)
         {
             if (width <= 0) return;
-            bool below = width < StackDetailsBelowWidth;
-            if (below != _detailsBelow)
-            {
-                _detailsBelow = below;
-                // Wide: details on the left, the file list on the right. Stacked: list on top, details under it.
-                Grid.SetColumn(FilesCard, below ? 0 : 2);
-                Grid.SetRow(DetailsCard, below ? 2 : 0);
-                DetailsColumn.MinWidth = below ? 0 : 460;
-                DetailsColumn.Width = below ? new GridLength(1, GridUnitType.Star) : new GridLength(3, GridUnitType.Star);
-                FilesColumn.MinWidth = below ? 0 : 300;
-                FilesColumn.Width = below ? new GridLength(0) : new GridLength(2, GridUnitType.Star);
-                DetailsGapColumn.Width = new GridLength(below ? 0 : 14);
-                DetailsGapRow.Height = new GridLength(below ? 14 : 0);
-                DetailsRow.Height = below ? new GridLength(3, GridUnitType.Star) : new GridLength(0);   // stacked: the details get the larger share
-            }
-            ColSummary.Visibility = width < 1500 ? Visibility.Collapsed : Visibility.Visible;
-            ColSize.Visibility = width < 1250 ? Visibility.Collapsed : Visibility.Visible;
+            ColSummary.Visibility = width < 1000 ? Visibility.Collapsed : Visibility.Visible;
+            ColSize.Visibility = width < 850 ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void BtnCollapseOptions_Click(object sender, RoutedEventArgs e)
@@ -148,8 +128,6 @@ namespace Smart_Tools.WPF.Views
                 ChkIncludeImages.IsChecked = s.IncludeImages;
                 InputCard.IncludeSubfolders = s.IncludeSubfolders;
                 _exportFormat = s.ExportFormat;
-                _detailsAsCards = s.DetailsAsCards;
-                ApplyDetailsMode();
             }
             finally
             {
@@ -165,7 +143,6 @@ namespace Smart_Tools.WPF.Views
             IncludeImages = ChkIncludeImages.IsChecked == true,
             IncludeSubfolders = InputCard.IncludeSubfolders,
             ExportFormat = SelectedExportFormat,
-            DetailsAsCards = _detailsAsCards,
         };
 
         // The last format exported (remembered in the settings and ticked in the Export menu).
@@ -291,9 +268,9 @@ namespace Smart_Tools.WPF.Views
         private void UpdateListState()
         {
             int count = _files.Count;
-            // Nothing added yet: one big empty card. Once there are files, the list and the details take its place.
+            // Nothing added yet: one big empty card. Once there are files, the list takes its place.
             PageEmptyCard.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            FilesCard.Visibility = DetailsCard.Visibility = count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            FilesCard.Visibility = count == 0 ? Visibility.Collapsed : Visibility.Visible;
             SummaryPanel.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
             TxtSummaryCount.Text = $"{count:N0} {MetadataText.Plural(count, "file", "files")}";
 
@@ -330,21 +307,17 @@ namespace Smart_Tools.WPF.Views
         private void DataGridFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             BtnRemoveSelected.IsEnabled = !IsBusy && DataGridFiles.SelectedItems.Count > 0;
-            ShowDetails(DataGridFiles.SelectedItem as MetadataFileItem);
         }
 
-        /// <summary>Double-click opens the file in its usual program.</summary>
+        /// <summary>Double-click on a row opens that file's details.</summary>
         private void DataGridFiles_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (DataGridFiles.SelectedItem is not MetadataFileItem item) return;
-            if (!File.Exists(item.FullPath))
+            if (e.OriginalSource is not DependencyObject source) return;
+            if (ItemsControl.ContainerFromElement(DataGridFiles, source) is DataGridRow { Item: MetadataFileItem item })
             {
-                TxtProgress.Text = $"{item.Name} is no longer there.";
-                return;
+                OpenDetails(item);
+                e.Handled = true;
             }
-            // Programs and scripts are shown in Explorer instead of being run.
-            if (!Smart_Tools.WPF.Controllers.ShellOpen.OpenFile(item.FullPath))
-                TxtProgress.Text = $"Couldn't open {item.Name}.";
         }
 
         private void DataGridFiles_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -354,6 +327,16 @@ namespace Smart_Tools.WPF.Views
                 RemoveItems(DataGridFiles.SelectedItems.Cast<MetadataFileItem>().ToList());
                 e.Handled = true;
             }
+            else if (e.Key == Key.Enter && DataGridFiles.SelectedItem is MetadataFileItem item)
+            {
+                OpenDetails(item);
+                e.Handled = true;
+            }
+        }
+
+        private void BtnRowDetails_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { Tag: MetadataFileItem item }) OpenDetails(item);
         }
 
         private void BtnRemoveRow_Click(object sender, RoutedEventArgs e)
@@ -381,7 +364,6 @@ namespace Smart_Tools.WPF.Views
         {
             if (IsBusy || _files.Count == 0) return;
             int n = _files.Count;
-            ShowDetails(null);
             MetadataExtractManager.ClearQueue(_files, _known, _groups);
             ProgressExtract.Value = 0;
             TxtProgressPercent.Text = "";
@@ -392,7 +374,6 @@ namespace Smart_Tools.WPF.Views
         private void BtnRemoveQueueGroup_Click(object sender, RoutedEventArgs e)
         {
             if (IsBusy || sender is not Button { Tag: MetadataQueueGroup group }) return;
-            if (_shown?.Group == group) ShowDetails(null);
             int n = MetadataExtractManager.RemoveGroup(_files, _known, _groups, group);
             ProgressExtract.Value = 0;
             TxtProgressPercent.Text = "";
@@ -403,7 +384,6 @@ namespace Smart_Tools.WPF.Views
         {
             if (remove.Count == 0) return;
             var gone = remove.ToHashSet();
-            if (_shown != null && gone.Contains(_shown)) ShowDetails(null);
             MetadataExtractManager.RemoveFromQueue(_files, _known, _groups, gone);
             ProgressExtract.Value = 0;
             TxtProgressPercent.Text = "";
@@ -411,179 +391,37 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Details panel
+        //  Details window
         // =================================================================
 
-        private void ShowDetails(MetadataFileItem? item)
+        /// <summary>
+        /// Opens the details window on this file. Previous / next walk the list in the order the grid shows it,
+        /// and the grid selects the file the window ended on.
+        /// </summary>
+        private void OpenDetails(MetadataFileItem item)
         {
-            if (_shown != null) _shown.PropertyChanged -= Shown_PropertyChanged;
-            _shown = item;
-            if (_shown != null) _shown.PropertyChanged += Shown_PropertyChanged;
-            RenderDetails();
-        }
+            var order = DataGridFiles.Items.OfType<MetadataFileItem>().ToList();
+            int index = order.IndexOf(item);
+            if (index < 0) return;
 
-        /// <summary>The panel follows the row live - the old one stayed empty until you clicked the row again.</summary>
-        private void Shown_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName is nameof(MetadataFileItem.Fields) or nameof(MetadataFileItem.Status) or nameof(MetadataFileItem.Message) or nameof(MetadataFileItem.HasLocation))
-                RenderDetails();
-        }
-
-        private void RenderDetails()
-        {
-            var item = _shown;
-            BtnShowInFolder.IsEnabled = item != null;
-            BtnOpenMap.Visibility = item?.HasLocation == true ? Visibility.Visible : Visibility.Collapsed;
-
-            if (item == null)
+            var owner = Window.GetWindow(this);
+            double height = Math.Clamp((owner?.ActualHeight ?? 800) - 170, 520, 800);
+            MetadataDetailsView? view = null;
+            bool shown = AppModal.Present(owner, close =>
             {
-                TxtDetailsHeader.SetResourceReference(TextBlock.TextProperty, "Str_Metadata_DetailsHeader");
-                TxtDetailsSub.Text = "";
-                DetailsKindIcon.Kind = PackIconKind.TagMultiple;
-                SetDetailsRows(null);
-                DetailsErrorBanner.Visibility = Visibility.Collapsed;
-                TxtDetailsEmpty.SetResourceReference(TextBlock.TextProperty, "Str_Metadata_DetailsEmptyHint");
+                view = new MetadataDetailsView(order, index, close) { Height = height };
+                return (view, view);
+            }, 760, 1240);
+
+            if (!shown)
+            {
+                TxtProgress.Text = Loc.T("Str_MetadataDetails_CantShow", "The details window couldn't be shown.");
                 return;
             }
-
-            TxtDetailsHeader.Text = item.Name;
-            TxtDetailsSub.Text = item.Summary.Length > 0 ? item.Summary : $"{item.Kind} · {item.Format} · {item.SizeText}";
-            DetailsKindIcon.Kind = item.Kind switch
+            if (view?.Current is { } last && _files.Contains(last))
             {
-                MetadataKind.Audio => PackIconKind.MusicNote,
-                MetadataKind.Image => PackIconKind.ImageOutline,
-                _ => PackIconKind.FilmstripBox,
-            };
-
-            bool failed = item.Status == MetadataStatus.Failed;
-            DetailsErrorBanner.Visibility = failed ? Visibility.Visible : Visibility.Collapsed;
-            TxtDetailsError.Text = failed ? item.Message : "";
-
-            SetDetailsRows(item.Fields);
-            if (item.Fields is not { Count: > 0 })
-            {
-                TxtDetailsEmpty.Text = item.Status switch
-                {
-                    MetadataStatus.Working => "Reading…",
-                    MetadataStatus.Skipped => item.Message + ". Switch it on in the sidebar and click Extract.",
-                    MetadataStatus.Failed => "Nothing could be read from this file.",
-                    _ => "Not read yet - click Extract.",
-                };
-            }
-        }
-
-        private void SetDetailsRows(IReadOnlyList<MetadataField>? fields)
-        {
-            bool any = fields is { Count: > 0 };
-            if (any)
-            {
-                _detailsView = new ListCollectionView(fields!.ToList());
-                _detailsView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(MetadataField.Group)));
-                _detailsView.Filter = DetailsFilter;
-                DataGridDetails.ItemsSource = _detailsView;
-                ItemsDetailsCards.ItemsSource = _detailsView;
-            }
-            else
-            {
-                _detailsView = null;
-                DataGridDetails.ItemsSource = null;
-                ItemsDetailsCards.ItemsSource = null;
-            }
-            ApplyDetailsMode();
-            DetailsFilterBar.Visibility = any ? Visibility.Visible : Visibility.Collapsed;
-            DetailsEmptyStatePanel.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
-            BtnCopyDetails.IsEnabled = any;
-        }
-
-        // The same grouped, filtered list is shown either as cards (default) or as the table.
-        private bool _detailsAsCards = true;
-
-        private void ApplyDetailsMode()
-        {
-            bool any = _detailsView != null;
-            DataGridDetails.Visibility = any && !_detailsAsCards ? Visibility.Visible : Visibility.Collapsed;
-            ScrollDetailsCards.Visibility = any && _detailsAsCards ? Visibility.Visible : Visibility.Collapsed;
-            DetailsViewIcon.Kind = _detailsAsCards ? MaterialDesignThemes.Wpf.PackIconKind.TableLarge : MaterialDesignThemes.Wpf.PackIconKind.ViewGridOutline;
-            if (any) UiMotion.FadeIn(_detailsAsCards ? ScrollDetailsCards : DataGridDetails, 4);
-        }
-
-        private void BtnDetailsView_Click(object sender, RoutedEventArgs e)
-        {
-            _detailsAsCards = !_detailsAsCards;
-            ApplyDetailsMode();
-            MetadataExtractManager.SaveSettings(ReadSettings());
-        }
-
-        /// <summary>A click on a card tile copies that one value.</summary>
-        private void DetailTile_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if ((sender as FrameworkElement)?.DataContext is not MetadataField field) return;
-            try
-            {
-                Clipboard.SetText(field.Value);
-                TxtProgress.Text = Smart_Tools.WPF.Loc.F("Str_MetadataExtract_CopiedValue", "Copied {0}.", field.Property);
-            }
-            catch (System.Runtime.InteropServices.ExternalException)
-            {
-                TxtProgress.Text = Smart_Tools.WPF.Loc.T("Str_MetadataExtract_CopyBusy", "Another program has the clipboard. Try again.");
-            }
-        }
-
-        private bool DetailsFilter(object o)
-        {
-            string term = TxtDetailsFilter.Text.Trim();
-            return term.Length == 0 || o is MetadataField f &&
-                   (f.Property.Contains(term, StringComparison.CurrentCultureIgnoreCase) ||
-                    f.Value.Contains(term, StringComparison.CurrentCultureIgnoreCase) ||
-                    f.Group.Contains(term, StringComparison.CurrentCultureIgnoreCase));
-        }
-
-        private void TxtDetailsFilter_TextChanged(object sender, TextChangedEventArgs e) => _detailsView?.Refresh();
-
-        private void BtnCopyDetails_Click(object sender, RoutedEventArgs e)
-        {
-            if (_shown == null || _detailsView == null) return;
-            var sb = new StringBuilder().AppendLine(_shown.FullPath);
-            foreach (var group in _detailsView.Cast<MetadataField>().GroupBy(f => f.Group))
-            {
-                sb.AppendLine().AppendLine(group.Key);
-                foreach (var f in group) sb.Append("  ").Append(f.Property).Append(": ").AppendLine(f.Value);
-            }
-            for (int attempt = 0; attempt < 4; attempt++)
-            {
-                try
-                {
-                    Clipboard.SetText(sb.ToString());
-                    TxtProgress.Text = $"Copied the details of {_shown.Name}.";
-                    UiMotion.Pop(BtnCopyDetails, 0.85);
-                    return;
-                }
-                catch (COMException)
-                {
-                    Thread.Sleep(60);   // another program briefly holds the clipboard
-                }
-            }
-            TxtProgress.Text = "Another program is using the clipboard - try again.";
-        }
-
-        private void BtnOpenMap_Click(object sender, RoutedEventArgs e)
-        {
-            if (_shown is not { Latitude: { } lat, Longitude: { } lon }) return;
-            if (!Smart_Tools.WPF.Controllers.ShellOpen.OpenUrl(MetadataExtractManager.MapUrl(lat, lon)))
-                TxtProgress.Text = "Couldn't open the browser.";
-        }
-
-        private void BtnShowInFolder_Click(object sender, RoutedEventArgs e)
-        {
-            if (_shown == null) return;
-            try
-            {
-                if (File.Exists(_shown.FullPath)) Process.Start("explorer.exe", $"/select,\"{_shown.FullPath}\"");
-                else TxtProgress.Text = $"{_shown.Name} is no longer there.";
-            }
-            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
-            {
-                TxtProgress.Text = "Couldn't open the folder: " + ex.Message;
+                DataGridFiles.SelectedItem = last;
+                DataGridFiles.ScrollIntoView(last);
             }
         }
 
@@ -629,11 +467,6 @@ namespace Smart_Tools.WPF.Views
                     ProgressExtract.Value = 100;
                     TxtProgressPercent.Text = "100%";
                     Toast("Metadata read", $"{done:N0} {MetadataText.Plural(done, "file", "files")}{(failed > 0 ? $", {failed:N0} failed" : "")}.");
-                }
-                if (_shown == null && _files.FirstOrDefault(f => f.Status == MetadataStatus.Done) is { } first)
-                {
-                    DataGridFiles.SelectedItem = first;   // show something straight away
-                    DataGridFiles.ScrollIntoView(first);
                 }
             }
             finally

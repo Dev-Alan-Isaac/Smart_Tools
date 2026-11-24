@@ -157,132 +157,6 @@
         </DataTemplate>
 
         <!--  Details grid: section headers (General, Video, Camera, Location…)  -->
-        <!--  One icon per kind of group: the table headers and the cards share it  -->
-        <Style x:Key="DetailsGroupIconStyle" TargetType="materialDesign:PackIcon">
-            <Setter Property="Width" Value="18" />
-            <Setter Property="Height" Value="18" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
-            <Setter Property="Kind" Value="InformationOutline" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Name}" Value="Video">
-                    <Setter Property="Kind" Value="FilmstripBox" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Audio">
-                    <Setter Property="Kind" Value="MusicNote" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Image">
-                    <Setter Property="Kind" Value="ImageOutline" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Camera">
-                    <Setter Property="Kind" Value="CameraOutline" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Location">
-                    <Setter Property="Kind" Value="MapMarkerRadiusOutline" />
-                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="Tags">
-                    <Setter Property="Kind" Value="TagOutline" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}" Value="EXIF">
-                    <Setter Property="Kind" Value="CodeBraces" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!--  Details as a table: a bar per group  -->
-        <DataTemplate x:Key="DetailsGroupHeaderTemplate">
-            <Border
-                Margin="0,18,0,8"
-                Padding="12,8"
-                Background="{DynamicResource RowBg}"
-                CornerRadius="10">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Margin="0,0,10,0" Style="{StaticResource DetailsGroupIconStyle}" />
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontSize="14"
-                        FontWeight="Bold"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Text="{Binding Name}" />
-                    <TextBlock
-                        Margin="10,0,0,0"
-                        VerticalAlignment="Center"
-                        FontSize="12"
-                        Foreground="{DynamicResource TextSecondary}"
-                        Text="{Binding ItemCount}" />
-                </StackPanel>
-            </Border>
-        </DataTemplate>
-
-        <!--  Details as cards: the head of one group card  -->
-        <DataTemplate x:Key="DetailsCardHeaderTemplate">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Margin="0,0,10,0" Style="{StaticResource DetailsGroupIconStyle}" />
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="14"
-                    FontWeight="Bold"
-                    Foreground="{DynamicResource TextPrimary}"
-                    Text="{Binding Name}" />
-                <TextBlock
-                    Margin="10,0,0,0"
-                    VerticalAlignment="Center"
-                    FontSize="12"
-                    Foreground="{DynamicResource TextSecondary}"
-                    Text="{Binding ItemCount}" />
-            </StackPanel>
-        </DataTemplate>
-
-        <!--  Details as cards: one field = a label over its value; a click copies the value  -->
-        <DataTemplate x:Key="DetailsTileTemplate" DataType="{x:Type models:MetadataField}">
-            <Border
-                Width="224"
-                Margin="0,0,8,8"
-                Padding="12,8"
-                BorderThickness="1"
-                CornerRadius="10"
-                Cursor="Hand"
-                MouseLeftButtonUp="DetailTile_MouseLeftButtonUp">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Background" Value="{DynamicResource RowBg}" />
-                        <Setter Property="BorderBrush" Value="Transparent" />
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="{DynamicResource AccentColor}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Border.ToolTip>
-                    <StackPanel MaxWidth="420">
-                        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,6,0,0"
-                            FontSize="11"
-                            Opacity="0.7"
-                            Text="{DynamicResource Str_MetadataExtract_ClickToCopy}" />
-                    </StackPanel>
-                </Border.ToolTip>
-                <StackPanel>
-                    <TextBlock
-                        FontSize="11"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextSecondary}"
-                        Text="{Binding Property}"
-                        TextTrimming="CharacterEllipsis" />
-                    <TextBlock
-                        MaxHeight="58"
-                        Margin="0,3,0,0"
-                        FontSize="13"
-                        Foreground="{DynamicResource TextPrimary}"
-                        Text="{Binding Value}"
-                        TextTrimming="CharacterEllipsis"
-                        TextWrapping="Wrap" />
-                </StackPanel>
-            </Border>
-        </DataTemplate>
 
 
         <!--  Input card: one queued item  -->
@@ -625,24 +499,12 @@
                     </Grid>
                 </Border>
 
-                <!--  Files + details (side by side; stacked on narrow windows)  -->
+                <!--  The files: one big card. A file's details open in their own window  -->
                 <Grid x:Name="ContentGrid" ctl:Tour.Key="Str_Tour_MetadataExtract_Results" ctl:Tour.Order="4" Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition x:Name="DetailsColumn" MinWidth="460" Width="3*" />
-                        <ColumnDefinition x:Name="DetailsGapColumn" Width="14" />
-                        <ColumnDefinition x:Name="FilesColumn" MinWidth="300" Width="2*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="2*" />
-                        <RowDefinition x:Name="DetailsGapRow" Height="0" />
-                        <RowDefinition x:Name="DetailsRow" Height="0" />
-                    </Grid.RowDefinitions>
-
+                    
                     <!--  ================= EMPTY: one big card (it takes drops like the rest of the page) until files are added =================  -->
                     <Border
                         x:Name="PageEmptyCard"
-                        Grid.RowSpan="3"
-                        Grid.ColumnSpan="3"
                         Panel.ZIndex="5"
                         Style="{StaticResource CardStyle}">
                             <StackPanel
@@ -672,7 +534,6 @@
                     <!--  ================= FILES =================  -->
                     <Border
                         x:Name="FilesCard"
-                        Grid.Column="2"
                         Style="{StaticResource CardStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -870,21 +731,36 @@
                                         CellTemplate="{StaticResource StatusCellTemplate}"
                                         Header="{DynamicResource Str_Common_ColHeaderStatus}"
                                         SortMemberPath="Status" />
-                                    <DataGridTemplateColumn Width="40" CellStyle="{StaticResource CompactCellStyle}">
+                                    <DataGridTemplateColumn Width="76" CellStyle="{StaticResource CompactCellStyle}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button
-                                                    Width="26"
-                                                    Height="26"
-                                                    Click="BtnRemoveRow_Click"
-                                                    Style="{StaticResource IconButtonStyle}"
-                                                    Tag="{Binding}"
-                                                    ToolTip="{DynamicResource Str_MetadataExtract_TakeThisFileOff}">
-                                                    <materialDesign:PackIcon
-                                                        Width="14"
-                                                        Height="14"
-                                                        Kind="Close" />
-                                                </Button>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button
+                                                        Width="26"
+                                                        Height="26"
+                                                        Margin="0,0,4,0"
+                                                        Click="BtnRowDetails_Click"
+                                                        Style="{StaticResource IconButtonStyle}"
+                                                        Tag="{Binding}"
+                                                        ToolTip="{DynamicResource Str_MetadataDetails_RowTip}">
+                                                        <materialDesign:PackIcon
+                                                            Width="14"
+                                                            Height="14"
+                                                            Kind="InformationOutline" />
+                                                    </Button>
+                                                    <Button
+                                                        Width="26"
+                                                        Height="26"
+                                                        Click="BtnRemoveRow_Click"
+                                                        Style="{StaticResource IconButtonStyle}"
+                                                        Tag="{Binding}"
+                                                        ToolTip="{DynamicResource Str_MetadataExtract_TakeThisFileOff}">
+                                                        <materialDesign:PackIcon
+                                                            Width="14"
+                                                            Height="14"
+                                                            Kind="Close" />
+                                                    </Button>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -894,289 +770,6 @@
                         </Grid>
                     </Border>
 
-                    <!--  ================= DETAILS =================  -->
-                    <Border
-                        x:Name="DetailsCard"
-                        Grid.Column="0"
-                        Style="{StaticResource CardStyle}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <!--  Header: the selected file  -->
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <Border
-                                    x:Name="DetailsKindBadge"
-                                    Width="38"
-                                    Height="38"
-                                    Margin="0,0,10,0"
-                                    VerticalAlignment="Center"
-                                    Background="{DynamicResource AccentFill}"
-                                    CornerRadius="10">
-                                    <materialDesign:PackIcon
-                                        x:Name="DetailsKindIcon"
-                                        Width="20"
-                                        Height="20"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Foreground="White"
-                                        Kind="TagMultiple" />
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock
-                                        x:Name="TxtDetailsHeader"
-                                        FontSize="14"
-                                        FontWeight="Bold"
-                                        Foreground="{DynamicResource TextPrimary}"
-                                        Text="{DynamicResource Str_Metadata_DetailsHeader}"
-                                        TextTrimming="CharacterEllipsis"
-                                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
-                                    <TextBlock
-                                        x:Name="TxtDetailsSub"
-                                        Margin="0,2,0,0"
-                                        FontSize="11"
-                                        Foreground="{DynamicResource TextSecondary}"
-                                        TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                    <Button Padding="0"
-                                        x:Name="BtnOpenMap"
-                                        Width="32"
-                                        Height="32"
-                                        Click="BtnOpenMap_Click"
-                                        Style="{StaticResource NeutralIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_MetadataExtract_ShowWhereItWas}"
-                                        Visibility="Collapsed">
-                                        <materialDesign:PackIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="MapSearchOutline" />
-                                    </Button>
-                                    <Button
-                                        x:Name="BtnCopyDetails"
-                                        Margin="4,0,0,0"
-                                        Click="BtnCopyDetails_Click"
-                                        IsEnabled="False"
-                                        ToolTip="{DynamicResource Str_MetadataExtract_CopyEverythingShownCtrl}"
-                                        Style="{StaticResource ListToolButtonStyle}">
-                                        <materialDesign:PackIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="ContentCopy" />
-                                    </Button>
-                                    <Button
-                                        x:Name="BtnShowInFolder"
-                                        Margin="4,0,0,0"
-                                        Click="BtnShowInFolder_Click"
-                                        IsEnabled="False"
-                                        ToolTip="{DynamicResource Str_LogViewer_ShowTheFileIn}"
-                                        Style="{StaticResource ListToolButtonStyle}">
-                                        <materialDesign:PackIcon
-                                            Width="16"
-                                            Height="16"
-                                            Kind="FolderSearchOutline" />
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-
-                            <!--  Why it failed  -->
-                            <Border
-                                x:Name="DetailsErrorBanner"
-                                Grid.Row="1"
-                                Margin="0,0,0,10"
-                                Padding="12,8"
-                                Background="{DynamicResource StatusErrorBg}"
-                                CornerRadius="8"
-                                Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon
-                                        Width="16"
-                                        Height="16"
-                                        Margin="0,1,8,0"
-                                        Foreground="{DynamicResource StatusErrorFg}"
-                                        Kind="AlertCircleOutline" />
-                                    <TextBlock
-                                        x:Name="TxtDetailsError"
-                                        Grid.Column="1"
-                                        FontSize="12"
-                                        Foreground="{DynamicResource StatusErrorFg}"
-                                        TextWrapping="Wrap" />
-                                </Grid>
-                            </Border>
-
-                            <!--  Filter  -->
-                            <Border
-                                x:Name="DetailsFilterBar"
-                                Grid.Row="2"
-                                Margin="0,0,0,6"
-                                Style="{StaticResource InputBarStyle}"
-                                Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon
-                                        Width="16"
-                                        Height="16"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource AccentColor}"
-                                        Kind="Magnify" />
-                                    <TextBox
-                                        x:Name="TxtDetailsFilter"
-                                        Grid.Column="1"
-                                        Style="{StaticResource BareTextBox}"
-                                        Tag="Find a detail (e.g. GPS, codec, ISO)"
-                                        TextChanged="TxtDetailsFilter_TextChanged" />
-                                    <Button
-                                        x:Name="BtnDetailsView"
-                                        Grid.Column="2"
-                                        Width="28"
-                                        Height="28"
-                                        Padding="0"
-                                        Click="BtnDetailsView_Click"
-                                        Style="{StaticResource ListToolButtonStyle}"
-                                        ToolTip="{DynamicResource Str_MetadataExtract_SwitchView}">
-                                        <materialDesign:PackIcon
-                                            x:Name="DetailsViewIcon"
-                                            Width="16"
-                                            Height="16"
-                                            Kind="TableLarge" />
-                                    </Button>
-                                </Grid>
-                            </Border>
-
-                            <DataGrid
-                                x:Name="DataGridDetails"
-                                Grid.Row="3"
-                                AutoGenerateColumns="False"
-                                CanUserAddRows="False"
-                                CanUserSortColumns="False"
-                                ClipboardCopyMode="ExcludeHeader"
-                                FontSize="13"
-                                HeadersVisibility="None"
-                                IsReadOnly="True"
-                                MinRowHeight="42"
-                                SelectionMode="Extended"
-                                ToolTip="{DynamicResource Str_Metadata_DetailsGridTooltip}"
-                                VirtualizingPanel.IsVirtualizingWhenGrouping="True">
-                                <DataGrid.GroupStyle>
-                                    <GroupStyle HeaderTemplate="{StaticResource DetailsGroupHeaderTemplate}" />
-                                </DataGrid.GroupStyle>
-                                <DataGrid.CellStyle>
-                                    <Style BasedOn="{StaticResource {x:Type DataGridCell}}" TargetType="DataGridCell">
-                                        <Setter Property="Padding" Value="16,10" />
-                                    </Style>
-                                </DataGrid.CellStyle>
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn
-                                        Width="210"
-                                        Binding="{Binding Property, Mode=OneWay}"
-                                        Header="{DynamicResource Str_Metadata_ColHeaderProperty}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
-                                                <Setter Property="FontSize" Value="12.5" />
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                                                <Setter Property="ToolTip" Value="{Binding Property}" />
-                                                <Setter Property="VerticalAlignment" Value="Center" />
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                    <DataGridTextColumn
-                                        Width="*"
-                                        Binding="{Binding Value, Mode=OneWay}"
-                                        Header="{DynamicResource Str_Metadata_ColHeaderValue}">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
-                                                <Setter Property="TextWrapping" Value="Wrap" />
-                                                <Setter Property="ToolTip" Value="{Binding Value}" />
-                                                <Setter Property="VerticalAlignment" Value="Center" />
-                                                <Setter Property="LineHeight" Value="20" />
-                                                <Setter Property="Margin" Value="0,2" />
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
-
-                            <ScrollViewer
-                                x:Name="ScrollDetailsCards"
-                                Grid.Row="3"
-                                VerticalScrollBarVisibility="Auto"
-                                Visibility="Collapsed">
-                                <ItemsControl
-                                    x:Name="ItemsDetailsCards"
-                                    Focusable="False"
-                                    ItemTemplate="{StaticResource DetailsTileTemplate}">
-                                    <ItemsControl.GroupStyle>
-                                        <GroupStyle HeaderTemplate="{StaticResource DetailsCardHeaderTemplate}">
-                                            <GroupStyle.ContainerStyle>
-                                                <Style TargetType="GroupItem">
-                                                    <Setter Property="Margin" Value="0,0,0,12" />
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="GroupItem">
-                                                                <Border
-                                                                    Padding="14,12,6,4"
-                                                                    BorderBrush="{DynamicResource CardBorder}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="14">
-                                                                    <StackPanel>
-                                                                        <ContentPresenter Margin="0,0,0,10" />
-                                                                        <ItemsPresenter />
-                                                                    </StackPanel>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </GroupStyle.ContainerStyle>
-                                            <GroupStyle.Panel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel />
-                                                </ItemsPanelTemplate>
-                                            </GroupStyle.Panel>
-                                        </GroupStyle>
-                                    </ItemsControl.GroupStyle>
-                                </ItemsControl>
-                            </ScrollViewer>
-
-                            <StackPanel
-                                x:Name="DetailsEmptyStatePanel"
-                                Grid.Row="3"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CursorDefaultClickOutline}" />
-                                <TextBlock
-                                    x:Name="TxtDetailsEmpty"
-                                    MaxWidth="300"
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Center"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondary}"
-                                    Text="{DynamicResource Str_Metadata_DetailsEmptyHint}"
-                                    TextAlignment="Center"
-                                    TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
                 </Grid>
             </Grid>
         </Grid>
