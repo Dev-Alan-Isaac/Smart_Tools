@@ -275,11 +275,7 @@ namespace Smart_Tools.WPF.Controllers
             return s;
         }
 
-        public static void SaveSettings(MidiInstrumentsSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-        }
+        public static void SaveSettings(MidiInstrumentsSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }

@@ -681,20 +681,7 @@ namespace Smart_Tools.WPF.Controllers
 
         private static MockDataSettings Fresh() => new() { Seed = NewSeed(), Fields = ToSettings(FieldsFrom(Presets[0].Fields)) };
 
-        public static void SaveSettings(MockDataSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            string temp = file + ".tmp";
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, SettingsJson));
-                File.Move(temp, file, overwrite: true);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                try { File.Delete(temp); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
-            }
-        }
+        public static void SaveSettings(MockDataSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, SettingsJson);
     }
 }

@@ -128,17 +128,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(WebcamTestSettings settings, string? path = null)
-        {
-            try
-            {
-                string file = path ?? SettingsPath;
-                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // A setting that doesn't stick is not worth interrupting the test for.
-            }
-        }
+        public static void SaveSettings(WebcamTestSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }

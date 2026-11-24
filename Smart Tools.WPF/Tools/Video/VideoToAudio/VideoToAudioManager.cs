@@ -278,18 +278,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(VtaSettings settings, string? path = null)
-        {
-            try
-            {
-                string file = path ?? SettingsPath;
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // settings are a convenience: never fail the tool over them
-            }
-        }
+        public static void SaveSettings(VtaSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }

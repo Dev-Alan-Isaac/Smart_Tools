@@ -305,20 +305,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(FileDiffSettings settings, string? path = null)
-        {
-            try
-            {
-                string file = path ?? SettingsPath;
-                Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-                string temp = file + ".tmp";
-                File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-                File.Move(temp, file, overwrite: true);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // Settings are a convenience; not being able to save them mustn't break the tool.
-            }
-        }
+        public static void SaveSettings(FileDiffSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }

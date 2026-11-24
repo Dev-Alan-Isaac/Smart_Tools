@@ -385,18 +385,8 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(ImageViewerSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            try
-            {
-                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // Settings are a convenience; never fail the tool over them.
-            }
-        }
+        public static void SaveSettings(ImageViewerSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 
     /// <summary>

@@ -567,11 +567,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(ImagePdfSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-        }
+        public static void SaveSettings(ImagePdfSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }

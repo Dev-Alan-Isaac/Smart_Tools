@@ -480,10 +480,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(KeyboardMouseTestSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-        }
+        public static void SaveSettings(KeyboardMouseTestSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }

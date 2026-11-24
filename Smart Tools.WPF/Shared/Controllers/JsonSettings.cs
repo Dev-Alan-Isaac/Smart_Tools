@@ -61,6 +61,23 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
+        /// <summary>
+        /// For managers that keep their own file name and serializer options: temp-then-move, folder created,
+        /// false (never a crash) when the disk refuses.
+        /// </summary>
+        public static bool SaveFile<T>(string file, T settings, JsonSerializerOptions options)
+        {
+            try
+            {
+                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, options));
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
         /// <summary>Copies to the clipboard; false when another program has it open.</summary>
         public static bool TryCopy(string text)
         {

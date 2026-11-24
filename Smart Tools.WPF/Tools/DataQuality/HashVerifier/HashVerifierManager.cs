@@ -380,14 +380,8 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(HashVerifierSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            string temp = file + ".tmp";
-            File.WriteAllText(temp, JsonSerializer.Serialize(settings, JsonOptions));
-            File.Move(temp, file, overwrite: true);
-        }
+        public static void SaveSettings(HashVerifierSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 
     /// <summary>Table-driven CRC-32 (IEEE 802.3, the one ZIP/PNG/SFV use).</summary>

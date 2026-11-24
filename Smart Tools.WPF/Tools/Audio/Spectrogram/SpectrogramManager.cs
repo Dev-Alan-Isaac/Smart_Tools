@@ -808,17 +808,7 @@ namespace Smart_Tools.WPF.Controllers
             }
         }
 
-        public static void SaveSettings(SpectrogramSettings settings, string? path = null)
-        {
-            string file = path ?? SettingsPath;
-            try
-            {
-                AtomicFile.WriteAllText(file, JsonSerializer.Serialize(settings, JsonOptions));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // best effort: AtomicFile already removed its temp file
-            }
-        }
+        public static void SaveSettings(SpectrogramSettings settings, string? path = null) =>
+            Smart_Tools.WPF.Controllers.JsonSettings.SaveFile(path ?? SettingsPath, settings, JsonOptions);
     }
 }
