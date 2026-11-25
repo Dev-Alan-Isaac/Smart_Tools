@@ -65,7 +65,7 @@ namespace Smart_Tools.WPF.Views
         private void RebuildScene()
         {
             var group = new Model3DGroup();
-            foreach (var part in _model.Parts)
+            foreach (var part in Shown())
             {
                 if (_hidden.Contains(part.Name)) continue;
                 var mesh = new MeshGeometry3D();
@@ -164,6 +164,7 @@ namespace Smart_Tools.WPF.Views
             _pressedEmpty = false;
             if (e.ChangedButton == MouseButton.Left && _isCustom)
             {
+                if (PushAllBack()) return;   // edit the piece where it really is
                 if (BeginEdit(_pressPoint))
                 {
                     StageHost.Cursor = _edit?.Kind == EditKind.Resize ? System.Windows.Input.Cursors.Cross : System.Windows.Input.Cursors.SizeAll;
@@ -223,13 +224,28 @@ namespace Smart_Tools.WPF.Views
         {
             double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
             if (w < 40 || h < 40 || _model.Parts.Count == 0) return;
-            int index = PieceDrag.Pick(_model.Parts, _camera.Ray(at.X, at.Y, w, h), out _, p => _hidden.Contains(p.Name));
+            var shown = Shown();
+            int index = PieceDrag.Pick(shown, _camera.Ray(at.X, at.Y, w, h), out _, p => _hidden.Contains(p.Name));
             if (index < 0 && _hidden.Count == 0) return;
 
             var menu = new ContextMenu { PlacementTarget = StageHost };
             if (index >= 0)
             {
-                string name = _model.Parts[index].Name;
+                string name = shown[index].Name;
+                if (shown[index].Group is { } group)
+                {
+                    // the whole group: pull it out (or back in), or hide it
+                    var pull = new MenuItem { Header = _pulled.ContainsKey(group) ? Loc.F("Str_Modeler_PushIn", "Push {0} back in", group) : Loc.F("Str_Modeler_PullOut", "Pull out {0}", group) };
+                    pull.Click += (_, _) => SetPulled(group, !_pulled.ContainsKey(group));
+                    menu.Items.Add(pull);
+                    var hideGroup = new MenuItem { Header = Loc.F("Str_Modeler_HideGroup", "Hide all of {0}", group) };
+                    hideGroup.Click += (_, _) =>
+                    {
+                        foreach (var p in _model.Parts.Where(p => p.Group == group)) _hidden.Add(p.Name);
+                        HiddenChanged();
+                    };
+                    menu.Items.Add(hideGroup);
+                }
                 var hide = new MenuItem { Header = Loc.F("Str_Modeler_HideBoard", "Hide {0}", name) };
                 hide.Click += (_, _) =>
                 {
@@ -268,16 +284,18 @@ namespace Smart_Tools.WPF.Views
             double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
             if (w < 40 || h < 40) return;
 
-            var picked = _model.Parts.FirstOrDefault(p => _selected.Contains(p.Name));
+            var shown = Shown();
+            var picked = shown.FirstOrDefault(p => _selected.Contains(p.Name));
             var lines = picked != null
                 ? DimensionLines.ForPart(picked, Math.Clamp(Math.Max(picked.Size.X, Math.Max(picked.Size.Y, picked.Size.Z)) * 0.15, 25, 150))
-                : DimensionLines.Overall(_model, DimensionOffset());
+                : DimensionLines.Overall(new PieceModel(_model.Name, shown), DimensionOffset());
             foreach (var line in lines) DrawDimension(line, w, h);
 
             // inside a piece: the free space from the picked board to the boards around it (hidden boards, like doors, do not count)
             if (picked != null)
-                foreach (var gap in DimensionLines.Gaps(_model.Parts, picked, p => _hidden.Contains(p.Name))) DrawDimension(gap, w, h, gapLine: true);
+                foreach (var gap in DimensionLines.Gaps(shown, picked, p => _hidden.Contains(p.Name))) DrawDimension(gap, w, h, gapLine: true);
             if (picked != null && picked.Bevels.Count > 0) DrawBevelMarkers(picked, w, h);   // the angle of each cut
+            if (_pulled.Count > 0) DrawPulledGroups(w, h);                                         // a pulled-out drawer and how far it came out
         }
 
         private void DrawDimension(DimensionLine line, double w, double h, bool gapLine = false)

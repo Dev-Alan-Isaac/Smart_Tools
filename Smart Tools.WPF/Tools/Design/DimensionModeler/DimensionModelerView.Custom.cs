@@ -142,6 +142,7 @@ namespace Smart_Tools.WPF.Views
             DataGridCut.SelectedItem = null;
             _selected.Clear();
             _hidden.Clear();
+            _pulled.Clear();
             ShowMode();
             Rebuild(fit: true);
             ScheduleSave();
@@ -217,6 +218,7 @@ namespace Smart_Tools.WPF.Views
             try
             {
                 TxtPartName.Text = p.Name;
+                TxtPartGroup.Text = p.Group ?? "";
                 TxtPosX.Text = Num(p.Min.X);
                 TxtPosY.Text = Num(p.Min.Y);
                 TxtPosZ.Text = Num(p.Min.Z);
@@ -251,11 +253,15 @@ namespace Smart_Tools.WPF.Views
                 box.Text.Trim() == Num(fallback) ? fallback
                 : LengthFormat.TryParseMm(box.Text, _settings.Unit, out double mm) ? mm : fallback;
             var kind = ComboPartKind.SelectedItem is ComboBoxItem { Tag: PartKind k } ? k : old.Kind;
-            var edited = new Part(
-                TxtPartName.Text,
-                new Vec3(V(TxtPosX, old.Min.X), V(TxtPosY, old.Min.Y), V(TxtPosZ, old.Min.Z)),
-                new Vec3(V(TxtSizeW, old.Size.X), V(TxtSizeH, old.Size.Y), V(TxtSizeD, old.Size.Z)),
-                kind);
+            // a copy of the board, so its holes, angled cuts and group stay with it (they have their own blocks)
+            var edited = old with
+            {
+                Name = TxtPartName.Text,
+                Min = new Vec3(V(TxtPosX, old.Min.X), V(TxtPosY, old.Min.Y), V(TxtPosZ, old.Min.Z)),
+                Size = new Vec3(V(TxtSizeW, old.Size.X), V(TxtSizeH, old.Size.Y), V(TxtSizeD, old.Size.Z)),
+                Kind = kind,
+                Group = string.IsNullOrWhiteSpace(TxtPartGroup.Text) ? null : TxtPartGroup.Text.Trim(),
+            };
             var result = PieceEditor.Replace(_customParts, i, edited);
             if (result[i] == old)
             {

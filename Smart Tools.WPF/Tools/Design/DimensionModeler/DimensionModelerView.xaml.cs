@@ -139,6 +139,7 @@ namespace Smart_Tools.WPF.Views
         {
             _model = _isCustom ? PieceEditor.ToModel(_customName, _customParts) : _template.Build(CurrentValues());
             _hidden.RemoveWhere(name => _model.Parts.All(p => p.Name != name));   // a board that is gone (or renamed) is no longer hidden
+            RefreshGroups();
             TxtPieceName.Text = _isCustom ? _customName : Loc.T($"Str_Modeler_Template_{_template.Id}", _template.Name);
             var size = _model.Size;
             TxtPieceSize.Text = _model.Parts.Count == 0
@@ -202,6 +203,7 @@ namespace Smart_Tools.WPF.Views
             DataGridCut.SelectedItem = null;
             _selected.Clear();
             _hidden.Clear();
+            _pulled.Clear();
             ShowMode();
             BuildParamRows();
             Rebuild(fit: true);

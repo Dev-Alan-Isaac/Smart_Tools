@@ -165,7 +165,15 @@ namespace Smart_Tools.WPF.Views
             }
 
             e.Moved = true;
-            ApplyLive(PieceEditor.Replace(start, e.Index, moved), e, stuck);
+            var result = PieceEditor.Replace(start, e.Index, moved);
+            if (e.Kind != EditKind.Resize && start[e.Index].Group is { } group)
+            {
+                // the rest of the group comes along by the same amount
+                var delta = result[e.Index].Min - start[e.Index].Min;
+                for (int j = 0; j < start.Count; j++)
+                    if (j != e.Index && start[j].Group == group) result = PieceEditor.Replace(result, j, start[j] with { Min = start[j].Min + delta });
+            }
+            ApplyLive(result, e, stuck);
         }
 
         /// <summary>Shows the board where the drag has it, without recording anything yet (that happens once, on release).</summary>

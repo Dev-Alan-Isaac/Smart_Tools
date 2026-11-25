@@ -389,6 +389,22 @@
                                         <TextBlock
                                             Margin="0,10,0,6"
                                             Style="{StaticResource FieldLabel}"
+                                            Text="{DynamicResource Str_Modeler_PartGroup}"
+                                            ToolTip="{DynamicResource Str_Modeler_PartGroupTip}" />
+                                        <Border Style="{StaticResource InputBarStyle}">
+                                            <TextBox
+                                                x:Name="TxtPartGroup"
+                                                PreviewKeyDown="PartBox_KeyDown"
+                                                LostFocus="PartBox_Commit"
+                                                MaxLength="60"
+                                                Style="{StaticResource BareTextBox}"
+                                                Tag="{DynamicResource Str_Modeler_PartGroupPlaceholder}"
+                                                ToolTip="{DynamicResource Str_Modeler_PartGroupTip}" />
+                                        </Border>
+
+                                        <TextBlock
+                                            Margin="0,10,0,6"
+                                            Style="{StaticResource FieldLabel}"
                                             Text="{DynamicResource Str_Modeler_PartKind}"
                                             ToolTip="{DynamicResource Str_Modeler_PartKindTip}" />
                                         <Border Style="{StaticResource InputBarStyle}">
@@ -1153,7 +1169,9 @@
                                             Header="{DynamicResource Str_Modeler_ColSize}" />
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <DockPanel Grid.Row="2" Margin="0,8,0,0">
+                                <StackPanel Grid.Row="2">
+                                <WrapPanel x:Name="PanelGroups" Margin="0,8,0,0" Visibility="Collapsed" />
+                                <DockPanel Margin="0,8,0,0">
                                     <Button
                                         x:Name="BtnShowAll"
                                         Padding="10,3"
@@ -1179,6 +1197,7 @@
                                         Foreground="{DynamicResource TextSecondary}"
                                         TextWrapping="Wrap" />
                                 </DockPanel>
+                                </StackPanel>
                             </Grid>
                         </Border>
                     </Grid>

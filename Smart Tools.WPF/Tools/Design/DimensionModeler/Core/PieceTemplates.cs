@@ -263,14 +263,15 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     int k = i + 1;
                     var front = FrontBevels(P($"Drawer {k} Front", 0, lift + i * (frontH + gap), dc, w, frontH, t, PartKind.Panel), v["bevel"], v["bevelAngle"]);
-                    parts.Add(WithHole(front, new Hole(2, w / 2, frontH * 0.7, v["handle"])));
+                    string group = $"Drawer {k}";   // front and box move, hide and pull out together
+                    parts.Add(WithHole(front, new Hole(2, w / 2, frontH * 0.7, v["handle"])) with { Group = group });
 
                     // the box behind the front: it rides between the sides and touches the front
                     double y0 = lift + t + i * slot + 5, y1 = lift + t + (i + 1) * slot - 5;
-                    parts.Add(P($"Drawer {k} Bottom", x0 + side, y0, zb, x1 - x0 - 2 * side, side, dc - zb, PartKind.Board));
-                    parts.Add(P($"Drawer {k} Side Left", x0, y0, zb, side, y1 - y0, dc - zb, PartKind.Board));
-                    parts.Add(P($"Drawer {k} Side Right", x1 - side, y0, zb, side, y1 - y0, dc - zb, PartKind.Board));
-                    parts.Add(P($"Drawer {k} Back", x0 + side, y0 + side, zb, x1 - x0 - 2 * side, y1 - y0 - side, side, PartKind.Board));
+                    parts.Add(P($"Drawer {k} Bottom", x0 + side, y0, zb, x1 - x0 - 2 * side, side, dc - zb, PartKind.Board) with { Group = group });
+                    parts.Add(P($"Drawer {k} Side Left", x0, y0, zb, side, y1 - y0, dc - zb, PartKind.Board) with { Group = group });
+                    parts.Add(P($"Drawer {k} Side Right", x1 - side, y0, zb, side, y1 - y0, dc - zb, PartKind.Board) with { Group = group });
+                    parts.Add(P($"Drawer {k} Back", x0 + side, y0 + side, zb, x1 - x0 - 2 * side, y1 - y0 - side, side, PartKind.Board) with { Group = group });
                 }
                 return parts;
             });
