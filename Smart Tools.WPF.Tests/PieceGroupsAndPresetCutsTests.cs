@@ -33,7 +33,7 @@ namespace Smart_Tools.WPF.Tests
             var t = PieceTemplates.Find(id)!;
             foreach (bool big in new[] { false, true })
             {
-                var values = t.Params.ToDictionary(p => p.Key, p => big && p.Key.StartsWith("bevel") ? p.Max : p.Default);
+                var values = t.Params.ToDictionary(p => p.Key, p => big && (p.Key.StartsWith("bevel") || p.Key == "miter") ? p.Max : p.Default);
                 foreach (var part in t.Build(values).Parts)
                     Assert.True(Watertight(BoxMesh.Triangles(part)), $"{id}: {part.Name} is not closed (bevel {(big ? "max" : "default")})");
             }
@@ -58,6 +58,37 @@ namespace Smart_Tools.WPF.Tests
             var top = desk.Build(d).Parts.Single(p => p.Name == "Top");
             Assert.Equal(new Bevel(3, 5, 45, 8), Assert.Single(top.Bevels));
             Assert.Single(top.Holes);
+        }
+
+        [Fact]
+        public void Mitred_top_corners_run_the_top_across_the_full_width_and_meet_the_sides_without_overlap()
+        {
+            var cabinet = PieceTemplates.Find("cabinet")!;
+            var v = cabinet.Params.ToDictionary(p => p.Key, p => p.Default);
+            v["miter"] = 1;
+            var parts = cabinet.Build(v).Parts;
+            var top = parts.Single(p => p.Name == "Top");
+            var left = parts.Single(p => p.Name == "Side Left");
+            Assert.Equal(0, top.Min.X, 6);                                     // over the sides now
+            Assert.Equal(2, top.Bevels.Count);
+            Assert.Single(left.Bevels);
+            Assert.False(PieceBevels.SolidsOverlap(top, left));
+            Assert.Empty(PieceChecks.Overlapping(parts));
+            Assert.True(Watertight(BoxMesh.Triangles(top)));
+            Assert.True(Watertight(BoxMesh.Triangles(left)));
+        }
+
+        [Fact]
+        public void Doors_and_shelf_levels_are_groups_too()
+        {
+            var door = PieceTemplates.Find("door")!.Build(PieceTemplates.Find("door")!.Params.ToDictionary(p => p.Key, p => p.Default)).Parts;
+            Assert.Equal(4, door.Count(p => p.Group == "Door"));               // the door and its three hinges
+            Assert.All(door.Where(p => p.Name.StartsWith("Jamb") || p.Name == "Head"), p => Assert.Null(p.Group));
+
+            var shelf = PieceTemplates.Find("shelf")!;
+            var v = shelf.Params.ToDictionary(p => p.Key, p => p.Default);
+            v["tiers"] = 3;
+            Assert.Equal(3, shelf.Build(v).Parts.Select(p => p.Group).Distinct().Count());
         }
 
         [Fact]

@@ -86,7 +86,8 @@ namespace Smart_Tools.WPF.Tests
                 var parts = t.Build(values).Parts;
                 for (int i = 0; i < parts.Count; i++)
                     for (int j = i + 1; j < parts.Count; j++)
-                        Assert.True(Overlap(parts[i], parts[j]) < 1e-3, $"{id}: {parts[i].Name} overlaps {parts[j].Name} by {Overlap(parts[i], parts[j])}");
+                        Assert.True(Overlap(parts[i], parts[j]) < 1e-3 || (parts[i].Bevels.Count + parts[j].Bevels.Count > 0 && !PieceBevels.SolidsOverlap(parts[i], parts[j])),
+                            $"{id}: {parts[i].Name} overlaps {parts[j].Name} by {Overlap(parts[i], parts[j])}");
             }
         }
 

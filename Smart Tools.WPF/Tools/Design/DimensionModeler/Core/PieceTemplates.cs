@@ -62,6 +62,8 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("leg", "Leg size", 60, 20, 150, 1),
                 new ParamSpec("apron", "Apron height", 80, 0, 200, 5),
                 new ParamSpec("inset", "Leg inset", 30, 0, 200, 5),
+                new ParamSpec("bevel", "Top edge bevel", 0, 0, 15, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
             {
@@ -74,7 +76,7 @@ namespace Smart_Tools.WPF.Controllers
                 double apron = Math.Min(v["apron"], legH / 2);
                 double apronT = Math.Min(leg / 2, 25);
 
-                var parts = new List<Part> { P("Top", 0, legH, 0, w, top, d, PartKind.Top) };
+                var parts = new List<Part> { EdgeBevels(P("Top", 0, legH, 0, w, top, d, PartKind.Top), FaceTop, new[] { FaceLeft, FaceRight, FaceFront, FaceBack }, v["bevel"], v["bevelAngle"]) };
                 double xr = w - inset - leg, zf = d - inset - leg;
                 parts.Add(P("Leg 1", inset, 0, inset, leg, legH, leg, PartKind.Leg));
                 parts.Add(P("Leg 2", xr, 0, inset, leg, legH, leg, PartKind.Leg));
@@ -105,6 +107,8 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("seat", "Seat thickness", 25, 15, 50, 1),
                 new ParamSpec("backHeight", "Back height", 450, 200, 800, 10),
                 new ParamSpec("leg", "Leg size", 40, 25, 80, 1),
+                new ParamSpec("bevel", "Seat edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
             {
@@ -117,7 +121,7 @@ namespace Smart_Tools.WPF.Controllers
 
                 return new[]
                 {
-                    P("Seat", 0, legH, 0, w, seat, d, PartKind.Top),
+                    EdgeBevels(P("Seat", 0, legH, 0, w, seat, d, PartKind.Top), FaceTop, new[] { FaceLeft, FaceRight, FaceFront }, v["bevel"], v["bevelAngle"]),
                     P("Leg 1", 0, 0, d - leg, leg, legH, leg, PartKind.Leg),
                     P("Leg 2", w - leg, 0, d - leg, leg, legH, leg, PartKind.Leg),
                     P("Leg 3", 0, 0, 0, leg, legH, leg, PartKind.Leg),
@@ -135,7 +139,7 @@ namespace Smart_Tools.WPF.Controllers
         /// The box shared by the bookshelf and the cabinet: two sides, a bottom lifted by the base height, a top, evenly spaced
         /// shelves and a thin back. Returns the parts and the carcass depth used.
         /// </summary>
-        private static List<Part> Carcass(double w, double h, double d, double thickness, int shelves, double baseHeight)
+        private static List<Part> Carcass(double w, double h, double d, double thickness, int shelves, double baseHeight, bool miterTop = false)
         {
             double t = Math.Min(thickness, Math.Min(w / 8, h / 20));
             double b = BackThickness;
@@ -146,12 +150,23 @@ namespace Smart_Tools.WPF.Controllers
             int n = Math.Min(shelves, fit);
             double gap = (ih - n * t) / (n + 1);
 
+            var sideLeft = P("Side Left", 0, 0, 0, t, h, d, PartKind.Panel);
+            var sideRight = P("Side Right", w - t, 0, 0, t, h, d, PartKind.Panel);
+            var top = P("Top", t, h - t, b, iw, t, d - b, PartKind.Top);
+            if (miterTop)
+            {
+                // the top runs the full width and meets each side at 45 degrees: both boards are cut right through at the corner
+                top = P("Top", 0, h - t, b, w, t, d - b, PartKind.Top);
+                top = top with { Edges = PieceBevels.Sanitize(top.Size, new[] { new Bevel(FaceLeft, FaceBottom, 45, t), new Bevel(FaceRight, FaceBottom, 45, t) }) };
+                sideLeft = sideLeft with { Edges = PieceBevels.Sanitize(sideLeft.Size, new[] { new Bevel(FaceTop, FaceRight, 45, t) }) };
+                sideRight = sideRight with { Edges = PieceBevels.Sanitize(sideRight.Size, new[] { new Bevel(FaceTop, FaceLeft, 45, t) }) };
+            }
             var parts = new List<Part>
             {
-                P("Side Left", 0, 0, 0, t, h, d, PartKind.Panel),
-                P("Side Right", w - t, 0, 0, t, h, d, PartKind.Panel),
+                sideLeft,
+                sideRight,
                 P("Bottom", t, lift, b, iw, t, d - b, PartKind.Board),
-                P("Top", t, h - t, b, iw, t, d - b, PartKind.Top),
+                top,
                 P("Back", t, lift + t, 0, iw, ih, b, PartKind.Panel),
             };
             for (int k = 1; k <= n; k++)
@@ -169,8 +184,12 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("thickness", "Board thickness", 18, 10, 40, 1),
                 new ParamSpec("shelves", "Shelves", 4, 0, 10, 1, Integer: true),
                 new ParamSpec("base", "Base height", 60, 0, 150, 5),
+                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+                new ParamSpec("bevel", "Shelf edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
-            v => Carcass(v["width"], v["height"], v["depth"], v["thickness"], (int)v["shelves"], v["base"]));
+            v => Carcass(v["width"], v["height"], v["depth"], v["thickness"], (int)v["shelves"], v["base"], v["miter"] >= 0.5)
+                .Select(p => p.Name.StartsWith("Shelf") ? EdgeBevels(p, FaceFront, new[] { FaceTop }, v["bevel"], v["bevelAngle"]) : p).ToList());
 
         // --------------------------------------------------------------- cabinet
         private static PieceTemplate Cabinet() => new("cabinet", "Cabinet",
@@ -186,6 +205,7 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("base", "Base height", 80, 0, 150, 5),
                 new ParamSpec("bevel", "Door edge bevel", 0, 0, 15, 1),
                 new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
             },
             v =>
             {
@@ -194,7 +214,7 @@ namespace Smart_Tools.WPF.Controllers
                 double lift = Math.Min(v["base"], h / 6);
                 int doors = (int)v["doors"];
 
-                var parts = Carcass(w, h, d - t, v["thickness"], (int)v["shelves"], v["base"]);
+                var parts = Carcass(w, h, d - t, v["thickness"], (int)v["shelves"], v["base"], v["miter"] >= 0.5);
                 const double gap = 2;
                 const double knobFromEdge = 40;     // the knob hole sits this far from the edge opposite the hinge
                 double knob = v["knob"];
@@ -206,14 +226,22 @@ namespace Smart_Tools.WPF.Controllers
                     double u = i == 1 ? knobFromEdge : doorW - knobFromEdge;
                     var door = P($"Door {i + 1}", i * (doorW + gap), lift, d - t, doorW, doorH, t, PartKind.Panel);
                     var hole = new Hole(2, u, doorH / 2, knob);   // punched through the door's thickness (Z)
-                    door = FrontBevels(door, v["bevel"], v["bevelAngle"]);
+                    door = FrontBevels(door, v["bevel"], v["bevelAngle"]) with { Group = $"Door {i + 1}" };
                     parts.Add(knob >= PieceHoles.MinDiameter ? door with { Cuts = PieceHoles.Sanitize(door.Size, new[] { hole }).Where(h => PieceBevels.HoleIsClear(door.Size, h, door.Bevels)).ToList() } : door);
                 }
                 return parts;
             });
 
         // faces for bevels: 0 left, 1 right, 2 bottom, 3 top, 4 back, 5 front
-        private const int FaceLeft = 0, FaceRight = 1, FaceBottom = 2, FaceTop = 3, FaceFront = 5;
+        private const int FaceLeft = 0, FaceRight = 1, FaceBottom = 2, FaceTop = 3, FaceBack = 4, FaceFront = 5;
+
+        /// <summary>Some edges of one face cut at an angle (the top edges of a tabletop, for example). Size 0 = square edges.</summary>
+        private static Part EdgeBevels(Part part, int face, IEnumerable<int> towards, double size, double angle)
+        {
+            if (size < 0.5) return part;
+            var kept = PieceBevels.Sanitize(part.Size, part.Bevels.Concat(towards.Select(f => new Bevel(face, f, angle, size))));
+            return kept.Count == 0 ? part : part with { Edges = kept };
+        }
 
         /// <summary>All four edges of a board's front face cut at an angle (a bevelled door or drawer front). Size 0 = square edges.</summary>
         private static Part FrontBevels(Part part, double size, double angle)
@@ -243,6 +271,7 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("base", "Base height", 50, 0, 150, 5),
                 new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
                 new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
             },
             v =>
             {
@@ -251,7 +280,7 @@ namespace Smart_Tools.WPF.Controllers
                 double lift = Math.Min(v["base"], h / 6);
                 double dc = d - t;                                              // the carcass; the drawer fronts sit in front of it
                 int n = (int)v["drawers"];
-                var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"]);
+                var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"], v["miter"] >= 0.5);
 
                 const double gap = 2, slide = 12;                               // between the fronts; room for the runners
                 double ih = h - 2 * t - lift;
@@ -287,6 +316,8 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("frameDepth", "Frame depth", 120, 80, 200, 5),
                 new ParamSpec("knob", "Lock hole", 54, 0, 60, 1),
                 new ParamSpec("knobHeight", "Lock height", 1000, 800, 1200, 10),
+                new ParamSpec("bevel", "Door edge bevel", 0, 0, 15, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
             {
@@ -303,14 +334,14 @@ namespace Smart_Tools.WPF.Controllers
                     P("Jamb Right", w - f, 0, 0, f, h - f, fd, PartKind.Board),
                     P("Head", 0, h - f, 0, w, f, fd, PartKind.Board),
                 };
-                var slab = P("Door", slabX, slabY, z0, slabW, slabH, dt, PartKind.Panel);
+                var slab = FrontBevels(P("Door", slabX, slabY, z0, slabW, slabH, dt, PartKind.Panel), v["bevel"], v["bevelAngle"]) with { Group = "Door" };
                 double lockV = Math.Clamp(v["knobHeight"] - slabY, 100, slabH - 100);
                 parts.Add(WithHole(slab, new Hole(2, slabW - 60, lockV, v["knob"])));   // the lock is on the side away from the hinges
 
                 // three hinges fill the gap on the left, joining the door to its frame
                 const double hingeH = 100;
                 foreach (var (name, y) in new[] { ("Hinge 1", slabY + 200), ("Hinge 2", slabY + (slabH - hingeH) / 2), ("Hinge 3", slabY + slabH - 200 - hingeH) })
-                    parts.Add(P(name, f, y, z0, gap, hingeH, Math.Min(25, dt), PartKind.Leg));
+                    parts.Add(P(name, f, y, z0, gap, hingeH, Math.Min(25, dt), PartKind.Leg) with { Group = "Door" });
                 return parts;
             });
 
@@ -358,6 +389,8 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("top", "Top thickness", 25, 18, 40, 1),
                 new ParamSpec("thickness", "Side thickness", 25, 18, 40, 1),
                 new ParamSpec("cable", "Cable hole", 60, 0, 80, 1),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 15, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
             {
@@ -368,8 +401,8 @@ namespace Smart_Tools.WPF.Controllers
                 double back = Math.Min(300, legH - 100);
                 return new[]
                 {
-                    WithHole(P("Main Top", 0, legH, 0, w, top, d, PartKind.Top), new Hole(1, w / 2, 80, v["cable"])),
-                    P("Side Top", w - rd, legH, d, rd, top, rl - d, PartKind.Top),
+                    WithHole(EdgeBevels(P("Main Top", 0, legH, 0, w, top, d, PartKind.Top), FaceTop, new[] { FaceFront }, v["bevel"], v["bevelAngle"]), new Hole(1, w / 2, 80, v["cable"])),
+                    EdgeBevels(P("Side Top", w - rd, legH, d, rd, top, rl - d, PartKind.Top), FaceTop, new[] { FaceLeft, FaceFront }, v["bevel"], v["bevelAngle"]),
                     P("Side Left", 0, 0, 0, t, legH, d, PartKind.Panel),
                     P("Side Right", w - t, 0, 0, t, legH, rl, PartKind.Panel),          // one panel under the whole right edge
                     P("End Panel", w - rd, 0, rl - t, rd - t, legH, t, PartKind.Panel), // holds the front end of the wing
@@ -388,6 +421,8 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("spacing", "Level height", 300, 150, 500, 10),
                 new ParamSpec("bracket", "Bracket thickness", 20, 15, 40, 1),
                 new ParamSpec("inset", "Bracket inset", 60, 0, 200, 5),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
             {
@@ -402,10 +437,11 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     double y = i * sp;                                            // each level stands on the one below
                     string tier = tiers > 1 ? $" {i + 1}" : "";
-                    parts.Add(P($"Bracket{tier} Left", inset, y, 0, bt, bracketH, bracketD, PartKind.Board));
-                    parts.Add(P($"Bracket{tier} Right", w - inset - bt, y, 0, bt, bracketH, bracketD, PartKind.Board));
-                    parts.Add(P($"Wall Rail{tier}", inset + bt, y + bracketH - cleatH, 0, w - 2 * (inset + bt), cleatH, cleatT, PartKind.Board));
-                    parts.Add(P($"Shelf{tier}", 0, y + bracketH, 0, w, st, d, PartKind.Top));
+                    string? group = tiers > 1 ? $"Level {i + 1}" : null;
+                    parts.Add(P($"Bracket{tier} Left", inset, y, 0, bt, bracketH, bracketD, PartKind.Board) with { Group = group });
+                    parts.Add(P($"Bracket{tier} Right", w - inset - bt, y, 0, bt, bracketH, bracketD, PartKind.Board) with { Group = group });
+                    parts.Add(P($"Wall Rail{tier}", inset + bt, y + bracketH - cleatH, 0, w - 2 * (inset + bt), cleatH, cleatT, PartKind.Board) with { Group = group });
+                    parts.Add(EdgeBevels(P($"Shelf{tier}", 0, y + bracketH, 0, w, st, d, PartKind.Top), FaceTop, new[] { FaceFront }, v["bevel"], v["bevelAngle"]) with { Group = group });
                 }
                 return parts;
             });
