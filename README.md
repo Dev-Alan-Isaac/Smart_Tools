@@ -1,6 +1,6 @@
 # Smart Tools
 
-A Windows desktop app with **114 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
+A Windows desktop app with **118 everyday tools** in one place: manage and clean files, convert and edit media, check your PC and network, work with data and code, and more. Built with **WPF**, **.NET 10** and Material Design, with light and dark themes and English and Spanish.
 
 ## Download and start
 
@@ -44,17 +44,17 @@ Found a security problem? Please open an issue on GitHub, or contact the author 
 ## What's inside
 
 - **Data Quality** (6): Validate Data, Duplicate Data, Find Similar Files, File Differences, Text Diff, Hash & Checksum Verifier
-- **Files** (6): Rename Files, Organize Files, Search Files, Copy Queue, Folder Tree Exporter, Metadata Extractor
+- **Files** (7): Rename Files, Organize Files, Search Files, Copy Queue, Archive Manager, Folder Tree Exporter, Metadata Extractor
 - **Convert** (4): Convert Files, Watermarker, CSV / JSON Converter, Unit & Currency Converter
 - **PDF** (4): Images to PDF, PDF Merge & Split, PDF Pages & Protect, PDF Reader & Signer
 - **Media** (1): Media Viewer
 - **Video** (6): Video Stitcher, Video to Audio, Video Compressor, GIF Maker, Screen Recorder, Video Frame Extractor
-- **Audio** (4): Speech Studio (Text to Speech + Speech to Text), Audio Editor (Audio Trimmer & Joiner + Loudness Meter & Normalizer), Voice Studio (Audio Recorder + Voice Changer), Spectrogram
+- **Audio** (5): Speech Studio (Text to Speech + Speech to Text), Audio Editor (Audio Trimmer & Joiner + Loudness Meter & Normalizer), Voice Studio (Audio Recorder + Voice Changer), Web Audio Saver, Spectrogram
 - **Music** (5): Instrument Tuner, Synthesizer, MIDI Instruments, MIDI Play-Along, Metronome
 - **Images** (6): Image Editor, Bulk Image Resizer, Background Remover, SVG Viewer & Optimizer, Screenshot, Icon Maker
 - **Colors** (5): Color Picker, Screen Color Picker, Color Wheel, Palette Extractor, Contrast Checker
 - **Storage** (6): Drive Health, Disk Space Analyzer, Large File Finder, Junk File Cleaner, Disk Speed Test, Empty Folder Cleaner
-- **Performance** (4): System Monitor, Hardware Sensors, Resource Hogs History, Process Killer
+- **Performance** (5): System Monitor, Hardware Sensors, Game Bottleneck Checker, Resource Hogs History, Process Killer
 - **System** (6): Startup Apps, Services, Environment Variables, Event Log Explorer, System Snapshot, Network Adapters
 - **Hardware Tests** (8): Audio Output Test, Game Controller Test, Monitor Test, Monitor HDR & Color Depth, Keyboard & Mouse Test, Microphone Test, Webcam Test, Battery Health
 - **Security** (6): Secure File Shredder, File Encryption, Password Generator, Password Vault, 2FA Code Generator, Image Metadata Cleaner
@@ -63,7 +63,7 @@ Found a security problem? Please open an issue on GitHub, or contact the author 
 - **Generators** (5): File Generator, Barcode Generator, QR Code Generator, Mock Data Generator, ID & Lorem Generator
 - **3D & Design** (1): Dimension Modeler
 - **Utilities** (6): Notes, Clipboard History, Screen OCR, Translate, Timer & Stopwatch, Send to Phone
-- **Art** (5): Pixel Art Editor, Sprite Sheet Packer, Texture Pack Builder, Image to Pixel Art, ASCII Art Maker
+- **Art** (6): Pixel Art Editor, Sprite Sheet Packer, Texture Pack Builder, Image to Pixel Art, ASCII Art Maker, ASCII Video Maker
 
 The full list, with what each tool does and its id, is in [`Smart Tools.WPF/PROJECT_DOCUMENTATION.md`](Smart%20Tools.WPF/PROJECT_DOCUMENTATION.md).
 

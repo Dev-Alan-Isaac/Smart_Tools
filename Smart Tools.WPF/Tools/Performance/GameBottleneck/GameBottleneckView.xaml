@@ -1,0 +1,289 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.GameBottleneckView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded">
+
+    <!--  Backend: GameBottleneckManager.cs (this PC, Steam store), Core\ (table, store text, comparison). An ESTIMATE, and the page says so.  -->
+
+    <UserControl.Resources>
+        <!--  One bar of the result  -->
+        <DataTemplate x:Key="CheckRowTemplate" DataType="{x:Type models:CheckRow}">
+            <Grid Margin="0,0,0,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <TextBlock FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Part}" />
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontSize="11.5"
+                        FontWeight="SemiBold"
+                        Text="{Binding Detail}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding StatusName}" Value="Ok">
+                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StatusName}" Value="Close">
+                                        <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StatusName}" Value="Low">
+                                        <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+                <ProgressBar
+                    Grid.Row="1"
+                    Height="8"
+                    Margin="0,6,0,6"
+                    Maximum="100"
+                    Value="{Binding Percent, Mode=OneWay}">
+                    <ProgressBar.Style>
+                        <Style BasedOn="{StaticResource {x:Type ProgressBar}}" TargetType="ProgressBar">
+                            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding StatusName}" Value="Ok">
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding StatusName}" Value="Close">
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding StatusName}" Value="Low">
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+                <StackPanel Grid.Row="2">
+                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Yours}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Yours}" />
+                    <TextBlock FontSize="11.5" Foreground="{DynamicResource TextSecondary}" Text="{Binding Needs}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Needs}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel x:Name="SidebarStack">
+
+                    <Border ctl:Tour.Key="Str_Tour_Bottleneck_Pc" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bottleneck_PcHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.DesktopTowerMonitor}" />
+                            <StackPanel x:Name="PanelThisPc">
+                                <TextBlock x:Name="TxtPcCpu" Margin="2,4,0,0" FontSize="12" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtPcGpu" Margin="2,4,0,0" FontSize="12" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtPcRam" Margin="2,4,0,0" FontSize="12" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtPcNote" Style="{StaticResource SidebarHint}" Visibility="Collapsed" />
+                            </StackPanel>
+                            <CheckBox
+                                x:Name="ChkOther"
+                                Margin="2,12,0,0"
+                                Checked="Other_Changed"
+                                Content="{DynamicResource Str_Bottleneck_OtherPc}"
+                                Foreground="{DynamicResource SidebarText}"
+                                ToolTip="{DynamicResource Str_Bottleneck_OtherPcTip}"
+                                Unchecked="Other_Changed" />
+                            <StackPanel x:Name="PanelOther" Margin="0,8,0,0" Visibility="Collapsed">
+                                <TextBlock Margin="0,0,0,4" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Bottleneck_Cpu}" />
+                                <ComboBox x:Name="CmbCpu" DisplayMemberPath="Name" SelectionChanged="OtherPart_Changed" />
+                                <TextBlock Margin="0,10,0,4" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Bottleneck_Gpu}" />
+                                <ComboBox x:Name="CmbGpu" DisplayMemberPath="Name" SelectionChanged="OtherPart_Changed" />
+                                <TextBlock Margin="0,10,0,4" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Bottleneck_Ram}" />
+                                <ComboBox x:Name="CmbRam" SelectionChanged="OtherPart_Changed" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_Bottleneck_Game" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bottleneck_GameHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.GamepadVariantOutline}" />
+                            <Border Margin="0,2,0,0" Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtGame" KeyDown="TxtGame_KeyDown" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_GamePlaceholder}" />
+                            </Border>
+                            <Button
+                                x:Name="BtnLookup"
+                                Margin="0,8,0,0"
+                                Click="BtnLookup_Click"
+                                Style="{StaticResource PrimaryButtonStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" Kind="Magnify" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Bottleneck_Lookup}" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Bottleneck_LookupNote}" />
+                            <ListBox
+                                x:Name="ListHits"
+                                MaxHeight="190"
+                                Margin="0,8,0,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                DisplayMemberPath="Name"
+                                SelectionChanged="ListHits_SelectionChanged"
+                                Visibility="Collapsed" />
+
+                            <CheckBox
+                                x:Name="ChkManual"
+                                Margin="2,14,0,0"
+                                Checked="Manual_Changed"
+                                Content="{DynamicResource Str_Bottleneck_Manual}"
+                                Foreground="{DynamicResource SidebarText}"
+                                ToolTip="{DynamicResource Str_Bottleneck_ManualTip}"
+                                Unchecked="Manual_Changed" />
+                            <StackPanel x:Name="PanelManual" Margin="0,8,0,0" Visibility="Collapsed">
+                                <TextBlock Margin="0,0,0,4" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Bottleneck_Minimum}" />
+                                <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtMinCpu" TextChanged="Manual_Edited" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_CpuHint}" /></Border>
+                                <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtMinGpu" TextChanged="Manual_Edited" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_GpuHint}" /></Border>
+                                <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtMinRam" TextChanged="Manual_Edited" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_RamHint}" /></Border>
+                                <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Foreground="{DynamicResource SidebarTextMuted}" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Bottleneck_Recommended}" />
+                                <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtRecCpu" TextChanged="Manual_Edited" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_CpuHint}" /></Border>
+                                <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtRecGpu" TextChanged="Manual_Edited" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_GpuHint}" /></Border>
+                                <Border Margin="0,6,0,0" Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtRecRam" TextChanged="Manual_Edited" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_Bottleneck_RamHint}" /></Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_Bottleneck_List" ctl:Tour.Order="5" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bottleneck_ListHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.DatabaseSyncOutline}" />
+                            <TextBlock x:Name="TxtListInfo" Margin="2,4,0,0" FontSize="12" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                            <Button x:Name="BtnUpdateList" Margin="0,8,0,0" Click="BtnUpdateList_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Bottleneck_ListUpdateTip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Update" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Bottleneck_ListUpdate}" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Margin="0,10,0,4" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_Bottleneck_ListAddress}" />
+                            <Border Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtListUrl" LostFocus="TxtListUrl_LostFocus" Style="{StaticResource BareTextBox}" />
+                            </Border>
+                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Bottleneck_ListNote}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_Bottleneck_GoodToKnow}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.InformationOutline}" />
+                            <TextBlock Margin="2,6,0,0" FontSize="10.5" Foreground="{DynamicResource SidebarTextMuted}" Text="{DynamicResource Str_Bottleneck_GoodToKnowText}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Always visible: this is an estimate  -->
+                <Border Grid.Row="0" Margin="0,0,0,14" Padding="14,10" Background="{DynamicResource StatusInfoBg}" CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon Width="18" Height="18" Margin="0,1,10,0" VerticalAlignment="Top" Foreground="{DynamicResource StatusInfoFg}" Kind="InformationOutline" />
+                        <TextBlock Grid.Column="1" FontSize="12" Foreground="{DynamicResource StatusInfoFg}" Text="{DynamicResource Str_Bottleneck_EstimateBanner}" TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+
+                <!--  Verdict  -->
+                <Border ctl:Tour.Key="Str_Tour_Bottleneck_Verdict" ctl:Tour.Order="3" Grid.Row="1" Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="VerdictBadge" Width="54" Height="54" Margin="0,0,16,0" VerticalAlignment="Center" Background="{DynamicResource AccentColorSubtle}" CornerRadius="16">
+                            <materialDesign:PackIcon x:Name="VerdictIcon" Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="GamepadVariantOutline" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtVerdict" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                            <TextBlock x:Name="TxtVerdictSub" Margin="0,4,0,0" FontSize="12.5" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                            <WrapPanel x:Name="PillsPanel" Margin="0,8,0,0" Visibility="Collapsed">
+                                <Border Margin="0,2,6,2" Background="{DynamicResource AccentColorSubtle}" Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="GamepadVariantOutline" />
+                                        <TextBlock x:Name="TxtPillGame" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentColor}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border x:Name="PillLimit" Margin="0,2,6,2" Background="{DynamicResource StatusWarningBg}" Style="{StaticResource IconStatusPillStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="13" Height="13" Margin="0,0,5,0" VerticalAlignment="Center" Foreground="{DynamicResource StatusWarningFg}" Kind="AlertOutline" />
+                                        <TextBlock x:Name="TxtPillLimit" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" />
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  The two levels  -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border ctl:Tour.Key="Str_Tour_Bottleneck_Levels" ctl:Tour.Order="4" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <ContentControl Margin="0,0,0,12" Content="{DynamicResource Str_Bottleneck_Minimum}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ArrowCollapseDown}" />
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <ItemsControl x:Name="MinItems" ItemTemplate="{StaticResource CheckRowTemplate}" />
+                                    <TextBlock x:Name="TxtMinEmpty" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Bottleneck_NoData}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <ContentControl Margin="0,0,0,12" Content="{DynamicResource Str_Bottleneck_Recommended}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ArrowExpandUp}" />
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <ItemsControl x:Name="RecItems" ItemTemplate="{StaticResource CheckRowTemplate}" />
+                                    <TextBlock x:Name="TxtRecEmpty" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_Bottleneck_NoData}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

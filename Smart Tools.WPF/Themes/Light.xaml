@@ -56,7 +56,7 @@
         but grep for "#4C8DFF" and switch those to the resource so the
         whole app repaints consistently.
     -->
-    <SolidColorBrush x:Key="AccentColor" Color="#3D6FE0" />
+    <SolidColorBrush x:Key="AccentColor" Color="#3563D4" />
 
     <!--
         ============ SEMANTIC STATUS COLORS ============
@@ -110,7 +110,7 @@
 
     <!--  Text sitting directly on the (always-dark) sidebar  -->
     <SolidColorBrush x:Key="SidebarText" Color="#EDEFF4" />
-    <SolidColorBrush x:Key="SidebarTextMuted" Color="#9BA8BC" />
+    <SolidColorBrush x:Key="SidebarTextMuted" Color="#B0BCCE" />
 
     <!--
         Inputs that sit ON the sidebar — separate from InputBg/InputBorder
@@ -174,7 +174,7 @@
         gradient PrimaryButtonStyle and proper hover/pressed shading
         instead of the old "just drop the opacity" treatment.
     -->
-    <SolidColorBrush x:Key="AccentColorHover" Color="#345FD1" />
+    <SolidColorBrush x:Key="AccentColorHover" Color="#2F58C4" />
     <SolidColorBrush x:Key="AccentColorPressed" Color="#2A4EB0" />
     <SolidColorBrush x:Key="AccentColorSubtle" Color="#E9EEFC" />
 

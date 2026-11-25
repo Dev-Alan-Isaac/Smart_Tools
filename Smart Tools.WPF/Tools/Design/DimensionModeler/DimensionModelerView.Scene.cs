@@ -7,6 +7,8 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using Color = System.Windows.Media.Color;
+using ContextMenu = System.Windows.Controls.ContextMenu;
+using MenuItem = System.Windows.Controls.MenuItem;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
@@ -30,12 +32,15 @@ namespace Smart_Tools.WPF.Views
 
         private readonly OrbitCamera _camera = new();
         private readonly HashSet<string> _selected = new();
+        private readonly HashSet<string> _hidden = new();   // boards switched off in the view (not saved, not exported, not part of undo)
         private readonly ModelVisual3D _pieceVisual = new();
         private readonly ModelVisual3D _floorVisual = new();
         private bool _needsFit = true;
         private Point _lastMouse;
         private bool _orbiting;
         private bool _panning;
+        private Point _pressPoint;
+        private bool _pressedEmpty;
 
         private void InitScene()
         {
@@ -62,6 +67,7 @@ namespace Smart_Tools.WPF.Views
             var group = new Model3DGroup();
             foreach (var part in _model.Parts)
             {
+                if (_hidden.Contains(part.Name)) continue;
                 var mesh = new MeshGeometry3D();
                 foreach (var t in BoxMesh.Triangles(part))
                 {
@@ -154,6 +160,18 @@ namespace Smart_Tools.WPF.Views
 
         private void Stage_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            _pressPoint = e.GetPosition(StageHost);
+            _pressedEmpty = false;
+            if (e.ChangedButton == MouseButton.Left && _isCustom)
+            {
+                if (BeginEdit(_pressPoint))
+                {
+                    StageHost.Cursor = _edit?.Kind == EditKind.Resize ? System.Windows.Input.Cursors.Cross : System.Windows.Input.Cursors.SizeAll;
+                    StageHost.CaptureMouse();
+                    return;
+                }
+                _pressedEmpty = true;   // empty space: turns the view, and a plain click there lets go of the picked board
+            }
             if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
             {
                 FitCamera();
@@ -168,6 +186,11 @@ namespace Smart_Tools.WPF.Views
 
         private void Stage_MouseMove(object sender, MouseEventArgs e)
         {
+            if (_edit != null)
+            {
+                UpdateEdit(e.GetPosition(StageHost));
+                return;
+            }
             if (!_orbiting && !_panning) return;
             var now = e.GetPosition(StageHost);
             double dx = now.X - _lastMouse.X, dy = now.Y - _lastMouse.Y;
@@ -180,8 +203,48 @@ namespace Smart_Tools.WPF.Views
 
         private void Stage_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            if (_edit != null)
+            {
+                EndEdit();
+                return;
+            }
+            var at = e.GetPosition(StageHost);
+            bool rightClick = e.ChangedButton == MouseButton.Right && Math.Abs(at.X - _pressPoint.X) < 4 && Math.Abs(at.Y - _pressPoint.Y) < 4;
+            if (_pressedEmpty && e.ChangedButton == MouseButton.Left && Math.Abs(at.X - _pressPoint.X) < 4 && Math.Abs(at.Y - _pressPoint.Y) < 4)
+                ListParts.SelectedIndex = -1;
+            _pressedEmpty = false;
             _orbiting = _panning = false;
             StageHost.ReleaseMouseCapture();
+            if (rightClick) ShowBoardMenu(at);   // a right click that did not drag: hide this one board
+        }
+
+        /// <summary>Right click on a board in the 3D view: hide just that board (one of two doors), or bring everything back.</summary>
+        private void ShowBoardMenu(Point at)
+        {
+            double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
+            if (w < 40 || h < 40 || _model.Parts.Count == 0) return;
+            int index = PieceDrag.Pick(_model.Parts, _camera.Ray(at.X, at.Y, w, h), out _, p => _hidden.Contains(p.Name));
+            if (index < 0 && _hidden.Count == 0) return;
+
+            var menu = new ContextMenu { PlacementTarget = StageHost };
+            if (index >= 0)
+            {
+                string name = _model.Parts[index].Name;
+                var hide = new MenuItem { Header = Loc.F("Str_Modeler_HideBoard", "Hide {0}", name) };
+                hide.Click += (_, _) =>
+                {
+                    _hidden.Add(name);
+                    HiddenChanged();
+                };
+                menu.Items.Add(hide);
+            }
+            if (_hidden.Count > 0)
+            {
+                var all = new MenuItem { Header = Loc.F("Str_Modeler_ShowAll", "Show all ({0} hidden)", _hidden.Count) };
+                all.Click += BtnShowAll_Click;
+                menu.Items.Add(all);
+            }
+            menu.IsOpen = true;
         }
 
         private void Stage_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -200,6 +263,7 @@ namespace Smart_Tools.WPF.Views
         private void RedrawOverlay()
         {
             Overlay.Children.Clear();
+            DrawHandles();
             if (!_settings.ShowDimensions || _model.Parts.Count == 0) return;
             double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
             if (w < 40 || h < 40) return;
@@ -209,9 +273,14 @@ namespace Smart_Tools.WPF.Views
                 ? DimensionLines.ForPart(picked, Math.Clamp(Math.Max(picked.Size.X, Math.Max(picked.Size.Y, picked.Size.Z)) * 0.15, 25, 150))
                 : DimensionLines.Overall(_model, DimensionOffset());
             foreach (var line in lines) DrawDimension(line, w, h);
+
+            // inside a piece: the free space from the picked board to the boards around it (hidden boards, like doors, do not count)
+            if (picked != null)
+                foreach (var gap in DimensionLines.Gaps(_model.Parts, picked, p => _hidden.Contains(p.Name))) DrawDimension(gap, w, h, gapLine: true);
+            if (picked != null && picked.Bevels.Count > 0) DrawBevelMarkers(picked, w, h);   // the angle of each cut
         }
 
-        private void DrawDimension(DimensionLine line, double w, double h)
+        private void DrawDimension(DimensionLine line, double w, double h, bool gapLine = false)
         {
             if (line.LengthMm < 1e-6) return;
             if (_camera.Project(line.A, w, h) is not { } a || _camera.Project(line.B, w, h) is not { } b
@@ -220,13 +289,13 @@ namespace Smart_Tools.WPF.Views
             // the short lines joining the measured points to the dimension line
             AddLine(a, s, "TextSecondary", 1, 0.7, dashed: true);
             AddLine(b, e, "TextSecondary", 1, 0.7, dashed: true);
-            AddLine(s, e, "AccentColor", 1.75, 1, dashed: false);
-            AddArrow(s, e);
-            AddArrow(e, s);
+            AddLine(s, e, gapLine ? "StatusWarningFg" : "AccentColor", 1.75, 1, dashed: gapLine);
+            AddArrow(s, e, gapLine ? "StatusWarningFg" : "AccentColor");
+            AddArrow(e, s, gapLine ? "StatusWarningFg" : "AccentColor");
 
             var label = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(7, 2, 7, 3), BorderThickness = new Thickness(1) };
             label.SetResourceReference(Border.BackgroundProperty, "PopupBg");
-            label.SetResourceReference(Border.BorderBrushProperty, "AccentColor");
+            label.SetResourceReference(Border.BorderBrushProperty, gapLine ? "StatusWarningFg" : "AccentColor");
             var text = new TextBlock { Text = LengthFormat.Format(line.LengthMm, _settings.Unit), FontSize = 12, FontWeight = FontWeights.SemiBold };
             text.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
             label.Child = text;
@@ -245,7 +314,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>A small arrowhead at <paramref name="tip"/>, pointing away from <paramref name="other"/>.</summary>
-        private void AddArrow(ScreenPoint tip, ScreenPoint other)
+        private void AddArrow(ScreenPoint tip, ScreenPoint other, string brushKey = "AccentColor")
         {
             double dx = other.X - tip.X, dy = other.Y - tip.Y;
             double len = Math.Sqrt(dx * dx + dy * dy);
@@ -260,7 +329,7 @@ namespace Smart_Tools.WPF.Views
                     new Point(tip.X + ux * 11 + uy * 4, tip.Y + uy * 11 - ux * 4),
                 },
             };
-            arrow.SetResourceReference(Shape.FillProperty, "AccentColor");
+            arrow.SetResourceReference(Shape.FillProperty, brushKey);
             Overlay.Children.Add(arrow);
         }
     }

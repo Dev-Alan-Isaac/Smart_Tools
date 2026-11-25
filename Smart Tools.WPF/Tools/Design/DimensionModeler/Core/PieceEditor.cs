@@ -15,6 +15,27 @@ namespace Smart_Tools.WPF.Models
         public double H { get; set; }
         public double D { get; set; }
         public string Kind { get; set; } = nameof(PartKind.Board);
+        public List<CustomHoleDto>? Holes { get; set; }
+        public List<CustomBevelDto>? Bevels { get; set; }
+        public string? Group { get; set; }
+    }
+
+    /// <summary>An angled edge cut as it is written to a file (see <see cref="Bevel"/>).</summary>
+    public sealed class CustomBevelDto
+    {
+        public int FaceA { get; set; }
+        public int FaceB { get; set; }
+        public double Angle { get; set; }
+        public double Depth { get; set; }
+    }
+
+    /// <summary>A round hole of a board as it is written to a file (see <see cref="Hole"/>).</summary>
+    public sealed class CustomHoleDto
+    {
+        public int Axis { get; set; }
+        public double U { get; set; }
+        public double V { get; set; }
+        public double Diameter { get; set; }
     }
 
     /// <summary>A saved design (.dmodel): a name and its boards. <see cref="Version"/> is for changes to this format later.</summary>
@@ -121,11 +142,18 @@ namespace Smart_Tools.WPF.Controllers
         {
             static double Pos(double v) => double.IsNaN(v) ? 0 : Math.Clamp(v, -MaxPosition, MaxPosition);
             static double Size(double v) => double.IsNaN(v) ? MinSize : Math.Clamp(v, MinSize, MaxSize);
+            var size = new Vec3(Size(part.Size.X), Size(part.Size.Y), Size(part.Size.Z));
+            var bevels = PieceBevels.Sanitize(size, part.Bevels);
+            var holes = PieceHoles.Sanitize(size, part.Holes).Where(h => PieceBevels.HoleIsClear(size, h, bevels)).ToList();   // a hole never runs into a cut
+            string? group = string.IsNullOrWhiteSpace(part.Group) ? null : part.Group.Trim()[..Math.Min(60, part.Group.Trim().Length)];
             return new Part(
                 UniqueTypedName(otherNames, part.Name),
                 new Vec3(Pos(part.Min.X), Pos(part.Min.Y), Pos(part.Min.Z)),
-                new Vec3(Size(part.Size.X), Size(part.Size.Y), Size(part.Size.Z)),
-                part.Kind);
+                size,
+                part.Kind,
+                holes.Count == 0 ? null : holes,   // a board made smaller pulls its holes back inside
+                bevels.Count == 0 ? null : bevels,
+                group);
         }
 
         public static PieceModel ToModel(string name, IReadOnlyList<Part> parts) => new(name, parts.ToList());
@@ -141,10 +169,8 @@ namespace Smart_Tools.WPF.Controllers
 
         private static double Penetration(double a0, double a1, double b0, double b1) => Math.Min(a1, b1) - Math.Max(a0, b0);
 
-        private static bool Overlap(Part a, Part b) =>
-            Penetration(a.Min.X, a.Max.X, b.Min.X, b.Max.X) > Tolerance &&
-            Penetration(a.Min.Y, a.Max.Y, b.Min.Y, b.Max.Y) > Tolerance &&
-            Penetration(a.Min.Z, a.Max.Z, b.Min.Z, b.Max.Z) > Tolerance;
+        // two boxes that cross may still not share material when a bevel cut it away (mitred corners): PieceBevels checks that
+        private static bool Overlap(Part a, Part b) => PieceBevels.SolidsOverlap(a, b, Tolerance);
 
         private static bool Touch(Part a, Part b) =>
             Penetration(a.Min.X, a.Max.X, b.Min.X, b.Max.X) >= -Tolerance &&
@@ -196,6 +222,9 @@ namespace Smart_Tools.WPF.Controllers
         public static List<CustomPartDto> ToDtos(IReadOnlyList<Part> parts) => parts.Select(p => new CustomPartDto
         {
             Name = p.Name, X = p.Min.X, Y = p.Min.Y, Z = p.Min.Z, W = p.Size.X, H = p.Size.Y, D = p.Size.Z, Kind = p.Kind.ToString(),
+            Holes = p.Holes.Count == 0 ? null : p.Holes.Select(h => new CustomHoleDto { Axis = h.Axis, U = h.U, V = h.V, Diameter = h.Diameter }).ToList(),
+            Bevels = p.Bevels.Count == 0 ? null : p.Bevels.Select(b => new CustomBevelDto { FaceA = b.FaceA, FaceB = b.FaceB, Angle = b.Angle, Depth = b.Depth }).ToList(),
+            Group = p.Group,
         }).ToList();
 
         public static IReadOnlyList<Part> FromDtos(IEnumerable<CustomPartDto>? dtos)
@@ -205,7 +234,9 @@ namespace Smart_Tools.WPF.Controllers
             foreach (var d in dtos.Where(d => d != null).Take(PieceEditor.MaxParts))
             {
                 var kind = Enum.TryParse<PartKind>(d.Kind, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed) ? parsed : PartKind.Board;
-                parts.Add(PieceEditor.Sanitize(new Part(d.Name, new Vec3(d.X, d.Y, d.Z), new Vec3(d.W, d.H, d.D), kind), parts.Select(p => p.Name)));
+                var holes = d.Holes?.Where(h => h != null).Select(h => new Hole(h.Axis, h.U, h.V, h.Diameter)).ToList();
+                var bevels = d.Bevels?.Where(b => b != null).Select(b => new Bevel(b.FaceA, b.FaceB, b.Angle, b.Depth)).ToList();
+                parts.Add(PieceEditor.Sanitize(new Part(d.Name, new Vec3(d.X, d.Y, d.Z), new Vec3(d.W, d.H, d.D), kind, holes, bevels, d.Group), parts.Select(p => p.Name)));
             }
             return parts;
         }

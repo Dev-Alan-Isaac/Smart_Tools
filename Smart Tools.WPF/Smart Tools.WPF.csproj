@@ -54,6 +54,26 @@
 		</Content>
 	</ItemGroup>
 
+	<!-- 7-Zip (Archive Manager): 7z.exe + 7z.dll and its licence (GNU LGPL, with the unRAR restriction: it may read RAR, never make it).
+	     Run by the tool as a separate program; arguments are passed as a list, never one string. -->
+	<ItemGroup>
+		<None Remove="Engines\7ZIP\**" />
+		<Content Include="Engines\7ZIP\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
+	<!-- yt-dlp (Web Audio Saver): the single yt-dlp.exe from the official release (Unlicense), checked against the published SHA2-256SUMS.
+	     Sites change often: the tool can update a COPY in the user's data folder; this one is never modified. -->
+	<ItemGroup>
+		<None Remove="Engines\YTDLP\**" />
+		<Content Include="Engines\YTDLP\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
 	<!-- Tesseract OCR (optional engine for Screen OCR): tesseract.exe, its DLLs and
 	     tessdata (configs + English). More languages are downloaded into AppPaths.TesseractData. -->
 	<ItemGroup>

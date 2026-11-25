@@ -29,14 +29,31 @@ namespace Smart_Tools.WPF.Views
 
         private readonly PieceHistory _history = new();
 
+        /// <summary>One entry of the piece dropdown.</summary>
+        public sealed record PieceChoice(string Id, string Name, MaterialDesignThemes.Wpf.PackIconKind Icon);
+
         private void InitCustom()
         {
+            var icons = new Dictionary<string, MaterialDesignThemes.Wpf.PackIconKind>
+            {
+                ["table"] = MaterialDesignThemes.Wpf.PackIconKind.TableFurniture,
+                ["chair"] = MaterialDesignThemes.Wpf.PackIconKind.SeatOutline,
+                ["bookshelf"] = MaterialDesignThemes.Wpf.PackIconKind.Bookshelf,
+                ["cabinet"] = MaterialDesignThemes.Wpf.PackIconKind.WardrobeOutline,
+                ["filing-cabinet"] = MaterialDesignThemes.Wpf.PackIconKind.FileCabinet,
+                ["door"] = MaterialDesignThemes.Wpf.PackIconKind.DoorClosed,
+                ["desk"] = MaterialDesignThemes.Wpf.PackIconKind.Desk,
+                ["desk-l"] = MaterialDesignThemes.Wpf.PackIconKind.DeskLamp,
+                ["shelf"] = MaterialDesignThemes.Wpf.PackIconKind.ViewAgendaOutline,
+                [CustomId] = MaterialDesignThemes.Wpf.PackIconKind.PencilRuler,
+            };
+            ComboPiece.ItemsSource = new[] { "table", "chair", "bookshelf", "cabinet", "filing-cabinet", "door", "desk", "desk-l", "shelf", CustomId }
+                .Select(id => new PieceChoice(id, Loc.T($"Str_Modeler_Template_{id}", id), icons[id])).ToList();
             ListParts.ItemsSource = _partRows;
             foreach (var kind in new[] { PartKind.Board, PartKind.Leg, PartKind.Panel, PartKind.Top })
                 ComboPartKind.Items.Add(new ComboBoxItem { Content = Loc.T($"Str_Modeler_Kind_{kind}", kind.ToString()), Tag = kind });
-            foreach (var align in new[] { SnapAlign.Start, SnapAlign.Center, SnapAlign.End })
-                ComboSnapAlign.Items.Add(new ComboBoxItem { Content = Loc.T($"Str_Modeler_Align_{align}", align.ToString()), Tag = align });
-            ComboSnapAlign.SelectedIndex = 0;
+            foreach (double mm in new[] { 0, 1, 5, 10, 25, 50 })
+                ComboGrid.Items.Add(new ComboBoxItem { Content = mm == 0 ? Loc.T("Str_Modeler_GridOff", "No grid") : $"{mm} mm", Tag = mm });
             PreviewKeyDown += View_PreviewKeyDown;
         }
 
@@ -71,8 +88,14 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z) for the custom piece, except while typing in a box (the box has its own undo).</summary>
         private void View_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (!_isCustom || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt) || !Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) return;
-            if (Keyboard.FocusedElement is TextBox) return;
+            if (!_isCustom || Keyboard.FocusedElement is TextBox || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) return;
+            if (e.Key == System.Windows.Input.Key.Delete && Keyboard.Modifiers == ModifierKeys.None && _edit == null)
+            {
+                BtnDeletePart_Click(sender, e);   // the picked board
+                e.Handled = true;
+                return;
+            }
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) return;
             bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
             if (e.Key == System.Windows.Input.Key.Z && !shift) GoTo(_history.Undo(Snapshot()));
             else if (e.Key == System.Windows.Input.Key.Y || e.Key == System.Windows.Input.Key.Z && shift) GoTo(_history.Redo(Snapshot()));
@@ -98,9 +121,16 @@ namespace Smart_Tools.WPF.Views
         {
             CardSize.Visibility = _isCustom ? Visibility.Collapsed : Visibility.Visible;
             CardParts.Visibility = _isCustom ? Visibility.Visible : Visibility.Collapsed;
+            PanelHistory.Visibility = _isCustom ? Visibility.Visible : Visibility.Collapsed;
+            TxtStageHint.Text = Loc.T(_isCustom ? "Str_Modeler_StageHintEdit" : "Str_Modeler_StageHint", "");
             if (!_isCustom) return;
             TxtCustomName.Text = _customName;
             ShowUnitLabels();
+            _loadingSnap = true;
+            ComboGrid.SelectedItem = ComboGrid.Items.OfType<ComboBoxItem>().FirstOrDefault(c => c.Tag is double d && Math.Abs(d - _settings.SnapGridMm) < 1e-9)
+                ?? ComboGrid.Items[0];
+            ChkMagnet.IsChecked = _settings.MagnetOn;
+            _loadingSnap = false;
             RefreshPartsList(ListParts.SelectedIndex);
         }
 
@@ -111,6 +141,7 @@ namespace Smart_Tools.WPF.Views
             _settings.Template = CustomId;
             DataGridCut.SelectedItem = null;
             _selected.Clear();
+            _hidden.Clear();
             ShowMode();
             Rebuild(fit: true);
             ScheduleSave();
@@ -131,6 +162,7 @@ namespace Smart_Tools.WPF.Views
             string unit = LengthFormat.Suffix(_settings.Unit);
             TxtPosLabel.Text = $"{Loc.T("Str_Modeler_PartPosition", "Position")} ({unit})";
             TxtSizeLabel.Text = $"{Loc.T("Str_Modeler_PartSize", "Size")} ({unit})";
+            TxtHolesLabel.Text = $"{Loc.T("Str_Modeler_Holes", "Holes")} ({unit})";
         }
 
         /// <summary>The unit changed: the boxes and the list are shown again in it (the board itself is untouched).</summary>
@@ -172,7 +204,8 @@ namespace Smart_Tools.WPF.Views
             {
                 _selected.Add(_customParts[i].Name);
                 FillEditor(_customParts[i]);
-                FillSnapTargets(i);
+                FillHoles(_customParts[i]);
+                FillBevels(_customParts[i]);
                 ListParts.ScrollIntoView(ListParts.SelectedItem);   // the list was rebuilt: keep the picked board in view
             }
             UpdateChecks();
@@ -255,9 +288,7 @@ namespace Smart_Tools.WPF.Views
             }
             else if (e.Key is System.Windows.Input.Key.Up or System.Windows.Input.Key.Down && sender is TextBox box && !ReferenceEquals(box, TxtPartName))
             {
-                // 10 mm (Shift 1, Ctrl 100); in inches 0.5 in (Shift 0.1, Ctrl 5)
-                double step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 1 : Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? 100 : 10;
-                if (_settings.Unit == LengthUnit.Inches) step *= 1.27;
+                double step = NudgeStep();
                 if (LengthFormat.TryParseMm(box.Text, _settings.Unit, out double now))
                 {
                     box.Text = Num(now + (e.Key == System.Windows.Input.Key.Up ? step : -step));
@@ -309,35 +340,6 @@ namespace Smart_Tools.WPF.Views
             CustomChanged(Math.Min(i, _customParts.Count - 1));
         }
 
-        // =================================================================
-        //  Snap: put the picked board against a face of another one
-        // =================================================================
-
-        private void FillSnapTargets(int picked)
-        {
-            string? keep = (ComboSnapTarget.SelectedItem as ComboBoxItem)?.Content as string;
-            ComboSnapTarget.Items.Clear();
-            for (int n = 0; n < _customParts.Count; n++)
-                if (n != picked) ComboSnapTarget.Items.Add(new ComboBoxItem { Content = _customParts[n].Name, Tag = n });
-            ComboSnapTarget.SelectedItem = ComboSnapTarget.Items.OfType<ComboBoxItem>().FirstOrDefault(c => (string?)c.Content == keep)
-                ?? (ComboSnapTarget.Items.Count > 0 ? ComboSnapTarget.Items[0] : null);
-            bool any = ComboSnapTarget.Items.Count > 0;
-            PanelSnap.IsEnabled = any;
-            TxtSnapHint.Visibility = any ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        private void SnapFace_Click(object sender, RoutedEventArgs e)
-        {
-            int i = ListParts.SelectedIndex;
-            if (i < 0 || sender is not FrameworkElement { Tag: string face } || !Enum.TryParse<SnapFace>(face, out var side)) return;
-            if (ComboSnapTarget.SelectedItem is not ComboBoxItem { Tag: int target }) return;
-            var align = ComboSnapAlign.SelectedItem is ComboBoxItem { Tag: SnapAlign a } ? a : SnapAlign.Start;
-            var moved = PieceSnap.Apply(_customParts, i, target, side, align);
-            if (moved.SequenceEqual(_customParts)) return;
-            TxtStatus.Text = Loc.F("Str_Modeler_SnapDone", "{0} snapped to {1}.", _customParts[i].Name, _customParts[target].Name);
-            ChangeCustom(moved);
-            CustomChanged(i);
-        }
 
         private void CustomName_KeyDown(object sender, KeyEventArgs e)
         {
@@ -374,8 +376,7 @@ namespace Smart_Tools.WPF.Views
             ChangeCustom(PieceEditor.FromModel(_model), Loc.T($"Str_Modeler_Template_{_template.Id}", _template.Name));
             _isCustom = true;
             _settings.Template = CustomId;
-            foreach (var radio in new[] { RadioTable, RadioChair, RadioBookshelf, RadioCabinet, RadioCustom })
-                radio.IsChecked = (string?)radio.Tag == CustomId;
+            ShowPieceChoice();
             DataGridCut.SelectedItem = null;
             _selected.Clear();
             SaveCustom();

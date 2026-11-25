@@ -40,6 +40,8 @@ namespace Smart_Tools.WPF.Controllers
 
         public static IReadOnlyList<Triangle> Triangles(Part part)
         {
+            if (part.Bevels.Count > 0) return PieceBevels.Triangles(part);
+            if (part.Holes.Count > 0) return PieceHoles.Triangles(part);
             var list = new List<Triangle>(12);
             foreach (var (corners, normal) in Faces)
             {
@@ -77,6 +79,18 @@ namespace Smart_Tools.WPF.Controllers
             foreach (var part in model.Parts)
             {
                 sb.Append("g ").Append(part.Name.Replace(' ', '_')).Append('\n');
+                if (part.Holes.Count > 0 || part.Bevels.Count > 0)
+                {
+                    // a board with holes or angled cuts: plain triangles, the viewer works out the normals
+                    var triangles = BoxMesh.Triangles(part);
+                    foreach (var t in triangles)
+                        foreach (var v in new[] { t.A, t.B, t.C })
+                            sb.Append("v ").Append(Num(v.X)).Append(' ').Append(Num(v.Y)).Append(' ').Append(Num(v.Z)).Append('\n');
+                    for (int i = 0; i < triangles.Count; i++)
+                        sb.Append("f ").Append(offset + 3 * i + 1).Append(' ').Append(offset + 3 * i + 2).Append(' ').Append(offset + 3 * i + 3).Append('\n');
+                    offset += 3 * triangles.Count;
+                    continue;
+                }
                 for (int i = 0; i < 8; i++)
                 {
                     var c = BoxMesh.Corner(part, i);

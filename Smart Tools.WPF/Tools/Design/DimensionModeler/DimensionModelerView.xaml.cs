@@ -15,7 +15,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 namespace Smart_Tools.WPF.Views
 {
     /// <summary>One line of the cut list as the grid shows it.</summary>
-    public sealed record CutItem(string Name, int Quantity, string SizeText, IReadOnlyList<string> PartNames);
+    public sealed record CutItem(string Name, int Quantity, string SizeText, IReadOnlyList<string> PartNames, bool Hidden = false);
 
     /// <summary>
     /// Dimension Modeler: pick a piece, type or drag its dimensions, see it in 3D with measuring lines, and save it as OBJ or STL
@@ -31,6 +31,7 @@ namespace Smart_Tools.WPF.Views
         private readonly ObservableCollection<CutItem> _cutItems = new();
         private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
 
+        private bool _loadingPiece;
         private PieceTemplate _template = PieceTemplates.All[0];
         private PieceModel _model = new("", Array.Empty<Part>());
         private bool _optionsCollapsed;
@@ -81,8 +82,7 @@ namespace Smart_Tools.WPF.Views
             _isCustom = _settings.Template == CustomId;
             _template = PieceTemplates.Find(_settings.Template) ?? PieceTemplates.All[0];
             _settings.Template = _isCustom ? CustomId : _template.Id;
-            foreach (var radio in new[] { RadioTable, RadioChair, RadioBookshelf, RadioCabinet, RadioCustom })
-                radio.IsChecked = (string?)radio.Tag == _settings.Template;
+            ShowPieceChoice();
             foreach (var radio in new[] { RadioMm, RadioCm, RadioIn })
                 radio.IsChecked = (string?)radio.Tag == _settings.Unit.ToString();
             ChkDimensions.IsChecked = _settings.ShowDimensions;
@@ -138,6 +138,7 @@ namespace Smart_Tools.WPF.Views
         private void Rebuild(bool fit = false)
         {
             _model = _isCustom ? PieceEditor.ToModel(_customName, _customParts) : _template.Build(CurrentValues());
+            _hidden.RemoveWhere(name => _model.Parts.All(p => p.Name != name));   // a board that is gone (or renamed) is no longer hidden
             TxtPieceName.Text = _isCustom ? _customName : Loc.T($"Str_Modeler_Template_{_template.Id}", _template.Name);
             var size = _model.Size;
             TxtPieceSize.Text = _model.Parts.Count == 0
@@ -161,21 +162,34 @@ namespace Smart_Tools.WPF.Views
                 foreach (var row in CutList.From(_model))
                 {
                     string a = NumberInput.Format(row.Length), b = NumberInput.Format(row.Width), c = NumberInput.Format(row.Thickness);
-                    _cutItems.Add(new CutItem(row.Name, row.Quantity, $"{a} × {b} × {c}", row.PartNames));
+                    var first = _model.Parts.FirstOrDefault(p => p.Name == row.PartNames[0]);
+                    string cuts = first == null || first.Bevels.Count == 0 ? ""
+                        : " · " + Loc.F("Str_Modeler_CutBevels", "{0} angled cut(s): {1}", first.Bevels.Count, string.Join(", ", first.Bevels.Select(bv => BevelText(first, bv))));
+                    _cutItems.Add(new CutItem(row.Name, row.Quantity, $"{a} × {b} × {c}{cuts}", row.PartNames, row.PartNames.Any(_hidden.Contains)));
                 }
             }
             finally
             {
                 _refreshingCut = false;
             }
+            BtnShowAll.Visibility = _hidden.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+            TxtShowAll.Text = Loc.F("Str_Modeler_ShowAll", "Show all ({0} hidden)", _hidden.Count);
             double volumeCm3 = CutList.TotalVolumeMm3(_model) / 1000.0;
             TxtCutTotals.Text = Loc.F("Str_Modeler_CutTotals", "{0} boards in {1} cuts · {2} cm³ of material", _model.Parts.Count, _cutItems.Count, NumberInput.Format(Math.Round(volumeCm3)));
             if (keep != null && _cutItems.FirstOrDefault(i => i.Name == keep) is { } again) DataGridCut.SelectedItem = again;
         }
 
-        private void Piece_Click(object sender, RoutedEventArgs e)
+        /// <summary>The dropdown shows the piece in use (without that being read as the user picking it).</summary>
+        private void ShowPieceChoice()
         {
-            if (!_viewConstructed || sender is not RadioButton { Tag: string id }) return;
+            _loadingPiece = true;
+            ComboPiece.SelectedValue = _settings.Template;
+            _loadingPiece = false;
+        }
+
+        private void ComboPiece_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_viewConstructed || _loadingPiece || ComboPiece.SelectedValue is not string id || id == _settings.Template) return;
             if (id == CustomId)
             {
                 EnterCustom();
@@ -187,6 +201,7 @@ namespace Smart_Tools.WPF.Views
             _settings.Template = id;
             DataGridCut.SelectedItem = null;
             _selected.Clear();
+            _hidden.Clear();
             ShowMode();
             BuildParamRows();
             Rebuild(fit: true);
@@ -275,6 +290,33 @@ namespace Smart_Tools.WPF.Views
         // =================================================================
         //  Cut list
         // =================================================================
+
+        /// <summary>The eye in a cut-list row: hides every board of that row (both doors), or shows them again if any is hidden. One board alone: right-click it in the 3D view.</summary>
+        private void BtnEye_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { DataContext: CutItem item }) return;
+            bool show = item.Hidden;
+            foreach (var name in item.PartNames)
+            {
+                if (show) _hidden.Remove(name);
+                else _hidden.Add(name);
+            }
+            e.Handled = true;
+            HiddenChanged();
+        }
+
+        private void BtnShowAll_Click(object sender, RoutedEventArgs e)
+        {
+            _hidden.Clear();
+            HiddenChanged();
+        }
+
+        private void HiddenChanged()
+        {
+            RefreshCutList();
+            RebuildScene();
+            RedrawOverlay();
+        }
 
         private void DataGridCut_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

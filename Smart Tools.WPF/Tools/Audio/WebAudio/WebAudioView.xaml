@@ -1,0 +1,255 @@
+<UserControl
+    x:Class="Smart_Tools.WPF.Views.WebAudioView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"
+    xmlns:controls="clr-namespace:Smart_Tools.WPF.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:models="clr-namespace:Smart_Tools.WPF.Models"
+    x:Name="Root"
+    Focusable="True"
+    Loaded="Root_Loaded">
+
+    <!--  Backend: WebAudioManager.cs (runs the bundled yt-dlp + FFmpeg), Core\ (link checks, command lines, parsers). UI only here.  -->
+
+    <Grid Background="{DynamicResource ContentBg}">
+        <Grid Margin="16,8,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  ================= OPTIONS SIDEBAR =================  -->
+            <controls:ToolSidebar>
+                <StackPanel x:Name="SidebarStack">
+
+                    <Border ctl:Tour.Key="Str_Tour_WebAudio_Link" ctl:Tour.Order="1" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_WebAudio_LinkHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LinkVariant}" />
+                            <Border Margin="0,2,0,0" Style="{StaticResource InputBarStyle}">
+                                <TextBox x:Name="TxtUrl" KeyDown="TxtUrl_KeyDown" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_WebAudio_LinkPlaceholder}" />
+                            </Border>
+                            <UniformGrid Margin="0,8,0,0" Columns="2">
+                                <Button Margin="0,0,3,0" Click="BtnPaste_Click" Style="{StaticResource NeutralIconButtonStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentPaste" />
+                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_WebAudio_Paste}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BtnCheck" Margin="3,0,0,0" Click="BtnCheck_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_WebAudio_CheckTip}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="MagnifyScan" />
+                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_WebAudio_Check}" />
+                                    </StackPanel>
+                                </Button>
+                            </UniformGrid>
+                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_WebAudio_LinkNote}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border ctl:Tour.Key="Str_Tour_WebAudio_Format" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_WebAudio_FormatHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.MusicNote}" />
+                            <ComboBox x:Name="CmbFormat" Margin="0,2,0,0" SelectionChanged="Option_Changed">
+                                <ComboBoxItem Content="MP3" Tag="Mp3" />
+                                <ComboBoxItem Content="M4A (AAC)" Tag="M4a" />
+                                <ComboBoxItem Content="Opus" Tag="Opus" />
+                                <ComboBoxItem Content="FLAC (lossless)" Tag="Flac" />
+                                <ComboBoxItem Content="WAV (lossless, big)" Tag="Wav" />
+                            </ComboBox>
+                            <TextBlock Margin="0,12,0,6" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_WebAudio_QualityHeader}" />
+                            <ComboBox x:Name="CmbQuality" SelectionChanged="Option_Changed">
+                                <ComboBoxItem Content="{DynamicResource Str_WebAudio_QualityBest}" Tag="Best" />
+                                <ComboBoxItem Content="192 kbps" Tag="High" />
+                                <ComboBoxItem Content="128 kbps" Tag="Standard" />
+                            </ComboBox>
+                            <CheckBox
+                                x:Name="ChkClip"
+                                Margin="2,14,0,0"
+                                Checked="Clip_Changed"
+                                Content="{DynamicResource Str_WebAudio_Clip}"
+                                Foreground="{DynamicResource SidebarText}"
+                                ToolTip="{DynamicResource Str_WebAudio_ClipTip}"
+                                Unchecked="Clip_Changed" />
+                            <Grid x:Name="PanelClip" Margin="0,8,0,0" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Margin="0,0,0,4" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_WebAudio_From}" />
+                                    <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtFrom" Style="{StaticResource BareTextBox}" Tag="0:00" /></Border>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Margin="0,0,0,4" Style="{StaticResource FieldLabel}" Text="{DynamicResource Str_WebAudio_To}" />
+                                    <Border Style="{StaticResource InputBarStyle}"><TextBox x:Name="TxtTo" Style="{StaticResource BareTextBox}" Tag="0:30" /></Border>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <controls:OutputFolderCard
+                        ctl:Tour.Key="Str_Tour_WebAudio_Output"
+                        ctl:Tour.Order="3"
+                        x:Name="OutputCard"
+                        Header="{DynamicResource Str_WebAudio_SaveTo}"
+                        HeaderIcon="ContentSaveOutline"
+                        ToolName="Web Audio" />
+
+                    <Border Style="{StaticResource SidebarGroupCardStyle}">
+                        <StackPanel>
+                            <ContentControl Content="{DynamicResource Str_WebAudio_ProgramHeader}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.Update}" />
+                            <TextBlock x:Name="TxtVersion" Margin="2,4,0,0" FontSize="12" Foreground="{DynamicResource SidebarText}" TextWrapping="Wrap" />
+                            <Button x:Name="BtnUpdate" Margin="0,8,0,0" Click="BtnUpdate_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_WebAudio_UpdateTip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="Update" />
+                                    <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_WebAudio_Update}" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_WebAudio_UpdateNote}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </controls:ToolSidebar>
+
+            <!--  ================= MAIN AREA =================  -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Always visible: rights  -->
+                <Border Grid.Row="0" Margin="0,0,0,14" Padding="14,10" Background="{DynamicResource StatusWarningBg}" CornerRadius="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon Width="18" Height="18" Margin="0,1,10,0" VerticalAlignment="Top" Foreground="{DynamicResource StatusWarningFg}" Kind="AlertOutline" />
+                        <TextBlock Grid.Column="1" FontSize="12" Foreground="{DynamicResource StatusWarningFg}" Text="{DynamicResource Str_WebAudio_RightsBanner}" TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+
+                <!--  Run bar  -->
+                <Border Grid.Row="1" Margin="0,0,0,14" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            ctl:Tour.Key="Str_Tour_WebAudio_Run"
+                            ctl:Tour.Order="4"
+                            x:Name="BtnStart"
+                            MinWidth="180"
+                            VerticalAlignment="Center"
+                            Click="BtnStart_Click"
+                            Style="{StaticResource AccentPrimaryButtonStyle}">
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon x:Name="IconStart" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Kind="CloudDownloadOutline" />
+                                <TextBlock x:Name="TxtStart" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            </Grid>
+                        </Button>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                            <ProgressBar x:Name="Bar" Height="8" Maximum="100" />
+                            <TextBlock x:Name="TxtProgress" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextSecondary}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock x:Name="TxtPercent" Grid.Column="2" MinWidth="54" Margin="16,0,0,0" VerticalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentColor}" TextAlignment="Right" />
+                    </Grid>
+                </Border>
+
+                <!--  Result  -->
+                <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_WebAudio_Result}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.Headphones}" />
+
+                        <Border x:Name="InfoPanel" Grid.Row="1" Margin="0,0,0,10" Padding="14,12" Background="{DynamicResource RowBg}" CornerRadius="12" Visibility="Collapsed">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtInfoTitle" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}" TextWrapping="Wrap" />
+                                <TextBlock x:Name="TxtInfoLine" Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="StatusBanner" Grid.Row="2" Margin="0,0,0,10" Padding="10,8" CornerRadius="8" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon x:Name="StatusIcon" Width="14" Height="14" Margin="0,1,8,0" VerticalAlignment="Top" Kind="AlertOutline" />
+                                <TextBlock x:Name="TxtStatus" Grid.Column="1" FontSize="11.5" TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="3">
+                            <DataGrid
+                                ctl:Tour.Key="Str_Tour_WebAudio_Files"
+                                ctl:Tour.Order="5"
+                                x:Name="GridFiles"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                FontSize="12"
+                                IsReadOnly="True"
+                                MinRowHeight="44"
+                                MouseDoubleClick="GridFiles_DoubleClick"
+                                SelectionMode="Single"
+                                VerticalScrollBarVisibility="Auto">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="3*" MinWidth="200" Header="{DynamicResource Str_WebAudio_ColFile}" SortMemberPath="Name">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="{x:Type models:WebAudioRow}">
+                                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentColor}" Kind="MusicNoteOutline" />
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
+                                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}" Text="{Binding Folder}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Width="100" Binding="{Binding SizeText, Mode=OneWay}" ElementStyle="{StaticResource EllipsisCellTextStyle}" Header="{DynamicResource Str_WebAudio_ColSize}" />
+                                    <DataGridTemplateColumn Width="96" Header="">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate DataType="{x:Type models:WebAudioRow}">
+                                                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                                    <Button Margin="0,0,4,0" Padding="0" Click="BtnPlay_Click" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_WebAudio_PlayTip}">
+                                                        <materialDesign:PackIcon Width="16" Height="16" Kind="PlayCircleOutline" />
+                                                    </Button>
+                                                    <Button Padding="0" Click="BtnShow_Click" Style="{StaticResource ListToolButtonStyle}" Tag="{Binding}" ToolTip="{DynamicResource Str_WebAudio_ShowTip}">
+                                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel x:Name="EmptyState" MaxWidth="380" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.CloudDownloadOutline}" />
+                                <TextBlock Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Text="{DynamicResource Str_WebAudio_EmptyTitle}" />
+                                <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" Text="{DynamicResource Str_WebAudio_EmptyHint}" TextAlignment="Center" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

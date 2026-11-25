@@ -33,8 +33,8 @@ namespace Smart_Tools.WPF.Tests
         }
 
         [Fact]
-        public void There_are_four_templates_with_unique_ids() =>
-            Assert.Equal(new[] { "table", "chair", "bookshelf", "cabinet" }, PieceTemplates.All.Select(t => t.Id));
+        public void The_templates_are_listed_with_unique_ids() =>
+            Assert.Equal(new[] { "table", "chair", "bookshelf", "cabinet", "filing-cabinet", "door", "desk", "desk-l", "shelf" }, PieceTemplates.All.Select(t => t.Id));
 
         [Theory]
         [MemberData(nameof(Ids))]

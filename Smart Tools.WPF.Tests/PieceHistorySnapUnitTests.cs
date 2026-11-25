@@ -49,46 +49,98 @@ namespace Smart_Tools.WPF.Tests
             Assert.Equal(PieceHistory.Limit, steps);
         }
 
-        [Theory]
-        [InlineData(SnapFace.Left, 100 - 40, 0, 0)]
-        [InlineData(SnapFace.Right, 600, 0, 0)]
-        [InlineData(SnapFace.Above, 100, 18, 0)]
-        [InlineData(SnapFace.Below, 100, -700, 0)]
-        [InlineData(SnapFace.InFront, 100, 0, 300)]
-        [InlineData(SnapFace.Behind, 100, 0, -40)]
-        public void Place_TouchesTheChosenFace_AndLinesUpAtTheStart(SnapFace face, double x, double y, double z)
+        private static readonly OrbitCamera Cam = new() { Yaw = 35, Pitch = 22, Distance = 3000, Target = new Vec3(500, 300, 300) };
+
+        [Fact]
+        public void Ray_ThroughAProjectedPoint_PassesThroughThatPoint()
         {
-            var target = Box("shelf", 100, 0, 0, 500, 18, 300);
-            var leg = Box("leg", 900, 900, 900, 40, 700, 40);
-            var moved = PieceSnap.Place(leg, target, face, SnapAlign.Start);
-            Assert.Equal(leg.Size, moved.Size);
-            // the two touching axes follow the face, the others sit at the target's start edge
-            double ex = face is SnapFace.Left or SnapFace.Right ? x : 100;
-            double ey = face is SnapFace.Above or SnapFace.Below ? y : 0;
-            double ez = face is SnapFace.InFront or SnapFace.Behind ? z : 0;
-            Assert.Equal(new Vec3(ex, ey, ez), moved.Min);
+            var p = new Vec3(620, 140, 410);
+            var s = Cam.Project(p, 900, 600)!.Value;
+            var ray = Cam.Ray(s.X, s.Y, 900, 600);
+            double along = PieceDrag.ClosestOnAxis(ray, p, new Vec3(1, 0, 0)) ?? double.NaN;   // any line through p
+            var onLine = p + new Vec3(1, 0, 0) * along;
+            var onRay = PieceDrag.PointAt(ray, Vec3.Dot(onLine - ray.Origin, ray.Direction));
+            Assert.True((onRay - p).Length < 1.0);
         }
 
         [Fact]
-        public void Place_CentreAndEnd_AlignTheOtherAxes()
+        public void Pick_ReturnsTheNearestBoardUnderThePointer()
         {
-            var target = Box("top", 0, 0, 0, 1000, 30, 600);
-            var leg = Box("leg", 0, 0, 0, 40, 700, 40);
-            var centre = PieceSnap.Place(leg, target, SnapFace.Below, SnapAlign.Center);
-            Assert.Equal(new Vec3(480, -700, 280), centre.Min);
-            var end = PieceSnap.Place(leg, target, SnapFace.Below, SnapAlign.End);
-            Assert.Equal(new Vec3(960, -700, 560), end.Min);
+            var parts = new List<Part> { Box("back", 0, 0, 0, 500, 500, 50), Box("front", 0, 0, 200, 500, 500, 50) };
+            var ray = new Ray3(new Vec3(250, 250, 2000), new Vec3(0, 0, -1));
+            Assert.Equal(1, PieceDrag.Pick(parts, ray, out double d));
+            Assert.Equal(1750, d, 6);
+            Assert.Equal(-1, PieceDrag.Pick(parts, new Ray3(new Vec3(900, 250, 2000), new Vec3(0, 0, -1)), out _));
         }
 
         [Fact]
-        public void Apply_SnappedBoardsTouchWithoutOverlap_AndBadPairsChangeNothing()
+        public void RayHitsHeight_FindsTheFloorPoint_AndRefusesAParallelOrBackwardsRay()
         {
-            var parts = new List<Part> { Box("top", 0, 0, 0, 1000, 30, 600), Box("leg", 500, 500, 500, 40, 700, 40) };
-            var snapped = PieceSnap.Apply(parts, 1, 0, SnapFace.Below, SnapAlign.Start);
-            Assert.Empty(PieceChecks.Overlapping(snapped));
-            Assert.Empty(PieceChecks.Loose(snapped));
-            Assert.Same(parts, PieceSnap.Apply(parts, 1, 1, SnapFace.Left, SnapAlign.Start));
-            Assert.Same(parts, PieceSnap.Apply(parts, 5, 0, SnapFace.Left, SnapAlign.Start));
+            var hit = PieceDrag.RayHitsHeight(new Ray3(new Vec3(0, 100, 0), new Vec3(0, -1, 1).Normalized), 0);
+            Assert.NotNull(hit);
+            Assert.Equal(100, hit!.Value.Z, 6);
+            Assert.Null(PieceDrag.RayHitsHeight(new Ray3(new Vec3(0, 100, 0), new Vec3(1, 0, 0)), 0));
+            Assert.Null(PieceDrag.RayHitsHeight(new Ray3(new Vec3(0, 100, 0), new Vec3(0, 1, 0)), 0));
+        }
+
+        [Fact]
+        public void ClosestOnAxis_MeasuresAMouseMoveAlongAnAxis()
+        {
+            var up = new Vec3(0, 1, 0);
+            var look = new Ray3(new Vec3(0, 300, 1000), new Vec3(0, 0, -1));
+            Assert.Equal(300, PieceDrag.ClosestOnAxis(look, new Vec3(0, 0, 0), up)!.Value, 6);
+            Assert.Null(PieceDrag.ClosestOnAxis(new Ray3(new Vec3(0, 0, 0), up), new Vec3(5, 5, 5), up));
+        }
+
+        [Fact]
+        public void Move_StopsAgainstTheFaceOfAnotherBoard_WhenCloseEnough()
+        {
+            var parts = new List<Part> { Box("top", 0, 700, 0, 1000, 30, 600), Box("leg", 0, 0, 0, 40, 700, 40) };
+            // dropped 6 mm too low and 9 mm off to the side: it climbs under the top and lines up with its start edge
+            var r = PieceDrag.Move(parts, 1, new Vec3(9, -6, 3), grid: 0, threshold: 12, magnet: true);
+            Assert.Equal(new Vec3(0, 0, 0), r.Min);   // y: floor and "under the top" are both 0 here
+            Assert.Equal(0, r.Target[0]);
+            Assert.Equal(0, r.Target[2]);
+        }
+
+        [Fact]
+        public void Move_PutsABoardOnTopOfAnother_AndOnTheFloor()
+        {
+            var parts = new List<Part> { Box("base", 0, 0, 0, 500, 20, 500), Box("shelf", 0, 300, 0, 500, 20, 500) };
+            var r = PieceDrag.Move(parts, 1, new Vec3(200, 25, 100), grid: 0, threshold: 12, magnet: true);
+            Assert.Equal(20, r.Min.Y);   // sits on the base
+            Assert.Equal(0, r.Target[1]);
+            var floor = PieceDrag.Move(parts, 1, new Vec3(900, 8, 900), grid: 0, threshold: 12, magnet: true);
+            Assert.Equal(0, floor.Min.Y);
+            Assert.Equal(SnapResult.Floor, floor.Target[1]);
+        }
+
+        [Fact]
+        public void Move_FallsBackToTheGrid_AndHonoursMagnetOffAndGridOff()
+        {
+            var parts = new List<Part> { Box("a", 0, 0, 0, 100, 100, 100), Box("b", 500, 0, 500, 100, 100, 100) };
+            var grid = PieceDrag.Move(parts, 1, new Vec3(333, 47, 262), grid: 10, threshold: 5, magnet: false);
+            Assert.Equal(new Vec3(330, 50, 260), grid.Min);
+            Assert.All(grid.Target, t => Assert.Equal(SnapResult.None, t));
+            var free = PieceDrag.Move(parts, 1, new Vec3(333.3, 47.1, 262.2), grid: 0, threshold: 5, magnet: false);
+            Assert.Equal(new Vec3(333.3, 47.1, 262.2), free.Min);
+            var far = PieceDrag.Move(parts, 1, new Vec3(150, 30, 30), grid: 0, threshold: 5, magnet: true);
+            Assert.Equal(150, far.Min.X);   // nothing within 5 mm: not pulled
+        }
+
+        [Fact]
+        public void Resize_MovesOnlyTheDraggedFace_SnapsToANeighbourAndKeepsAMinimum()
+        {
+            var parts = new List<Part> { Box("a", 0, 0, 0, 100, 50, 50), Box("wall", 400, 0, 0, 20, 300, 300) };
+            var grown = PieceDrag.Resize(parts, 0, 0, highFace: true, proposedFace: 396, grid: 0, threshold: 10, magnet: true);
+            Assert.Equal(0, grown.Min.X);
+            Assert.Equal(400, grown.Size.X);   // reached the wall
+            Assert.Equal(50, grown.Size.Y);
+            var left = PieceDrag.Resize(parts, 0, 0, highFace: false, proposedFace: -34, grid: 10, threshold: 0, magnet: false);
+            Assert.Equal(-30, left.Min.X);     // grid
+            Assert.Equal(130, left.Size.X);    // the far face stayed at 100
+            var tiny = PieceDrag.Resize(parts, 0, 0, highFace: true, proposedFace: -500, grid: 0, threshold: 0, magnet: false);
+            Assert.Equal(PieceEditor.MinSize, tiny.Size.X);
         }
 
         [Theory]

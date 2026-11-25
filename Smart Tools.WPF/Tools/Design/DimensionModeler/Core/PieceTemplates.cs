@@ -44,7 +44,7 @@ namespace Smart_Tools.WPF.Controllers
 
     public static class PieceTemplates
     {
-        public static IReadOnlyList<PieceTemplate> All { get; } = new[] { Table(), Chair(), Bookshelf(), Cabinet() };
+        public static IReadOnlyList<PieceTemplate> All { get; } = new[] { Table(), Chair(), Bookshelf(), Cabinet(), FilingCabinet(), Door(), Desk(), DeskL(), Shelf() };
 
         public static PieceTemplate? Find(string? id) => All.FirstOrDefault(t => t.Id == id);
 
@@ -180,9 +180,12 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("height", "Height", 800, 400, 1200, 10),
                 new ParamSpec("depth", "Depth", 450, 250, 700, 5),
                 new ParamSpec("thickness", "Board thickness", 18, 12, 30, 1),
-                new ParamSpec("doors", "Doors", 1, 1, 2, 1, Integer: true),
+                new ParamSpec("doors", "Doors", 1, 0, 2, 1, Integer: true),
+                new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
                 new ParamSpec("shelves", "Shelves", 1, 0, 5, 1, Integer: true),
                 new ParamSpec("base", "Base height", 80, 0, 150, 5),
+                new ParamSpec("bevel", "Door edge bevel", 0, 0, 15, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
             {
@@ -193,9 +196,216 @@ namespace Smart_Tools.WPF.Controllers
 
                 var parts = Carcass(w, h, d - t, v["thickness"], (int)v["shelves"], v["base"]);
                 const double gap = 2;
-                double doorW = (w - (doors - 1) * gap) / doors;
+                const double knobFromEdge = 40;     // the knob hole sits this far from the edge opposite the hinge
+                double knob = v["knob"];
+                double doorW = doors == 0 ? 0 : (w - (doors - 1) * gap) / doors;
+                double doorH = h - lift;
                 for (int i = 0; i < doors; i++)
-                    parts.Add(P($"Door {i + 1}", i * (doorW + gap), lift, d - t, doorW, h - lift, t, PartKind.Panel));
+                {
+                    // the first door is hinged on the left, so its knob is on the right; a second door is the mirror of it
+                    double u = i == 1 ? knobFromEdge : doorW - knobFromEdge;
+                    var door = P($"Door {i + 1}", i * (doorW + gap), lift, d - t, doorW, doorH, t, PartKind.Panel);
+                    var hole = new Hole(2, u, doorH / 2, knob);   // punched through the door's thickness (Z)
+                    door = FrontBevels(door, v["bevel"], v["bevelAngle"]);
+                    parts.Add(knob >= PieceHoles.MinDiameter ? door with { Cuts = PieceHoles.Sanitize(door.Size, new[] { hole }).Where(h => PieceBevels.HoleIsClear(door.Size, h, door.Bevels)).ToList() } : door);
+                }
+                return parts;
+            });
+
+        // faces for bevels: 0 left, 1 right, 2 bottom, 3 top, 4 back, 5 front
+        private const int FaceLeft = 0, FaceRight = 1, FaceBottom = 2, FaceTop = 3, FaceFront = 5;
+
+        /// <summary>All four edges of a board's front face cut at an angle (a bevelled door or drawer front). Size 0 = square edges.</summary>
+        private static Part FrontBevels(Part part, double size, double angle)
+        {
+            if (size < 0.5) return part;
+            var bevels = new[] { FaceLeft, FaceRight, FaceTop, FaceBottom }.Select(f => new Bevel(FaceFront, f, angle, size));
+            var kept = PieceBevels.Sanitize(part.Size, bevels);
+            return kept.Count == 0 ? part : part with { Edges = kept };
+        }
+
+        /// <summary>A round hole through a board, or the board unchanged when the diameter is too small to cut.</summary>
+        private static Part WithHole(Part part, Hole hole) =>
+            hole.Diameter >= PieceHoles.MinDiameter
+                ? part with { Cuts = PieceHoles.Sanitize(part.Size, new[] { hole }).Where(h => PieceBevels.HoleIsClear(part.Size, h, part.Bevels)).ToList() }
+                : part;
+
+        // --------------------------------------------------------- filing cabinet
+        private static PieceTemplate FilingCabinet() => new("filing-cabinet", "Filing cabinet",
+            new[]
+            {
+                new ParamSpec("width", "Width", 470, 400, 1000, 10),
+                new ParamSpec("height", "Height", 1320, 500, 1400, 10),
+                new ParamSpec("depth", "Depth", 620, 400, 800, 5),
+                new ParamSpec("thickness", "Board thickness", 18, 12, 30, 1),
+                new ParamSpec("drawers", "Drawers", 4, 1, 5, 1, Integer: true),
+                new ParamSpec("handle", "Handle hole", 12, 0, 40, 1),
+                new ParamSpec("base", "Base height", 50, 0, 150, 5),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+            },
+            v =>
+            {
+                double w = v["width"], h = v["height"], d = v["depth"];
+                double t = Math.Min(v["thickness"], Math.Min(w / 8, h / 20));   // the same limits the carcass uses
+                double lift = Math.Min(v["base"], h / 6);
+                double dc = d - t;                                              // the carcass; the drawer fronts sit in front of it
+                int n = (int)v["drawers"];
+                var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"]);
+
+                const double gap = 2, slide = 12;                               // between the fronts; room for the runners
+                double ih = h - 2 * t - lift;
+                double slot = ih / n;
+                double frontH = (h - lift - (n - 1) * gap) / n;
+                double side = Math.Min(12, t);
+                double x0 = t + slide, x1 = w - t - slide, zb = BackThickness + 10;
+                for (int i = 0; i < n; i++)
+                {
+                    int k = i + 1;
+                    var front = FrontBevels(P($"Drawer {k} Front", 0, lift + i * (frontH + gap), dc, w, frontH, t, PartKind.Panel), v["bevel"], v["bevelAngle"]);
+                    parts.Add(WithHole(front, new Hole(2, w / 2, frontH * 0.7, v["handle"])));
+
+                    // the box behind the front: it rides between the sides and touches the front
+                    double y0 = lift + t + i * slot + 5, y1 = lift + t + (i + 1) * slot - 5;
+                    parts.Add(P($"Drawer {k} Bottom", x0 + side, y0, zb, x1 - x0 - 2 * side, side, dc - zb, PartKind.Board));
+                    parts.Add(P($"Drawer {k} Side Left", x0, y0, zb, side, y1 - y0, dc - zb, PartKind.Board));
+                    parts.Add(P($"Drawer {k} Side Right", x1 - side, y0, zb, side, y1 - y0, dc - zb, PartKind.Board));
+                    parts.Add(P($"Drawer {k} Back", x0 + side, y0 + side, zb, x1 - x0 - 2 * side, y1 - y0 - side, side, PartKind.Board));
+                }
+                return parts;
+            });
+
+        // ------------------------------------------------------------------- door
+        private static PieceTemplate Door() => new("door", "Door",
+            new[]
+            {
+                new ParamSpec("width", "Width with frame", 900, 600, 1200, 10),
+                new ParamSpec("height", "Height with frame", 2100, 1800, 2400, 10),
+                new ParamSpec("thickness", "Door thickness", 40, 30, 60, 1),
+                new ParamSpec("frame", "Frame width", 30, 20, 60, 1),
+                new ParamSpec("frameDepth", "Frame depth", 120, 80, 200, 5),
+                new ParamSpec("knob", "Lock hole", 54, 0, 60, 1),
+                new ParamSpec("knobHeight", "Lock height", 1000, 800, 1200, 10),
+            },
+            v =>
+            {
+                double w = v["width"], h = v["height"], f = v["frame"], fd = v["frameDepth"];
+                double dt = Math.Min(v["thickness"], fd - 10);
+                const double gap = 3, undercut = 10;                       // around the door, and the gap over the floor
+                double z0 = (fd - dt) / 2;
+                double slabX = f + gap, slabW = w - 2 * f - 2 * gap;
+                double slabY = undercut, slabH = h - f - gap - undercut;
+
+                var parts = new List<Part>
+                {
+                    P("Jamb Left", 0, 0, 0, f, h - f, fd, PartKind.Board),
+                    P("Jamb Right", w - f, 0, 0, f, h - f, fd, PartKind.Board),
+                    P("Head", 0, h - f, 0, w, f, fd, PartKind.Board),
+                };
+                var slab = P("Door", slabX, slabY, z0, slabW, slabH, dt, PartKind.Panel);
+                double lockV = Math.Clamp(v["knobHeight"] - slabY, 100, slabH - 100);
+                parts.Add(WithHole(slab, new Hole(2, slabW - 60, lockV, v["knob"])));   // the lock is on the side away from the hinges
+
+                // three hinges fill the gap on the left, joining the door to its frame
+                const double hingeH = 100;
+                foreach (var (name, y) in new[] { ("Hinge 1", slabY + 200), ("Hinge 2", slabY + (slabH - hingeH) / 2), ("Hinge 3", slabY + slabH - 200 - hingeH) })
+                    parts.Add(P(name, f, y, z0, gap, hingeH, Math.Min(25, dt), PartKind.Leg));
+                return parts;
+            });
+
+        // ------------------------------------------------------------------- desk
+        private static PieceTemplate Desk() => new("desk", "Desk",
+            new[]
+            {
+                new ParamSpec("width", "Width", 1400, 800, 2400, 10),
+                new ParamSpec("depth", "Depth", 700, 500, 900, 10),
+                new ParamSpec("height", "Height", 740, 650, 800, 5),
+                new ParamSpec("top", "Top thickness", 25, 18, 40, 1),
+                new ParamSpec("thickness", "Side thickness", 25, 18, 40, 1),
+                new ParamSpec("modesty", "Back panel height", 300, 0, 500, 10),
+                new ParamSpec("cable", "Cable hole", 60, 0, 80, 1),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 15, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+            },
+            v =>
+            {
+                double w = v["width"], d = v["depth"], h = v["height"], top = v["top"], t = v["thickness"];
+                double legH = h - top;
+                var deskTop = P("Top", 0, legH, 0, w, top, d, PartKind.Top);
+                if (v["bevel"] >= 0.5)   // the front edge, where your wrists rest
+                    deskTop = deskTop with { Edges = PieceBevels.Sanitize(deskTop.Size, new[] { new Bevel(FaceTop, FaceFront, v["bevelAngle"], v["bevel"]) }) };
+                var parts = new List<Part>
+                {
+                    WithHole(deskTop, new Hole(1, w / 2, 80, v["cable"])),   // a cable hole near the back
+                    P("Side Left", 0, 0, 0, t, legH, d, PartKind.Panel),
+                    P("Side Right", w - t, 0, 0, t, legH, d, PartKind.Panel),
+                };
+                double mh = Math.Min(v["modesty"], legH - 100);
+                if (mh >= 10) parts.Add(P("Back Panel", t, legH - mh, 50, w - 2 * t, mh, t, PartKind.Panel));
+                return parts;
+            });
+
+        // ------------------------------------------------------------ L-shaped desk
+        private static PieceTemplate DeskL() => new("desk-l", "Desk in L shape",
+            new[]
+            {
+                new ParamSpec("width", "Main width", 1600, 1200, 2400, 10),
+                new ParamSpec("depth", "Main depth", 700, 500, 900, 10),
+                new ParamSpec("returnLength", "Side length", 1400, 1000, 2000, 10),
+                new ParamSpec("returnDepth", "Side depth", 600, 400, 800, 10),
+                new ParamSpec("height", "Height", 740, 650, 800, 5),
+                new ParamSpec("top", "Top thickness", 25, 18, 40, 1),
+                new ParamSpec("thickness", "Side thickness", 25, 18, 40, 1),
+                new ParamSpec("cable", "Cable hole", 60, 0, 80, 1),
+            },
+            v =>
+            {
+                double w = v["width"], d = v["depth"], h = v["height"], top = v["top"], t = v["thickness"];
+                double rd = Math.Min(v["returnDepth"], w / 2);                   // the side wing, on the right, coming towards you
+                double rl = Math.Max(v["returnLength"], d + 300);
+                double legH = h - top;
+                double back = Math.Min(300, legH - 100);
+                return new[]
+                {
+                    WithHole(P("Main Top", 0, legH, 0, w, top, d, PartKind.Top), new Hole(1, w / 2, 80, v["cable"])),
+                    P("Side Top", w - rd, legH, d, rd, top, rl - d, PartKind.Top),
+                    P("Side Left", 0, 0, 0, t, legH, d, PartKind.Panel),
+                    P("Side Right", w - t, 0, 0, t, legH, rl, PartKind.Panel),          // one panel under the whole right edge
+                    P("End Panel", w - rd, 0, rl - t, rd - t, legH, t, PartKind.Panel), // holds the front end of the wing
+                    P("Back Panel", t, legH - back, 50, w - 2 * t, back, t, PartKind.Panel),
+                };
+            });
+
+        // ------------------------------------------------------------------ shelf
+        private static PieceTemplate Shelf() => new("shelf", "Shelf",
+            new[]
+            {
+                new ParamSpec("width", "Width", 800, 300, 1500, 10),
+                new ParamSpec("depth", "Depth", 250, 120, 400, 5),
+                new ParamSpec("thickness", "Board thickness", 20, 15, 40, 1),
+                new ParamSpec("tiers", "Levels", 1, 1, 4, 1, Integer: true),
+                new ParamSpec("spacing", "Level height", 300, 150, 500, 10),
+                new ParamSpec("bracket", "Bracket thickness", 20, 15, 40, 1),
+                new ParamSpec("inset", "Bracket inset", 60, 0, 200, 5),
+            },
+            v =>
+            {
+                double w = v["width"], d = v["depth"], st = v["thickness"], sp = v["spacing"], bt = v["bracket"];
+                int tiers = (int)v["tiers"];
+                double inset = Math.Min(v["inset"], w / 4);
+                double bracketH = sp - st, bracketD = d * 0.8;
+                double cleatH = Math.Min(60, bracketH - 5);
+                const double cleatT = 15;
+                var parts = new List<Part>();
+                for (int i = 0; i < tiers; i++)
+                {
+                    double y = i * sp;                                            // each level stands on the one below
+                    string tier = tiers > 1 ? $" {i + 1}" : "";
+                    parts.Add(P($"Bracket{tier} Left", inset, y, 0, bt, bracketH, bracketD, PartKind.Board));
+                    parts.Add(P($"Bracket{tier} Right", w - inset - bt, y, 0, bt, bracketH, bracketD, PartKind.Board));
+                    parts.Add(P($"Wall Rail{tier}", inset + bt, y + bracketH - cleatH, 0, w - 2 * (inset + bt), cleatH, cleatT, PartKind.Board));
+                    parts.Add(P($"Shelf{tier}", 0, y + bracketH, 0, w, st, d, PartKind.Top));
+                }
                 return parts;
             });
     }

@@ -14,6 +14,57 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>The three measures of one board.</summary>
         public static IReadOnlyList<DimensionLine> ForPart(Part part, double offset) => Around(part.Min, part.Max, offset);
 
+        /// <summary>
+        /// The free space around a board: for each of its six faces, the distance to the nearest other board that lies straight
+        /// across from it (their faces overlap). Boards for which <paramref name="ignore"/> is true - hidden ones, such as a cabinet
+        /// door - do not count, so the gaps are measured to what is inside. Faces that touch, or look at nothing, give no line.
+        /// </summary>
+        public static IReadOnlyList<DimensionLine> Gaps(IReadOnlyList<Part> parts, Part part, Func<Part, bool>? ignore = null)
+        {
+            const double Touch = 0.5;
+            var lines = new List<DimensionLine>();
+            for (int axis = 0; axis < 3; axis++)
+            {
+                int u = (axis + 1) % 3, v = (axis + 2) % 3;
+                for (int side = 0; side < 2; side++)
+                {
+                    bool high = side == 1;
+                    double face = high ? At(part.Max, axis) : At(part.Min, axis);
+                    Part? best = null;
+                    double bestGap = double.PositiveInfinity;
+                    foreach (var other in parts)
+                    {
+                        if (ReferenceEquals(other, part) || other.Name == part.Name || (ignore?.Invoke(other) ?? false)) continue;
+                        if (Math.Min(At(part.Max, u), At(other.Max, u)) - Math.Max(At(part.Min, u), At(other.Min, u)) <= Touch) continue;
+                        if (Math.Min(At(part.Max, v), At(other.Max, v)) - Math.Max(At(part.Min, v), At(other.Min, v)) <= Touch) continue;
+                        double gap = high ? At(other.Min, axis) - face : face - At(other.Max, axis);
+                        if (gap > Touch && gap < bestGap)
+                        {
+                            best = other;
+                            bestGap = gap;
+                        }
+                    }
+                    if (best == null) continue;
+                    double cu = (Math.Max(At(part.Min, u), At(best.Min, u)) + Math.Min(At(part.Max, u), At(best.Max, u))) / 2;
+                    double cv = (Math.Max(At(part.Min, v), At(best.Min, v)) + Math.Min(At(part.Max, v), At(best.Max, v))) / 2;
+                    double near = high ? face : face - bestGap, far = high ? face + bestGap : face;
+                    lines.Add(new DimensionLine(Point(axis, near, u, cu, v, cv), Point(axis, far, u, cu, v, cv), Vec3.Zero, bestGap));
+                }
+            }
+            return lines;
+        }
+
+        private static double At(Vec3 p, int axis) => axis == 0 ? p.X : axis == 1 ? p.Y : p.Z;
+
+        private static Vec3 Point(int a, double av, int b, double bv, int c, double cv)
+        {
+            var values = new double[3];
+            values[a] = av;
+            values[b] = bv;
+            values[c] = cv;
+            return new Vec3(values[0], values[1], values[2]);
+        }
+
         private static IReadOnlyList<DimensionLine> Around(Vec3 min, Vec3 max, double off) => new[]
         {
             // width along the front bottom edge, pushed out in front of the piece
@@ -105,7 +156,8 @@ namespace Smart_Tools.WPF.Controllers
         private static string Key(Part p)
         {
             var d = Dims(p);
-            return $"{Numbered.Replace(p.Name, "")}|{d[0]:0.###}|{d[1]:0.###}|{d[2]:0.###}";
+            string cuts = string.Join(",", p.Bevels.Select(b => $"{b.FaceA}{b.FaceB}:{b.Angle:0.#}:{b.Depth:0.#}"));
+            return $"{Numbered.Replace(p.Name, "")}|{d[0]:0.###}|{d[1]:0.###}|{d[2]:0.###}|{cuts}";
         }
     }
 
@@ -171,6 +223,20 @@ namespace Smart_Tools.WPF.Controllers
             var up = Vec3.Cross(right, forward);
             return (right, up, forward);
         }
+
+        /// <summary>The line of sight through a pixel of a view of this size (the opposite of <see cref="Project"/>).</summary>
+        public Ray3 Ray(double x, double y, double width, double height)
+        {
+            var (right, up, forward) = Basis();
+            double tanH = Math.Tan(Rad(FovDegrees) / 2);
+            double tanV = tanH * height / width;
+            double ndcX = (x / width - 0.5) * 2, ndcY = (0.5 - y / height) * 2;
+            var direction = (forward + right * (ndcX * tanH) + up * (ndcY * tanV)).Normalized;
+            return new Ray3(Position, direction);
+        }
+
+        /// <summary>How many millimetres one pixel is at the distance of the target.</summary>
+        public double MmPerPixel(double width) => width <= 0 ? 1 : 2 * Distance * Math.Tan(Rad(FovDegrees) / 2) / width;
 
         /// <summary>Where a point lands on a view of this size, or null when it is behind the camera.</summary>
         public ScreenPoint? Project(Vec3 point, double width, double height)

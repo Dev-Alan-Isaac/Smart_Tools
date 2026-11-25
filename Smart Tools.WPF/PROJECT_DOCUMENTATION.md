@@ -17,7 +17,7 @@ A comprehensive, feature-rich Windows desktop application built with **WPF** and
 
 ## Tools
 
-Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
+Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside the main window, has a **Help** button with a guided tour of its page, and follows the same layout: options on the left, work area on the right. Tools that change files never overwrite one (a taken name gets " (2)") and keep originals until a result is proven good.
 
 ### Data Quality
 *Check, de-duplicate and compare*
@@ -40,6 +40,7 @@ Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside 
 | **Organize Files** | `organize-files` | Sort files into folders |
 | **Search Files** | `search-files` | Find text and patterns inside files |
 | **Copy Queue** | `copy-queue` | Copy or move big sets of files safely, with pause and verify |
+| **Archive Manager** | `archive-manager` | Open, extract and create zip / 7z / tar archives, including split ones (.001, .z01, .part1.rar), with passwords; runs the bundled 7-Zip |
 | **Folder Tree Exporter** | `folder-tree` | Export a folder's structure as a text tree, Markdown, JSON or CSV |
 | **Metadata Extractor** | `metadata-extract` | Read the hidden details in files |
 
@@ -90,6 +91,7 @@ Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside 
 | **Speech Studio** | `speech-studio` | Two pages: Text to Speech (read text aloud or save it as audio) and Speech to Text (audio or video into text and subtitles, offline) |
 | **Audio Editor** | `audio-editor` | Two pages: Audio Trimmer & Joiner (cut, join, fade, normalize) and Loudness Meter & Normalizer (LUFS and peak, normalized copies) |
 | **Voice Studio** | `voice-studio` | Two pages: Audio Recorder (record from your microphone) and Voice Changer (change how a voice sounds) |
+| **Web Audio Saver** | `web-audio` | Saves the sound of a video page or a direct sound link as MP3 / M4A / Opus / FLAC / WAV (optionally just a clip); runs the bundled yt-dlp and FFmpeg only when a button is pressed; warns about copyright |
 | **Spectrogram** | `spectrogram` | See the frequencies in a sound |
 
 ### Music
@@ -144,6 +146,7 @@ Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside 
 | Tool | Id | What it does |
 |---|---|---|
 | **System Monitor** | `system-monitor` | Live CPU, memory, disks, network and GPU, like Task Manager |
+| **Game Bottleneck Checker** | `game-bottleneck` | Estimates whether this PC (or another you pick) can run a game and which part holds it back; game requirements come from the Steam store only when you press Look up, parts are compared with a built-in table of rounded scores (newer parts come from an optional downloaded list, or are estimated from their family and marked as such) |
 | **Hardware Sensors** | `hardware-sensors` | Temperatures, fans, clocks, voltages and power, part by part |
 | **Resource Hogs History** | `resource-hogs` | Which programs used the most CPU, memory and disk over the last 24 hours (recorded every 5 s while the app is open, per program name and minute, stored locally) |
 | **Process Killer** | `process-killer` | See every running process and end the stuck ones safely |
@@ -234,7 +237,7 @@ Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Dimension Modeler** | `dimension-modeler` | Model a table, chair, bookshelf or cabinet from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing |
+| **Dimension Modeler** | `dimension-modeler` | Model a table, chair, bookshelf, cabinet, filing cabinet, door, desk, L-shaped desk or shelf (or your own piece) from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing |
 
 ### Utilities
 *Everyday helpers*
@@ -254,6 +257,7 @@ Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside 
 | Tool | Id | What it does |
 |---|---|---|
 | **Pixel Art Editor** | `pixel-art` | Draw on a small grid, animate frames and export sharp PNGs |
+| **ASCII Video Maker** | `ascii-video` | Turns a video (a link via yt-dlp, or a file) into ASCII: MP4 with the original sound, GIF, and frames.txt with a console player (play.cmd); up to 10 minutes; frames are streamed through FFmpeg, never written one by one; shows an own-responsibility notice |
 | **Sprite Sheet Packer** | `sprite-packer` | Pack images into a sprite sheet with coordinates, or slice a sheet back into frames |
 | **Texture Pack Builder** | `texture-pack` | Turn your PNGs into a Minecraft Java resource pack (.zip) with pack.mcmeta |
 | **Image to Pixel Art** | `image-to-pixel` | Shrink a picture to a pixel grid with a limited palette and optional dithering |
@@ -281,7 +285,7 @@ Smart Tools has **114 tools** in 21 sidebar categories. Every tool opens inside 
 - **Game Controller Test** - Reads Xbox-style pads (XInput) and other game devices (joysticks, wheels, generic and PlayStation pads) over USB or Bluetooth, with the layout detected automatically (no type to pick) and a notice that extra buttons such as back paddles or levers cannot be detected: live sticks, triggers and buttons, dead zones (axial, radial, scaled), rest drift, range and roundness, trigger response, report rate and vibration
 - **Audio Output Test** - Per-channel beeps, phase and polarity tests, tone generator, sweep and noise for speakers, headphones and IEMs, through any active output device (WASAPI shared mode, at the device's own format); no speaker/headphone type to pick, a stereo device simply gets the left/right picture
 - **Mock Data Generator** - Generate fake data for testing (Generators category): grouped type list, checksum-valid IBAN / credit card (Luhn) / ISBN-13, and your own saved lists (Settings > Mock data)
-- **Dimension Modeler** (3D & Design category) - Pick a table, chair, bookshelf or cabinet and set its dimensions in millimetres (sliders or typed values); the piece is built from boards and legs, shown in 3D (drag to turn, right-drag to move, wheel to zoom) with width / height / depth dimension lines in mm, cm or inches, and listed in a cut list (click a row to light that board up and measure it). Export: OBJ or STL of the whole piece, or every board laid flat on printable plates (print scale such as 1/10, joint clearance, your printer bed size; one file per plate). **Custom piece:** the "Custom" choice (or "Edit as custom piece" on a preset, which copies its boards) lets you build from scratch: add boards (board, leg, panel, top), name them and type their position and size in mm (Up / Down nudge a number), copy and delete them; a pill warns about overlapping or loose boards; designs are saved and opened as `.dmodel` files (readable JSON) and the custom piece is remembered. Everything else (3D, dimension lines, cut list, exports, print plates) works on it unchanged. The pure maths lives in `Tools/Design/DimensionModeler/Core/` (templates, `BoxMesh`, `OrbitCamera`, `PrintPlanner`, OBJ / STL writers) and is covered by tests in `Smart Tools.WPF.Tests`.
+- **Dimension Modeler** (3D & Design category) - Pick a table, chair, bookshelf, cabinet, filing cabinet, door, desk, L-shaped desk or wall shelf (or build your own) and set its dimensions in millimetres (sliders or typed values); the piece is built from boards and legs, shown in 3D (drag to turn, right-drag to move, wheel to zoom) with width / height / depth dimension lines in mm, cm or inches, and listed in a cut list (click a row to light that board up and measure it). Export: OBJ or STL of the whole piece, or every board laid flat on printable plates (print scale such as 1/10, joint clearance, your printer bed size; one file per plate). **Custom piece:** the "Custom" choice (or "Edit as custom piece" on a preset, which copies its boards) lets you build from scratch: add boards (board, leg, panel, top), name them and type their position and size in mm (Up / Down nudge a number), copy and delete them; a pill warns about overlapping or loose boards; designs are saved and opened as `.dmodel` files (readable JSON) and the custom piece is remembered. Everything else (3D, dimension lines, cut list, exports, print plates) works on it unchanged. The pure maths lives in `Tools/Design/DimensionModeler/Core/` (templates, `BoxMesh`, `OrbitCamera`, `PrintPlanner`, OBJ / STL writers) and is covered by tests in `Smart Tools.WPF.Tests`.
 
 - **Media Viewer** (`media-viewer`, `Tools/Media/MediaHub`) - one tool with four pages: **Mixed** (`MediaViewerView`: pictures, videos and music in one queue, slideshow, mini-player widget), **Photos** (`ImageViewerControl`: zoom, rotate, thumbnails, slideshow, save as), **Videos** (`VideoReplayView`: LibVLC player for almost any format, playlists, resume position) and **Music** (`AudioReplayControl`: NAudio player with the level visualizer, audio tracks, speed). It replaced the separate Image Viewer, Video Replay and Audio Replay tools; each page is the complete original tool. Only the page shown is in the visual tree (the others release their playback when you switch), and files dropped on the wrong page jump to the page that fits their type (`MediaHubView`, `AddPaths` on each page).
   - **Seek bar (Mixed page, `MediaViewerView.PosSlider`)**: pressing the bar pauses playback, dragging only scrubs a frame about every 100 ms (`ScrubbingEnabled`), and one seek plus resume happens on release (`_isUserSeeking`, `EndUserSeek`). The position timer never writes to the bar while the user is seeking, and changing `Maximum` on a new clip is guarded by `_updatingSlider`. Never seek on every `ValueChanged` while playing: it garbles the picture and crackles the audio.
@@ -311,7 +315,7 @@ Smart_Tools/
     ├── Modules/                # App services: AppPaths, AppSettingsStore, LanguageManager, ThemeManager, Log, toasts
     ├── Themes/                 # Controls.xaml (all shared styles), Light.xaml, Dark.xaml, ui-style-guide.md
     ├── Language/               # en.xaml, es.xaml (every UI string, tool names and the guided tours)
-    ├── Engines/                # Bundled native tools: FFMPEG, VLC, TESSERACT, WHISPER
+    ├── Engines/                # Bundled native tools: FFMPEG, VLC, TESSERACT, WHISPER, 7ZIP, YTDLP
     ├── Data/                   # Read-only data shipped with the app (oui.txt)
     └── Images/                 # App assets
 ```
@@ -354,6 +358,8 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ### Native Engines
 - **FFmpeg** - Video/audio encoding and processing
 - **VLC (libvlc)** - Media playback with extensive codec support
+- **yt-dlp (`Engines\YTDLP\yt-dlp.exe`)** - Web Audio Saver: finds and downloads the sound of a link; FFmpeg converts it. Unlicense; checked against the official SHA2-256SUMS. A user-updated copy lives in the data folder `YtDlp`.
+- **7-Zip (7z.exe + 7z.dll, `Engines\7ZIP`)** - Archive Manager: reads and writes archives, split volumes and passwords. LGPL with the unRAR restriction (it reads RAR, never makes it); its licence file travels with it.
 
 ---
 
@@ -448,7 +454,7 @@ A tool is split three ways: the **View** only shows things and reacts to clicks,
 ## Guided Tours (Help button)
 
 Every tool page has a **Help** button in the header that walks through the page's main parts, highlighting each in turn.
-All 114 tools have one. The tour only covers the page that is open.
+All 118 tools have one. The tour only covers the page that is open.
 
 To add or change a tour:
 1. In the view's XAML add `xmlns:ctl="clr-namespace:Smart_Tools.WPF.Controllers"`.
@@ -605,7 +611,7 @@ Language files use XAML resource dictionaries for easy maintenance and extensibi
 - Controllers handle business logic separate from UI
 
 ### Testing Strategy
-*Currently exploring unified testing approach across all 114 tools*
+*Currently exploring unified testing approach across all 118 tools*
 
 ### Performance Optimization
 - SparkLine rendering for system monitor

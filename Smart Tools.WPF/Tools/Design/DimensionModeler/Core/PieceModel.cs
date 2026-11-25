@@ -34,10 +34,31 @@ namespace Smart_Tools.WPF.Models
         Panel,
     }
 
-    /// <summary>One box of the piece: its lowest corner and its size.</summary>
-    public sealed record Part(string Name, Vec3 Min, Vec3 Size, PartKind Kind)
+    /// <summary>
+    /// A round hole punched right through a board. <see cref="Axis"/> is the direction it goes through (0 = X, 1 = Y, 2 = Z).
+    /// <see cref="U"/> and <see cref="V"/> are where its centre is, in mm from the board's lowest corner, along the two other
+    /// axes in ascending order (through Z: U is X and V is Y; through Y: U is X and V is Z; through X: U is Y and V is Z).
+    /// </summary>
+    public readonly record struct Hole(int Axis, double U, double V, double Diameter);
+
+    /// <summary>
+    /// One box of the piece: its lowest corner and its size, any round holes punched through it, any edges cut at an angle (bevels and
+    /// miters), and the group it belongs to (the boards of one drawer move and hide together; null = on its own).
+    /// </summary>
+    public sealed record Part(string Name, Vec3 Min, Vec3 Size, PartKind Kind, IReadOnlyList<Hole>? Cuts = null, IReadOnlyList<Bevel>? Edges = null, string? Group = null)
     {
         public Vec3 Max => Min + Size;
+
+        public IReadOnlyList<Hole> Holes => Cuts ?? Array.Empty<Hole>();
+
+        public IReadOnlyList<Bevel> Bevels => Edges ?? Array.Empty<Bevel>();
+
+        // a record compares lists by reference; two boards with the same holes and cuts are the same board
+        public bool Equals(Part? other) =>
+            other is not null && Name == other.Name && Min == other.Min && Size == other.Size && Kind == other.Kind
+            && Holes.SequenceEqual(other.Holes) && Bevels.SequenceEqual(other.Bevels) && (Group ?? "") == (other.Group ?? "");
+
+        public override int GetHashCode() => HashCode.Combine(Name, Min, Size, Kind, Holes.Count, Bevels.Count, Group ?? "");
     }
 
     /// <summary>A finished piece: its boards, and the box around them.</summary>

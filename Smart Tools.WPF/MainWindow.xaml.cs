@@ -251,6 +251,10 @@ namespace Smart_Tools.WPF
             Add<OrganizeFilesView>("organize-files", v => v.CancelActiveRun());
             Add<FileSearchView>("search-files", v => v.CancelActiveRun());
             Add<FolderTreeView>("folder-tree", v => v.CancelActiveRun());   // stops a scan; the folder is only read, never changed
+            Add<GameBottleneckView>("game-bottleneck", v => v.CancelActiveRun());   // stops a store lookup
+            Add<AsciiVideoView>("ascii-video", v => v.CancelActiveRun());   // stops yt-dlp and FFmpeg; a stopped run removes what it made
+            Add<WebAudioView>("web-audio", v => v.CancelActiveRun());   // stops yt-dlp; a stopped run removes its temp files
+            Add<ArchiveManagerView>("archive-manager", v => v.CancelActiveRun());   // stops 7-Zip; a stopped run removes only what it had started
             Add<CopyQueueView>("copy-queue", v => v.CancelActiveRun());   // stops the queue; originals are never touched mid-file, the job is kept to continue
 
             // Convert

@@ -14,6 +14,12 @@ namespace Smart_Tools.WPF.Models
 
         public bool ShowDimensions { get; set; } = true;
 
+        /// <summary>The grid a dragged board lands on, in mm; 0 = no grid.</summary>
+        public double SnapGridMm { get; set; } = 10;
+
+        /// <summary>Dragged boards jump to the faces of the other boards and to the floor.</summary>
+        public bool MagnetOn { get; set; } = true;
+
         /// <summary>10 means 1:10; 1 is full size.</summary>
         public double ScaleRatio { get; set; } = 1;
 
