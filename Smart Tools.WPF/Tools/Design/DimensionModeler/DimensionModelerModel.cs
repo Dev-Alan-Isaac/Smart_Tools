@@ -35,6 +35,15 @@ namespace Smart_Tools.WPF.Models
         public string CustomName { get; set; } = "";
 
         public List<CustomPartDto> CustomParts { get; set; } = new();
+
+        /// <summary>Colours chosen in the 3D view: piece id (template id or "custom") -> board name -> colour.</summary>
+        public Dictionary<string, Dictionary<string, BoardPaint>> Paint { get; set; } = new();
+
+        /// <summary>Groups changed on a preset: template id -> board name -> group ("" = in no group). The custom piece keeps its groups in its boards.</summary>
+        public Dictionary<string, Dictionary<string, string>> GroupOverrides { get; set; } = new();
+
+        /// <summary>The cut list beside the 3D view is folded away.</summary>
+        public bool CutListHidden { get; set; }
     }
 
     /// <summary>The four ways to save a piece.</summary>

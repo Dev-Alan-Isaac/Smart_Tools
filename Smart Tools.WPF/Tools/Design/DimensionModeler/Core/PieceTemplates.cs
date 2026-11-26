@@ -1,4 +1,4 @@
-using Smart_Tools.WPF.Models;
+﻿using Smart_Tools.WPF.Models;
 
 namespace Smart_Tools.WPF.Controllers
 {
@@ -350,7 +350,7 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("shelves", "Shelves", 1, 0, 2, 1, Integer: true),
                 new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
                 new ParamSpec("base", "Plinth height", 100, 0, 150, 5),
-                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevel", "Front edge bevel", 3, 0, 10, 1),
                 new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
             },
             v =>
@@ -390,9 +390,9 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("doors", "Doors", 2, 0, 2, 1, Integer: true),
                 new ParamSpec("shelves", "Shelves", 2, 0, 4, 1, Integer: true),
                 new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
-                new ParamSpec("bevel", "Door edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevel", "Door edge bevel", 3, 0, 10, 1),
                 new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
-                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+                new ParamSpec("miter", "Mitred top corners", 1, 0, 1, 1, Integer: true),
             },
             v =>
             {
@@ -416,9 +416,9 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("drawers", "Drawers", 1, 0, 2, 1, Integer: true),
                 new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
                 new ParamSpec("base", "Base height", 80, 0, 150, 5),
-                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevel", "Front edge bevel", 3, 0, 10, 1),
                 new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
-                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+                new ParamSpec("miter", "Mitred top corners", 1, 0, 1, 1, Integer: true),
             },
             v =>
             {
@@ -465,9 +465,9 @@ namespace Smart_Tools.WPF.Controllers
                 new ParamSpec("drawers", "Middle drawers", 2, 0, 3, 1, Integer: true),
                 new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
                 new ParamSpec("base", "Base height", 80, 0, 150, 5),
-                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevel", "Front edge bevel", 3, 0, 10, 1),
                 new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
-                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+                new ParamSpec("miter", "Mitred top corners", 1, 0, 1, 1, Integer: true),
             },
             v =>
             {

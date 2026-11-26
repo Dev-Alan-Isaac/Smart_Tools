@@ -55,12 +55,12 @@
         <Grid Margin="16,8,16,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="OptionsColumn" Width="280" />
-                <ColumnDefinition Width="14" />
+                <ColumnDefinition x:Name="OptionsGapColumn" Width="14" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!--  ================= SIDEBAR =================  -->
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+            <Border x:Name="OptionsSidebar" Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -1014,6 +1014,36 @@
                                     Height="16"
                                     Kind="FitToScreenOutline" />
                             </Button>
+                            <Button
+                                x:Name="BtnFullView"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Padding="0"
+                                Click="BtnFullView_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_Modeler_FullViewTip}">
+                                <materialDesign:PackIcon
+                                    x:Name="IconFullView"
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ArrowExpand" />
+                            </Button>
+                            <Button
+                                x:Name="BtnToggleCutList"
+                                Width="32"
+                                Height="32"
+                                Margin="4,0,0,0"
+                                Padding="0"
+                                Click="BtnToggleCutList_Click"
+                                Style="{StaticResource ListToolButtonStyle}"
+                                ToolTip="{DynamicResource Str_Modeler_HideCutListTip}">
+                                <materialDesign:PackIcon
+                                    x:Name="IconToggleCutList"
+                                    Width="16"
+                                    Height="16"
+                                    Kind="ChevronRight" />
+                            </Button>
                             <controls:ExportButton
                                 x:Name="BtnExport"
                                 ctl:Tour.Key="Str_Tour_DimensionModeler_Export"
@@ -1052,8 +1082,8 @@
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="14" />
-                            <ColumnDefinition Width="300" />
+                            <ColumnDefinition x:Name="CutListGapColumn" Width="14" />
+                            <ColumnDefinition x:Name="CutListColumn" Width="300" />
                         </Grid.ColumnDefinitions>
 
                         <!--  The 3D view: drag to turn, right-drag to move, wheel to zoom. The lines are drawn over it from the same camera.  -->
@@ -1067,6 +1097,8 @@
                                 x:Name="StageHost"
                                 Background="Transparent"
                                 ClipToBounds="True"
+                                FocusVisualStyle="{x:Null}"
+                                Focusable="True"
                                 MouseDown="Stage_MouseDown"
                                 MouseMove="Stage_MouseMove"
                                 MouseUp="Stage_MouseUp"
@@ -1100,6 +1132,7 @@
 
                         <!--  The cut list: pick a row to see that board lit up and measured  -->
                         <Border
+                            x:Name="CutListPanel"
                             Grid.Column="2"
                             Padding="12"
                             Background="{DynamicResource RowBg}"
@@ -1125,7 +1158,7 @@
                                     IsReadOnly="True"
                                     MinRowHeight="34"
                                     SelectionChanged="DataGridCut_SelectionChanged"
-                                    SelectionMode="Single"
+                                    SelectionMode="Extended"
                                     ToolTip="{DynamicResource Str_Modeler_CutListTip}">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Width="40" Header="">

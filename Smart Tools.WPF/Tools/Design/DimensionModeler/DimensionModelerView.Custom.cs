@@ -92,6 +92,11 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z) for the custom piece, except while typing in a box (the box has its own undo).</summary>
         private void View_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (TryLeaveFullView(e.Key))
+            {
+                e.Handled = true;
+                return;
+            }
             if (!_isCustom || Keyboard.FocusedElement is TextBox || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) return;
             if (e.Key == System.Windows.Input.Key.Delete && Keyboard.Modifiers == ModifierKeys.None && _edit == null)
             {

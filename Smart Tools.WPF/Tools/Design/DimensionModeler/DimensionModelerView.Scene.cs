@@ -65,12 +65,16 @@ namespace Smart_Tools.WPF.Views
         private void RebuildScene()
         {
             var group = new Model3DGroup();
+            var paints = CurrentPaint();
             foreach (var part in Shown())
             {
                 if (_hidden.Contains(part.Name)) continue;
-                var mesh = new MeshGeometry3D();
+                // one mesh per colour: a board with a coloured face is drawn in two (or more) pieces
+                var meshes = new Dictionary<Color, MeshGeometry3D>();
                 foreach (var t in BoxMesh.Triangles(part))
                 {
+                    var colour = FaceColour(part, PiecePaint.FaceOf(part, t), paints);
+                    if (!meshes.TryGetValue(colour, out var mesh)) meshes[colour] = mesh = new MeshGeometry3D();
                     int at = mesh.Positions.Count;
                     foreach (var corner in new[] { t.A, t.B, t.C })
                     {
@@ -81,11 +85,14 @@ namespace Smart_Tools.WPF.Views
                     mesh.TriangleIndices.Add(at + 1);
                     mesh.TriangleIndices.Add(at + 2);
                 }
-                mesh.Freeze();
-                var brush = new SolidColorBrush(_selected.Contains(part.Name) ? SelectedColor : Wood[part.Kind]);
-                brush.Freeze();
-                var material = new DiffuseMaterial(brush);
-                group.Children.Add(new GeometryModel3D(mesh, material) { BackMaterial = material });
+                foreach (var (colour, mesh) in meshes)
+                {
+                    mesh.Freeze();
+                    var brush = new SolidColorBrush(colour);
+                    brush.Freeze();
+                    var material = new DiffuseMaterial(brush);
+                    group.Children.Add(new GeometryModel3D(mesh, material) { BackMaterial = material });
+                }
             }
             _pieceVisual.Content = group;
             _floorVisual.Content = BuildFloor();
@@ -162,6 +169,13 @@ namespace Smart_Tools.WPF.Views
         {
             _pressPoint = e.GetPosition(StageHost);
             _pressedEmpty = false;
+            StageHost.Focus();   // so Esc reaches the view (full view)
+            if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && BoardAt(_pressPoint) is { } board)
+            {
+                PickBoard(board, add: true);   // Ctrl+click: one more board picked (or one less), nothing is dragged
+                e.Handled = true;
+                return;
+            }
             if (e.ChangedButton == MouseButton.Left && _isCustom)
             {
                 if (PushAllBack()) return;   // edit the piece where it really is
@@ -211,8 +225,11 @@ namespace Smart_Tools.WPF.Views
             }
             var at = e.GetPosition(StageHost);
             bool rightClick = e.ChangedButton == MouseButton.Right && Math.Abs(at.X - _pressPoint.X) < 4 && Math.Abs(at.Y - _pressPoint.Y) < 4;
-            if (_pressedEmpty && e.ChangedButton == MouseButton.Left && Math.Abs(at.X - _pressPoint.X) < 4 && Math.Abs(at.Y - _pressPoint.Y) < 4)
+            bool leftClick = e.ChangedButton == MouseButton.Left && Math.Abs(at.X - _pressPoint.X) < 4 && Math.Abs(at.Y - _pressPoint.Y) < 4;
+            if (_pressedEmpty && leftClick)
                 ListParts.SelectedIndex = -1;
+            else if (leftClick && !_isCustom && _orbiting)
+                PickBoard(BoardAt(at), add: false);   // a preset: a plain click picks the board (or lets go on empty space)
             _pressedEmpty = false;
             _orbiting = _panning = false;
             StageHost.ReleaseMouseCapture();
@@ -225,13 +242,16 @@ namespace Smart_Tools.WPF.Views
             double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
             if (w < 40 || h < 40 || _model.Parts.Count == 0) return;
             var shown = Shown();
-            int index = PieceDrag.Pick(shown, _camera.Ray(at.X, at.Y, w, h), out _, p => _hidden.Contains(p.Name));
+            var ray = _camera.Ray(at.X, at.Y, w, h);
+            int index = PieceDrag.Pick(shown, ray, out double distance, p => _hidden.Contains(p.Name));
             if (index < 0 && _hidden.Count == 0) return;
 
             var menu = new ContextMenu { PlacementTarget = StageHost };
             if (index >= 0)
             {
                 string name = shown[index].Name;
+                AddGroupItems(menu, shown[index]);
+                AddPaintItems(menu, shown[index], PiecePaint.FaceAt(shown[index], ray.Origin + ray.Direction * distance));
                 if (shown[index].Group is { } group)
                 {
                     // the whole group: pull it out (or back in), or hide it

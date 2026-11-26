@@ -88,6 +88,7 @@ namespace Smart_Tools.WPF.Views
             ChkDimensions.IsChecked = _settings.ShowDimensions;
             PresetScale.Selected = NumberInput.Format(_settings.ScaleRatio);
             ShowPrintBoxes();
+            ApplyCutListShown();
             ShowMode();
             BuildParamRows();
             Rebuild(fit: true);
@@ -137,7 +138,7 @@ namespace Smart_Tools.WPF.Views
         /// <summary>Builds the piece from the sliders and brings everything that shows it up to date.</summary>
         private void Rebuild(bool fit = false)
         {
-            _model = _isCustom ? PieceEditor.ToModel(_customName, _customParts) : _template.Build(CurrentValues());
+            _model = _isCustom ? PieceEditor.ToModel(_customName, _customParts) : WithGroupChanges(_template.Build(CurrentValues()));
             _hidden.RemoveWhere(name => _model.Parts.All(p => p.Name != name));   // a board that is gone (or renamed) is no longer hidden
             RefreshGroups();
             TxtPieceName.Text = _isCustom ? _customName : Loc.T($"Str_Modeler_Template_{_template.Id}", _template.Name);
@@ -155,7 +156,6 @@ namespace Smart_Tools.WPF.Views
 
         private void RefreshCutList()
         {
-            string? keep = DataGridCut.SelectedItem is CutItem current ? current.Name : null;
             _refreshingCut = true;   // rebuilding the list must not read as "the picked row was cleared"
             try
             {
@@ -177,7 +177,8 @@ namespace Smart_Tools.WPF.Views
             TxtShowAll.Text = Loc.F("Str_Modeler_ShowAll", "Show all ({0} hidden)", _hidden.Count);
             double volumeCm3 = CutList.TotalVolumeMm3(_model) / 1000.0;
             TxtCutTotals.Text = Loc.F("Str_Modeler_CutTotals", "{0} boards in {1} cuts · {2} cm³ of material", _model.Parts.Count, _cutItems.Count, NumberInput.Format(Math.Round(volumeCm3)));
-            if (keep != null && _cutItems.FirstOrDefault(i => i.Name == keep) is { } again) DataGridCut.SelectedItem = again;
+            _selected.RemoveWhere(name => _model.Parts.All(p => p.Name != name));
+            ShowSelectionInCutList();   // the picked boards (one or several) stay lit in the rebuilt list
         }
 
         /// <summary>The dropdown shows the piece in use (without that being read as the user picking it).</summary>
@@ -324,7 +325,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (_refreshingCut) return;
             _selected.Clear();
-            if (DataGridCut.SelectedItem is CutItem item)
+            foreach (var item in DataGridCut.SelectedItems.OfType<CutItem>())   // Ctrl+click picks several rows
                 foreach (var name in item.PartNames) _selected.Add(name);
             RebuildScene();
             RedrawOverlay();
