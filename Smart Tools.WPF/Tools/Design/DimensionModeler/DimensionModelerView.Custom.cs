@@ -45,9 +45,13 @@ namespace Smart_Tools.WPF.Views
                 ["desk"] = MaterialDesignThemes.Wpf.PackIconKind.Desk,
                 ["desk-l"] = MaterialDesignThemes.Wpf.PackIconKind.DeskLamp,
                 ["shelf"] = MaterialDesignThemes.Wpf.PackIconKind.ViewAgendaOutline,
+                ["kitchen-base"] = MaterialDesignThemes.Wpf.PackIconKind.CountertopOutline,
+                ["wall-cabinet"] = MaterialDesignThemes.Wpf.PackIconKind.CupboardOutline,
+                ["wardrobe"] = MaterialDesignThemes.Wpf.PackIconKind.Wardrobe,
+                ["sideboard"] = MaterialDesignThemes.Wpf.PackIconKind.DresserOutline,
                 [CustomId] = MaterialDesignThemes.Wpf.PackIconKind.PencilRuler,
             };
-            ComboPiece.ItemsSource = new[] { "table", "chair", "bookshelf", "cabinet", "filing-cabinet", "door", "desk", "desk-l", "shelf", CustomId }
+            ComboPiece.ItemsSource = new[] { "table", "chair", "bookshelf", "cabinet", "filing-cabinet", "door", "desk", "desk-l", "shelf", "kitchen-base", "wall-cabinet", "wardrobe", "sideboard", CustomId }
                 .Select(id => new PieceChoice(id, Loc.T($"Str_Modeler_Template_{id}", id), icons[id])).ToList();
             ListParts.ItemsSource = _partRows;
             foreach (var kind in new[] { PartKind.Board, PartKind.Leg, PartKind.Panel, PartKind.Top })

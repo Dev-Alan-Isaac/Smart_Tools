@@ -44,7 +44,7 @@ namespace Smart_Tools.WPF.Controllers
 
     public static class PieceTemplates
     {
-        public static IReadOnlyList<PieceTemplate> All { get; } = new[] { Table(), Chair(), Bookshelf(), Cabinet(), FilingCabinet(), Door(), Desk(), DeskL(), Shelf() };
+        public static IReadOnlyList<PieceTemplate> All { get; } = new[] { Table(), Chair(), Bookshelf(), Cabinet(), FilingCabinet(), Door(), Desk(), DeskL(), Shelf(), KitchenBase(), WallCabinet(), Wardrobe(), Sideboard() };
 
         public static PieceTemplate? Find(string? id) => All.FirstOrDefault(t => t.Id == id);
 
@@ -215,22 +215,65 @@ namespace Smart_Tools.WPF.Controllers
                 int doors = (int)v["doors"];
 
                 var parts = Carcass(w, h, d - t, v["thickness"], (int)v["shelves"], v["base"], v["miter"] >= 0.5);
-                const double gap = 2;
-                const double knobFromEdge = 40;     // the knob hole sits this far from the edge opposite the hinge
-                double knob = v["knob"];
-                double doorW = doors == 0 ? 0 : (w - (doors - 1) * gap) / doors;
                 double doorH = h - lift;
-                for (int i = 0; i < doors; i++)
-                {
-                    // the first door is hinged on the left, so its knob is on the right; a second door is the mirror of it
-                    double u = i == 1 ? knobFromEdge : doorW - knobFromEdge;
-                    var door = P($"Door {i + 1}", i * (doorW + gap), lift, d - t, doorW, doorH, t, PartKind.Panel);
-                    var hole = new Hole(2, u, doorH / 2, knob);   // punched through the door's thickness (Z)
-                    door = FrontBevels(door, v["bevel"], v["bevelAngle"]) with { Group = $"Door {i + 1}" };
-                    parts.Add(knob >= PieceHoles.MinDiameter ? door with { Cuts = PieceHoles.Sanitize(door.Size, new[] { hole }).Where(h => PieceBevels.HoleIsClear(door.Size, h, door.Bevels)).ToList() } : door);
-                }
+                parts.AddRange(Doors(doors, 0, lift, w, doorH, d - t, t, v["knob"], doorH / 2, v["bevel"], v["bevelAngle"]));
                 return parts;
             });
+
+        private const double FrontGap = 2;          // between two doors or drawer fronts
+        private const double KnobFromEdge = 40;     // a door's knob hole sits this far from the edge opposite the hinge
+
+        /// <summary>
+        /// One door on the front: a panel in its own group ("Door k"), bevelled edges, and a knob hole at height
+        /// <paramref name="knobV"/> on the side away from the hinge.
+        /// </summary>
+        private static Part OneDoor(int k, double x, double y, double width, double height, double z, double t, bool knobOnRight, double knob, double knobV, double bevel, double angle)
+        {
+            var door = FrontBevels(P($"Door {k}", x, y, z, width, height, t, PartKind.Panel), bevel, angle) with { Group = $"Door {k}" };
+            double u = knobOnRight ? width - KnobFromEdge : KnobFromEdge;
+            return WithHole(door, new Hole(2, u, Math.Clamp(knobV, 0, height), knob));   // punched through the door's thickness (Z)
+        }
+
+        /// <summary>
+        /// <paramref name="count"/> doors side by side across a width: the first is hinged on the left (knob on the right),
+        /// the last of two or more is its mirror, any between open like the first.
+        /// </summary>
+        private static IEnumerable<Part> Doors(int count, double x, double y, double width, double height, double z, double t, double knob, double knobV, double bevel, double angle)
+        {
+            if (count <= 0) yield break;
+            double doorW = (width - (count - 1) * FrontGap) / count;
+            for (int i = 0; i < count; i++)
+                yield return OneDoor(i + 1, x + i * (doorW + FrontGap), y, doorW, height, z, t, !(count > 1 && i == count - 1), knob, knobV, bevel, angle);
+        }
+
+        /// <summary>
+        /// A drawer as one group: the front (with a handle hole) and, behind it, a box of bottom, two sides and back that
+        /// rides between <paramref name="innerX0"/> and <paramref name="innerX1"/> from <paramref name="boxY0"/> to
+        /// <paramref name="boxY1"/>, from just in front of the carcass back to the front.
+        /// </summary>
+        private static IEnumerable<Part> Drawer(string group, double frontX, double frontY, double frontW, double frontH, double z, double t,
+            double innerX0, double innerX1, double boxY0, double boxY1, double handle, double bevel, double angle)
+        {
+            const double slide = 12;                                            // room for the runners
+            double side = Math.Min(12, t);
+            double x0 = innerX0 + slide, x1 = innerX1 - slide, zb = BackThickness + 10;
+            var front = FrontBevels(P($"{group} Front", frontX, frontY, z, frontW, frontH, t, PartKind.Panel), bevel, angle);
+            yield return WithHole(front, new Hole(2, frontW / 2, frontH * 0.7, handle)) with { Group = group };
+            yield return P($"{group} Bottom", x0 + side, boxY0, zb, x1 - x0 - 2 * side, side, z - zb, PartKind.Board) with { Group = group };
+            yield return P($"{group} Side Left", x0, boxY0, zb, side, boxY1 - boxY0, z - zb, PartKind.Board) with { Group = group };
+            yield return P($"{group} Side Right", x1 - side, boxY0, zb, side, boxY1 - boxY0, z - zb, PartKind.Board) with { Group = group };
+            yield return P($"{group} Back", x0 + side, boxY0 + side, zb, x1 - x0 - 2 * side, boxY1 - boxY0 - side, side, PartKind.Board) with { Group = group };
+        }
+
+        /// <summary>Up to <paramref name="count"/> boards evenly spaced between two heights, fewer when they would sit closer than 20 mm.</summary>
+        private static IEnumerable<Part> EvenShelves(string name, int count, double x, double width, double y0, double y1, double z, double depth, double t)
+        {
+            int fit = Math.Max(0, (int)Math.Floor((y1 - y0 - 20) / (t + 20)));
+            int n = Math.Min(count, fit);
+            double gap = (y1 - y0 - n * t) / (n + 1);
+            for (int k = 1; k <= n; k++)
+                yield return P(n > 1 ? $"{name} {k}" : name, x, y0 + k * gap + (k - 1) * t, z, width, t, depth, PartKind.Board);
+        }
 
         // faces for bevels: 0 left, 1 right, 2 bottom, 3 top, 4 back, 5 front
         private const int FaceLeft = 0, FaceRight = 1, FaceBottom = 2, FaceTop = 3, FaceBack = 4, FaceFront = 5;
@@ -282,25 +325,183 @@ namespace Smart_Tools.WPF.Controllers
                 int n = (int)v["drawers"];
                 var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"], v["miter"] >= 0.5);
 
-                const double gap = 2, slide = 12;                               // between the fronts; room for the runners
                 double ih = h - 2 * t - lift;
                 double slot = ih / n;
-                double frontH = (h - lift - (n - 1) * gap) / n;
-                double side = Math.Min(12, t);
-                double x0 = t + slide, x1 = w - t - slide, zb = BackThickness + 10;
+                double frontH = (h - lift - (n - 1) * FrontGap) / n;
                 for (int i = 0; i < n; i++)
                 {
-                    int k = i + 1;
-                    var front = FrontBevels(P($"Drawer {k} Front", 0, lift + i * (frontH + gap), dc, w, frontH, t, PartKind.Panel), v["bevel"], v["bevelAngle"]);
-                    string group = $"Drawer {k}";   // front and box move, hide and pull out together
-                    parts.Add(WithHole(front, new Hole(2, w / 2, frontH * 0.7, v["handle"])) with { Group = group });
-
-                    // the box behind the front: it rides between the sides and touches the front
+                    // front and box move, hide and pull out together; the box rides between the sides and touches the front
                     double y0 = lift + t + i * slot + 5, y1 = lift + t + (i + 1) * slot - 5;
-                    parts.Add(P($"Drawer {k} Bottom", x0 + side, y0, zb, x1 - x0 - 2 * side, side, dc - zb, PartKind.Board) with { Group = group });
-                    parts.Add(P($"Drawer {k} Side Left", x0, y0, zb, side, y1 - y0, dc - zb, PartKind.Board) with { Group = group });
-                    parts.Add(P($"Drawer {k} Side Right", x1 - side, y0, zb, side, y1 - y0, dc - zb, PartKind.Board) with { Group = group });
-                    parts.Add(P($"Drawer {k} Back", x0 + side, y0 + side, zb, x1 - x0 - 2 * side, y1 - y0 - side, side, PartKind.Board) with { Group = group });
+                    parts.AddRange(Drawer($"Drawer {i + 1}", 0, lift + i * (frontH + FrontGap), w, frontH, dc, t, t, w - t, y0, y1, v["handle"], v["bevel"], v["bevelAngle"]));
+                }
+                return parts;
+            });
+
+        // ------------------------------------------------------ kitchen base cabinet
+        private static PieceTemplate KitchenBase() => new("kitchen-base", "Kitchen base cabinet",
+            new[]
+            {
+                new ParamSpec("width", "Width", 600, 300, 1200, 10),
+                new ParamSpec("height", "Height", 870, 700, 950, 5),
+                new ParamSpec("depth", "Depth", 580, 450, 650, 5),
+                new ParamSpec("thickness", "Board thickness", 18, 15, 25, 1),
+                new ParamSpec("drawer", "Drawer height", 150, 0, 250, 5),
+                new ParamSpec("doors", "Doors", 2, 1, 2, 1, Integer: true),
+                new ParamSpec("shelves", "Shelves", 1, 0, 2, 1, Integer: true),
+                new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
+                new ParamSpec("base", "Plinth height", 100, 0, 150, 5),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+            },
+            v =>
+            {
+                double w = v["width"], h = v["height"], d = v["depth"];
+                double t = Math.Min(v["thickness"], Math.Min(w / 8, h / 20));   // the same limits the carcass uses
+                double lift = Math.Min(v["base"], h / 6);
+                double dc = d - t;                                              // the fronts sit in front of the carcass
+                var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"]);
+
+                // a drawer at the top (under the worktop), the doors below it
+                double dh = Math.Min(v["drawer"], (h - lift) / 3);
+                bool drawer = dh >= 80;
+                double doorTop = drawer ? h - dh - FrontGap : h;
+                double ceiling = h - t;                                         // the lowest board above the cupboard space
+                if (drawer)
+                {
+                    double rail = h - dh - FrontGap / 2 - t / 2;                // the board between drawer and cupboard
+                    parts.Add(P("Rail", t, rail, BackThickness, w - 2 * t, t, dc - BackThickness, PartKind.Board));
+                    parts.AddRange(Drawer("Drawer", 0, h - dh, w, dh, dc, t, t, w - t, rail + t + 5, h - t - 5, v["knob"], v["bevel"], v["bevelAngle"]));
+                    ceiling = rail;
+                }
+                parts.AddRange(EvenShelves("Shelf", (int)v["shelves"], t, w - 2 * t, lift + t, ceiling, BackThickness, dc - BackThickness, t));
+                double doorH = doorTop - lift;
+                parts.AddRange(Doors((int)v["doors"], 0, lift, w, doorH, dc, t, v["knob"], doorH - 60, v["bevel"], v["bevelAngle"]));
+                return parts;
+            });
+
+        // ------------------------------------------------------------ wall cabinet
+        private static PieceTemplate WallCabinet() => new("wall-cabinet", "Wall cabinet",
+            new[]
+            {
+                new ParamSpec("width", "Width", 600, 300, 1200, 10),
+                new ParamSpec("height", "Height", 700, 300, 1000, 10),
+                new ParamSpec("depth", "Depth", 330, 250, 400, 5),
+                new ParamSpec("thickness", "Board thickness", 18, 15, 25, 1),
+                new ParamSpec("doors", "Doors", 2, 0, 2, 1, Integer: true),
+                new ParamSpec("shelves", "Shelves", 2, 0, 4, 1, Integer: true),
+                new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
+                new ParamSpec("bevel", "Door edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+            },
+            v =>
+            {
+                double w = v["width"], h = v["height"], d = v["depth"];
+                double t = Math.Min(v["thickness"], Math.Min(w / 8, h / 20));
+                var parts = Carcass(w, h, d - t, v["thickness"], (int)v["shelves"], 0, v["miter"] >= 0.5);
+                // it hangs above your head, so the knob holes are near the bottom of the doors
+                parts.AddRange(Doors((int)v["doors"], 0, 0, w, h, d - t, t, v["knob"], 60, v["bevel"], v["bevelAngle"]));
+                return parts;
+            });
+
+        // ---------------------------------------------------------------- wardrobe
+        private static PieceTemplate Wardrobe() => new("wardrobe", "Wardrobe",
+            new[]
+            {
+                new ParamSpec("width", "Width", 1000, 600, 2000, 10),
+                new ParamSpec("height", "Height", 2000, 1600, 2400, 10),
+                new ParamSpec("depth", "Depth", 600, 500, 700, 5),
+                new ParamSpec("thickness", "Board thickness", 18, 15, 25, 1),
+                new ParamSpec("doors", "Doors", 2, 1, 3, 1, Integer: true),
+                new ParamSpec("drawers", "Drawers", 1, 0, 2, 1, Integer: true),
+                new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
+                new ParamSpec("base", "Base height", 80, 0, 150, 5),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+            },
+            v =>
+            {
+                double w = v["width"], h = v["height"], d = v["depth"];
+                double t = Math.Min(v["thickness"], Math.Min(w / 8, h / 20));
+                double lift = Math.Min(v["base"], h / 6);
+                double dc = d - t;
+                int n = (int)v["drawers"];
+                const double drawerH = 200;
+                double iw = w - 2 * t, zd = dc - BackThickness;
+                var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"], v["miter"] >= 0.5);
+
+                // drawers at the bottom with a board over them; the doors cover the hanging space above
+                double doorY = lift + n * (drawerH + FrontGap);
+                if (n > 0)
+                {
+                    double divider = doorY - FrontGap / 2 - t / 2;
+                    parts.Add(P("Divider", t, divider, BackThickness, iw, t, zd, PartKind.Board));
+                    double slot = (divider - lift - t) / n;
+                    for (int i = 0; i < n; i++)
+                        parts.AddRange(Drawer($"Drawer {i + 1}", 0, lift + i * (drawerH + FrontGap), w, drawerH, dc, t, t, w - t,
+                            lift + t + i * slot + 5, lift + t + (i + 1) * slot - 5, v["knob"], v["bevel"], v["bevelAngle"]));
+                }
+
+                // a hat shelf under the top and the hanging rail under that, both from side to side
+                double hat = h - 2 * t - 250;
+                parts.Add(P("Hat Shelf", t, hat, BackThickness, iw, t, zd, PartKind.Board));
+                const double railSize = 25;
+                parts.Add(P("Hanging Rail", t, hat - 80 - railSize, BackThickness + (zd - railSize) / 2, iw, railSize, railSize, PartKind.Leg));
+
+                double doorH = h - doorY;
+                parts.AddRange(Doors((int)v["doors"], 0, doorY, w, doorH, dc, t, v["knob"], doorH / 2, v["bevel"], v["bevelAngle"]));
+                return parts;
+            });
+
+        // ------------------------------------------------------ sideboard / TV unit
+        private static PieceTemplate Sideboard() => new("sideboard", "Sideboard / TV unit",
+            new[]
+            {
+                new ParamSpec("width", "Width", 1600, 900, 2400, 10),
+                new ParamSpec("height", "Height", 600, 400, 900, 10),
+                new ParamSpec("depth", "Depth", 450, 350, 550, 5),
+                new ParamSpec("thickness", "Board thickness", 18, 15, 25, 1),
+                new ParamSpec("drawers", "Middle drawers", 2, 0, 3, 1, Integer: true),
+                new ParamSpec("knob", "Knob hole", 8, 0, 40, 1),
+                new ParamSpec("base", "Base height", 80, 0, 150, 5),
+                new ParamSpec("bevel", "Front edge bevel", 0, 0, 10, 1),
+                new ParamSpec("bevelAngle", "Bevel angle", 45, 15, 75, 5),
+                new ParamSpec("miter", "Mitred top corners", 0, 0, 1, 1, Integer: true),
+            },
+            v =>
+            {
+                double w = v["width"], h = v["height"], d = v["depth"];
+                double t = Math.Min(v["thickness"], Math.Min(w / 8, h / 20));
+                double lift = Math.Min(v["base"], h / 6);
+                double dc = d - t, zd = dc - BackThickness;
+                int n = (int)v["drawers"];
+                var parts = Carcass(w, h, dc, v["thickness"], 0, v["base"], v["miter"] >= 0.5);
+
+                // three bays split by two upright boards: a door on each end, drawers (or an open shelf) in the middle
+                double inner = h - 2 * t - lift;
+                double bay = (w - 4 * t) / 3;
+                double x1 = t + bay, x2 = x1 + t + bay;                          // left edge of each divider
+                parts.Add(P("Divider Left", x1, lift + t, BackThickness, t, inner, zd, PartKind.Panel));
+                parts.Add(P("Divider Right", x2, lift + t, BackThickness, t, inner, zd, PartKind.Panel));
+
+                double frontH = h - lift;
+                double split1 = x1 + t / 2, split2 = x2 + t / 2;                 // fronts meet over the middle of a divider
+                double half = FrontGap / 2;
+                parts.Add(OneDoor(1, 0, lift, split1 - half, frontH, dc, t, true, v["knob"], frontH / 2, v["bevel"], v["bevelAngle"]));
+                parts.Add(OneDoor(2, split2 + half, lift, w - split2 - half, frontH, dc, t, false, v["knob"], frontH / 2, v["bevel"], v["bevelAngle"]));
+
+                double mx = split1 + half, mw = split2 - half - mx;
+                if (n == 0)
+                {
+                    parts.AddRange(EvenShelves("Open Shelf", 1, x1 + t, bay, lift + t, h - t, BackThickness, zd, t));
+                }
+                else
+                {
+                    double dh = (frontH - (n - 1) * FrontGap) / n, slot = inner / n;
+                    for (int i = 0; i < n; i++)
+                        parts.AddRange(Drawer($"Drawer {i + 1}", mx, lift + i * (dh + FrontGap), mw, dh, dc, t, x1 + t, x2,
+                            lift + t + i * slot + 5, lift + t + (i + 1) * slot - 5, v["knob"], v["bevel"], v["bevelAngle"]));
                 }
                 return parts;
             });

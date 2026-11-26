@@ -237,7 +237,7 @@ Smart Tools has **118 tools** in 21 sidebar categories. Every tool opens inside 
 
 | Tool | Id | What it does |
 |---|---|---|
-| **Dimension Modeler** | `dimension-modeler` | Model a table, chair, bookshelf, cabinet, filing cabinet, door, desk, L-shaped desk or shelf (or your own piece) from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing |
+| **Dimension Modeler** | `dimension-modeler` | Model a table, chair, bookshelf, cabinet, filing cabinet, door, desk, L-shaped desk, shelf, kitchen base cabinet, wall cabinet, wardrobe or sideboard / TV unit (or your own piece) from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing |
 
 ### Utilities
 *Everyday helpers*
