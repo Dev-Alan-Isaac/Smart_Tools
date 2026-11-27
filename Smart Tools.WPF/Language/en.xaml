@@ -3668,7 +3668,7 @@
     <system:String x:Key="Str_Win_Maximize">Maximize or restore</system:String>
     <system:String x:Key="Str_Win_Close">Close</system:String>
     <system:String x:Key="Str_Home_TypePartOfA">Type part of a name or what you want to do - Enter opens the first match, Esc clears</system:String>
-    <system:String x:Key="Str_Home_Recent">RECENT</system:String>
+    <system:String x:Key="Str_Home_Recent">Recent</system:String>
     <system:String x:Key="Str_Palette_Home">Home - browse all tools</system:String>
     <system:String x:Key="Str_Palette_Settings">Settings</system:String>
     <system:String x:Key="Str_Palette_Theme">Change theme (Light, Dark, Glass)</system:String>
@@ -3708,7 +3708,7 @@
     <system:String x:Key="Str_Rel_2_1_0_i">Timer &amp; Stopwatch has mode tabs and a choice of alert sounds, including your own file.</system:String>
     <system:String x:Key="Str_Rel_2_1_0_j">Services now keep their running/stopped state up to date on their own.</system:String>
     <system:String x:Key="Str_Rel_2_1_0_k">Log Viewer reopens the files you had open; Send to Phone shows the text you receive.</system:String>
-    <system:String x:Key="Str_Home_Favorites">FAVORITES</system:String>
+    <system:String x:Key="Str_Home_Favorites">Favorites</system:String>
     <system:String x:Key="Str_Home_FavoritesHint">Right-click any tool and choose Add to favorites to keep it here.</system:String>
     <system:String x:Key="Str_Home_AddFavorite">Add to favorites</system:String>
     <system:String x:Key="Str_Home_RemoveFavorite">Remove from favorites</system:String>
@@ -6854,7 +6854,7 @@
     <system:String x:Key="Str_FrameExtractor_MsgReading">Reading the video...</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgMostMoments">That is the most moments I can take ({0}).</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgPictureFailed">The picture couldn't be shown.</system:String>
-    <system:String x:Key="Str_FrameExtractor_MsgAddToStart">Add videos or folders on the left to start.</system:String>
+    <system:String x:Key="Str_FrameExtractor_MsgAddToStart">Add videos or folders below to start.</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgCantSave">Can't save there: {0}</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgChooseFolder">Choose a folder to save the frames into first.</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgProgress">Video {0} of {1}: frame {2} of {3}...</system:String>
@@ -7118,7 +7118,7 @@
     <system:String x:Key="Str_Shell_OpenFailed">"{0}" couldn't be opened:</system:String>
     <system:String x:Key="Str_Shell_ConfirmExitText">Are you sure you want to close Smart Tools?</system:String>
     <system:String x:Key="Str_Shell_ConfirmExitTitle">Confirm exit</system:String>
-    <system:String x:Key="Str_Home_ToolCount">{0} tools in {1} sections - pick one, or search.</system:String>
+    <system:String x:Key="Str_Home_ToolCount">{0} tools in {1} sections. Pick one, or type what you want to do.</system:String>
     <system:String x:Key="Str_Home_ResultsTitle">{0} {1} for "{2}" - Enter opens the first</system:String>
     <system:String x:Key="Str_Home_NoResults">No tool matches "{0}"</system:String>
 
@@ -10411,7 +10411,7 @@
     <system:String x:Key="Str_FrameExtractor_SaveFramesTo">Save frames to</system:String>
     <system:String x:Key="Str_FrameExtractor_TakeFrames">Take frames</system:String>
     <system:String x:Key="Str_FrameExtractor_VideoFrames">VIDEO FRAMES</system:String>
-    <system:String x:Key="Str_FrameExtractor_AddVideosOrFolders">Add videos or folders on the left to start.</system:String>
+    <system:String x:Key="Str_FrameExtractor_AddVideosOrFolders">Add videos or folders below to start.</system:String>
     <system:String x:Key="Str_FrameExtractor_VideosYouAddShow">Videos you add show here. Click one to see it and pick a moment.</system:String>
     <system:String x:Key="Str_FrameExtractor_ChooseAMoment">Choose a moment</system:String>
     <system:String x:Key="Str_FrameExtractor_ClickAVideoIn">Click a video in the list to see it here.</system:String>
@@ -12317,7 +12317,9 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_MdHtml_JsPlaceholder">Write the page's script here (JavaScript). It runs after the page is built.</system:String>
     <system:String x:Key="Str_ImageEditor_Undo">Undo (Ctrl+Z)</system:String>
     <system:String x:Key="Str_ImageEditor_Redo">Redo (Ctrl+Y)</system:String>
-    <system:String x:Key="Str_Shell_Back">Back</system:String>
+    <system:String x:Key="Str_Shell_Back">Back</system:String>
+    <system:String x:Key="Str_Shell_Search">Search tools…</system:String>
+    <system:String x:Key="Str_Shell_SearchTip">Find any tool by its name or by what it does (Ctrl+K)</system:String>
     <system:String x:Key="Str_GameCtl_LayoutHeader">Detected layout</system:String>
     <system:String x:Key="Str_GameCtl_LayoutXbox">Xbox layout</system:String>
     <system:String x:Key="Str_GameCtl_LayoutPlayStation">PlayStation layout</system:String>
@@ -12799,4 +12801,8 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_PlanEmpty">Add boards to see what fits the bed.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Title">Boards</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Text">Add boards and set where each one goes and how big it is. Pick one to light it up in 3D. The pill warns about boards that overlap or float loose.</system:String>
+    <system:String x:Key="Str_Home_GoodMorning">Good morning</system:String>
+    <system:String x:Key="Str_Home_GoodAfternoon">Good afternoon</system:String>
+    <system:String x:Key="Str_Home_GoodEvening">Good evening</system:String>
+    <system:String x:Key="Str_Home_AllSections">All</system:String>
 </ResourceDictionary>

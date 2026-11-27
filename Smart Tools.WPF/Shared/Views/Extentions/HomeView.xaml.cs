@@ -1,5 +1,6 @@
-﻿using Smart_Tools.WPF.Controllers;
+using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Controls;
+using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Models;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,102 +11,160 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MenuItem = System.Windows.Controls.MenuItem;
 using Orientation = System.Windows.Controls.Orientation;
 using Panel = System.Windows.Controls.Panel;
+using RadioButton = System.Windows.Controls.RadioButton;
+using TextBlock = System.Windows.Controls.TextBlock;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Smart_Tools.WPF.Views
 {
     /// <summary>
-    /// Home page - UI only. Every section is a card of its tools (laid out
-    /// in as many columns as fit, shortest column first), with search and
-    /// Recent on top. The list itself is <see cref="ToolCatalogManager"/>.
+    /// Home page - UI only. A greeting with the search, Favorites and Recent as small tiles, a row of section chips
+    /// (All or one section) and every tool as an even tile under its section's heading. Tile widths are worked out
+    /// from the page width so a row is always filled edge to edge. The list itself is <see cref="ToolCatalogManager"/>.
     /// Clicking a tool raises <see cref="ToolRequested"/>; MainWindow opens it.
     /// </summary>
     public partial class HomeView : UserControl
     {
-        private const double CardMinWidth = 330;
-        private const double ColumnGap = 14;
+        private const double TileMinWidth = 270;
+        private const double QuickTileMinWidth = 200;
+        private const double TileGap = 10;          // the right margin every tile carries
+        private const double PageSideMargins = 28 + 18;
 
-        private readonly List<ContentControl> _cards = new();
-        private int _columns;
+        public static readonly DependencyProperty TileWidthProperty =
+            DependencyProperty.Register(nameof(TileWidth), typeof(double), typeof(HomeView), new PropertyMetadata(TileMinWidth + TileGap));
+
+        public static readonly DependencyProperty QuickTileWidthProperty =
+            DependencyProperty.Register(nameof(QuickTileWidth), typeof(double), typeof(HomeView), new PropertyMetadata(QuickTileMinWidth + 8));
+
+        /// <summary>Width of one tool tile, its gap included (bound by the tile WrapPanels).</summary>
+        public double TileWidth { get => (double)GetValue(TileWidthProperty); set => SetValue(TileWidthProperty, value); }
+
+        /// <summary>Width of one Favorites / Recent tile, its gap included.</summary>
+        public double QuickTileWidth { get => (double)GetValue(QuickTileWidthProperty); set => SetValue(QuickTileWidthProperty, value); }
+
+        private string _sectionFilter = "";          // "" = all sections
         private bool _loadedOnce;
 
         /// <summary>The tool id to open.</summary>
         public event Action<string>? ToolRequested;
 
+        /// <summary>Toxy's name was typed in the search (the memorial easter egg).</summary>
+        public event Action? MemorialRequested;
+
         public HomeView()
         {
             InitializeComponent();
             AddHandler(ContextMenuOpeningEvent, new ContextMenuEventHandler(ToolButton_ContextMenuOpening));
-            UpdateToolCount();
-            BuildCards();
+            UpdateTexts();
+            BuildSectionChips();
+            ShowSections();
         }
 
         private string S(string key, string fallback) => TryFindResource(key) as string ?? fallback;
 
-        private void UpdateToolCount() =>
-            TxtToolCount.Text = string.Format(S("Str_Home_ToolCount", "{0} tools in {1} sections - pick one, or search."),
-                ToolCatalogManager.Tools.Count, ToolCatalogManager.Categories.Count);
-
-        private void BuildCards()
+        private void UpdateTexts()
         {
-            var template = (DataTemplate)FindResource("CategoryCardTemplate");
-            _cards.Clear();
-            foreach (var category in ToolCatalogManager.Categories)
-                _cards.Add(new ContentControl { Content = category, ContentTemplate = template, Focusable = false });
+            int hour = DateTime.Now.Hour;
+            TxtGreeting.Text = hour < 12 ? S("Str_Home_GoodMorning", "Good morning")
+                             : hour < 19 ? S("Str_Home_GoodAfternoon", "Good afternoon")
+                             : S("Str_Home_GoodEvening", "Good evening");
+            TxtToolCount.Text = string.Format(S("Str_Home_ToolCount", "{0} tools in {1} sections. Pick one, or type what you want to do."),
+                ToolCatalogManager.Tools.Count, ToolCatalogManager.Categories.Count);
         }
 
+        /// <summary>One chip per section plus "All"; the chosen one filters the tiles below.</summary>
+        private void BuildSectionChips()
+        {
+            SectionChips.Children.Clear();
+            SectionChips.Children.Add(MakeChip("", S("Str_Home_AllSections", "All"), PackIconKind.ViewGridOutline));
+            foreach (var category in ToolCatalogManager.Categories)
+            {
+                var kind = Enum.TryParse<PackIconKind>(category.Icon, out var k) ? k : PackIconKind.Circle;
+                SectionChips.Children.Add(MakeChip(category.Id, category.Title, kind));
+            }
+        }
+
+        private RadioButton MakeChip(string id, string title, PackIconKind icon)
+        {
+            var glyph = new PackIcon { Kind = icon, Width = 14, Height = 14, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center };
+            var text = new TextBlock { Text = title, VerticalAlignment = VerticalAlignment.Center };
+            var chip = new RadioButton
+            {
+                GroupName = "HomeSections",
+                Tag = id,
+                IsChecked = id == _sectionFilter,
+                Content = new StackPanel { Orientation = Orientation.Horizontal, Children = { glyph, text } },
+            };
+            chip.SetResourceReference(StyleProperty, "SectionChipStyle");
+            chip.Checked += (_, _) =>
+            {
+                if (_sectionFilter == id) return;
+                _sectionFilter = id;
+                ShowSections();
+                UiMotion.FadeIn(CardsHost, 6);
+            };
+            return chip;
+        }
+
+        private void ShowSections() =>
+            CardsHost.ItemsSource = _sectionFilter.Length == 0
+                ? ToolCatalogManager.Categories
+                : ToolCatalogManager.Categories.Where(c => c.Id == _sectionFilter).ToList();
+
         /// <summary>
-        /// A new language: tool and section names are plain properties (they don't notify), so the cards and the
-        /// search results are rebuilt. Called by MainWindow from LanguageManager.Changed.
+        /// A new language: tool and section names are plain properties (they don't notify), so the chips, the sections,
+        /// Favorites, Recent and the search results are rebuilt. Called by MainWindow from LanguageManager.Changed.
         /// </summary>
         public void RefreshLanguage()
         {
-            UpdateToolCount();
-            BuildCards();
-            LayoutCards(ActualWidth, force: true);
+            UpdateTexts();
+            BuildSectionChips();
+            CardsHost.ItemsSource = null;
+            ShowSections();
+            FavoritesList.ItemsSource = ToolCatalogManager.FavoriteTools(_favoriteIds);
+            RecentList.ItemsSource = null;
+            ShowRecent();
             if (TxtSearch.Text.Trim().Length > 0) TxtSearch_TextChanged(TxtSearch, null!);
         }
 
         private void Root_Loaded(object sender, RoutedEventArgs e)
         {
-            LayoutCards(ActualWidth, force: true);
+            UpdateTexts();
+            FitTiles(ActualWidth);
             if (_loadedOnce) return;
             _loadedOnce = true;
-            for (int i = 0; i < CardsHost.Children.Count; i++)
-                if (CardsHost.Children[i] is FrameworkElement column) UiMotion.FadeIn(column, 8 + i * 4);
+            UiMotion.FadeIn(PageStack, 8);
         }
 
-        private void Root_SizeChanged(object sender, SizeChangedEventArgs e) => LayoutCards(e.NewSize.Width, force: false);
+        private void Root_SizeChanged(object sender, SizeChangedEventArgs e) => FitTiles(e.NewSize.Width);
 
-        /// <summary>Puts the section cards into as many columns as fit, each card in the currently shortest column.</summary>
-        private void LayoutCards(double width, bool force)
+        /// <summary>
+        /// Fills each row: as many tiles as fit at their minimum width, stretched to share what is left. Favorites and
+        /// Recent sit side by side on a wide page and one above the other on a narrow one.
+        /// </summary>
+        private void FitTiles(double width)
         {
-            double usable = Math.Max(0, width - 32);
-            int columns = Math.Clamp((int)((usable + ColumnGap) / (CardMinWidth + ColumnGap)), 1, 4);
-            if (!force && columns == _columns) return;
-            _columns = columns;
+            if (width <= 0) return;
+            double usable = Math.Max(0, Math.Min(width - PageSideMargins - SystemParameters.VerticalScrollBarWidth, PageStack.MaxWidth));
+            int columns = Math.Max(1, (int)(usable / (TileMinWidth + TileGap)));
+            TileWidth = Math.Floor(usable / columns);
 
-            foreach (var card in _cards)
-                if (card.Parent is Panel old) old.Children.Remove(card);
-            CardsHost.Children.Clear();
-            CardsHost.ColumnDefinitions.Clear();
-
-            var stacks = new StackPanel[columns];
-            var heights = new double[columns];
-            for (int c = 0; c < columns; c++)
+            bool recentShown = RecentPanel.Visibility == Visibility.Visible;
+            bool sideBySide = recentShown && usable >= 4 * (QuickTileMinWidth + 8);
+            if (QuickRow.RowDefinitions.Count == 0)
             {
-                CardsHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                stacks[c] = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(c == 0 ? 0 : ColumnGap / 2, 0, c == columns - 1 ? 0 : ColumnGap / 2, 0) };
-                Grid.SetColumn(stacks[c], c);
-                CardsHost.Children.Add(stacks[c]);
+                QuickRow.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+                QuickRow.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             }
+            Grid.SetColumn(RecentPanel, sideBySide ? 1 : 0);
+            Grid.SetRow(RecentPanel, sideBySide ? 0 : 1);
+            RecentPanel.Margin = sideBySide ? new Thickness(0) : new Thickness(0, 8, 0, 0);
+            FavoritesPanel.Margin = sideBySide ? new Thickness(0, 0, 10, 0) : new Thickness(0);
+            RecentColumn.Width = sideBySide ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
 
-            for (int i = 0; i < _cards.Count; i++)
-            {
-                int target = Array.IndexOf(heights, heights.Min());
-                stacks[target].Children.Add(_cards[i]);
-                heights[target] += 90 + 46 * ToolCatalogManager.Categories[i].Tools.Count;   // header + rows (estimate)
-            }
+            double half = sideBySide ? (usable - 10) / 2 : usable;
+            int quickColumns = Math.Max(1, (int)(half / (QuickTileMinWidth + 8)));
+            QuickTileWidth = Math.Floor(half / quickColumns);
         }
 
         // =================================================================
@@ -122,7 +181,7 @@ namespace Smart_Tools.WPF.Views
             _favoriteIds = ids.ToList();
             var tools = ToolCatalogManager.FavoriteTools(ids);
             FavoritesList.ItemsSource = tools;
-            TxtNoFavorites.Visibility = tools.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            TxtNoFavoritesBox.Visibility = tools.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             ShowRecent();
         }
 
@@ -179,6 +238,7 @@ namespace Smart_Tools.WPF.Views
             var shown = _recent.Where(t => !_favoriteIds.Contains(t.Id)).ToList();
             RecentList.ItemsSource = shown;
             RecentPanel.Visibility = shown.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            FitTiles(ActualWidth);
         }
 
         // =================================================================
@@ -202,6 +262,12 @@ namespace Smart_Tools.WPF.Views
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             string query = TxtSearch.Text.Trim();
+            if (MemorialEgg.Matches(query))
+            {
+                TxtSearch.Clear();   // runs this handler again with an empty box, which restores the page
+                MemorialRequested?.Invoke();
+                return;
+            }
             bool searching = query.Length > 0;
             BtnClearSearch.Visibility = searching ? Visibility.Visible : Visibility.Collapsed;
 
@@ -211,12 +277,12 @@ namespace Smart_Tools.WPF.Views
                 ResultsList.ItemsSource = null;
                 ResultsPanel.Visibility = Visibility.Collapsed;
                 NoResultsPanel.Visibility = Visibility.Collapsed;
-                if (CardsHost.Visibility != Visibility.Visible) UiMotion.FadeVisibility(CardsHost, true);
+                if (BrowsePanel.Visibility != Visibility.Visible) UiMotion.FadeVisibility(BrowsePanel, true);
                 return;
             }
 
             _matches = ToolCatalogManager.Search(query);
-            CardsHost.Visibility = Visibility.Collapsed;
+            BrowsePanel.Visibility = Visibility.Collapsed;
             ResultsList.ItemsSource = _matches;
             ResultsPanel.Visibility = _matches.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             NoResultsPanel.Visibility = _matches.Count > 0 ? Visibility.Collapsed : Visibility.Visible;

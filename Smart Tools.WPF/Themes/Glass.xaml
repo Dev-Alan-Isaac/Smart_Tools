@@ -160,10 +160,7 @@
     <SolidColorBrush x:Key="AccentColorPressed" Color="#4670C9" />
     <SolidColorBrush x:Key="AccentColorSubtle" Color="#1C2A47" />
 
-    <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#6E96EE" />
-        <GradientStop Offset="1" Color="#3D62C4" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="AccentGradient" Color="#6E96EE" />
 
     <!--
         ============ NEW: ELEVATION ============
@@ -174,15 +171,15 @@
     -->
     <DropShadowEffect
         x:Key="CardElevation"
-        BlurRadius="24"
+        BlurRadius="16"
         Direction="270"
         Opacity="0.22"
-        ShadowDepth="4"
+        ShadowDepth="2"
         Color="#000000" />
 
     <DropShadowEffect
         x:Key="ButtonElevation"
-        BlurRadius="14"
+        BlurRadius="16"
         Direction="270"
         Opacity="0.35"
         ShadowDepth="2"
@@ -193,7 +190,7 @@
         shared Effect resource. Lighter than Light.xaml's version so the
         hover glow still reads against a near-black card.
     -->
-    <Color x:Key="ButtonHoverGlowColor">#6E96EE</Color>
+    <Color x:Key="ButtonHoverGlowColor">#00000000</Color>
 
     <!--
         ============ NEW: FILLS, DANGER, SCROLLBAR ============
@@ -216,48 +213,21 @@
     <SolidColorBrush x:Key="GlassHostBase" Color="#05101826" />
 
     <!--  Glass sidebar: only a faint sheen over the window's frost, so it keeps the same base colour as the title bar and content  -->
-    <LinearGradientBrush x:Key="SidebarBg" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#12FFFFFF" />
-        <GradientStop Offset="1" Color="#08FFFFFF" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="SidebarBg" Color="#12FFFFFF" />
 
     <!--
         ============ MODERN LOOK (soft gradients) ============
         Cards: faint vertical gradient + lit top edge. Primary actions: AccentFillGradient (white text stays >= 4.5:1).
         Calm zones (inputs, rows, charts, popups) stay solid. Same keys in Light, Dark and Glass.
     -->
-    <LinearGradientBrush x:Key="CardBgGradient" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#4AFFFFFF" />
-        <GradientStop Offset="1" Color="#36FFFFFF" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="CardBorderGradient" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#4DFFFFFF" />
-        <GradientStop Offset="1" Color="#26FFFFFF" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="ContentBgGradient" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#00000000" />
-        <GradientStop Offset="1" Color="#00000000" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="SidebarCardGradient" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#323B4F" />
-        <GradientStop Offset="1" Color="#2A3345" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="HeaderGradient" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#4AFFFFFF" />
-        <GradientStop Offset="1" Color="#36FFFFFF" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="AccentFillGradient" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#4F7AD6" />
-        <GradientStop Offset="1" Color="#3A5FBF" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="AccentFillGradientHover" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#6089E0" />
-        <GradientStop Offset="1" Color="#4A70CF" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="AccentFillGradientPressed" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#3F68C4" />
-        <GradientStop Offset="1" Color="#2F52AB" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="CardBgGradient" Color="#4AFFFFFF" />
+    <SolidColorBrush x:Key="CardBorderGradient" Color="#4DFFFFFF" />
+    <SolidColorBrush x:Key="ContentBgGradient" Color="#00000000" />
+    <SolidColorBrush x:Key="SidebarCardGradient" Color="#323B4F" />
+    <SolidColorBrush x:Key="HeaderGradient" Color="#4AFFFFFF" />
+    <SolidColorBrush x:Key="AccentFillGradient" Color="#4F7AD6" />
+    <SolidColorBrush x:Key="AccentFillGradientHover" Color="#6089E0" />
+    <SolidColorBrush x:Key="AccentFillGradientPressed" Color="#3F68C4" />
 
 
     <!--  Fill of the datagrid header bar: a step stronger than the card, tinted toward the accent  -->

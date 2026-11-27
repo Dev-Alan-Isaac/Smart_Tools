@@ -591,6 +591,8 @@ namespace Smart_Tools.WPF.Views
         {
             _busy = busy;
             SidebarStack.IsEnabled = !busy;
+            InputCard.IsEnabled = !busy;
+            OutputCard.IsEnabled = !busy;
             VideoList.IsEnabled = !busy;
             OutputCard.IsLocked = busy;
             RunProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;

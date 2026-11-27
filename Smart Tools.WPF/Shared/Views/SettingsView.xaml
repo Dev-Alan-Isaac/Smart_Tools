@@ -24,9 +24,9 @@
 
         <!--  Sidebar section link  -->
         <Style x:Key="NavButtonStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{DynamicResource SidebarText}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="Padding" Value="14,9" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
@@ -36,7 +36,7 @@
                     <ControlTemplate TargetType="RadioButton">
                         <Border
                             x:Name="Bd"
-                            Margin="0,0,0,4"
+                            Margin="0,0,0,2"
                             Background="Transparent"
                             CornerRadius="8">
                             <Grid>
@@ -56,10 +56,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
                                 <Setter TargetName="Indicator" Property="Opacity" Value="1" />
                                 <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
                             </Trigger>
@@ -767,7 +767,7 @@
 
             <!--  ================= SIDEBAR =================  -->
 
-            <Border Grid.Column="0" Style="{StaticResource SidebarPanelStyle}">
+            <Border Grid.Column="0" Background="Transparent">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -782,7 +782,7 @@
                             Click="BtnCollapseOptions_Click"
                             Cursor="Hand"
                             FocusVisualStyle="{x:Null}"
-                            Foreground="{DynamicResource SidebarText}"
+                            Foreground="{DynamicResource TextSecondary}"
                             ToolTip="{DynamicResource Str_Settings_SectionsTooltip}">
                             <Button.Style>
                                 <Style TargetType="Button">
@@ -820,7 +820,7 @@
                         <Separator
                             x:Name="SepHeader"
                             Margin="16,4"
-                            Style="{StaticResource SidebarSeparatorStyle}" />
+                            Visibility="Hidden" />
                     </StackPanel>
 
                     <ScrollViewer
@@ -1187,11 +1187,11 @@
                 Grid.Column="2"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <Grid>
+                <Grid Margin="0,0,8,0">
 
                     <!--  ============ General ============  -->
                     <StackPanel x:Name="PanelGeneral">
-                        <Border Style="{StaticResource CardStyle}">
+                        <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
                             <StackPanel>
                                 <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>

@@ -14,11 +14,25 @@ Standing instruction from Alan: **every view gets this treatment** – friendly,
 - Namespaces: `Smart_Tools.WPF.Controllers`, `Smart_Tools.WPF.Models`. Types several tools share (e.g. `RgbColor`, `ColorManager.TryHexToRgb` used by Barcode/QR) live there too - never in a tool-specific sub-namespace.
 - Keep WPF drawing out of engine files: split a manager into `X.cs` (pure, unit-tested) and `X.Render.cs` (partial, WPF) so the logic compiles in a plain net8.0 test project. The project also references WinForms, so alias clashing names (`MessageBox`, `SaveFileDialog`, `Point`, `Path`, `KeyEventArgs`, ...).
 
-## Layout
-- No per-view page header: MainWindow's header card already shows the tool's icon, section and name.
-- Content margin `16,8,16,16`; options sidebar 280 px, collapses to 56 px (`TuneVariant` icon toggle).
-- Sidebar = `SidebarPanelStyle`; each settings group is a `SidebarGroupCardStyle` card that opens with a `SidebarGroupHeader` (gradient icon chip + CAPS label, icon passed via `Tag="{x:Static materialDesign:PackIconKind.X}"`).
+## Layout: the standard tool page (2026-11-27 restyle; pilot = Video Frame Extractor)
+```
++--------------------------------------------------+   +-------------+
+| Run card: what is loaded + status  [pills] [Run] |   | Options     |
++----------------+-----------------+---------------+   | (settings   |
+| Input card     | work area /     | Results       |   |  only)      |
+| (InputFolder-  | preview         |               |   |             |
+|  Card) + list  |                 | Output card   |   |             |
++----------------+-----------------+---------------+   +-------------+
+```
+- No per-view page header: the title bar shows the tool's icon, section and name.
+- Content margin `16,8,16,16`. Grid columns: content `*` | `14` | options `Auto`. **The options panel is on the RIGHT** (`<controls:ToolSidebar Grid.Column="2">`) and holds **settings only**: how the tool works (mode, format, quality, filters). 280 px, folds to 56 px.
+- **Inputs, outputs and the main action live in the content area**: the run card on top (status text left, the primary button at the right end), the `InputFolderCard` at the top of the input/list card, the `OutputFolderCard` at the bottom of the results card. Results get the most space.
+- The Input/Output cards style themselves for where they sit (`Controls/CardPlacement.cs`, called on Loaded): in the options panel a settings group, in the content a plain block with a `CardHeader`. Do not wrap them in another box.
+- When a card moves out of the options panel, also: enable/disable it with the busy state (it is no longer inside `SidebarStack`), and reword hints that say "on the left" / "in the sidebar" (about 70 such strings in en.xaml).
+- Options panel = `ToolSidebar` (or `SidebarPanelStyle`, flat, no shadow). Each settings group is a `SidebarGroupCardStyle` block: no box, a hairline under it, opening with a `SidebarGroupHeader` (icon chip + CAPS label, icon via `Tag="{x:Static materialDesign:PackIconKind.X}"`). Never a box inside a box.
 - Content cards = `CardStyle`, with a `CardHeader` (icon chip + title) where a card has a heading.
+- Choice toggles (`ModeToggleButtonStyle` / `ModeToggleTallStyle`) are outlined; the chosen one has an accent tint, accent outline and accent text (no solid fill).
+- Home: greeting + search, Favorites/Recent as small tiles, section chips (All or one section), every tool as an even tile under a flat section heading (`HomeView.FitTiles` fills each row). Settings: plain section list on the page (filled pill for the open one), content max 1040 px wide.
 
 ## View kit (Themes/Controls.xaml) – use these, don't hand-roll
 | Need | Use |

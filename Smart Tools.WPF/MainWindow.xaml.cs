@@ -38,17 +38,7 @@ namespace Smart_Tools.WPF
         private const int SidebarRecentCount = 4;
 
         private const string ContactId = "contact";
-        private const string MemorialId = "memorial";
-
-        // ---------------- Memorial easter egg ----------------
-        // Not linked from any visible button: clicking the app title this many
-        // times in a row, each click within the reset window of the last,
-        // opens the memorial page. A pause longer than the window, or opening
-        // any page in between, resets the count.
-        private const int MemorialEasterEggClickCount = 7;
-        private static readonly TimeSpan MemorialEasterEggResetWindow = TimeSpan.FromSeconds(3);
-        private int _titleClickCount;
-        private DateTime _lastTitleClickTime;
+        private const string MemorialId = MemorialEgg.PageId;   // easter egg: typing "toxy" in Home's search or Ctrl+K
 
         // Page-transition timings - short, so switching never makes anyone wait.
         private static readonly Duration PageFadeDuration = new(TimeSpan.FromMilliseconds(220));
@@ -105,6 +95,7 @@ namespace Smart_Tools.WPF
             BuildSidebar();
 
             _homeView.ToolRequested += id => Open(id);
+            _homeView.MemorialRequested += ShowMemorial;
             _homeView.FavoriteToggled += id =>
             {
                 ToolCatalogManager.ToggleFavorite(_shell.FavoriteToolIds, id);
@@ -416,7 +407,6 @@ namespace Smart_Tools.WPF
         /// <summary>Opens Home, a tool (by catalog id) or Contact.</summary>
         private void Open(string id, bool keepRecentOrder = false)
         {
-            _titleClickCount = 0;   // any navigation resets the easter-egg count (as the comment always said)
 
             if (string.Equals(id, ToolCatalogManager.HomeId, StringComparison.OrdinalIgnoreCase))
             {
@@ -715,6 +705,8 @@ namespace Smart_Tools.WPF
 
         private CommandPalette? _palette;
 
+        private void BtnSearchTools_Click(object sender, RoutedEventArgs e) => ShowCommandPalette();
+
         private void ShowCommandPalette()
         {
             if (_palette != null) { _palette.Activate(); return; }
@@ -728,7 +720,7 @@ namespace Smart_Tools.WPF
             _palette = new CommandPalette(
                 () => ToolCatalogManager.FavoriteTools(_shell.FavoriteToolIds).Concat(ToolCatalogManager.RecentTools(_shell.RecentToolIds)).DistinctBy(t => t.Id).ToList(),
                 actions,
-                id => Open(id));
+                id => { if (id == MemorialId) ShowMemorial(); else Open(id); });
             _palette.Closed += (_, _) => _palette = null;
             _palette.Show();
         }
@@ -998,13 +990,10 @@ namespace Smart_Tools.WPF
         /// </summary>
         private void ApplySidebarLayout(bool compact)
         {
-            SidebarColumn.Width = new GridLength(compact ? SidebarCompactWidth : SidebarExpandedWidth);
+            // the tool list down the side is hidden (Home and the search in the title bar replace it); its column stays at 0
+            SidebarColumn.Width = new GridLength(0);
             var visibility = compact ? Visibility.Collapsed : Visibility.Visible;
             var alignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Left;
-
-            TxtAppSubtitle.Visibility = visibility;
-            LblHome.Visibility = visibility;
-            LblSettings.Visibility = visibility;
             _recentHeader.Visibility = compact || _recentButtons.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             foreach (var section in _sections.Values) section.Header.Visibility = visibility;
 
@@ -1057,23 +1046,10 @@ namespace Smart_Tools.WPF
         //  Memorial easter egg
         // =================================================================
 
-        private void TxtAppTitle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        /// <summary>Opens the memorial page (typing "toxy" in a tool search; see <see cref="MemorialEgg"/>).</summary>
+        private void ShowMemorial()
         {
-            DateTime now = DateTime.UtcNow;
-
-            if (now - _lastTitleClickTime > MemorialEasterEggResetWindow)
-                _titleClickCount = 0;
-
-            _titleClickCount++;
-            _lastTitleClickTime = now;
-
-            if (_titleClickCount < MemorialEasterEggClickCount) return;
-            _titleClickCount = 0;
-
-            if (_memorialView == null)
-            {
-                _memorialView = new MemorialView();
-            }
+            _memorialView ??= new MemorialView();
             var memorial = HeaderTexts(MemorialId);
             Show(MemorialId, _memorialView, memorial.Label, PackIconKind.HeartOutline, memorial.Section);
         }

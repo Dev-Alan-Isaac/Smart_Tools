@@ -9,17 +9,17 @@
     SizeChanged="Root_SizeChanged">
 
     <!--
-        Home page: every tool, grouped into section cards, plus search and
-        Recent. Built from Controllers/ToolCatalogManager.cs (the one list of
-        sections and tools). Raises ToolRequested(id); MainWindow opens it.
+        Home page: a greeting with the search, Favorites and Recent as small tiles,
+        a row of section chips (All or one section), then every tool as an even
+        tile under a flat section heading. Built from Controllers/ToolCatalogManager.cs
+        (the one list of sections and tools). Raises ToolRequested(id); MainWindow opens it.
     -->
 
     <UserControl.Resources>
 
-        <!--  A tool row inside a section card: tinted icon badge, name, one-line description  -->
-        <Style x:Key="ToolRowButtonStyle" TargetType="Button">
+        <!--  Shared button look for every tile: flat card, accent outline on hover/focus, small press  -->
+        <Style x:Key="HomeTileStyle" TargetType="Button">
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
@@ -27,11 +27,11 @@
                     <ControlTemplate TargetType="Button">
                         <Border
                             x:Name="Bd"
-                            Padding="8,7"
-                            Background="Transparent"
-                            BorderBrush="Transparent"
+                            Padding="12,10"
+                            Background="{DynamicResource CardBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
                             BorderThickness="1"
-                            CornerRadius="10"
+                            CornerRadius="{StaticResource RadiusLg}"
                             RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="BdScale" ScaleX="1" ScaleY="1" />
@@ -41,6 +41,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
@@ -49,34 +50,16 @@
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation
-                                                Storyboard.TargetName="BdScale"
-                                                Storyboard.TargetProperty="ScaleX"
-                                                To="0.97"
-                                                Duration="0:0:0.08" />
-                                            <DoubleAnimation
-                                                Storyboard.TargetName="BdScale"
-                                                Storyboard.TargetProperty="ScaleY"
-                                                To="0.97"
-                                                Duration="0:0:0.08" />
+                                            <DoubleAnimation Storyboard.TargetName="BdScale" Storyboard.TargetProperty="ScaleX" To="0.98" Duration="0:0:0.08" />
+                                            <DoubleAnimation Storyboard.TargetName="BdScale" Storyboard.TargetProperty="ScaleY" To="0.98" Duration="0:0:0.08" />
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.EnterActions>
                                 <Trigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation
-                                                EasingFunction="{StaticResource EasePop}"
-                                                Storyboard.TargetName="BdScale"
-                                                Storyboard.TargetProperty="ScaleX"
-                                                To="1"
-                                                Duration="0:0:0.25" />
-                                            <DoubleAnimation
-                                                EasingFunction="{StaticResource EasePop}"
-                                                Storyboard.TargetName="BdScale"
-                                                Storyboard.TargetProperty="ScaleY"
-                                                To="1"
-                                                Duration="0:0:0.25" />
+                                            <DoubleAnimation EasingFunction="{StaticResource EasePop}" Storyboard.TargetName="BdScale" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.22" />
+                                            <DoubleAnimation EasingFunction="{StaticResource EasePop}" Storyboard.TargetName="BdScale" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.22" />
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
@@ -87,32 +70,36 @@
             </Setter>
         </Style>
 
-        <!--  Rounded chip for Recent  -->
-        <Style x:Key="RecentChipStyle" TargetType="Button">
+        <!--  Section filter chip (All, Files, Media, ...)  -->
+        <Style x:Key="SectionChipStyle" TargetType="RadioButton">
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="0,0,8,8" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
+                    <ControlTemplate TargetType="RadioButton">
                         <Border
                             x:Name="Bd"
-                            Padding="10,6,14,6"
-                            Background="{DynamicResource CardBgGradient}"
-                            BorderBrush="{DynamicResource CardBorderGradient}"
+                            Height="30"
+                            Padding="10,0,12,0"
+                            Background="Transparent"
+                            BorderBrush="{DynamicResource CardBorder}"
                             BorderThickness="1"
-                            CornerRadius="16">
+                            CornerRadius="15">
                             <ContentPresenter VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
                             </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
+                            <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -120,16 +107,13 @@
             </Setter>
         </Style>
 
-        <!--  Icon in a soft badge tinted with the section colour  -->
+        <!--  Icon in a soft square tinted with the section colour  -->
         <DataTemplate x:Key="ToolBadgeTemplate" DataType="{x:Type models:ToolInfo}">
-            <Grid Width="32" Height="32">
-                <Border
-                    Background="{Binding AccentHex}"
-                    CornerRadius="9"
-                    Opacity="0.15" />
+            <Grid Width="36" Height="36">
+                <Border Background="{Binding AccentHex}" CornerRadius="{StaticResource RadiusMd}" Opacity="0.14" />
                 <materialDesign:PackIcon
-                    Width="17"
-                    Height="17"
+                    Width="19"
+                    Height="19"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Foreground="{Binding AccentHex}"
@@ -137,22 +121,21 @@
             </Grid>
         </DataTemplate>
 
-        <DataTemplate x:Key="ToolRowTemplate" DataType="{x:Type models:ToolInfo}">
+        <!--  A tool tile: badge, name, two lines of description  -->
+        <DataTemplate x:Key="ToolTileTemplate" DataType="{x:Type models:ToolInfo}">
             <Button
+                Height="78"
+                Margin="0,0,10,10"
                 Click="Tool_Click"
-                Style="{StaticResource ToolRowButtonStyle}"
+                Style="{StaticResource HomeTileStyle}"
                 ToolTip="{Binding HeaderTitle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolBadgeTemplate}" />
-                    <StackPanel
-                        Grid.Column="1"
-                        Margin="10,0,0,0"
-                        VerticalAlignment="Center">
+                    <ContentPresenter VerticalAlignment="Top" Content="{Binding}" ContentTemplate="{StaticResource ToolBadgeTemplate}" />
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock
                             FontSize="13"
                             FontWeight="SemiBold"
@@ -160,370 +143,346 @@
                             Text="{Binding Name}"
                             TextTrimming="CharacterEllipsis" />
                         <TextBlock
-                            FontSize="11"
+                            MaxHeight="32"
+                            Margin="0,2,0,0"
+                            FontSize="11.5"
                             Foreground="{DynamicResource TextSecondary}"
                             Text="{Binding Description}"
-                            TextTrimming="CharacterEllipsis" />
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="Wrap" />
                     </StackPanel>
-                    <materialDesign:PackIcon
-                        Grid.Column="2"
-                        Width="14"
-                        Height="14"
-                        Margin="6,0,2,0"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextSecondary}"
-                        Kind="ChevronRight"
-                        Opacity="0.6" />
                 </Grid>
             </Button>
         </DataTemplate>
 
-        <!--  A section card  -->
-        <DataTemplate x:Key="CategoryCardTemplate" DataType="{x:Type models:ToolCategoryInfo}">
-            <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Border
-                            Width="38"
-                            Height="38"
-                            Background="{Binding AccentHex}"
-                            CornerRadius="11">
-                            <materialDesign:PackIcon
-                                Width="20"
-                                Height="20"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Foreground="White"
-                                Kind="{Binding Icon}" />
-                        </Border>
-                        <StackPanel
-                            Grid.Column="1"
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center">
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Bold"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Text="{Binding Title}" />
-                            <TextBlock
-                                FontSize="11.5"
-                                Foreground="{DynamicResource TextSecondary}"
-                                Text="{Binding Blurb}"
-                                TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-                        <Border
-                            Grid.Column="2"
-                            Padding="8,2"
-                            VerticalAlignment="Center"
-                            Background="{DynamicResource RowBg}"
-                            CornerRadius="9">
-                            <TextBlock
-                                FontSize="10.5"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextSecondary}"
-                                Text="{Binding CountLabel}" />
-                        </Border>
-                    </Grid>
-                    <ItemsControl
-                        Focusable="False"
-                        ItemTemplate="{StaticResource ToolRowTemplate}"
-                        ItemsSource="{Binding Tools}" />
-                </StackPanel>
-            </Border>
-        </DataTemplate>
-
-        <!--  Search result tile: like a row, plus the section it's in  -->
+        <!--  Search result: a tool tile that also names its section  -->
         <DataTemplate x:Key="ResultTileTemplate" DataType="{x:Type models:ToolInfo}">
-            <Border
-                Margin="0,0,10,10"
-                Padding="4"
-                Background="{DynamicResource CardBgGradient}"
-                BorderBrush="{DynamicResource CardBorderGradient}"
-                BorderThickness="1"
-                CornerRadius="12">
-                <Button
-                    Click="Tool_Click"
-                    Style="{StaticResource ToolRowButtonStyle}"
-                    ToolTip="{Binding HeaderTitle}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ToolBadgeTemplate}" />
-                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock
-                                FontSize="13"
-                                FontWeight="SemiBold"
-                                Foreground="{DynamicResource TextPrimary}"
-                                Text="{Binding Name}"
-                                TextTrimming="CharacterEllipsis" />
-                            <TextBlock
-                                FontSize="11"
-                                Foreground="{DynamicResource TextSecondary}"
-                                Text="{Binding Description}"
-                                TextTrimming="CharacterEllipsis" />
-                            <TextBlock
-                                Margin="0,3,0,0"
-                                FontSize="10"
-                                FontWeight="SemiBold"
-                                Foreground="{Binding AccentHex}"
-                                Text="{Binding CategoryTitle}" />
-                        </StackPanel>
-                    </Grid>
-                </Button>
-            </Border>
-        </DataTemplate>
-
-        <DataTemplate x:Key="RecentChipTemplate" DataType="{x:Type models:ToolInfo}">
             <Button
+                Height="78"
+                Margin="0,0,10,10"
                 Click="Tool_Click"
-                Style="{StaticResource RecentChipStyle}"
+                Style="{StaticResource HomeTileStyle}"
                 ToolTip="{Binding HeaderTitle}">
-                <Grid HorizontalAlignment="Center">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <ContentPresenter VerticalAlignment="Top" Content="{Binding}" ContentTemplate="{StaticResource ToolBadgeTemplate}" />
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="10.5"
+                            FontWeight="SemiBold"
+                            Foreground="{Binding AccentHex}"
+                            Text="{Binding CategoryTitle}" />
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBlock
+                            FontSize="11.5"
+                            Foreground="{DynamicResource TextSecondary}"
+                            Text="{Binding Description}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+        </DataTemplate>
+
+        <!--  Favorite / Recent: a compact tile (badge + name)  -->
+        <DataTemplate x:Key="QuickTileTemplate" DataType="{x:Type models:ToolInfo}">
+            <Button
+                Height="52"
+                Margin="0,0,8,8"
+                Click="Tool_Click"
+                Style="{StaticResource HomeTileStyle}"
+                ToolTip="{Binding HeaderTitle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="28" Height="28" Margin="-4,0,0,0">
+                        <Border Background="{Binding AccentHex}" CornerRadius="{StaticResource RadiusSm}" Opacity="0.14" />
+                        <materialDesign:PackIcon
+                            Width="16"
+                            Height="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{Binding AccentHex}"
+                            Kind="{Binding Icon}" />
+                    </Grid>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{Binding Name}"
+                        TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+
+        <!--  A section: flat heading, then its tools as tiles  -->
+        <DataTemplate x:Key="SectionTemplate" DataType="{x:Type models:ToolCategoryInfo}">
+            <StackPanel Margin="0,0,0,18">
+                <Grid Margin="0,0,10,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <materialDesign:PackIcon
-                        Grid.Column="0"
-                        Width="15"
-                        Height="15"
-                        Margin="0,0,7,0"
+                        Width="18"
+                        Height="18"
+                        Margin="0,0,8,0"
                         VerticalAlignment="Center"
                         Foreground="{Binding AccentHex}"
                         Kind="{Binding Icon}" />
                     <TextBlock
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        FontSize="12"
+                        FontSize="15"
                         FontWeight="SemiBold"
                         Foreground="{DynamicResource TextPrimary}"
-                        Text="{Binding Name}" TextWrapping="Wrap" />
+                        Text="{Binding Title}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Margin="10,1,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding Blurb}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Grid.Column="3"
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="11.5"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{Binding CountLabel}" />
                 </Grid>
-            </Button>
+                <ItemsControl
+                    Focusable="False"
+                    ItemTemplate="{StaticResource ToolTileTemplate}"
+                    ItemsSource="{Binding Tools}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel ItemWidth="{Binding TileWidth, ElementName=Root}" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
         </DataTemplate>
 
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource ContentBg}">
-        <Grid Margin="16,8,16,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <ScrollViewer
+            x:Name="CardsScroll"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="PageStack" MaxWidth="1480" Margin="28,22,18,24">
 
-            <!--  Search  -->
-            <Border Margin="0,0,0,14" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Margin="0,0,24,0" VerticalAlignment="Center">
-                        <TextBlock
-                            FontSize="18"
-                            FontWeight="Bold"
-                            Foreground="{DynamicResource TextPrimary}"
-                            Text="{DynamicResource Str_Home_WhatDoYouWant}" />
-                        <TextBlock
-                            x:Name="TxtToolCount"
-                            Margin="0,2,0,0"
-                            FontSize="11.5"
-                            Foreground="{DynamicResource TextSecondary}" />
-                    </StackPanel>
-                    <Border
-                        x:Name="SearchBar"
-                        Grid.Column="1"
-                        MaxWidth="560"
-                        Padding="10,2,4,2"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource InputBarStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon
-                                Width="18"
-                                Height="18"
-                                VerticalAlignment="Center"
-                                Foreground="{DynamicResource AccentColor}"
-                                Kind="Magnify" />
-                            <TextBox
-                                x:Name="TxtSearch"
-                                Grid.Column="1"
-                                FontSize="14"
-                                PreviewKeyDown="TxtSearch_PreviewKeyDown"
-                                Style="{StaticResource BareTextBox}"
-                                Tag="{DynamicResource Str_Home_SearchHint}"
-                                TextChanged="TxtSearch_TextChanged"
-                                ToolTip="{DynamicResource Str_Home_TypePartOfA}" />
-                            <Button Padding="0"
-                                x:Name="BtnClearSearch"
-                                Grid.Column="2"
-                                Width="32"
-                                Height="32"
-                                Margin="2,1"
-                                Click="BtnClearSearch_Click"
-                                Style="{StaticResource NeutralIconButtonStyle}"
-                                ToolTip="{DynamicResource Str_MidiInstruments_ClearTheSearch}"
-                                Visibility="Collapsed">
-                                <materialDesign:PackIcon
-                                    Width="14"
-                                    Height="14"
-                                    Kind="Close" />
-                            </Button>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </Border>
-
-            <StackPanel Grid.Row="1">
-
-            <!--  Favorites (right-click any tool to pin it)  -->
-            <Border
-                x:Name="FavoritesPanel"
-                Margin="0,0,0,10"
-                Padding="14,10,14,4"
-                Background="{DynamicResource CardBgGradient}"
-                BorderBrush="{DynamicResource CardBorderGradient}"
-                BorderThickness="1"
-                CornerRadius="16">
-                <StackPanel>
-                <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                    <materialDesign:PackIcon
-                        Width="14"
-                        Height="14"
-                        Margin="0,0,6,0"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource StatusWarningFg}"
-                        Kind="Star" />
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontSize="10.5"
-                        FontWeight="Bold"
-                        Foreground="{DynamicResource TextSecondary}"
-                        Text="{DynamicResource Str_Home_Favorites}" />
-                </StackPanel>
+                <!--  Greeting + search  -->
                 <TextBlock
-                    x:Name="TxtNoFavorites"
-                    Margin="0,0,0,8"
-                    FontSize="11.5"
-                    Foreground="{DynamicResource TextSecondary}"
-                    Text="{DynamicResource Str_Home_FavoritesHint}" />
-                <ItemsControl
-                    x:Name="FavoritesList"
-                    Focusable="False"
-                    ItemTemplate="{StaticResource RecentChipTemplate}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-                </StackPanel>
-            </Border>
-
-            <!--  Recent  -->
-            <Border
-                x:Name="RecentPanel"
-                Margin="0,0,0,10"
-                Padding="14,10,14,4"
-                Background="{DynamicResource CardBgGradient}"
-                BorderBrush="{DynamicResource CardBorderGradient}"
-                BorderThickness="1"
-                CornerRadius="16"
-                Visibility="Collapsed">
-                <StackPanel>
-                <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                    <materialDesign:PackIcon
-                        Width="14"
-                        Height="14"
-                        Margin="0,0,6,0"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextSecondary}"
-                        Kind="History" />
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontSize="10.5"
-                        FontWeight="Bold"
-                        Foreground="{DynamicResource TextSecondary}"
-                        Text="{DynamicResource Str_Home_Recent}" />
-                </StackPanel>
-                <ItemsControl
-                    x:Name="RecentList"
-                    Focusable="False"
-                    ItemTemplate="{StaticResource RecentChipTemplate}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-                </StackPanel>
-            </Border>
-            </StackPanel>
-
-            <!--  Section cards (columns filled from code) / search results  -->
-            <ScrollViewer
-                x:Name="CardsScroll"
-                Grid.Row="2"
-                HorizontalScrollBarVisibility="Disabled"
-                VerticalScrollBarVisibility="Auto">
-                <Grid Margin="0,0,0,16">
-                    <Grid x:Name="CardsHost" />
-
-                    <StackPanel x:Name="ResultsPanel" Visibility="Collapsed">
-                        <TextBlock
-                            x:Name="TxtResultsTitle"
-                            Margin="2,0,0,10"
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextSecondary}" />
-                        <ItemsControl
-                            x:Name="ResultsList"
-                            Focusable="False"
-                            ItemTemplate="{StaticResource ResultTileTemplate}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel ItemWidth="290" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
-                    </StackPanel>
-
-                    <StackPanel
-                        x:Name="NoResultsPanel"
-                        Margin="0,60,0,0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Top"
-                        Visibility="Collapsed">
-                        <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MagnifyRemoveOutline}" />
-                        <TextBlock
-                            x:Name="TxtNoResults"
-                            Margin="0,12,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="15"
-                            FontWeight="SemiBold"
-                            Foreground="{DynamicResource TextPrimary}" />
-                        <TextBlock
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="12"
+                    x:Name="TxtGreeting"
+                    FontSize="26"
+                    FontWeight="SemiBold"
+                    Foreground="{DynamicResource TextPrimary}"
+                    Text="{DynamicResource Str_Home_WhatDoYouWant}" />
+                <TextBlock
+                    x:Name="TxtToolCount"
+                    Margin="0,4,0,0"
+                    FontSize="12.5"
+                    Foreground="{DynamicResource TextSecondary}" />
+                <Border
+                    x:Name="SearchBar"
+                    MaxWidth="680"
+                    Height="46"
+                    Margin="0,16,10,20"
+                    Padding="14,0,6,0"
+                    HorizontalAlignment="Left"
+                    Width="{Binding ActualWidth, ElementName=PageStack}"
+                    Style="{StaticResource InputBarStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <materialDesign:PackIcon
+                            Width="20"
+                            Height="20"
+                            VerticalAlignment="Center"
                             Foreground="{DynamicResource TextSecondary}"
-                            Text="{DynamicResource Str_Home_TryAnotherWordLike}" />
-                    </StackPanel>
-                </Grid>
-            </ScrollViewer>
-        </Grid>
+                            Kind="Magnify" />
+                        <TextBox
+                            x:Name="TxtSearch"
+                            Grid.Column="1"
+                            Margin="4,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14.5"
+                            PreviewKeyDown="TxtSearch_PreviewKeyDown"
+                            Style="{StaticResource BareTextBox}"
+                            Tag="{DynamicResource Str_Home_SearchHint}"
+                            TextChanged="TxtSearch_TextChanged"
+                            ToolTip="{DynamicResource Str_Home_TypePartOfA}" />
+                        <Button
+                            x:Name="BtnClearSearch"
+                            Grid.Column="2"
+                            Width="32"
+                            Height="32"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Click="BtnClearSearch_Click"
+                            Style="{StaticResource NeutralIconButtonStyle}"
+                            ToolTip="{DynamicResource Str_MidiInstruments_ClearTheSearch}"
+                            Visibility="Collapsed">
+                            <materialDesign:PackIcon Width="14" Height="14" Kind="Close" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!--  Everything below the search hides while searching  -->
+                <StackPanel x:Name="BrowsePanel">
+
+                    <!--  Favorites (right-click any tool to pin it) and Recent, side by side when there is room  -->
+                    <Grid x:Name="QuickRow" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="FavoritesColumn" Width="*" />
+                            <ColumnDefinition x:Name="RecentColumn" Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel x:Name="FavoritesPanel" Margin="0,0,10,0">
+                            <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource StatusWarningFg}"
+                                    Kind="Star" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="13"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_Home_Favorites}" />
+                            </StackPanel>
+                            <Border
+                                x:Name="TxtNoFavoritesBox"
+                                Height="52"
+                                Margin="0,0,8,8"
+                                Padding="14,0"
+                                BorderBrush="{DynamicResource CardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource RadiusLg}">
+                                <TextBlock
+                                    x:Name="TxtNoFavorites"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Text="{DynamicResource Str_Home_FavoritesHint}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Border>
+                            <ItemsControl
+                                x:Name="FavoritesList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource QuickTileTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel ItemWidth="{Binding QuickTileWidth, ElementName=Root}" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <StackPanel x:Name="RecentPanel" Grid.Column="1" Visibility="Collapsed">
+                            <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                <materialDesign:PackIcon
+                                    Width="15"
+                                    Height="15"
+                                    Margin="0,0,6,0"
+                                    VerticalAlignment="Center"
+                                    Foreground="{DynamicResource TextSecondary}"
+                                    Kind="History" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="13"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextPrimary}"
+                                    Text="{DynamicResource Str_Home_Recent}" />
+                            </StackPanel>
+                            <ItemsControl
+                                x:Name="RecentList"
+                                Focusable="False"
+                                ItemTemplate="{StaticResource QuickTileTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel ItemWidth="{Binding QuickTileWidth, ElementName=Root}" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Grid>
+
+                    <!--  Section chips: All, or one section  -->
+                    <WrapPanel x:Name="SectionChips" Margin="0,8,0,14" />
+
+                    <!--  Sections and their tools  -->
+                    <ItemsControl
+                        x:Name="CardsHost"
+                        Focusable="False"
+                        ItemTemplate="{StaticResource SectionTemplate}" />
+                </StackPanel>
+
+                <!--  Search results  -->
+                <StackPanel x:Name="ResultsPanel" Visibility="Collapsed">
+                    <TextBlock
+                        x:Name="TxtResultsTitle"
+                        Margin="0,0,0,10"
+                        FontSize="12.5"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondary}" />
+                    <ItemsControl
+                        x:Name="ResultsList"
+                        Focusable="False"
+                        ItemTemplate="{StaticResource ResultTileTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemWidth="{Binding TileWidth, ElementName=Root}" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+
+                <StackPanel
+                    x:Name="NoResultsPanel"
+                    Margin="0,50,0,0"
+                    HorizontalAlignment="Center"
+                    Visibility="Collapsed">
+                    <ContentControl Style="{StaticResource EmptyStateBadge}" Tag="{x:Static materialDesign:PackIconKind.MagnifyRemoveOutline}" />
+                    <TextBlock
+                        x:Name="TxtNoResults"
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_Home_TryAnotherWordLike}" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

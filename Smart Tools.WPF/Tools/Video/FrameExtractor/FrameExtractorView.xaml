@@ -91,26 +91,17 @@
 
     <Grid Background="{DynamicResource ContentBg}">
         <Grid Margin="16,8,16,16">
+            <!--  Standard tool page: content (input, action, results) on the left, settings-only options on the right  -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="14" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!--  ================= OPTIONS SIDEBAR =================  -->
-            <controls:ToolSidebar>
+            <!--  ================= OPTIONS (settings only) =================  -->
+            <controls:ToolSidebar Grid.Column="2">
                 <StackPanel x:Name="SidebarStack">
-                    <controls:InputFolderCard ctl:Tour.Key="Str_Tour_FrameExtractor_Input" ctl:Tour.Order="1"
-                        x:Name="InputCard"
-                        ClearRequested="InputCard_ClearRequested"
-                        Header="{DynamicResource Str_DuplicateFinder_Videos}"
-                        HeaderIcon="FilmstripBox"
-                        IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
-                        ItemTemplate="{StaticResource SourceTemplate}"
-                        Mode="Files"
-                        PathsAdded="InputCard_PathsAdded" />
-
-                    <Border ctl:Tour.Key="Str_Tour_FrameExtractor_Frames" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
+                    <Border ctl:Tour.Key="Str_Tour_FrameExtractor_Frames" ctl:Tour.Order="2" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_FrameExtractor_WhichFrames}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
                             <StackPanel Margin="0,6,0,0">
@@ -148,17 +139,11 @@
                             <TextBlock Style="{StaticResource FeHint}" Text="{DynamicResource Str_FrameExtractor_PngIsLosslessAnd}" />
                         </StackPanel>
                     </Border>
-
-                    <controls:OutputFolderCard ctl:Tour.Key="Str_Tour_FrameExtractor_Output" ctl:Tour.Order="3"
-                        x:Name="OutputCard"
-                        Header="{DynamicResource Str_FrameExtractor_SaveFramesTo}"
-                        HeaderIcon="FolderOutline"
-                        ToolName="Frame Extractor" />
                 </StackPanel>
             </controls:ToolSidebar>
 
             <!--  ================= MAIN AREA =================  -->
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="14" />
@@ -203,18 +188,25 @@
                     </StackPanel>
                 </Border>
 
-                <!--  ========== The list of videos ==========  -->
+                <!--  ========== Input: what goes in, and the videos found in it ==========  -->
                 <Border Grid.Row="2" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <DockPanel Margin="0,0,0,10">
-                            <TextBlock x:Name="TxtVideoCount" VerticalAlignment="Center" DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
-                            <ContentControl Content="{DynamicResource Str_DuplicateFinder_Videos}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.FilmstripBox}" />
-                        </DockPanel>
-                        <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
+                        <controls:InputFolderCard ctl:Tour.Key="Str_Tour_FrameExtractor_Input" ctl:Tour.Order="1"
+                            x:Name="InputCard"
+                            ClearRequested="InputCard_ClearRequested"
+                            Header="{DynamicResource Str_DuplicateFinder_Videos}"
+                            HeaderIcon="FilmstripBox"
+                            IncludeSubfoldersChanged="InputCard_IncludeSubfoldersChanged"
+                            ItemTemplate="{StaticResource SourceTemplate}"
+                            Mode="Files"
+                            PathsAdded="InputCard_PathsAdded" />
+                        <TextBlock x:Name="TxtVideoCount" Grid.Row="1" Margin="2,10,0,8" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondary}" />
+                        <Border Grid.Row="2" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>
                                 <ListBox ctl:Tour.Key="Str_Tour_FrameExtractor_List" ctl:Tour.Order="5" x:Name="VideoList" Padding="6" Background="Transparent" BorderThickness="0" ItemTemplate="{StaticResource VideoTemplate}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="VideoList_SelectionChanged" VirtualizingPanel.IsVirtualizing="True" />
                                 <TextBlock x:Name="VideosEmpty" Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}" IsHitTestVisible="False" Text="{DynamicResource Str_FrameExtractor_VideosYouAddShow}" TextAlignment="Center" TextWrapping="Wrap" />
@@ -280,13 +272,21 @@
                     </Grid>
                 </Border>
 
-                <!--  ========== The frames ==========  -->
+                <!--  ========== The frames, and where they are saved ==========  -->
                 <Border Grid.Row="2" Grid.Column="4" Style="{StaticResource CardStyle}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+                        <controls:OutputFolderCard ctl:Tour.Key="Str_Tour_FrameExtractor_Output" ctl:Tour.Order="3"
+                            x:Name="OutputCard"
+                            Grid.Row="2"
+                            Margin="0,12,0,0"
+                            Header="{DynamicResource Str_FrameExtractor_SaveFramesTo}"
+                            HeaderIcon="FolderOutline"
+                            ToolName="Frame Extractor" />
                         <ContentControl Margin="0,0,0,10" Content="{DynamicResource Str_FrameExtractor_FramesSaved}" Style="{StaticResource CardHeader}" Tag="{x:Static materialDesign:PackIconKind.ImageMultipleOutline}" />
                         <Border Grid.Row="1" Background="{DynamicResource RowBg}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="12">
                             <Grid>

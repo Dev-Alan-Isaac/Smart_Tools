@@ -273,7 +273,11 @@ namespace Smart_Tools.WPF.Controls
             TxtExtension = Part<TextBlock>(parts, "TxtExtension");
             ChkAskEachTime = Part<CheckBox>(parts, "ChkAskEachTime");
             ApplyProperties();
-            Loaded += (_, _) => Refresh();
+            Loaded += (_, _) =>
+            {
+                CardPlacement.Apply(this, HeaderControl);
+                Refresh();
+            };
         }
 
         /// <summary>Walks the card's own XAML (the logical tree) once and indexes every part by its x:Uid.</summary>

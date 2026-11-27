@@ -189,19 +189,9 @@
     -->
     <Style x:Key="SidebarPanelStyle" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource SidebarBg}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SidebarBorder}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect
-                    BlurRadius="20"
-                    Direction="0"
-                    Opacity="0.10"
-                    ShadowDepth="3"
-                    Color="Black" />
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <!--
@@ -257,12 +247,12 @@
         </Border>
     -->
     <Style x:Key="SidebarGroupCardStyle" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource SidebarCardBg}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SidebarBorder}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="12" />
-        <Setter Property="Margin" Value="0,0,0,10" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorder}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="2,10,2,16" />
+        <Setter Property="Margin" Value="0,0,0,4" />
     </Style>
 
     <!--
@@ -875,7 +865,7 @@
         BasedOn="{StaticResource BaseButtonStyle}"
         TargetType="Button">
         <Style.Resources>
-            <Color x:Key="ButtonHoverGlowColor">#DC2626</Color>
+            <Color x:Key="ButtonHoverGlowColor">#00000000</Color>
         </Style.Resources>
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="12,0" />
@@ -1302,7 +1292,9 @@
                 <ControlTemplate TargetType="RadioButton">
                     <Border
                         x:Name="Bd"
-                        Background="{DynamicResource SidebarInputBg}"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource SidebarInputBorder}"
+                        BorderThickness="1"
                         CornerRadius="8"
                         RenderTransformOrigin="0.5,0.5">
                         <Border.RenderTransform>
@@ -1343,10 +1335,11 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SidebarItemHoverBg}" />
                         </Trigger>
-                        <!--  AccentFill + white: SidebarText on AccentColor was only 3.0:1 in Dark  -->
+                        <!--  Chosen: accent tint + accent outline and text (flat look, accent only on the choice)  -->
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentFillGradient}" />
-                            <Setter Property="Foreground" Value="White" />
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.4" />
@@ -3866,16 +3859,7 @@
         x:Key="ElevatedSidebarGroupCardStyle"
         BasedOn="{StaticResource SidebarGroupCardStyle}"
         TargetType="Border">
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect
-                    BlurRadius="14"
-                    Direction="270"
-                    Opacity="0.14"
-                    ShadowDepth="3"
-                    Color="Black" />
-            </Setter.Value>
-        </Setter>
+        <!--  Same as SidebarGroupCardStyle since the flat restyle (groups have no box, so no shadow either). Kept so views that use it still work.  -->
     </Style>
 
     <!--
@@ -4071,7 +4055,7 @@
         BasedOn="{StaticResource AccentPrimaryButtonStyle}"
         TargetType="Button">
         <Style.Resources>
-            <Color x:Key="ButtonHoverGlowColor">#DC2626</Color>
+            <Color x:Key="ButtonHoverGlowColor">#00000000</Color>
         </Style.Resources>
         <Setter Property="Background" Value="{DynamicResource DangerFill}" />
     </Style>
@@ -4159,14 +4143,14 @@
                             Height="22"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
-                            Background="{DynamicResource AccentGradient}"
+                            Background="{DynamicResource AccentColorSubtle}"
                             CornerRadius="6">
                             <materialDesign:PackIcon
                                 Width="13"
                                 Height="13"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Foreground="White"
+                                Foreground="{DynamicResource AccentColor}"
                                 Kind="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Border>
                         <TextBlock
@@ -4194,14 +4178,14 @@
                             Height="28"
                             Margin="0,0,10,0"
                             VerticalAlignment="Center"
-                            Background="{DynamicResource AccentGradient}"
+                            Background="{DynamicResource AccentColorSubtle}"
                             CornerRadius="8">
                             <materialDesign:PackIcon
                                 Width="16"
                                 Height="16"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Foreground="White"
+                                Foreground="{DynamicResource AccentColor}"
                                 Kind="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
                         </Border>
                         <TextBlock

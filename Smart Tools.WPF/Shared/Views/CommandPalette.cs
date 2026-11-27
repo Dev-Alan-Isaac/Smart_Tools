@@ -96,6 +96,12 @@ namespace Smart_Tools.WPF.Views
         private void Fill()
         {
             string query = _box.Text.Trim();
+            if (MemorialEgg.Matches(query))
+            {
+                CloseOnce();
+                _openTool(MemorialEgg.PageId);
+                return;
+            }
             var rows = new List<PaletteAction>();
             var tools = query.Length == 0 ? _startTools() : ToolCatalogManager.Search(query);
             foreach (var tool in tools.Take(query.Length == 0 ? 8 : 10))

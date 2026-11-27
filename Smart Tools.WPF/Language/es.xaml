@@ -3728,7 +3728,7 @@
     <system:String x:Key="Str_Win_Maximize">Maximizar o restaurar</system:String>
     <system:String x:Key="Str_Win_Close">Cerrar</system:String>
     <system:String x:Key="Str_Home_TypePartOfA">Escribe parte de un nombre o lo que quieres hacer: Intro abre la primera coincidencia, Esc borra</system:String>
-    <system:String x:Key="Str_Home_Recent">RECIENTES</system:String>
+    <system:String x:Key="Str_Home_Recent">Recientes</system:String>
     <system:String x:Key="Str_Palette_Home">Inicio - ver todas las herramientas</system:String>
     <system:String x:Key="Str_Palette_Settings">Ajustes</system:String>
     <system:String x:Key="Str_Palette_Theme">Cambiar tema (claro, oscuro, cristal)</system:String>
@@ -3768,7 +3768,7 @@
     <system:String x:Key="Str_Rel_2_1_0_i">Temporizador y cronómetro tiene pestañas de modo y varios sonidos de alerta, incluido un archivo tuyo.</system:String>
     <system:String x:Key="Str_Rel_2_1_0_j">Servicios mantiene al día el estado en ejecución/detenido por sí solo.</system:String>
     <system:String x:Key="Str_Rel_2_1_0_k">El visor de registros reabre los archivos que tenías abiertos; Enviar al teléfono muestra el texto que recibes.</system:String>
-    <system:String x:Key="Str_Home_Favorites">FAVORITOS</system:String>
+    <system:String x:Key="Str_Home_Favorites">Favoritos</system:String>
     <system:String x:Key="Str_Home_FavoritesHint">Haz clic derecho en una herramienta y elige Añadir a favoritos para tenerla aquí.</system:String>
     <system:String x:Key="Str_Home_AddFavorite">Añadir a favoritos</system:String>
     <system:String x:Key="Str_Home_RemoveFavorite">Quitar de favoritos</system:String>
@@ -6856,7 +6856,7 @@
     <system:String x:Key="Str_FrameExtractor_MsgReading">Leyendo el video...</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgMostMoments">Ese es el máximo de momentos que puedo tomar ({0}).</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgPictureFailed">No se pudo mostrar la imagen.</system:String>
-    <system:String x:Key="Str_FrameExtractor_MsgAddToStart">Agrega videos o carpetas a la izquierda para empezar.</system:String>
+    <system:String x:Key="Str_FrameExtractor_MsgAddToStart">Agrega videos o carpetas abajo para empezar.</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgCantSave">No se puede guardar ahí: {0}</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgChooseFolder">Primero elige una carpeta donde guardar los fotogramas.</system:String>
     <system:String x:Key="Str_FrameExtractor_MsgProgress">Video {0} de {1}: fotograma {2} de {3}...</system:String>
@@ -7120,7 +7120,7 @@
     <system:String x:Key="Str_Shell_OpenFailed">No se pudo abrir "{0}":</system:String>
     <system:String x:Key="Str_Shell_ConfirmExitText">¿Seguro que quieres cerrar Smart Tools?</system:String>
     <system:String x:Key="Str_Shell_ConfirmExitTitle">Confirmar salida</system:String>
-    <system:String x:Key="Str_Home_ToolCount">{0} herramientas en {1} secciones: elige una o busca.</system:String>
+    <system:String x:Key="Str_Home_ToolCount">{0} herramientas en {1} secciones. Elige una o escribe lo que quieres hacer.</system:String>
     <system:String x:Key="Str_Home_ResultsTitle">{0} {1} para "{2}": Enter abre la primera</system:String>
     <system:String x:Key="Str_Home_NoResults">Ninguna herramienta coincide con "{0}"</system:String>
 
@@ -10412,7 +10412,7 @@
     <system:String x:Key="Str_FrameExtractor_SaveFramesTo">Guardar fotogramas en</system:String>
     <system:String x:Key="Str_FrameExtractor_TakeFrames">Tomar fotogramas</system:String>
     <system:String x:Key="Str_FrameExtractor_VideoFrames">FOTOGRAMAS DE VIDEO</system:String>
-    <system:String x:Key="Str_FrameExtractor_AddVideosOrFolders">Agrega videos o carpetas a la izquierda para empezar.</system:String>
+    <system:String x:Key="Str_FrameExtractor_AddVideosOrFolders">Agrega videos o carpetas abajo para empezar.</system:String>
     <system:String x:Key="Str_FrameExtractor_VideosYouAddShow">Los videos que agregues aparecen aquí. Haz clic en uno para verlo y elegir un momento.</system:String>
     <system:String x:Key="Str_FrameExtractor_ChooseAMoment">Elige un momento</system:String>
     <system:String x:Key="Str_FrameExtractor_ClickAVideoIn">Haz clic en un video de la lista para verlo aquí.</system:String>
@@ -12318,7 +12318,9 @@
     <system:String x:Key="Str_MdHtml_JsPlaceholder">Escribe aquí el script de la página (JavaScript). Se ejecuta cuando la página está construida.</system:String>
     <system:String x:Key="Str_ImageEditor_Undo">Deshacer (Ctrl+Z)</system:String>
     <system:String x:Key="Str_ImageEditor_Redo">Rehacer (Ctrl+Y)</system:String>
-    <system:String x:Key="Str_Shell_Back">Atrás</system:String>
+    <system:String x:Key="Str_Shell_Back">Atrás</system:String>
+    <system:String x:Key="Str_Shell_Search">Buscar herramientas…</system:String>
+    <system:String x:Key="Str_Shell_SearchTip">Busca cualquier herramienta por su nombre o por lo que hace (Ctrl+K)</system:String>
     <system:String x:Key="Str_GameCtl_LayoutHeader">Diseño detectado</system:String>
     <system:String x:Key="Str_GameCtl_LayoutXbox">Diseño Xbox</system:String>
     <system:String x:Key="Str_GameCtl_LayoutPlayStation">Diseño PlayStation</system:String>
@@ -12800,4 +12802,8 @@
     <system:String x:Key="Str_Modeler_PlanEmpty">Añade tablas para ver qué cabe en la cama.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Title">Tablas</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Text">Añade tablas y fija dónde va cada una y qué tamaño tiene. Elige una para iluminarla en 3D. La etiqueta avisa de tablas que se solapan o quedan sueltas.</system:String>
+    <system:String x:Key="Str_Home_GoodMorning">Buenos días</system:String>
+    <system:String x:Key="Str_Home_GoodAfternoon">Buenas tardes</system:String>
+    <system:String x:Key="Str_Home_GoodEvening">Buenas noches</system:String>
+    <system:String x:Key="Str_Home_AllSections">Todas</system:String>
 </ResourceDictionary>

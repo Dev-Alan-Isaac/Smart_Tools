@@ -25,7 +25,7 @@
     <!--  Custom title bar: Windows draws only the resize frame, the caption is the TitleBar row below  -->
     <WindowChrome.WindowChrome>
         <WindowChrome
-            CaptionHeight="40"
+            CaptionHeight="52"
             CornerRadius="0"
             GlassFrameThickness="0"
             ResizeBorderThickness="6"
@@ -464,47 +464,371 @@
             </Setter>
         </Style>
 
+
+        <!--
+            ============================================================
+            COMMAND BAR (title bar) controls: flat 36 px icon buttons, an icon toggle for Home / Settings that shows which page is
+            open, and the search field that opens the tool search (Ctrl+K). All of them take clicks inside the window caption.
+        -->
+        <Style x:Key="TitleIconButtonStyle" TargetType="Button">
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TitleNavToggleStyle" TargetType="RadioButton">
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border
+                            x:Name="Bd"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RowBg}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentColorSubtle}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TitleSearchStyle" TargetType="Button">
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Cursor" Value="IBeam" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="Bd"
+                            Padding="12,0,6,0"
+                            Background="{DynamicResource CardBg}"
+                            BorderBrush="{DynamicResource CardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource InputBorder}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="52" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--  ================= TITLE BAR =================  -->
+        <!--
+            ================= COMMAND BAR (the title bar) =================
+            Left: brand, Back, Home, and where you are (tool icon, section > tool). Middle: the tool search (Ctrl+K opens the same).
+            Right: Help (guided tour of the page), contact, theme, Settings, and the window buttons. There is no tool list down the
+            side any more: the tool gets the whole width, and Home lists every tool by section with Recent and Favorites.
+        -->
         <Grid
             x:Name="TitleBar"
             Grid.Row="0"
             Background="{DynamicResource ContentBg}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
             <StackPanel
-                Margin="14,0,0,0"
-                HorizontalAlignment="Left"
+                Grid.Column="0"
+                Margin="12,0,8,0"
                 VerticalAlignment="Center"
-                IsHitTestVisible="False"
                 Orientation="Horizontal">
+                <!--  Brand: part of the title bar's drag area. (The memorial easter egg is typing "toxy" in a search, see Controllers/MemorialEgg.cs.)  -->
                 <Border
-                    Width="20"
-                    Height="20"
+                    x:Name="BrandArea"
                     Margin="0,0,10,0"
-                    Background="{DynamicResource AccentGradient}"
-                    CornerRadius="6">
-                    <materialDesign:PackIcon
-                        Width="13"
-                        Height="13"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        Kind="ToolboxOutline" />
+                    VerticalAlignment="Stretch">
+                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                        <Border
+                            Width="26"
+                            Height="26"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentFill}"
+                            CornerRadius="7">
+                            <materialDesign:PackIcon
+                                Width="16"
+                                Height="16"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Kind="ToolboxOutline" />
+                        </Border>
+                        <TextBlock
+                            x:Name="TxtAppTitle"
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimary}"
+                            Text="{DynamicResource Str_App_Title}" />
+                    </StackPanel>
                 </Border>
                 <TextBlock
+                    x:Name="TxtAppSubtitle"
+                    Text="{DynamicResource Str_App_Subtitle}"
+                    Visibility="Collapsed" />
+
+                <Border
+                    Width="1"
+                    Height="20"
+                    Margin="2,0,6,0"
+                    Background="{DynamicResource CardBorder}" />
+
+                <!--  Back to the page that was open before this one (hidden until there is one)  -->
+                <Button
+                    x:Name="BtnBack"
+                    Click="BtnBack_Click"
+                    Style="{StaticResource TitleIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_Shell_Back}"
+                    Visibility="Collapsed">
+                    <materialDesign:PackIcon
+                        Width="18"
+                        Height="18"
+                        Kind="ArrowLeft" />
+                </Button>
+
+                <RadioButton
+                    x:Name="BtnHome"
+                    Click="BtnHome_Click"
+                    GroupName="MainNav"
+                    Style="{StaticResource TitleNavToggleStyle}"
+                    ToolTip="{DynamicResource Str_Main_HomeEveryToolWith}">
+                    <Grid>
+                        <materialDesign:PackIcon
+                            Width="18"
+                            Height="18"
+                            Kind="HomeOutline" />
+                        <TextBlock
+                            x:Name="LblHome"
+                            Text="{DynamicResource Str_Main_Home}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </RadioButton>
+
+                <!--  Where you are: the tool's icon, its section and its name  -->
+                <Border
+                    x:Name="ActiveToolBadge"
+                    Width="28"
+                    Height="28"
+                    Margin="10,0,10,0"
                     VerticalAlignment="Center"
-                    FontSize="12"
-                    Foreground="{DynamicResource TextSecondary}"
-                    Text="{DynamicResource Str_App_Title}" />
+                    Background="{DynamicResource AccentColorSubtle}"
+                    CornerRadius="7"
+                    IsHitTestVisible="False"
+                    RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <ScaleTransform x:Name="ActiveToolBadgeScale" ScaleX="1" ScaleY="1" />
+                    </Border.RenderTransform>
+                    <materialDesign:PackIcon
+                        x:Name="IconActiveTool"
+                        Width="17"
+                        Height="17"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentColor}"
+                        Kind="HomeOutline" />
+                </Border>
+                <StackPanel
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        x:Name="TxtBreadcrumbSection"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="{DynamicResource Str_Main_Home}" />
+                    <TextBlock
+                        Margin="6,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondary}"
+                        Text="›" />
+                    <TextBlock
+                        x:Name="TxtBreadcrumbActive"
+                        MaxWidth="320"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimary}"
+                        Text="{DynamicResource Str_Main_Home}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <!--  Tool search: opens the same search as Ctrl+K, from any page  -->
+            <Button
+                x:Name="BtnSearchTools"
+                Grid.Column="2"
+                Width="420"
+                MinWidth="180"
+                Margin="8,0"
+                VerticalAlignment="Center"
+                Click="BtnSearchTools_Click"
+                Style="{StaticResource TitleSearchStyle}"
+                ToolTip="{DynamicResource Str_Shell_SearchTip}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon
+                        Width="16"
+                        Height="16"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        Kind="Magnify" />
+                    <TextBlock
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        FontSize="12.5"
+                        Text="{DynamicResource Str_Shell_Search}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Border
+                        Grid.Column="2"
+                        Padding="6,1"
+                        VerticalAlignment="Center"
+                        Background="{DynamicResource RowBg}"
+                        BorderBrush="{DynamicResource CardBorder}"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                        <TextBlock FontSize="11" Text="Ctrl+K" />
+                    </Border>
+                </Grid>
+            </Button>
+
+            <StackPanel
+                Grid.Column="4"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <!--  Starts the guided tour of the page that is open (enabled only when the page has one)  -->
+                <Button
+                    x:Name="BtnHelpTour"
+                    Click="BtnHelpTour_Click"
+                    Style="{StaticResource TitleIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_Tour_Help}"
+                    ToolTipService.ShowOnDisabled="True">
+                    <materialDesign:PackIcon
+                        Width="18"
+                        Height="18"
+                        Kind="HelpCircleOutline" />
+                </Button>
+                <Button
+                    x:Name="BtnContactDeveloper"
+                    Click="BtnContactDeveloper_Click"
+                    Style="{StaticResource TitleIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_Main_ContactDeveloper}">
+                    <materialDesign:PackIcon
+                        Width="18"
+                        Height="18"
+                        Kind="EmailOutline" />
+                </Button>
+                <Button
+                    x:Name="BtnThemeToggle"
+                    Click="BtnThemeToggle_Click"
+                    Style="{StaticResource TitleIconButtonStyle}"
+                    ToolTip="{DynamicResource Str_Main_SwitchBetweenLightAnd}">
+                    <materialDesign:PackIcon
+                        x:Name="IconThemeToggle"
+                        Width="18"
+                        Height="18"
+                        Kind="WeatherNight" />
+                </Button>
+                <RadioButton
+                    x:Name="BtnSettings"
+                    Click="BtnSettings_Click"
+                    GroupName="MainNav"
+                    Style="{StaticResource TitleNavToggleStyle}"
+                    ToolTip="{DynamicResource Str_Nav_Settings}">
+                    <Grid>
+                        <materialDesign:PackIcon
+                            Width="18"
+                            Height="18"
+                            Kind="CogOutline" />
+                        <TextBlock
+                            x:Name="LblSettings"
+                            Text="{DynamicResource Str_Nav_Settings}"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </RadioButton>
+
+                <Border
+                    Width="1"
+                    Height="20"
+                    Margin="8,0,4,0"
+                    Background="{DynamicResource CardBorder}" />
+
                 <Button
                     x:Name="BtnWinMinimize"
                     Click="BtnWinMinimize_Click"
@@ -529,405 +853,30 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="SidebarColumn" Width="252" />
+                <ColumnDefinition x:Name="SidebarColumn" Width="0" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!--
-                ================= SIDEBAR =================
-                The Effect renders outside the Border's own layout bounds and
-                the parent Grid doesn't clip by default, so this soft shadow
-                bleeds a few pixels into the content column - reads as a
-                panel gently floating above the content instead of a flat
-                block of color butted up against it.
+                The old tool list. Hidden: Home and the search replace it. Kept (empty, collapsed) only because the code still fills
+                NavPanel; remove it together with that code once the new layout is settled.
             -->
-            <!--
-                Shadow caster for the sidebar. Kept as an EMPTY sibling rather
-                than an Effect on the sidebar itself: an Effect on the panel
-                would render all 45 nav items (and every hover animation)
-                through an offscreen bitmap and drop their text to greyscale
-                anti-aliasing. Panel.ZIndex keeps it above the content column
-                so the shadow still falls onto it.
-            -->
-            <Border
+            <ScrollViewer
+                x:Name="NavScroll"
                 Grid.Column="0"
-                Margin="12,0,0,12"
-                Panel.ZIndex="1"
-                Background="{DynamicResource GlassHostBase}"
-                CornerRadius="16"
-                IsHitTestVisible="False">
-                <Border.Effect>
-                    <DropShadowEffect
-                        BlurRadius="24"
-                        Direction="270"
-                        Opacity="0.16"
-                        ShadowDepth="4"
-                        Color="Black" />
-                </Border.Effect>
-            </Border>
-
-            <Border
-                Grid.Column="0"
-                Margin="12,0,0,12"
-                Panel.ZIndex="2"
-                Background="{DynamicResource SidebarBg}"
-                CornerRadius="16">
-                <Grid>
-
-                    <!--
-                        Soft accent glow behind the brand area. Uses the theme's
-                        AccentGradient at low opacity and fades it out downward
-                        with an OpacityMask, so it follows Light/Dark automatically
-                        and adds depth without a hard edge.
-                    -->
-                    <Border
-                        Height="170"
-                        VerticalAlignment="Top"
-                        Background="{DynamicResource AccentGradient}"
-                        CornerRadius="16,16,0,0"
-                        IsHitTestVisible="False"
-                        Opacity="0.07">
-                        <Border.OpacityMask>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Offset="0" Color="Black" />
-                                <GradientStop Offset="1" Color="Transparent" />
-                            </LinearGradientBrush>
-                        </Border.OpacityMask>
-                    </Border>
-
-                    <DockPanel>
-
-                        <!--  App title / logo area  -->
-                        <Border
-                            Padding="18,20,18,16"
-                            BorderBrush="{DynamicResource SidebarBorder}"
-                            BorderThickness="0,0,0,1"
-                            DockPanel.Dock="Top">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel
-                                    Grid.Column="0"
-                                    Margin="-10,0,0,0"
-                                    Orientation="Horizontal">
-
-                                    <!--  Gradient brand badge - purely decorative, no code-behind reference  -->
-                                    <Border
-                                        Width="34"
-                                        Height="34"
-                                        Margin="0,0,10,0"
-                                        VerticalAlignment="Top"
-                                        Background="{DynamicResource AccentGradient}"
-                                        CornerRadius="10">
-                                        <Border.Effect>
-                                            <DropShadowEffect
-                                                BlurRadius="12"
-                                                Direction="270"
-                                                Opacity="0.18"
-                                                ShadowDepth="3"
-                                                Color="Black" />
-                                        </Border.Effect>
-                                        <materialDesign:PackIcon
-                                            Width="19"
-                                            Height="19"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            Foreground="White"
-                                            Kind="ToolboxOutline" />
-                                    </Border>
-
-                                    <StackPanel>
-                                        <TextBlock
-                                            x:Name="TxtAppTitle"
-                                            FontSize="18"
-                                            FontWeight="Bold"
-                                            Foreground="{DynamicResource SidebarText}"
-                                            MouseLeftButtonDown="TxtAppTitle_MouseLeftButtonDown"
-                                            Text="{DynamicResource Str_App_Title}" />
-                                        <TextBlock
-                                            x:Name="TxtAppSubtitle"
-                                            Margin="0,2,0,0"
-                                            FontSize="11"
-                                            Foreground="{DynamicResource SidebarTextMuted}"
-                                            Text="{DynamicResource Str_App_Subtitle}" />
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <StackPanel
-                                    Grid.Column="1"
-                                    VerticalAlignment="Top"
-                                    Orientation="Horizontal">
-
-                                    <Button
-                                        x:Name="BtnContactDeveloper"
-                                        Click="BtnContactDeveloper_Click"
-                                        Style="{StaticResource SidebarIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_Main_ContactDeveloper}">
-                                        <materialDesign:PackIcon
-                                            Width="17"
-                                            Height="17"
-                                            Foreground="{DynamicResource SidebarText}"
-                                            Kind="EmailOutline" />
-                                    </Button>
-
-                                    <Button
-                                        x:Name="BtnThemeToggle"
-                                        Margin="2,0,0,0"
-                                        Click="BtnThemeToggle_Click"
-                                        Style="{StaticResource SidebarIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_Main_SwitchBetweenLightAnd}">
-                                        <materialDesign:PackIcon
-                                            x:Name="IconThemeToggle"
-                                            Width="18"
-                                            Height="18"
-                                            Foreground="{DynamicResource SidebarText}"
-                                            Kind="WeatherNight" />
-                                    </Button>
-
-                                </StackPanel>
-
-                            </Grid>
-                        </Border>
-
-                        <!--
-                            Home (all tools as cards + search) - pinned above the
-                            sections. Ctrl+K anywhere opens it with search focused.
-                        -->
-                        <StackPanel Margin="0,8,0,0" DockPanel.Dock="Top">
-                            <RadioButton
-                                x:Name="BtnHome"
-                                Click="BtnHome_Click"
-                                GroupName="MainNav"
-                                Style="{StaticResource SidebarNavButtonStyle}"
-                                ToolTip="{DynamicResource Str_Main_HomeEveryToolWith}">
-                                <Grid HorizontalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon
-                                        Grid.Column="0"
-                                        Width="18"
-                                        Height="18"
-                                        Margin="0,0,10,0"
-                                        VerticalAlignment="Center"
-                                        Kind="HomeOutline" />
-                                    <TextBlock
-                                        x:Name="LblHome"
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Text="{DynamicResource Str_Main_Home}"
-                                        TextWrapping="Wrap" />
-                                </Grid>
-                            </RadioButton>
-                        </StackPanel>
-
-                        <!--  Settings pinned at the bottom  -->
-                        <Border
-                            Padding="0,6,0,10"
-                            BorderBrush="{DynamicResource SidebarBorder}"
-                            BorderThickness="0,1,0,0"
-                            DockPanel.Dock="Bottom">
-                            <RadioButton
-                                x:Name="BtnSettings"
-                                Click="BtnSettings_Click"
-                                GroupName="MainNav"
-                                Style="{StaticResource SidebarNavButtonStyle}"
-                                ToolTip="{DynamicResource Str_Nav_Settings}">
-                                <Grid HorizontalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon
-                                        Grid.Column="0"
-                                        Width="18"
-                                        Height="18"
-                                        Margin="0,0,10,0"
-                                        VerticalAlignment="Center"
-                                        Kind="Cog" />
-                                    <TextBlock
-                                        x:Name="LblSettings"
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Text="{DynamicResource Str_Nav_Settings}"
-                                        TextWrapping="Wrap" />
-                                </Grid>
-                            </RadioButton>
-                        </Border>
-
-                        <!--
-                            Recent + the sections (Data Quality, Files, ... Music ...)
-                            are built in code-behind from Controllers/ToolCatalogManager.cs
-                            - the one list of tools. To move a tool to another section,
-                            change it there; nothing here.
-                        -->
-                        <ScrollViewer
-                            x:Name="NavScroll"
-                            HorizontalScrollBarVisibility="Disabled"
-                            VerticalScrollBarVisibility="Auto">
-                            <StackPanel
-                                x:Name="NavPanel"
-                                Margin="0,0,0,12"
-                                KeyboardNavigation.DirectionalNavigation="Cycle" />
-                        </ScrollViewer>
-
-
-                    </DockPanel>
-                </Grid>
-            </Border>
+                Visibility="Collapsed">
+                <StackPanel x:Name="NavPanel" />
+            </ScrollViewer>
 
             <!--  ================= CONTENT AREA =================  -->
-            <Border Grid.Column="1" Background="{DynamicResource ContentBgGradient}">
-
+            <Border Grid.Column="1" Background="{DynamicResource ContentBg}">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
                     <!--
-                        ================= PAGE HEADER CARD =================
-                        Replaces the flat full-width breadcrumb strip with a
-                        rounded card that floats over the content background.
-                        Shows the active tool's icon (in a gradient badge that
-                        pops on every navigation) plus "Smart Tools › Section"
-                        above the tool name. Icon + section are filled in by
-                        NavigateTo in code-behind.
-                    -->
-                    <!--  Shadow layer (empty) + card on top: crisp header text  -->
-                    <Border
-                        Grid.Row="0"
-                        Margin="16,4,16,8"
-                        Background="{DynamicResource CardBg}"
-                        CornerRadius="12"
-                        Effect="{DynamicResource CardElevation}"
-                        IsHitTestVisible="False" />
-                    <Border
-                        Grid.Row="0"
-                        Margin="16,4,16,8"
-                        Padding="14,10,18,10"
-                        Background="{DynamicResource HeaderGradient}"
-                        BorderBrush="{DynamicResource CardBorderGradient}"
-                        BorderThickness="1"
-                        CornerRadius="12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <!--  Back to the page that was open before this one (hidden until there is one)  -->
-                            <Button
-                                x:Name="BtnBack"
-                                Grid.Column="0"
-                                Width="36"
-                                Height="36"
-                                Margin="0,0,10,0"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="BtnBack_Click"
-                                Style="{StaticResource NeutralIconButtonStyle}"
-                                ToolTip="{DynamicResource Str_Shell_Back}"
-                                Visibility="Collapsed">
-                                <materialDesign:PackIcon
-                                    Width="20"
-                                    Height="20"
-                                    Kind="ArrowLeft" />
-                            </Button>
-
-                            <Border
-                                x:Name="ActiveToolBadge"
-                                Grid.Column="1"
-                                Width="36"
-                                Height="36"
-                                Margin="0,0,12,0"
-                                VerticalAlignment="Center"
-                                Background="{DynamicResource AccentGradient}"
-                                CornerRadius="9"
-                                RenderTransformOrigin="0.5,0.5">
-                                <Border.RenderTransform>
-                                    <ScaleTransform x:Name="ActiveToolBadgeScale" ScaleX="1" ScaleY="1" />
-                                </Border.RenderTransform>
-                                <materialDesign:PackIcon
-                                    x:Name="IconActiveTool"
-                                    Width="20"
-                                    Height="20"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Foreground="White"
-                                    Kind="HomeOutline" />
-                            </Border>
-
-                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock
-                                        FontSize="11.5"
-                                        Foreground="{DynamicResource TextSecondary}"
-                                        Text="{DynamicResource Str_App_Title}" />
-                                    <TextBlock
-                                        Margin="6,0"
-                                        FontSize="11.5"
-                                        Foreground="{DynamicResource TextSecondary}"
-                                        Text="›" />
-                                    <TextBlock
-                                        x:Name="TxtBreadcrumbSection"
-                                        FontSize="11.5"
-                                        Foreground="{DynamicResource TextSecondary}"
-                                        Text="{DynamicResource Str_Main_Home}" />
-                                </StackPanel>
-                                <TextBlock
-                                    x:Name="TxtBreadcrumbActive"
-                                    Margin="0,1,0,0"
-                                    FontSize="17"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextPrimary}"
-                                    Text="{DynamicResource Str_Main_Home}"
-                                    TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-
-                            <!--  Starts the guided tour of the page that is open (enabled only when the page has one)  -->
-                            <Button
-                                x:Name="BtnHelpTour"
-                                Grid.Column="3"
-                                Width="90"
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center"
-                                Click="BtnHelpTour_Click"
-                                Style="{StaticResource NeutralIconButtonStyle}"
-                                ToolTip="{DynamicResource Str_Tour_Help}"
-                                ToolTipService.ShowOnDisabled="True">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon
-                                        Width="16"
-                                        Height="16"
-                                        VerticalAlignment="Center"
-                                        Kind="HelpCircleOutline" />
-                                    <TextBlock Margin="6,0,0,0" Text="{DynamicResource Str_Tour_HelpButton}" />
-                                </StackPanel>
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <!--
-                        No ScrollViewer here on purpose: this Grid row now gives the
-                        active view a bounded height equal to the window's content
-                        area. Each view manages its own internal scrolling (its
-                        options sidebar has its own ScrollViewer, and any DataGrid
-                        scrolls internally via VerticalScrollBarVisibility="Auto").
-                        Wrapping this in a ScrollViewer would hand every child an
-                        effectively infinite available height, which is what let a
-                        large DataGrid (e.g. 10,000+ rows) balloon the whole page
-                        instead of scrolling within its own bounds.
+                        No ScrollViewer here on purpose: the active view gets a bounded height equal to the window's content area and
+                        manages its own scrolling (a ScrollViewer here would let a huge DataGrid balloon the page).
                     -->
                     <ContentControl
                         x:Name="MainContentArea"
-                        Grid.Row="1"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch">
                         <!--  Animated by NavigateTo: each tool fades + slides up into place  -->
@@ -936,13 +885,10 @@
                         </ContentControl.RenderTransform>
                     </ContentControl>
 
-                    <!--  Guided tour: over the header and the page, hidden until the Help button is used  -->
-                    <views:TourOverlay x:Name="TourLayer" Grid.RowSpan="2" />
-
+                    <!--  Guided tour: over the page, hidden until the Help button is used  -->
+                    <views:TourOverlay x:Name="TourLayer" />
                 </Grid>
-
             </Border>
-
         </Grid>
 
         <!--  Shared modal (AppModal): message boxes are added here, over the title bar and the page  -->
