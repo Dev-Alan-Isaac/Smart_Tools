@@ -10,7 +10,7 @@
     Title="{DynamicResource Str_App_Title}"
     Width="900"
     Height="550"
-    MinWidth="360"
+    MinWidth="520"
     MinHeight="420"
     Background="{DynamicResource ContentBg}"
     Closing="Window_Closing"
@@ -589,6 +589,7 @@
         <Grid
             x:Name="TitleBar"
             Grid.Row="0"
+            SizeChanged="TitleBar_SizeChanged"
             Background="{DynamicResource ContentBg}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -599,6 +600,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel
+                x:Name="TitleLeft"
                 Grid.Column="0"
                 Margin="12,0,8,0"
                 VerticalAlignment="Center"
@@ -699,6 +701,7 @@
                         Kind="HomeOutline" />
                 </Border>
                 <StackPanel
+                    x:Name="BreadcrumbPanel"
                     VerticalAlignment="Center"
                     IsHitTestVisible="False"
                     Orientation="Horizontal">
@@ -709,6 +712,7 @@
                         Foreground="{DynamicResource TextSecondary}"
                         Text="{DynamicResource Str_Main_Home}" />
                     <TextBlock
+                        x:Name="TxtBreadcrumbChevron"
                         Margin="6,0"
                         VerticalAlignment="Center"
                         FontSize="12"
@@ -731,7 +735,6 @@
                 x:Name="BtnSearchTools"
                 Grid.Column="2"
                 Width="420"
-                MinWidth="180"
                 Margin="8,0"
                 VerticalAlignment="Center"
                 Click="BtnSearchTools_Click"
@@ -744,18 +747,21 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <materialDesign:PackIcon
+                        x:Name="IconSearch"
                         Width="16"
                         Height="16"
                         Margin="0,0,8,0"
                         VerticalAlignment="Center"
                         Kind="Magnify" />
                     <TextBlock
+                        x:Name="TxtSearchLabel"
                         Grid.Column="1"
                         VerticalAlignment="Center"
                         FontSize="12.5"
                         Text="{DynamicResource Str_Shell_Search}"
                         TextTrimming="CharacterEllipsis" />
                     <Border
+                        x:Name="SearchKeyChip"
                         Grid.Column="2"
                         Padding="6,1"
                         VerticalAlignment="Center"
@@ -769,6 +775,7 @@
             </Button>
 
             <StackPanel
+                x:Name="TitleRight"
                 Grid.Column="4"
                 VerticalAlignment="Center"
                 Orientation="Horizontal">

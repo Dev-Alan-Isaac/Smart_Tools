@@ -20,6 +20,15 @@ namespace Smart_Tools.WPF.Views
     {
         private void ShowStageMenu(Point at)
         {
+            if (TapeAt(at) is int tape and >= 0)
+            {
+                var tapeMenu = new ContextMenu { PlacementTarget = StageHost, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+                tapeMenu.Items.Add(Item("Str_Modeler_Menu_RemoveTape", "Remove this measurement", PackIconKind.DeleteOutline, () => RemoveTape(tape)));
+                tapeMenu.Items.Add(Item("Str_Modeler_Menu_RemoveAllTapes", "Remove all measurements", PackIconKind.DeleteSweepOutline, RemoveAllTapes, enabled: _tapes.Count > 1));
+                tapeMenu.IsOpen = true;
+                return;
+            }
+            if (_measuring) return;   // measuring: right-click only acts on measurements
             string? hitTop = ObjectAt(at) is { } id ? SceneEdit.TopOf(_scene, id)?.Id ?? id : null;
             if (hitTop != null && !PickedObjects().Contains(hitTop)) Pick(new[] { hitTop });
 
@@ -38,6 +47,11 @@ namespace Smart_Tools.WPF.Views
             menu.Items.Add(Item("Str_Modeler_Menu_Paste", "Paste", PackIconKind.ContentPaste, PasteClip, "Ctrl+V", _clip != null));
             menu.Items.Add(Item("Str_Modeler_Menu_Fit", "Fit the view", PackIconKind.FitToScreenOutline, FitCamera));
             menu.Items.Add(Item("Str_Modeler_Menu_Undo", "Undo", PackIconKind.UndoVariant, Undo, "Ctrl+Z"));
+            if (_tapes.Count > 0)
+            {
+                menu.Items.Add(new Separator());
+                menu.Items.Add(Item("Str_Modeler_Menu_RemoveAllTapes", "Remove all measurements", PackIconKind.DeleteSweepOutline, RemoveAllTapes));
+            }
         }
 
         private void BuildObjectMenu(ContextMenu menu)

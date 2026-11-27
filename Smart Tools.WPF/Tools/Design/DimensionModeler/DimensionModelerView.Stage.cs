@@ -328,7 +328,7 @@ namespace Smart_Tools.WPF.Views
             bool still = Math.Abs(at.X - _pressPoint.X) < DragStartPixels && Math.Abs(at.Y - _pressPoint.Y) < DragStartPixels;
             bool pressedObject = _pressHit != null;
             bool leftClick = e.ChangedButton == MouseButton.Left && (_orbiting || pressedObject) && still;
-            bool rightClick = e.ChangedButton == MouseButton.Right && still && _drawing == null && !_measuring;   // a right-drag pans; a right-click opens the menu
+            bool rightClick = e.ChangedButton == MouseButton.Right && still && _drawing == null;   // a right-drag pans; a right-click opens the menu
             _orbiting = _panning = false;
             _pressHit = null;
             StageHost.ReleaseMouseCapture();

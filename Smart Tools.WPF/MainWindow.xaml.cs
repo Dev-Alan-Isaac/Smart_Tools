@@ -746,6 +746,56 @@ namespace Smart_Tools.WPF
 
         private void BtnSearchTools_Click(object sender, RoutedEventArgs e) => ShowCommandPalette();
 
+        // =================================================================
+        //  Title bar on a narrow window
+        // =================================================================
+
+        private int _titleFit = -1;
+
+        /// <summary>
+        /// Keeps the title bar inside the window: it steps down until everything fits, and the window buttons are never pushed out.
+        /// 0 full; 1 narrower search without the Ctrl+K tag; 2 no app name and no "Section >"; 3 search is just its icon and Contact
+        /// goes (it is in Ctrl+K... and Settings); 4 no tool name (its icon stays) and the theme button goes (Settings has it).
+        /// </summary>
+        private void TitleBar_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (!e.WidthChanged) return;
+            FitTitleBar(TitleBar.ActualWidth);
+        }
+
+        private void FitTitleBar(double width)
+        {
+            if (width <= 0) return;
+            for (int level = 0; level <= 4; level++)
+            {
+                ApplyTitleFit(level);
+                TitleLeft.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+                BtnSearchTools.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+                TitleRight.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+                double need = TitleLeft.DesiredSize.Width + BtnSearchTools.DesiredSize.Width + TitleRight.DesiredSize.Width + 8;
+                if (need <= width) return;
+            }
+        }
+
+        private void ApplyTitleFit(int level)
+        {
+            if (level == _titleFit) return;
+            _titleFit = level;
+            var show = Visibility.Visible;
+            var hide = Visibility.Collapsed;
+            BtnSearchTools.Width = level switch { 0 => 420, 1 => 280, 2 => 200, _ => 44 };
+            IconSearch.Margin = level >= 3 ? new Thickness(0) : new Thickness(0, 0, 8, 0);
+            IconSearch.HorizontalAlignment = level >= 3 ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+            TxtSearchLabel.Visibility = level >= 3 ? hide : show;
+            SearchKeyChip.Visibility = level >= 1 ? hide : show;
+            TxtAppTitle.Visibility = level >= 2 ? hide : show;
+            TxtBreadcrumbSection.Visibility = TxtBreadcrumbChevron.Visibility = level >= 2 ? hide : show;
+            TxtBreadcrumbActive.MaxWidth = level >= 2 ? 160 : 320;
+            BreadcrumbPanel.Visibility = level >= 4 ? hide : show;
+            BtnContactDeveloper.Visibility = level >= 3 ? hide : show;
+            BtnThemeToggle.Visibility = level >= 4 ? hide : show;
+        }
+
         private void ShowCommandPalette()
         {
             if (_palette != null) { _palette.Activate(); return; }

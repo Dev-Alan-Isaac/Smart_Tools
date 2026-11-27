@@ -228,15 +228,20 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Tape measure: click two points
+        //  Tape measure: click two points; finished measurements stay
         // =================================================================
 
-        private const double CornerSnapPixels = 10;
+        private const double CornerSnapPixels = 12;
+        private const double EdgeSnapPixels = 8;
+        private const double TapeHitPixels = 8;
 
         private bool _measuring;
         private Vec3? _tapeA;
-        private Vec3? _tapeB;
         private Vec3? _tapeHover;
+        private TapeSnap _tapeHoverKind;
+        private IReadOnlyList<ObjectMesh>? _featuresFor;              // the built objects the edges below were found on
+        private List<MeshFeatures> _features = new();
+        private readonly List<(Vec3 A, Vec3 B)> _tapes = new();   // finished measurements: stay until removed (view only, not saved)
 
         private void BtnMeasure_Click(object sender, RoutedEventArgs e)
         {
@@ -247,85 +252,171 @@ namespace Smart_Tools.WPF.Views
             }
             CancelDrawing();
             _measuring = true;
-            _tapeA = _tapeB = _tapeHover = null;
+            _tapeA = _tapeHover = null;
             StageHost.Cursor = Cursors.Cross;
             StageHost.Focus();
-            TxtStatus.Text = Loc.T("Str_Modeler_MeasureStart", "Click the first point, then the second. Corners of shapes catch the pointer. Esc stops.");
+            TxtStatus.Text = Loc.T("Str_Modeler_MeasureStart", "Click the first point, then the second. Corners of shapes catch the pointer. Measurements stay; right-click one to remove it. Esc stops.");
             RedrawOverlay();
         }
 
+        /// <summary>Leaves the tape tool; finished measurements stay on the view.</summary>
         private bool StopMeasuring()
         {
             if (!_measuring) return false;
             _measuring = false;
-            _tapeA = _tapeB = _tapeHover = null;
+            _tapeA = _tapeHover = null;
             StageHost.Cursor = null;
             RedrawOverlay();
             return true;
         }
 
-        /// <summary>The 3D point under the mouse: a shape corner near the pointer, else the surface hit, else the floor.</summary>
-        private Vec3? TapePoint(Point at)
+        /// <summary>The real edges and corners of every drawn object (found once per build).</summary>
+        private List<MeshFeatures> Features()
+        {
+            if (!ReferenceEquals(_featuresFor, _objects))
+            {
+                _featuresFor = _objects;
+                _features = _objects.Select(o => MeshEdges.Find(o.Triangles.Select(c => c.Triangle))).ToList();
+            }
+            return _features;
+        }
+
+        /// <summary>
+        /// The 3D point under the mouse and what it caught: a real corner of a shape near the pointer, else a point exactly on a real
+        /// edge near it, else the surface under it, else the floor.
+        /// </summary>
+        private (Vec3 Point, TapeSnap Kind)? TapePoint(Point at)
         {
             double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
             if (w < 10 || h < 10) return null;
-            Vec3? best = null;
-            double bestPx = CornerSnapPixels;
-            foreach (var node in _scene.Nodes.Where(n => !n.Hidden))
-            {
-                var box = SceneEdit.BoundsOf(_scene, node);
-                if (box.IsEmpty) continue;
-                for (int i = 0; i < 8; i++)
+            double Px(Vec3 v) => _camera.Project(v, w, h) is { } s ? Math.Sqrt((s.X - at.X) * (s.X - at.X) + (s.Y - at.Y) * (s.Y - at.Y)) : double.MaxValue;
+            var features = Features();
+
+            Vec3? corner = null;
+            double best = CornerSnapPixels;
+            foreach (var f in features)
+                foreach (var c in f.Corners)
                 {
-                    var corner = new Vec3((i & 1) == 0 ? box.Min.X : box.Max.X, (i & 2) == 0 ? box.Min.Y : box.Max.Y, (i & 4) == 0 ? box.Min.Z : box.Max.Z);
-                    if (_camera.Project(corner, w, h) is not { } p) continue;
-                    double d = Math.Sqrt((p.X - at.X) * (p.X - at.X) + (p.Y - at.Y) * (p.Y - at.Y));
-                    if (d < bestPx) { bestPx = d; best = corner; }
+                    double d = Px(c);
+                    if (d < best) { best = d; corner = c; }
                 }
-            }
-            if (best != null) return best;
+            if (corner is { } cp) return (cp, TapeSnap.Corner);
+
             var ray = _camera.Ray(at.X, at.Y, w, h);
-            if (ScenePick.Pick(_objects, ray) is { } hit) return hit.Point;
-            return PieceDrag.RayHitsHeight(ray, 0);
+            Vec3? onEdge = null;
+            best = EdgeSnapPixels;
+            foreach (var f in features)
+                foreach (var (a, b) in f.Edges)
+                {
+                    if (MeshEdges.NearestOnSegment(ray, a, b) is not { } q) continue;
+                    double d = Px(q);
+                    if (d < best) { best = d; onEdge = q; }
+                }
+            if (onEdge is { } ep) return (ep, TapeSnap.Edge);
+
+            if (ScenePick.Pick(_objects, ray) is { } hit) return (hit.Point, TapeSnap.Surface);
+            return PieceDrag.RayHitsHeight(ray, 0) is { } floor ? (floor, TapeSnap.Floor) : null;
         }
+
+        /// <summary>The point for the end of a measurement: Shift keeps it straight along X, Y or Z from the first point.</summary>
+        private Vec3 TapeEnd(Vec3 p) =>
+            _tapeA is { } a && Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? MeshEdges.AlongMainAxis(a, p) : p;
 
         private void MeasureClick(Point at)
         {
-            if (TapePoint(at) is not { } p) return;
-            if (_tapeA == null || _tapeB != null)
+            if (TapePoint(at) is not { } hit) return;
+            var p = _tapeA == null ? hit.Point : TapeEnd(hit.Point);
+            if (_tapeA is not { } a)
             {
                 _tapeA = p;
-                _tapeB = null;
+                RedrawOverlay();
+                return;
             }
-            else
-            {
-                _tapeB = p;
-                var d = p - _tapeA.Value;
-                string F(double mm) => LengthFormat.Format(Math.Abs(mm), _settings.Unit);
-                TxtStatus.Text = Loc.F("Str_Modeler_MeasureResult", "Distance {0}  (X {1} · Y {2} · Z {3}). Click again to measure another.", F(d.Length), F(d.X), F(d.Y), F(d.Z));
-            }
+            _tapeA = null;
+            if ((p - a).Length < 1e-6) { RedrawOverlay(); return; }   // the same point twice: nothing to measure
+            _tapes.Add((a, p));
+            var d = p - a;
+            string F(double mm) => LengthFormat.Format(Math.Abs(mm), _settings.Unit);
+            TxtStatus.Text = Loc.F("Str_Modeler_MeasureResult", "Distance {0}  (X {1} · Y {2} · Z {3}). It stays: right-click it to remove it. Click again to measure another.", F(d.Length), F(d.X), F(d.Y), F(d.Z));
             RedrawOverlay();
         }
 
         private void MeasureHover(Point at)
         {
-            _tapeHover = TapePoint(at);
-            if (_tapeA != null && _tapeB == null) RedrawOverlay();
+            var hit = TapePoint(at);
+            _tapeHover = hit is { } h ? TapeEnd(h.Point) : null;
+            _tapeHoverKind = hit?.Kind ?? TapeSnap.None;
+            RedrawOverlay();   // also with no first point yet: the marker shows what a click would catch
+        }
+
+        /// <summary>The finished measurement whose line (or label) is under the pointer, or -1.</summary>
+        private int TapeAt(Point at)
+        {
+            double w = StageHost.ActualWidth, h = StageHost.ActualHeight;
+            int best = -1;
+            double bestPx = TapeHitPixels;
+            for (int i = 0; i < _tapes.Count; i++)
+            {
+                if (_camera.Project(_tapes[i].A, w, h) is not { } a || _camera.Project(_tapes[i].B, w, h) is not { } b) continue;
+                double dx = b.X - a.X, dy = b.Y - a.Y, len2 = dx * dx + dy * dy;
+                double t = len2 < 1e-9 ? 0 : Math.Clamp(((at.X - a.X) * dx + (at.Y - a.Y) * dy) / len2, 0, 1);
+                double px = a.X + t * dx - at.X, py = a.Y + t * dy - at.Y;
+                double d = Math.Sqrt(px * px + py * py);
+                // the label sits just above the middle of the line
+                double mx = (a.X + b.X) / 2 - at.X, my = (a.Y + b.Y) / 2 - 14 - at.Y;
+                d = Math.Min(d, Math.Abs(mx) < 34 && Math.Abs(my) < 12 ? 0 : double.MaxValue);
+                if (d < bestPx) { bestPx = d; best = i; }
+            }
+            return best;
+        }
+
+        private void RemoveTape(int index)
+        {
+            if (index < 0 || index >= _tapes.Count) return;
+            _tapes.RemoveAt(index);
+            RedrawOverlay();
+        }
+
+        private void RemoveAllTapes()
+        {
+            _tapes.Clear();
+            RedrawOverlay();
         }
 
         private void DrawTape(double w, double h)
         {
-            if (!_measuring || _tapeA is not { } a) return;
-            var b = _tapeB ?? _tapeHover;
-            if (_camera.Project(a, w, h) is not { } pa) return;
+            foreach (var (a, b) in _tapes) DrawOneTape(a, b, w, h, dashed: false);
+            if (_measuring && _tapeA is { } start)
+            {
+                if (_tapeHover is { } end) DrawOneTape(start, end, w, h, dashed: true);
+                else if (_camera.Project(start, w, h) is { } ps) AddTapeDot(ps);
+            }
+            if (_measuring && _tapeHover is { } hover && _camera.Project(hover, w, h) is { } ph) AddSnapMarker(ph, _tapeHoverKind);
+        }
+
+        /// <summary>What the pointer would catch: a square on a corner, a diamond on an edge (nothing on a plain surface or the floor).</summary>
+        private void AddSnapMarker(ScreenPoint p, TapeSnap kind)
+        {
+            if (kind is not (TapeSnap.Corner or TapeSnap.Edge)) return;
+            var mark = new System.Windows.Shapes.Rectangle { Width = 12, Height = 12, StrokeThickness = 2 };
+            mark.SetResourceReference(Shape.StrokeProperty, "StatusWarningFg");
+            mark.SetResourceReference(Shape.FillProperty, "PopupBg");
+            if (kind == TapeSnap.Edge) mark.RenderTransform = new RotateTransform(45, 6, 6);
+            Canvas.SetLeft(mark, p.X - 6);
+            Canvas.SetTop(mark, p.Y - 6);
+            Overlay.Children.Add(mark);
+        }
+
+        private void DrawOneTape(Vec3 a, Vec3 b, double w, double h, bool dashed)
+        {
+            if (_camera.Project(a, w, h) is not { } pa || _camera.Project(b, w, h) is not { } pb) return;
+            AddLine(pa, pb, "StatusWarningFg", 2, 1, dashed);
             AddTapeDot(pa);
-            if (b is not { } end || _camera.Project(end, w, h) is not { } pb) return;
-            AddLine(pa, pb, "StatusWarningFg", 2, 1, dashed: _tapeB == null);
             AddTapeDot(pb);
             var label = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(7, 2, 7, 3), BorderThickness = new Thickness(1) };
             label.SetResourceReference(Border.BackgroundProperty, "PopupBg");
             label.SetResourceReference(Border.BorderBrushProperty, "StatusWarningFg");
-            var text = new TextBlock { Text = LengthFormat.Format((end - a).Length, _settings.Unit), FontSize = 12, FontWeight = FontWeights.SemiBold };
+            var text = new TextBlock { Text = LengthFormat.Format((b - a).Length, _settings.Unit), FontSize = 12, FontWeight = FontWeights.SemiBold };
             text.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
             label.Child = text;
             label.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));

@@ -12909,9 +12909,9 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_RepeatOk">Repeat</system:String>
     <system:String x:Key="Str_Modeler_BoxPickedOne">1 object picked.</system:String>
     <system:String x:Key="Str_Modeler_BoxPickedMany">{0} objects picked.</system:String>
-    <system:String x:Key="Str_Modeler_MeasureToolTip">Tape measure: click two points to read the distance between them</system:String>
-    <system:String x:Key="Str_Modeler_MeasureStart">Click the first point, then the second. Corners of shapes catch the pointer. Esc stops.</system:String>
-    <system:String x:Key="Str_Modeler_MeasureResult">Distance {0}  (X {1} · Y {2} · Z {3}). Click again to measure another.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureToolTip">Tape measure: click two points to read the distance. Catches the corners and edges of shapes; Shift measures straight along one axis.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureStart">Click the first point, then the second. Points catch the real corners (square) and edges (diamond) of shapes. Hold Shift on the second point to measure straight along X, Y or Z. Measurements stay; right-click one to remove it. Esc stops.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureResult">Distance {0}  (X {1} · Y {2} · Z {3}). It stays: right-click it to remove it. Click again to measure another.</system:String>
     <system:String x:Key="Str_Modeler_Menu_Copy">Copy</system:String>
     <system:String x:Key="Str_Modeler_Menu_Cut">Cut</system:String>
     <system:String x:Key="Str_Modeler_Menu_Paste">Paste</system:String>
@@ -12919,4 +12919,6 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_Menu_TakeOut">Take out of the group</system:String>
     <system:String x:Key="Str_Modeler_TookOutOne">Taken out of its group: it is an object of its own now.</system:String>
     <system:String x:Key="Str_Modeler_TookOutMany">{0} taken out of their groups.</system:String>
+    <system:String x:Key="Str_Modeler_Menu_RemoveTape">Remove this measurement</system:String>
+    <system:String x:Key="Str_Modeler_Menu_RemoveAllTapes">Remove all measurements</system:String>
 </ResourceDictionary>

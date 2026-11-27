@@ -12910,9 +12910,9 @@
     <system:String x:Key="Str_Modeler_RepeatOk">Repetir</system:String>
     <system:String x:Key="Str_Modeler_BoxPickedOne">1 objeto seleccionado.</system:String>
     <system:String x:Key="Str_Modeler_BoxPickedMany">{0} objetos seleccionados.</system:String>
-    <system:String x:Key="Str_Modeler_MeasureToolTip">Cinta métrica: haz clic en dos puntos para leer la distancia entre ellos</system:String>
-    <system:String x:Key="Str_Modeler_MeasureStart">Haz clic en el primer punto y luego en el segundo. Las esquinas de las formas atraen el puntero. Esc para.</system:String>
-    <system:String x:Key="Str_Modeler_MeasureResult">Distancia {0}  (X {1} · Y {2} · Z {3}). Vuelve a hacer clic para medir otra.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureToolTip">Cinta métrica: haz clic en dos puntos para leer la distancia. Se pega a las esquinas y aristas de las formas; Mayús mide recto en un eje.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureStart">Haz clic en el primer punto y luego en el segundo. Los puntos se pegan a las esquinas (cuadro) y aristas (rombo) reales de las formas. Mantén Mayús en el segundo punto para medir recto en X, Y o Z. Las medidas se quedan; clic derecho en una para quitarla. Esc para.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureResult">Distancia {0}  (X {1} · Y {2} · Z {3}). Se queda: clic derecho en ella para quitarla. Vuelve a hacer clic para medir otra.</system:String>
     <system:String x:Key="Str_Modeler_Menu_Copy">Copiar</system:String>
     <system:String x:Key="Str_Modeler_Menu_Cut">Cortar</system:String>
     <system:String x:Key="Str_Modeler_Menu_Paste">Pegar</system:String>
@@ -12920,4 +12920,6 @@
     <system:String x:Key="Str_Modeler_Menu_TakeOut">Sacar del grupo</system:String>
     <system:String x:Key="Str_Modeler_TookOutOne">Sacado de su grupo: ahora es un objeto independiente.</system:String>
     <system:String x:Key="Str_Modeler_TookOutMany">{0} sacados de sus grupos.</system:String>
+    <system:String x:Key="Str_Modeler_Menu_RemoveTape">Quitar esta medida</system:String>
+    <system:String x:Key="Str_Modeler_Menu_RemoveAllTapes">Quitar todas las medidas</system:String>
 </ResourceDictionary>
