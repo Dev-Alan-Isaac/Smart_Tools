@@ -409,24 +409,11 @@
 
                                         <Button
                                             x:Name="BtnPasteBatch"
-                                            MinHeight="30"
                                             Margin="0,0,0,10"
                                             Click="BtnPasteBatch_Click"
-                                            ToolTip="{DynamicResource Str_ColorPicker_AddTheColorsOn}">
-                                            <Grid HorizontalAlignment="Center">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <materialDesign:PackIcon
-                                                    Grid.Column="0"
-                                                    Width="14"
-                                                    Height="14"
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    Kind="ContentPaste" />
-                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_ColorPicker_Paste}" TextWrapping="Wrap" />
-                                            </Grid>
+                                            ToolTip="{DynamicResource Str_ColorPicker_AddTheColorsOn}"
+                                            Style="{StaticResource ListToolButtonStyle}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="ContentPaste" />
                                         </Button>
 
                                         <Button

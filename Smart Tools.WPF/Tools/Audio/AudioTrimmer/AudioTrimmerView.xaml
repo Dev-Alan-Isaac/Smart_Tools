@@ -1125,22 +1125,10 @@
                                             Margin="0,8,0,0"
                                             HorizontalAlignment="Left"
                                             Click="BtnShowFolder_Click"
-                                            Style="{StaticResource PrimaryButtonStyle}"
-                                            Visibility="Collapsed">
-                                            <Grid HorizontalAlignment="Center">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <materialDesign:PackIcon
-                                                    Grid.Column="0"
-                                                    Width="16"
-                                                    Height="16"
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    Kind="FolderOpenOutline" />
-                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Common_ShowInFolderTooltip}" TextWrapping="Wrap" />
-                                            </Grid>
+                                            Visibility="Collapsed"
+                                            ToolTip="{DynamicResource Str_Common_ShowInFolderTooltip}"
+                                            Style="{StaticResource ListToolButtonStyle}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                         </Button>
                                     </Grid>
                                     <ProgressBar

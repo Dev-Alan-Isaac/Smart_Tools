@@ -35,11 +35,12 @@
                                 <Border Style="{StaticResource InputBarStyle}">
                                     <TextBox x:Name="TxtUrl" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_AsciiVideo_LinkPlaceholder}" />
                                 </Border>
-                                <Button Margin="0,8,0,0" Click="BtnPaste_Click" Style="{StaticResource NeutralIconButtonStyle}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentPaste" />
-                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_AsciiVideo_Paste}" />
-                                    </StackPanel>
+                                <Button
+                                    Margin="0,8,0,0"
+                                    Click="BtnPaste_Click"
+                                    ToolTip="{DynamicResource Str_AsciiVideo_Paste}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ContentPaste" />
                                 </Button>
                             </StackPanel>
                             <StackPanel x:Name="PanelFile" Margin="0,10,0,0" Visibility="Collapsed">

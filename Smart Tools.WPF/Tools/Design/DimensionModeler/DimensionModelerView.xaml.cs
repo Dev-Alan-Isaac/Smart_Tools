@@ -44,6 +44,7 @@ namespace Smart_Tools.WPF.Views
             _saveTimer.Tick += (_, _) => FlushSave();
             InitStage();
             InitPalette();
+            ShowExtrudeHeight();
             InitInspector();
             InitOutliner();
             _viewConstructed = true;
@@ -260,13 +261,19 @@ namespace Smart_Tools.WPF.Views
             bool typing = Keyboard.FocusedElement is TextBox;
             if (e.Key == Key.Escape && !typing)
             {
-                if (_fullView) SetFullView(false);
+                if (CancelDrag() || CancelDrawing()) { }
+                else if (_fullView) SetFullView(false);
                 else if (_picked.Count > 0) Pick(Array.Empty<string>());
                 else return;
                 e.Handled = true;
                 return;
             }
             if (typing || mods.HasFlag(ModifierKeys.Alt)) return;
+            if (DrawKey(e.Key))
+            {
+                e.Handled = true;
+                return;
+            }
             bool ctrl = mods.HasFlag(ModifierKeys.Control), shift = mods.HasFlag(ModifierKeys.Shift);
             switch (e.Key)
             {
@@ -291,6 +298,10 @@ namespace Smart_Tools.WPF.Views
                     break;
                 case Key.Delete:
                     DeletePicked();
+                    break;
+                // arrows move the picked shapes, only while the 3D view has the focus (lists keep their own arrow keys)
+                case Key.Left or Key.Right or Key.Up or Key.Down when StageHost.IsKeyboardFocusWithin && _picked.Count > 0:
+                    NudgePicked(e.Key, ctrl, shift);
                     break;
                 default:
                     return;
@@ -335,6 +346,7 @@ namespace Smart_Tools.WPF.Views
         {
             if (!_viewConstructed || sender is not RadioButton { Tag: string name } || !Enum.TryParse<LengthUnit>(name, out var unit)) return;
             _settings.Unit = unit;
+            ShowExtrudeHeight();
             RefreshTitle();
             RefreshInspector();
             RefreshParts();

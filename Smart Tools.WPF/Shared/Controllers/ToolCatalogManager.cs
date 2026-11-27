@@ -16,7 +16,7 @@ namespace Smart_Tools.WPF.Controllers
     {
         public const string HomeId = "home";
         public const string SettingsId = "settings";
-        public const int MaxRecent = 10;
+        public const int MaxRecent = 9;
 
 
         // =================================================================
@@ -352,9 +352,12 @@ namespace Smart_Tools.WPF.Controllers
         /// <summary>Tools that became a page of another tool: old id -> the tool that holds it now (saved Recent / Favorites follow it).</summary>
         private static readonly Dictionary<string, string> MergedInto = new()
         {
-            ["text-to-speech"] = "speech-studio", ["speech-to-text"] = "speech-studio",
-            ["audio-trimmer"] = "audio-editor", ["loudness-meter"] = "audio-editor",
-            ["audio-recorder"] = "voice-studio", ["voice-changer"] = "voice-studio",
+            ["text-to-speech"] = "speech-studio",
+            ["speech-to-text"] = "speech-studio",
+            ["audio-trimmer"] = "audio-editor",
+            ["loudness-meter"] = "audio-editor",
+            ["audio-recorder"] = "voice-studio",
+            ["voice-changer"] = "voice-studio",
         };
 
         private static List<string> FollowMerged(List<string>? ids) =>

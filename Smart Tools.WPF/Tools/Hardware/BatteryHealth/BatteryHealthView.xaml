@@ -206,11 +206,15 @@
                     <Border ctl:Tour.Key="Str_Tour_BatteryHealth_Actions" ctl:Tour.Order="2" Margin="0,0,0,10" Style="{StaticResource SidebarGroupCardStyle}">
                         <StackPanel>
                             <ContentControl Content="{DynamicResource Str_BatteryHealth_Actions}" Style="{StaticResource SidebarGroupHeader}" Tag="{x:Static materialDesign:PackIconKind.LightningBoltOutline}" />
-                            <Button ctl:Tour.Key="Str_Tour_BatteryHealth_Refresh" ctl:Tour.Order="3" x:Name="BtnRefresh" MinHeight="36" Margin="0,10,0,0" Click="BtnRefresh_Click" ToolTip="{DynamicResource Str_BatteryHealth_ReadTheBatteryAgain}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,6,0" Kind="Refresh" />
-                                    <TextBlock Text="{DynamicResource Str_Common_Refresh}" />
-                                </StackPanel>
+                            <Button
+                                ctl:Tour.Key="Str_Tour_BatteryHealth_Refresh"
+                                ctl:Tour.Order="3"
+                                x:Name="BtnRefresh"
+                                Margin="0,10,0,0"
+                                Click="BtnRefresh_Click"
+                                ToolTip="{DynamicResource Str_BatteryHealth_ReadTheBatteryAgain}"
+                                Style="{StaticResource ListToolButtonStyle}">
+                                <materialDesign:PackIcon Width="16" Height="16" Kind="Refresh" />
                             </Button>
                             <Button ctl:Tour.Key="Str_Tour_BatteryHealth_Report" ctl:Tour.Order="4" x:Name="BtnReport" MinHeight="36" Margin="0,8,0,0" Click="BtnReport_Click" ToolTip="{DynamicResource Str_BatteryHealth_MakeWindowsOwnDetailed}">
                                 <StackPanel Orientation="Horizontal">

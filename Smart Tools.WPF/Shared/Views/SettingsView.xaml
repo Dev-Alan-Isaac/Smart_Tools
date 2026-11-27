@@ -1567,11 +1567,13 @@
                                             <TextBlock VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_Install_PortableCopy}" />
                                         </StackPanel>
                                     </Button>
-                                    <Button x:Name="BtnOpenAppFolder" Margin="0,0,8,8" Click="BtnOpenAppFolder_Click" Style="{StaticResource NeutralIconButtonStyle}">
-                                        <StackPanel Margin="8,0" Orientation="Horizontal">
-                                            <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="FolderOpenOutline" />
-                                            <TextBlock VerticalAlignment="Center" FontSize="12" Text="{DynamicResource Str_Install_OpenAppFolder}" />
-                                        </StackPanel>
+                                    <Button
+                                        x:Name="BtnOpenAppFolder"
+                                        Margin="0,0,8,8"
+                                        Click="BtnOpenAppFolder_Click"
+                                        ToolTip="{DynamicResource Str_Install_OpenAppFolder}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                     </Button>
                                     <Button x:Name="BtnUninstall" Margin="0,0,8,8" Click="BtnUninstall_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_Install_UninstallTip}">
                                         <StackPanel Margin="8,0" Orientation="Horizontal">
@@ -1619,26 +1621,9 @@
                                         Margin="12,0,0,0"
                                         VerticalAlignment="Center"
                                         Click="BtnOpenSettingsFolder_Click"
-                                        Style="{StaticResource NeutralIconButtonStyle}"
-                                        ToolTip="{DynamicResource Str_Settings_OpenTheFolderWith}">
-                                        <Grid HorizontalAlignment="Center" Margin="8,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <materialDesign:PackIcon
-                                                Grid.Column="0"
-                                                Width="15"
-                                                Height="15"
-                                                Margin="0,0,5,0"
-                                                VerticalAlignment="Center"
-                                                Kind="FolderOpenOutline" />
-                                            <TextBlock
-                                                Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                FontSize="12"
-                                                Text="{DynamicResource Str_FileConverter_OpenFolder}" TextWrapping="Wrap" />
-                                        </Grid>
+                                        ToolTip="{DynamicResource Str_Settings_OpenTheFolderWith}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                     </Button>
                                 </Grid>
                                 <Border
@@ -2168,26 +2153,9 @@
                                 <Button
                                     Grid.Column="1"
                                     Click="BtnResetEventDays_Click"
-                                    Style="{StaticResource NeutralIconButtonStyle}"
-                                    ToolTip="{DynamicResource Str_Settings_PutBackEventDays}">
-                                    <Grid HorizontalAlignment="Center" Margin="8,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon
-                                            Grid.Column="0"
-                                            Width="15"
-                                            Height="15"
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center"
-                                            Kind="Restore" />
-                                        <TextBlock
-                                            Grid.Column="1"
-                                            VerticalAlignment="Center"
-                                            FontSize="12"
-                                            Text="{DynamicResource Str_Common_Reset}" TextWrapping="Wrap" />
-                                    </Grid>
+                                    ToolTip="{DynamicResource Str_Settings_PutBackEventDays}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="Restore" />
                                 </Button>
                             </Grid>
                             <TextBlock

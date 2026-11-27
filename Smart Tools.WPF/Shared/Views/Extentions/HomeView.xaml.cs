@@ -54,7 +54,8 @@ namespace Smart_Tools.WPF.Views
         public HomeView()
         {
             InitializeComponent();
-            AddHandler(ContextMenuOpeningEvent, new ContextMenuEventHandler(ToolButton_ContextMenuOpening));
+            AddHandler(PreviewMouseRightButtonUpEvent, new MouseButtonEventHandler(Root_PreviewMouseRightButtonUp), handledEventsToo: true);
+            AddHandler(ContextMenuOpeningEvent, new ContextMenuEventHandler(Root_ContextMenuOpening));
             UpdateTexts();
             BuildSectionChips();
             ShowSections();
@@ -185,43 +186,59 @@ namespace Smart_Tools.WPF.Views
             ShowRecent();
         }
 
+        // The Add / Remove favorite menu. It is built and opened here on the right-click itself. (It used to be attached to the tile
+        // inside ContextMenuOpening on the first right-click, which is too late for that click: WPF has already found no menu, so
+        // the first right-click on a tile - often on its text - did nothing until the mouse left and came back.) It is never put in
+        // a Style setter in the XAML: the XAML compiler wires a menu's handlers inside a Style to the wrong element and the view throws.
+
+        private void Root_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (ToolUnder(e.OriginalSource as DependencyObject) is not { } hit) return;
+            OpenToolMenu(hit.Tool, hit.Target);
+            e.Handled = true;
+        }
+
+        /// <summary>The keyboard's menu key or Shift+F10 on a focused tile.</summary>
+        private void Root_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (ToolUnder(e.OriginalSource as DependencyObject) is not { } hit) return;
+            OpenToolMenu(hit.Tool, hit.Target);
+            e.Handled = true;
+        }
+
         /// <summary>
-        /// Gives a tool button its Add / Remove favorite menu the first time it is right-clicked. It is built here, not in a
-        /// Style setter in the XAML: the XAML compiler wires event handlers of a menu inside a Style to the wrong element,
-        /// which throws when the view loads and the main window never opens.
+        /// The tool a clicked element belongs to (the text, the icon, the badge or the tile's border) and the tile to place the menu
+        /// at. Text pieces are not always visuals, so the walk goes through the logical tree when the visual one has no parent.
         /// </summary>
-        private void ToolButton_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        private (ToolInfo Tool, FrameworkElement Target)? ToolUnder(DependencyObject? source)
         {
-            if (e.OriginalSource is not DependencyObject source) return;
-            for (DependencyObject? d = source; d != null && d != this; d = System.Windows.Media.VisualTreeHelper.GetParent(d))
+            ToolInfo? tool = null;
+            for (DependencyObject? d = source; d != null && d != this; d = Parent(d))
             {
-                if (d is not System.Windows.Controls.Button { DataContext: ToolInfo } button) continue;
-                if (button.ContextMenu == null)
-                {
-                    var item = new MenuItem { Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.StarOutline } };
-                    item.Click += ToolMenuFavorite_Click;
-                    var menu = new ContextMenu();
-                    menu.Items.Add(item);
-                    menu.Opened += ToolMenu_Opened;
-                    button.ContextMenu = menu;
-                }
-                return;
+                if (tool == null && d is FrameworkElement { DataContext: ToolInfo t }) tool = t;
+                if (tool != null && d is System.Windows.Controls.Button { DataContext: ToolInfo } tile) return (tool, tile);
             }
+            return null;
         }
 
-        /// <summary>The menu says Add or Remove depending on whether the tool under the pointer is pinned.</summary>
-        private void ToolMenu_Opened(object sender, RoutedEventArgs e)
+        private static DependencyObject? Parent(DependencyObject d) =>
+            d is System.Windows.Media.Visual or System.Windows.Media.Media3D.Visual3D
+                ? System.Windows.Media.VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d)
+                : LogicalTreeHelper.GetParent(d);
+
+        private void OpenToolMenu(ToolInfo tool, FrameworkElement target)
         {
-            if (sender is not ContextMenu { PlacementTarget: FrameworkElement { DataContext: ToolInfo tool } } menu || menu.Items[0] is not MenuItem item) return;
             bool pinned = ToolCatalogManager.IsFavorite(_favoriteIds, tool.Id);
-            item.Header = Application.Current.TryFindResource(pinned ? "Str_Home_RemoveFavorite" : "Str_Home_AddFavorite") as string ?? (pinned ? "Remove from favorites" : "Add to favorites");
-            if (item.Icon is MaterialDesignThemes.Wpf.PackIcon icon) icon.Kind = pinned ? MaterialDesignThemes.Wpf.PackIconKind.StarOff : MaterialDesignThemes.Wpf.PackIconKind.StarOutline;
-        }
-
-        private void ToolMenuFavorite_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is MenuItem { Parent: ContextMenu { PlacementTarget: FrameworkElement { DataContext: ToolInfo tool } } })
-                FavoriteToggled?.Invoke(tool.Id);
+            var item = new MenuItem
+            {
+                Header = Application.Current.TryFindResource(pinned ? "Str_Home_RemoveFavorite" : "Str_Home_AddFavorite") as string
+                         ?? (pinned ? "Remove from favorites" : "Add to favorites"),
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = pinned ? MaterialDesignThemes.Wpf.PackIconKind.StarOff : MaterialDesignThemes.Wpf.PackIconKind.StarOutline },
+            };
+            item.Click += (_, _) => FavoriteToggled?.Invoke(tool.Id);
+            var menu = new ContextMenu { PlacementTarget = target, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+            menu.Items.Add(item);
+            menu.IsOpen = true;
         }
 
         private IReadOnlyList<ToolInfo> _recent = Array.Empty<ToolInfo>();

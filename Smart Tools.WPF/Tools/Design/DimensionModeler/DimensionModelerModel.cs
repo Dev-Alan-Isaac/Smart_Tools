@@ -20,6 +20,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Dragged boards jump to the faces of the other boards and to the floor.</summary>
         public bool MagnetOn { get; set; } = true;
 
+        /// <summary>How thick a drawn outline is made by Draw and extrude, in mm.</summary>
+        public double ExtrudeMm { get; set; } = 10;
+
         /// <summary>10 means 1:10; 1 is full size.</summary>
         public double ScaleRatio { get; set; } = 1;
 

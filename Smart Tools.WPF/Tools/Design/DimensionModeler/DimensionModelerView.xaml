@@ -148,6 +148,39 @@
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.ShapePlusOutline}" />
                                     <UniformGrid x:Name="PanelShapes" Columns="3" />
+                                    <!--  Draw an outline on the floor, give it a thickness  -->
+                                    <Grid Margin="2,6,2,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            x:Name="BtnExtrude"
+                                            Height="36"
+                                            Click="BtnExtrude_Click"
+                                            Style="{StaticResource NeutralIconButtonStyle}"
+                                            ToolTip="{DynamicResource Str_Modeler_ExtrudeTip}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon
+                                                    Width="18"
+                                                    Height="18"
+                                                    Margin="0,0,6,0"
+                                                    VerticalAlignment="Center"
+                                                    Kind="VectorPolygon" />
+                                                <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_Modeler_Extrude}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <TextBox
+                                            x:Name="TxtExtrudeHeight"
+                                            Grid.Column="1"
+                                            Width="76"
+                                            Height="36"
+                                            Margin="6,0,0,0"
+                                            VerticalContentAlignment="Center"
+                                            LostFocus="TxtExtrudeHeight_LostFocus"
+                                            KeyDown="TxtExtrudeHeight_KeyDown"
+                                            ToolTip="{DynamicResource Str_Modeler_ExtrudeHeightTip}" />
+                                    </Grid>
                                     <TextBlock
                                         Margin="0,12,0,6"
                                         Style="{StaticResource FieldLabel}"

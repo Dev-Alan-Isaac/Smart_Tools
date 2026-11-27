@@ -178,21 +178,9 @@
                                             x:Name="BtnNew"
                                             Margin="0,0,3,6"
                                             Click="BtnNew_Click"
-                                            ToolTip="{DynamicResource Str_MdHtml_NewTooltip}">
-                                            <Grid HorizontalAlignment="Center">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <materialDesign:PackIcon
-                                                    Grid.Column="0"
-                                                    Width="14"
-                                                    Height="14"
-                                                    Margin="0,0,6,0"
-                                                    VerticalAlignment="Center"
-                                                    Kind="{x:Static materialDesign:PackIconKind.FilePlusOutline}" />
-                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_MdHtml_New}" TextWrapping="Wrap" />
-                                            </Grid>
+                                            ToolTip="{DynamicResource Str_MdHtml_NewTooltip}"
+                                            Style="{StaticResource ListToolButtonStyle}">
+                                            <materialDesign:PackIcon Width="16" Height="16" Kind="{x:Static materialDesign:PackIconKind.FilePlusOutline}" />
                                         </Button>
                                         <Button
                                             x:Name="BtnOpen"

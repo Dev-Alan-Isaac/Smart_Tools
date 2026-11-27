@@ -1217,21 +1217,9 @@
                                 x:Name="BtnPreview"
                                 Grid.Column="1"
                                 Click="BtnPreview_Click"
-                                ToolTip="{DynamicResource Str_BgRemove_PreviewTooltip}">
-                                <Grid HorizontalAlignment="Center">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <materialDesign:PackIcon
-                                        Grid.Column="0"
-                                        Width="15"
-                                        Height="15"
-                                        Margin="0,0,6,0"
-                                        VerticalAlignment="Center"
-                                        Kind="Reload" />
-                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_BgRemove_PreviewButton}" TextWrapping="Wrap" />
-                                </Grid>
+                                ToolTip="{DynamicResource Str_BgRemove_PreviewTooltip}"
+                                Style="{StaticResource ListToolButtonStyle}">
+                                <materialDesign:PackIcon Width="16" Height="16" Kind="Reload" />
                             </Button>
 
                             <controls:ExportButton

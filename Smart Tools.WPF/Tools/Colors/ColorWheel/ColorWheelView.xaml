@@ -229,26 +229,11 @@
 
                                     <Button
                                         x:Name="BtnResetWheel"
-                                        Width="NaN"
-                                        Padding="12,0"
                                         HorizontalAlignment="Stretch"
                                         Click="BtnResetWheel_Click"
-                                        Style="{StaticResource ListToolButtonStyle}"
-                                        ToolTip="{DynamicResource Str_ColorWheel_BackToFullSaturation}">
-                                        <Grid HorizontalAlignment="Center">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <materialDesign:PackIcon
-                                                Grid.Column="0"
-                                                Width="16"
-                                                Height="16"
-                                                Margin="0,0,6,0"
-                                                VerticalAlignment="Center"
-                                                Kind="Restore" />
-                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_ColorWheel_ResetWheel}" TextWrapping="Wrap" />
-                                        </Grid>
+                                        ToolTip="{DynamicResource Str_ColorWheel_BackToFullSaturation}"
+                                        Style="{StaticResource ListToolButtonStyle}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="Restore" />
                                     </Button>
 
                                 </StackPanel>

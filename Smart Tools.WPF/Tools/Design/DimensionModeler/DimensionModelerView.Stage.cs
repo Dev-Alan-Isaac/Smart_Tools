@@ -114,16 +114,21 @@ namespace Smart_Tools.WPF.Views
             foreach (var obj in _objects)
             {
                 bool picked = lit.Contains(obj.NodeId);
+                var shift = DragShift(obj.NodeId);
                 if (obj.IsHole)
                 {
-                    group.Children.Add(Model(obj.Triangles.Select(t => t.Triangle), picked ? HoleGhostPicked : HoleGhost));
+                    var ghost = Model(obj.Triangles.Select(t => t.Triangle), picked ? HoleGhostPicked : HoleGhost);
+                    if (shift != null) ghost.Transform = shift;
+                    group.Children.Add(ghost);
                     continue;
                 }
                 foreach (var byColour in obj.Triangles.GroupBy(t => t.Colour))
                 {
                     var colour = ColourOf(byColour.Key);
                     if (picked) colour = Mix(colour, PickTint, 0.3);
-                    group.Children.Add(Model(byColour.Select(t => t.Triangle), colour));
+                    var model = Model(byColour.Select(t => t.Triangle), colour);
+                    if (shift != null) model.Transform = shift;
+                    group.Children.Add(model);
                 }
             }
             _sceneVisual.Content = group;
@@ -234,27 +239,50 @@ namespace Smart_Tools.WPF.Views
         }
 
         // =================================================================
-        //  Mouse: click picks, drag turns, right-drag moves, wheel zooms
+        //  Mouse: click picks, drag on an object moves it (Shift: lifts it), drag on empty space turns, right-drag pans, wheel zooms
         // =================================================================
 
         private void Stage_MouseDown(object sender, MouseButtonEventArgs e)
         {
             _pressPoint = e.GetPosition(StageHost);
             StageHost.Focus();   // so the keys (Delete, Ctrl+Z, Esc) reach the page
+            if (_drawing != null && e.ChangedButton == MouseButton.Left)
+            {
+                DrawClick(_pressPoint, e.ClickCount);   // drawing an outline: a left click adds a point (right-drag still pans)
+                e.Handled = true;
+                return;
+            }
             if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
             {
                 FitCamera();
                 return;
             }
-            _orbiting = e.ChangedButton == MouseButton.Left;
+            bool onObject = e.ChangedButton == MouseButton.Left && TryBeginPress(_pressPoint);
+            _orbiting = e.ChangedButton == MouseButton.Left && !onObject;
             _panning = e.ChangedButton is MouseButton.Right or MouseButton.Middle;
-            if (!_orbiting && !_panning) return;
+            if (!_orbiting && !_panning && !onObject) return;
             _lastMouse = _pressPoint;
             StageHost.CaptureMouse();
         }
 
         private void Stage_MouseMove(object sender, MouseEventArgs e)
         {
+            if (_drawing != null && !_panning)
+            {
+                DrawHover(e.GetPosition(StageHost));
+                return;
+            }
+            if (_pressHit is { } hit && e.LeftButton == MouseButtonState.Pressed)
+            {
+                var at = e.GetPosition(StageHost);
+                if (_drag == null && (Math.Abs(at.X - _pressPoint.X) >= DragStartPixels || Math.Abs(at.Y - _pressPoint.Y) >= DragStartPixels))
+                {
+                    StartDrag(hit);
+                    if (_drag == null) _pressHit = null;   // locked: nothing moves
+                }
+                if (_drag != null) DragTo(at);
+                return;
+            }
             if (!_orbiting && !_panning) return;
             var now = e.GetPosition(StageHost);
             double dx = now.X - _lastMouse.X, dy = now.Y - _lastMouse.Y;
@@ -268,11 +296,20 @@ namespace Smart_Tools.WPF.Views
         private void Stage_MouseUp(object sender, MouseButtonEventArgs e)
         {
             var at = e.GetPosition(StageHost);
-            bool still = Math.Abs(at.X - _pressPoint.X) < 4 && Math.Abs(at.Y - _pressPoint.Y) < 4;
-            bool leftClick = e.ChangedButton == MouseButton.Left && _orbiting && still;
+            bool still = Math.Abs(at.X - _pressPoint.X) < DragStartPixels && Math.Abs(at.Y - _pressPoint.Y) < DragStartPixels;
+            bool pressedObject = _pressHit != null;
+            bool leftClick = e.ChangedButton == MouseButton.Left && (_orbiting || pressedObject) && still;
+            bool rightClick = e.ChangedButton == MouseButton.Right && still && _drawing == null;   // a right-drag pans; a right-click opens the menu
             _orbiting = _panning = false;
+            _pressHit = null;
             StageHost.ReleaseMouseCapture();
-            if (leftClick) ClickPick(at, Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
+            if (_drag != null) EndDrag();
+            else if (leftClick) ClickPick(at, Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
+            else if (rightClick)
+            {
+                ShowStageMenu(at);
+                e.Handled = true;
+            }
         }
 
         /// <summary>A click (no drag): the object under the mouse becomes the pick; Ctrl adds or takes it away; empty space lets go.</summary>
@@ -317,6 +354,8 @@ namespace Smart_Tools.WPF.Views
 
             foreach (var id in _picked)
                 if (SceneEdit.Find(_scene, id) is { } node) DrawBox(SceneEdit.BoundsOf(_scene, node), w, h);
+            DrawSnapGuides(w, h);
+            DrawOutline(w, h);
 
             if (!_settings.ShowDimensions) return;
             var measured = _picked.Count > 0 ? SceneEdit.BoundsOf(_scene, _picked) : SolidBounds();

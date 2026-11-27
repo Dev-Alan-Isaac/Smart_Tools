@@ -31,11 +31,12 @@
                                 <TextBox x:Name="TxtUrl" KeyDown="TxtUrl_KeyDown" Style="{StaticResource BareTextBox}" Tag="{DynamicResource Str_WebAudio_LinkPlaceholder}" />
                             </Border>
                             <UniformGrid Margin="0,8,0,0" Columns="2">
-                                <Button Margin="0,0,3,0" Click="BtnPaste_Click" Style="{StaticResource NeutralIconButtonStyle}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" Kind="ContentPaste" />
-                                        <TextBlock VerticalAlignment="Center" Text="{DynamicResource Str_WebAudio_Paste}" />
-                                    </StackPanel>
+                                <Button
+                                    Margin="0,0,3,0"
+                                    Click="BtnPaste_Click"
+                                    ToolTip="{DynamicResource Str_WebAudio_Paste}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="ContentPaste" />
                                 </Button>
                                 <Button x:Name="BtnCheck" Margin="3,0,0,0" Click="BtnCheck_Click" Style="{StaticResource NeutralIconButtonStyle}" ToolTip="{DynamicResource Str_WebAudio_CheckTip}">
                                     <StackPanel Orientation="Horizontal">

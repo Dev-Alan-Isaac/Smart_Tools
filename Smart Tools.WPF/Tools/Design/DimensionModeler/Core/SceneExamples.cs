@@ -56,7 +56,7 @@ namespace Smart_Tools.WPF.Controllers
     public static class SceneExamples
     {
         public static IReadOnlyList<SceneExample> All { get; } =
-            new[] { Bracket(), BoxWithLid(), PhoneStand() }
+            new[] { Bracket(), BoxWithLid(), PhoneStand(), Hand() }
             .Concat(PieceTemplates.All.Select(t => new SceneExample(t.Id, t.Name, t.Params, v => LegacyPieces.FromParts(t.Build(v).Parts))))
             .ToList();
 
@@ -158,6 +158,77 @@ namespace Smart_Tools.WPF.Controllers
                     Box("Lip", new Vec3(0, t + lip / 2, z0 + 14 + t), new Vec3(w, lip, t)),
                 }),
             };
+        });
+
+        /// <summary>
+        /// A hand lying palm down, fingers pointing away (-Z): a palm and wrist, a thumb of two segments and four fingers of three, each
+        /// segment a cylinder a little thinner than the one before, with a round tip. Fingers fan out by the spread angle.
+        /// </summary>
+        private static SceneExample Hand() => new("hand", "Hand", new[]
+        {
+            new ParamSpec("width", "Palm width", 80, 30, 300),
+            new ParamSpec("fingers", "Finger length (%)", 100, 60, 140),
+            new ParamSpec("thickness", "Thickness", 24, 8, 80),
+            new ParamSpec("spread", "Finger spread (degrees)", 6, 0, 20),
+            new ParamSpec("thumb", "Thumb angle (degrees)", 40, 10, 80),
+        }, v =>
+        {
+            double w = v["width"], t = Math.Min(v["thickness"], w * 0.6), spread = v["spread"];
+            double palmDepth = w * 1.05;
+            double fd = Math.Min(w / 4 * 0.92, t);            // finger thickness
+            double baseLen = w * 0.95 * v["fingers"] / 100;   // the middle finger's length
+            double y = t / 2;                                 // fingers lie at mid height of the palm
+            const int Round = 12;                             // sides of the round parts: the join time grows fast with this
+
+            var parts = new List<SceneNode>
+            {
+                Box("Palm", new Vec3(0, y, 0), new Vec3(w, t, palmDepth)),
+                new SceneShape(Id(), "Wrist", ShapeKind.Cylinder, new Vec3(0, y, palmDepth / 2 + w * 0.25), new Vec3(w * 0.72, w * 0.5, t), new Vec3(90, 0, 0), Segments: Round),
+            };
+
+            // one jointed digit: from its base point, along the direction the yaw gives, in segments of the given shares of its length
+            // side: -1 leans towards -X, +1 towards +X (the turn's sign is fixed here, whatever way the rotation maths counts it)
+            void Digit(string name, Vec3 basePoint, double yaw, int side, double length, double thick, double[] shares)
+            {
+                Vec3 Dir(double turn)
+                {
+                    var d = Mat3.FromEuler(new Vec3(90, turn, 0)) * new Vec3(0, 1, 0);
+                    return d.Z > 0 ? d * -1 : d;   // fingers point away from the wrist
+                }
+                var dir = Dir(yaw);
+                if (Math.Abs(dir.X) > 1e-9 && Math.Sign(dir.X) != side)
+                {
+                    yaw = -yaw;
+                    dir = Dir(yaw);
+                }
+                // one cylinder per digit, getting a little thinner segment by segment, and a round tip. (A ball at every joint looked
+                // nicer but made the hand take ~17 s to join; this keeps it near a second.)
+                double along = 0, thickness = thick;
+                for (int s = 0; s < shares.Length; s++)
+                {
+                    double len = length * shares[s];
+                    double overlap = s == 0 ? 0 : thickness * 0.15;   // segments overlap a little, so they join into one finger
+                    var centre = basePoint + dir * (along - overlap + (len + overlap) / 2);
+                    parts.Add(new SceneShape(Id(), $"{name} {s + 1}", ShapeKind.Cylinder, centre, new Vec3(thickness, len + overlap, thickness), new Vec3(90, yaw, 0), Segments: Round));
+                    along += len;
+                    if (s < shares.Length - 1) thickness *= 0.92;
+                }
+                parts.Add(new SceneShape(Id(), $"{name} tip", ShapeKind.Sphere, basePoint + dir * along, new Vec3(thickness, thickness, thickness), Vec3.Zero, Segments: Round));
+            }
+
+            var names = new[] { "Index finger", "Middle finger", "Ring finger", "Little finger" };
+            var lengths = new[] { 0.9, 1.0, 0.94, 0.74 };
+            var phalanges = new[] { 0.45, 0.31, 0.24 };
+            for (int i = 0; i < 4; i++)
+            {
+                double x = -w / 2 + w * (i + 0.5) / 4;
+                double thick = fd * (i == 3 ? 0.85 : 1);
+                double yaw = (1.5 - i) * spread;              // the outer fingers lean out
+                Digit(names[i], new Vec3(x, y, -palmDepth / 2 + thick * 0.25), Math.Abs(yaw), Math.Sign(yaw), baseLen * lengths[i], thick, phalanges);
+            }
+            Digit("Thumb", new Vec3(-w / 2 + fd * 0.3, y, palmDepth * 0.1), v["thumb"], -1, baseLen * 0.62, fd * 1.1, new[] { 0.55, 0.45 });
+
+            return new List<SceneNode> { new GroupNode(Id(), "Hand", parts) };
         });
     }
 }

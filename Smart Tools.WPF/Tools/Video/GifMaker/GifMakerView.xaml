@@ -1256,25 +1256,9 @@
                                     x:Name="BtnShowResult"
                                     Grid.Column="3"
                                     Click="BtnShowResult_Click"
-                                    Style="{StaticResource NeutralIconButtonStyle}">
-                                    <Grid HorizontalAlignment="Center" Margin="8,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon
-                                            Grid.Column="0"
-                                            Width="15"
-                                            Height="15"
-                                            Margin="0,0,5,0"
-                                            VerticalAlignment="Center"
-                                            Kind="FolderOpenOutline" />
-                                        <TextBlock
-                                            Grid.Column="1"
-                                            VerticalAlignment="Center"
-                                            FontSize="12"
-                                            Text="{DynamicResource Str_GifMaker_ShowInFolder}" TextWrapping="Wrap" />
-                                    </Grid>
+                                    ToolTip="{DynamicResource Str_GifMaker_ShowInFolder}"
+                                    Style="{StaticResource ListToolButtonStyle}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="FolderOpenOutline" />
                                 </Button>
                             </Grid>
                         </Grid>

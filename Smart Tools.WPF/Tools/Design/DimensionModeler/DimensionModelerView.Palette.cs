@@ -1,4 +1,4 @@
-using MaterialDesignThemes.Wpf;
+﻿using MaterialDesignThemes.Wpf;
 using Smart_Tools.WPF.Controllers;
 using Smart_Tools.WPF.Models;
 using System.Windows;
@@ -32,6 +32,7 @@ namespace Smart_Tools.WPF.Views
             ["bracket"] = PackIconKind.SetSquare,
             ["box-lid"] = PackIconKind.PackageVariantClosed,
             ["phone-stand"] = PackIconKind.Cellphone,
+            ["hand"] = PackIconKind.HandBackRightOutline,
             ["table"] = PackIconKind.TableFurniture,
             ["chair"] = PackIconKind.SeatOutline,
             ["bookshelf"] = PackIconKind.Bookshelf,

@@ -1534,22 +1534,9 @@
                                 <Button
                                     x:Name="BtnClearConsole"
                                     Click="BtnClearConsole_Click"
-                                    Style="{StaticResource DangerButtonStyle}"
-                                    ToolTip="{DynamicResource Str_Network_ClearConsoleTooltip}">
-                                    <Grid HorizontalAlignment="Center">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <materialDesign:PackIcon
-                                            Grid.Column="0"
-                                            Width="14"
-                                            Height="14"
-                                            Margin="0,0,6,0"
-                                            VerticalAlignment="Center"
-                                            Kind="DeleteSweepOutline" />
-                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{DynamicResource Str_Network_ClearConsole}" TextWrapping="Wrap" />
-                                    </Grid>
+                                    ToolTip="{DynamicResource Str_Network_ClearConsoleTooltip}"
+                                    Style="{StaticResource ListToolDangerButtonStyle}">
+                                    <materialDesign:PackIcon Width="16" Height="16" Kind="DeleteSweepOutline" />
                                 </Button>
                             </StackPanel>
                         </Grid>
