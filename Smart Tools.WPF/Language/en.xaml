@@ -12365,8 +12365,8 @@ Show them all anyway?</system:String>
 
     <system:String x:Key="Str_Cat_design_Title">3D &amp; Design</system:String>
     <system:String x:Key="Str_Cat_design_Blurb">Model and print things</system:String>
-    <system:String x:Key="Str_Tool_dimension-modeler_Name">Dimension Modeler</system:String>
-    <system:String x:Key="Str_Tool_dimension-modeler_Description">Model a table, chair, shelf or cabinet from its dimensions, see it in 3D with dimension lines, and export OBJ or STL for 3D printing</system:String>
+    <system:String x:Key="Str_Tool_dimension-modeler_Name">3D Modeler</system:String>
+    <system:String x:Key="Str_Tool_dimension-modeler_Description">Build anything from shapes - boxes, cylinders, spheres, cones, wedges, tubes or imported models - where any shape can be a hole that cuts the others; see it in 3D with measurements and save STL or OBJ for 3D printing</system:String>
     <system:String x:Key="Str_Modeler_PieceHeader">PIECE</system:String>
     <system:String x:Key="Str_Modeler_Template_table">Table</system:String>
     <system:String x:Key="Str_Modeler_Template_chair">Chair</system:String>
@@ -12527,7 +12527,7 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_Colour_Green">Green</system:String>
     <system:String x:Key="Str_Modeler_Colour_Blue">Blue</system:String>
     <system:String x:Key="Str_Modeler_Colour_Navy">Navy</system:String>
-    <system:String x:Key="Str_Modeler_PickedMany">{0} boards picked - right-click one of them to make a group.</system:String>
+    <system:String x:Key="Str_Modeler_PickedMany">{0} picked</system:String>
     <system:String x:Key="Str_Modeler_GroupN">Group {0}</system:String>
     <system:String x:Key="Str_Modeler_MakeGroup">Make a group of the {0} picked boards...</system:String>
     <system:String x:Key="Str_Modeler_GroupNamePrompt">Name of the group:</system:String>
@@ -12541,7 +12541,7 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_ShowCutListTip">Show the cut list</system:String>
     <system:String x:Key="Str_Modeler_Template_cabinet">Cabinet</system:String>
     <system:String x:Key="Str_Modeler_SizeHeader">SIZE (MM)</system:String>
-    <system:String x:Key="Str_Modeler_ResetSizesTip">Back to the default sizes</system:String>
+    <system:String x:Key="Str_Modeler_ResetSizesTip">Put the sliders of this example back to their start values</system:String>
     <system:String x:Key="Str_Modeler_Param_table_width">Width</system:String>
     <system:String x:Key="Str_Modeler_Param_table_depth">Depth</system:String>
     <system:String x:Key="Str_Modeler_Param_table_height">Height</system:String>
@@ -12574,7 +12574,7 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_UnitCm">cm</system:String>
     <system:String x:Key="Str_Modeler_UnitIn">in</system:String>
     <system:String x:Key="Str_Modeler_ShowDimensions">Show dimension lines</system:String>
-    <system:String x:Key="Str_Modeler_ShowDimensionsTip">Draw the width, height and depth on the piece (or on the board picked in the cut list)</system:String>
+    <system:String x:Key="Str_Modeler_ShowDimensionsTip">Draw the width, height and depth of the picked shapes (or of the whole design)</system:String>
     <system:String x:Key="Str_Modeler_PrintHeader">3D PRINTING</system:String>
     <system:String x:Key="Str_Modeler_Scale">Print scale</system:String>
     <system:String x:Key="Str_Modeler_ScaleTip">1/10 prints at a tenth of the real size. It applies to everything you export.</system:String>
@@ -12585,16 +12585,16 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_BedHeight">Height</system:String>
     <system:String x:Key="Str_Modeler_PlanFits">{0} parts fit on {1} plate(s).</system:String>
     <system:String x:Key="Str_Modeler_PlanTooBig">{0} of {1} parts are too big for the bed - raise the scale or use a bigger bed.</system:String>
-    <system:String x:Key="Str_Modeler_FitTip">Fit the piece in view (or double-click the view)</system:String>
-    <system:String x:Key="Str_Modeler_ExportTip">Save the piece as an OBJ or STL file</system:String>
-    <system:String x:Key="Str_Modeler_ExportObj">OBJ - whole piece</system:String>
-    <system:String x:Key="Str_Modeler_ExportStl">STL - whole piece</system:String>
+    <system:String x:Key="Str_Modeler_FitTip">Fit the design in the view (or double-click the view)</system:String>
+    <system:String x:Key="Str_Modeler_ExportTip">Save the finished design (holes cut out) as STL or OBJ, at the print scale</system:String>
+    <system:String x:Key="Str_Modeler_ExportObj">OBJ - for other 3D programs</system:String>
+    <system:String x:Key="Str_Modeler_ExportStl">STL - for 3D printing</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintStl">STL - printable parts (one file per plate)</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintObj">OBJ - printable parts (one file per plate)</system:String>
-    <system:String x:Key="Str_Modeler_StageHint">Click a board to pick it · Ctrl+click picks more · right-click it for colour and groups · drag to turn · right-drag to move · wheel to zoom</system:String>
+    <system:String x:Key="Str_Modeler_StageHint">Click a shape to pick it · Ctrl+click picks more · drag to turn · right-drag to move · wheel to zoom</system:String>
     <system:String x:Key="Str_Modeler_CutList">Cut list</system:String>
     <system:String x:Key="Str_Modeler_CutListTip">Click a row to light that board up and measure it · Ctrl+click picks several rows</system:String>
-    <system:String x:Key="Str_Modeler_ColPart">Part</system:String>
+    <system:String x:Key="Str_Modeler_ColPart">Shape</system:String>
     <system:String x:Key="Str_Modeler_ColQty">Qty</system:String>
     <system:String x:Key="Str_Modeler_ColSize">L × W × T (mm)</system:String>
     <system:String x:Key="Str_Modeler_CutTotals">{0} boards in {1} cuts · {2} cm³ of material</system:String>
@@ -12617,7 +12617,7 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Export_Text">Save the whole piece, or every board laid flat on printable plates, as OBJ or STL.</system:String>
     <system:String x:Key="Str_Modeler_Template_custom">Custom</system:String>
     <system:String x:Key="Str_Modeler_CustomTip">Build a piece from scratch: add boards and set where each one goes and how big it is</system:String>
-    <system:String x:Key="Str_Modeler_EyeTip">Hide or show every board of this row (both doors) in the 3D view. To hide just one, right-click it in the 3D view. Hidden boards stay in the piece and in the exports.</system:String>
+    <system:String x:Key="Str_Modeler_EyeTip">Hide or show it in the view (it is still saved and exported)</system:String>
     <system:String x:Key="Str_Modeler_ShowAll">Show all ({0} hidden)</system:String>
     <system:String x:Key="Str_Modeler_HideBoard">Hide {0}</system:String>
     <system:String x:Key="Str_Modeler_PieceTip">Pick what to model. Custom lets you build a piece from scratch, board by board.</system:String>
@@ -12630,10 +12630,10 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_Kind_Leg">Leg or post</system:String>
     <system:String x:Key="Str_Modeler_Kind_Panel">Upright panel</system:String>
     <system:String x:Key="Str_Modeler_Kind_Top">Top</system:String>
-    <system:String x:Key="Str_Modeler_DuplicateTip">Copy the selected board</system:String>
-    <system:String x:Key="Str_Modeler_DeleteTip">Delete the selected board</system:String>
-    <system:String x:Key="Str_Modeler_OpenTip">Open a saved design</system:String>
-    <system:String x:Key="Str_Modeler_SaveTip">Save this design to a file</system:String>
+    <system:String x:Key="Str_Modeler_DuplicateTip">Copy the picked shapes (Ctrl+D)</system:String>
+    <system:String x:Key="Str_Modeler_DeleteTip">Delete the picked shapes (Delete)</system:String>
+    <system:String x:Key="Str_Modeler_OpenTip">Open a saved design (.dmodel), or add an STL / OBJ model</system:String>
+    <system:String x:Key="Str_Modeler_SaveTip">Save the design as a .dmodel file, to keep working on it later</system:String>
     <system:String x:Key="Str_Modeler_NoParts">No boards yet. Add one, or use "Edit as custom piece" on a preset to start from it.</system:String>
     <system:String x:Key="Str_Modeler_PartName">Board name</system:String>
     <system:String x:Key="Str_Modeler_PartKind">Type</system:String>
@@ -12675,7 +12675,127 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_CheckOverlap">These boards overlap: {0}</system:String>
     <system:String x:Key="Str_Modeler_CheckLoose">Not touching the rest: {0}</system:String>
     <system:String x:Key="Str_Modeler_OpenFailed">Couldn't open that design: {0}</system:String>
-    <system:String x:Key="Str_Modeler_Opened">Opened {0}</system:String>
+    <system:String x:Key="Str_Modeler_Opened">Opened {0}</system:String>
+    <system:String x:Key="Str_Modeler_LeaveFullViewTip">Back to the normal view (Esc)</system:String>
+    <system:String x:Key="Str_Modeler_PartsTotals">{0} solid shapes · {1} holes · {2} cm³ of material</system:String>
+    <system:String x:Key="Str_Modeler_LockedNote">Locked: it can be picked but not moved, sized or changed.</system:String>
+    <system:String x:Key="Str_Modeler_HiddenNote">Hidden in the view only: it is still saved and exported.</system:String>
+    <system:String x:Key="Str_Modeler_LockTip">Lock or unlock it</system:String>
+    <system:String x:Key="Str_Modeler_ObjectsHint">Click a row to pick it (Ctrl or Shift for several). The eye hides it in the view only; the lock keeps it from being changed.</system:String>
+    <system:String x:Key="Str_Modeler_LockedNoEdit">That is locked: unlock it under Objects to change it.</system:String>
+    <system:String x:Key="Str_Modeler_PaintNone">No colour (the standard look)</system:String>
+    <system:String x:Key="Str_Modeler_Colour">COLOUR</system:String>
+    <system:String x:Key="Str_Modeler_InnerTip">The tube's hole as a share of its width (5 to 95 %)</system:String>
+    <system:String x:Key="Str_Modeler_Inner">HOLE %</system:String>
+    <system:String x:Key="Str_Modeler_SegmentsTip">How round it is: the number of flat sides round it (3 to 128)</system:String>
+    <system:String x:Key="Str_Modeler_Segments">SIDES</system:String>
+    <system:String x:Key="Str_Modeler_RotationTip">Turn round X, then Y, then Z, about the shape's middle. Up / Down turn 15 degrees (Shift 1, Ctrl 90).</system:String>
+    <system:String x:Key="Str_Modeler_Rotation">TURN (DEGREES)</system:String>
+    <system:String x:Key="Str_Modeler_Depth">Depth</system:String>
+    <system:String x:Key="Str_Modeler_Height">Height</system:String>
+    <system:String x:Key="Str_Modeler_Width">Width</system:String>
+    <system:String x:Key="Str_Modeler_SizeTip">A shape's own width, height and depth (before it is turned); for a group, the box around it. A shape grows from its lowest corner.</system:String>
+    <system:String x:Key="Str_Modeler_SizeLabel">SIZE ({0})</system:String>
+    <system:String x:Key="Str_Modeler_PositionTip">Where the lowest corner of the box around the pick is: X to the right, Y up, Z toward you. Up / Down change a number (Shift small steps, Ctrl big steps). A unit after the number wins: 2 in, 30 cm.</system:String>
+    <system:String x:Key="Str_Modeler_PositionLabel">POSITION, LOWEST CORNER ({0})</system:String>
+    <system:String x:Key="Str_Modeler_Hole">Hole</system:String>
+    <system:String x:Key="Str_Modeler_Solid">Solid</system:String>
+    <system:String x:Key="Str_Modeler_SolidOrHole">SOLID OR HOLE</system:String>
+    <system:String x:Key="Str_Modeler_Kind">SHAPE</system:String>
+    <system:String x:Key="Str_Modeler_Name">NAME</system:String>
+    <system:String x:Key="Str_Modeler_NoPick">Pick a shape in the view or under Objects to see and change its size, position, turn and colour.</system:String>
+    <system:String x:Key="Str_Modeler_TabPartsTip">Every solid shape with its size; the same ones are counted together</system:String>
+    <system:String x:Key="Str_Modeler_TabParts">Parts</system:String>
+    <system:String x:Key="Str_Modeler_TabObjectsTip">Every group and shape of the design</system:String>
+    <system:String x:Key="Str_Modeler_TabObjects">Objects</system:String>
+    <system:String x:Key="Str_Modeler_TabPropertiesTip">Name, size, position, turn and colour of the picked shapes</system:String>
+    <system:String x:Key="Str_Modeler_TabProperties">Properties</system:String>
+    <system:String x:Key="Str_Modeler_ScaleHint">Export divides every size by this scale.</system:String>
+    <system:String x:Key="Str_Modeler_BuildFailed">Couldn't build the design: {0}</system:String>
+    <system:String x:Key="Str_Modeler_NothingToExport">There is nothing solid to save: a hole on its own is not part of the design.</system:String>
+    <system:String x:Key="Str_Modeler_Exporting">Saving...</system:String>
+    <system:String x:Key="Str_Modeler_ShowPanelTip">Show the side panel</system:String>
+    <system:String x:Key="Str_Modeler_HidePanelTip">Hide the side panel</system:String>
+    <system:String x:Key="Str_Modeler_ImportedObjects">{0} objects</system:String>
+    <system:String x:Key="Str_Modeler_ImportedObject">{0} object</system:String>
+    <system:String x:Key="Str_Modeler_ImportedMesh">Imported {0}: {1}.</system:String>
+    <system:String x:Key="Str_Modeler_ReplaceConfirm">Replace the design on screen with this one? (Ctrl+Z brings it back.)</system:String>
+    <system:String x:Key="Str_Modeler_ImportTip">Add an STL or OBJ model to the design: each object in it becomes a shape with its exact form</system:String>
+    <system:String x:Key="Str_Modeler_NewConfirm">Start a new, empty design? (Ctrl+Z brings this one back.)</system:String>
+    <system:String x:Key="Str_Modeler_NewTip">Start a new, empty design</system:String>
+    <system:String x:Key="Str_Modeler_DeletedMany">{0} deleted. Ctrl+Z brings them back.</system:String>
+    <system:String x:Key="Str_Modeler_DeletedOne">Deleted. Ctrl+Z brings it back.</system:String>
+    <system:String x:Key="Str_Modeler_Dropped">Put on the floor.</system:String>
+    <system:String x:Key="Str_Modeler_DropTip">Put the picked shapes on the floor</system:String>
+    <system:String x:Key="Str_Modeler_Duplicated">Copied.</system:String>
+    <system:String x:Key="Str_Modeler_NowSolid">Solid again.</system:String>
+    <system:String x:Key="Str_Modeler_NowHole">Now a hole: group it with a shape to cut that shape.</system:String>
+    <system:String x:Key="Str_Modeler_MakeSolidTip">Make the picked shapes solid</system:String>
+    <system:String x:Key="Str_Modeler_MakeHoleTip">Make the picked shapes holes</system:String>
+    <system:String x:Key="Str_Modeler_Ungrouped">Taken apart: each piece is its own object again.</system:String>
+    <system:String x:Key="Str_Modeler_Grouped">{0} objects are now one group: its solids join and its holes cut them.</system:String>
+    <system:String x:Key="Str_Modeler_GroupName">Group</system:String>
+    <system:String x:Key="Str_Modeler_UngroupTip">Take the picked group apart (Ctrl+Shift+G)</system:String>
+    <system:String x:Key="Str_Modeler_GroupTip">Group the picked objects (Ctrl+G): their solids join and their holes cut them</system:String>
+    <system:String x:Key="Str_Modeler_EmptyHint">Click a shape in Shapes, insert an example, or import an STL / OBJ model.</system:String>
+    <system:String x:Key="Str_Modeler_EmptyTitle">Start with a shape</system:String>
+    <system:String x:Key="Str_Modeler_SceneEmpty">Nothing here yet</system:String>
+    <system:String x:Key="Str_Modeler_SceneNameTip">The design's name: click to type a new one</system:String>
+    <system:String x:Key="Str_Modeler_DefaultName">My design</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_lip">Lip height</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_thickness">Thickness</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_depth">Base depth</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_angle">Angle from the table</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_width">Width</system:String>
+    <system:String x:Key="Str_Modeler_Template_phone-stand">Phone stand</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_lid">Lid (0 = none)</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_wall">Wall</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_height">Height</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_depth">Depth</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_width">Width</system:String>
+    <system:String x:Key="Str_Modeler_Template_box-lid">Box with lid</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_holes">Holes per arm</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_hole">Screw hole (0 = none)</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_thickness">Thickness</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_arm">Arm length</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_width">Width</system:String>
+    <system:String x:Key="Str_Modeler_Template_bracket">L bracket</system:String>
+    <system:String x:Key="Str_Modeler_Inserted">{0} inserted as one group: Ungroup (Ctrl+Shift+G) to change its parts.</system:String>
+    <system:String x:Key="Str_Modeler_InsertTip">Add this example to the design, beside what is already there</system:String>
+    <system:String x:Key="Str_Modeler_Insert">Insert</system:String>
+    <system:String x:Key="Str_Modeler_ExamplesTip">Ready-made designs: set the sliders, then Insert. What you insert is made of ordinary shapes you can change freely.</system:String>
+    <system:String x:Key="Str_Modeler_ExamplesHeader">EXAMPLES</system:String>
+    <system:String x:Key="Str_Modeler_TooMany">A design can have at most {0} shapes.</system:String>
+    <system:String x:Key="Str_Modeler_AddedHole">Hole added. Pick it and a shape (Ctrl+click), then Group (Ctrl+G) to cut the shape.</system:String>
+    <system:String x:Key="Str_Modeler_Added">Added. Type its size and position under Properties.</system:String>
+    <system:String x:Key="Str_Modeler_HoleName">{0} hole</system:String>
+    <system:String x:Key="Str_Modeler_AddHoleShapeTip">Add a {0} hole: group it with a shape to cut that shape</system:String>
+    <system:String x:Key="Str_Modeler_AddShapeTip">Add a {0}</system:String>
+    <system:String x:Key="Str_Modeler_HolesLabelTip">A hole cuts the solid shapes it is grouped with. Pick a hole and a shape (Ctrl+click) and press Group (Ctrl+G): the hole is taken out of the shape. A hole on its own cuts nothing and shows as a see-through ghost.</system:String>
+    <system:String x:Key="Str_Modeler_HolesLabel">AS A HOLE</system:String>
+    <system:String x:Key="Str_Modeler_ShapesHint">Click a shape to add it in the middle of the view.</system:String>
+    <system:String x:Key="Str_Modeler_ShapesHeader">SHAPES</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Mesh">Imported model</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Tube">Tube</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Wedge">Wedge</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Cone">Cone</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Sphere">Sphere</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Cylinder">Cylinder</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Box">Box</system:String>
+    <system:String x:Key="Str_Modeler_LookBack">Look from the back (-Z)</system:String>
+    <system:String x:Key="Str_Modeler_LookFront">Look from the front (Z)</system:String>
+    <system:String x:Key="Str_Modeler_LookBelow">Look from below (-Y)</system:String>
+    <system:String x:Key="Str_Modeler_LookTop">Look from above (Y)</system:String>
+    <system:String x:Key="Str_Modeler_LookLeft">Look from the left (-X)</system:String>
+    <system:String x:Key="Str_Modeler_LookRight">Look from the right (X)</system:String>
+    <system:String x:Key="Str_Modeler_ImportedDropped">{0} small objects were left out (limit {1}).</system:String>
+    <system:String x:Key="Str_Modeler_ImportedShaped">{0} were not plain boxes and became the box around them.</system:String>
+    <system:String x:Key="Str_Modeler_ImportedMetres">The file was read as metres.</system:String>
+    <system:String x:Key="Str_Modeler_ImportedBoards">{0} boards</system:String>
+    <system:String x:Key="Str_Modeler_ImportedBoard">{0} board</system:String>
+    <system:String x:Key="Str_Modeler_Imported">Imported {0}: {1}.</system:String>
+    <system:String x:Key="Str_Modeler_ImportPart">Part</system:String>
+    <system:String x:Key="Str_Modeler_Importing">Reading {0}...</system:String>
     <system:String x:Key="Str_Modeler_PlanEmpty">Add boards to see what fits the bed.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Title">Boards</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Text">Add boards and set where each one goes and how big it is. Pick one to light it up in 3D. The pill warns about boards that overlap or float loose.</system:String>

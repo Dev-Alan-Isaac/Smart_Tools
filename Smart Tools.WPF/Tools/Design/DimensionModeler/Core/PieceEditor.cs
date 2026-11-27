@@ -44,6 +44,10 @@ namespace Smart_Tools.WPF.Models
         public int Version { get; set; } = 1;
         public string Name { get; set; } = "";
         public List<CustomPartDto> Parts { get; set; } = new();
+
+        /// <summary>Board name -> its colours (see <see cref="BoardPaint"/>); left out of the file when nothing is coloured.</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public Dictionary<string, BoardPaint>? Paint { get; set; }
     }
 
     /// <summary>Two boards that share space.</summary>
@@ -241,13 +245,22 @@ namespace Smart_Tools.WPF.Controllers
             return parts;
         }
 
-        public static string ToJson(string name, IReadOnlyList<Part> parts) =>
-            JsonSerializer.Serialize(new CustomPieceDto { Name = name, Parts = ToDtos(parts) }, Options);
+        /// <summary>The design as JSON, with the colours of its own boards (colours kept for boards it does not have are left out).</summary>
+        public static string ToJson(string name, IReadOnlyList<Part> parts, IReadOnlyDictionary<string, BoardPaint>? paint = null)
+        {
+            var own = paint?.Where(kv => kv.Value != null && parts.Any(p => p.Name == kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+            return JsonSerializer.Serialize(new CustomPieceDto { Name = name, Parts = ToDtos(parts), Paint = own is { Count: > 0 } ? own : null }, Options);
+        }
 
-        public static bool TryRead(string? json, out string name, out IReadOnlyList<Part> parts, out string error)
+        public static bool TryRead(string? json, out string name, out IReadOnlyList<Part> parts, out string error) =>
+            TryRead(json, out name, out parts, out _, out error);
+
+        /// <summary>Reads a design and its colours (made safe; only colours of boards the design has; empty when none).</summary>
+        public static bool TryRead(string? json, out string name, out IReadOnlyList<Part> parts, out Dictionary<string, BoardPaint> paint, out string error)
         {
             name = DefaultName;
             parts = Array.Empty<Part>();
+            paint = new Dictionary<string, BoardPaint>();
             error = "";
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -264,6 +277,13 @@ namespace Smart_Tools.WPF.Controllers
                 }
                 name = string.IsNullOrWhiteSpace(dto.Name) ? DefaultName : dto.Name.Trim();
                 parts = FromDtos(dto.Parts);
+                if (dto.Paint != null)
+                {
+                    var names = parts.Select(p => p.Name).ToHashSet();
+                    foreach (var (board, colours) in dto.Paint)
+                        if (board != null && names.Contains(board) && colours != null) paint[board] = colours;
+                    Smart_Tools.WPF.Controllers.PiecePaint.Sanitize(paint);
+                }
                 return true;
             }
             catch (JsonException ex)

@@ -129,6 +129,9 @@ namespace Smart_Tools.WPF.Controllers
         }
     }
 
+    /// <summary>One axis of the corner gizmo: 0 = X, 1 = Y, 2 = Z; screen direction (Y down) and depth (negative = towards the viewer).</summary>
+    public readonly record struct GizmoAxis(int Axis, double X, double Y, double Depth);
+
     /// <summary>One line of the cut list: how many boards of this name and size to cut.</summary>
     public sealed record CutRow(string Name, int Quantity, double Length, double Width, double Thickness, IReadOnlyList<string> PartNames);
 
@@ -214,6 +217,28 @@ namespace Smart_Tools.WPF.Controllers
             var (right, up, _) = Basis();
             double perPixel = 2 * Distance * Math.Tan(Rad(FovDegrees) / 2) / viewportWidth;
             Target = Target - right * (dxPixels * perPixel) + up * (dyPixels * perPixel);
+        }
+
+        /// <summary>
+        /// The X, Y and Z axes as the corner gizmo draws them: where each unit axis points on screen (X right, Y down, length 1 when
+        /// it lies flat on the screen) and how far it points away from the viewer (negative = towards you, drawn on top).
+        /// </summary>
+        public IReadOnlyList<GizmoAxis> GizmoAxes()
+        {
+            var (right, up, forward) = Basis();
+            var axes = new[] { new Vec3(1, 0, 0), new Vec3(0, 1, 0), new Vec3(0, 0, 1) };
+            return axes.Select((a, i) => new GizmoAxis(i, Vec3.Dot(a, right), -Vec3.Dot(a, up), Vec3.Dot(a, forward))).ToList();
+        }
+
+        /// <summary>Turns the view to look at the piece from one side: from +X / -X, from above / below (as far as the pitch goes), or from +Z / -Z.</summary>
+        public void LookFrom(int axis, bool positive)
+        {
+            switch (axis)
+            {
+                case 0: Yaw = positive ? 90 : -90; Pitch = 0; break;
+                case 1: Pitch = positive ? MaxPitch : MinPitch; break;
+                case 2: Yaw = positive ? 0 : 180; Pitch = 0; break;
+            }
         }
 
         private (Vec3 Right, Vec3 Up, Vec3 Forward) Basis()

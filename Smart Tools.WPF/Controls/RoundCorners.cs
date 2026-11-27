@@ -89,18 +89,28 @@ namespace Smart_Tools.WPF.Controls
             {
                 IsHitTestVisible = false;
                 _brushWatch?.AddValueChanged(element, OnBrushChanged);
-                ModalState.Changed += OnModalChanged;
-                OnModalChanged();
+                ModalState.Changed += UpdateShown;
+                element.IsVisibleChanged += OnElementVisibleChanged;
+                UpdateShown();
             }
 
             public void Detach()
             {
                 _brushWatch?.RemoveValueChanged(AdornedElement, OnBrushChanged);
-                ModalState.Changed -= OnModalChanged;
+                ModalState.Changed -= UpdateShown;
+                AdornedElement.IsVisibleChanged -= OnElementVisibleChanged;
             }
 
             // The adorner layer is above every modal, so while one is open the outline steps aside instead of crossing it.
-            private void OnModalChanged() => Visibility = ModalState.AnyOpen ? Visibility.Collapsed : Visibility.Visible;
+            // It also lives apart from the element's own tree, so hiding the element (a folded panel) does not hide it: follow it.
+            private void UpdateShown()
+            {
+                bool show = !ModalState.AnyOpen && AdornedElement.IsVisible;
+                Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+                if (show) InvalidateVisual();   // the element may have a new size since it was last drawn
+            }
+
+            private void OnElementVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => UpdateShown();
 
             private void OnBrushChanged(object? sender, EventArgs e) => InvalidateVisual();
 

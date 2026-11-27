@@ -23,6 +23,9 @@ namespace Smart_Tools.WPF.Models
         public double Length => Math.Sqrt(Dot(this, this));
 
         public Vec3 Normalized => Length < 1e-12 ? Zero : this * (1.0 / Length);
+
+        // the generated record ToString printed Normalized, another Vec3, and so on forever (stack overflow)
+        public override string ToString() => FormattableString.Invariant($"({X:0.###}, {Y:0.###}, {Z:0.###})");
     }
 
     /// <summary>What a board is for - the preview colours by it, nothing else depends on it.</summary>

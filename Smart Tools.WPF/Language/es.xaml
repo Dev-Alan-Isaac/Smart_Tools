@@ -12366,8 +12366,8 @@
 
     <system:String x:Key="Str_Cat_design_Title">3D y diseño</system:String>
     <system:String x:Key="Str_Cat_design_Blurb">Modela e imprime cosas</system:String>
-    <system:String x:Key="Str_Tool_dimension-modeler_Name">Modelador por medidas</system:String>
-    <system:String x:Key="Str_Tool_dimension-modeler_Description">Modela una mesa, silla, estantería o armario a partir de sus medidas, míralo en 3D con líneas de cota y expórtalo en OBJ o STL para imprimir en 3D</system:String>
+    <system:String x:Key="Str_Tool_dimension-modeler_Name">Modelador 3D</system:String>
+    <system:String x:Key="Str_Tool_dimension-modeler_Description">Construye lo que quieras con formas (cajas, cilindros, esferas, conos, cuñas, tubos o modelos importados), donde cualquier forma puede ser un hueco que corta a las demás; míralo en 3D con medidas y guárdalo en STL u OBJ para imprimir en 3D</system:String>
     <system:String x:Key="Str_Modeler_PieceHeader">PIEZA</system:String>
     <system:String x:Key="Str_Modeler_Template_table">Mesa</system:String>
     <system:String x:Key="Str_Modeler_Template_chair">Silla</system:String>
@@ -12528,7 +12528,7 @@
     <system:String x:Key="Str_Modeler_Colour_Green">Verde</system:String>
     <system:String x:Key="Str_Modeler_Colour_Blue">Azul</system:String>
     <system:String x:Key="Str_Modeler_Colour_Navy">Azul marino</system:String>
-    <system:String x:Key="Str_Modeler_PickedMany">{0} tablas elegidas: clic derecho en una de ellas para hacer un grupo.</system:String>
+    <system:String x:Key="Str_Modeler_PickedMany">{0} elegidos</system:String>
     <system:String x:Key="Str_Modeler_GroupN">Grupo {0}</system:String>
     <system:String x:Key="Str_Modeler_MakeGroup">Hacer un grupo con las {0} tablas elegidas...</system:String>
     <system:String x:Key="Str_Modeler_GroupNamePrompt">Nombre del grupo:</system:String>
@@ -12542,7 +12542,7 @@
     <system:String x:Key="Str_Modeler_ShowCutListTip">Mostrar la lista de cortes</system:String>
     <system:String x:Key="Str_Modeler_Template_cabinet">Armario</system:String>
     <system:String x:Key="Str_Modeler_SizeHeader">MEDIDAS (MM)</system:String>
-    <system:String x:Key="Str_Modeler_ResetSizesTip">Volver a las medidas por defecto</system:String>
+    <system:String x:Key="Str_Modeler_ResetSizesTip">Volver a poner los deslizadores de este ejemplo en sus valores iniciales</system:String>
     <system:String x:Key="Str_Modeler_Param_table_width">Ancho</system:String>
     <system:String x:Key="Str_Modeler_Param_table_depth">Fondo</system:String>
     <system:String x:Key="Str_Modeler_Param_table_height">Alto</system:String>
@@ -12575,7 +12575,7 @@
     <system:String x:Key="Str_Modeler_UnitCm">cm</system:String>
     <system:String x:Key="Str_Modeler_UnitIn">pulg</system:String>
     <system:String x:Key="Str_Modeler_ShowDimensions">Mostrar líneas de cota</system:String>
-    <system:String x:Key="Str_Modeler_ShowDimensionsTip">Dibuja el ancho, el alto y el fondo sobre la pieza (o sobre la tabla elegida en la lista de corte)</system:String>
+    <system:String x:Key="Str_Modeler_ShowDimensionsTip">Dibujar el ancho, el alto y el fondo de las formas elegidas (o de todo el diseño)</system:String>
     <system:String x:Key="Str_Modeler_PrintHeader">IMPRESIÓN 3D</system:String>
     <system:String x:Key="Str_Modeler_Scale">Escala de impresión</system:String>
     <system:String x:Key="Str_Modeler_ScaleTip">1/10 imprime a una décima del tamaño real. Se aplica a todo lo que exportes.</system:String>
@@ -12586,16 +12586,16 @@
     <system:String x:Key="Str_Modeler_BedHeight">Alto</system:String>
     <system:String x:Key="Str_Modeler_PlanFits">{0} piezas caben en {1} placa(s).</system:String>
     <system:String x:Key="Str_Modeler_PlanTooBig">{0} de {1} piezas son demasiado grandes para la cama: sube la escala o usa una cama mayor.</system:String>
-    <system:String x:Key="Str_Modeler_FitTip">Encajar la pieza en la vista (o doble clic en la vista)</system:String>
-    <system:String x:Key="Str_Modeler_ExportTip">Guardar la pieza como archivo OBJ o STL</system:String>
-    <system:String x:Key="Str_Modeler_ExportObj">OBJ - pieza entera</system:String>
-    <system:String x:Key="Str_Modeler_ExportStl">STL - pieza entera</system:String>
+    <system:String x:Key="Str_Modeler_FitTip">Encajar el diseño en la vista (o doble clic en la vista)</system:String>
+    <system:String x:Key="Str_Modeler_ExportTip">Guardar el diseño terminado (con los huecos cortados) como STL u OBJ, a la escala de impresión</system:String>
+    <system:String x:Key="Str_Modeler_ExportObj">OBJ - para otros programas 3D</system:String>
+    <system:String x:Key="Str_Modeler_ExportStl">STL - para imprimir en 3D</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintStl">STL - piezas imprimibles (un archivo por placa)</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintObj">OBJ - piezas imprimibles (un archivo por placa)</system:String>
-    <system:String x:Key="Str_Modeler_StageHint">Clic en una tabla para elegirla · Ctrl+clic elige más · clic derecho en ella para color y grupos · arrastra para girar · clic derecho y arrastra para mover · rueda para acercar</system:String>
+    <system:String x:Key="Str_Modeler_StageHint">Clic en una forma para elegirla · Ctrl+clic elige más · arrastra para girar · arrastra con el botón derecho para mover · rueda para acercar</system:String>
     <system:String x:Key="Str_Modeler_CutList">Lista de corte</system:String>
     <system:String x:Key="Str_Modeler_CutListTip">Haz clic en una fila para iluminar esa tabla y medirla · Ctrl+clic elige varias filas</system:String>
-    <system:String x:Key="Str_Modeler_ColPart">Pieza</system:String>
+    <system:String x:Key="Str_Modeler_ColPart">Forma</system:String>
     <system:String x:Key="Str_Modeler_ColQty">Cant.</system:String>
     <system:String x:Key="Str_Modeler_ColSize">L × An × Gr (mm)</system:String>
     <system:String x:Key="Str_Modeler_CutTotals">{0} tablas en {1} cortes · {2} cm³ de material</system:String>
@@ -12618,7 +12618,7 @@
     <system:String x:Key="Str_Tour_DimensionModeler_Export_Text">Guarda la pieza entera, o cada tabla tumbada en placas imprimibles, como OBJ o STL.</system:String>
     <system:String x:Key="Str_Modeler_Template_custom">Propia</system:String>
     <system:String x:Key="Str_Modeler_CustomTip">Construye una pieza desde cero: añade tablas y fija dónde va cada una y qué tamaño tiene</system:String>
-    <system:String x:Key="Str_Modeler_EyeTip">Oculta o muestra todas las tablas de esta fila (las dos puertas) en la vista 3D. Para ocultar solo una, haz clic derecho sobre ella en la vista 3D. Las tablas ocultas siguen en la pieza y en las exportaciones.</system:String>
+    <system:String x:Key="Str_Modeler_EyeTip">Ocultarlo o mostrarlo en la vista (se sigue guardando y exportando)</system:String>
     <system:String x:Key="Str_Modeler_ShowAll">Mostrar todo ({0} ocultas)</system:String>
     <system:String x:Key="Str_Modeler_HideBoard">Ocultar {0}</system:String>
     <system:String x:Key="Str_Modeler_PieceTip">Elige qué modelar. Personalizada te deja construir una pieza desde cero, tabla por tabla.</system:String>
@@ -12631,10 +12631,10 @@
     <system:String x:Key="Str_Modeler_Kind_Leg">Pata o poste</system:String>
     <system:String x:Key="Str_Modeler_Kind_Panel">Panel vertical</system:String>
     <system:String x:Key="Str_Modeler_Kind_Top">Tablero</system:String>
-    <system:String x:Key="Str_Modeler_DuplicateTip">Copiar la tabla elegida</system:String>
-    <system:String x:Key="Str_Modeler_DeleteTip">Borrar la tabla elegida</system:String>
-    <system:String x:Key="Str_Modeler_OpenTip">Abrir un diseño guardado</system:String>
-    <system:String x:Key="Str_Modeler_SaveTip">Guardar este diseño en un archivo</system:String>
+    <system:String x:Key="Str_Modeler_DuplicateTip">Copiar las formas elegidas (Ctrl+D)</system:String>
+    <system:String x:Key="Str_Modeler_DeleteTip">Borrar las formas elegidas (Supr)</system:String>
+    <system:String x:Key="Str_Modeler_OpenTip">Abrir un diseño guardado (.dmodel) o añadir un modelo STL / OBJ</system:String>
+    <system:String x:Key="Str_Modeler_SaveTip">Guardar el diseño como archivo .dmodel, para seguir trabajando en él más tarde</system:String>
     <system:String x:Key="Str_Modeler_NoParts">Aún no hay tablas. Añade una, o usa "Editar como pieza propia" en una pieza predefinida para partir de ella.</system:String>
     <system:String x:Key="Str_Modeler_PartName">Nombre de la tabla</system:String>
     <system:String x:Key="Str_Modeler_PartKind">Tipo</system:String>
@@ -12676,7 +12676,127 @@
     <system:String x:Key="Str_Modeler_CheckOverlap">Estas tablas se solapan: {0}</system:String>
     <system:String x:Key="Str_Modeler_CheckLoose">No tocan al resto: {0}</system:String>
     <system:String x:Key="Str_Modeler_OpenFailed">No se pudo abrir ese diseño: {0}</system:String>
-    <system:String x:Key="Str_Modeler_Opened">Se abrió {0}</system:String>
+    <system:String x:Key="Str_Modeler_Opened">Se abrió {0}</system:String>
+    <system:String x:Key="Str_Modeler_LeaveFullViewTip">Volver a la vista normal (Esc)</system:String>
+    <system:String x:Key="Str_Modeler_PartsTotals">{0} formas sólidas · {1} huecos · {2} cm³ de material</system:String>
+    <system:String x:Key="Str_Modeler_LockedNote">Bloqueado: se puede elegir, pero no mover, cambiar de tamaño ni editar.</system:String>
+    <system:String x:Key="Str_Modeler_HiddenNote">Oculto solo en la vista: se sigue guardando y exportando.</system:String>
+    <system:String x:Key="Str_Modeler_LockTip">Bloquearlo o desbloquearlo</system:String>
+    <system:String x:Key="Str_Modeler_ObjectsHint">Haz clic en una fila para elegirla (Ctrl o Mayús para varias). El ojo la oculta solo en la vista; el candado evita que se cambie.</system:String>
+    <system:String x:Key="Str_Modeler_LockedNoEdit">Está bloqueado: desbloquéalo en Objetos para cambiarlo.</system:String>
+    <system:String x:Key="Str_Modeler_PaintNone">Sin color (el aspecto normal)</system:String>
+    <system:String x:Key="Str_Modeler_Colour">COLOR</system:String>
+    <system:String x:Key="Str_Modeler_InnerTip">El hueco del tubo como parte de su ancho (5 a 95 %)</system:String>
+    <system:String x:Key="Str_Modeler_Inner">HUECO %</system:String>
+    <system:String x:Key="Str_Modeler_SegmentsTip">Lo redonda que es: el número de lados planos alrededor (3 a 128)</system:String>
+    <system:String x:Key="Str_Modeler_Segments">LADOS</system:String>
+    <system:String x:Key="Str_Modeler_RotationTip">Giro sobre X, luego Y, luego Z, alrededor del centro de la forma. Arriba / Abajo giran 15 grados (Mayús 1, Ctrl 90).</system:String>
+    <system:String x:Key="Str_Modeler_Rotation">GIRO (GRADOS)</system:String>
+    <system:String x:Key="Str_Modeler_Depth">Fondo</system:String>
+    <system:String x:Key="Str_Modeler_Height">Alto</system:String>
+    <system:String x:Key="Str_Modeler_Width">Ancho</system:String>
+    <system:String x:Key="Str_Modeler_SizeTip">El ancho, alto y fondo propios de la forma (antes de girarla); para un grupo, la caja que lo rodea. La forma crece desde su esquina más baja.</system:String>
+    <system:String x:Key="Str_Modeler_SizeLabel">TAMAÑO ({0})</system:String>
+    <system:String x:Key="Str_Modeler_PositionTip">Dónde está la esquina más baja de la caja que rodea lo elegido: X a la derecha, Y hacia arriba, Z hacia ti. Arriba / Abajo cambian el número (Mayús pasos pequeños, Ctrl pasos grandes). Una unidad tras el número manda: 2 in, 30 cm.</system:String>
+    <system:String x:Key="Str_Modeler_PositionLabel">POSICIÓN, ESQUINA MÁS BAJA ({0})</system:String>
+    <system:String x:Key="Str_Modeler_Hole">Hueco</system:String>
+    <system:String x:Key="Str_Modeler_Solid">Sólido</system:String>
+    <system:String x:Key="Str_Modeler_SolidOrHole">SÓLIDO O HUECO</system:String>
+    <system:String x:Key="Str_Modeler_Kind">FORMA</system:String>
+    <system:String x:Key="Str_Modeler_Name">NOMBRE</system:String>
+    <system:String x:Key="Str_Modeler_NoPick">Elige una forma en la vista o en Objetos para ver y cambiar su tamaño, posición, giro y color.</system:String>
+    <system:String x:Key="Str_Modeler_TabPartsTip">Cada forma sólida con su tamaño; las iguales se cuentan juntas</system:String>
+    <system:String x:Key="Str_Modeler_TabParts">Piezas</system:String>
+    <system:String x:Key="Str_Modeler_TabObjectsTip">Todos los grupos y formas del diseño</system:String>
+    <system:String x:Key="Str_Modeler_TabObjects">Objetos</system:String>
+    <system:String x:Key="Str_Modeler_TabPropertiesTip">Nombre, tamaño, posición, giro y color de las formas elegidas</system:String>
+    <system:String x:Key="Str_Modeler_TabProperties">Propiedades</system:String>
+    <system:String x:Key="Str_Modeler_ScaleHint">Al exportar, cada medida se divide por esta escala.</system:String>
+    <system:String x:Key="Str_Modeler_BuildFailed">No se pudo construir el diseño: {0}</system:String>
+    <system:String x:Key="Str_Modeler_NothingToExport">No hay nada sólido que guardar: un hueco solo no forma parte del diseño.</system:String>
+    <system:String x:Key="Str_Modeler_Exporting">Guardando...</system:String>
+    <system:String x:Key="Str_Modeler_ShowPanelTip">Mostrar el panel lateral</system:String>
+    <system:String x:Key="Str_Modeler_HidePanelTip">Ocultar el panel lateral</system:String>
+    <system:String x:Key="Str_Modeler_ImportedObjects">{0} objetos</system:String>
+    <system:String x:Key="Str_Modeler_ImportedObject">{0} objeto</system:String>
+    <system:String x:Key="Str_Modeler_ImportedMesh">Importado {0}: {1}.</system:String>
+    <system:String x:Key="Str_Modeler_ReplaceConfirm">¿Cambiar el diseño en pantalla por este? (Ctrl+Z lo recupera.)</system:String>
+    <system:String x:Key="Str_Modeler_ImportTip">Añadir un modelo STL u OBJ al diseño: cada objeto que tenga se convierte en una forma con su forma exacta</system:String>
+    <system:String x:Key="Str_Modeler_NewConfirm">¿Empezar un diseño nuevo y vacío? (Ctrl+Z recupera este.)</system:String>
+    <system:String x:Key="Str_Modeler_NewTip">Empezar un diseño nuevo y vacío</system:String>
+    <system:String x:Key="Str_Modeler_DeletedMany">{0} borrados. Ctrl+Z los recupera.</system:String>
+    <system:String x:Key="Str_Modeler_DeletedOne">Borrado. Ctrl+Z lo recupera.</system:String>
+    <system:String x:Key="Str_Modeler_Dropped">Puesto en el suelo.</system:String>
+    <system:String x:Key="Str_Modeler_DropTip">Poner en el suelo las formas elegidas</system:String>
+    <system:String x:Key="Str_Modeler_Duplicated">Copiado.</system:String>
+    <system:String x:Key="Str_Modeler_NowSolid">De nuevo sólida.</system:String>
+    <system:String x:Key="Str_Modeler_NowHole">Ahora es un hueco: agrúpalo con una forma para cortarla.</system:String>
+    <system:String x:Key="Str_Modeler_MakeSolidTip">Convertir en sólidas las formas elegidas</system:String>
+    <system:String x:Key="Str_Modeler_MakeHoleTip">Convertir en huecos las formas elegidas</system:String>
+    <system:String x:Key="Str_Modeler_Ungrouped">Separado: cada pieza vuelve a ser un objeto.</system:String>
+    <system:String x:Key="Str_Modeler_Grouped">Ahora {0} objetos son un grupo: sus sólidos se unen y sus huecos los cortan.</system:String>
+    <system:String x:Key="Str_Modeler_GroupName">Grupo</system:String>
+    <system:String x:Key="Str_Modeler_UngroupTip">Separar el grupo elegido (Ctrl+Mayús+G)</system:String>
+    <system:String x:Key="Str_Modeler_GroupTip">Agrupar los objetos elegidos (Ctrl+G): sus sólidos se unen y sus huecos los cortan</system:String>
+    <system:String x:Key="Str_Modeler_EmptyHint">Haz clic en una forma de Formas, inserta un ejemplo o importa un modelo STL / OBJ.</system:String>
+    <system:String x:Key="Str_Modeler_EmptyTitle">Empieza con una forma</system:String>
+    <system:String x:Key="Str_Modeler_SceneEmpty">Todavía no hay nada</system:String>
+    <system:String x:Key="Str_Modeler_SceneNameTip">El nombre del diseño: haz clic para escribir otro</system:String>
+    <system:String x:Key="Str_Modeler_DefaultName">Mi diseño</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_lip">Alto del tope</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_thickness">Grosor</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_depth">Fondo de la base</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_angle">Ángulo desde la mesa</system:String>
+    <system:String x:Key="Str_Modeler_Param_phone-stand_width">Ancho</system:String>
+    <system:String x:Key="Str_Modeler_Template_phone-stand">Soporte para móvil</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_lid">Tapa (0 = sin tapa)</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_wall">Pared</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_height">Alto</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_depth">Fondo</system:String>
+    <system:String x:Key="Str_Modeler_Param_box-lid_width">Ancho</system:String>
+    <system:String x:Key="Str_Modeler_Template_box-lid">Caja con tapa</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_holes">Agujeros por brazo</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_hole">Agujero de tornillo (0 = ninguno)</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_thickness">Grosor</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_arm">Largo del brazo</system:String>
+    <system:String x:Key="Str_Modeler_Param_bracket_width">Ancho</system:String>
+    <system:String x:Key="Str_Modeler_Template_bracket">Escuadra en L</system:String>
+    <system:String x:Key="Str_Modeler_Inserted">{0} insertado como un grupo: desagrupa (Ctrl+Mayús+G) para cambiar sus piezas.</system:String>
+    <system:String x:Key="Str_Modeler_InsertTip">Añadir este ejemplo al diseño, al lado de lo que ya hay</system:String>
+    <system:String x:Key="Str_Modeler_Insert">Insertar</system:String>
+    <system:String x:Key="Str_Modeler_ExamplesTip">Diseños hechos: ajusta los deslizadores y pulsa Insertar. Lo que insertas son formas normales que puedes cambiar libremente.</system:String>
+    <system:String x:Key="Str_Modeler_ExamplesHeader">EJEMPLOS</system:String>
+    <system:String x:Key="Str_Modeler_TooMany">Un diseño puede tener como mucho {0} formas.</system:String>
+    <system:String x:Key="Str_Modeler_AddedHole">Hueco añadido. Elígelo junto con una forma (Ctrl+clic) y agrupa (Ctrl+G) para cortar la forma.</system:String>
+    <system:String x:Key="Str_Modeler_Added">Añadida. Escribe su tamaño y su posición en Propiedades.</system:String>
+    <system:String x:Key="Str_Modeler_HoleName">Hueco {0}</system:String>
+    <system:String x:Key="Str_Modeler_AddHoleShapeTip">Añadir un hueco ({0}): agrúpalo con una forma para cortarla</system:String>
+    <system:String x:Key="Str_Modeler_AddShapeTip">Añadir: {0}</system:String>
+    <system:String x:Key="Str_Modeler_HolesLabelTip">Un hueco corta las formas sólidas con las que está agrupado. Elige un hueco y una forma (Ctrl+clic) y pulsa Agrupar (Ctrl+G): el hueco se quita de la forma. Un hueco solo no corta nada y se ve como un fantasma transparente.</system:String>
+    <system:String x:Key="Str_Modeler_HolesLabel">COMO HUECO</system:String>
+    <system:String x:Key="Str_Modeler_ShapesHint">Haz clic en una forma para añadirla en el centro de la vista.</system:String>
+    <system:String x:Key="Str_Modeler_ShapesHeader">FORMAS</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Mesh">Modelo importado</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Tube">Tubo</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Wedge">Cuña</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Cone">Cono</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Sphere">Esfera</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Cylinder">Cilindro</system:String>
+    <system:String x:Key="Str_Modeler_Shape_Box">Caja</system:String>
+    <system:String x:Key="Str_Modeler_LookBack">Ver desde atrás (-Z)</system:String>
+    <system:String x:Key="Str_Modeler_LookFront">Ver desde el frente (Z)</system:String>
+    <system:String x:Key="Str_Modeler_LookBelow">Ver desde abajo (-Y)</system:String>
+    <system:String x:Key="Str_Modeler_LookTop">Ver desde arriba (Y)</system:String>
+    <system:String x:Key="Str_Modeler_LookLeft">Ver desde la izquierda (-X)</system:String>
+    <system:String x:Key="Str_Modeler_LookRight">Ver desde la derecha (X)</system:String>
+    <system:String x:Key="Str_Modeler_ImportedDropped">Se dejaron fuera {0} objetos pequeños (límite {1}).</system:String>
+    <system:String x:Key="Str_Modeler_ImportedShaped">{0} no eran cajas simples y se convirtieron en la caja que las rodea.</system:String>
+    <system:String x:Key="Str_Modeler_ImportedMetres">El archivo se leyó en metros.</system:String>
+    <system:String x:Key="Str_Modeler_ImportedBoards">{0} tablas</system:String>
+    <system:String x:Key="Str_Modeler_ImportedBoard">{0} tabla</system:String>
+    <system:String x:Key="Str_Modeler_Imported">Importado {0}: {1}.</system:String>
+    <system:String x:Key="Str_Modeler_ImportPart">Pieza</system:String>
+    <system:String x:Key="Str_Modeler_Importing">Leyendo {0}...</system:String>
     <system:String x:Key="Str_Modeler_PlanEmpty">Añade tablas para ver qué cabe en la cama.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Title">Tablas</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Parts_Text">Añade tablas y fija dónde va cada una y qué tamaño tiene. Elige una para iluminarla en 3D. La etiqueta avisa de tablas que se solapan o quedan sueltas.</system:String>

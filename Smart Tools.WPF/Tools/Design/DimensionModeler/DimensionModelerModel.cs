@@ -42,8 +42,22 @@ namespace Smart_Tools.WPF.Models
         /// <summary>Groups changed on a preset: template id -> board name -> group ("" = in no group). The custom piece keeps its groups in its boards.</summary>
         public Dictionary<string, Dictionary<string, string>> GroupOverrides { get; set; } = new();
 
-        /// <summary>The cut list beside the 3D view is folded away.</summary>
+        /// <summary>The cut list beside the 3D view is folded away (before the shape builder; read once as <see cref="PanelHidden"/>).</summary>
         public bool CutListHidden { get; set; }
+
+        // ---- 3D Modeler (shape builder). The fields above Template..CutListHidden are only read to move old settings over. ----
+
+        /// <summary>The design on screen. Null in settings from before the shape builder: then it is made from the old fields.</summary>
+        public SceneFileDto? Scene { get; set; }
+
+        /// <summary>The example picked in the Examples card (its sliders are kept in <see cref="Values"/>).</summary>
+        public string ExampleId { get; set; } = "bracket";
+
+        /// <summary>The Properties / Objects / Parts panel beside the 3D view is folded away. Null = not set yet (then the old cut-list choice).</summary>
+        public bool? PanelHidden { get; set; }
+
+        /// <summary>The tab open in that panel: "properties", "objects" or "parts".</summary>
+        public string PanelTab { get; set; } = "properties";
     }
 
     /// <summary>The four ways to save a piece.</summary>

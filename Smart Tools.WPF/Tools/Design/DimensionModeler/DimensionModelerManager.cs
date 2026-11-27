@@ -47,6 +47,26 @@ namespace Smart_Tools.WPF.Controllers
             return new ModelerExportResult(files, plan.TooBig.Select(p => p.Name).ToList());
         }
 
+        /// <summary>
+        /// Writes the finished design (holes cut out, hidden shapes included, lone holes left out) as one OBJ or STL file, scaled down by
+        /// the print ratio (10 = 1:10). A file that is already there is never overwritten: the new one gets " (2)". Returns the file
+        /// written, or null when there is nothing solid to write.
+        /// </summary>
+        public static string? ExportScene(Scene scene, bool obj, string path, double ratio)
+        {
+            var objects = new SceneMeshBuilder().Build(scene, includeHidden: true).Where(o => !o.IsHole && o.Triangles.Count > 0).ToList();
+            if (objects.Count == 0) return null;
+            double scale = 1 / Math.Max(1, ratio);
+            string target = SafeFileOps.UniquePath(Path.ChangeExtension(path, obj ? ".obj" : ".stl"));
+            if (obj)
+            {
+                var named = objects.Select(o => (SceneEdit.Find(scene, o.NodeId)?.Name ?? "object", o.Triangles));
+                AtomicFile.WriteAllText(target, SceneFiles.ToObj(scene.Name, named, scale));
+            }
+            else AtomicFile.WriteAllBytes(target, SceneFiles.ToStl(objects.SelectMany(o => o.Triangles.Select(t => t.Triangle)), scale));
+            return target;
+        }
+
         private static string Write(PieceModel model, string path, bool obj)
         {
             string target = SafeFileOps.UniquePath(path);
