@@ -885,6 +885,9 @@
                         </ContentControl.RenderTransform>
                     </ContentControl>
 
+                    <!--  First time a tool opens: what it does + its tour (bottom right, goes away by itself)  -->
+                    <views:ToolTipCard x:Name="ToolTip1st" />
+
                     <!--  Guided tour: over the page, hidden until the Help button is used  -->
                     <views:TourOverlay x:Name="TourLayer" />
                 </Grid>

@@ -131,6 +131,7 @@ namespace Smart_Tools.WPF.Views
                     group.Children.Add(model);
                 }
             }
+            AddPickedParts(group);
             _sceneVisual.Content = group;
             _floorVisual.Content = BuildFloor();
         }
@@ -316,6 +317,7 @@ namespace Smart_Tools.WPF.Views
         private void ClickPick(Point at, bool add)
         {
             string? id = ObjectAt(at);
+            if (!add && id != null && TryPickPart(at, id)) return;   // second click on a picked group: the part under the mouse
             if (add)
             {
                 if (id == null) return;
@@ -357,28 +359,36 @@ namespace Smart_Tools.WPF.Views
             DrawSnapGuides(w, h);
             DrawOutline(w, h);
 
+            var boxes = MeasuredBoxes();
+            // a picked part of a group: its group's box, dashed and quiet, so the part is seen in its place
+            if (_picked.Any(IsPart))
+                foreach (var top in _picked.Select(id => SceneEdit.TopOf(_scene, id)).OfType<SceneNode>().Distinct())
+                    DrawBox(SceneEdit.BoundsOf(_scene, top), w, h, "TextSecondary", dashed: true);
             if (!_settings.ShowDimensions) return;
-            var measured = _picked.Count > 0 ? SceneEdit.BoundsOf(_scene, _picked) : SolidBounds();
-            if (measured.IsEmpty) return;
-            var box = new Part("", measured.Min, measured.Size, PartKind.Board);
-            var lines = _picked.Count > 0
-                ? DimensionLines.ForPart(box, Math.Clamp(Math.Max(measured.Size.X, Math.Max(measured.Size.Y, measured.Size.Z)) * 0.15, 8, 150))
-                : DimensionLines.Overall(new PieceModel("", new[] { box }), DimensionOffset(measured));
-            foreach (var line in lines) DrawDimension(line, w, h);
+            bool two = boxes.Count > 1;
+            foreach (var (measured, outer) in boxes)
+            {
+                var box = new Part("", measured.Min, measured.Size, PartKind.Board);
+                double biggest = Math.Max(measured.Size.X, Math.Max(measured.Size.Y, measured.Size.Z));
+                var lines = _picked.Count == 0
+                    ? DimensionLines.Overall(new PieceModel("", new[] { box }), DimensionOffset(measured))
+                    : DimensionLines.ForPart(box, outer ? Math.Clamp(biggest * 0.3, 20, 300) : Math.Clamp(biggest * 0.15, 8, 150));
+                foreach (var line in lines) DrawDimension(line, w, h, two && outer ? "TextSecondary" : "AccentColor");
+            }
         }
 
         /// <summary>The twelve edges of a box, thin and in the accent colour.</summary>
-        private void DrawBox(Bounds3 b, double w, double h)
+        private void DrawBox(Bounds3 b, double w, double h, string brush = "AccentColor", bool dashed = false)
         {
             if (b.IsEmpty) return;
             var c = new Vec3[8];
             for (int i = 0; i < 8; i++)
                 c[i] = new Vec3((i & 1) == 0 ? b.Min.X : b.Max.X, (i & 2) == 0 ? b.Min.Y : b.Max.Y, (i & 4) == 0 ? b.Min.Z : b.Max.Z);
             foreach (var (i, j) in new[] { (0, 1), (2, 3), (4, 5), (6, 7), (0, 2), (1, 3), (4, 6), (5, 7), (0, 4), (1, 5), (2, 6), (3, 7) })
-                if (_camera.Project(c[i], w, h) is { } a && _camera.Project(c[j], w, h) is { } z) AddLine(a, z, "AccentColor", 1.25, 0.9, dashed: false);
+                if (_camera.Project(c[i], w, h) is { } a && _camera.Project(c[j], w, h) is { } z) AddLine(a, z, brush, 1.25, dashed ? 0.6 : 0.9, dashed);
         }
 
-        private void DrawDimension(DimensionLine line, double w, double h)
+        private void DrawDimension(DimensionLine line, double w, double h, string brush = "AccentColor")
         {
             if (line.LengthMm < 1e-6) return;
             if (_camera.Project(line.A, w, h) is not { } a || _camera.Project(line.B, w, h) is not { } b
@@ -387,13 +397,13 @@ namespace Smart_Tools.WPF.Views
             // the short lines joining the measured points to the dimension line
             AddLine(a, s, "TextSecondary", 1, 0.7, dashed: true);
             AddLine(b, e, "TextSecondary", 1, 0.7, dashed: true);
-            AddLine(s, e, "AccentColor", 1.75, 1, dashed: false);
+            AddLine(s, e, brush, 1.75, 1, dashed: false);
             AddArrow(s, e);
             AddArrow(e, s);
 
             var label = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(7, 2, 7, 3), BorderThickness = new Thickness(1) };
             label.SetResourceReference(Border.BackgroundProperty, "PopupBg");
-            label.SetResourceReference(Border.BorderBrushProperty, "AccentColor");
+            label.SetResourceReference(Border.BorderBrushProperty, brush);
             var text = new TextBlock { Text = LengthFormat.Format(line.LengthMm, _settings.Unit), FontSize = 12, FontWeight = FontWeights.SemiBold };
             text.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
             label.Child = text;

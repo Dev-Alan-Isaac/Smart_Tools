@@ -60,6 +60,21 @@ namespace Smart_Tools.WPF.Views
 
             // a resize pulls one object's face; a move takes the whole pick along when the pressed object is in it
             string[] ids = mode == DragMode.Resize || !pickedTops.Contains(top) ? new[] { top } : pickedTops.ToArray();
+
+            // a picked part of a group under the mouse: only that part moves (or is resized), the rest of the group stays
+            bool partMode = false;
+            var pickedParts = _picked.Where(IsPart).ToList();
+            if (pickedParts.Count > 0 && SceneEdit.Find(_scene, top) is GroupNode grp
+                && ScenePick.PickShape(_scene, grp, _camera.Ray(_pressPoint.X, _pressPoint.Y, StageHost.ActualWidth, StageHost.ActualHeight)) is { } partHit)
+            {
+                var owner = pickedParts.FirstOrDefault(p => SceneEdit.Find(_scene, p) is { } pn && SceneEdit.Shapes(pn).Any(s => s.Id == partHit.NodeId));
+                if (owner != null)
+                {
+                    hit = partHit;
+                    ids = new[] { owner };
+                    partMode = true;
+                }
+            }
             if (ids.Any(IsLocked))
             {
                 TxtStatus.Text = Loc.T("Str_Modeler_LockedNoEdit", "That is locked: unlock it under Objects to change it.");
@@ -76,10 +91,16 @@ namespace Smart_Tools.WPF.Views
                 axis = ax >= ay && ax >= az ? 0 : ay >= az ? 1 : 2;
                 high = (axis == 0 ? n.X : axis == 1 ? n.Y : n.Z) > 0;
             }
-            if (!(pickedTops.Count == ids.Length && ids.All(pickedTops.Contains))) Pick(ids);
+            if (!partMode && !(pickedTops.Count == ids.Length && ids.All(pickedTops.Contains))) Pick(ids);
 
             var moving = ids.ToHashSet();
-            var others = _scene.Nodes.Where(n => !moving.Contains(n.Id) && !n.Hidden).ToList();
+            var movingShapes = ids.Select(i => SceneEdit.Find(_scene, i)).OfType<SceneNode>().SelectMany(SceneEdit.Shapes).Select(s => s.Id).ToHashSet();
+            // what it can snap to: the other objects, and for a part also the other parts of its own group
+            var others = partMode
+                ? _scene.Nodes.Where(n => n.Id != top && !n.Hidden)
+                    .Concat(SceneEdit.Shapes(SceneEdit.Find(_scene, top)!).Where(s => !movingShapes.Contains(s.Id) && !s.Hidden))
+                    .ToList()
+                : _scene.Nodes.Where(n => !moving.Contains(n.Id) && !n.Hidden).ToList();
             var start = SceneEdit.BoundsOf(_scene, ids);
             _drag = new DragState
             {

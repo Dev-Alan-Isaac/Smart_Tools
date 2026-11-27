@@ -407,6 +407,12 @@ namespace Smart_Tools.WPF.Modules
         public static bool ConfirmBeforeDeleting { get; set; } = true;
         public static bool ShowDesktopNotifications { get; set; } = true;
 
+        /// <summary>The first time a tool is opened a small card says what it does and offers its guided tour.</summary>
+        public static bool ShowToolTips { get; set; } = true;
+
+        /// <summary>Tool ids whose first-time card was already shown (ids only, never paths).</summary>
+        public static HashSet<string> ToolTipsSeen { get; private set; } = new(StringComparer.OrdinalIgnoreCase);
+
         // Keyboard shortcuts: only what differs from each action's default is stored, keyed by action id.
         // A value of "" means the user cleared the key.
         public static Dictionary<string, string> Shortcuts { get; private set; } = new();
@@ -443,6 +449,8 @@ namespace Smart_Tools.WPF.Modules
                 Language = "en";
                 ConfirmBeforeDeleting = true;
                 ShowDesktopNotifications = true;
+                ShowToolTips = true;
+                ToolTipsSeen = new(StringComparer.OrdinalIgnoreCase);
                 Shortcuts = new();
                 DisabledShortcuts = new();
                 GlobalHotkeysEnabled = true;
@@ -475,6 +483,8 @@ namespace Smart_Tools.WPF.Modules
                         Language = Language,
                         ConfirmBeforeDeleting = ConfirmBeforeDeleting,
                         ShowDesktopNotifications = ShowDesktopNotifications,
+                        ShowToolTips = ShowToolTips,
+                        ToolTipsSeen = ToolTipsSeen.OrderBy(id => id).ToList(),
                         Shortcuts = new Dictionary<string, string>(Shortcuts),
                         DisabledShortcuts = DisabledShortcuts.ToList(),
                         GlobalHotkeysEnabled = GlobalHotkeysEnabled,
@@ -513,6 +523,8 @@ namespace Smart_Tools.WPF.Modules
                 // Missing keys (older files) keep the defaults instead of turning into false.
                 ConfirmBeforeDeleting = dto.ConfirmBeforeDeleting ?? true;
                 ShowDesktopNotifications = dto.ShowDesktopNotifications ?? true;
+                ShowToolTips = dto.ShowToolTips ?? true;
+                ToolTipsSeen = new(dto.ToolTipsSeen ?? new List<string>(), StringComparer.OrdinalIgnoreCase);
                 Shortcuts = dto.Shortcuts != null ? new Dictionary<string, string>(dto.Shortcuts) : new();
                 DisabledShortcuts = dto.DisabledShortcuts != null ? new HashSet<string>(dto.DisabledShortcuts) : new();
                 GlobalHotkeysEnabled = dto.GlobalHotkeysEnabled ?? true;
@@ -588,6 +600,8 @@ namespace Smart_Tools.WPF.Modules
             public string? Language { get; set; }
             public bool? ConfirmBeforeDeleting { get; set; }
             public bool? ShowDesktopNotifications { get; set; }
+            public bool? ShowToolTips { get; set; }
+            public List<string>? ToolTipsSeen { get; set; }
             public Dictionary<string, string>? Shortcuts { get; set; }
             public List<string>? DisabledShortcuts { get; set; }
             public bool? GlobalHotkeysEnabled { get; set; }

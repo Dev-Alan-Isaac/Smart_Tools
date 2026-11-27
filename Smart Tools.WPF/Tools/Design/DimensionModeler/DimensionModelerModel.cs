@@ -23,6 +23,9 @@ namespace Smart_Tools.WPF.Models
         /// <summary>How thick a drawn outline is made by Draw and extrude, in mm.</summary>
         public double ExtrudeMm { get; set; } = 10;
 
+        /// <summary>When the pick is one part of a group, what the measuring lines show: "part", "group" or "both".</summary>
+        public string MeasureMode { get; set; } = "both";
+
         /// <summary>10 means 1:10; 1 is full size.</summary>
         public double ScaleRatio { get; set; } = 1;
 

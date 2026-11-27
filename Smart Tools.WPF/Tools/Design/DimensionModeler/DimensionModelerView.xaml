@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Smart_Tools.WPF.Views.DimensionModelerView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -147,9 +147,9 @@
                                         Content="{DynamicResource Str_Modeler_ShapesHeader}"
                                         Style="{StaticResource SidebarGroupHeader}"
                                         Tag="{x:Static materialDesign:PackIconKind.ShapePlusOutline}" />
-                                    <UniformGrid x:Name="PanelShapes" Columns="3" />
+                                    <UniformGrid x:Name="PanelShapes" ctl:Tour.Key="Str_Tour_DimensionModeler_Shapes" ctl:Tour.Order="1" Columns="3" />
                                     <!--  Draw an outline on the floor, give it a thickness  -->
-                                    <Grid Margin="2,6,2,0">
+                                    <Grid Margin="2,6,2,0" ctl:Tour.Key="Str_Tour_DimensionModeler_Extrude" ctl:Tour.Order="3">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
@@ -157,6 +157,7 @@
                                         <Button
                                             x:Name="BtnExtrude"
                                             Height="36"
+                                            Padding="6,0"
                                             Click="BtnExtrude_Click"
                                             Style="{StaticResource NeutralIconButtonStyle}"
                                             ToolTip="{DynamicResource Str_Modeler_ExtrudeTip}">
@@ -173,7 +174,9 @@
                                         <TextBox
                                             x:Name="TxtExtrudeHeight"
                                             Grid.Column="1"
-                                            Width="76"
+                                            Width="66"
+                                            Padding="4,0"
+                                            HorizontalContentAlignment="Center"
                                             Height="36"
                                             Margin="6,0,0,0"
                                             VerticalContentAlignment="Center"
@@ -186,13 +189,13 @@
                                         Style="{StaticResource FieldLabel}"
                                         Text="{DynamicResource Str_Modeler_HolesLabel}"
                                         ToolTip="{DynamicResource Str_Modeler_HolesLabelTip}" />
-                                    <UniformGrid x:Name="PanelHoleShapes" Columns="3" />
+                                    <UniformGrid x:Name="PanelHoleShapes" ctl:Tour.Key="Str_Tour_DimensionModeler_Holes" ctl:Tour.Order="4" Columns="3" />
                                     <TextBlock Style="{StaticResource SidebarHint}" Text="{DynamicResource Str_Modeler_ShapesHint}" />
                                 </StackPanel>
                             </Border>
 
                             <!--  ============ EXAMPLES: set the sliders, then insert as ordinary shapes ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_Examples" ctl:Tour.Order="7" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Modeler_ExamplesHeader}"
@@ -262,7 +265,7 @@
                             </Border>
 
                             <!--  ============ SNAP ============  -->
-                            <Border Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_Snap" ctl:Tour.Order="8" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Modeler_SnapHeader}"
@@ -288,7 +291,7 @@
                             </Border>
 
                             <!--  ============ VIEW ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_View" ctl:Tour.Order="3" Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_View" ctl:Tour.Order="9" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Modeler_ViewHeader}"
@@ -337,7 +340,7 @@
                             </Border>
 
                             <!--  ============ 3D PRINTING ============  -->
-                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_Print" ctl:Tour.Order="4" Style="{StaticResource SidebarGroupCardStyle}">
+                            <Border ctl:Tour.Key="Str_Tour_DimensionModeler_Print" ctl:Tour.Order="10" Style="{StaticResource SidebarGroupCardStyle}">
                                 <StackPanel>
                                     <ContentControl
                                         Content="{DynamicResource Str_Modeler_PrintHeader}"
@@ -402,7 +405,7 @@
                             x:Name="BtnExport"
                             Grid.Column="1"
                             ctl:Tour.Key="Str_Tour_DimensionModeler_Export"
-                            ctl:Tour.Order="6"
+                            ctl:Tour.Order="11"
                             VerticalAlignment="Center"
                             ToolTip="{DynamicResource Str_Modeler_ExportTip}">
                             <Button.ContextMenu>
@@ -423,7 +426,7 @@
                     </Grid>
 
                     <!--  Toolbar: every button acts on the picked shapes  -->
-                    <WrapPanel x:Name="Toolbar" Grid.Row="1" Margin="0,0,0,10">
+                    <WrapPanel x:Name="Toolbar" ctl:Tour.Key="Str_Tour_DimensionModeler_Group" ctl:Tour.Order="5" Grid.Row="1" Margin="0,0,0,10">
                         <Button x:Name="BtnUndo" Width="32" Height="32" Padding="0" Click="BtnUndo_Click" Style="{StaticResource ListToolButtonStyle}" ToolTip="{DynamicResource Str_Modeler_UndoTip}">
                             <materialDesign:PackIcon Width="16" Height="16" Kind="UndoVariant" />
                         </Button>
@@ -485,7 +488,7 @@
                         <!--  The 3D view: click picks, drag turns, right-drag moves, wheel zooms. The lines are drawn over it from the same camera.  -->
                         <Border
                             ctl:Tour.Key="Str_Tour_DimensionModeler_Stage"
-                            ctl:Tour.Order="5"
+                            ctl:Tour.Order="2"
                             Background="{DynamicResource RowBg}"
                             ClipToBounds="True"
                             CornerRadius="12">
@@ -559,12 +562,39 @@
                                     Background="Transparent"
                                     MouseDown="Gizmo_MouseDown"
                                     MouseUp="Gizmo_MouseUp" />
+                                <!--  Shown when the pick is one part of a group: measure the part, its whole group, or both  -->
+                                <Border
+                                    x:Name="MeasureSwitch"
+                                    Margin="10"
+                                    Padding="4"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource PopupBg}"
+                                    BorderBrush="{DynamicResource CardBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon
+                                            Width="16"
+                                            Height="16"
+                                            Margin="6,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextSecondary}"
+                                            Kind="RulerSquare"
+                                            ToolTip="{DynamicResource Str_Modeler_MeasureTip}" />
+                                        <RadioButton x:Name="RadioMeasurePart" MinWidth="84" MinHeight="30" Margin="0,0,3,0" Click="MeasureMode_Click" Content="{DynamicResource Str_Modeler_MeasurePart}" GroupName="MeasureMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="part" />
+                                        <RadioButton x:Name="RadioMeasureGroup" MinWidth="84" MinHeight="30" Margin="0,0,3,0" Click="MeasureMode_Click" Content="{DynamicResource Str_Modeler_MeasureGroup}" GroupName="MeasureMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="group" />
+                                        <RadioButton x:Name="RadioMeasureBoth" MinWidth="84" MinHeight="30" Click="MeasureMode_Click" Content="{DynamicResource Str_Modeler_MeasureBoth}" GroupName="MeasureMode" Style="{StaticResource ModeToggleButtonStyle}" Tag="both" />
+                                    </StackPanel>
+                                </Border>
                             </Grid>
                         </Border>
 
                         <!--  Properties / Objects / Parts  -->
                         <Border
                             x:Name="SidePanel"
+                            ctl:Tour.Key="Str_Tour_DimensionModeler_Panel" ctl:Tour.Order="6"
                             Grid.Column="2"
                             Padding="12,6,12,12"
                             Background="{DynamicResource RowBg}"

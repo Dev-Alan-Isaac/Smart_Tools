@@ -45,6 +45,7 @@ namespace Smart_Tools.WPF.Views
             InitStage();
             InitPalette();
             ShowExtrudeHeight();
+            ShowMeasureChoice();
             InitInspector();
             InitOutliner();
             _viewConstructed = true;

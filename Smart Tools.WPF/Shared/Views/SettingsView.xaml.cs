@@ -619,6 +619,7 @@ namespace Smart_Tools.WPF.Views
 
                 ChkConfirmDelete.IsChecked = AppSettingsStore.ConfirmBeforeDeleting;
                 ChkShowNotifications.IsChecked = AppSettingsStore.ShowDesktopNotifications;
+                ChkShowToolTips.IsChecked = AppSettingsStore.ShowToolTips;
             }
             finally
             {
@@ -647,6 +648,18 @@ namespace Smart_Tools.WPF.Views
             if (Ignore) return;
             AppSettingsStore.ConfirmBeforeDeleting = ChkConfirmDelete.IsChecked == true;
             AppSettingsStore.ShowDesktopNotifications = ChkShowNotifications.IsChecked == true;
+            AppSettingsStore.ShowToolTips = ChkShowToolTips.IsChecked == true;
+            SaveAndConfirm();
+        }
+
+        /// <summary>Every tool shows its first-time card again (and the cards are turned on).</summary>
+        private void BtnResetToolTips_Click(object sender, RoutedEventArgs e)
+        {
+            AppSettingsStore.ToolTipsSeen.Clear();
+            AppSettingsStore.ShowToolTips = true;
+            _applying = true;
+            try { ChkShowToolTips.IsChecked = true; }
+            finally { _applying = false; }
             SaveAndConfirm();
         }
 

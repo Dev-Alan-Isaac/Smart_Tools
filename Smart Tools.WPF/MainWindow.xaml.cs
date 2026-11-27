@@ -508,7 +508,9 @@ namespace Smart_Tools.WPF
             BtnBack.Visibility = _history.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             TourLayer.Close();   // a tour belongs to the page it was started on
+            ToolTip1st.Hide();   // so does the first-time card
             UpdateHelpButton();
+            ShowFirstTimeTip(id);
 
             if (changed) PlayPageTransition();
         }
@@ -555,7 +557,44 @@ namespace Smart_Tools.WPF
 
         private void BtnHelpTour_Click(object sender, RoutedEventArgs e)
         {
+            ToolTip1st.Hide();   // the tour is the longer version of the card
             TourLayer.Start(Tour.Collect(MainContentArea.Content as DependencyObject));
+        }
+
+        // =================================================================
+        //  First-time card (what the tool does + its tour)
+        // =================================================================
+
+        private bool _tipWired;
+
+        /// <summary>
+        /// The first time a tool is opened, a card says what it does and offers its tour. Once per tool (remembered in settings.json,
+        /// ids only); Settings > Behavior turns it off or shows the cards again. Waits for the page's first layout, since the tour's
+        /// steps only exist then.
+        /// </summary>
+        private void ShowFirstTimeTip(string id)
+        {
+            if (!_tipWired)
+            {
+                _tipWired = true;
+                ToolTip1st.TourRequested += () => TourLayer.Start(Tour.Collect(MainContentArea.Content as DependencyObject));
+                ToolTip1st.TurnOffRequested += () =>
+                {
+                    AppSettingsStore.ShowToolTips = false;
+                    AppSettingsStore.Save();
+                };
+            }
+            if (!AppSettingsStore.ShowToolTips || !CurrentPageCanHaveTour || ToolCatalogManager.Find(id) is not { } tool) return;
+            if (!AppSettingsStore.ToolTipsSeen.Add(tool.Id)) return;
+            AppSettingsStore.Save();
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (id != _currentId) return;   // moved on before the page was laid out
+                if (TourLayer.Visibility == Visibility.Visible) return;   // the tour already started: it says more than the card
+                bool hasTour = Tour.HasSteps(MainContentArea.Content as DependencyObject);
+                ToolTip1st.Show(tool.Name, tool.Description, IconOf(tool.Icon), hasTour);
+            }, System.Windows.Threading.DispatcherPriority.Loaded);   // not ApplicationIdle: a busy page (the 3D view) never lets that run
         }
 
         /// <summary>
@@ -997,7 +1036,9 @@ namespace Smart_Tools.WPF
             _recentHeader.Visibility = compact || _recentButtons.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
             foreach (var section in _sections.Values) section.Header.Visibility = visibility;
 
-            foreach (var rb in AllNavButtons())
+            // only the old side list's buttons: Home and Settings live in the title bar now and stay icon-only (their labels showed
+            // up after a language change, which calls this)
+            foreach (var rb in AllNavButtons().Where(b => b != BtnHome && b != BtnSettings))
             {
                 rb.HorizontalContentAlignment = alignment;
                 if (rb.Content is Panel panel)

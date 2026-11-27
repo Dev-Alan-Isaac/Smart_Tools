@@ -1511,6 +1511,28 @@
                                     Content="{DynamicResource Str_Settings_ShowNotifications}"
                                     ToolTip="{DynamicResource Str_Settings_ShowNotificationsTooltip}"
                                     Unchecked="Behaviour_Changed" />
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox
+                                        x:Name="ChkShowToolTips"
+                                        VerticalAlignment="Center"
+                                        Checked="Behaviour_Changed"
+                                        Content="{DynamicResource Str_Settings_ShowToolTips}"
+                                        ToolTip="{DynamicResource Str_Settings_ShowToolTipsTooltip}"
+                                        Unchecked="Behaviour_Changed" />
+                                    <Button
+                                        x:Name="BtnResetToolTips"
+                                        Grid.Column="1"
+                                        Margin="12,0,0,0"
+                                        Click="BtnResetToolTips_Click"
+                                        Style="{StaticResource ListToolButtonStyle}"
+                                        ToolTip="{DynamicResource Str_Settings_ResetToolTipsTooltip}">
+                                        <materialDesign:PackIcon Width="16" Height="16" Kind="Restore" />
+                                    </Button>
+                                </Grid>
                             </StackPanel>
                         </Border>
 

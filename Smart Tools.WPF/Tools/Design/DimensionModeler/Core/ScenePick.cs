@@ -34,6 +34,43 @@ namespace Smart_Tools.WPF.Controllers
         }
 
         /// <summary>
+        /// The single shape (not the whole joined object) of <paramref name="within"/> that the ray meets first, holes included, by each
+        /// shape's own surface. Used to pick one part inside a group. Hidden shapes are left out. Null when the ray misses them all.
+        /// </summary>
+        public static SceneHit? PickShape(Scene scene, SceneNode within, Ray3 ray)
+        {
+            SceneHit? best = null;
+            foreach (var shape in SceneEdit.Shapes(within))
+            {
+                if (shape.Hidden) continue;
+                var box = Primitives.Bounds(shape, scene.Meshes);
+                if (box.IsEmpty || !RayHitsBox(ray, box)) continue;
+                foreach (var poly in Primitives.Placed(shape, scene.Meshes))
+                    for (int i = 1; i + 1 < poly.Count; i++)
+                    {
+                        if (RayTriangle(ray, poly[0], poly[i], poly[i + 1]) is not { } d) continue;
+                        if (best is { } b && d >= b.Distance) continue;
+                        var n = Vec3.Cross(poly[i] - poly[0], poly[i + 1] - poly[0]);
+                        best = new SceneHit(shape.Id, d, ray.Origin + ray.Direction * d, n.Length > 1e-12 ? n * (1 / n.Length) : n);
+                    }
+            }
+            return best;
+        }
+
+        /// <summary>The flat triangles of one shape's surface where it stands (for drawing a picked part on its own).</summary>
+        public static List<Triangle> ShapeTriangles(Scene scene, SceneShape shape)
+        {
+            var result = new List<Triangle>();
+            foreach (var poly in Primitives.Placed(shape, scene.Meshes))
+                for (int i = 1; i + 1 < poly.Count; i++)
+                {
+                    var n = Vec3.Cross(poly[i] - poly[0], poly[i + 1] - poly[0]);
+                    result.Add(new Triangle(poly[0], poly[i], poly[i + 1], n.Length > 1e-12 ? n * (1 / n.Length) : n));
+                }
+            return result;
+        }
+
+        /// <summary>
         /// Where a new shape dropped at the mouse should stand: on top of the surface under the mouse when that surface faces up, else
         /// on the floor (Y = 0) where the ray meets it. Null when the ray never comes down to the floor.
         /// </summary>
