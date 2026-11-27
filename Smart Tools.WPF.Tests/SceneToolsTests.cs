@@ -57,6 +57,36 @@ namespace Smart_Tools.WPF.Tests
         }
 
         [Fact]
+        public void Taking_a_part_out_keeps_its_place_and_the_rest_of_the_group()
+        {
+            var a = Box("A", new Vec3(0, 5, 0), new Vec3(10, 10, 10));
+            var b = Box("B", new Vec3(20, 5, 0), new Vec3(10, 10, 10));
+            var c = Box("C", new Vec3(40, 5, 0), new Vec3(10, 10, 10));
+            var g = new GroupNode(SceneEdit.NewId(), "G", new SceneNode[] { a, b, c }, Colour: "#AA0000");
+            var scene = SceneEdit.TakeOut(With(g), new[] { b.Id }, out var moved);
+
+            Assert.Equal(new[] { b.Id }, moved);
+            Assert.Equal(2, scene.Nodes.Count);                                   // the group, then B right after it
+            Assert.Equal(g.Id, scene.Nodes[0].Id);
+            var outB = Assert.IsType<SceneShape>(scene.Nodes[1]);
+            Assert.Equal(b.Position, outB.Position);                              // same place
+            Assert.Equal("#AA0000", outB.Colour);                                 // shows the colour it had in the group
+            Assert.Equal(2, ((GroupNode)scene.Nodes[0]).Children.Count);
+        }
+
+        [Fact]
+        public void Taking_out_one_of_two_leaves_no_group_of_one_and_top_level_is_untouched()
+        {
+            var a = Box("A", Vec3.Zero, new Vec3(10, 10, 10));
+            var b = Box("B", new Vec3(20, 0, 0), new Vec3(10, 10, 10));
+            var g = new GroupNode(SceneEdit.NewId(), "G", new SceneNode[] { a, b });
+            var scene = SceneEdit.TakeOut(With(g), new[] { a.Id, g.Id }, out var moved);
+            Assert.Equal(new[] { a.Id }, moved);                                  // the group itself is top-level: left alone
+            Assert.All(scene.Nodes, n => Assert.IsType<SceneShape>(n));          // B is no longer a group of one
+            Assert.Equal(2, scene.Nodes.Count);
+        }
+
+        [Fact]
         public void Even_scaling_keeps_proportions_the_floor_and_the_middle()
         {
             var start = new Bounds3(new Vec3(-10, 0, -20), new Vec3(10, 30, 20));          // 20 x 30 x 40 on the floor

@@ -4,6 +4,9 @@ using Smart_Tools.WPF.Models;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using ContextMenu = System.Windows.Controls.ContextMenu;
+using Separator = System.Windows.Controls.Separator;
 
 namespace Smart_Tools.WPF.Views
 {
@@ -38,7 +41,51 @@ namespace Smart_Tools.WPF.Views
         private readonly ObservableCollection<PartRow> _partRows = new();
         private bool _syncingList;
 
-        private void InitOutliner() => DataGridParts.ItemsSource = _partRows;
+        private void InitOutliner()
+        {
+            DataGridParts.ItemsSource = _partRows;
+            // right-click a row: group, ungroup, take out of its group... (built on the click itself, see HomeView for why)
+            ListObjects.AddHandler(PreviewMouseRightButtonUpEvent, new MouseButtonEventHandler(ListObjects_RightClick), handledEventsToo: true);
+        }
+
+        private void ListObjects_RightClick(object sender, MouseButtonEventArgs e)
+        {
+            OutlineRow? row = null;
+            for (var d = e.OriginalSource as DependencyObject; d != null && d != ListObjects; d = System.Windows.Media.VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d))
+                if (d is FrameworkElement { DataContext: OutlineRow r }) { row = r; break; }
+            if (row == null) return;
+            if (!_picked.Contains(row.Id)) Pick(new[] { row.Id });   // right-click on a row that is not picked: pick it first
+
+            var menu = new ContextMenu { PlacementTarget = ListObjects, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+            bool locked = _picked.Any(IsLocked);
+            bool anyGroup = PickedNodes().Any(n => n is GroupNode);
+            bool anyPart = _picked.Any(IsPart);
+            menu.Items.Add(Item("Str_Modeler_Menu_Group", "Group", PackIconKind.Group, GroupPicked, "Ctrl+G", PickedTops().Count >= 2));
+            menu.Items.Add(Item("Str_Modeler_Menu_Ungroup", "Ungroup", PackIconKind.Ungroup, UngroupPicked, "Ctrl+Shift+G", anyGroup && !locked));
+            menu.Items.Add(Item("Str_Modeler_Menu_TakeOut", "Take out of the group", PackIconKind.ExitToApp, TakePartsOut, enabled: anyPart && !locked));
+            menu.Items.Add(new Separator());
+            menu.Items.Add(Item("Str_Modeler_Menu_Duplicate", "Duplicate", PackIconKind.ContentDuplicate, DuplicatePicked, "Ctrl+D"));
+            menu.Items.Add(Item("Str_Modeler_Menu_Copy", "Copy", PackIconKind.ContentCopy, CopyPicked, "Ctrl+C"));
+            menu.Items.Add(Item("Str_Modeler_Menu_Delete", "Delete", PackIconKind.DeleteOutline, DeletePicked, "Del", !locked));
+            menu.IsOpen = true;
+            e.Handled = true;
+        }
+
+        /// <summary>The picked parts leave their groups and become objects of their own, where they are.</summary>
+        private void TakePartsOut()
+        {
+            var parts = _picked.Where(IsPart).ToList();
+            if (parts.Count == 0) return;
+            if (parts.Any(IsLocked))
+            {
+                TxtStatus.Text = Loc.T("Str_Modeler_LockedNoEdit", "That is locked: unlock it under Objects to change it.");
+                return;
+            }
+            var next = SceneEdit.TakeOut(_scene, parts, out var moved);
+            Change(next, Loc.N(moved.Count, "Str_Modeler_TookOutOne", "Taken out of its group: it is an object of its own now.",
+                "Str_Modeler_TookOutMany", "{0} taken out of their groups.", moved.Count));
+            Pick(moved);
+        }
 
         private static PackIconKind IconOf(SceneNode node) => node switch
         {

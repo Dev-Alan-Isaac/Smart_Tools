@@ -185,6 +185,65 @@ namespace Smart_Tools.WPF.Controllers
             return scene with { Nodes = Splice(scene.Nodes, ids) };
         }
 
+        /// <summary>
+        /// Takes parts out of their groups: each becomes its own top-level object, placed right after the object it came from, where it
+        /// was. A part that showed its group's colour keeps that colour. A group left with one member becomes that member, an empty
+        /// one goes (as after a delete). Top-level nodes are left alone. <paramref name="moved"/> gets the ids that came out.
+        /// </summary>
+        public static Scene TakeOut(Scene scene, IEnumerable<string> ids, out List<string> moved)
+        {
+            moved = new List<string>();
+            var result = scene;
+            foreach (var id in ids.Distinct())
+            {
+                if (TopOf(result, id) is not { } top || top.Id == id || Find(result, id) is not { } node) continue;
+                // the colour it showed: its own, else that of the nearest group above it that has one
+                string? shown = node is SceneShape { Colour: { } own } ? own : node is GroupNode { Colour: { } gc } ? gc : null;
+                if (shown == null)
+                    foreach (var g in AncestorsOf(result, id))
+                        if (g.Colour != null) { shown = g.Colour; break; }
+                var outside = shown == null ? node : node switch
+                {
+                    SceneShape s => s with { Colour = shown },
+                    GroupNode g => g with { Colour = shown },
+                    _ => node,
+                };
+                var without = Remove(result.Nodes, new HashSet<string> { id });
+                var list = new List<SceneNode>();
+                foreach (var n in without)
+                {
+                    list.Add(n);
+                    if (n.Id == top.Id) list.Add(outside);
+                }
+                result = Prune(result with { Nodes = list });
+                moved.Add(id);
+            }
+            return result;
+        }
+
+        /// <summary>The groups a node sits in, nearest first.</summary>
+        private static List<GroupNode> AncestorsOf(Scene scene, string id)
+        {
+            var path = new List<GroupNode>();
+            bool Walk(IReadOnlyList<SceneNode> nodes)
+            {
+                foreach (var n in nodes)
+                {
+                    if (n.Id == id) return true;
+                    if (n is GroupNode g)
+                    {
+                        path.Add(g);
+                        if (Walk(g.Children)) return true;
+                        path.RemoveAt(path.Count - 1);
+                    }
+                }
+                return false;
+            }
+            Walk(scene.Nodes);
+            path.Reverse();
+            return path;
+        }
+
         /// <summary>Makes every shape in the nodes a hole (true) or a solid (false).</summary>
         public static Scene SetHole(Scene scene, IEnumerable<string> ids, bool hole) =>
             MapShapes(scene, ids, s => s with { IsHole = hole });

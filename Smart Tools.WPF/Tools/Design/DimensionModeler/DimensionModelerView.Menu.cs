@@ -35,6 +35,7 @@ namespace Smart_Tools.WPF.Views
             menu.Items.Add(Item("Str_Modeler_Menu_ShowAll", "Show everything hidden", PackIconKind.EyeOutline,
                 () => Change(SceneEdit.ShowAll(_scene)), enabled: SceneEdit.All(_scene).Any(n => n.Hidden)));
             menu.Items.Add(new Separator());
+            menu.Items.Add(Item("Str_Modeler_Menu_Paste", "Paste", PackIconKind.ContentPaste, PasteClip, "Ctrl+V", _clip != null));
             menu.Items.Add(Item("Str_Modeler_Menu_Fit", "Fit the view", PackIconKind.FitToScreenOutline, FitCamera));
             menu.Items.Add(Item("Str_Modeler_Menu_Undo", "Undo", PackIconKind.UndoVariant, Undo, "Ctrl+Z"));
         }
@@ -47,11 +48,17 @@ namespace Smart_Tools.WPF.Views
             bool anyGroup = nodes.Any(n => n is GroupNode);
             bool allHoles = nodes.SelectMany(SceneEdit.Shapes).All(s => s.IsHole);
 
+            menu.Items.Add(Item("Str_Modeler_Menu_Copy", "Copy", PackIconKind.ContentCopy, CopyPicked, "Ctrl+C"));
+            menu.Items.Add(Item("Str_Modeler_Menu_Cut", "Cut", PackIconKind.ContentCut, CutPicked, "Ctrl+X", !locked));
+            menu.Items.Add(Item("Str_Modeler_Menu_Paste", "Paste", PackIconKind.ContentPaste, PasteClip, "Ctrl+V", _clip != null));
             menu.Items.Add(Item("Str_Modeler_Menu_Duplicate", "Duplicate", PackIconKind.ContentDuplicate, DuplicatePicked, "Ctrl+D"));
+            menu.Items.Add(Item("Str_Modeler_Menu_Repeat", "Repeat in a row...", PackIconKind.ViewColumnOutline, RepeatPicked, enabled: !locked));
             menu.Items.Add(Item("Str_Modeler_Menu_Delete", "Delete", PackIconKind.DeleteOutline, DeletePicked, "Del"));
             menu.Items.Add(new Separator());
             menu.Items.Add(Item("Str_Modeler_Menu_Group", "Group", PackIconKind.Group, GroupPicked, "Ctrl+G", tops.Count >= 2));
             menu.Items.Add(Item("Str_Modeler_Menu_Ungroup", "Ungroup", PackIconKind.Ungroup, UngroupPicked, "Ctrl+Shift+G", anyGroup));
+            if (_picked.Any(IsPart))
+                menu.Items.Add(Item("Str_Modeler_Menu_TakeOut", "Take out of the group", PackIconKind.ExitToApp, TakePartsOut, enabled: !locked));
             menu.Items.Add(allHoles
                 ? Item("Str_Modeler_Menu_MakeSolid", "Make solid", PackIconKind.VectorUnion, ToggleHole, enabled: !locked)
                 : Item("Str_Modeler_Menu_MakeHole", "Make it a hole", PackIconKind.VectorDifference, ToggleHole, enabled: !locked));

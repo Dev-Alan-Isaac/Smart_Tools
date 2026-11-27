@@ -262,7 +262,7 @@ namespace Smart_Tools.WPF.Views
             bool typing = Keyboard.FocusedElement is TextBox;
             if (e.Key == Key.Escape && !typing)
             {
-                if (CancelDrag() || CancelDrawing()) { }
+                if (CancelDrag() || CancelDrawing() || StopMeasuring()) { }
                 else if (_fullView) SetFullView(false);
                 else if (_picked.Count > 0) Pick(Array.Empty<string>());
                 else return;
@@ -293,6 +293,15 @@ namespace Smart_Tools.WPF.Views
                     break;
                 case Key.D when ctrl:
                     DuplicatePicked();
+                    break;
+                case Key.C when ctrl:
+                    CopyPicked();
+                    break;
+                case Key.X when ctrl:
+                    CutPicked();
+                    break;
+                case Key.V when ctrl:
+                    PasteClip();
                     break;
                 case Key.A when ctrl:
                     Pick(_scene.Nodes.Select(n => n.Id));

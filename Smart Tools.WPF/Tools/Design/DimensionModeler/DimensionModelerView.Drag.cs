@@ -28,6 +28,7 @@ namespace Smart_Tools.WPF.Views
             public required Bounds3 StartBox;
             public required Vec3 Grab;                 // the point of the object that was pressed
             public required DragMode Mode;
+            public bool Even;                          // Resize with Shift too: all three sides in proportion
             public int Axis;                           // Resize: the axis of the pulled face
             public bool HighFace;                      // Resize: the face on the high side of that axis
             public required IReadOnlyList<Bounds3> Others;
@@ -110,6 +111,7 @@ namespace Smart_Tools.WPF.Views
                 Box = start,
                 Grab = hit.Point,
                 Mode = mode,
+                Even = mode == DragMode.Resize && mods.HasFlag(ModifierKeys.Shift),
                 Axis = axis,
                 HighFace = high,
                 Others = others.Select(n => SceneEdit.BoundsOf(_scene, n)).ToList(),
@@ -130,6 +132,7 @@ namespace Smart_Tools.WPF.Views
                 if (PieceDrag.ClosestOnAxis(ray, d.Grab, unit) is not { } t) return;
                 double startFace = Side(d.HighFace ? d.StartBox.Max : d.StartBox.Min, d.Axis);
                 var (box, guide) = SceneSnap.Face(d.StartBox, d.Axis, d.HighFace, startFace + t, d.Others, _settings.SnapGridMm, threshold, _settings.MagnetOn);
+                if (d.Even) box = SceneTools.ScaleEvenly(d.StartBox, box, d.Axis, d.HighFace);
                 d.Box = box;
                 d.Guides = guide is { } g ? new[] { g } : Array.Empty<SnapGuide>();
                 _scene = SceneEdit.Resize(d.StartScene, d.Ids[0], box);
@@ -217,6 +220,11 @@ namespace Smart_Tools.WPF.Views
             double Ratio(double to, double from) => from > 1e-9 ? to / from : 1;
             var s0 = d.StartBox.Size;
             var s1 = d.Box.Size;
+            if (d.Even)
+            {
+                var c = SceneTools.EvenScaleCentre(d.StartBox, d.Axis, d.HighFace);
+                return new ScaleTransform3D(Ratio(s1.X, s0.X), Ratio(s1.Y, s0.Y), Ratio(s1.Z, s0.Z), c.X, c.Y, c.Z);
+            }
             var fixedCorner = d.HighFace ? d.StartBox.Min : d.StartBox.Max;   // the face that stays
             var scale = new ScaleTransform3D(
                 d.Axis == 0 ? Ratio(s1.X, s0.X) : 1, d.Axis == 1 ? Ratio(s1.Y, s0.Y) : 1, d.Axis == 2 ? Ratio(s1.Z, s0.Z) : 1,

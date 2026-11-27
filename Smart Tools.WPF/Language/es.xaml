@@ -12594,7 +12594,7 @@
     <system:String x:Key="Str_Modeler_ExportStl">STL - para imprimir en 3D</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintStl">STL - piezas imprimibles (un archivo por placa)</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintObj">OBJ - piezas imprimibles (un archivo por placa)</system:String>
-    <system:String x:Key="Str_Modeler_StageHint">Arrastra una forma para moverla · Mayús+arrastrar la sube · Alt+arrastrar una cara cambia el tamaño · las flechas la mueven (Arriba/Abajo = altura, Mayús+Arriba/Abajo = adelante/atrás, Ctrl = 1 mm) · clic derecho para acciones rápidas · Ctrl+clic selecciona más · Esc cancela · arrastra el vacío para girar · clic derecho y arrastrar para desplazar</system:String>
+    <system:String x:Key="Str_Modeler_StageHint">Arrastra una forma para moverla · vuelve a hacer clic para elegir una parte de un grupo · Mayús+arrastrar sube · Alt+arrastrar una cara cambia el tamaño (Alt+Mayús mantiene la proporción) · las flechas la mueven · Ctrl+arrastrar en el vacío selecciona con un recuadro · clic derecho para más · arrastra el vacío para girar · clic derecho y arrastrar para desplazar</system:String>
     <system:String x:Key="Str_Modeler_CutList">Lista de corte</system:String>
     <system:String x:Key="Str_Modeler_CutListTip">Haz clic en una fila para iluminar esa tabla y medirla · Ctrl+clic elige varias filas</system:String>
     <system:String x:Key="Str_Modeler_ColPart">Forma</system:String>
@@ -12615,7 +12615,7 @@
     <system:String x:Key="Str_Tour_DimensionModeler_Print_Title">10 · Impresión 3D</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Print_Text">Imprime más pequeño que el tamaño real (1:10, etc.) cuando el diseño es del tamaño de un mueble.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Stage_Title">2 · Mover, subir y cambiar tamaño</system:String>
-    <system:String x:Key="Str_Tour_DimensionModeler_Stage_Text">Arrastra una forma para deslizarla por el suelo; se ajusta a las esquinas, lados y centros de las demás. Mayús+arrastrar la sube. Alt+arrastrar una cara la agranda o achica de ese lado. Las flechas la mueven (Arriba/Abajo = altura). Clic derecho en una forma para Duplicar, Color, Alinear, Girar, Reflejar y más. Arrastra el vacío para girar la vista, clic derecho y arrastrar para desplazar, rueda para zoom.</system:String>
+    <system:String x:Key="Str_Tour_DimensionModeler_Stage_Text">Arrastra una forma para deslizarla por el suelo; se ajusta a las esquinas, lados y centros de las demás. Vuelve a hacer clic en un grupo seleccionado para elegir una parte dentro. Mayús+arrastrar la sube. Alt+arrastrar una cara la agranda o achica de ese lado (Alt+Mayús mantiene la proporción). Las flechas la mueven. Ctrl+arrastrar en el vacío selecciona todo lo que cae dentro de un recuadro. Clic derecho para Copiar, Pegar, Repetir en fila, Color, Alinear, Girar, Reflejar y más. Arrastra el vacío para girar la vista, clic derecho para desplazar, rueda para zoom.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Export_Title">11 · Exportar</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Export_Text">Guarda el diseño terminado (con los huecos cortados) como STL u OBJ para un laminador u otro programa 3D. Guardar lo deja como .dmodel para seguir editándolo.</system:String>
     <system:String x:Key="Str_Modeler_Template_custom">Propia</system:String>
@@ -12886,4 +12886,38 @@
     <system:String x:Key="Str_Tour_DimensionModeler_Examples_Text">Diseños listos (un soporte con agujeros para tornillos, una caja con tapa, una mano, muebles...). Ajusta los controles e inserta: llegan como formas normales, así que puedes desagruparlos para ver cómo están hechos.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Snap_Title">8 · Ajuste</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Snap_Text">La cuadrícula es donde cae una forma arrastrada cuando no hay nada cerca. El imán la pega, la alinea o la centra con las demás formas y con el suelo.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureTip">Qué muestran las líneas de medida cuando está seleccionada una parte de un grupo</system:String>
+    <system:String x:Key="Str_Modeler_MeasurePart">Esta parte</system:String>
+    <system:String x:Key="Str_Modeler_MeasureGroup">Su grupo</system:String>
+    <system:String x:Key="Str_Modeler_MeasureBoth">Ambos</system:String>
+    <system:String x:Key="Str_Modeler_PartPicked">Seleccionada {0} dentro de {1}. Arrástrala, cambia su tamaño o modifícala sola; clic en el vacío para soltarla.</system:String>
+    <system:String x:Key="Str_Modeler_CopiedOne">Copiado. Ctrl+V lo pega.</system:String>
+    <system:String x:Key="Str_Modeler_CopiedMany">{0} copiados. Ctrl+V los pega.</system:String>
+    <system:String x:Key="Str_Modeler_Cut">Cortado. Ctrl+V lo vuelve a pegar.</system:String>
+    <system:String x:Key="Str_Modeler_Pasted">Pegado.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatedOne">1 copia agregada.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatedMany">{0} copias agregadas en fila.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatTitle">Repetir en fila</system:String>
+    <system:String x:Key="Str_Modeler_RepeatHint">Las copias se colocan una tras otra, cada una del tamaño de lo seleccionado más el espacio.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatX">De izquierda a derecha (X)</system:String>
+    <system:String x:Key="Str_Modeler_RepeatY">Hacia arriba (Y)</system:String>
+    <system:String x:Key="Str_Modeler_RepeatZ">De adelante a atrás (Z)</system:String>
+    <system:String x:Key="Str_Modeler_RepeatCount">Copias</system:String>
+    <system:String x:Key="Str_Modeler_RepeatDirection">Dirección</system:String>
+    <system:String x:Key="Str_Modeler_RepeatGap">Espacio entre copias</system:String>
+    <system:String x:Key="Str_Modeler_RepeatBadCount">Las copias deben ser un número entero de 1 a {0}.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatBadGap">El espacio debe ser una medida, como 10 o 1 cm (0 = tocándose).</system:String>
+    <system:String x:Key="Str_Modeler_RepeatOk">Repetir</system:String>
+    <system:String x:Key="Str_Modeler_BoxPickedOne">1 objeto seleccionado.</system:String>
+    <system:String x:Key="Str_Modeler_BoxPickedMany">{0} objetos seleccionados.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureToolTip">Cinta métrica: haz clic en dos puntos para leer la distancia entre ellos</system:String>
+    <system:String x:Key="Str_Modeler_MeasureStart">Haz clic en el primer punto y luego en el segundo. Las esquinas de las formas atraen el puntero. Esc para.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureResult">Distancia {0}  (X {1} · Y {2} · Z {3}). Vuelve a hacer clic para medir otra.</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Copy">Copiar</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Cut">Cortar</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Paste">Pegar</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Repeat">Repetir en fila...</system:String>
+    <system:String x:Key="Str_Modeler_Menu_TakeOut">Sacar del grupo</system:String>
+    <system:String x:Key="Str_Modeler_TookOutOne">Sacado de su grupo: ahora es un objeto independiente.</system:String>
+    <system:String x:Key="Str_Modeler_TookOutMany">{0} sacados de sus grupos.</system:String>
 </ResourceDictionary>

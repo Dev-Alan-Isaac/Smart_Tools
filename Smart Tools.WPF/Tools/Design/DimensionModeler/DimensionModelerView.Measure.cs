@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 using Point = System.Windows.Point;
+using RadioButton = System.Windows.Controls.RadioButton;
 
 namespace Smart_Tools.WPF.Views
 {

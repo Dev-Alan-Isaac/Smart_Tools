@@ -12593,7 +12593,7 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Modeler_ExportStl">STL - for 3D printing</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintStl">STL - printable parts (one file per plate)</system:String>
     <system:String x:Key="Str_Modeler_ExportPrintObj">OBJ - printable parts (one file per plate)</system:String>
-    <system:String x:Key="Str_Modeler_StageHint">Drag a shape to move it · Shift+drag lifts it · Alt+drag a face to resize · arrows move it (Up/Down = height, Shift+Up/Down = front/back, Ctrl = 1 mm) · right-click for quick actions · Ctrl+click picks more · Esc cancels · drag empty space to turn · right-drag to pan</system:String>
+    <system:String x:Key="Str_Modeler_StageHint">Drag a shape to move it · click it again to pick one part of a group · Shift+drag lifts · Alt+drag a face resizes (Alt+Shift keeps proportions) · arrows nudge · Ctrl+drag on empty space box-selects · right-click for more · drag empty space to turn · right-drag to pan</system:String>
     <system:String x:Key="Str_Modeler_CutList">Cut list</system:String>
     <system:String x:Key="Str_Modeler_CutListTip">Click a row to light that board up and measure it · Ctrl+click picks several rows</system:String>
     <system:String x:Key="Str_Modeler_ColPart">Shape</system:String>
@@ -12614,7 +12614,7 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Print_Title">10 · 3D printing</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Print_Text">Print smaller than the real size (1:10 and so on) when the design is furniture-sized.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Stage_Title">2 · Move, lift and resize</system:String>
-    <system:String x:Key="Str_Tour_DimensionModeler_Stage_Text">Drag a shape to slide it over the floor; it snaps to the corners, sides and centres of the others. Shift+drag lifts it. Alt+drag a face to make it bigger or smaller on that side. Arrow keys nudge it (Up/Down = height). Right-click a shape for Duplicate, Colour, Line up, Turn, Mirror and more. Drag empty space to turn the view, right-drag to pan, wheel to zoom.</system:String>
+    <system:String x:Key="Str_Tour_DimensionModeler_Stage_Text">Drag a shape to slide it over the floor; it snaps to the corners, sides and centres of the others. Click a picked group again to pick one part inside it. Shift+drag lifts it. Alt+drag a face to make it bigger or smaller on that side (Alt+Shift keeps the proportions). Arrow keys nudge it. Ctrl+drag on empty space picks everything inside a box. Right-click for Copy, Paste, Repeat in a row, Colour, Line up, Turn, Mirror and more. Drag empty space to turn the view, right-drag to pan, wheel to zoom.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Export_Title">11 · Export</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Export_Text">Save the finished design (holes cut) as STL or OBJ for a slicer or another 3D program. Save keeps it as a .dmodel you can keep editing.</system:String>
     <system:String x:Key="Str_Modeler_Template_custom">Custom</system:String>
@@ -12885,4 +12885,38 @@ Show them all anyway?</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Examples_Text">Ready-made designs (a bracket with screw holes, a box with a lid, a hand, furniture...). Set the sliders and insert: they arrive as ordinary shapes, so you can ungroup them to see how they are made.</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Snap_Title">8 · Snapping</system:String>
     <system:String x:Key="Str_Tour_DimensionModeler_Snap_Text">The grid is where a dragged shape lands when nothing is near. Magnet makes it jump against, flush with or centred on the other shapes and onto the floor.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureTip">What the measuring lines show when one part of a group is picked</system:String>
+    <system:String x:Key="Str_Modeler_MeasurePart">This part</system:String>
+    <system:String x:Key="Str_Modeler_MeasureGroup">Its group</system:String>
+    <system:String x:Key="Str_Modeler_MeasureBoth">Both</system:String>
+    <system:String x:Key="Str_Modeler_PartPicked">Picked {0} inside {1}. Drag, resize or change it on its own; click empty space to let go.</system:String>
+    <system:String x:Key="Str_Modeler_CopiedOne">Copied. Ctrl+V pastes it.</system:String>
+    <system:String x:Key="Str_Modeler_CopiedMany">{0} copied. Ctrl+V pastes them.</system:String>
+    <system:String x:Key="Str_Modeler_Cut">Cut. Ctrl+V pastes it back.</system:String>
+    <system:String x:Key="Str_Modeler_Pasted">Pasted.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatedOne">1 copy added.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatedMany">{0} copies added in a row.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatTitle">Repeat in a row</system:String>
+    <system:String x:Key="Str_Modeler_RepeatHint">Copies are placed one after another, each the size of the pick plus the gap.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatX">Left to right (X)</system:String>
+    <system:String x:Key="Str_Modeler_RepeatY">Upward (Y)</system:String>
+    <system:String x:Key="Str_Modeler_RepeatZ">Front to back (Z)</system:String>
+    <system:String x:Key="Str_Modeler_RepeatCount">Copies</system:String>
+    <system:String x:Key="Str_Modeler_RepeatDirection">Direction</system:String>
+    <system:String x:Key="Str_Modeler_RepeatGap">Gap between copies</system:String>
+    <system:String x:Key="Str_Modeler_RepeatBadCount">Copies must be a whole number from 1 to {0}.</system:String>
+    <system:String x:Key="Str_Modeler_RepeatBadGap">The gap must be a length, like 10 or 1 cm (0 = touching).</system:String>
+    <system:String x:Key="Str_Modeler_RepeatOk">Repeat</system:String>
+    <system:String x:Key="Str_Modeler_BoxPickedOne">1 object picked.</system:String>
+    <system:String x:Key="Str_Modeler_BoxPickedMany">{0} objects picked.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureToolTip">Tape measure: click two points to read the distance between them</system:String>
+    <system:String x:Key="Str_Modeler_MeasureStart">Click the first point, then the second. Corners of shapes catch the pointer. Esc stops.</system:String>
+    <system:String x:Key="Str_Modeler_MeasureResult">Distance {0}  (X {1} · Y {2} · Z {3}). Click again to measure another.</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Copy">Copy</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Cut">Cut</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Paste">Paste</system:String>
+    <system:String x:Key="Str_Modeler_Menu_Repeat">Repeat in a row...</system:String>
+    <system:String x:Key="Str_Modeler_Menu_TakeOut">Take out of the group</system:String>
+    <system:String x:Key="Str_Modeler_TookOutOne">Taken out of its group: it is an object of its own now.</system:String>
+    <system:String x:Key="Str_Modeler_TookOutMany">{0} taken out of their groups.</system:String>
 </ResourceDictionary>
