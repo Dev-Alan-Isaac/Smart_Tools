@@ -42,6 +42,7 @@ namespace Smart_Tools.WPF
             if (mode == AppRunMode.Ask && !AskInstallOrRun()) return;
 
             Log.Init();
+            RenderRecovery.Init(e.Args);
             HookGlobalErrorLogging();
             Log.Info($"Starting Smart Tools {AppMode.VersionText()} ({AppMode.Current}), pid {Environment.ProcessId}, {Environment.OSVersion.VersionString}, {Environment.ProcessorCount} cores, args [{string.Join(' ', e.Args)}]");
 
@@ -170,9 +171,11 @@ namespace Smart_Tools.WPF
             DispatcherUnhandledException += (_, args) =>
             {
                 // Logged, then swallowed: one failed click or async void callback shouldn't close the whole
-                // app and every other tool's unsaved state with it.
-                Log.Error("Unhandled UI exception", args.Exception);
+                // app and every other tool's unsaved state with it. Drawing that broke for good (graphics reset after
+                // sleep) would otherwise leave a frozen picture forever: RenderRecovery restarts or switches to software.
                 args.Handled = true;
+                if (RenderRecovery.TryHandle(args.Exception)) return;
+                Log.Error("Unhandled UI exception", args.Exception);
             };
             AppDomain.CurrentDomain.UnhandledException += (_, args) =>
                 Log.Fatal($"Unhandled exception (terminating={args.IsTerminating})", args.ExceptionObject as Exception);
