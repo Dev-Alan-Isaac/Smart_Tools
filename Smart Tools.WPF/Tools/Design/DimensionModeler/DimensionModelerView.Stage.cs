@@ -403,7 +403,7 @@ namespace Smart_Tools.WPF.Views
                 var lines = _picked.Count == 0
                     ? DimensionLines.Overall(new PieceModel("", new[] { box }), DimensionOffset(measured))
                     : DimensionLines.ForPart(box, outer ? Math.Clamp(biggest * 0.3, 20, 300) : Math.Clamp(biggest * 0.15, 8, 150));
-                foreach (var line in lines) DrawDimension(line, w, h, two && outer ? "TextSecondary" : "AccentColor");
+                foreach (var line in lines) DrawDimension(line, w, h, quiet: two && outer);
             }
         }
 
@@ -418,18 +418,22 @@ namespace Smart_Tools.WPF.Views
                 if (_camera.Project(c[i], w, h) is { } a && _camera.Project(c[j], w, h) is { } z) AddLine(a, z, brush, 1.25, dashed ? 0.6 : 0.9, dashed);
         }
 
-        private void DrawDimension(DimensionLine line, double w, double h, string brush = "AccentColor")
+        /// <summary>A measuring line in its axis colour (X width, Y height, Z depth: the same colours as the gizmo and the
+        /// Width / Height / Depth boxes in Properties). <paramref name="quiet"/> = the group's lines beside a part's: fainter.</summary>
+        private void DrawDimension(DimensionLine line, double w, double h, bool quiet = false)
         {
             if (line.LengthMm < 1e-6) return;
+            string brush = AxisBrushes[DimensionAxis(line)];
+            double strength = quiet ? 0.55 : 1;
             if (_camera.Project(line.A, w, h) is not { } a || _camera.Project(line.B, w, h) is not { } b
                 || _camera.Project(line.Start, w, h) is not { } s || _camera.Project(line.End, w, h) is not { } e) return;
 
             // the short lines joining the measured points to the dimension line
             AddLine(a, s, "TextSecondary", 1, 0.7, dashed: true);
             AddLine(b, e, "TextSecondary", 1, 0.7, dashed: true);
-            AddLine(s, e, brush, 1.75, 1, dashed: false);
-            AddArrow(s, e);
-            AddArrow(e, s);
+            AddLine(s, e, brush, quiet ? 1.25 : 1.75, strength, dashed: false);
+            AddArrow(s, e, brush, strength);
+            AddArrow(e, s, brush, strength);
 
             var label = new Border { CornerRadius = new CornerRadius(6), Padding = new Thickness(7, 2, 7, 3), BorderThickness = new Thickness(1) };
             label.SetResourceReference(Border.BackgroundProperty, "PopupBg");
@@ -437,10 +441,18 @@ namespace Smart_Tools.WPF.Views
             var text = new TextBlock { Text = LengthFormat.Format(line.LengthMm, _settings.Unit), FontSize = 12, FontWeight = FontWeights.SemiBold };
             text.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
             label.Child = text;
+            label.Opacity = quiet ? 0.8 : 1;
             label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(label, (s.X + e.X) / 2 - label.DesiredSize.Width / 2);
             Canvas.SetTop(label, (s.Y + e.Y) / 2 - label.DesiredSize.Height / 2);
             Overlay.Children.Add(label);
+        }
+
+        /// <summary>0 = X, 1 = Y, 2 = Z: the axis the measuring line runs along.</summary>
+        private static int DimensionAxis(DimensionLine line)
+        {
+            double x = Math.Abs(line.End.X - line.Start.X), y = Math.Abs(line.End.Y - line.Start.Y), z = Math.Abs(line.End.Z - line.Start.Z);
+            return x >= y && x >= z ? 0 : y >= z ? 1 : 2;
         }
 
         private void AddLine(ScreenPoint from, ScreenPoint to, string brushKey, double thickness, double opacity, bool dashed)
@@ -452,7 +464,7 @@ namespace Smart_Tools.WPF.Views
         }
 
         /// <summary>A small arrowhead at <paramref name="tip"/>, pointing away from <paramref name="other"/>.</summary>
-        private void AddArrow(ScreenPoint tip, ScreenPoint other)
+        private void AddArrow(ScreenPoint tip, ScreenPoint other, string brushKey = "AccentColor", double opacity = 1)
         {
             double dx = other.X - tip.X, dy = other.Y - tip.Y;
             double len = Math.Sqrt(dx * dx + dy * dy);
@@ -467,7 +479,8 @@ namespace Smart_Tools.WPF.Views
                     new Point(tip.X + ux * 11 + uy * 4, tip.Y + uy * 11 - ux * 4),
                 },
             };
-            arrow.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, "AccentColor");
+            arrow.Opacity = opacity;
+            arrow.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, brushKey);
             Overlay.Children.Add(arrow);
         }
     }

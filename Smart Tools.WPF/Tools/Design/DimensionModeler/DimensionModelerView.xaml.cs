@@ -269,6 +269,15 @@ namespace Smart_Tools.WPF.Views
                 e.Handled = true;
                 return;
             }
+            // Alt+Enter (like Windows' "Properties"): from anywhere, go to the Properties tab and type in its first box;
+            // from a Properties box, keep the typed value (LostFocus commits it) and go back to the 3D view
+            if (e.Key == Key.System && e.SystemKey is Key.Enter && mods == ModifierKeys.Alt)
+            {
+                if (PageProperties.IsKeyboardFocusWithin) StageHost.Focus();
+                else EnterProperties();
+                e.Handled = true;
+                return;
+            }
             if (typing || mods.HasFlag(ModifierKeys.Alt)) return;
             if (DrawKey(e.Key))
             {
@@ -453,6 +462,22 @@ namespace Smart_Tools.WPF.Views
             if (!_viewConstructed) return;
             _settings.PanelTab = tab;
             ScheduleSave();
+        }
+
+        /// <summary>Shows the side panel on the Properties tab (leaving full view, unfolding the panel) and puts the caret in its first box.</summary>
+        private void EnterProperties()
+        {
+            if (_fullView) SetFullView(false);
+            if (_settings.PanelHidden == true)
+            {
+                _settings.PanelHidden = false;
+                ApplyPanelShown();
+                ScheduleSave();
+            }
+            ShowPanelTab("properties");
+            PageProperties.UpdateLayout();
+            if (PageProperties.MoveFocus(new TraversalRequest(FocusNavigationDirection.First)) && Keyboard.FocusedElement is TextBox box)
+                box.SelectAll();
         }
 
         private void ShowPanelTab(string tab)
