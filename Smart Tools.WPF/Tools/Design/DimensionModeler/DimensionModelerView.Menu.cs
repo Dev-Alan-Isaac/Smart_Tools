@@ -92,6 +92,17 @@ namespace Smart_Tools.WPF.Views
             colour.Items.Add(Item("Str_Modeler_PaintOther", "Other colour...", PackIconKind.PaletteOutline, PickOtherColour));
             menu.Items.Add(colour);
 
+            // Material: standard or crystal (the tick shows what the first picked one is made of)
+            var material = Sub("Str_Modeler_Menu_Material", "Material", PackIconKind.DiamondStone, !locked);
+            string? current = _picked.Count > 0 ? SceneEdit.ShownMaterial(_scene, _picked[0]) : null;
+            var standard = Item("Str_Modeler_Material_Standard", "Standard", PackIconKind.CubeOutline, () => SetPickedMaterial(null));
+            standard.IsChecked = current == null;
+            var crystalItem = Item("Str_Modeler_Material_Crystal", "Crystal", PackIconKind.DiamondStone, () => SetPickedMaterial(SceneMaterial.Crystal));
+            crystalItem.IsChecked = current == SceneMaterial.Crystal;
+            material.Items.Add(standard);
+            material.Items.Add(crystalItem);
+            menu.Items.Add(material);
+
             // Arrange: floor, align, turn, mirror
             var arrange = Sub("Str_Modeler_Menu_Arrange", "Arrange", PackIconKind.ArrangeBringForward, !locked);
             arrange.Items.Add(Item("Str_Modeler_Menu_Floor", "Put on the floor", PackIconKind.ArrowCollapseDown,

@@ -103,6 +103,11 @@ namespace Smart_Tools.WPF.Views
                 RadioHole.IsChecked = shapes.Count > 0 && shapes.All(s => s.IsHole);
                 RadioSolid.IsChecked = shapes.Count > 0 && shapes.All(s => !s.IsHole);
 
+                // the material the picked ones show (own or their group's); a mix of both ticks neither
+                var materials = _picked.Select(id => SceneEdit.ShownMaterial(_scene, id)).Distinct().ToList();
+                RadioMaterialStandard.IsChecked = materials.Count == 1 && materials[0] == null;
+                RadioMaterialCrystal.IsChecked = materials.Count == 1 && materials[0] == SceneMaterial.Crystal;
+
                 var b = SceneEdit.BoundsOf(_scene, _picked);
                 TxtPosLabel.Text = Loc.F("Str_Modeler_PositionLabel", "Position, lowest corner ({0})", suffix);
                 Fill(TxtPosX, "px", LengthFormat.Number(b.Min.X, unit));
@@ -297,6 +302,17 @@ namespace Smart_Tools.WPF.Views
         {
             if (sender is not RadioButton { Tag: string tag } || _picked.Count == 0) return;
             Change(SceneEdit.SetHole(_scene, _picked, tag == "hole"));
+        }
+
+        private void Material_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton { Tag: string tag }) SetPickedMaterial(tag.Length == 0 ? null : tag);
+        }
+
+        private void SetPickedMaterial(string? material)
+        {
+            if (_picked.Count == 0 || _picked.Any(IsLocked)) return;
+            Change(SceneEdit.SetMaterial(_scene, _picked, material));
         }
     }
 }

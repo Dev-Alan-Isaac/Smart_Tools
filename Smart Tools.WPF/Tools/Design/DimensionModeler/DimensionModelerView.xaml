@@ -800,6 +800,28 @@
 
                                             <TextBlock Style="{StaticResource PanelLabel}" Text="{DynamicResource Str_Modeler_Colour}" />
                                             <WrapPanel x:Name="PanelSwatches" />
+
+                                            <TextBlock Style="{StaticResource PanelLabel}" Text="{DynamicResource Str_Modeler_Material}" ToolTip="{DynamicResource Str_Modeler_MaterialTip}" />
+                                            <UniformGrid Columns="2">
+                                                <RadioButton
+                                                    x:Name="RadioMaterialStandard"
+                                                    Margin="0,0,2,0"
+                                                    controls:ChoiceIcon.Kind="CubeOutline"
+                                                    Click="Material_Click"
+                                                    Content="{DynamicResource Str_Modeler_Material_Standard}"
+                                                    GroupName="ModelerMaterial"
+                                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                                    Tag="" />
+                                                <RadioButton
+                                                    x:Name="RadioMaterialCrystal"
+                                                    Margin="2,0,0,0"
+                                                    controls:ChoiceIcon.Kind="DiamondStone"
+                                                    Click="Material_Click"
+                                                    Content="{DynamicResource Str_Modeler_Material_Crystal}"
+                                                    GroupName="ModelerMaterial"
+                                                    Style="{StaticResource ModeToggleButtonStyle}"
+                                                    Tag="crystal" />
+                                            </UniformGrid>
                                         </StackPanel>
                                     </StackPanel>
                                 </ScrollViewer>

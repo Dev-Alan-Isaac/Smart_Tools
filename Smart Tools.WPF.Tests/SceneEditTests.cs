@@ -188,6 +188,52 @@ namespace Smart_Tools.WPF.Tests
         }
 
         [Fact]
+        public void Crystal_material_follows_the_colour_rules_and_survives_saving()
+        {
+            var a = Box("A", Vec3.Zero, new Vec3(10, 10, 10)) with { Id = "a", Colour = "#2E86DE" };
+            var b = Box("B", new Vec3(20, 0, 0), new Vec3(10, 10, 10));
+            var scene = With(new GroupNode("g", "G", new SceneNode[] { a, b }));
+
+            // the group made crystal: both parts are crystal, colours untouched
+            var glass = SceneEdit.SetMaterial(scene, new[] { "g" }, "Crystal");
+            var tris = new SceneMeshBuilder().Build(glass).Single().Triangles;
+            Assert.All(tris, t => Assert.Equal(SceneMaterial.Crystal, t.Material));
+            Assert.Contains(tris, t => t.Colour == "#2E86DE");
+            Assert.Contains(tris, t => t.Colour == null);
+            Assert.Equal(SceneMaterial.Crystal, SceneEdit.ShownMaterial(glass, "a"));
+
+            // a part set on its own wins; standard on a part inside a crystal group is "inherit", so set the group back instead
+            var onlyA = SceneEdit.SetMaterial(scene, new[] { "a" }, SceneMaterial.Crystal);
+            var mixed = new SceneMeshBuilder().Build(onlyA).Single().Triangles;
+            Assert.Contains(mixed, t => t.Material == SceneMaterial.Crystal && t.Colour == "#2E86DE");
+            Assert.Contains(mixed, t => t.Material == null);
+
+            // saved and read back; an unknown material is dropped
+            Assert.True(SceneJson.TryRead(SceneJson.ToJson(glass), out var back, out _));
+            Assert.Equal(SceneMaterial.Crystal, ((GroupNode)back.Nodes[0]).Material);
+            Assert.Null(SceneMaterial.Normalize("lava"));
+
+            // taken out of the group, a part keeps the crystal look it showed
+            var outA = SceneEdit.TakeOut(glass, new[] { "a" }, out _);
+            Assert.Equal(SceneMaterial.Crystal, ((SceneShape)SceneEdit.Find(outA, "a")!).Material);
+        }
+
+        [Fact]
+        public void A_part_painted_inside_a_coloured_group_keeps_its_own_colour()
+        {
+            var a = Box("A", Vec3.Zero, new Vec3(10, 10, 10)) with { Id = "a" };
+            var b = Box("B", new Vec3(20, 0, 0), new Vec3(10, 10, 10));
+            var scene = With(new GroupNode("g", "G", new SceneNode[] { a, b }));
+            var red = SceneEdit.SetColour(scene, new[] { "g" }, "#C0392B");
+            var blueA = SceneEdit.SetColour(red, new[] { "a" }, "#2E86DE");
+            var colours = new SceneMeshBuilder().Build(blueA).Single().Triangles.Select(t => t.Colour).Distinct().OrderBy(c => c).ToList();
+            Assert.Equal(new[] { "#2E86DE", "#C0392B" }, colours);   // A blue, B still the group's red
+            // painting the whole group again repaints the part too
+            var green = SceneEdit.SetColour(blueA, new[] { "g" }, "#27AE60");
+            Assert.All(new SceneMeshBuilder().Build(green).Single().Triangles, t => Assert.Equal("#27AE60", t.Colour));
+        }
+
+        [Fact]
         public void Sanitize_keeps_numbers_in_range()
         {
             var s = SceneEdit.Sanitize(new SceneShape("x", " ", (ShapeKind)99, new Vec3(double.NaN, 1e9, 0), new Vec3(0, -5, 1e9), new Vec3(370, -190, double.NaN), Segments: 1000, Inner: 5));

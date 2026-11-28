@@ -111,6 +111,8 @@ namespace Smart_Tools.WPF.Views
         {
             var lit = PickedObjects();
             var group = new Model3DGroup();
+            // see-through surfaces only show what is behind them when drawn after it, so crystal goes in last
+            var crystal = new List<GeometryModel3D>();
             foreach (var obj in _objects)
             {
                 bool picked = lit.Contains(obj.NodeId);
@@ -122,15 +124,22 @@ namespace Smart_Tools.WPF.Views
                     group.Children.Add(ghost);
                     continue;
                 }
-                foreach (var byColour in obj.Triangles.GroupBy(t => t.Colour))
+                foreach (var byLook in obj.Triangles.GroupBy(t => (t.Colour, t.Material)))
                 {
-                    var colour = ColourOf(byColour.Key);
+                    bool isCrystal = byLook.Key.Material == SceneMaterial.Crystal;
+                    var colour = byLook.Key.Colour == null && isCrystal ? CrystalTint : ColourOf(byLook.Key.Colour);
                     if (picked) colour = Mix(colour, PickTint, 0.3);
-                    var model = Model(byColour.Select(t => t.Triangle), colour);
-                    if (shift != null) model.Transform = shift;
-                    group.Children.Add(model);
+                    var triangles = byLook.Select(t => t.Triangle).ToList();
+                    var models = isCrystal ? CrystalModels(triangles, colour) : new[] { Model(triangles, colour) };
+                    foreach (var model in models)
+                    {
+                        if (shift != null) model.Transform = shift;
+                        if (isCrystal) crystal.Add(model);
+                        else group.Children.Add(model);
+                    }
                 }
             }
+            foreach (var model in crystal) group.Children.Add(model);
             AddPickedParts(group);
             _sceneVisual.Content = group;
             _floorVisual.Content = BuildFloor();
@@ -165,6 +174,38 @@ namespace Smart_Tools.WPF.Views
             brush.Freeze();
             var material = new DiffuseMaterial(brush);
             return new GeometryModel3D(mesh, material) { BackMaterial = material };
+        }
+
+        /// <summary>The tint of crystal that has no colour of its own: a pale ice blue.</summary>
+        private static readonly Color CrystalTint = Color.FromRgb(0xD6, 0xEC, 0xFF);
+
+        /// <summary>
+        /// Crystal: see-through, tinted by its colour, with a white shine. Two models: the far (back) faces first, then the near (front)
+        /// faces, so the inside walls show through the front instead of being hidden by it.
+        /// </summary>
+        private static GeometryModel3D[] CrystalModels(IReadOnlyList<Triangle> triangles, Color colour)
+        {
+            var mesh = ((MeshGeometry3D)Model(triangles, colour).Geometry);
+            SolidColorBrush B(byte alpha)
+            {
+                var brush = new SolidColorBrush(Color.FromArgb(alpha, colour.R, colour.G, colour.B));
+                brush.Freeze();
+                return brush;
+            }
+            var back = new DiffuseMaterial(B(46));
+            back.Freeze();
+            var front = new MaterialGroup();
+            front.Children.Add(new DiffuseMaterial(B(72)));
+            front.Children.Add(new EmissiveMaterial(B(22)));
+            var shine = new SolidColorBrush(Color.FromArgb(220, 255, 255, 255));
+            shine.Freeze();
+            front.Children.Add(new SpecularMaterial(shine, 45));
+            front.Freeze();
+            return new[]
+            {
+                new GeometryModel3D { Geometry = mesh, BackMaterial = back },
+                new GeometryModel3D { Geometry = mesh, Material = front },
+            };
         }
 
         /// <summary>The box around the solid objects as last built (holes on their own do not count), or the shapes' boxes before the first build.</summary>

@@ -31,7 +31,12 @@ namespace Smart_Tools.WPF.Controllers
                 if (!includeHidden && node.Hidden) continue;
                 var baked = Bake(node, scene.Meshes, includeHidden);
                 if (baked == null || baked.Polygons.Count == 0) continue;
-                var triangles = Csg.Triangles(baked.Polygons);
+                // the polygons carry "material|colour" while joining; split it back into the two fields
+                var triangles = Csg.Triangles(baked.Polygons).Select(t =>
+                {
+                    var (colour, material) = SceneMaterial.Split(t.Colour);
+                    return new ColouredTriangle(t.Triangle, colour, material);
+                }).ToList();
                 result.Add(new ObjectMesh(node.Id, triangles, baked.IsHole, Csg.BoundsOf(baked.Polygons)));
             }
             // forget what this scene no longer has, so the cache cannot grow without end
@@ -47,7 +52,7 @@ namespace Smart_Tools.WPF.Controllers
 
             Baked? baked = node switch
             {
-                SceneShape shape => new Baked(Primitives.Placed(shape, meshes).Select(p => new CsgPolygon(p, shape.Colour)).ToList(), shape.IsHole),
+                SceneShape shape => new Baked(Primitives.Placed(shape, meshes).Select(p => new CsgPolygon(p, SceneMaterial.Tag(shape.Colour, shape.Material))).ToList(), shape.IsHole),
                 GroupNode group => BakeGroup(group, meshes, includeHidden),
                 _ => null,
             };
@@ -79,7 +84,14 @@ namespace Smart_Tools.WPF.Controllers
                     if (cluster.Bounds.Overlaps(hole.Bounds)) polygons = Csg.Subtract(polygons, hole.Polygons.Select(p => p.WithTag(HoleWall)).ToList());
                 result.AddRange(polygons.Select(p => ReferenceEquals(p.Tag, HoleWall) ? p.WithTag(wall) : p));
             }
-            if (group.Colour != null) result = result.Select(p => p.WithTag(group.Colour)).ToList();
+            // the group's colour and material are those of every part that has none of its own; a part's own look wins
+            if (group.Colour != null || group.Material != null)
+                result = result.Select(p =>
+                {
+                    var (colour, material) = SceneMaterial.Split(p.Tag);
+                    string? tag = SceneMaterial.Tag(colour ?? group.Colour, material ?? group.Material);
+                    return tag == p.Tag ? p : p.WithTag(tag);
+                }).ToList();
             return new Baked(result, IsHole: false);
         }
 
@@ -134,13 +146,13 @@ namespace Smart_Tools.WPF.Controllers
             {
                 case SceneShape s:
                     sb.Append('S').Append((int)s.Kind).Append('|').Append(V(s.Position)).Append('|').Append(V(s.Size)).Append('|').Append(V(s.Rotation))
-                      .Append('|').Append(s.IsHole ? 'H' : 's').Append(s.Mirrored ? 'M' : 'm').Append('|').Append(s.Colour)
+                      .Append('|').Append(s.IsHole ? 'H' : 's').Append(s.Mirrored ? 'M' : 'm').Append('|').Append(s.Colour).Append('/').Append(s.Material)
                       .Append('|').Append(s.Segments).Append('|').Append(N(s.Inner));
                     if (s.MeshId != null)
                         sb.Append('|').Append(s.MeshId).Append(':').Append(meshes.TryGetValue(s.MeshId, out var m) ? m.Points.Count : -1);
                     break;
                 case GroupNode g:
-                    sb.Append("G(").Append(g.Colour);
+                    sb.Append("G(").Append(g.Colour).Append('/').Append(g.Material);
                     foreach (var child in g.Children)
                     {
                         if (!includeHidden && child.Hidden) continue;

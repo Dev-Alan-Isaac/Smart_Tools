@@ -28,6 +28,7 @@ namespace Smart_Tools.WPF.Models
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public double[]? Rotation { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool Hole { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Colour { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Material { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public int? Segments { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public double? Inner { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? Mesh { get; set; }
@@ -75,14 +76,14 @@ namespace Smart_Tools.WPF.Controllers
             {
                 Type = "shape", Id = s.Id, Name = s.Name, Kind = s.Kind.ToString(),
                 Position = Arr(s.Position), Size = Arr(s.Size), Rotation = s.Rotation == Vec3.Zero ? null : Arr(s.Rotation),
-                Hole = s.IsHole, Colour = s.Colour,
+                Hole = s.IsHole, Colour = s.Colour, Material = s.Material,
                 Segments = s.Kind is ShapeKind.Cylinder or ShapeKind.Cone or ShapeKind.Sphere or ShapeKind.Tube && s.Segments != 32 ? s.Segments : null,
                 Inner = s.Kind == ShapeKind.Tube ? s.Inner : null, Mesh = s.MeshId,
                 Mirrored = s.Mirrored, Hidden = s.Hidden, Locked = s.Locked,
             },
             GroupNode g => new SceneNodeDto
             {
-                Type = "group", Id = g.Id, Name = g.Name, Colour = g.Colour, Hidden = g.Hidden, Locked = g.Locked,
+                Type = "group", Id = g.Id, Name = g.Name, Colour = g.Colour, Material = g.Material, Hidden = g.Hidden, Locked = g.Locked,
                 Children = g.Children.Select(ToDto).ToList(),
             },
             _ => throw new ArgumentOutOfRangeException(nameof(node)),
@@ -161,7 +162,7 @@ namespace Smart_Tools.WPF.Controllers
                 {
                     var kids = (d.Children ?? new List<SceneNodeDto>()).Select(Read).OfType<SceneNode>().ToList();
                     if (kids.Count == 0) return null;
-                    return new GroupNode(id, name, kids, PiecePaint.Normalize(d.Colour), d.Hidden, d.Locked);
+                    return new GroupNode(id, name, kids, PiecePaint.Normalize(d.Colour), d.Hidden, d.Locked, SceneMaterial.Normalize(d.Material));
                 }
                 if (shapes >= SceneEdit.MaxShapes) return null;
                 shapes++;
@@ -169,7 +170,7 @@ namespace Smart_Tools.WPF.Controllers
                 string? meshId = kind == ShapeKind.Mesh && d.Mesh != null && meshes.ContainsKey(d.Mesh) ? d.Mesh : null;
                 if (kind == ShapeKind.Mesh && meshId == null) kind = ShapeKind.Box;   // its surface is missing: keep its place as a box
                 return SceneEdit.Sanitize(new SceneShape(id, name, kind, Vec(d.Position, 0), Vec(d.Size, 10), Vec(d.Rotation, 0),
-                    d.Hole, d.Colour, d.Segments ?? 32, d.Inner ?? 0.6, meshId, d.Mirrored, d.Hidden, d.Locked));
+                    d.Hole, d.Colour, d.Segments ?? 32, d.Inner ?? 0.6, meshId, d.Mirrored, d.Hidden, d.Locked, d.Material));
             }
             string Take(string id)
             {

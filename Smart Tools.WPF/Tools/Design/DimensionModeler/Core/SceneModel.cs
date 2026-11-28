@@ -25,22 +25,27 @@ namespace Smart_Tools.WPF.Models
     /// own X before turning it (what a mirror leaves behind). <see cref="Segments"/> is how round a round shape is (3..128);
     /// <see cref="Inner"/> is a tube's hole as a share of its width (0..0.95). <see cref="MeshId"/> names the imported surface of a
     /// Mesh shape in <see cref="Scene.Meshes"/>. <see cref="Colour"/> is "#RRGGBB" or null for the default look.
+    /// <see cref="Material"/> is a <see cref="SceneMaterial"/> id (e.g. crystal) or null for the standard look.
     /// </summary>
     public sealed record SceneShape(
         string Id, string Name, ShapeKind Kind, Vec3 Position, Vec3 Size, Vec3 Rotation,
         bool IsHole = false, string? Colour = null, int Segments = 32, double Inner = 0.6, string? MeshId = null,
-        bool Mirrored = false, bool Hidden = false, bool Locked = false) : SceneNode(Id, Name, Hidden, Locked);
+        bool Mirrored = false, bool Hidden = false, bool Locked = false, string? Material = null) : SceneNode(Id, Name, Hidden, Locked);
 
-    /// <summary>A group: its solids are joined into one object and its holes are cut out of them. <see cref="Colour"/>, when set, paints all of it.</summary>
-    public sealed record GroupNode(string Id, string Name, IReadOnlyList<SceneNode> Children, string? Colour = null, bool Hidden = false, bool Locked = false)
+    /// <summary>
+    /// A group: its solids are joined into one object and its holes are cut out of them. <see cref="Colour"/> and <see cref="Material"/>,
+    /// when set, are the look of every part that has none of its own.
+    /// </summary>
+    public sealed record GroupNode(string Id, string Name, IReadOnlyList<SceneNode> Children, string? Colour = null, bool Hidden = false, bool Locked = false,
+        string? Material = null)
         : SceneNode(Id, Name, Hidden, Locked)
     {
         // a record compares lists by reference; two groups with the same children are the same group
         public bool Equals(GroupNode? other) =>
-            other is not null && Id == other.Id && Name == other.Name && Colour == other.Colour && Hidden == other.Hidden && Locked == other.Locked
-            && Children.SequenceEqual(other.Children);
+            other is not null && Id == other.Id && Name == other.Name && Colour == other.Colour && Material == other.Material
+            && Hidden == other.Hidden && Locked == other.Locked && Children.SequenceEqual(other.Children);
 
-        public override int GetHashCode() => HashCode.Combine(Id, Name, Children.Count, Colour, Hidden, Locked);
+        public override int GetHashCode() => HashCode.Combine(Id, Name, Children.Count, Colour, Material, Hidden, Locked);
     }
 
     /// <summary>An imported surface, stored once and shared by every Mesh shape that uses it: triangles (3 points each) inside -0.5..0.5.</summary>
@@ -171,7 +176,7 @@ namespace Smart_Tools.WPF.Models
     }
 
     /// <summary>A triangle of a finished object with its colour ("#RRGGBB", or null for the default look).</summary>
-    public readonly record struct ColouredTriangle(Triangle Triangle, string? Colour);
+    public readonly record struct ColouredTriangle(Triangle Triangle, string? Colour, string? Material = null);
 
     /// <summary>
     /// One top-level object ready to draw or export: its triangles and its box. <see cref="IsHole"/> = a hole (or a group of holes) that

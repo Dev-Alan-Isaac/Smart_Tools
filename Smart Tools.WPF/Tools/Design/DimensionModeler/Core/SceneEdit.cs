@@ -202,10 +202,11 @@ namespace Smart_Tools.WPF.Controllers
                 if (shown == null)
                     foreach (var g in AncestorsOf(result, id))
                         if (g.Colour != null) { shown = g.Colour; break; }
-                var outside = shown == null ? node : node switch
+                string? material = ShownMaterial(result, id);
+                var outside = node switch
                 {
-                    SceneShape s => s with { Colour = shown },
-                    GroupNode g => g with { Colour = shown },
+                    SceneShape s => s with { Colour = shown, Material = material },
+                    GroupNode g => g with { Colour = shown, Material = material },
                     _ => node,
                 };
                 var without = Remove(result.Nodes, new HashSet<string> { id });
@@ -248,7 +249,10 @@ namespace Smart_Tools.WPF.Controllers
         public static Scene SetHole(Scene scene, IEnumerable<string> ids, bool hole) =>
             MapShapes(scene, ids, s => s with { IsHole = hole });
 
-        /// <summary>Paints the nodes: a shape gets the colour, a group gets it as its own (it paints all of it). Null = back to the default.</summary>
+        /// <summary>
+        /// Paints the nodes: a shape gets the colour; a group gets it as its own and its parts lose theirs, so all of it shows the
+        /// colour (a part painted afterwards keeps its own colour inside the group). Null = back to the default.
+        /// </summary>
         public static Scene SetColour(Scene scene, IEnumerable<string> ids, string? hex)
         {
             string? colour = PiecePaint.Normalize(hex);
@@ -256,9 +260,32 @@ namespace Smart_Tools.WPF.Controllers
             return Map(scene, n => !set.Contains(n.Id) ? n : n switch
             {
                 SceneShape s => s with { Colour = colour },
-                GroupNode g => colour == null ? ClearColours(g) : g with { Colour = colour },
+                GroupNode g => ClearColours(g) with { Colour = colour },
                 _ => n,
             });
+        }
+
+        /// <summary>
+        /// Sets what the nodes are made of (<see cref="SceneMaterial"/> id, null = standard), like <see cref="SetColour"/>: a group gets it
+        /// as its own and its parts lose theirs, so all of it shows the material.
+        /// </summary>
+        public static Scene SetMaterial(Scene scene, IEnumerable<string> ids, string? material)
+        {
+            string? value = SceneMaterial.Normalize(material);
+            var set = new HashSet<string>(ids);
+            return Map(scene, n => !set.Contains(n.Id) ? n : n switch
+            {
+                SceneShape s => s with { Material = value },
+                GroupNode g => ClearMaterials(g) with { Material = value },
+                _ => n,
+            });
+        }
+
+        /// <summary>The material a node shows: its own, else that of the nearest group above it that has one (null = standard).</summary>
+        public static string? ShownMaterial(Scene scene, string id)
+        {
+            var own = Find(scene, id) switch { SceneShape s => s.Material, GroupNode g => g.Material, _ => null };
+            return own ?? AncestorsOf(scene, id).Select(g => g.Material).FirstOrDefault(m => m != null);
         }
 
         public static Scene SetHidden(Scene scene, IEnumerable<string> ids, bool hidden)
@@ -414,6 +441,7 @@ namespace Smart_Tools.WPF.Controllers
                 Size = new Vec3(Size(s.Size.X), Size(s.Size.Y), Size(s.Size.Z)),
                 Rotation = new Vec3(Angle(s.Rotation.X), Angle(s.Rotation.Y), Angle(s.Rotation.Z)),
                 Colour = PiecePaint.Normalize(s.Colour),
+                Material = SceneMaterial.Normalize(s.Material),
                 Segments = Math.Clamp(s.Segments, Primitives.MinSegments, Primitives.MaxSegments),
                 Inner = Math.Clamp(Num(s.Inner, 0.6), 0.05, 0.95),
             };
@@ -502,6 +530,17 @@ namespace Smart_Tools.WPF.Controllers
             }
             return list;
         }
+
+        private static GroupNode ClearMaterials(GroupNode g) => g with
+        {
+            Material = null,
+            Children = g.Children.Select(c => c switch
+            {
+                SceneShape s => s with { Material = null },
+                GroupNode inner => ClearMaterials(inner),
+                _ => c,
+            }).ToList(),
+        };
 
         private static GroupNode ClearColours(GroupNode g) => g with
         {
